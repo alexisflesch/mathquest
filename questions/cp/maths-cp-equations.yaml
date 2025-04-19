@@ -1,0 +1,398 @@
+- question: "Compléter : 5 + _ = 8"
+  uid: "cp-eq-1"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "5 + 3 = 8"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : _ + 4 = 7"
+  uid: "cp-eq-2"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "3 + 4 = 7"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 6 + _ = 10"
+  uid: "cp-eq-3"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "6 + 4 = 10"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 7 + _ = 12"
+  uid: "cp-eq-4"
+  reponses:
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: true
+    - texte: "6"
+      correct: false
+    - texte: "7"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "7 + 5 = 12"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : _ + 3 = 9"
+  uid: "cp-eq-5"
+  reponses:
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: true
+    - texte: "7"
+      correct: false
+    - texte: "8"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "6 + 3 = 9"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 4 + _ = 11"
+  uid: "cp-eq-6"
+  reponses:
+    - texte: "6"
+      correct: false
+    - texte: "7"
+      correct: true
+    - texte: "8"
+      correct: false
+    - texte: "9"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "4 + 7 = 11"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : _ + 2 = 6"
+  uid: "cp-eq-7"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "4 + 2 = 6"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 8 + _ = 15"
+  uid: "cp-eq-8"
+  reponses:
+    - texte: "6"
+      correct: false
+    - texte: "7"
+      correct: true
+    - texte: "8"
+      correct: false
+    - texte: "9"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "8 + 7 = 15"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 3 + _ = 8"
+  uid: "cp-eq-9"
+  reponses:
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: true
+    - texte: "6"
+      correct: false
+    - texte: "7"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "3 + 5 = 8"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : _ + 5 = 10"
+  uid: "cp-eq-10"
+  reponses:
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: true
+    - texte: "6"
+      correct: false
+    - texte: "7"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "5 + 5 = 10"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 9 + _ = 14"
+  uid: "cp-eq-11"
+  reponses:
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: true
+    - texte: "6"
+      correct: false
+    - texte: "7"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "9 + 5 = 14"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : _ + 6 = 13"
+  uid: "cp-eq-12"
+  reponses:
+    - texte: "6"
+      correct: false
+    - texte: "7"
+      correct: true
+    - texte: "8"
+      correct: false
+    - texte: "9"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "7 + 6 = 13"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 2 + _ = 5"
+  uid: "cp-eq-13"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "2 + 3 = 5"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : _ + 7 = 14"
+  uid: "cp-eq-14"
+  reponses:
+    - texte: "6"
+      correct: false
+    - texte: "7"
+      correct: true
+    - texte: "8"
+      correct: false
+    - texte: "9"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "7 + 7 = 14"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 10 + _ = 20"
+  uid: "cp-eq-15"
+  reponses:
+    - texte: "9"
+      correct: false
+    - texte: "10"
+      correct: true
+    - texte: "11"
+      correct: false
+    - texte: "12"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "10 + 10 = 20"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : _ + 8 = 16"
+  uid: "cp-eq-16"
+  reponses:
+    - texte: "7"
+      correct: false
+    - texte: "8"
+      correct: true
+    - texte: "9"
+      correct: false
+    - texte: "10"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "8 + 8 = 16"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 12 + _ = 18"
+  uid: "cp-eq-17"
+  reponses:
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: true
+    - texte: "7"
+      correct: false
+    - texte: "8"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "12 + 6 = 18"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : _ + 9 = 19"
+  uid: "cp-eq-18"
+  reponses:
+    - texte: "9"
+      correct: false
+    - texte: "10"
+      correct: true
+    - texte: "11"
+      correct: false
+    - texte: "12"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "10 + 9 = 19"
+  tags: ["équations", "calcul"]
+  temps: 20
+
+- question: "Compléter : 15 + _ = 25"
+  uid: "cp-eq-19"
+  reponses:
+    - texte: "9"
+      correct: false
+    - texte: "10"
+      correct: true
+    - texte: "11"
+      correct: false
+    - texte: "12"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "équations"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "15 + 10 = 25"
+  tags: ["équations", "calcul"]
+  temps: 20

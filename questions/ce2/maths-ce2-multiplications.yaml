@@ -1,0 +1,229 @@
+- question: "3 x 2 = ..."
+  uid: "ce2-mult-1"
+  reponses:
+    - texte: "8"
+      correct: false
+    - texte: "12"
+      correct: false
+    - texte: "6"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "9"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "3 x 2 = 6"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "4 x 3 = ..."
+  uid: "ce2-mult-2"
+  reponses:
+    - texte: "18"
+      correct: false
+    - texte: "9"
+      correct: false
+    - texte: "24"
+      correct: false
+    - texte: "12"
+      correct: true
+    - texte: "15"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "4 x 3 = 12"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "5 x 5 = ..."
+  uid: "ce2-mult-3"
+  reponses:
+    - texte: "35"
+      correct: false
+    - texte: "25"
+      correct: true
+    - texte: "20"
+      correct: false
+    - texte: "40"
+      correct: false
+    - texte: "30"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "5 x 5 = 25"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "6 x 4 = ..."
+  uid: "ce2-mult-4"
+  reponses:
+    - texte: "36"
+      correct: false
+    - texte: "20"
+      correct: false
+    - texte: "24"
+      correct: true
+    - texte: "30"
+      correct: false
+    - texte: "28"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "6 x 4 = 24"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "7 x 3 = ..."
+  uid: "ce2-mult-5"
+  reponses:
+    - texte: "24"
+      correct: false
+    - texte: "18"
+      correct: false
+    - texte: "30"
+      correct: false
+    - texte: "21"
+      correct: true
+    - texte: "27"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "7 x 3 = 21"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "8 x 2 = ..."
+  uid: "ce2-mult-6"
+  reponses:
+    - texte: "18"
+      correct: false
+    - texte: "24"
+      correct: false
+    - texte: "12"
+      correct: false
+    - texte: "16"
+      correct: true
+    - texte: "20"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "8 x 2 = 16"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "9 x 4 = ..."
+  uid: "ce2-mult-7"
+  reponses:
+    - texte: "36"
+      correct: true
+    - texte: "28"
+      correct: false
+    - texte: "40"
+      correct: false
+    - texte: "45"
+      correct: false
+    - texte: "48"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "9 x 4 = 36"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "10 x 5 = ..."
+  uid: "ce2-mult-8"
+  reponses:
+    - texte: "60"
+      correct: false
+    - texte: "40"
+      correct: false
+    - texte: "55"
+      correct: false
+    - texte: "70"
+      correct: false
+    - texte: "50"
+      correct: true
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "10 x 5 = 50"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "11 x 2 = ..."
+  uid: "ce2-mult-9"
+  reponses:
+    - texte: "18"
+      correct: false
+    - texte: "24"
+      correct: false
+    - texte: "22"
+      correct: true
+    - texte: "28"
+      correct: false
+    - texte: "30"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "11 x 2 = 22"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "12 x 3 = ..."
+  uid: "ce2-mult-10"
+  reponses:
+    - texte: "30"
+      correct: false
+    - texte: "36"
+      correct: true
+    - texte: "40"
+      correct: false
+    - texte: "42"
+      correct: false
+    - texte: "48"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 2
+  niveau: "CE2"
+  auteur: "gpt4o"
+  explication: "12 x 3 = 36"
+  tags: ["multiplication", "calcul"]
+  temps: 20

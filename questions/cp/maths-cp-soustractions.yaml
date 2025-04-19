@@ -1,0 +1,377 @@
+- question: "5 - 3 = ..."
+  uid: "cp-sub-1"
+  reponses:
+    - texte: "1"
+      correct: false
+    - texte: "2"
+      correct: true
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "5 - 3 = 2"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "6 - 2 = ..."
+  uid: "cp-sub-2"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "6 - 2 = 4"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "7 - 4 = ..."
+  uid: "cp-sub-3"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "7 - 4 = 3"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "9 - 5 = ..."
+  uid: "cp-sub-4"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "9 - 5 = 4"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "8 - 6 = ..."
+  uid: "cp-sub-5"
+  reponses:
+    - texte: "1"
+      correct: false
+    - texte: "2"
+      correct: true
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "8 - 6 = 2"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "10 - 7 = ..."
+  uid: "cp-sub-6"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "10 - 7 = 3"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "4 - 1 = ..."
+  uid: "cp-sub-7"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "4 - 1 = 3"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "6 - 5 = ..."
+  uid: "cp-sub-8"
+  reponses:
+    - texte: "0"
+      correct: false
+    - texte: "1"
+      correct: true
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "6 - 5 = 1"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "3 - 2 = ..."
+  uid: "cp-sub-9"
+  reponses:
+    - texte: "0"
+      correct: false
+    - texte: "1"
+      correct: true
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "3 - 2 = 1"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "7 - 3 = ..."
+  uid: "cp-sub-10"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "7 - 3 = 4"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "5 - 2 = ..."
+  uid: "cp-sub-11"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "5 - 2 = 3"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "9 - 6 = ..."
+  uid: "cp-sub-12"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "9 - 6 = 3"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "8 - 4 = ..."
+  uid: "cp-sub-13"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "8 - 4 = 4"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "10 - 8 = ..."
+  uid: "cp-sub-14"
+  reponses:
+    - texte: "1"
+      correct: false
+    - texte: "2"
+      correct: true
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "10 - 8 = 2"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "6 - 3 = ..."
+  uid: "cp-sub-15"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "6 - 3 = 3"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "7 - 5 = ..."
+  uid: "cp-sub-16"
+  reponses:
+    - texte: "1"
+      correct: false
+    - texte: "2"
+      correct: true
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "7 - 5 = 2"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "9 - 7 = ..."
+  uid: "cp-sub-17"
+  reponses:
+    - texte: "1"
+      correct: false
+    - texte: "2"
+      correct: true
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "9 - 7 = 2"
+  tags: ["soustraction", "calcul"]
+  temps: 20
+
+- question: "8 - 5 = ..."
+  uid: "cp-sub-18"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "soustraction"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "8 - 5 = 3"
+  tags: ["soustraction", "calcul"]
+  temps: 20

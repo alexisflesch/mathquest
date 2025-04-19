@@ -1,0 +1,12 @@
+{
+    "servers": {
+        "postgres": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-postgres",
+                "postgresql://postgre:Phuf0pohooFee8auohFahk7vChae4Iv0wiem5voT@localhost:5432/mathquest"
+            ]
+        }
+    }
+}

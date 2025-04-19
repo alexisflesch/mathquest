@@ -1,0 +1,398 @@
+- question: "Quel est le plus grand nombre ?"
+  uid: "cp-aut-1"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: true
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "comparaison"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "5 est plus grand que 3 et 4"
+  tags: ["comparaison", "calcul"]
+  temps: 20
+
+- question: "Quel est le plus petit nombre ?"
+  uid: "cp-aut-2"
+  reponses:
+    - texte: "1"
+      correct: true
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "comparaison"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "1 est plus petit que 2 et 3"
+  tags: ["comparaison", "calcul"]
+  temps: 20
+
+- question: "Quel nombre est impair ?"
+  uid: "cp-aut-3"
+  reponses:
+    - texte: "1"
+      correct: true
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "parité"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "3 est impair"
+  tags: ["parité", "calcul"]
+  temps: 20
+
+- question: "Quel est le double de 2 ?"
+  uid: "cp-aut-4"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le double de 2 est 4"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "Quel est le triple de 3 ?"
+  uid: "cp-aut-5"
+  reponses:
+    - texte: "6"
+      correct: false
+    - texte: "9"
+      correct: true
+    - texte: "12"
+      correct: false
+    - texte: "15"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le triple de 3 est 9"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "Quel est le successeur de 4 ?"
+  uid: "cp-aut-6"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: true
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "ordre"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le successeur de 4 est 5"
+  tags: ["ordre", "calcul"]
+  temps: 20
+
+- question: "Quel est le prédécesseur de 7 ?"
+  uid: "cp-aut-7"
+  reponses:
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: true
+    - texte: "7"
+      correct: false
+    - texte: "8"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "ordre"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le prédécesseur de 7 est 6"
+  tags: ["ordre", "calcul"]
+  temps: 20
+
+- question: "Combien y a-t-il de côtés dans un carré ?"
+  uid: "cp-aut-8"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "géométrie"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Un carré a 4 côtés"
+  tags: ["géométrie", "formes"]
+  temps: 20
+
+- question: "Combien y a-t-il de côtés dans un triangle ?"
+  uid: "cp-aut-9"
+  reponses:
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: true
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "géométrie"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Un triangle a 3 côtés"
+  tags: ["géométrie", "formes"]
+  temps: 20
+
+- question: "Quel est le plus grand nombre ?"
+  uid: "cp-aut-10"
+  reponses:
+    - texte: "7"
+      correct: false
+    - texte: "8"
+      correct: false
+    - texte: "9"
+      correct: true
+    - texte: "10"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "comparaison"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "9 est plus grand que 8 et 7"
+  tags: ["comparaison", "calcul"]
+  temps: 20
+
+- question: "Quel est le plus petit nombre ?"
+  uid: "cp-aut-11"
+  reponses:
+    - texte: "1"
+      correct: true
+    - texte: "2"
+      correct: false
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "comparaison"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "1 est plus petit que 2 et 3"
+  tags: ["comparaison", "calcul"]
+  temps: 20
+
+- question: "Quel est le nombre suivant après 10 ?"
+  uid: "cp-aut-12"
+  reponses:
+    - texte: "10"
+      correct: false
+    - texte: "11"
+      correct: true
+    - texte: "12"
+      correct: false
+    - texte: "13"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "ordre"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le nombre suivant après 10 est 11"
+  tags: ["ordre", "calcul"]
+  temps: 20
+
+- question: "Quel est le nombre précédent avant 5 ?"
+  uid: "cp-aut-13"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "ordre"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le nombre précédent avant 5 est 4"
+  tags: ["ordre", "calcul"]
+  temps: 20
+
+- question: "Quel est le double de 5 ?"
+  uid: "cp-aut-14"
+  reponses:
+    - texte: "8"
+      correct: false
+    - texte: "9"
+      correct: false
+    - texte: "10"
+      correct: true
+    - texte: "11"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le double de 5 est 10"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "Quel est le triple de 2 ?"
+  uid: "cp-aut-15"
+  reponses:
+    - texte: "4"
+      correct: false
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: true
+    - texte: "7"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "multiplication"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le triple de 2 est 6"
+  tags: ["multiplication", "calcul"]
+  temps: 20
+
+- question: "Quel est le successeur de 9 ?"
+  uid: "cp-aut-16"
+  reponses:
+    - texte: "9"
+      correct: false
+    - texte: "10"
+      correct: true
+    - texte: "11"
+      correct: false
+    - texte: "12"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "ordre"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le successeur de 9 est 10"
+  tags: ["ordre", "calcul"]
+  temps: 20
+
+- question: "Quel est le prédécesseur de 3 ?"
+  uid: "cp-aut-17"
+  reponses:
+    - texte: "1"
+      correct: false
+    - texte: "2"
+      correct: true
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "ordre"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Le prédécesseur de 3 est 2"
+  tags: ["ordre", "calcul"]
+  temps: 20
+
+- question: "Combien y a-t-il de côtés dans un rectangle ?"
+  uid: "cp-aut-18"
+  reponses:
+    - texte: "3"
+      correct: false
+    - texte: "4"
+      correct: true
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "géométrie"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Un rectangle a 4 côtés"
+  tags: ["géométrie", "formes"]
+  temps: 20
+
+- question: "Combien y a-t-il de côtés dans un hexagone ?"
+  uid: "cp-aut-19"
+  reponses:
+    - texte: "5"
+      correct: false
+    - texte: "6"
+      correct: true
+    - texte: "7"
+      correct: false
+    - texte: "8"
+      correct: false
+  type: "choix_simple"
+  discipline: "Mathématiques"
+  theme: "géométrie"
+  difficulte: 1
+  niveau: "CP"
+  auteur: "gpt4o"
+  explication: "Un hexagone a 6 côtés"
+  tags: ["géométrie", "formes"]
+  temps: 20

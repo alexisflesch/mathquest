@@ -1,0 +1,10 @@
+# Ignore admin secret file
+.admin_secret
+
+# Ignore database info
+postgre.md
+
+# Ignore all .env files
+.env
+# Ignore all .env files in any directory
+**/.env
