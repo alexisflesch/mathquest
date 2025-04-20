@@ -8,3 +8,6 @@ postgre.md
 .env
 # Ignore all .env files in any directory
 **/.env
+
+# Ignore deploy script
+script/deploy_to_vps.sh

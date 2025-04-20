@@ -16,10 +16,24 @@ interface Question {
     temps?: number;
 }
 
-export default function QuestionSelector({ onSelect }: { onSelect: (selected: string[]) => void }) {
+interface QuestionSelectorProps {
+    onSelect: (selected: string[], meta: { niveaux: string[], categories: string[], themes: string[] }) => void;
+    selectedQuestionIds: string[];
+}
+
+export default function QuestionSelector({ onSelect, selectedQuestionIds }: QuestionSelectorProps) {
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [selected, setSelected] = useState<string[]>([]);
-    const [filter, setFilter] = useState({ discipline: '', niveau: '', theme: '' });
+    const [filters, setFilters] = useState({ disciplines: [], niveaux: [], themes: [] });
+    const [filter, setFilter] = useState({ discipline: '', niveau: '', theme: '', tag: '' });
+    const [selectedNiveaux, setSelectedNiveaux] = useState<string[]>([]);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
+
+    useEffect(() => {
+        fetch('/api/questions/filters')
+            .then(res => res.json())
+            .then(setFilters);
+    }, []);
 
     useEffect(() => {
         let url = '/api/questions';
@@ -27,61 +41,89 @@ export default function QuestionSelector({ onSelect }: { onSelect: (selected: st
         if (filter.discipline) params.push(`discipline=${encodeURIComponent(filter.discipline)}`);
         if (filter.niveau) params.push(`niveau=${encodeURIComponent(filter.niveau)}`);
         if (filter.theme) params.push(`theme=${encodeURIComponent(filter.theme)}`);
+        // Always limit to 100 questions max
+        params.push('limit=100');
         if (params.length) url += '?' + params.join('&');
         fetch(url)
             .then(res => res.json())
             .then(setQuestions);
-    }, [filter]);
+    }, [filter.discipline, filter.niveau, filter.theme]);
 
     const handleToggle = (uid: string) => {
-        setSelected(sel => {
-            const next = sel.includes(uid) ? sel.filter(id => id !== uid) : [...sel, uid];
-            onSelect(next);
-            return next;
-        });
+        let next: string[];
+        if (selectedQuestionIds.includes(uid)) {
+            next = selectedQuestionIds.filter(id => id !== uid);
+        } else {
+            next = [...selectedQuestionIds, uid];
+        }
+        // Compute meta arrays from selected questions
+        const selectedQuestionsMeta = questions.filter(q => next.includes(q.uid));
+        const niveaux = Array.from(new Set(selectedQuestionsMeta.map(q => q.niveau)));
+        const categories = Array.from(new Set(selectedQuestionsMeta.map(q => q.discipline)));
+        const themes = Array.from(new Set(selectedQuestionsMeta.map(q => q.theme)));
+        setSelectedNiveaux(niveaux);
+        setSelectedCategories(categories);
+        setSelectedThemes(themes);
+        onSelect(next, { niveaux, categories, themes });
     };
+
+    // Filter by tag (client-side)
+    const filteredQuestions = filter.tag
+        ? questions.filter(q => (q.tags || []).some(t => t.toLowerCase().includes(filter.tag.toLowerCase())))
+        : questions;
 
     return (
         <div>
             <h2 className="text-xl font-bold mb-2">Sélectionner des questions</h2>
-            <div className="flex gap-4 mb-4">
-                <input
-                    className="border px-2 py-1 rounded"
-                    placeholder="Discipline"
+            <div className="flex flex-col gap-4 w-full mb-4">
+                <select
+                    className="border-2 border-sky-200 bg-sky-50 rounded-full px-4 py-3 text-lg font-semibold text-sky-700 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 transition"
                     value={filter.discipline}
                     onChange={e => setFilter(f => ({ ...f, discipline: e.target.value }))}
-                />
-                <input
-                    className="border px-2 py-1 rounded"
-                    placeholder="Niveau"
+                >
+                    <option value="">Discipline</option>
+                    {filters.disciplines.map((d: string) => <option key={d} value={d}>{d}</option>)}
+                </select>
+                <select
+                    className="border-2 border-violet-200 bg-violet-50 rounded-full px-4 py-3 text-lg font-semibold text-violet-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 transition"
                     value={filter.niveau}
                     onChange={e => setFilter(f => ({ ...f, niveau: e.target.value }))}
-                />
-                <input
-                    className="border px-2 py-1 rounded"
-                    placeholder="Thème"
+                >
+                    <option value="">Niveau</option>
+                    {filters.niveaux.map((n: string) => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <select
+                    className="border-2 border-indigo-200 bg-indigo-50 rounded-full px-4 py-3 text-lg font-semibold text-indigo-700 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 transition"
                     value={filter.theme}
                     onChange={e => setFilter(f => ({ ...f, theme: e.target.value }))}
+                >
+                    <option value="">Thème</option>
+                    {filters.themes.map((t: string) => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <input
+                    className="border-2 border-sky-200 bg-sky-50 rounded-full px-4 py-3 text-lg font-semibold text-sky-700 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 transition"
+                    placeholder="Rechercher par tag"
+                    value={filter.tag}
+                    onChange={e => setFilter(f => ({ ...f, tag: e.target.value }))}
                 />
             </div>
-            <div className="max-h-96 overflow-y-auto border rounded p-2 bg-white">
-                {questions.length === 0 && <div className="text-gray-500">Aucune question trouvée.</div>}
+            <div className="max-h-96 overflow-y-auto border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50 shadow-inner">
+                {filteredQuestions.length === 0 && <div className="text-gray-500">Aucune question trouvée.</div>}
                 <ul className="space-y-2">
-                    {questions.map(q => (
+                    {filteredQuestions.map(q => (
                         <li key={q.uid} className="flex items-center gap-2">
                             <input
                                 type="checkbox"
-                                checked={selected.includes(q.uid)}
+                                checked={selectedQuestionIds.includes(q.uid)}
                                 onChange={() => handleToggle(q.uid)}
                             />
                             <span className="font-semibold">{q.question}</span>
                             <span className="text-xs text-gray-500">[{q.discipline} - {q.niveau} - {q.theme}]</span>
-                            <Image src={`/avatars/${q.uid}`} alt={q.uid} width={32} height={32} className="w-8 h-8 rounded-full" />
                         </li>
                     ))}
                 </ul>
             </div>
-            <div className="mt-2 text-sm text-gray-600">{selected.length} question(s) sélectionnée(s)</div>
+            <div className="mt-2 text-sm text-gray-600">{selectedQuestionIds.length} question(s) sélectionnée(s)</div>
         </div>
     );
 }

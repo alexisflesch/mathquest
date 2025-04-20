@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation'; // Use navigation for redirect after signup
+import Link from 'next/link';
 
 export default function TeacherSignupPage() {
     const [formData, setFormData] = useState({
@@ -177,6 +178,12 @@ export default function TeacherSignupPage() {
                         </button>
                     </div>
                 </form>
+                <p className="text-center text-sm mt-4">
+                    Déjà un compte ?{' '}
+                    <Link href="/teacher/login" className="text-blue-600 underline hover:text-blue-800">
+                        Se connecter
+                    </Link>
+                </p>
             </div>
         </div>
     );

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 // GET: List all quizzes (quizz = list of questions saved by a teacher)
 export async function GET() {
-    // For now, return all quizzes (tournois_sauvegardes) as placeholder
+    // Return all quizzes with new array fields
     const quizzes = await prisma.tournoiSauvegarde.findMany({
         select: {
             id: true,
@@ -14,9 +14,10 @@ export async function GET() {
             questions_ids: true,
             enseignant_id: true,
             date_creation: true,
-            niveau: true,
-            categorie: true,
-            themes: true,
+            niveaux: true,      // <-- now array
+            categories: true,   // <-- now array
+            themes: true,       // <-- array
+            type: true,
         },
         orderBy: { date_creation: 'desc' },
     });
@@ -27,7 +28,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { nom, questions_ids, enseignant_id, niveau, categorie, themes, type } = body;
+        const { nom, questions_ids, enseignant_id, niveaux, categories, themes, type } = body;
         if (!nom || !questions_ids || !enseignant_id) {
             return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
         }
@@ -36,14 +37,15 @@ export async function POST(request: NextRequest) {
                 nom,
                 questions_ids,
                 enseignant_id,
-                niveau,
-                categorie,
+                niveaux,
+                categories,
                 themes,
                 type: type || 'direct',
             },
         });
         return NextResponse.json({ message: 'Quiz sauvegardé.', quizId: quiz.id }, { status: 201 });
-    } catch {
-        return NextResponse.json({ message: 'Erreur serveur.' }, { status: 500 });
+    } catch (error) {
+        console.error('POST /api/quiz error:', error);
+        return NextResponse.json({ message: 'Erreur serveur.', error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
     }
 }

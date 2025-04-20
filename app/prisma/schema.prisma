@@ -106,8 +106,8 @@ model TournoiSauvegarde {
   enseignant_id   String
   questions_ids   String[]
   type            String
-  niveau          String?
-  categorie       String?
+  niveaux         String[]     // <-- Now an array of niveaux (school years/levels)
+  categories      String[]     // Multiple disciplines/categories
   themes          String[]
 
   enseignant Enseignant @relation(fields: [enseignant_id], references: [id])

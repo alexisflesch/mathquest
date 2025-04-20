@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../components/AuthProvider';
+import { useAuth } from '../components/AuthProvider';
 
 export default function TeacherPage() {
     const { isAuthenticated } = useAuth() || {};

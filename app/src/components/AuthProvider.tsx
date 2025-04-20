@@ -7,6 +7,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isStudent: boolean;
     isTeacher: boolean;
+    teacherId?: string;
 }
 
 // Create the context with an initial undefined value
@@ -25,11 +26,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isStudent, setIsStudent] = useState(false);
     const [isTeacher, setIsTeacher] = useState(false);
     const [isLoading, setIsLoading] = useState(true); // Add loading state
+    const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
 
     const refreshAuth = useCallback(async () => {
         setIsLoading(true);
         let studentLoggedIn = false;
         let teacherLoggedIn = false;
+        let fetchedTeacherId: string | undefined = undefined;
 
         // Check student status from localStorage (client-side only)
         if (typeof window !== 'undefined') {
@@ -42,6 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (response.ok) {
                 const data = await response.json();
                 teacherLoggedIn = data.isTeacher;
+                if (teacherLoggedIn && data.teacherId) {
+                    fetchedTeacherId = data.teacherId;
+                }
             } else {
                 console.error('Failed to fetch auth status');
             }
@@ -53,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsStudent(studentLoggedIn);
         setIsTeacher(teacherLoggedIn);
         setIsAuthenticated(studentLoggedIn || teacherLoggedIn);
+        setTeacherId(fetchedTeacherId);
         setIsLoading(false); // Finished loading
 
         console.log('AuthProvider: Refreshed Auth State:', { studentLoggedIn, teacherLoggedIn, isAuthenticated: studentLoggedIn || teacherLoggedIn });
@@ -71,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Optionally, don't render children until loading is complete
     // if (!isLoading) { // Or show a loading indicator
     return (
-        <AuthContext.Provider value={{ refreshAuth, isAuthenticated, isStudent, isTeacher }}>
+        <AuthContext.Provider value={{ refreshAuth, isAuthenticated, isStudent, isTeacher, teacherId }}>
             {children}
         </AuthContext.Provider>
     );

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import Link from 'next/link';
 
 export default function TeacherLoginPage() {
     const [email, setEmail] = useState('');
@@ -82,6 +83,12 @@ export default function TeacherLoginPage() {
                         {isLoading ? 'Connexion...' : 'Se connecter'}
                     </button>
                 </form>
+                <p className="text-center text-sm mt-4">
+                    Pas encore de compte ?{' '}
+                    <Link href="/teacher/signup" className="text-blue-600 underline hover:text-blue-800">
+                        Créer un compte enseignant
+                    </Link>
+                </p>
             </div>
         </div>
     );

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies(); // Await cookies()
     const teacherCookie = cookieStore.get('mathquest_teacher');
 
     const isTeacher = !!teacherCookie?.value;
@@ -11,5 +11,8 @@ export async function GET(request: NextRequest) {
     // Check localStorage for student status (cannot be done server-side directly)
     // We will handle student status client-side
 
-    return NextResponse.json({ isTeacher });
+    return NextResponse.json({
+        isTeacher,
+        teacherId: isTeacher ? teacherCookie.value : null,
+    });
 }
