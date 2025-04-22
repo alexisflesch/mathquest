@@ -52,16 +52,16 @@ export default function AppNav() {
         }
     }, [isStudent, isTeacher]); // Re-run when isStudent or isTeacher changes
 
-    // Disconnect handler using context refresh
+    // Add handleDisconnect function for menu actions
     const handleDisconnect = async () => {
-        // Clear student local storage
+        // Remove localStorage/session data if needed
         localStorage.removeItem('mathquest_pseudo');
         localStorage.removeItem('mathquest_avatar');
-        // Call API to clear teacher cookie
+        localStorage.removeItem('mathquest_teacher_pseudo');
+        localStorage.removeItem('mathquest_teacher_avatar');
+        localStorage.removeItem('mathquest_teacher_id');
+        // Optionally call logout API
         await fetch('/api/auth/logout', { method: 'POST' });
-        // Trigger context refresh to update isStudent, isTeacher, isAuthenticated
-        refreshAuth();
-        // Redirect after state updates and API call
         window.location.href = '/';
     };
 
@@ -119,9 +119,6 @@ export default function AppNav() {
     }, [isAuthenticated, isStudent, isTeacher]);
 
     if (!mounted) return null;
-
-    // Determine if disconnect button should be shown based on context
-    const showDisconnect = isAuthenticated;
 
     return (
         <>

@@ -38,21 +38,6 @@ export default function PracticePage() {
             .then(setPracticeFilters);
     }, []);
 
-    const handleStartPractice = async () => {
-        setPracticeStarted(true);
-        setPracticeDone(false);
-        setPracticeIndex(0);
-        setPracticeScore(0);
-        const params = new URLSearchParams();
-        if (practiceDiscipline) params.append('discipline', practiceDiscipline);
-        if (practiceNiveau) params.append('niveau', practiceNiveau);
-        if (practiceTheme) params.append('theme', practiceTheme);
-        params.append('limit', String(practiceLimit)); // Use selected limit
-        const res = await fetch(`/api/questions?${params.toString()}`);
-        const questions = await res.json();
-        setPracticeQuestions(questions);
-    };
-
     const handlePracticeAnswer = useCallback((isCorrect: boolean) => {
         if (isCorrect) setPracticeScore(s => s + 1);
         if (practiceIndex + 1 < practiceQuestions.length) {

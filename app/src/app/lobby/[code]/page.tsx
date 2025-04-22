@@ -4,12 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from '@/components/AuthProvider';
 
-// Placeholder avatars and participants for now
-const mockCreator = {
-    pseudo: "Créateur",
-    avatar: "/avatars/cat-face.svg",
-};
-
 export default function LobbyPage() {
     const { code } = useParams();
     const router = useRouter();
@@ -41,16 +35,31 @@ export default function LobbyPage() {
         if (!identity) {
             router.replace('/');
         }
-    }, [isTeacher, isStudent]);
+    }, [isTeacher, isStudent, getCurrentIdentity, router]);
 
     // Fetch tournament and creator info
     useEffect(() => {
         async function fetchCreator() {
-            const res = await fetch(`/api/tournament?code=${code}`);
-            console.log("[Lobby] Tournament fetch status:", res.status);
+            const res = await fetch(`/api/tournament-status?code=${code}`);
             if (!res.ok) return;
-            const tournoi = await res.json();
+            const status = await res.json();
+            if (status.statut === 'terminé') {
+                router.replace(`/tournament/leaderboard/${code}`);
+                return;
+            }
+            if (status.statut === 'en cours') {
+                router.replace(`/tournament/${code}`);
+                return;
+            }
+            const tournoiRes = await fetch(`/api/tournament?code=${code}`);
+            if (!tournoiRes.ok) return;
+            const tournoi = await tournoiRes.json();
             console.log("[Lobby] Tournament fetched:", tournoi);
+            // If the tournament is already started, redirect to tournament page
+            if (tournoi.statut && tournoi.statut !== 'en préparation') {
+                router.replace(`/tournament/${code}`);
+                return;
+            }
             let creatorData = null;
             if (tournoi.cree_par_joueur_id) {
                 // Fetch student creator
@@ -80,7 +89,7 @@ export default function LobbyPage() {
             if (creatorData) setCreator(creatorData);
         }
         fetchCreator();
-    }, [code]);
+    }, [code, router]);
 
     // Determine if the current user is the creator
     useEffect(() => {
@@ -133,6 +142,7 @@ export default function LobbyPage() {
             setParticipants((prev) => prev.filter((p) => p.id !== participant.id));
             console.log("Participant left:", participant);
         });
+        // Listen for tournament_started event from server
         socket.on("tournament_started", () => {
             console.log("[Lobby] Received tournament_started event");
             setCountdown(5);
@@ -157,8 +167,7 @@ export default function LobbyPage() {
             socket.emit("leave_lobby", { code });
             socket.disconnect();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [code, isTeacher, isStudent]);
+    }, [code, isTeacher, isStudent, getCurrentIdentity, router]);
 
     useEffect(() => {
         if (countdown === 0) {

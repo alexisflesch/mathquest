@@ -1,6 +1,8 @@
 const { createServer } = require("node:http");
 const next = require("next");
 const { Server } = require("socket.io");
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -54,65 +56,87 @@ app.prepare().then(() => {
         });
 
         socket.on("start_tournament", async ({ code }) => {
-            console.log(`[Socket.IO] start_tournament: code=${code}, socket.id=${socket.id}`);
-            // Fetch questions from the database for this tournament
-            // For simplicity, fetch from REST API (could use Prisma directly if desired)
-            const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-            let questions = [];
             try {
-                const res = await fetch(`http://localhost:${port}/api/tournament-questions?code=${code}`);
-                if (res.ok) {
-                    questions = await res.json();
-                }
-            } catch (e) {
-                console.error('[Socket.IO] Failed to fetch questions:', e);
-            }
-            if (!questions.length) {
-                io.to(code).emit("tournament_end", { finalScore: 0, leaderboard: [] });
-                return;
-            }
-            tournamentState[code] = {
-                participants: {},
-                questions,
-                currentIndex: 0,
-                started: true,
-                answers: {},
-                timer: null,
-                questionStart: null,
-            };
-            // Start the first question
-            const sendQuestion = (idx) => {
-                const q = questions[idx];
-                if (!q) return;
-                const time = q.temps || 20;
-                tournamentState[code].currentIndex = idx;
-                tournamentState[code].questionStart = Date.now();
-                io.to(`tournament_${code}`).emit("tournament_question", {
-                    question: q,
-                    index: idx,
-                    total: questions.length,
-                    time,
-                });
-                // Start timer for this question
-                if (tournamentState[code].timer) clearTimeout(tournamentState[code].timer);
-                tournamentState[code].timer = setTimeout(() => {
-                    // Move to next question or end
-                    if (idx + 1 < questions.length) {
-                        sendQuestion(idx + 1);
-                    } else {
-                        // End tournament
-                        const leaderboard = Object.entries(tournamentState[code].participants)
-                            .map(([id, p]) => ({ id, ...p }))
-                            .sort((a, b) => b.score - a.score);
-                        io.to(`tournament_${code}`).emit("tournament_end", {
-                            finalScore: leaderboard.find(p => p.id === socket.id)?.score || 0,
-                            leaderboard,
-                        });
-                        delete tournamentState[code];
+                console.log('[Socket.IO] start_tournament code type:', typeof code, 'value:', code);
+                console.log(`[Socket.IO] start_tournament: code=${code}, socket.id=${socket.id}`);
+                // Fetch questions from the database for this tournament
+                // For simplicity, fetch from REST API (could use Prisma directly if desired)
+                const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+                let questions = [];
+                try {
+                    const res = await fetch(`http://localhost:${port}/api/tournament-questions?code=${code}`);
+                    if (res.ok) {
+                        questions = await res.json();
                     }
-                }, time * 1000);
-            };
-            sendQuestion(0);
+                } catch (e) {
+                    console.error('[Socket.IO] Failed to fetch questions:', e);
+                }
+                console.log('[Socket.IO] Questions fetched:', questions.length, questions.map(q => q.uid));
+                if (!questions.length) {
+                    io.to(code).emit("tournament_end", { finalScore: 0, leaderboard: [] });
+                    return;
+                }
+                // Log all rooms and sockets in the room before emitting
+                console.log('[Socket.IO] Rooms:', Array.from(io.sockets.adapter.rooms.keys()));
+                console.log('[Socket.IO] Sockets in room', code, ':', io.sockets.adapter.rooms.get(code));
+                // Notify lobby clients to start countdown
+                io.to(code).emit("tournament_started");
+                console.log(`[Socket.IO] tournament_started emitted to room ${code}`);
+                await prisma.tournoi.update({
+                    where: { code },
+                    data: { date_debut: new Date(), statut: 'en cours' }
+                });
+                tournamentState[code] = {
+                    participants: {},
+                    questions,
+                    currentIndex: 0,
+                    started: true,
+                    answers: {},
+                    timer: null,
+                    questionStart: null,
+                };
+                // Wait 5 seconds before starting the tournament
+                setTimeout(() => {
+                    sendQuestionWithState(code, 0);
+                }, 5000);
+                function sendQuestionWithState(code, idx) {
+                    const state = tournamentState[code];
+                    if (!state) return;
+                    const q = state.questions[idx];
+                    if (!q) return;
+                    const time = q.temps || 20;
+                    state.currentIndex = idx;
+                    state.questionStart = Date.now();
+                    io.to(`tournament_${code}`).emit("tournament_question", {
+                        question: q,
+                        index: idx,
+                        total: state.questions.length,
+                        time,
+                    });
+                    if (state.timer) clearTimeout(state.timer);
+                    state.timer = setTimeout(async () => {
+                        if (idx + 1 < state.questions.length) {
+                            sendQuestionWithState(code, idx + 1);
+                        } else {
+                            const leaderboard = Object.entries(state.participants)
+                                .map(([id, p]) => ({ id, ...p }))
+                                .sort((a, b) => b.score - a.score);
+                            io.to(`tournament_${code}`).emit("tournament_end", {
+                                finalScore: leaderboard.find(p => p.id === socket.id)?.score || 0,
+                                leaderboard,
+                            });
+                            await prisma.tournoi.update({
+                                where: { code },
+                                data: { date_fin: new Date(), statut: 'terminé', leaderboard }, // leaderboard is the final leaderboard array
+                            });
+                            io.to(`tournament_${code}`).emit("tournament_finished_redirect", { code });
+                            delete tournamentState[code];
+                        }
+                    }, time * 1000);
+                }
+            } catch (err) {
+                console.error('[Socket.IO] Error in start_tournament:', err);
+            }
         });
 
         // --- TOURNAMENT REAL-TIME LOGIC ---
@@ -121,7 +145,6 @@ app.prepare().then(() => {
             // Add participant to tournament state if not present
             if (!tournamentState[code]) return;
             if (!tournamentState[code].participants[socket.id]) {
-                // Try to get pseudo/avatar from lobbyParticipants
                 const lobby = lobbyParticipants[code] || [];
                 const found = lobby.find(p => p.id === socket.id);
                 tournamentState[code].participants[socket.id] = {
@@ -129,6 +152,23 @@ app.prepare().then(() => {
                     pseudo: found?.pseudo || 'Joueur',
                     avatar: found?.avatar || '/avatars/cat-face.svg',
                 };
+            }
+            // Late joiner: send current question with adjusted timer
+            const state = tournamentState[code];
+            if (state && state.currentIndex !== undefined && state.questionStart) {
+                const idx = state.currentIndex;
+                const q = state.questions[idx];
+                const time = q.temps || 20;
+                const elapsed = Math.ceil((Date.now() - state.questionStart) / 1000);
+                const remaining = Math.max(0, time - elapsed);
+                if (remaining >= 0) {
+                    socket.emit("tournament_question", {
+                        question: q,
+                        index: idx,
+                        total: state.questions.length,
+                        time: remaining,
+                    });
+                }
             }
         });
 

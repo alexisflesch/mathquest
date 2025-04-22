@@ -74,7 +74,7 @@ export default function UseQuizPage() {
                         onChange={e => setSearch(e.target.value)}
                     />
                     <div className="max-h-96 overflow-y-auto w-full mt-4">
-                        <QuizList quizzes={filteredQuizzes} onSelect={id => { }} />
+                        <QuizList quizzes={filteredQuizzes} onSelect={() => { }} />
                     </div>
                 </div>
             </div>

@@ -2,6 +2,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
+import Link from 'next/link';
+import { useAuth } from '@/components/AuthProvider';
 
 interface TournamentQuestion {
     uid: string;
@@ -33,6 +35,9 @@ export default function TournamentSessionPage() {
     const [result, setResult] = useState<string | null>(null);
     const [leaderboard, setLeaderboard] = useState<{ id: string; pseudo: string; avatar: string; score: number }[]>([]);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const { isStudent, isTeacher } = useAuth();
+    const [myPseudo, setMyPseudo] = useState<string | null>(null);
+    const [myAvatar, setMyAvatar] = useState<string | null>(null);
 
     // Connect to socket.io and handle real-time events
     useEffect(() => {
@@ -90,11 +95,37 @@ export default function TournamentSessionPage() {
             // Optionally: show leaderboard
         });
 
+        // Get pseudo/avatar from localStorage for highlighting
+        if (typeof window !== 'undefined') {
+            let pseudo = null;
+            let avatar = null;
+            if (isStudent) {
+                pseudo = localStorage.getItem('mathquest_pseudo');
+                avatar = localStorage.getItem('mathquest_avatar');
+            } else if (isTeacher) {
+                pseudo = localStorage.getItem('mathquest_teacher_pseudo');
+                avatar = localStorage.getItem('mathquest_teacher_avatar');
+            }
+            setMyPseudo(pseudo);
+            setMyAvatar(avatar);
+        }
+
         return () => {
             s.disconnect();
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [code]);
+    }, [code, isStudent, isTeacher]);
+
+    useEffect(() => {
+        if (!socket) return;
+        // Listen for tournament finished redirect
+        socket.on("tournament_finished_redirect", ({ code }) => {
+            router.replace(`/tournament/leaderboard/${code}`);
+        });
+        return () => {
+            socket.off("tournament_finished_redirect");
+        };
+    }, [socket, router]);
 
     // Send answer to server
     const handleAnswer = (repIdx: number) => {
@@ -116,19 +147,24 @@ export default function TournamentSessionPage() {
             <div className="min-h-screen flex items-center justify-center bg-base-200">
                 <div className="card w-full max-w-xl shadow-xl bg-base-100">
                     <div className="card-body items-center gap-8">
+                        <div className="w-full flex justify-start mb-2">
+                            <Link href="/" className="text-primary underline hover:text-primary/80 font-semibold">&larr; Retour &apos;à l&apos;accueil</Link>
+                        </div>
                         <h1 className="card-title text-3xl mb-2 text-center">Classement final</h1>
                         <ol className="w-full flex flex-col gap-2">
-                            {leaderboard.map((p, idx) => (
-                                <li key={p.id} className={`flex items-center gap-4 p-2 rounded ${idx === 0 ? 'bg-yellow-100 font-bold' : ''}`}>
-                                    <img src={p.avatar?.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`} alt="avatar" className="w-8 h-8 rounded-full border border-base-300" />
-                                    <span className="w-8 text-center">#{idx + 1}</span>
-                                    <span className="flex-1">{p.pseudo || 'Joueur'}</span>
-                                    <span className="font-mono text-lg">{p.score}</span>
-                                </li>
-                            ))}
+                            {leaderboard.map((p, idx) => {
+                                const isMe = (myPseudo && myAvatar && p.pseudo === myPseudo && (p.avatar === myAvatar || p.avatar === `/avatars/${myAvatar}`));
+                                return (
+                                    <li key={p.id} className={`flex items-center gap-4 p-2 rounded ${isMe ? 'bg-blue-100 font-bold ring-2 ring-blue-400' : ''}`}>
+                                        <img src={p.avatar?.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`} alt="avatar" className="w-8 h-8 rounded-full border border-base-300" />
+                                        <span className="w-8 text-center">#{idx + 1}</span>
+                                        <span className="flex-1">{p.pseudo || 'Joueur'}</span>
+                                        <span className="font-mono text-lg">{p.score}</span>
+                                    </li>
+                                );
+                            })}
                         </ol>
                         <div className="alert alert-info text-center text-lg font-bold">{result}</div>
-                        <button className="btn btn-primary mt-4" onClick={() => router.push("/")}>Retour &apos;à l&apos;accueil</button>
                     </div>
                 </div>
             </div>

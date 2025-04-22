@@ -26,9 +26,6 @@ export default function QuestionSelector({ onSelect, selectedQuestionIds, extern
     const [questions, setQuestions] = useState<Question[]>([]);
     const [filters, setFilters] = useState({ disciplines: [], niveaux: [], themes: [] });
     const [filter, setFilter] = useState({ discipline: '', niveau: '', theme: '', tag: '' });
-    const [selectedNiveaux, setSelectedNiveaux] = useState<string[]>([]);
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
     const [selectedQuestionsMap, setSelectedQuestionsMap] = useState<{ [uid: string]: Question }>({});
     const [expanded, setExpanded] = useState<{ [uid: string]: boolean }>({});
 
@@ -101,9 +98,6 @@ export default function QuestionSelector({ onSelect, selectedQuestionIds, extern
         const niveaux = Array.from(new Set(selectedQuestionsMeta.map(q => q.niveau)));
         const categories = Array.from(new Set(selectedQuestionsMeta.map(q => q.discipline)));
         const themes = Array.from(new Set(selectedQuestionsMeta.map(q => q.theme)));
-        setSelectedNiveaux(niveaux);
-        setSelectedCategories(categories);
-        setSelectedThemes(themes);
         onSelect(next, { niveaux, categories, themes });
     };
 

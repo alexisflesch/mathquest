@@ -69,47 +69,6 @@ export default function ProjectorView() {
         return () => clearInterval(intervalId);
     }, [timeLeft, tournamentStatus]);
 
-    // Display based on status
-    const renderContent = () => {
-        switch (tournamentStatus) {
-            case 'waiting':
-                return <p className="text-2xl">En attente du démarrage du tournoi...</p>;
-            case 'question':
-                return (
-                    <>
-                        {currentQuestion && (
-                            <div className="mb-8 p-6 bg-blue-100 rounded-lg shadow">
-                                <h2 className="text-3xl font-semibold mb-4">{currentQuestion.question}</h2>
-                                <ul className="list-disc list-inside space-y-2 text-xl">
-                                    {currentQuestion.reponses.map((rep, index) => (
-                                        <li key={index}>{rep.texte}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {timeLeft !== null && (
-                            <div className="text-6xl font-bold text-red-600 mb-8">
-                                Temps restant : {timeLeft}s
-                            </div>
-                        )}
-                        {/* <Scoreboard scores={scores} /> */}
-                        <h3 className="text-2xl font-semibold mt-8 mb-4">Classement Actuel (Placeholder)</h3>
-                        <ol className="list-decimal list-inside space-y-1">
-                            {scores.sort((a, b) => b.score - a.score).slice(0, 5).map(s => (
-                                <li key={s.pseudo}>{s.pseudo} - {s.score} pts</li>
-                            ))}
-                        </ol>
-                    </>
-                );
-            case 'results':
-                return <p className="text-2xl">Affichage des résultats...</p>; // TODO
-            case 'finished':
-                return <p className="text-2xl">Tournoi terminé !</p>; // TODO: Show final podium
-            default:
-                return null;
-        }
-    };
-
     return (
         <div className="min-h-screen flex flex-col justify-center items-center bg-base-200">
             <div className="card w-full max-w-2xl shadow-xl bg-base-100">

@@ -77,6 +77,7 @@ model Tournoi {
   cree_par_enseignant_id String? // Link to Enseignant (teacher creator)
   questions_generées    Boolean   @default(false)
   code                   String?   @unique // Unique code to join
+  leaderboard            Json?
 
   enseignant          Enseignant? @relation("TournoiEnseignant", fields: [enseignant_id], references: [id])
   createur_joueur     Joueur?     @relation(fields: [cree_par_joueur_id], references: [id])
