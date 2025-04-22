@@ -5,7 +5,7 @@ import { useAuth } from './AuthProvider'; // Corrected import path
 import Image from 'next/image';
 
 export default function AppNav() {
-    const { refreshAuth, isAuthenticated, isStudent, isTeacher } = useAuth();
+    const { /* refreshAuth, */ isAuthenticated, isStudent, isTeacher } = useAuth();
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [pseudo, setPseudo] = useState<string | null>(null);
@@ -27,6 +27,7 @@ export default function AppNav() {
             } catch (e) {
                 setPseudo(null);
                 setAvatar(null);
+                console.error('Error fetching teacher profile:', e);
             }
         }
         if (isTeacher && typeof window !== 'undefined') {
@@ -123,12 +124,12 @@ export default function AppNav() {
     return (
         <>
             {/* Sidebar for large screens */}
-            <aside className={`hidden md:flex md:flex-col md:w-64 md:h-screen md:fixed md:left-0 md:top-0 bg-gray-900 text-white z-40`}>
+            <aside className={`hidden md:flex md:flex-col md:w-64 md:h-screen md:fixed md:left-0 md:top-0 bg-[color:var(--navbar)] text-white z-40`}>
                 {/* Show teacher info if logged in as teacher, otherwise student info */}
                 {isTeacher ? (
-                    <div className="flex flex-col items-center justify-center h-32 border-b border-gray-700 pt-4">
+                    <div className="flex flex-col items-center justify-center h-32 pt-4 mt-4">
                         {avatar ? (
-                            <Image src={`/avatars/${avatar}`} alt="avatar" width={80} height={80} className="w-20 h-20 rounded-full mb-2 ring-4 ring-indigo-300 shadow-lg" />
+                            <Image src={`/avatars/${avatar}`} alt="avatar" width={80} height={80} className="w-20 h-20 rounded-full mb-2 avatar-ring-primary" />
                         ) : (
                             <div className="w-20 h-20 rounded-full mb-2 bg-gray-700" />
                         )}
@@ -139,9 +140,9 @@ export default function AppNav() {
                         )}
                     </div>
                 ) : isStudent && (
-                    <div className={`flex flex-col items-center justify-center h-32 border-b border-gray-700 pt-4`}>
+                    <div className="flex flex-col items-center justify-center h-32 pt-4 mb-4">
                         {avatar ? (
-                            <Image src={`/avatars/${avatar}`} alt="avatar" width={80} height={80} className="w-20 h-20 rounded-full mb-2 ring-4 ring-sky-300 shadow-lg" />
+                            <Image src={`/avatars/${avatar}`} alt="avatar" width={80} height={80} className="w-20 h-20 rounded-full mb-2 avatar-ring-primary" />
                         ) : (
                             <div className="w-20 h-20 rounded-full mb-2 bg-gray-700" />
                         )}
@@ -154,7 +155,7 @@ export default function AppNav() {
                 )}
                 {/* Adjust padding if student is not logged in */}
                 <nav className={`flex-1 p-4 space-y-2 ${!isStudent ? 'pt-6' : ''}`}>
-                    {menu.map((item, idx) => (
+                    {menu.map((item) => (
                         <div key={item.label}>
                             {item.href && !item.submenu && (
                                 <Link href={item.href} className="block px-4 py-2 rounded hover:bg-gray-700">
@@ -185,17 +186,17 @@ export default function AppNav() {
                 </nav>
             </aside>
             {/* Burger menu for small screens */}
-            <div className="md:hidden flex items-center justify-between bg-gray-900 text-white h-14 px-4">
+            <div className="md:hidden flex items-center justify-between bg-[color:var(--navbar)] text-white h-14 px-4">
                 {/* Show student info only if logged in as student (using context) */}
                 <div className="flex items-center gap-2">
                     {isTeacher ? (
                         <>
-                            {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full ring-2 ring-indigo-300" />}
+                            {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
                             {pseudo && <span className="font-bold text-base">{pseudo}</span>}
                         </>
                     ) : isStudent && (
                         <>
-                            {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full ring-2 ring-sky-300" />}
+                            {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
                             {pseudo && <span className="font-bold text-base">{pseudo}</span>}
                         </>
                     )}
@@ -209,13 +210,13 @@ export default function AppNav() {
             {/* Drawer menu for small screens */}
             {open && (
                 <div className="fixed inset-0 z-50 bg-black bg-opacity-40" onClick={() => setOpen(false)}>
-                    <nav className="absolute left-0 top-0 w-64 h-full bg-gray-900 text-white p-6 space-y-4 shadow-lg" onClick={e => e.stopPropagation()}>
+                    <nav className="absolute left-0 top-0 w-64 h-full bg-[color:var(--navbar)] text-white p-6 space-y-4 shadow-lg" onClick={() => setOpen(false)}>
                         <button className="mb-4" onClick={() => setOpen(false)} aria-label="Fermer le menu">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
-                        {menu.map((item, idx) => (
+                        {menu.map((item) => (
                             <div key={item.label}>
                                 {item.href && !item.submenu && (
                                     <Link href={item.href} className="block px-4 py-2 rounded hover:bg-gray-700" onClick={() => setOpen(false)}>

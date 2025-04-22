@@ -1,8 +1,7 @@
-import { Config } from 'tailwindcss'
-import fontFamily from 'tailwindcss/defaultTheme'
+import defaultTheme from 'tailwindcss/defaultTheme';
 
-export default {
-  darkMode: 'class',
+/** @type {import('tailwindcss').Config} */
+const config = {
   content: [
     './src/**/*.{js,ts,jsx,tsx}',
     './src/app/**/*.{js,ts,jsx,tsx}',
@@ -10,60 +9,74 @@ export default {
     './src/lib/**/*.{js,ts,jsx,tsx}',
     './public/**/*.html',
   ],
-  safelist: [
-    'bg-primary', 'text-primary', 'border-primary',
-    'bg-accent', 'text-accent', 'border-accent',
-    'bg-error', 'text-error', 'border-error',
-    'bg-success', 'text-success', 'border-success',
-    'bg-warning', 'text-warning', 'border-warning',
-    'bg-info', 'text-info', 'border-info',
-    'bg-neutral', 'text-neutral', 'border-neutral',
-    // Ajoute ici toutes les variantes DaisyUI que tu veux utiliser dans ton CSS global
-    'ring-primary',
-  ],
+  darkMode: ["class"],
   theme: {
+    ...defaultTheme,
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
-      fontFamily: {
-        sans: ['Inter', ...fontFamily.sans],
-      },
       colors: {
-        primary: '#2563EB',
-        accent: '#10B981',
-        background: '#F9FAFB',
-        surface: '#FFFFFF',
-        'text-primary': '#111827',
-        'text-secondary': '#6B7280',
-        border: '#E5E7EB',
-        error: '#DC2626',
-      },
-      boxShadow: {
-        card: '0 2px 8px rgba(0, 0, 0, 0.05)',
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
       },
       borderRadius: {
-        xl: '1rem',
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
-  plugins: [require('daisyui')],
-  daisyui: {
-    themes: [
-      {
-        mathquest: {
-          primary: '#2563EB',
-          'primary-content': '#fff',
-          accent: '#10B981',
-          'accent-content': '#fff',
-          neutral: '#111827',
-          'neutral-content': '#fff',
-          'base-100': '#FFFFFF',
-          'base-200': '#F9FAFB',
-          'base-300': '#E5E7EB',
-          info: '#2563EB',
-          success: '#10B981',
-          warning: '#F59E42',
-          error: '#DC2626',
-        },
-      },
-    ],
-  },
-}
+  plugins: [require("tailwindcss-animate")],
+};
+
+export default config;

@@ -53,8 +53,21 @@ export async function POST(request: NextRequest) {
             if (!valid) {
                 return NextResponse.json({ message: 'Mot de passe incorrect.' }, { status: 403 });
             }
-            // Set session/cookie here
-            const response = NextResponse.json({ message: 'Connexion réussie.', enseignantId: enseignant.id }, { status: 200 });
+            // Upsert Joueur for teacher
+            const teacherCookieId = `teacher_${enseignant.id}`;
+            await prisma.joueur.upsert({
+                where: { cookie_id: teacherCookieId },
+                update: { pseudo: enseignant.pseudo, avatar: enseignant.avatar },
+                create: { pseudo: enseignant.pseudo, avatar: enseignant.avatar, cookie_id: teacherCookieId },
+            });
+            // Set session/cookie here if needed
+            const response = NextResponse.json({
+                message: 'Connexion réussie.',
+                enseignantId: enseignant.id,
+                pseudo: enseignant.pseudo,
+                avatar: enseignant.avatar,
+                cookie_id: teacherCookieId
+            }, { status: 200 });
             setAuthCookie(response, enseignant.id);
             return response;
         }

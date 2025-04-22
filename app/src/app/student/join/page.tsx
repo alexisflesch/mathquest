@@ -32,7 +32,7 @@ export default function StudentJoinPage() {
                     return;
                 }
                 if (data.statut === 'en cours') {
-                    router.push(`/live/${tournoiCode}`);
+                    router.push(`/tournament/${tournoiCode}`);
                     return;
                 }
                 if (data.statut === 'terminé') {

@@ -28,9 +28,43 @@ export default function TeacherLoginPage() {
                 setIsLoading(false);
                 return;
             }
+            console.log(result);
             // Store teacher id in localStorage for frontend profile fetch
             if (result.enseignantId) {
                 localStorage.setItem('mathquest_teacher_id', result.enseignantId);
+            }
+            // Ensure mathquest_cookie_id is set for teacher gameplay/leaderboard
+            if (typeof window !== 'undefined') {
+                let cookie_id = result.cookie_id;
+                if (cookie_id) {
+                    localStorage.setItem('mathquest_cookie_id', cookie_id);
+                    console.log('[TeacherLogin] Set mathquest_cookie_id:', cookie_id);
+                } else {
+                    // fallback for legacy/old backend
+                    cookie_id = localStorage.getItem('mathquest_cookie_id');
+                    if (!cookie_id) {
+                        cookie_id = Math.random().toString(36).substring(2) + Date.now();
+                        localStorage.setItem('mathquest_cookie_id', cookie_id);
+                        console.log('[TeacherLogin] Set new mathquest_cookie_id:', cookie_id);
+                    } else {
+                        console.log('[TeacherLogin] Existing mathquest_cookie_id:', cookie_id);
+                    }
+                }
+                // Set pseudo and avatar for gameplay/leaderboard
+                if (result.pseudo) {
+                    localStorage.setItem('mathquest_pseudo', result.pseudo);
+                    console.log('[TeacherLogin] Set mathquest_pseudo:', result.pseudo);
+                }
+                if (result.avatar) {
+                    localStorage.setItem('mathquest_avatar', result.avatar);
+                    console.log('[TeacherLogin] Set mathquest_avatar:', result.avatar);
+                }
+                // Log all values after setting
+                console.log('[TeacherLogin] Final values:', {
+                    cookie_id: localStorage.getItem('mathquest_cookie_id'),
+                    pseudo: localStorage.getItem('mathquest_pseudo'),
+                    avatar: localStorage.getItem('mathquest_avatar'),
+                });
             }
             if (refreshAuth) refreshAuth(); // Trigger refreshAuth after successful login
             router.push('/teacher/dashboard'); // Redirect to dashboard

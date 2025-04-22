@@ -17,7 +17,7 @@ model Question {
   uid         String   @id @default(uuid())
   question    String
   reponses    Json // Assuming structure: [{ texte: String, correct: Boolean }]
-  type        String // e.g., 'qcm', 'choix_simple'
+  type        String // e.g., 'choix_multiple', 'choix_simple'
   discipline  String
   theme       String
   difficulte  Int

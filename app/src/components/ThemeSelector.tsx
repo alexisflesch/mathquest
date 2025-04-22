@@ -1,4 +1,6 @@
-"use client";
+import React from 'react';
 
-// Ce composant a été désactivé/supprimé car le sélecteur de thème n'est plus utilisé dans l'application.
-export default function ThemeSelector() { return null; }
+// This is a placeholder component for future theme selection functionality
+export default function ThemeSelector() {
+    return null; // No UI for now, will implement proper theme selection later
+}

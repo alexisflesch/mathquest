@@ -113,15 +113,15 @@ export default function CreateQuizPage() {
                             onChange={e => setQuizName(e.target.value)}
                         />
                         {(quizMeta.niveaux.length > 0 || quizMeta.categories.length > 0 || quizMeta.themes.length > 0) && (
-                            <div className="flex flex-wrap gap-2 my-2">
+                            <div className="flex flex-row flex-wrap items-center gap-2 my-2">
                                 {quizMeta.niveaux.map(n => (
-                                    <span key={n} className="badge badge-primary badge-lg">{n}</span>
+                                    <span key={n} className="badge badge-primary rounded-lg px-4 py-2">{n}</span>
                                 ))}
                                 {quizMeta.categories.map(c => (
-                                    <span key={c} className="badge badge-secondary badge-lg">{c}</span>
+                                    <span key={c} className="badge badge-secondary rounded-lg px-4 py-2">{c}</span>
                                 ))}
                                 {quizMeta.themes.map(t => (
-                                    <span key={t} className="badge badge-accent badge-lg">{t}</span>
+                                    <span key={t} className="badge badge-accent rounded-lg px-4 py-2">{t}</span>
                                 ))}
                             </div>
                         )}

@@ -7,6 +7,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isStudent: boolean;
     isTeacher: boolean;
+    isLoading: boolean; // <-- add this
     teacherId?: string;
 }
 
@@ -78,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Optionally, don't render children until loading is complete
     // if (!isLoading) { // Or show a loading indicator
     return (
-        <AuthContext.Provider value={{ refreshAuth, isAuthenticated, isStudent, isTeacher, teacherId }}>
+        <AuthContext.Provider value={{ refreshAuth, isAuthenticated, isStudent, isTeacher, isLoading, teacherId }}>
             {children}
         </AuthContext.Provider>
     );

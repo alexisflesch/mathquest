@@ -28,14 +28,15 @@ app.prepare().then(() => {
     io.on("connection", (socket) => {
         console.log("[Socket.IO] New connection:", socket.id);
 
-        socket.on("join_lobby", ({ code, pseudo, avatar }) => {
-            console.log(`[Socket.IO] join_lobby: code=${code}, pseudo=${pseudo}, avatar=${avatar}, socket.id=${socket.id}`);
+        socket.on("join_lobby", ({ code, pseudo, avatar, cookie_id }) => {
+            console.log(`[Socket.IO] join_lobby: code=${code}, pseudo=${pseudo}, avatar=${avatar}, cookie_id=${cookie_id}, socket.id=${socket.id}`);
             socket.join(code);
             if (!lobbyParticipants[code]) lobbyParticipants[code] = [];
             lobbyParticipants[code] = [
                 ...lobbyParticipants[code].filter((p) => p.id !== socket.id),
-                { id: socket.id, pseudo, avatar },
+                { id: socket.id, pseudo, avatar, cookie_id },
             ];
+            console.log(`[Socket.IO] lobbyParticipants[${code}]:`, lobbyParticipants[code]);
             io.to(code).emit("participant_joined", { pseudo, avatar, id: socket.id });
             io.to(code).emit("participants_list", lobbyParticipants[code]);
         });
@@ -45,6 +46,7 @@ app.prepare().then(() => {
             socket.leave(code);
             if (lobbyParticipants[code]) {
                 lobbyParticipants[code] = lobbyParticipants[code].filter((p) => p.id !== socket.id);
+                console.log(`[Socket.IO] lobbyParticipants[${code}] after leave:`, lobbyParticipants[code]);
                 io.to(code).emit("participant_left", { id: socket.id });
                 io.to(code).emit("participants_list", lobbyParticipants[code]);
             }
@@ -52,6 +54,7 @@ app.prepare().then(() => {
 
         socket.on("get_participants", ({ code }) => {
             console.log(`[Socket.IO] get_participants: code=${code}, socket.id=${socket.id}`);
+            console.log(`[Socket.IO] lobbyParticipants[${code}] on get_participants:`, lobbyParticipants[code]);
             socket.emit("participants_list", lobbyParticipants[code] || []);
         });
 
@@ -118,16 +121,17 @@ app.prepare().then(() => {
                         if (idx + 1 < state.questions.length) {
                             sendQuestionWithState(code, idx + 1);
                         } else {
-                            const leaderboard = Object.entries(state.participants)
-                                .map(([id, p]) => ({ id, ...p }))
+                            // Build leaderboard from unique participants
+                            const leaderboard = Object.values(state.participants)
+                                .map(p => ({ id: p.id, pseudo: p.pseudo, avatar: p.avatar, score: p.score }))
                                 .sort((a, b) => b.score - a.score);
                             io.to(`tournament_${code}`).emit("tournament_end", {
-                                finalScore: leaderboard.find(p => p.id === socket.id)?.score || 0,
+                                finalScore: leaderboard.find(p => p.id === (state.socketToJoueur ? state.socketToJoueur[socket.id] : null))?.score || 0,
                                 leaderboard,
                             });
                             await prisma.tournoi.update({
                                 where: { code },
-                                data: { date_fin: new Date(), statut: 'terminé', leaderboard }, // leaderboard is the final leaderboard array
+                                data: { date_fin: new Date(), statut: 'terminé', leaderboard },
                             });
                             io.to(`tournament_${code}`).emit("tournament_finished_redirect", { code });
                             delete tournamentState[code];
@@ -140,19 +144,50 @@ app.prepare().then(() => {
         });
 
         // --- TOURNAMENT REAL-TIME LOGIC ---
-        socket.on("join_tournament", async ({ code }) => {
+        socket.on("join_tournament", async ({ code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar }) => {
             socket.join(`tournament_${code}`);
-            // Add participant to tournament state if not present
             if (!tournamentState[code]) return;
-            if (!tournamentState[code].participants[socket.id]) {
+            // Use joueurId as the unique key
+            let joueurId = null, pseudo = clientPseudo || 'Joueur', avatar = clientAvatar || '/avatars/cat-face.svg';
+            if (cookie_id) {
+                try {
+                    let joueur = await prisma.joueur.findUnique({ where: { cookie_id } });
+                    if (!joueur) {
+                        joueur = await prisma.joueur.create({ data: { pseudo, avatar, cookie_id } });
+                    } else {
+                        pseudo = joueur.pseudo;
+                        avatar = joueur.avatar || avatar;
+                    }
+                    joueurId = joueur.id;
+                } catch (err) {
+                    console.error('[DEBUG] Error fetching/creating joueur from DB by cookie_id:', err);
+                }
+            }
+            // fallback: try to find in lobby by socket.id if no cookie_id or not found
+            if (!joueurId) {
                 const lobby = lobbyParticipants[code] || [];
                 const found = lobby.find(p => p.id === socket.id);
-                tournamentState[code].participants[socket.id] = {
+                if (found) {
+                    pseudo = found.pseudo || pseudo;
+                    avatar = found.avatar || avatar;
+                }
+                // Generate a fallback id for non-cookie users
+                joueurId = `socket_${socket.id}`;
+            }
+            // Only add if not already present
+            if (!tournamentState[code].participants[joueurId]) {
+                tournamentState[code].participants[joueurId] = {
+                    id: joueurId,
+                    pseudo,
+                    avatar,
                     score: 0,
-                    pseudo: found?.pseudo || 'Joueur',
-                    avatar: found?.avatar || '/avatars/cat-face.svg',
                 };
             }
+            // Map socket.id to joueurId for answer tracking
+            if (!tournamentState[code].socketToJoueur) tournamentState[code].socketToJoueur = {};
+            tournamentState[code].socketToJoueur[socket.id] = joueurId;
+            // Debug: log all participants
+            console.log(`[DEBUG] tournamentState[${code}].participants:`, tournamentState[code].participants);
             // Late joiner: send current question with adjusted timer
             const state = tournamentState[code];
             if (state && state.currentIndex !== undefined && state.questionStart) {
@@ -175,16 +210,19 @@ app.prepare().then(() => {
         socket.on("tournament_answer", ({ code, questionUid, answerIdx, clientTimestamp }) => {
             const state = tournamentState[code];
             if (!state) return;
+            // Use joueurId for answer tracking
+            const joueurId = state.socketToJoueur ? state.socketToJoueur[socket.id] : null;
+            if (!joueurId) return;
             const qIdx = state.currentIndex;
             const question = state.questions[qIdx];
             const timeAllowed = question.temps || 20;
             const questionStart = state.questionStart;
             // Only accept answers within the allowed window
             if (!questionStart || (clientTimestamp - questionStart) > timeAllowed * 1000) return;
-            if (!state.answers[socket.id]) state.answers[socket.id] = {};
+            if (!state.answers[joueurId]) state.answers[joueurId] = {};
             // Prevent multiple answers for the same question
-            if (state.answers[socket.id][questionUid]) return;
-            state.answers[socket.id][questionUid] = { answerIdx, clientTimestamp };
+            if (state.answers[joueurId][questionUid]) return;
+            state.answers[joueurId][questionUid] = { answerIdx, clientTimestamp };
 
             // --- SCORING LOGIC ---
             let baseScore = 0;
@@ -216,11 +254,11 @@ app.prepare().then(() => {
                 rapidity = Math.max(0, Math.min(5, 5 * (1 - timeUsed / timeAllowed)));
             }
             const totalScore = Math.round(baseScore + rapidity);
-            if (!state.participants[socket.id]) state.participants[socket.id] = { score: 0 };
-            state.participants[socket.id].score += totalScore;
+            if (!state.participants[joueurId]) state.participants[joueurId] = { score: 0 };
+            state.participants[joueurId].score += totalScore;
             socket.emit("tournament_answer_result", {
                 correct: baseScore > 0,
-                score: state.participants[socket.id].score,
+                score: state.participants[joueurId].score,
                 explanation: question?.explication || null,
                 baseScore,
                 rapidity: Math.round(rapidity * 100) / 100,

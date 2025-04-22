@@ -31,7 +31,10 @@ export default function StudentCreateTournamentPage() {
     useEffect(() => {
         fetch("/api/questions/filters")
             .then((res) => res.json())
-            .then(setFilters);
+            .then((data) => {
+                setFilters(data);
+                console.log("[CreateTournament] Loaded filters:", data);
+            });
     }, []);
 
     // Check if enough questions exist for the selected filters
@@ -39,15 +42,27 @@ export default function StudentCreateTournamentPage() {
         if (niveau && discipline && themes.length > 0) {
             setLoading(true);
             setError(null);
+            console.log("[CreateTournament] Checking question count for:", { niveau, discipline, themes, numQuestions });
             fetch(`/api/questions/count?niveau=${encodeURIComponent(niveau)}&discipline=${encodeURIComponent(discipline)}&themes=${themes.map(encodeURIComponent).join(",")}`)
                 .then((res) => res.json())
                 .then((data) => {
-                    setCanCreate(data.count >= numQuestions);
-                    if (data.count < numQuestions) {
-                        setError("Pas assez de questions pour ces critères.");
+                    console.log("[CreateTournament] Question count response:", data);
+                    if (data.count === 0) {
+                        setCanCreate(false);
+                        setError("Aucune question ne correspond à ces critères.");
+                    } else if (data.count < numQuestions) {
+                        setCanCreate(true);
+                        setError(`Seulement ${data.count} questions dans la base satisfaisant vos critères, continuer quand même ?`);
+                    } else {
+                        setCanCreate(true);
+                        setError(null);
                     }
                 })
-                .catch(() => setError("Erreur lors de la vérification des questions."))
+                .catch((err) => {
+                    setCanCreate(false);
+                    setError("Erreur lors de la vérification des questions.");
+                    console.error("[CreateTournament] Error checking question count:", err);
+                })
                 .finally(() => setLoading(false));
         } else {
             setCanCreate(false);
@@ -73,13 +88,15 @@ export default function StudentCreateTournamentPage() {
         setLoading(true);
         setError(null);
         try {
+            console.log("[CreateTournament] Creating tournament with:", { niveau, discipline, themes, numQuestions, tournamentType });
             // 1. Fetch question IDs matching filters
             const qRes = await fetch(`/api/questions/list?niveau=${encodeURIComponent(niveau)}&discipline=${encodeURIComponent(discipline)}&themes=${themes.map(encodeURIComponent).join(",")}&limit=${numQuestions}`);
             if (!qRes.ok) throw new Error('Erreur lors de la récupération des questions.');
             interface Question { uid: string; }
             const questions: Question[] = await qRes.json();
-            if (!questions || !Array.isArray(questions) || questions.length < numQuestions) {
-                setError('Pas assez de questions pour ces critères.');
+            console.log("[CreateTournament] Questions fetched:", questions);
+            if (!questions || !Array.isArray(questions) || questions.length === 0) {
+                setError('Aucune question ne correspond à ces critères.');
                 setLoading(false);
                 return;
             }
@@ -116,12 +133,14 @@ export default function StudentCreateTournamentPage() {
                 ...(pseudo && { pseudo }), ...(avatar && { avatar }),
                 ...(isTeacher && teacherId ? { teacherCreatorId: teacherId } : {}),
             };
+            console.log("[CreateTournament] Tournament request body:", requestBody);
             const tRes = await fetch('/api/tournament', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
             });
             const tData = await tRes.json();
+            console.log("[CreateTournament] Tournament creation response:", tData);
             if (!tRes.ok) throw new Error(tData.message || 'Erreur lors de la création du tournoi.');
             setTournamentCode(tData.code);
             setCreated(true);
@@ -132,6 +151,7 @@ export default function StudentCreateTournamentPage() {
                 router.push(`/tournament/${tData.code}`);
             }
         } catch (err: unknown) {
+            console.error("[CreateTournament] Error creating tournament:", err);
             if (err instanceof Error) setError(err.message);
             else setError('Erreur lors de la création du tournoi.');
         } finally {
@@ -151,7 +171,7 @@ export default function StudentCreateTournamentPage() {
                             <div className="flex flex-row flex-1 items-center">
                                 {[0, 1, 2].map((idx) => (
                                     <div key={steps[idx]} className="flex-1 flex flex-col items-center">
-                                        <div className={`badge badge-lg ${step > idx + 1 ? "badge-primary" : "badge-ghost"}`}>
+                                        <div className={`badge badge-lg ${step > idx + 1 ? "badge-stepper-primary" : "badge-stepper-ghost"}`}>
                                             {idx + 1}
                                         </div>
                                         <span className="text-xs text-center w-16 h-5 whitespace-nowrap flex items-center justify-center">{steps[idx]}</span>
@@ -162,7 +182,7 @@ export default function StudentCreateTournamentPage() {
                             <div className="flex flex-row flex-1 items-center mt-2 sm:mt-0">
                                 {[3, 4, 5].map((idx) => (
                                     <div key={steps[idx]} className="flex-1 flex flex-col items-center">
-                                        <div className={`badge badge-lg ${step > idx + 1 ? "badge-primary" : "badge-ghost"}`}>
+                                        <div className={`badge badge-lg ${step > idx + 1 ? "badge-stepper-primary" : "badge-stepper-ghost"}`}>
                                             {idx + 1}
                                         </div>
                                         <span className="text-xs text-center w-16 h-5 whitespace-nowrap flex items-center justify-center">{steps[idx]}</span>
@@ -254,17 +274,14 @@ export default function StudentCreateTournamentPage() {
                                     <button
                                         key={n}
                                         type="button"
-                                        className={`flex-1 rounded-lg border border-primary transition-colors duration-100
-                                            ${numQuestions === n
-                                                ? 'bg-primary text-white'
-                                                : 'bg-white text-black hover:bg-primary hover:text-white'}
+                                        className={`flex-1 rounded-lg border btn-primary transition-colors duration-100
                                             py-3 text-lg font-semibold
                                         `}
-                                        style={{
-                                            backgroundColor: numQuestions === n ? '#2563EB' : '#fff',
-                                            color: numQuestions === n ? '#fff' : '#111827',
-                                            borderColor: '#2563EB',
-                                        }}
+                                        style={
+                                            numQuestions === n
+                                                ? { backgroundColor: 'var(--navbar)', color: 'var(--primary-foreground)' }
+                                                : {}
+                                        }
                                         onClick={() => setNumQuestions(n)}
                                     >
                                         {n}
@@ -286,34 +303,28 @@ export default function StudentCreateTournamentPage() {
                             <div className="flex gap-4">
                                 <button
                                     type="button"
-                                    className={`flex-1 rounded-lg border border-primary transition-colors duration-100
-                                        ${tournamentType === 'live'
-                                            ? 'bg-primary text-white'
-                                            : 'bg-white text-black hover:bg-primary hover:text-white'}
+                                    className={`flex-1 rounded-lg border btn-primary transition-colors duration-100
                                         py-3 text-lg font-semibold
                                     `}
-                                    style={{
-                                        backgroundColor: tournamentType === 'live' ? '#2563EB' : '#fff',
-                                        color: tournamentType === 'live' ? '#fff' : '#111827',
-                                        borderColor: '#2563EB',
-                                    }}
+                                    style={
+                                        tournamentType === 'live'
+                                            ? { backgroundColor: 'var(--navbar)', color: 'var(--primary-foreground)' }
+                                            : {}
+                                    }
                                     onClick={() => setTournamentType('live')}
                                 >
                                     Tournoi en direct
                                 </button>
                                 <button
                                     type="button"
-                                    className={`flex-1 rounded-lg border border-primary transition-colors duration-100
-                                        ${tournamentType === 'deferred'
-                                            ? 'bg-primary text-white'
-                                            : 'bg-white text-black hover:bg-primary hover:text-white'}
+                                    className={`flex-1 rounded-lg border btn-primary transition-colors duration-100
                                         py-3 text-lg font-semibold
                                     `}
-                                    style={{
-                                        backgroundColor: tournamentType === 'deferred' ? '#2563EB' : '#fff',
-                                        color: tournamentType === 'deferred' ? '#fff' : '#111827',
-                                        borderColor: '#2563EB',
-                                    }}
+                                    style={
+                                        tournamentType === 'deferred'
+                                            ? { backgroundColor: 'var(--navbar)', color: 'var(--primary-foreground)' }
+                                            : {}
+                                    }
                                     onClick={() => setTournamentType('deferred')}
                                 >
                                     Tournoi différé
@@ -339,7 +350,11 @@ export default function StudentCreateTournamentPage() {
                                 <li><b>Nombre de questions :</b> {numQuestions}</li>
                                 <li><b>Type :</b> {tournamentType === 'live' ? 'Tournoi en direct' : 'Tournoi différé'}</li>
                             </ul>
-                            {error && <div className="alert alert-error justify-center mb-2">{error}</div>}
+                            {error && (
+                                <div className={`alert ${error.startsWith("Seulement") ? "alert-warning" : "alert-error"} justify-center mb-2`}>
+                                    {error}
+                                </div>
+                            )}
                             <button
                                 className="btn btn-primary btn-lg mt-2"
                                 disabled={!canCreate || loading}

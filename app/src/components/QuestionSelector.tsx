@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 
 interface Question {
     uid: string;
@@ -63,7 +62,7 @@ export default function QuestionSelector({ onSelect, selectedQuestionIds, extern
             }
         });
         setSelectedQuestionsMap(newMap);
-    }, [questions]);
+    }, [questions, selectedQuestionIds]);
 
     const handleToggle = async (uid: string) => {
         let next: string[];

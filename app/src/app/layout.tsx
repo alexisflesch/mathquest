@@ -1,22 +1,17 @@
 "use client";
 
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// Removed unused import: import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import AppNav from '@/components/AppNav';
 import { AuthProvider } from '@/components/AuthProvider';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+// Removed unused assignments for geistSans and geistMono
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
 });
-
-// Removed export const metadata: Metadata = { ... } because metadata export is not allowed in client components
 
 export default function RootLayout({
   children,
@@ -24,10 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
-      <head>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="fr" className={inter.className} suppressHydrationWarning>
+      {/* Removed <head> with <link> for Inter font */}
       <body>
         <AuthProvider>
           <AppNav />

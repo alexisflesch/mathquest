@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
                 joueur = await prisma.joueur.create({
                     data: { pseudo, cookie_id, avatar },
                 });
+                console.log('[API/student] Created new Joueur:', joueur);
+            } else {
+                console.log('[API/student] Found existing Joueur:', joueur);
             }
             // Optionally: add to a join table if needed
             return NextResponse.json({ message: 'Joueur connecté.', joueurId: joueur.id, tournoiId: tournoi.id }, { status: 200 });
