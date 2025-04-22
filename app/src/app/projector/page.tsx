@@ -111,9 +111,54 @@ export default function ProjectorView() {
     };
 
     return (
-        <div className="container mx-auto p-8 text-center bg-gray-50 min-h-screen flex flex-col justify-center items-center">
-            <h1 className="text-4xl font-bold mb-10">Vue Projecteur - MathQuest</h1>
-            {renderContent()}
+        <div className="min-h-screen flex flex-col justify-center items-center bg-base-200">
+            <div className="card w-full max-w-2xl shadow-xl bg-base-100">
+                <div className="card-body items-center gap-8">
+                    <h1 className="card-title text-4xl mb-10 text-center">Vue Projecteur - MathQuest</h1>
+                    <div className="w-full flex flex-col items-center">
+                        {(() => {
+                            switch (tournamentStatus) {
+                                case 'waiting':
+                                    return <div className="alert alert-info text-xl justify-center">En attente du démarrage du tournoi...</div>;
+                                case 'question':
+                                    return (
+                                        <>
+                                            {currentQuestion && (
+                                                <div className="card w-full bg-primary bg-opacity-10 mb-8">
+                                                    <div className="card-body items-center">
+                                                        <h2 className="card-title text-3xl mb-4">{currentQuestion.question}</h2>
+                                                        <ul className="flex flex-col gap-2 w-full">
+                                                            {currentQuestion.reponses.map((rep, index) => (
+                                                                <li key={index} className="badge badge-lg badge-outline w-full text-xl justify-center">{rep.texte}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {timeLeft !== null && (
+                                                <div className="text-6xl font-bold text-error mb-8">
+                                                    Temps restant : {timeLeft}s
+                                                </div>
+                                            )}
+                                            <h3 className="text-2xl font-semibold mt-8 mb-4">Classement Actuel (Placeholder)</h3>
+                                            <ol className="flex flex-col gap-1 w-full items-center">
+                                                {scores.sort((a, b) => b.score - a.score).slice(0, 5).map(s => (
+                                                    <li key={s.pseudo} className="badge badge-secondary badge-lg w-full justify-center">{s.pseudo} - {s.score} pts</li>
+                                                ))}
+                                            </ol>
+                                        </>
+                                    );
+                                case 'results':
+                                    return <div className="alert alert-info text-xl justify-center">Affichage des résultats...</div>;
+                                case 'finished':
+                                    return <div className="alert alert-success text-xl justify-center">Tournoi terminé !</div>;
+                                default:
+                                    return null;
+                            }
+                        })()}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

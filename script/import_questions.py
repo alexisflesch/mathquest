@@ -3,6 +3,7 @@ import psycopg2
 import os
 import json
 import logging
+import argparse
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -36,6 +37,17 @@ def get_conn():
         host=DB_HOST,
         port=DB_PORT
     )
+
+def clear_db():
+    conn = get_conn()
+    cur = conn.cursor()
+    logging.info('Clearing the Enseignant and TournoiSauvegarde tables...')
+    cur.execute('DELETE FROM "TournoiSauvegarde"')
+    cur.execute('DELETE FROM "Enseignant"')
+    conn.commit()
+    cur.close()
+    conn.close()
+    logging.info('Tables Enseignant and TournoiSauvegarde cleared.')
 
 def import_questions():
     logging.info('Starting import process...')
@@ -85,4 +97,11 @@ def import_questions():
     logging.info('Import process completed.')
 
 if __name__ == '__main__':
-    import_questions()
+    parser = argparse.ArgumentParser(description='Import questions or clear database tables.')
+    parser.add_argument('--clear-db', action='store_true', help='Clear Enseignant and TournoiSauvegarde tables')
+    args = parser.parse_args()
+
+    if args.clear_db:
+        clear_db()
+    else:
+        import_questions()

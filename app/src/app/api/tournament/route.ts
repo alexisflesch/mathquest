@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { randomBytes } from 'crypto';
+// removed unused randomBytes import
 
 const prisma = new PrismaClient();
 
-function generateTournamentCode(length = 6) {
-    return randomBytes(length).toString('base64').replace(/[^A-Z0-9]/gi, '').slice(0, length).toUpperCase();
+// Generate a unique 6-digit numeric code for the tournament
+async function generateUniqueTournamentCode() {
+    let code;
+    let exists = true;
+    while (exists) {
+        code = Math.floor(100000 + Math.random() * 900000).toString();
+        const found = await prisma.tournoi.findUnique({ where: { code } });
+        exists = !!found;
+    }
+    return code;
 }
 
 export async function POST(request: NextRequest) {
@@ -15,22 +23,50 @@ export async function POST(request: NextRequest) {
         const { action, ...data } = body;
 
         if (action === 'create') {
-            const { nom, questions_ids, enseignant_id, type, niveau, categorie, themes } = data;
-            if (!nom || !questions_ids || !enseignant_id || !type) {
+            const { nom, questions_ids, enseignant_id, type, niveau, categorie, themes, cree_par_id, pseudo, avatar, teacherCreatorId } = data;
+            if (!nom || !questions_ids || !type) {
                 return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
             }
-            const code = generateTournamentCode();
+            const code = await generateUniqueTournamentCode();
+            let cree_par_joueur_id = null;
+            let cree_par_enseignant_id = null;
+            let finalEnseignantId = enseignant_id || null;
+
+            if (teacherCreatorId) {
+                // Teacher is the creator
+                cree_par_enseignant_id = teacherCreatorId;
+                finalEnseignantId = teacherCreatorId;
+            } else {
+                // Student is the creator
+                if (!cree_par_id) {
+                    return NextResponse.json({ message: 'Aucun identifiant élève.' }, { status: 400 });
+                }
+                let joueur = await prisma.joueur.findUnique({ where: { cookie_id: cree_par_id } });
+                if (!joueur) {
+                    joueur = await prisma.joueur.create({
+                        data: {
+                            pseudo: pseudo || 'Élève',
+                            cookie_id: cree_par_id,
+                            avatar: avatar || null,
+                        },
+                    });
+                }
+                cree_par_joueur_id = joueur.id;
+                finalEnseignantId = null;
+            }
+
             const tournoi = await prisma.tournoi.create({
                 data: {
                     nom,
                     questions_ids,
-                    enseignant_id,
+                    enseignant_id: finalEnseignantId,
                     type,
                     niveau,
                     categorie,
                     themes,
                     statut: 'en préparation',
-                    cree_par_id: enseignant_id,
+                    cree_par_joueur_id,
+                    cree_par_enseignant_id,
                     questions_generées: true,
                     code,
                 },

@@ -3,43 +3,54 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/components/AuthProvider';
 
 export default function StudentMenuPage() {
     const [pseudo, setPseudo] = useState('');
     const [avatar, setAvatar] = useState('');
     const router = useRouter();
+    const { isTeacher } = useAuth();
 
     useEffect(() => {
-        setPseudo(localStorage.getItem('mathquest_pseudo') || '');
-        setAvatar(localStorage.getItem('mathquest_avatar') || '');
-        if (!localStorage.getItem('mathquest_pseudo') || !localStorage.getItem('mathquest_avatar')) {
+        const localPseudo = localStorage.getItem('mathquest_pseudo');
+        const localAvatar = localStorage.getItem('mathquest_avatar');
+        // For teachers, try to get pseudo from teacher profile in localStorage
+        let teacherPseudo = '';
+        if (isTeacher) {
+            teacherPseudo = localStorage.getItem('mathquest_teacher_pseudo') || '';
+        }
+        if (localPseudo) setPseudo(localPseudo);
+        else if (isTeacher && teacherPseudo) setPseudo(teacherPseudo);
+        else setPseudo('');
+        if (localAvatar) setAvatar(localAvatar);
+        else if (isTeacher) setAvatar(localStorage.getItem('mathquest_teacher_avatar') || '');
+        else setAvatar('');
+        if (!isTeacher && (!localPseudo || !localAvatar)) {
             router.replace('/student');
         }
-    }, [router]);
+    }, [router, isTeacher]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center gap-6">
-                <h1 className="text-3xl font-extrabold text-indigo-700 mb-2 text-center tracking-wide drop-shadow">Bienvenue, {pseudo} !</h1>
-                {avatar && (
-                    <Image src={`/avatars/${avatar}`} alt="avatar" width={112} height={112} className="w-28 h-28 rounded-full mb-4 ring-4 ring-sky-300 shadow-lg" />
-                )}
-                <div className="flex flex-col gap-4 w-full mt-2">
-                    <Link href="/student/join">
-                        <button className="bg-gradient-to-r from-sky-400 to-indigo-400 text-white font-bold py-3 px-4 rounded-full shadow-md hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-sky-300 focus:outline-none transition w-full text-xl">
-                            Rejoindre un tournoi
-                        </button>
-                    </Link>
-                    <Link href="/student/practice">
-                        <button className="bg-gradient-to-r from-violet-400 to-sky-400 text-white font-bold py-3 px-4 rounded-full shadow-md hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-violet-300 focus:outline-none transition w-full text-xl">
-                            Entraînement libre
-                        </button>
-                    </Link>
-                    <Link href="/student/create-tournament">
-                        <button className="bg-gradient-to-r from-indigo-400 to-violet-400 text-white font-bold py-3 px-4 rounded-full shadow-md hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-indigo-300 focus:outline-none transition w-full text-xl">
-                            Créer un tournoi
-                        </button>
-                    </Link>
+        <div className="h-[calc(100vh-56px)] flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4 pt-14 md:h-screen md:pt-0">
+            <div className="card w-full max-w-md shadow-xl bg-base-100">
+                <div className="card-body items-center gap-6 text-center">
+                    <h1 className="card-title text-3xl mb-2">Bienvenue, {pseudo} !</h1>
+                    {avatar && (
+                        <div className="flex justify-center items-center w-full mb-6">
+                            <Image src={`/avatars/${avatar}`} alt="avatar" width={112} height={112} className="w-28 h-28 rounded-full ring-4 ring-primary shadow-lg" />
+                        </div>
+                    )}
+                    <div className="flex flex-col gap-4 w-full mt-2">
+                        <Link href="/student/join">
+                            <button className="btn btn-primary btn-lg w-full">Rejoindre un tournoi</button>
+                        </Link>
+                        <Link href="/student/practice">
+                            <button className="btn btn-secondary btn-lg w-full">Entraînement libre</button>
+                        </Link>
+                        <Link href="/student/create-tournament">
+                            <button className="btn btn-accent btn-lg w-full">Créer un tournoi</button>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

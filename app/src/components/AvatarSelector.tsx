@@ -24,23 +24,26 @@ export default function AvatarSelector({ onSelect, selected }: { onSelect?: (ava
     }, []);
 
     return (
-        <div className="flex flex-wrap gap-4 max-w-xl">
-            {avatars.map((file) => (
-                <button
-                    key={file}
-                    className={`rounded-full border-2 ${selected === file ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-500 focus:outline-none`}
-                    onClick={() => onSelect && onSelect(file)}
-                    type="button"
-                >
-                    <Image
-                        src={`/avatars/${file}`}
-                        alt={file.replace('.svg', '')}
-                        width={48}
-                        height={48}
-                        className="w-16 h-16 object-cover rounded-full"
-                    />
-                </button>
-            ))}
+        <div className="flex justify-center w-full">
+            <div className="flex flex-wrap justify-center gap-4 max-w-xl">
+                {avatars.map((file) => (
+                    <button
+                        key={file}
+                        className={`rounded-full border-2 bg-white !bg-white ${selected === file ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-500 focus:outline-none`}
+                        style={{ backgroundColor: 'white' }}
+                        onClick={() => onSelect && onSelect(file)}
+                        type="button"
+                    >
+                        <Image
+                            src={`/avatars/${file}`}
+                            alt={file.replace('.svg', '')}
+                            width={48}
+                            height={48}
+                            className="w-16 h-16 object-cover rounded-full"
+                        />
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }

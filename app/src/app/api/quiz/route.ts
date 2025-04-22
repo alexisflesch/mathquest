@@ -46,6 +46,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Quiz sauvegardé.', quizId: quiz.id }, { status: 201 });
     } catch (error) {
         console.error('POST /api/quiz error:', error);
-        return NextResponse.json({ message: 'Erreur serveur.', error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
+        let errorMessage = 'Erreur serveur.';
+        if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+            errorMessage = (error as { message: string }).message;
+        } else {
+            errorMessage = String(error);
+        }
+        return NextResponse.json({ message: errorMessage }, { status: 500 });
     }
 }

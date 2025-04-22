@@ -14,7 +14,7 @@ datasource db {
 }
 
 model Question {
-  uid         String    @id @default(uuid())
+  uid         String   @id @default(uuid())
   question    String
   reponses    Json // Assuming structure: [{ texte: String, correct: Boolean }]
   type        String // e.g., 'qcm', 'choix_simple'
@@ -32,18 +32,20 @@ model Question {
 }
 
 model Enseignant {
-  id           String    @id @default(uuid())
+  id           String   @id @default(uuid())
   pseudo       String
   mot_de_passe String // Hashed password
-  email        String?   @unique // Optional but unique if provided
-  created_at   DateTime  @default(now())
+  email        String?  @unique // Optional but unique if provided
+  created_at   DateTime @default(now())
   avatar       String?
 
   // Password reset fields
   reset_token         String?
   reset_token_expires DateTime?
 
-  tournois          Tournoi[]
+  // Add both relations with explicit names
+  tournois            Tournoi[]           @relation("TournoiEnseignant")
+  tournoisCrees       Tournoi[]           @relation("TournoiCreateurEnseignant")
   tournoisSauvegardes TournoiSauvegarde[]
 }
 
@@ -59,25 +61,27 @@ model Joueur {
 }
 
 model Tournoi {
-  id                 String    @id @default(uuid())
-  nom                String
-  date_creation      DateTime  @default(now())
-  date_debut         DateTime?
-  date_fin           DateTime?
-  statut             String // "en préparation", "en cours", "terminé"
-  enseignant_id      String? // Link to Enseignant
-  questions_ids      String[] // List of Question uids
-  type               String // "direct", "differé"
-  niveau             String?
-  categorie          String?
-  themes             String[]
-  cree_par_id        String // Link to Enseignant or Joueur ID
-  questions_generées Boolean   @default(false)
-  code               String?   @unique // Unique code to join
+  id                     String    @id @default(uuid())
+  nom                    String
+  date_creation          DateTime  @default(now())
+  date_debut             DateTime?
+  date_fin               DateTime?
+  statut                 String // "en préparation", "en cours", "terminé"
+  enseignant_id          String? // Link to Enseignant (owner/organizer)
+  questions_ids          String[] // List of Question uids
+  type                   String // "direct", "differé"
+  niveau                 String?
+  categorie              String?
+  themes                 String[]
+  cree_par_joueur_id     String? // Link to Joueur (student creator)
+  cree_par_enseignant_id String? // Link to Enseignant (teacher creator)
+  questions_generées    Boolean   @default(false)
+  code                   String?   @unique // Unique code to join
 
-  enseignant         Enseignant? @relation(fields: [enseignant_id], references: [id])
-  createur           Joueur?     @relation(fields: [cree_par_id], references: [id]) // Assuming cree_par links to Joueur for now, adjust if needed
-  scores             Score[]
+  enseignant          Enseignant? @relation("TournoiEnseignant", fields: [enseignant_id], references: [id])
+  createur_joueur     Joueur?     @relation(fields: [cree_par_joueur_id], references: [id])
+  createur_enseignant Enseignant? @relation("TournoiCreateurEnseignant", fields: [cree_par_enseignant_id], references: [id])
+  scores              Score[]
 
   // Relation placeholder if using relation table for questions
   // questions Question[] @relation("TournoiQuestions")
@@ -99,15 +103,15 @@ model Score {
 }
 
 model TournoiSauvegarde {
-  id              String    @id @default(uuid())
+  id              String   @id @default(uuid())
   nom             String
-  date_creation   DateTime  @default(now()) // When the original tournament was created
-  date_sauvegarde DateTime  @default(now()) // When this saved instance was created
+  date_creation   DateTime @default(now()) // When the original tournament was created
+  date_sauvegarde DateTime @default(now()) // When this saved instance was created
   enseignant_id   String
   questions_ids   String[]
   type            String
-  niveaux         String[]     // <-- Now an array of niveaux (school years/levels)
-  categories      String[]     // Multiple disciplines/categories
+  niveaux         String[] // <-- Now an array of niveaux (school years/levels)
+  categories      String[] // Multiple disciplines/categories
   themes          String[]
 
   enseignant Enseignant @relation(fields: [enseignant_id], references: [id])

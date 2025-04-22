@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation'; // Use navigation for redirect after signup
 import Link from 'next/link';
+import AvatarSelector from '@/components/AvatarSelector';
 
 export default function TeacherSignupPage() {
     const [formData, setFormData] = useState({
@@ -12,6 +13,8 @@ export default function TeacherSignupPage() {
         adminPassword: '', // The fixed admin password
         password: '',
         confirmPassword: '',
+        pseudo: '',
+        avatar: '',
     });
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -35,6 +38,14 @@ export default function TeacherSignupPage() {
             setError('Le mot de passe administrateur est requis.');
             return;
         }
+        if (!formData.pseudo) {
+            setError('Le pseudo est obligatoire.');
+            return;
+        }
+        if (!formData.avatar) {
+            setError('Veuillez choisir un avatar.');
+            return;
+        }
         setIsLoading(true);
         try {
             const response = await fetch('/api/auth', {
@@ -47,14 +58,20 @@ export default function TeacherSignupPage() {
                     email: formData.email,
                     adminPassword: formData.adminPassword,
                     password: formData.password,
+                    pseudo: formData.pseudo,
+                    avatar: formData.avatar,
                 }),
             });
             const result = await response.json();
             if (!response.ok) {
                 throw new Error(result.message || 'Erreur lors de la création du compte.');
             }
+            // Store teacher id in localStorage for frontend profile fetch
+            if (result.enseignantId) {
+                localStorage.setItem('mathquest_teacher_id', result.enseignantId);
+            }
             setSuccess('Compte enseignant créé avec succès ! Vous allez être redirigé.');
-            setTimeout(() => router.push('/teacher'), 2000);
+            setTimeout(() => router.push('/teacher/login'), 2000);
         } catch (err: unknown) {
             setError((err as Error).message || 'Une erreur est survenue.');
         } finally {
@@ -63,127 +80,151 @@ export default function TeacherSignupPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center gap-8">
-                <h1 className="text-3xl font-extrabold text-indigo-700 mb-4 text-center tracking-wide drop-shadow">Créer un compte enseignant</h1>
-                <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6">
-                    <div>
-                        <label className="block text-lg font-bold text-sky-700 mb-2" htmlFor="nom">
-                            Nom
-                        </label>
-                        <input
-                            className="w-full py-3 px-4 rounded-full border-2 border-sky-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 text-lg font-semibold text-gray-700 bg-sky-50 placeholder:text-sky-300 transition"
-                            id="nom"
-                            type="text"
-                            name="nom"
-                            value={formData.nom}
-                            onChange={handleChange}
-                            required
-                            placeholder="Votre nom"
-                            autoComplete="family-name"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-lg font-bold text-sky-700 mb-2" htmlFor="prenom">
-                            Prénom
-                        </label>
-                        <input
-                            className="w-full py-3 px-4 rounded-full border-2 border-sky-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 text-lg font-semibold text-gray-700 bg-sky-50 placeholder:text-sky-300 transition"
-                            id="prenom"
-                            type="text"
-                            name="prenom"
-                            value={formData.prenom}
-                            onChange={handleChange}
-                            required
-                            placeholder="Votre prénom"
-                            autoComplete="given-name"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-lg font-bold text-sky-700 mb-2" htmlFor="email">
-                            Email
-                        </label>
-                        <input
-                            className="w-full py-3 px-4 rounded-full border-2 border-sky-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 text-lg font-semibold text-gray-700 bg-sky-50 placeholder:text-sky-300 transition"
-                            id="email"
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                            placeholder="Votre email"
-                            autoComplete="email"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-lg font-bold text-indigo-700 mb-2" htmlFor="adminPassword">
-                            Mot de passe administrateur
-                        </label>
-                        <input
-                            className="w-full py-3 px-4 rounded-full border-2 border-indigo-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 text-lg font-semibold text-gray-700 bg-indigo-50 placeholder:text-indigo-300 transition"
-                            id="adminPassword"
-                            type="password"
-                            name="adminPassword"
-                            value={formData.adminPassword}
-                            onChange={handleChange}
-                            required
-                            placeholder="Mot de passe admin"
-                            autoComplete="off"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-lg font-bold text-violet-700 mb-2" htmlFor="password">
-                            Mot de passe
-                        </label>
-                        <input
-                            className="w-full py-3 px-4 rounded-full border-2 border-violet-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 text-lg font-semibold text-gray-700 bg-violet-50 placeholder:text-violet-300 transition"
-                            id="password"
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                            minLength={8}
-                            placeholder="Votre mot de passe"
-                            autoComplete="new-password"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-lg font-bold text-violet-700 mb-2" htmlFor="confirmPassword">
-                            Confirmer le mot de passe
-                        </label>
-                        <input
-                            className="w-full py-3 px-4 rounded-full border-2 border-violet-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 text-lg font-semibold text-gray-700 bg-violet-50 placeholder:text-violet-300 transition"
-                            id="confirmPassword"
-                            type="password"
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            required
-                            placeholder="Confirmez le mot de passe"
-                            autoComplete="new-password"
-                        />
-                    </div>
-
-                    {error && <p className="text-sm text-red-600">{error}</p>}
-                    {success && <p className="text-sm text-green-600">{success}</p>}
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="bg-gradient-to-r from-indigo-400 via-sky-400 to-violet-400 text-white font-extrabold py-3 px-8 rounded-full shadow-lg hover:scale-105 hover:shadow-xl focus:ring-4 focus:ring-indigo-200 focus:outline-none transition text-2xl tracking-wide mt-2"
-                        >
-                            {isLoading ? 'Création en cours...' : 'Créer le compte'}
-                        </button>
-                    </div>
-                </form>
-                <p className="text-center text-sm mt-4">
-                    Déjà un compte ?{' '}
-                    <Link href="/teacher/login" className="text-blue-600 underline hover:text-blue-800">
-                        Se connecter
-                    </Link>
-                </p>
+        <div className="h-[calc(100vh-56px)] flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4 pt-14 md:h-screen md:pt-0">
+            <div className="card w-full max-w-md shadow-xl bg-base-100">
+                <div className="card-body items-center gap-8">
+                    <h1 className="card-title text-3xl mb-4">Créer un compte enseignant</h1>
+                    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6">
+                        <div>
+                            <label className="block text-lg font-bold mb-2" htmlFor="nom">
+                                Nom
+                            </label>
+                            <input
+                                className="input input-bordered input-lg w-full"
+                                id="nom"
+                                type="text"
+                                name="nom"
+                                value={formData.nom}
+                                onChange={handleChange}
+                                required
+                                placeholder="Votre nom"
+                                autoComplete="family-name"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-bold mb-2" htmlFor="prenom">
+                                Prénom
+                            </label>
+                            <input
+                                className="input input-bordered input-lg w-full"
+                                id="prenom"
+                                type="text"
+                                name="prenom"
+                                value={formData.prenom}
+                                onChange={handleChange}
+                                required
+                                placeholder="Votre prénom"
+                                autoComplete="given-name"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-bold mb-2" htmlFor="email">
+                                Email
+                            </label>
+                            <input
+                                className="input input-bordered input-lg w-full"
+                                id="email"
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                placeholder="Votre email"
+                                autoComplete="email"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-bold mb-2" htmlFor="adminPassword">
+                                Mot de passe administrateur
+                            </label>
+                            <input
+                                className="input input-bordered input-lg w-full"
+                                id="adminPassword"
+                                type="password"
+                                name="adminPassword"
+                                value={formData.adminPassword}
+                                onChange={handleChange}
+                                required
+                                placeholder="Mot de passe admin"
+                                autoComplete="off"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-bold mb-2" htmlFor="password">
+                                Mot de passe
+                            </label>
+                            <input
+                                className="input input-bordered input-lg w-full"
+                                id="password"
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                minLength={8}
+                                placeholder="Votre mot de passe"
+                                autoComplete="new-password"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-bold mb-2" htmlFor="confirmPassword">
+                                Confirmer le mot de passe
+                            </label>
+                            <input
+                                className="input input-bordered input-lg w-full"
+                                id="confirmPassword"
+                                type="password"
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                required
+                                placeholder="Confirmez le mot de passe"
+                                autoComplete="new-password"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-bold mb-2" htmlFor="pseudo">
+                                Pseudo
+                            </label>
+                            <input
+                                className="input input-bordered input-lg w-full"
+                                id="pseudo"
+                                type="text"
+                                name="pseudo"
+                                value={formData.pseudo}
+                                onChange={handleChange}
+                                required
+                                placeholder="Votre pseudo"
+                                autoComplete="off"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-bold mb-2">
+                                Choisissez votre avatar !
+                            </label>
+                            <div className="flex justify-center w-full">
+                                <AvatarSelector onSelect={avatar => setFormData(f => ({ ...f, avatar }))} selected={formData.avatar} />
+                            </div>
+                        </div>
+                        {error && <div className="alert alert-error justify-center">{error}</div>}
+                        {success && <div className="alert alert-success justify-center">{success}</div>}
+                        <div className="flex justify-center w-full">
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="btn btn-primary btn-lg w-full"
+                            >
+                                {isLoading ? 'Création en cours...' : 'Créer le compte'}
+                            </button>
+                        </div>
+                    </form>
+                    <p className="text-center text-sm mt-4">
+                        Déjà un compte ?{' '}
+                        <Link href="/teacher/login" className="link link-primary">
+                            Se connecter
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

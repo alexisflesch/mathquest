@@ -132,7 +132,7 @@ Validation :
 
 - **Base de données** : PostgreSQL
 - **API** : REST (via Next.js API routes) ou éventuellement tRPC pour typage complet
-- **Temps réel** : WebSocket ou Server-Sent Events pour les mises à jour en direct (questions, scores, podium)
+- **Temps réel** :socket.io pour les mises à jour en direct (questions, scores, podium)
 - **Import des questions** :
   - Les enseignants n’ajoutent pas de questions depuis l’interface
   - Les questions sont importées via des fichiers Markdown/YAML par l’administrateur sur github.

@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
         const { action, ...data } = body;
 
         if (action === 'teacher_signup') {
-            const { nom, prenom, email, adminPassword, password } = data;
-            if (!nom || !prenom || !email || !adminPassword || !password) {
+            const { nom, prenom, email, adminPassword, password, pseudo, avatar } = data;
+            if (!nom || !prenom || !email || !adminPassword || !password || !pseudo || !avatar) {
                 return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
             }
             if (adminPassword !== ADMIN_PASSWORD) {
@@ -31,9 +31,10 @@ export async function POST(request: NextRequest) {
             const hash = await bcrypt.hash(password, 10);
             const enseignant = await prisma.enseignant.create({
                 data: {
-                    pseudo: nom + ' ' + prenom,
+                    pseudo,
                     mot_de_passe: hash,
                     email,
+                    avatar,
                 },
             });
             return NextResponse.json({ message: 'Compte enseignant créé.', enseignantId: enseignant.id }, { status: 201 });

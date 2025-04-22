@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface CurrentQuestion {
     uid: string;
@@ -26,6 +27,10 @@ export default function PracticePage() {
     const [practiceIndex, setPracticeIndex] = useState(0);
     const [practiceScore, setPracticeScore] = useState(0);
     const [practiceDone, setPracticeDone] = useState(false);
+    const [practiceLimit, setPracticeLimit] = useState(10); // NEW: number of questions
+    const [practiceTimer, setPracticeTimer] = useState<number | null>(null); // seconds left for current question
+    const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         fetch('/api/questions/filters')
@@ -42,72 +47,121 @@ export default function PracticePage() {
         if (practiceDiscipline) params.append('discipline', practiceDiscipline);
         if (practiceNiveau) params.append('niveau', practiceNiveau);
         if (practiceTheme) params.append('theme', practiceTheme);
-        params.append('limit', '10');
+        params.append('limit', String(practiceLimit)); // Use selected limit
         const res = await fetch(`/api/questions?${params.toString()}`);
         const questions = await res.json();
         setPracticeQuestions(questions);
     };
 
-    const handlePracticeAnswer = (isCorrect: boolean) => {
+    const handlePracticeAnswer = useCallback((isCorrect: boolean) => {
         if (isCorrect) setPracticeScore(s => s + 1);
         if (practiceIndex + 1 < practiceQuestions.length) {
             setPracticeIndex(i => i + 1);
         } else {
             setPracticeDone(true);
         }
-    };
+    }, [practiceIndex, practiceQuestions.length]);
+
+    useEffect(() => {
+        if (practiceStarted && !practiceDone && practiceQuestions.length > 0) {
+            // Set timer for current question
+            const current = practiceQuestions[practiceIndex];
+            if (current && typeof current.temps === 'number') {
+                setPracticeTimer(current.temps);
+            } else {
+                setPracticeTimer(20); // fallback default
+            }
+        }
+    }, [practiceStarted, practiceIndex, practiceQuestions, practiceDone]);
+
+    useEffect(() => {
+        if (practiceTimer === null || practiceDone || !practiceStarted) return;
+        if (practiceTimer <= 0) {
+            // Time's up: go to next question (count as incorrect)
+            handlePracticeAnswer(false);
+            return;
+        }
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setPracticeTimer(t => (t !== null ? t - 1 : null)), 1000);
+        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    }, [practiceTimer, practiceDone, practiceStarted, handlePracticeAnswer]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-xl w-full flex flex-col items-center gap-8">
-                <h1 className="text-3xl font-extrabold text-indigo-700 mb-2 text-center tracking-wide drop-shadow">Entra&icirc;nement Libre</h1>
-                {!practiceStarted && (
-                    <div className="flex flex-col gap-6 w-full">
-                        <select className="border-2 border-sky-200 bg-sky-50 rounded-full px-4 py-3 text-lg font-semibold text-sky-700 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 transition" value={practiceDiscipline} onChange={e => setPracticeDiscipline(e.target.value)}>
-                            <option value="">Discipline</option>
-                            {practiceFilters.disciplines.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                        <select className="border-2 border-violet-200 bg-violet-50 rounded-full px-4 py-3 text-lg font-semibold text-violet-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 transition" value={practiceNiveau} onChange={e => setPracticeNiveau(e.target.value)}>
-                            <option value="">Niveau</option>
-                            {practiceFilters.niveaux.map(n => <option key={n} value={n}>{n}</option>)}
-                        </select>
-                        <select className="border-2 border-indigo-200 bg-indigo-50 rounded-full px-4 py-3 text-lg font-semibold text-indigo-700 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 transition" value={practiceTheme} onChange={e => setPracticeTheme(e.target.value)}>
-                            <option value="">Th&egrave;me</option>
-                            {practiceFilters.themes.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                        <button className="bg-gradient-to-r from-indigo-400 via-sky-400 to-violet-400 text-white font-extrabold py-3 px-8 rounded-full shadow-lg hover:scale-105 hover:shadow-xl focus:ring-4 focus:ring-indigo-200 focus:outline-none transition text-2xl tracking-wide mt-2" onClick={handleStartPractice}>
-                            Commencer l&apos;entra&icirc;nement
-                        </button>
-                    </div>
-                )}
-                {practiceStarted && !practiceDone && practiceQuestions.length > 0 && (
-                    <div className="w-full bg-sky-50 rounded-2xl shadow-lg p-6 flex flex-col gap-6 items-center">
-                        <h3 className="text-2xl font-bold text-sky-700 mb-2">Question {practiceIndex + 1} / {practiceQuestions.length}</h3>
-                        <div className="mb-4 text-xl font-semibold text-gray-800 text-center">{practiceQuestions[practiceIndex].question}</div>
-                        <ul className="space-y-3 w-full">
-                            {practiceQuestions[practiceIndex].reponses.map((rep, idx) => (
-                                <li key={idx}>
-                                    <button
-                                        className="w-full text-left bg-gradient-to-r from-white to-sky-100 rounded-xl py-3 px-4 font-semibold text-lg border-2 border-transparent hover:bg-sky-100 hover:border-sky-400 focus:bg-sky-200 focus:border-sky-500 transition cursor-pointer shadow-md"
-                                        onClick={() => handlePracticeAnswer(rep.correct)}
-                                    >
-                                        {rep.texte}
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="text-gray-600 font-bold">Score: {practiceScore}</div>
-                    </div>
-                )}
-                {practiceDone && (
-                    <div className="w-full bg-violet-50 rounded-2xl shadow-lg p-6 flex flex-col items-center gap-4 text-center">
-                        <h3 className="text-2xl font-bold text-violet-700 mb-2">Entra&icirc;nement termin&eacute; !</h3>
-                        <div className="text-2xl mb-2 font-extrabold text-violet-800">Score : {practiceScore} / {practiceQuestions.length}</div>
-                        <button className="mt-4 bg-gradient-to-r from-indigo-400 via-sky-400 to-violet-400 text-white font-extrabold py-3 px-8 rounded-full shadow-lg hover:scale-105 hover:shadow-xl focus:ring-4 focus:ring-indigo-200 focus:outline-none transition text-xl tracking-wide" onClick={() => { setPracticeStarted(false); setPracticeQuestions([]); setPracticeDone(false); }}>
-                            Recommencer
-                        </button>
-                    </div>
-                )}
+        <div className="min-h-screen flex items-center justify-center bg-base-200">
+            <div className="card w-full max-w-xl shadow-xl bg-base-100">
+                <div className="card-body items-center gap-8">
+                    <h1 className="card-title text-3xl">Entraînement Libre</h1>
+                    {/* Add spacing after the title using a div with a fixed height */}
+                    <div style={{ height: 32 }} />
+                    {!practiceStarted && (
+                        <div className="flex flex-col gap-6 w-full">
+                            {/* If you want even more space, increase mb-4 to mb-8 above, or add another <div className="mb-2" /> here */}
+                            <select className="select select-bordered select-lg w-full" value={practiceDiscipline} onChange={e => setPracticeDiscipline(e.target.value)}>
+                                <option value="">Discipline</option>
+                                {practiceFilters.disciplines.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                            <select className="select select-bordered select-lg w-full" value={practiceNiveau} onChange={e => setPracticeNiveau(e.target.value)}>
+                                <option value="">Niveau</option>
+                                {practiceFilters.niveaux.map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                            <select className="select select-bordered select-lg w-full" value={practiceTheme} onChange={e => setPracticeTheme(e.target.value)}>
+                                <option value="">Thème</option>
+                                {practiceFilters.themes.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                            <select className="select select-bordered select-lg w-full" value={practiceLimit} onChange={e => setPracticeLimit(Number(e.target.value))}>
+                                <option value={10}>10 questions</option>
+                                <option value={20}>20 questions</option>
+                                <option value={30}>30 questions</option>
+                            </select>
+                            <button
+                                className="btn btn-primary btn-lg w-full mt-4"
+                                onClick={() => {
+                                    const params = new URLSearchParams();
+                                    if (practiceDiscipline) params.append('discipline', practiceDiscipline);
+                                    if (practiceNiveau) params.append('niveau', practiceNiveau);
+                                    if (practiceTheme) params.append('theme', practiceTheme);
+                                    params.append('limit', String(practiceLimit));
+                                    router.push(`/student/practice/session?${params.toString()}`);
+                                }}
+                            >
+                                Commencer l&apos;entraînement
+                            </button>
+                        </div>
+                    )}
+                    {practiceStarted && !practiceDone && practiceQuestions.length > 0 && (
+                        <div className="card w-full bg-base-200 shadow-inner">
+                            <div className="card-body items-center gap-4">
+                                <h3 className="card-title text-2xl mb-2">Question {practiceIndex + 1} / {practiceQuestions.length}</h3>
+                                <div className="mb-2 text-lg font-bold text-primary">Temps restant : {practiceTimer !== null ? practiceTimer : '-'} s</div>
+                                <div className="mb-4 text-xl font-semibold text-center">{practiceQuestions[practiceIndex].question}</div>
+                                <ul className="flex flex-col gap-3 w-full">
+                                    {practiceQuestions[practiceIndex].reponses.map((rep, idx) => (
+                                        <li key={idx} className="card-answer">
+                                            <button
+                                                className="btn-answer w-full text-left"
+                                                onClick={() => handlePracticeAnswer(rep.correct)}
+                                            >
+                                                {rep.texte}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <div className="font-bold">Score: {practiceScore}</div>
+                            </div>
+                        </div>
+                    )}
+                    {practiceDone && (
+                        <div className="card w-full bg-base-200 shadow-inner">
+                            <div className="card-body items-center gap-4 text-center">
+                                <h3 className="card-title text-2xl mb-2">Entraînement terminé !</h3>
+                                <div className="text-2xl mb-2 font-extrabold">Score : {practiceScore} / {practiceQuestions.length}</div>
+                                <button className="btn btn-primary btn-lg" onClick={() => { setPracticeStarted(false); setPracticeQuestions([]); setPracticeDone(false); }}>
+                                    Recommencer
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
