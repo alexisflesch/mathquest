@@ -1,3 +1,15 @@
+/**
+ * Tournament Status API Route
+ * 
+ * This API route retrieves the current status information for a specific tournament:
+ * - Accepts a tournament code as a query parameter
+ * - Returns the tournament status (preparation, in progress, completed)
+ * - Includes start and end timestamps if available
+ * 
+ * Used by client components to determine appropriate navigation and UI state,
+ * such as redirecting users to the lobby, tournament, or leaderboard views.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 

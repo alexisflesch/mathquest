@@ -1,9 +1,28 @@
+/**
+ * Student API Route
+ * 
+ * This API route handles student-specific operations:
+ * - POST with "join" action: Registers a student for a tournament
+ * - POST with "answer" action: Records a student's answer to a tournament question
+ * - GET: Retrieves a student's current tournament state (questions, score, leaderboard)
+ * 
+ * Key features include:
+ * - Student creation or retrieval based on cookie_id
+ * - Answer validation against question data
+ * - Score calculation and persistence
+ * - Real-time score updates via server-sent events
+ * 
+ * Used by the tournament interface to manage student participation and scoring.
+ */
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import logger from '@/app/api/logger';
 
 const prisma = new PrismaClient();
+const routeLogger = logger.child({ component: 'API:Student' });
 
 export async function POST(request: NextRequest) {
     try {
@@ -13,18 +32,22 @@ export async function POST(request: NextRequest) {
         if (action === 'join') {
             const { pseudo, code, avatar, cookie_id } = data;
             if (!pseudo || !code || !cookie_id) {
+                routeLogger.warn('Missing fields in join action', { pseudo, code, cookie_id });
                 return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
             }
             const tournoi = await prisma.tournoi.findUnique({ where: { code } });
-            if (!tournoi) return NextResponse.json({ message: 'Tournoi introuvable.' }, { status: 404 });
+            if (!tournoi) {
+                routeLogger.warn('Tournament not found', { code });
+                return NextResponse.json({ message: 'Tournoi introuvable.' }, { status: 404 });
+            }
             let joueur = await prisma.joueur.findUnique({ where: { cookie_id } });
             if (!joueur) {
                 joueur = await prisma.joueur.create({
                     data: { pseudo, cookie_id, avatar },
                 });
-                console.log('[API/student] Created new Joueur:', joueur);
+                routeLogger.info('Created new Player', { id: joueur.id, pseudo, cookie_id });
             } else {
-                console.log('[API/student] Found existing Joueur:', joueur);
+                routeLogger.debug('Found existing Player', { id: joueur.id, pseudo: joueur.pseudo });
             }
             // Optionally: add to a join table if needed
             return NextResponse.json({ message: 'Joueur connecté.', joueurId: joueur.id, tournoiId: tournoi.id }, { status: 200 });
@@ -76,9 +99,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: 'Réponse enregistrée', correct, score: newScore }, { status: 200 });
         }
 
+        routeLogger.warn('Unknown action', { action });
         return NextResponse.json({ message: 'Action inconnue.' }, { status: 400 });
     } catch (error: unknown) {
-        console.error('API /api/student error:', error);
+        routeLogger.error('API error:', error);
         return NextResponse.json({ message: 'Erreur serveur.', error: String(error) }, { status: 500 });
     }
 }
@@ -88,6 +112,7 @@ export async function GET(request: NextRequest) {
     const tournoiId = searchParams.get('tournoiId');
     const joueurId = searchParams.get('joueurId');
     // TODO: Fetch current question, score, leaderboard for this player
+    routeLogger.debug('GET student tournament state', { tournoiId, joueurId });
     return NextResponse.json({
         tournoiId,
         joueurId,

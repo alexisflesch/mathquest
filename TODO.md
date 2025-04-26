@@ -1,9 +1,25 @@
-# Création de tournoi par un élève :
-après choix du niveau, filtrer les disciplines restantes
-après choix de la discipline, filtrer les thèmes restant
+# Code refactoring
+fichiers trop gros (partie serveur), l'IA fait n'importe quoi.
 
-cliquer en-dehors du dropdown pour le fermer dans le choix des thèmes
+# Favicon
+Test it
 
-revoir les couleurs pour le choix des questions et le type de tournoi
+# PWA
+Do it
 
-après avoir cliqué sur "Créer le tournoi", ne virer l'affichage du numéro de tournoi puisqu'on se retrouve direct dans le lobby
+# Teacher dashboard
+Travailler sur les couleurs et lier à globals.css
+
+Ajouter un chrono à côté du bouton play/pause avec socket serveur
+Ajouter un bouton stop ?
+
+# Afficher les stats des réponses
+les mettre directement en mode histogramme sur les réponses ?
+
+
+# tournament/[code]
+Si étudiant pas encore loggé, rediriger vers login étudiant puis renvoyer vers le tournoi dans la foulée
+Si tournoi déjà terminé, envoyer vers leaderboard et proposer de jouer en différé
+
+# IMPORTANT / DEBUG
+En mode différé, des fois, la question suivante n'est pas envoyée

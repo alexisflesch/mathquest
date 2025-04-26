@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+const createLogger = require('@logger');
+const logger = createLogger('API:QuestionsFilters');
 
 const prisma = new PrismaClient();
 
@@ -26,7 +28,7 @@ export async function GET() {
             themes: themes.map(t => t.theme).filter(Boolean),
         });
     } catch (e) {
-        console.error('API /api/questions/filters error', e);
+        logger.error('API /api/questions/filters error', e);
         return NextResponse.json({ disciplines: [], niveaux: [], themes: [] });
     }
 }

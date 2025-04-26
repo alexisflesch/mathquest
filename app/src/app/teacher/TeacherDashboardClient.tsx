@@ -53,7 +53,7 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
+        <div className="min-h-screen  flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full flex flex-col items-center gap-8">
                 <h1 className="text-4xl font-extrabold text-indigo-700 mb-4 text-center tracking-wide drop-shadow">Espace Enseignant</h1>
                 <div className="flex flex-col gap-6 w-full">

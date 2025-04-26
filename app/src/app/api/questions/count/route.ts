@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
+const createLogger = require('@logger');
+const logger = createLogger('API:QuestionsCount');
+
 const prisma = new PrismaClient();
 
 // GET /api/questions/count?niveau=...&discipline=...&themes=theme1,theme2
@@ -27,7 +30,7 @@ export async function GET(request: NextRequest) {
         });
         return NextResponse.json({ count });
     } catch (error: unknown) {
-        console.error('API /api/questions/count error:', error);
+        logger.error('API /api/questions/count error:', error);
         return NextResponse.json({ message: 'Erreur serveur.', error: String(error) }, { status: 500 });
     }
 }

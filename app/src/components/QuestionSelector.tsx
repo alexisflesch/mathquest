@@ -1,27 +1,52 @@
-import React, { useEffect, useState } from 'react';
+/**
+ * Question Selector Component
+ * 
+ * This component provides an interactive interface for selecting and filtering questions
+ * to include in quizzes and tournaments. Key features include:
+ * 
+ * - Filtering by discipline, grade level (niveau), theme, and tags
+ * - Expandable question previews showing answer options
+ * - Checkbox selection with automatic metadata extraction
+ * - Support for external filters (when used in specific contexts)
+ * - Timer controls for questions when used in quiz management
+ * - Automatic loading of available filter options from the server
+ * 
+ * This component is central to both the teacher quiz creation flow and
+ * the student tournament creation experience, allowing users to build
+ * personalized question sets based on various criteria.
+ */
 
-interface Question {
-    uid: string;
-    question: string;
-    reponses: { texte: string; correct: boolean }[];
-    type: string;
+import React, { useEffect, useState } from 'react';
+import type { Question as BaseQuestion } from '../types';
+
+// Extend the shared Question interface with additional fields for this component
+interface Question extends BaseQuestion {
     discipline: string;
     theme: string;
     difficulte: number;
     niveau: string;
     auteur?: string;
-    explication?: string;
     tags?: string[];
-    temps?: number;
 }
 
-interface QuestionSelectorProps {
+interface TimerProps {
+    timerStatus: 'play' | 'pause' | 'stop';
+    timerQuestionId: string | null;
+    timeLeft: number;
+    onTimerAction: (info: { status: 'play' | 'pause' | 'stop'; questionId: string; timeLeft: number }) => void;
+}
+
+interface QuestionSelectorProps extends TimerProps {
     onSelect: (selected: string[], meta: { niveaux: string[], categories: string[], themes: string[] }) => void;
     selectedQuestionIds: string[];
     externalFilter?: { discipline?: string; niveau?: string; theme?: string };
 }
 
-export default function QuestionSelector({ onSelect, selectedQuestionIds, externalFilter }: QuestionSelectorProps) {
+export default function QuestionSelector({
+    onSelect, selectedQuestionIds, externalFilter,
+    timerStatus, timerQuestionId, timeLeft,
+    onTimerAction
+}: QuestionSelectorProps) {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [filters, setFilters] = useState({ disciplines: [], niveaux: [], themes: [] });
     const [filter, setFilter] = useState({ discipline: '', niveau: '', theme: '', tag: '' });
@@ -62,6 +87,7 @@ export default function QuestionSelector({ onSelect, selectedQuestionIds, extern
             }
         });
         setSelectedQuestionsMap(newMap);
+        // Only depend on questions and selectedQuestionIds to avoid infinite loop
     }, [questions, selectedQuestionIds]);
 
     const handleToggle = async (uid: string) => {
@@ -152,8 +178,8 @@ export default function QuestionSelector({ onSelect, selectedQuestionIds, extern
                     />
                 </div>
             )}
-            <div className="max-h-96 overflow-y-auto border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50 shadow-inner">
-                {filteredQuestions.length === 0 && <div className="text-gray-500">Aucune question trouvée.</div>}
+            <div className="max-h-96 overflow-y-auto border-2 rounded-2xl p-4 shadow-inner">
+                {filteredQuestions.length === 0 && <div>Aucune question trouvée.</div>}
                 <ul className="space-y-2">
                     {filteredQuestions.map(q => (
                         <li key={q.uid}>
@@ -170,13 +196,13 @@ export default function QuestionSelector({ onSelect, selectedQuestionIds, extern
                                     onClick={e => e.stopPropagation()}
                                 />
                                 <span className="font-semibold select-none flex-1">{q.question}</span>
-                                <span className="text-xs text-gray-500">[{q.discipline} - {q.niveau} - {q.theme}]</span>
+                                <span className="text-xs">[{q.discipline} - {q.niveau} - {q.theme}]</span>
                                 <span className={`ml-2 transition-transform ${expanded[q.uid] ? 'rotate-90' : ''}`}>▼</span>
                             </div>
                             {expanded[q.uid] && (
                                 <div
                                     className={
-                                        `ml-8 mt-2 bg-white rounded-xl p-3 shadow-inner border border-indigo-100 ` +
+                                        `ml-8 mt-2 rounded-xl p-3 shadow-inner border` +
                                         `transition-all duration-300 ease-in-out overflow-hidden ` +
                                         (expanded[q.uid] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0')
                                     }
@@ -189,11 +215,11 @@ export default function QuestionSelector({ onSelect, selectedQuestionIds, extern
                                         transition: 'max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s, margin 0.3s, padding 0.3s',
                                     }}
                                 >
-                                    <div className="font-bold mb-1 text-indigo-700">Réponses :</div>
+                                    <div className="font-bold mb-1 ">Réponses :</div>
                                     <ul className="list-disc pl-5">
                                         {q.reponses.map((rep, idx) => (
-                                            <li key={idx} className={rep.correct ? 'text-green-700 font-semibold' : ''}>
-                                                {rep.texte} {rep.correct && <span className="ml-1 text-xs text-green-600">(correct)</span>}
+                                            <li key={idx} className={rep.correct ? 'font-semibold' : ''}>
+                                                {rep.texte} {rep.correct && <span className="ml-1 text-xs text-secondary">(correct)</span>}
                                             </li>
                                         ))}
                                     </ul>

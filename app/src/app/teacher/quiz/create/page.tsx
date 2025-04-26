@@ -95,8 +95,14 @@ export default function CreateQuizPage() {
                         </div>
                         <QuestionSelector
                             onSelect={(ids, meta) => {
-                                setSelectedQuestions(ids);
-                                setQuizMeta(meta);
+                                // Prevent infinite loop by only updating if values have changed
+                                if (
+                                    JSON.stringify(ids) !== JSON.stringify(selectedQuestions) ||
+                                    JSON.stringify(meta) !== JSON.stringify(quizMeta)
+                                ) {
+                                    setSelectedQuestions(ids);
+                                    setQuizMeta(meta);
+                                }
                             }}
                             selectedQuestionIds={selectedQuestions}
                             externalFilter={{
@@ -126,12 +132,7 @@ export default function CreateQuizPage() {
                             </div>
                         )}
                         <button
-                            className={`w-full rounded-lg border border-primary transition-colors duration-100
-                                ${selectedQuestions.length === 0 || !quizName.trim() || savingQuiz
-                                    ? 'bg-base-200 text-base-content/40 cursor-not-allowed'
-                                    : 'bg-primary text-white hover:bg-primary/90'}
-                                py-3 text-lg font-semibold
-                            `}
+                            className="btn-primary w-full"
                             onClick={handleSaveQuiz}
                             disabled={savingQuiz || selectedQuestions.length === 0 || !quizName.trim()}
                         >

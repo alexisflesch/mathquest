@@ -46,7 +46,7 @@ model Enseignant {
   // Add both relations with explicit names
   tournois            Tournoi[]           @relation("TournoiEnseignant")
   tournoisCrees       Tournoi[]           @relation("TournoiCreateurEnseignant")
-  tournoisSauvegardes TournoiSauvegarde[]
+  quizSauvegardes Quiz[]
 }
 
 model Joueur {
@@ -103,10 +103,10 @@ model Score {
   @@unique([tournoi_id, joueur_id]) // Ensure one score per player per tournament
 }
 
-model TournoiSauvegarde {
+model Quiz {
   id              String   @id @default(uuid())
   nom             String
-  date_creation   DateTime @default(now()) // When the original tournament was created
+  date_creation   DateTime @default(now()) // When the original quiz was created
   date_sauvegarde DateTime @default(now()) // When this saved instance was created
   enseignant_id   String
   questions_ids   String[]
@@ -114,6 +114,7 @@ model TournoiSauvegarde {
   niveaux         String[] // <-- Now an array of niveaux (school years/levels)
   categories      String[] // Multiple disciplines/categories
   themes          String[]
+  tournament_code String?  @unique // Code of the current/last tournament for this quiz
 
   enseignant Enseignant @relation(fields: [enseignant_id], references: [id])
 }

@@ -1,8 +1,28 @@
+/**
+ * Teacher Login Page
+ * 
+ * This page provides the authentication interface for teachers accessing the MathQuest platform:
+ * - Email and password authentication with field validation
+ * - Error handling for failed authentication attempts
+ * - Loading state management during authentication process
+ * - Storage of teacher identity for subsequent API calls
+ * - Creation of necessary local storage entries for teacher participation in student activities
+ * 
+ * The page implements secure teacher authentication using server-side validation,
+ * while also establishing the necessary client-side state for teachers to access
+ * student areas for testing and demonstration purposes. After successful authentication,
+ * teachers are redirected to their dashboard with full access to teaching tools.
+ */
+
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
+import { createLogger } from '@/clientLogger';
+
+// Create a logger for this component
+const logger = createLogger('TeacherLogin');
 
 export default function TeacherLoginPage() {
     const [email, setEmail] = useState('');
@@ -28,7 +48,7 @@ export default function TeacherLoginPage() {
                 setIsLoading(false);
                 return;
             }
-            console.log(result);
+            logger.debug('Login response', result);
             // Store teacher id in localStorage for frontend profile fetch
             if (result.enseignantId) {
                 localStorage.setItem('mathquest_teacher_id', result.enseignantId);
@@ -38,29 +58,29 @@ export default function TeacherLoginPage() {
                 let cookie_id = result.cookie_id;
                 if (cookie_id) {
                     localStorage.setItem('mathquest_cookie_id', cookie_id);
-                    console.log('[TeacherLogin] Set mathquest_cookie_id:', cookie_id);
+                    logger.debug('Set mathquest_cookie_id', { cookie_id });
                 } else {
                     // fallback for legacy/old backend
                     cookie_id = localStorage.getItem('mathquest_cookie_id');
                     if (!cookie_id) {
                         cookie_id = Math.random().toString(36).substring(2) + Date.now();
                         localStorage.setItem('mathquest_cookie_id', cookie_id);
-                        console.log('[TeacherLogin] Set new mathquest_cookie_id:', cookie_id);
+                        logger.debug('Set new mathquest_cookie_id', { cookie_id });
                     } else {
-                        console.log('[TeacherLogin] Existing mathquest_cookie_id:', cookie_id);
+                        logger.debug('Using existing mathquest_cookie_id', { cookie_id });
                     }
                 }
                 // Set pseudo and avatar for gameplay/leaderboard
                 if (result.pseudo) {
                     localStorage.setItem('mathquest_pseudo', result.pseudo);
-                    console.log('[TeacherLogin] Set mathquest_pseudo:', result.pseudo);
+                    logger.debug('Set mathquest_pseudo', { pseudo: result.pseudo });
                 }
                 if (result.avatar) {
                     localStorage.setItem('mathquest_avatar', result.avatar);
-                    console.log('[TeacherLogin] Set mathquest_avatar:', result.avatar);
+                    logger.debug('Set mathquest_avatar', { avatar: result.avatar });
                 }
                 // Log all values after setting
-                console.log('[TeacherLogin] Final values:', {
+                logger.info('Teacher login successful', {
                     cookie_id: localStorage.getItem('mathquest_cookie_id'),
                     pseudo: localStorage.getItem('mathquest_pseudo'),
                     avatar: localStorage.getItem('mathquest_avatar'),
@@ -69,6 +89,7 @@ export default function TeacherLoginPage() {
             if (refreshAuth) refreshAuth(); // Trigger refreshAuth after successful login
             router.push('/teacher/dashboard'); // Redirect to dashboard
         } catch (err: unknown) {
+            logger.error('Login error', err);
             setError((err as Error).message || 'Une erreur est survenue.');
         } finally {
             setIsLoading(false);
@@ -76,7 +97,7 @@ export default function TeacherLoginPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-56px)] flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4 pt-14 md:h-screen md:pt-0">
+        <div className="h-[calc(100vh-56px)] flex items-center justify-center  p-4 pt-14 md:h-screen md:pt-0">
             <div className="card w-full max-w-md shadow-xl bg-base-100">
                 <div className="card-body items-center gap-8">
                     <h1 className="card-title text-3xl mb-4">Connexion Enseignant</h1>

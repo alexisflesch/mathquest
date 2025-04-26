@@ -1,3 +1,21 @@
+/**
+ * Tournament Lobby Component
+ * 
+ * This component displays the waiting room interface for tournaments before they start,
+ * showing connected players and providing tournament management controls.
+ * 
+ * Key features:
+ * - Display of the tournament access code for sharing with participants
+ * - Visual grid of connected players with avatars
+ * - Empty state handling when no players have joined
+ * - Start tournament button for tournament hosts/teachers
+ * - Real-time updates of player presence
+ * 
+ * Used as the pre-tournament interface where students gather before
+ * the competitive phase begins, allowing hosts to see who's ready
+ * and control when to launch the activity.
+ */
+
 import React from 'react';
 import Image from 'next/image';
 
@@ -6,7 +24,7 @@ export default function TournamentLobby({ players = [], code = '', onStart }: { 
     return (
         <div className="bg-white rounded shadow p-4">
             <h2 className="text-xl font-bold mb-2">Lobby du Tournoi</h2>
-            <div className="mb-2">Code du tournoi : <span className="font-mono bg-gray-100 px-2 py-1 rounded">{code || '------'}</span></div>
+            <div className="mb-2">Code du tournoi : <span className="font-mono px-2 py-1 rounded">{code || '------'}</span></div>
             <div className="mb-4">Joueurs connect&eacute;s :</div>
             <ul className="flex flex-wrap gap-4 mb-4">
                 {players.length === 0 && <li className="text-gray-500">Aucun joueur pour l&apos;instant.</li>}

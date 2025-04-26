@@ -1,5 +1,28 @@
+/**
+ * Authentication Provider Component
+ * 
+ * This component manages the authentication state for the entire application,
+ * providing context for both teacher and student authentication flows:
+ * 
+ * - Teacher authentication: Validated via server API calls and session cookies
+ * - Student authentication: Managed via localStorage for anonymous participation
+ * 
+ * Key features:
+ * - Provides authentication state (isAuthenticated, isStudent, isTeacher)
+ * - Tracks loading state during authentication checks
+ * - Offers a refreshAuth method for forcing re-authentication
+ * - Stores teacherId for API calls requiring teacher identity
+ * 
+ * All components requiring authentication information should consume this context
+ * using the useAuth hook exported from this file.
+ */
+
 "use client";
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
+import { createLogger } from '@/clientLogger';
+
+// Create a logger for this component
+const logger = createLogger('Auth');
 
 // Define the shape of the context value
 interface AuthContextType {
@@ -50,10 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     fetchedTeacherId = data.teacherId;
                 }
             } else {
-                console.error('Failed to fetch auth status');
+                logger.error('Failed to fetch auth status');
             }
         } catch (error) {
-            console.error('Error fetching auth status:', error);
+            logger.error('Error fetching auth status:', error);
         }
 
         // Update state based on checks
@@ -63,7 +86,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTeacherId(fetchedTeacherId);
         setIsLoading(false); // Finished loading
 
-        console.log('AuthProvider: Refreshed Auth State:', { studentLoggedIn, teacherLoggedIn, isAuthenticated: studentLoggedIn || teacherLoggedIn });
+        logger.info('Refreshed Auth State', {
+            studentLoggedIn,
+            teacherLoggedIn,
+            isAuthenticated: studentLoggedIn || teacherLoggedIn
+        });
     }, []);
 
     useEffect(() => {
@@ -72,7 +99,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Log state changes for debugging
     useEffect(() => {
-        console.log('AuthProvider: State Updated:', { isAuthenticated, isStudent, isTeacher, isLoading });
+        logger.debug('Auth State Updated', {
+            isAuthenticated,
+            isStudent,
+            isTeacher,
+            isLoading
+        });
     }, [isAuthenticated, isStudent, isTeacher, isLoading]);
 
     // Provide the state and refresh function through context

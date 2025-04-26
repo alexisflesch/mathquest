@@ -1,3 +1,17 @@
+/**
+ * Student Practice Session Page
+ * 
+ * This page provides the interactive question interface for student practice sessions:
+ * - Loads questions based on the filter parameters from the practice setup page
+ * - Presents questions one at a time with multiple choice answers
+ * - Tracks student score as they progress through questions
+ * - Provides a summary and score report upon completion
+ * 
+ * The practice session allows students to work through a customized set of questions
+ * matching their selected criteria, with immediate feedback on their answers.
+ * It represents the core question-answering experience in the practice mode.
+ */
+
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";

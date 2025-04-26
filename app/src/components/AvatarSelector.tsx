@@ -1,3 +1,19 @@
+/**
+ * Avatar Selector Component
+ * 
+ * This component displays a grid of available avatar options and allows users
+ * to select one for their profile. Key features include:
+ * 
+ * - Grid display of all available avatars from the public/avatars directory
+ * - Visual highlighting of the currently selected avatar
+ * - Responsive layout that adapts to different screen sizes
+ * - Scrollable container for many avatar options
+ * - Callback support for parent components to handle selection
+ * 
+ * Used during user registration, profile customization, and anywhere 
+ * users need to select an avatar within the MathQuest application.
+ */
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 
@@ -25,11 +41,11 @@ export default function AvatarSelector({ onSelect, selected }: { onSelect?: (ava
 
     return (
         <div className="flex justify-center w-full">
-            <div className="flex flex-wrap justify-center gap-4 max-w-xl">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-xs sm:max-w-xl overflow-y-auto max-h-[220px] sm:max-h-72">
                 {avatars.map((file) => (
                     <button
                         key={file}
-                        className={`rounded-full border-2 bg-white !bg-white ${selected === file ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-500 focus:outline-none`}
+                        className={`rounded-full border-2 bg-white ${selected === file ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-500 focus:outline-none`}
                         style={{ backgroundColor: 'white' }}
                         onClick={() => onSelect && onSelect(file)}
                         type="button"

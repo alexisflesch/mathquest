@@ -1,6 +1,21 @@
+/**
+ * Questions API Route
+ * 
+ * This API route retrieves questions for quiz and tournament creation:
+ * - Supports filtering by discipline, niveau (grade level), and theme
+ * - Returns a randomized subset of questions based on the provided limit
+ * - Default limit is 10 questions if not specified
+ * 
+ * Used by both teacher quiz creation and student tournament creation flows
+ * to generate question sets based on selected criteria.
+ */
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+
+const createLogger = require('@logger');
+const logger = createLogger('API:Questions');
 
 const prisma = new PrismaClient();
 
@@ -25,7 +40,7 @@ export async function GET(request: NextRequest) {
         const shuffled = all.sort(() => Math.random() - 0.5).slice(0, limit);
         return NextResponse.json(shuffled);
     } catch (error: unknown) {
-        console.error('API /api/questions error:', error);
+        logger.error('API /api/questions error:', error);
         return NextResponse.json({ message: 'Erreur serveur.', error: String(error) }, { status: 500 });
     }
 }

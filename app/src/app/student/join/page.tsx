@@ -1,3 +1,19 @@
+/**
+ * Student Tournament Join Page
+ * 
+ * This page provides the interface for students to join tournaments:
+ * - Simple numeric code entry with validation
+ * - Smart routing based on tournament type and status
+ * - Error handling for invalid codes
+ * 
+ * The component implements intelligent routing logic that directs students
+ * to the appropriate experience based on the tournament's current state:
+ * - Direct tournaments in preparation → Lobby
+ * - Direct tournaments in progress → Tournament interface
+ * - Direct tournaments that are finished → Tournament in differed mode
+ * - Differed tournaments → Tournament interface directly
+ */
+
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,7 +52,8 @@ export default function StudentJoinPage() {
                     return;
                 }
                 if (data.statut === 'terminé') {
-                    setError('Tournoi terminé');
+                    // Allow differed play for finished tournaments
+                    router.push(`/tournament/${tournoiCode}?differed=1`);
                     return;
                 }
             }
@@ -47,7 +64,7 @@ export default function StudentJoinPage() {
     };
 
     return (
-        <div className="h-[100dvh] w-full flex flex-col items-center justify-center bg-gray-100 px-4">
+        <div className="h-[100dvh] w-full flex flex-col items-center justify-center px-4">
             <form
                 onSubmit={handleSubmit}
                 className="card w-full max-w-md shadow-xl bg-base-100"

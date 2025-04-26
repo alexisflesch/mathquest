@@ -1,3 +1,18 @@
+/**
+ * Student Dashboard/Menu Page
+ * 
+ * This page serves as the central hub for student navigation within the MathQuest application.
+ * It provides:
+ * - A personalized welcome based on the student's registered username
+ * - Main navigation options for student activities
+ * - Authentication verification with redirection for non-authenticated users
+ * - Special handling for teachers who are accessing the student area
+ * 
+ * The page dynamically adapts to the user's authentication status, supporting
+ * both regular student users and teachers who may want to test the student experience.
+ * It serves as the main entry point after student authentication.
+ */
+
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -26,7 +41,7 @@ export default function StudentMenuPage() {
     }, [router, isTeacher, isLoading]);
 
     return (
-        <div className="h-[calc(100vh-56px)] flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4 pt-14 md:h-screen md:pt-0">
+        <div className="h-[calc(100vh-56px)] flex items-center justify-center  p-4 pt-14 md:h-screen md:pt-0">
             <div className="card w-full max-w-md shadow-xl bg-base-100">
                 <div className="card-body items-center gap-6 text-center">
                     <h1 className="card-title text-3xl mb-8">Bienvenue, {pseudo} !</h1>

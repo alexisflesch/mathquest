@@ -1,3 +1,16 @@
+/**
+ * Tournament Leaderboard API Route
+ * 
+ * This API route retrieves the leaderboard data for a specific tournament:
+ * - Accepts a tournament code as a query parameter
+ * - Returns the ranked list of participants with their scores
+ * 
+ * The leaderboard data is stored directly in the tournament record in the database
+ * and includes both live and differed (asynchronous) participant results.
+ * 
+ * Used by the tournament leaderboard page to display final results and rankings.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 

@@ -3,12 +3,16 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
+const createLogger = require('@logger');
+const logger = createLogger('API:ResetPassword');
+
 const prisma = new PrismaClient();
+
 
 // Helper: send email (mock)
 async function sendResetEmail(email: string, token: string) {
     // In production, use a real email service
-    console.log(`[DEV] Password reset link for ${email}: http://localhost:3000/teacher/reset-password/${token}`);
+    logger.debug(`Password reset link for ${email}: http://localhost:3000/teacher/reset-password/${token}`);
 }
 
 export async function POST(req: Request) {

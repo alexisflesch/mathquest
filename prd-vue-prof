@@ -1,0 +1,57 @@
+# 🎓 MathQuest - Interface Enseignant (Mode Prof)
+
+## Objectif
+Offrir aux enseignants une interface souple et interactive pour animer des séances en classe avec MathQuest. L’enseignant doit pouvoir contrôler le rythme, visualiser les réponses, interagir avec les élèves, et s’adapter au contexte de chaque séance.
+
+---
+
+## 🖥️ Vue Enseignant - Projection (Vidéoprojecteur)
+
+### Composants projetables personnalisables
+- Système de **fenêtres flottantes** (type Windows) permettant à l’enseignant de :
+  - Choisir les composants à afficher : chrono, question en cours, podium, etc.
+  - Déplacer et redimensionner librement chaque composant.
+- Chaque enseignant peut adapter la disposition selon sa pédagogie.
+
+### Chronomètre
+- Affichage d’un **chrono visible sur vidéoprojecteur**.
+- Possibilité de :
+  - Démarrer / Mettre en pause / Réinitialiser
+  - Modifier la durée du chrono à tout moment
+  - Sauter une question
+
+### Affichage question
+- Question en cours avec options de réponse
+- Affichage du nombre d’élèves ayant répondu en temps réel
+- Option pour **rejouer** une question
+- Pas de passage à la question suivante de manière automatique, contrairement aux tournois
+- Affichage de la bonne réponse par appui sur un bouton
+
+---
+
+## 🎛️ Vue Enseignant - Dashboard (Privée)
+
+### Navigation et contrôle
+- Liste des questions du quiz en cours avec réponses en sous-menu (Créer ou réutiliser le composant de création de quiz)
+  - Permet de **changer l’ordre**, **sauter**, ou **revenir** sur une question : par glisser-déposer et boutons "croix" pour supprimer
+- Statistiques en temps réel :
+  - Nombre de réponses par question
+  - Répartition des réponses
+  - Score moyen
+  - Taux de réussite
+
+### Gestion des sessions
+- Lancement manuel de chaque question depuis le dashboard
+- Possibilité de rejouer une question même après l'avoir terminée
+- Chrono paramétrable à chaque question (utiliser les valeurs de la question par défaut)
+- Possibilité de verrouiller une question pour la rendre non modifiable par les élèves (automatique si chrono à zéro)
+
+---
+
+## 🧠 Suggestions UX/UI
+
+- Couleurs et animations douces pour encourager l’engagement (utiliser globals.css)
+
+
+# Librairies utilisées
+react-rnd

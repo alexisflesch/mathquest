@@ -1,6 +1,22 @@
+/**
+ * Student Practice Page
+ * 
+ * This page provides a self-paced practice environment for students:
+ * - Filter selection by discipline, grade level, and theme
+ * - Configurable number of practice questions
+ * - Timed questions with automatic progression
+ * - Score tracking and completion summary
+ * 
+ * The practice mode allows students to improve their skills independently,
+ * focusing on specific subject areas without the competitive pressure of
+ * tournaments. It implements a local timer for each question and tracks
+ * the student's progress through the selected question set.
+ */
+
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import CustomDropdown from "@/components/CustomDropdown";
 
 interface CurrentQuestion {
     uid: string;
@@ -80,24 +96,34 @@ export default function PracticePage() {
                     <div style={{ height: 32 }} />
                     {!practiceStarted && (
                         <div className="flex flex-col gap-6 w-full">
-                            {/* If you want even more space, increase mb-4 to mb-8 above, or add another <div className="mb-2" /> here */}
-                            <select className="select select-bordered select-lg w-full" value={practiceDiscipline} onChange={e => setPracticeDiscipline(e.target.value)}>
-                                <option value="">Discipline</option>
-                                {practiceFilters.disciplines.map(d => <option key={d} value={d}>{d}</option>)}
-                            </select>
-                            <select className="select select-bordered select-lg w-full" value={practiceNiveau} onChange={e => setPracticeNiveau(e.target.value)}>
-                                <option value="">Niveau</option>
-                                {practiceFilters.niveaux.map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                            <select className="select select-bordered select-lg w-full" value={practiceTheme} onChange={e => setPracticeTheme(e.target.value)}>
-                                <option value="">Thème</option>
-                                {practiceFilters.themes.map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                            <select className="select select-bordered select-lg w-full" value={practiceLimit} onChange={e => setPracticeLimit(Number(e.target.value))}>
-                                <option value={10}>10 questions</option>
-                                <option value={20}>20 questions</option>
-                                <option value={30}>30 questions</option>
-                            </select>
+                            <CustomDropdown
+                                options={practiceFilters.disciplines}
+                                value={practiceDiscipline}
+                                onChange={setPracticeDiscipline}
+                                placeholder="Discipline"
+                                className="mb-2"
+                            />
+                            <CustomDropdown
+                                options={practiceFilters.niveaux}
+                                value={practiceNiveau}
+                                onChange={setPracticeNiveau}
+                                placeholder="Niveau"
+                                className="mb-2"
+                            />
+                            <CustomDropdown
+                                options={practiceFilters.themes}
+                                value={practiceTheme}
+                                onChange={setPracticeTheme}
+                                placeholder="Thème"
+                                className="mb-2"
+                            />
+                            <CustomDropdown
+                                options={["10", "20", "30"]}
+                                value={String(practiceLimit)}
+                                onChange={v => setPracticeLimit(Number(v))}
+                                placeholder="Nombre de questions"
+                                className="mb-2"
+                            />
                             <button
                                 className="btn btn-primary btn-lg w-full mt-4"
                                 onClick={() => {

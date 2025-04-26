@@ -1,3 +1,21 @@
+/**
+ * Lobby Page Component
+ * 
+ * This component manages the tournament lobby/waiting room where participants
+ * gather before the tournament begins. Key functionalities include:
+ * 
+ * - Socket.IO connection for real-time participant updates
+ * - Display of connected participants with avatars
+ * - Tournament start controls (for tournament creator only)
+ * - Countdown animation before tournament starts
+ * - Tournament code sharing
+ * - Identity management for teachers and students
+ * 
+ * The lobby handles the transition between tournament creation and actual
+ * tournament participation, and ensures all participants are properly
+ * redirected when the tournament begins.
+ */
+
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -5,6 +23,10 @@ import { io, Socket } from "socket.io-client";
 import { useAuth } from '@/components/AuthProvider';
 import Image from 'next/image';
 import { Share2 } from "lucide-react";
+import { createLogger } from '@/clientLogger';
+
+// Create a logger for this component
+const logger = createLogger('Lobby');
 
 export default function LobbyPage() {
     const { code } = useParams();
@@ -19,22 +41,22 @@ export default function LobbyPage() {
     // Get correct pseudo/avatar for current session
     const getCurrentIdentity = useCallback(() => {
         if (typeof window === 'undefined') {
-            console.log('[Lobby][getCurrentIdentity] Not running in browser, window is undefined');
+            logger.debug('Not running in browser, window is undefined');
             return null;
         }
-        console.log('[Lobby][getCurrentIdentity] isTeacher:', isTeacher, 'isStudent:', isStudent);
+        logger.debug('Identity check', { isTeacher, isStudent });
         if (isTeacher) {
             const pseudo = localStorage.getItem('mathquest_teacher_pseudo');
             const avatar = localStorage.getItem('mathquest_teacher_avatar');
-            console.log('[Lobby][getCurrentIdentity] teacher pseudo:', pseudo, 'avatar:', avatar);
+            logger.debug('Teacher identity', { pseudo, avatar });
             if (pseudo && avatar) return { pseudo, avatar: `/avatars/${avatar}` };
         } else if (isStudent) {
             const pseudo = localStorage.getItem('mathquest_pseudo');
             const avatar = localStorage.getItem('mathquest_avatar');
-            console.log('[Lobby][getCurrentIdentity] student pseudo:', pseudo, 'avatar:', avatar);
+            logger.debug('Student identity', { pseudo, avatar });
             if (pseudo && avatar) return { pseudo, avatar: `/avatars/${avatar}` };
         }
-        console.log('[Lobby][getCurrentIdentity] No valid identity found');
+        logger.warn('No valid identity found');
         return null;
     }, [isTeacher, isStudent]);
 
@@ -42,9 +64,9 @@ export default function LobbyPage() {
     useEffect(() => {
         if (isLoading) return; // Wait for auth state to load
         const identity = getCurrentIdentity();
-        console.log('[Lobby][useEffect redirect] identity:', identity);
+        logger.debug('Redirect check', { identity });
         if (!identity) {
-            console.log('[Lobby][useEffect redirect] No identity, redirecting to /');
+            logger.info('No identity, redirecting to home page');
             router.replace('/');
         }
     }, [isTeacher, isStudent, isLoading, getCurrentIdentity, router]);
@@ -66,7 +88,7 @@ export default function LobbyPage() {
             const tournoiRes = await fetch(`/api/tournament?code=${code}`);
             if (!tournoiRes.ok) return;
             const tournoi = await tournoiRes.json();
-            console.log("[Lobby] Tournament fetched:", tournoi);
+            logger.debug("Tournament fetched", { id: tournoi.id, code: tournoi.code, statut: tournoi.statut });
             // If the tournament is already started, redirect to tournament page
             if (tournoi.statut && tournoi.statut !== 'en préparation') {
                 router.replace(`/tournament/${code}`);
@@ -75,27 +97,27 @@ export default function LobbyPage() {
             let creatorData = null;
             if (tournoi.cree_par_joueur_id) {
                 // Fetch student creator
-                console.log("[Lobby] Fetching student creator", tournoi.cree_par_joueur_id);
+                logger.debug("Fetching student creator", { id: tournoi.cree_par_joueur_id });
                 const resJ = await fetch(`/api/joueur?id=${tournoi.cree_par_joueur_id}`);
-                console.log("[Lobby] Joueur fetch status:", resJ.status);
+                logger.debug("Joueur fetch status", { status: resJ.status });
                 if (resJ.ok) {
                     const joueur = await resJ.json();
-                    console.log("[Lobby] Joueur fetched:", joueur);
+                    logger.debug("Joueur fetched", { id: joueur.id, pseudo: joueur.pseudo });
                     creatorData = { pseudo: joueur.pseudo, avatar: `/avatars/${joueur.avatar || "cat-face.svg"}` };
                 }
             } else if (tournoi.cree_par_enseignant_id) {
                 // Fetch teacher creator
-                console.log("[Lobby] Fetching teacher creator", tournoi.cree_par_enseignant_id);
+                logger.debug("Fetching teacher creator", { id: tournoi.cree_par_enseignant_id });
                 const resE = await fetch(`/api/enseignant?id=${tournoi.cree_par_enseignant_id}`);
-                console.log("[Lobby] Enseignant fetch status:", resE.status);
+                logger.debug("Enseignant fetch status", { status: resE.status });
                 if (resE.ok) {
                     const enseignant = await resE.json();
-                    console.log("[Lobby] Enseignant fetched:", enseignant);
+                    logger.debug("Enseignant fetched", { id: enseignant.id, pseudo: enseignant.pseudo });
                     creatorData = { pseudo: enseignant.pseudo, avatar: `/avatars/${enseignant.avatar || "cat-face.svg"}` };
                 }
             } else {
                 // No creator found
-                console.log("[Lobby] No creator found in tournament");
+                logger.warn("No creator found in tournament");
                 creatorData = { pseudo: "Inconnu", avatar: "/avatars/cat-face.svg" };
             }
             if (creatorData) setCreator(creatorData);
@@ -129,7 +151,7 @@ export default function LobbyPage() {
         let cookie_id = null;
         if (typeof window !== 'undefined') {
             cookie_id = localStorage.getItem('mathquest_cookie_id');
-            console.log('[Lobby] cookie_id before join_lobby:', cookie_id);
+            logger.debug('cookie_id before join_lobby', { cookie_id });
         }
         socket.emit("join_lobby", {
             code,
@@ -139,14 +161,14 @@ export default function LobbyPage() {
         });
 
         // Debug: log after join_lobby
-        console.log("[Lobby] Emitted join_lobby for code", code);
+        logger.info("Joined lobby", { code });
 
         // Request the current participants list
         socket.emit("get_participants", { code });
 
         // Listen for the full participants list
         socket.on("participants_list", (list) => {
-            console.log("[Lobby] Received participants_list:", list);
+            logger.debug("Received participants list", { count: list.length });
             setParticipants(list);
         });
 
@@ -156,30 +178,64 @@ export default function LobbyPage() {
                 if (prev.some((p) => p.id === participant.id)) return prev;
                 return [...prev, participant];
             });
-            console.log("[Lobby] participant_joined:", participant);
+            logger.debug("Participant joined", { id: participant.id, pseudo: participant.pseudo });
         });
         socket.on("participant_left", (participant) => {
             setParticipants((prev) => prev.filter((p) => p.id !== participant.id));
-            console.log("[Lobby] participant_left:", participant);
+            logger.debug("Participant left", { id: participant.id, pseudo: participant.pseudo });
         });
-        // Listen for tournament_started event from server
+
+        // Listen for redirect_to_tournament event (immediate redirect for quiz-triggered tournaments)
+        socket.on("redirect_to_tournament", ({ code }) => {
+            logger.info("Received redirect_to_tournament event, redirecting immediately");
+            router.push(`/tournament/${code}`);
+        });
+
+        // Listen for tournament_started event from server (normal tournaments with countdown)
         socket.on("tournament_started", () => {
-            console.log("[Lobby] Received tournament_started event");
+            logger.info("Tournament started, beginning countdown");
             setCountdown(5);
             const interval = setInterval(() => {
                 setCountdown((prev) => {
                     if (prev === null) return null;
                     if (prev <= 1) {
                         clearInterval(interval);
+                        // Redirect to tournament page when countdown ends
+                        logger.info("Countdown finished, redirecting to tournament");
+                        router.push(`/tournament/${code}`);
                         return 0;
                     }
                     return prev - 1;
                 });
             }, 1000);
         });
+
+        // *** NEW: Listen for the event indicating the tournament already started ***
+        socket.on("tournament_already_started", ({ code: tournamentCode, status }) => {
+            logger.info(`Received tournament_already_started event for code ${tournamentCode} with status ${status}. Redirecting...`);
+            if (status === 'en cours') {
+                router.replace(`/tournament/${tournamentCode}`);
+            } else if (status === 'terminé') {
+                // Optional: Redirect to leaderboard if finished, or just the main tournament page
+                router.replace(`/tournament/leaderboard/${tournamentCode}`);
+            } else {
+                // Fallback or error handling, maybe redirect home?
+                logger.warn(`Unexpected status received in tournament_already_started: ${status}`);
+                router.replace('/');
+            }
+        });
+
+        // Listen for potential lobby errors from the server
+        socket.on("lobby_error", ({ message }) => {
+            logger.error(`Lobby error received: ${message}`);
+            // TODO: Display this error to the user appropriately
+            alert(`Erreur: ${message}`); // Simple alert for now
+            router.replace('/'); // Redirect home on error
+        });
+
         // Debug: log all socket events
         socket.onAny((event, ...args) => {
-            console.log("[Lobby] socket event:", event, args);
+            logger.debug(`Socket event: ${event}`, args);
         });
 
         // Clean up on unmount
@@ -199,10 +255,10 @@ export default function LobbyPage() {
     // Handler for start button
     const handleStart = () => {
         if (isCreator && socketRef.current) {
-            console.log("[Lobby] Emitting start_tournament", code, socketRef.current.connected);
+            logger.info("Starting tournament", { code, socketConnected: socketRef.current.connected });
             socketRef.current.emit("start_tournament", { code });
         } else {
-            console.log("[Lobby] Not creator or socket not ready", isCreator, !!socketRef.current);
+            logger.warn("Cannot start tournament", { isCreator, socketReady: !!socketRef.current });
         }
     };
 
@@ -221,7 +277,7 @@ export default function LobbyPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-200">
+        <div className="m-2 min-h-screen flex items-center justify-center bg-base-200">
             <div className="card w-full max-w-2xl shadow-xl bg-base-100 relative">
                 <div className="card-body items-center gap-8 w-full">
                     {/* First row: Avatar/pseudo | Code | Share button */}
@@ -270,9 +326,10 @@ export default function LobbyPage() {
                                         alt="avatar"
                                         width={40}
                                         height={40}
-                                        className="w-[40px] h-[40px] rounded-full border border-base-300"
+                                        className="w-[47px] h-[47px] rounded-full border-2"
+                                        style={{ borderColor: "var(--secondary)" }}
                                     />
-                                    <span className="text-sm mt-1 truncate max-w-[70px]">{p.pseudo}</span>
+                                    <span className="text-sm mt-0 truncate max-w-[70px]">{p.pseudo}</span>
                                 </div>
                             ))}
                         </div>

@@ -1,57 +1,77 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+/**
+ * Quiz API Route
+ * 
+ * This API route handles quiz operations:
+ * - GET: Retrieves all quizzes with their basic information
+ * - POST: Creates a new quiz with specified properties
+ * 
+ * Quizzes represent collections of questions that can be used for tournaments
+ * or classroom activities. They are primarily created and managed by teachers.
+ * 
+ * The route includes logging for debugging purposes and proper error handling
+ * for all operations.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
+const createLogger = require('@logger');
+const logger = createLogger('API:Quiz');
 const prisma = new PrismaClient();
 
-// GET: List all quizzes (quizz = list of questions saved by a teacher)
-export async function GET() {
-    // Return all quizzes with new array fields
-    const quizzes = await prisma.tournoiSauvegarde.findMany({
-        select: {
-            id: true,
-            nom: true,
-            questions_ids: true,
-            enseignant_id: true,
-            date_creation: true,
-            niveaux: true,      // <-- now array
-            categories: true,   // <-- now array
-            themes: true,       // <-- array
-            type: true,
-        },
-        orderBy: { date_creation: 'desc' },
-    });
-    return NextResponse.json(quizzes);
+
+export async function GET(req: NextRequest) {
+    logger.debug('GET /api/quiz called');
+    try {
+        const quizzes = await prisma.quiz.findMany({
+            select: {
+                id: true,
+                nom: true,
+                questions_ids: true,
+                enseignant_id: true,
+                date_creation: true,
+                niveaux: true,
+                categories: true,
+                themes: true,
+                type: true,
+            },
+            orderBy: { date_creation: 'desc' },
+        });
+        return NextResponse.json(quizzes);
+    } catch (e) {
+        logger.error('Error in GET /api/quiz:', e);
+        return NextResponse.json({ error: 'Erreur lors de la récupération des quiz' }, { status: 500 });
+    }
 }
 
-// POST: Save a new quiz (for future use)
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
     try {
-        const body = await request.json();
-        const { nom, questions_ids, enseignant_id, niveaux, categories, themes, type } = body;
-        if (!nom || !questions_ids || !enseignant_id) {
-            return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
+        const data = await req.json();
+        // Validation minimale
+        if (!data.nom || !data.enseignant_id || !Array.isArray(data.questions_ids)) {
+            logger.warn('Invalid data in POST /api/quiz', {
+                hasName: !!data.nom,
+                hasTeacherId: !!data.enseignant_id,
+                hasQuestions: Array.isArray(data.questions_ids)
+            });
+            return new Response(JSON.stringify({ error: "Champs obligatoires manquants" }), { status: 400 });
         }
-        const quiz = await prisma.tournoiSauvegarde.create({
+        const prisma = new PrismaClient();
+        const quiz = await prisma.quiz.create({
             data: {
-                nom,
-                questions_ids,
-                enseignant_id,
-                niveaux,
-                categories,
-                themes,
-                type: type || 'direct',
+                nom: data.nom,
+                enseignant_id: data.enseignant_id,
+                questions_ids: data.questions_ids,
+                type: data.type || "standard",
+                niveaux: data.niveaux || [],
+                categories: data.categories || [],
+                themes: data.themes || [],
             },
         });
-        return NextResponse.json({ message: 'Quiz sauvegardé.', quizId: quiz.id }, { status: 201 });
-    } catch (error) {
-        console.error('POST /api/quiz error:', error);
-        let errorMessage = 'Erreur serveur.';
-        if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: string }).message === 'string') {
-            errorMessage = (error as { message: string }).message;
-        } else {
-            errorMessage = String(error);
-        }
-        return NextResponse.json({ message: errorMessage }, { status: 500 });
+        logger.info('Quiz created successfully', { quizId: quiz.id, name: quiz.nom });
+        return new Response(JSON.stringify(quiz), { status: 201 });
+    } catch (e) {
+        logger.error('Error in POST /api/quiz:', e);
+        return new Response(JSON.stringify({ error: "Erreur lors de la création du quiz" }), { status: 500 });
     }
 }

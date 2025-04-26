@@ -4,6 +4,8 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+const createLogger = require('@logger');
+const logger = createLogger('API:Auth');
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme'; // Set this in your server env
 
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ message: 'Action inconnue.' }, { status: 400 });
     } catch (error: unknown) {
-        console.error('API /api/auth error:', error);
+        logger.error('API /api/auth error:', error);
         return NextResponse.json({ message: 'Erreur serveur.', error: String(error) }, { status: 500 });
     }
 }

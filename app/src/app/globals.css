@@ -10,7 +10,7 @@
 #10b981; */
 
 :root {
-  --background: #ECEBE4;
+  --background: #ebf0f5;
   --navbar: #153B50;
   --foreground: #23272f;
   --primary: #5fbcd3;
@@ -23,11 +23,120 @@
   --alert-foreground: #fff;
   --success: #10b981;
   --success-foreground: #fff;
-  --border: #e5e7eb;
+  --border: #23272f;
   --input: #e5e7eb;
   --radius: 0.75rem;
   --font-main: 'Inter', 'Segoe UI', Arial, sans-serif;
+  --muted: #e5e7eb;
+  --muted-foreground: #6b7280;
+  --placeholder: #e5e7eb;
+  --placeholder-foreground: #9ca3af;
+  --dropdown: #fff;
+  --dropdown-foreground: #23272f;
+  --badge-stepper-color: #23272f;
 }
+
+/* Force theme by [data-theme] attribute on html, takes precedence over prefers-color-scheme */
+html[data-theme="dark"] {
+  --background: #23272f;
+  --card: #2d3340;
+  --foreground: #f3f4f6;
+  --primary: #5fbcd3;
+  --primary-foreground: #23272f;
+  --secondary: #FF8C42;
+  --secondary-foreground: #23272f;
+  --accent: #9C89B8;
+  --accent-foreground: #23272f;
+  --alert: #f87171;
+  --alert-foreground: #23272f;
+  --success: #6ee7b7;
+  --success-foreground: #23272f;
+  --border: #27272a;
+  --input: #27272a;
+  --muted: #2d3340;
+  --muted-foreground: #9ca3af;
+  --placeholder: #23272f;
+  --placeholder-foreground: #6b7280;
+  --dropdown: #2d3340;
+  --dropdown-foreground: #f3f4f6;
+  --badge-stepper-color: #5fbcd3;
+}
+
+html[data-theme="light"] {
+  --background: #ebf0f5;
+  --card: #fff;
+  --foreground: #23272f;
+  --primary: #5fbcd3;
+  --primary-foreground: #fff;
+  --secondary: #FF8C42;
+  --secondary-foreground: #23272f;
+  --accent: #9C89B8;
+  --accent-foreground: #fff;
+  --alert: #ef4444;
+  --alert-foreground: #fff;
+  --success: #10b981;
+  --success-foreground: #fff;
+  --border: #23272f;
+  --input: #e5e7eb;
+  --muted: #e5e7eb;
+  --muted-foreground: #6b7280;
+  --placeholder: #e5e7eb;
+  --placeholder-foreground: #9ca3af;
+  --dropdown: #fff;
+  --dropdown-foreground: #23272f;
+  --badge-stepper-color: #23272f;
+}
+
+/* Optionally, comment out or remove the prefers-color-scheme block below to avoid confusion */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #23272f;
+    --card: #2d3340;
+    --foreground: #f3f4f6;
+    --primary: #5fbcd3;
+    --primary-foreground: #23272f;
+    --secondary: #FF8C42;
+    --secondary-foreground: #23272f;
+    --accent: #9C89B8;
+    --accent-foreground: #23272f;
+    --alert: #f87171;
+    --alert-foreground: #23272f;
+    --success: #6ee7b7;
+    --success-foreground: #23272f;
+    --border: #27272a;
+    --input: #27272a;
+    --muted: #2d3340;
+    --muted-foreground: #9ca3af;
+    --placeholder: #23272f;
+    --placeholder-foreground: #6b7280;
+    --dropdown: #2d3340;
+    --dropdown-foreground: #f3f4f6;
+    --badge-stepper-color: #5fbcd3;
+  }
+
+  .badge-stepper-dark-primary {
+    background: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+    border: 3px solid var(--primary) !important;
+    box-shadow: 0 2px 8px rgba(95, 188, 211, 0.10);
+  }
+
+  .badge-stepper {
+    --badge-stepper-bg: var(--primary);
+    --badge-stepper-fg: var(--primary-foreground);
+    --badge-stepper-border: var(--primary);
+    box-shadow: 0 2px 8px rgba(95, 188, 211, 0.10);
+  }
+
+  .badge-stepper-ghost {
+    background: transparent !important;
+    color: var(--foreground) !important;
+    border: 2px solid var(--badge-stepper-color) !important;
+    box-shadow: 0 2px 8px rgba(95, 188, 211, 0.05) !important;
+  }
+}
+*/
 
 @layer components {
   .btn-primary {
@@ -80,7 +189,7 @@
 
   .btn-success {
     background-color: var(--success) !important;
-    color: var(--success-foreground) !important;
+    color: var (--success-foreground) !important;
     border-radius: var(--radius) !important;
     font-weight: 600;
     letter-spacing: 0.01em;
@@ -149,25 +258,34 @@
     background-color: var(--navbar-bg, #f8fafc);
     /* fallback to a light color */
   }
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #23272f;
-    --navbar: #153B50;
-    --foreground: #f3f4f6;
-    --primary: #5fbcd3;
-    --primary-foreground: #23272f;
-    --secondary: #FF8C42;
-    --secondary-foreground: #23272f;
-    --accent: #9C89B8;
-    --accent-foreground: #23272f;
-    --alert: #f87171;
-    --alert-foreground: #23272f;
-    --success: #6ee7b7;
-    --success-foreground: #23272f;
-    --border: #27272a;
-    --input: #27272a;
+  .badge-stepper,
+  .badge-stepper-ghost,
+  .badge-stepper-primary {
+    background: var(--badge-stepper-color) !important;
+    color: var(--primary-foreground) !important;
+    border: 3px solid var(--badge-stepper-color) !important;
+    box-shadow: 0 2px 8px rgba(21, 59, 80, 0.10);
+  }
+
+  .no-dropdown-hover,
+  .no-dropdown-hover:hover,
+  .no-dropdown-hover:focus,
+  .no-dropdown-hover:active,
+  .no-dropdown-hover:focus-visible {
+    background: var(--dropdown) !important;
+    color: var(--dropdown-foreground) !important;
+    border-color: var(--primary) !important;
+    box-shadow: none !important;
+    outline: none !important;
+    caret-color: transparent !important;
+  }
+
+  .card-active {
+    background: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+    border: 2px solid var(--primary) !important;
+    box-shadow: 0 2px 8px rgba(95, 188, 211, 0.15);
   }
 }
 
@@ -193,17 +311,29 @@ button:disabled {
 
 .card,
 .bg-surface {
-  background: #fff;
+  background: var(--dropdown);
   border-radius: var(--radius);
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.04);
   border: 1px solid var(--border);
   padding: 1.5rem;
 }
 
+.bg-base-100 {
+  background-color: var(--card) !important;
+}
+
+.bg-base-200 {
+  background-color: var(--background) !important;
+}
+
+.bg-dropdown {
+  background-color: var(--dropdown, #fff) !important;
+}
+
 input,
 select,
 textarea {
-  background: #fff;
+  background: var(--dropdown);
   border: 1.5px solid var(--input);
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
@@ -237,7 +367,15 @@ textarea:focus {
 }
 
 .text-muted {
-  color: #9ca3af !important;
+  color: var(--muted-foreground) !important;
+}
+
+.text-placeholder {
+  color: var(--placeholder-foreground) !important;
+}
+
+.text-dropdown {
+  color: var(--dropdown-foreground) !important;
 }
 
 .border-default {
@@ -280,17 +418,26 @@ textarea:focus {
   font-size: 1rem;
 }
 
+.badge-accent {
+  background: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+  border-radius: 9999px !important;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  font-size: 1rem;
+}
+
 .badge-ghost {
-  border: 3px solid #2563EB !important;
-  background: #fff !important;
-  color: #2563EB !important;
+  border: 3px solid var(--primary) !important;
+  background: var(--dropdown) !important;
+  color: var(--primary) !important;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
 }
 
 .badge-info {
-  background: #2563EB !important;
-  color: #fff !important;
-  border: 3px solid #2563EB !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: 3px solid var(--primary) !important;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.10);
 }
 
@@ -312,21 +459,21 @@ textarea:focus {
 }
 
 .badge-stepper-primary {
-  background: var(--navbar) !important;
+  background: var(--badge-stepper-color) !important;
   color: var(--primary-foreground) !important;
-  border: 3px solid var(--navbar) !important;
+  border: 3px solid var(--badge-stepper-color) !important;
   box-shadow: 0 2px 8px rgba(21, 59, 80, 0.10);
 }
 
 .badge-stepper-ghost {
-  background: #fff !important;
-  color: var(--navbar) !important;
-  border: 3px solid var(--navbar) !important;
-  box-shadow: 0 2px 8px rgba(21, 59, 80, 0.05);
+  background: transparent !important;
+  color: var(--foreground) !important;
+  border: 2px solid var(--badge-stepper-color) !important;
+  box-shadow: 0 2px 8px rgba(21, 59, 80, 0.10);
 }
 
 .btn-outline.bg-base-100 {
-  background: #fff !important;
+  background: var(--dropdown) !important;
 }
 
 .avatar-ring-primary {
@@ -341,9 +488,4 @@ textarea:focus {
   .avatar-ring-primary {
     box-shadow: 0 0 0 4px var(--primary), 0 1px 3px 0 rgba(0, 0, 0, 0.07);
   }
-}
-
-button,
-.btn {
-  box-shadow: 3px 4px 4px #00000014 !important
 }

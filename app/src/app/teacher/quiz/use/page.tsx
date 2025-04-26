@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import QuizList from '@/components/QuizList';
+import { useRouter } from "next/navigation";
 
 interface Quiz {
     id: string;
@@ -23,6 +23,8 @@ export default function UseQuizPage() {
     const [selectedTheme, setSelectedTheme] = useState('');
     const [search, setSearch] = useState('');
     const [filteredQuizzes, setFilteredQuizzes] = useState<Quiz[]>([]);
+    const [selectedQuizId, setSelectedQuizId] = useState<string>("");
+    const router = useRouter();
 
     useEffect(() => {
         fetch('/api/quiz')
@@ -74,8 +76,28 @@ export default function UseQuizPage() {
                         onChange={e => setSearch(e.target.value)}
                     />
                     <div className="max-h-96 overflow-y-auto w-full mt-4">
-                        <QuizList quizzes={filteredQuizzes} onSelect={() => { }} />
+                        <ul className="divide-y divide-gray-200">
+                            {filteredQuizzes.map((quiz) => (
+                                <li
+                                    key={quiz.id}
+                                    className={`p-4 cursor-pointer flex items-center justify-between ${selectedQuizId === quiz.id ? "bg-blue-100" : "hover:bg-gray-100"}`}
+                                    onClick={() => setSelectedQuizId(quiz.id)}
+                                >
+                                    <span>{quiz.nom}</span>
+                                    {selectedQuizId === quiz.id && <span className="text-blue-600 font-bold">Sélectionné</span>}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
+                    <button
+                        className="btn btn-primary w-full mt-4"
+                        disabled={!selectedQuizId}
+                        onClick={() => {
+                            if (selectedQuizId) router.push(`/teacher/dashboard/${selectedQuizId}`);
+                        }}
+                    >
+                        Accéder au tableau de bord du quiz sélectionné
+                    </button>
                 </div>
             </div>
         </div>

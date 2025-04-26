@@ -22,9 +22,13 @@
         "name": "next"
       }
     ],
+    "baseUrl": "src",
     "paths": {
       "@/*": [
-        "./src/*"
+        "*"
+      ],
+      "@logger": [
+        "../logger.js"
       ]
     }
   },

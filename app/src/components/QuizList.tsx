@@ -1,3 +1,20 @@
+/**
+ * Quiz List Component
+ * 
+ * This component displays a list of available quizzes and provides selection
+ * functionality. Currently implemented as a simple list with basic styling, 
+ * but marked for future enhancement.
+ * 
+ * Key features:
+ * - Displays quiz names in a vertical list
+ * - Provides empty state messaging when no quizzes are available
+ * - Supports selection callback for navigation to quiz details
+ * - Simple, clean UI with hover effects
+ * 
+ * Used in teacher dashboards and quiz management screens to display
+ * available quizzes for selection, editing, or deployment.
+ */
+
 import React from 'react';
 
 // TODO: Replace with real quiz list logic and props

@@ -1,9 +1,26 @@
+/**
+ * Tournament API Route
+ * 
+ * This API route handles all tournament-related operations:
+ * - Creating new tournaments
+ * - Starting and ending tournaments
+ * - Retrieving tournament data by code, ID, or teacher/questions
+ * 
+ * The route supports:
+ * - POST: For creating/updating tournaments with various actions (create, start, end)
+ * - GET: For retrieving tournament data with different filtering options
+ * 
+ * Tournament creation handles both teacher-created and student-created tournaments
+ * with appropriate data attribution and unique code generation.
+ */
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-// removed unused randomBytes import
 
 const prisma = new PrismaClient();
+const createLogger = require('@logger');
+const logger = createLogger('API:Tournament');
 
 // Generate a unique 6-digit numeric code for the tournament
 async function generateUniqueTournamentCode() {
@@ -96,7 +113,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ message: 'Action inconnue.' }, { status: 400 });
     } catch (error: unknown) {
-        console.error('API /api/tournament error:', error);
+        logger.error('API /api/tournament error:', error);
         return NextResponse.json({ message: 'Erreur serveur.', error: String(error) }, { status: 500 });
     }
 }
@@ -105,6 +122,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const id = searchParams.get('id');
+    const enseignant_id = searchParams.get('enseignant_id');
+    const questions_ids = searchParams.getAll('questions_ids'); // expects repeated param: ?questions_ids=uid1&questions_ids=uid2
 
     if (code) {
         const tournoi = await prisma.tournoi.findUnique({ where: { code } });
@@ -115,6 +134,21 @@ export async function GET(request: NextRequest) {
         const tournoi = await prisma.tournoi.findUnique({ where: { id } });
         if (!tournoi) return NextResponse.json({ message: 'Tournoi introuvable.' }, { status: 404 });
         return NextResponse.json(tournoi);
+    }
+    // New: search by enseignant_id and questions_ids (for dashboard quiz)
+    if (enseignant_id && questions_ids.length > 0) {
+        // Find a tournament for this teacher and exact questions_ids, regardless of statut
+        const tournoi = await prisma.tournoi.findFirst({
+            where: {
+                enseignant_id,
+                questions_ids: { equals: questions_ids },
+            },
+            orderBy: { date_creation: 'desc' },
+        });
+        if (!tournoi) return NextResponse.json({ message: 'Aucun tournoi trouvé.' }, { status: 404 });
+        // Add a flag if there is already data (scores or leaderboard)
+        const hasData = (tournoi.leaderboard && Array.isArray(tournoi.leaderboard) && tournoi.leaderboard.length > 0);
+        return NextResponse.json({ ...tournoi, hasData });
     }
     // List all tournois (for teacher dashboard)
     const tournois = await prisma.tournoi.findMany();

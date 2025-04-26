@@ -1,6 +1,25 @@
+/**
+ * Tournaments API Route
+ * 
+ * This API route handles tournament creation operations:
+ * - POST: Creates a new tournament with specified properties
+ * 
+ * Key features of this route include:
+ * - Generation of a unique 6-digit tournament code
+ * - Setting of expiration date (24 hours after creation)
+ * - Support for both student and teacher tournament creation
+ * - Storage of tournament parameters (level, category, themes)
+ * 
+ * Tournaments start in "en préparation" status and can be later
+ * updated to "en cours" and "terminé" via other API routes.
+ */
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+
+const createLogger = require('@logger');
+const logger = createLogger('API:Tournaments');
 
 const prisma = new PrismaClient();
 
@@ -57,7 +76,7 @@ export async function POST(request: NextRequest) {
         });
         return NextResponse.json({ tournoi });
     } catch (error: unknown) {
-        console.error('API /api/tournaments POST error:', error);
+        logger.error('API /api/tournaments POST error:', error);
         return NextResponse.json({ message: 'Erreur serveur.', error: String(error) }, { status: 500 });
     }
 }

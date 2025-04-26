@@ -1,3 +1,19 @@
+/**
+ * Scoreboard Component
+ * 
+ * This component displays the current ranking of participants in a tournament or quiz,
+ * showing their avatars, names, and scores in descending order by score.
+ * 
+ * Key features:
+ * - Sorted display of participants by score (highest first)
+ * - Visual integration of player avatars
+ * - Empty state handling when no scores are available
+ * - Clean, list-based presentation with consistent styling
+ * 
+ * Used in tournament interfaces and teacher dashboards to display real-time
+ * or final rankings in competitive activities.
+ */
+
 import React from 'react';
 import Image from 'next/image';
 

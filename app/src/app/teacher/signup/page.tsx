@@ -80,11 +80,17 @@ export default function TeacherSignupPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-56px)] flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4 pt-14 md:h-screen md:pt-0">
-            <div className="card w-full max-w-md shadow-xl bg-base-100">
-                <div className="card-body items-center gap-8">
+        <div className="h-[calc(100vh-56px)] flex flex-col items-center justify-center p-4 md:p-4 pt-10 md:pt-14 md:h-screen">
+            <p className="text-center text-sm mb-4 text-muted w-full max-w-md">
+                Déjà un compte ?{' '}
+                <Link href="/teacher/login" className="link link-primary">
+                    Se connecter
+                </Link>
+            </p>
+            <div className="card w-full max-w-md shadow-xl bg-base-100 h-full md:h-[calc(100vh-56px)] m-2 flex flex-col">
+                <div className="card-body flex-1 flex flex-col items-center gap-8 min-h-0 overflow-y-auto w-full">
                     <h1 className="card-title text-3xl mb-4">Créer un compte enseignant</h1>
-                    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6">
+                    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6 flex-1 min-h-0">
                         <div>
                             <label className="block text-lg font-bold mb-2" htmlFor="nom">
                                 Nom
@@ -218,12 +224,6 @@ export default function TeacherSignupPage() {
                             </button>
                         </div>
                     </form>
-                    <p className="text-center text-sm mt-4">
-                        Déjà un compte ?{' '}
-                        <Link href="/teacher/login" className="link link-primary">
-                            Se connecter
-                        </Link>
-                    </p>
                 </div>
             </div>
         </div>
