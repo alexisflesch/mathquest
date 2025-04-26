@@ -78,11 +78,11 @@ export default function LobbyPage() {
             if (!res.ok) return;
             const status = await res.json();
             if (status.statut === 'terminé') {
-                router.replace(`/tournament/leaderboard/${code}`);
+                router.replace(`/leaderboard/${code}`);
                 return;
             }
             if (status.statut === 'en cours') {
-                router.replace(`/tournament/${code}`);
+                router.replace(`/live/${code}`);
                 return;
             }
             const tournoiRes = await fetch(`/api/tournament?code=${code}`);
@@ -91,7 +91,7 @@ export default function LobbyPage() {
             logger.debug("Tournament fetched", { id: tournoi.id, code: tournoi.code, statut: tournoi.statut });
             // If the tournament is already started, redirect to tournament page
             if (tournoi.statut && tournoi.statut !== 'en préparation') {
-                router.replace(`/tournament/${code}`);
+                router.replace(`/live/${code}`);
                 return;
             }
             let creatorData = null;
@@ -188,7 +188,7 @@ export default function LobbyPage() {
         // Listen for redirect_to_tournament event (immediate redirect for quiz-triggered tournaments)
         socket.on("redirect_to_tournament", ({ code }) => {
             logger.info("Received redirect_to_tournament event, redirecting immediately");
-            router.push(`/tournament/${code}`);
+            router.push(`/live/${code}`);
         });
 
         // Listen for tournament_started event from server (normal tournaments with countdown)
@@ -202,7 +202,7 @@ export default function LobbyPage() {
                         clearInterval(interval);
                         // Redirect to tournament page when countdown ends
                         logger.info("Countdown finished, redirecting to tournament");
-                        router.push(`/tournament/${code}`);
+                        router.push(`/live/${code}`);
                         return 0;
                     }
                     return prev - 1;
@@ -214,10 +214,10 @@ export default function LobbyPage() {
         socket.on("tournament_already_started", ({ code: tournamentCode, status }) => {
             logger.info(`Received tournament_already_started event for code ${tournamentCode} with status ${status}. Redirecting...`);
             if (status === 'en cours') {
-                router.replace(`/tournament/${tournamentCode}`);
+                router.replace(`/live/${tournamentCode}`);
             } else if (status === 'terminé') {
                 // Optional: Redirect to leaderboard if finished, or just the main tournament page
-                router.replace(`/tournament/leaderboard/${tournamentCode}`);
+                router.replace(`/leaderboard/${tournamentCode}`);
             } else {
                 // Fallback or error handling, maybe redirect home?
                 logger.warn(`Unexpected status received in tournament_already_started: ${status}`);
@@ -248,7 +248,7 @@ export default function LobbyPage() {
     useEffect(() => {
         if (countdown === 0) {
             // Redirect to tournament page when countdown ends
-            router.push(`/tournament/${code}`);
+            router.push(`/live/${code}`);
         }
     }, [countdown, code, router]);
 

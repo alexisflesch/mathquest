@@ -33,7 +33,7 @@ const getMinLogLevel = (): number => {
 const MIN_LOG_LEVEL = getMinLogLevel();
 
 // Core logging function
-const log = (level: LogLevel, message: string, context?: any) => {
+const log = (level: LogLevel, message: string, context?: unknown) => {
     if (LOG_LEVELS[level] < MIN_LOG_LEVEL) return;
 
     const timestamp = new Date().toISOString();
@@ -59,10 +59,10 @@ const log = (level: LogLevel, message: string, context?: any) => {
 
 // Export methods for each log level
 const logger = {
-    debug: (message: string, context?: any) => log('DEBUG', message, context),
-    info: (message: string, context?: any) => log('INFO', message, context),
-    warn: (message: string, context?: any) => log('WARN', message, context),
-    error: (message: string, context?: any) => log('ERROR', message, context),
+    debug: (message: string, context?: unknown) => log('DEBUG', message, context),
+    info: (message: string, context?: unknown) => log('INFO', message, context),
+    warn: (message: string, context?: unknown) => log('WARN', message, context),
+    error: (message: string, context?: unknown) => log('ERROR', message, context),
 };
 
 export default logger;

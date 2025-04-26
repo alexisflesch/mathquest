@@ -115,10 +115,10 @@ export function setLogLevel(level: LogLevel): void {
 
 // Logger interface
 export interface Logger {
-    debug: (message: any, ...args: any[]) => void;
-    info: (message: any, ...args: any[]) => void;
-    warn: (message: any, ...args: any[]) => void;
-    error: (message: any, ...args: any[]) => void;
+    debug: (message: unknown, ...args: unknown[]) => void;
+    info: (message: unknown, ...args: unknown[]) => void;
+    warn: (message: unknown, ...args: unknown[]) => void;
+    error: (message: unknown, ...args: unknown[]) => void;
 }
 
 /**
@@ -128,7 +128,7 @@ export interface Logger {
  */
 export function createLogger(context: string): Logger {
     // Common logging function
-    const log = (level: LogLevel, message: any, ...args: any[]): void => {
+    const log = (level: LogLevel, message: unknown, ...args: unknown[]): void => {
         // Skip logging if disabled or below minimum level
         if (level === 'NONE' || LOG_LEVELS[level] < getLogLevel()) {
             return;
@@ -162,10 +162,10 @@ export function createLogger(context: string): Logger {
     };
 
     return {
-        debug: (message: any, ...args: any[]) => log('DEBUG', message, ...args),
-        info: (message: any, ...args: any[]) => log('INFO', message, ...args),
-        warn: (message: any, ...args: any[]) => log('WARN', message, ...args),
-        error: (message: any, ...args: any[]) => log('ERROR', message, ...args)
+        debug: (message: unknown, ...args: unknown[]) => log('DEBUG', message, ...args),
+        info: (message: unknown, ...args: unknown[]) => log('INFO', message, ...args),
+        warn: (message: unknown, ...args: unknown[]) => log('WARN', message, ...args),
+        error: (message: unknown, ...args: unknown[]) => log('ERROR', message, ...args)
     };
 }
 

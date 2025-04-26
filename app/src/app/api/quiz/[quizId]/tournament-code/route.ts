@@ -15,10 +15,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import createLogger from '@logger';
+import { Logger } from '@/types';
 
+const logger = createLogger('API:QuizTournamentCode') as Logger;
 const prisma = new PrismaClient();
-const createLogger = require('@logger');
-const logger = createLogger('API:QuizTournamentCode');
 
 export async function GET(req: NextRequest) {
     try {

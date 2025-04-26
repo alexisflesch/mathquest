@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import createLogger from '@logger';
+import { Logger } from '@/types';
 
 const prisma = new PrismaClient();
-const createLogger = require('@logger');
-const logger = createLogger('API:Auth');
+const logger = createLogger('API:Auth') as Logger;
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme'; // Set this in your server env
 

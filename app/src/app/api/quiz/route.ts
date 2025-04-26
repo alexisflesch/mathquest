@@ -14,9 +14,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import createLogger from '@logger';
+import { Logger } from '@/types';
 
-const createLogger = require('@logger');
-const logger = createLogger('API:Quiz');
+const logger = createLogger('API:Quiz') as Logger;
 const prisma = new PrismaClient();
 
 

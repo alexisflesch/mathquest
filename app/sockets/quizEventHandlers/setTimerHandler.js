@@ -1,4 +1,10 @@
-const handleSetTimer = (io, socket, prisma, quizState, tournamentState, tournamentHandler, logger) => ({ quizId, timeLeft }) => {
+const createLogger = require('../../logger');
+const logger = createLogger('SetTimerHandler');
+const quizState = require('../quizState');
+const { tournamentState, triggerTournamentTimerSet } = require('../tournamentHandler');
+
+// Note: prisma is not needed here, so we don't pass it in registerQuizEvents
+function handleSetTimer(io, socket, prisma, { quizId, timeLeft }) {
     // *** ADDED LOGGING ***
     logger.info(`Received quiz_set_timer for quiz ${quizId} with timeLeft=${timeLeft}s`);
 
@@ -58,8 +64,8 @@ const handleSetTimer = (io, socket, prisma, quizState, tournamentState, tourname
         }
 
         // Update the tournament timer using the trigger function
-        tournamentHandler.triggerTournamentTimerSet(io, code, timeLeft);
+        triggerTournamentTimerSet(io, code, timeLeft);
     }
-};
+}
 
 module.exports = handleSetTimer;

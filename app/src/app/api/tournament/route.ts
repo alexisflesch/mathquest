@@ -17,10 +17,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import createLogger from '@logger';
+import { Logger } from '@/types';
 
 const prisma = new PrismaClient();
-const createLogger = require('@logger');
-const logger = createLogger('API:Tournament');
+const logger = createLogger('API:Tournament') as Logger;
 
 // Generate a unique 6-digit numeric code for the tournament
 async function generateUniqueTournamentCode() {

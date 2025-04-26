@@ -174,12 +174,17 @@ export default function DraggableQuestionsList({
 
     const handlePause = () => {
         setLocalStatus('pause');
-        onTimerAction && onTimerAction({ status: 'pause', questionId: localQuestionId!, timeLeft: localTimeLeft });
+        if (onTimerAction) {
+            onTimerAction({ status: 'pause', questionId: localQuestionId!, timeLeft: localTimeLeft });
+        }
     };
+
     const handleStop = () => {
         setLocalStatus('stop');
         setLocalTimeLeft(0);
-        onTimerAction && onTimerAction({ status: 'stop', questionId: localQuestionId!, timeLeft: 0 });
+        if (onTimerAction) {
+            onTimerAction({ status: 'stop', questionId: localQuestionId!, timeLeft: 0 });
+        }
     };
 
     return (

@@ -12,10 +12,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import createLogger from '@logger';
+import { Logger } from '@/types';
 
 const prisma = new PrismaClient();
-const createLogger = require('@logger');
-const logger = createLogger('API:TeacherQuizQuestions');
+const logger = createLogger('API:TeacherQuizQuestions') as Logger;
 
 export async function GET(req: NextRequest) {
     // Extract quizId from the URL pathname

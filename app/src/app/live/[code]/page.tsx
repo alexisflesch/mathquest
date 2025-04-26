@@ -427,7 +427,7 @@ export default function TournamentSessionPage() {
                 });
 
                 // Redirect to the new tournament URL to keep everything consistent
-                router.replace(`/tournament/${newCode}`);
+                router.replace(`/leaderboard/${code}`);
             }
         });
 
@@ -508,7 +508,7 @@ export default function TournamentSessionPage() {
         if (!socket) return;
         // Listen for tournament finished redirect
         socket.on("tournament_finished_redirect", ({ code }) => {
-            router.replace(`/tournament/leaderboard/${code}`);
+            router.replace(`/leaderboard/${code}`);
         });
         return () => {
             socket.off("tournament_finished_redirect");
@@ -520,7 +520,7 @@ export default function TournamentSessionPage() {
         // Listen for tournament_already_played event
         socket.on("tournament_already_played", ({ code }) => {
             // Redirect to leaderboard if already played
-            router.replace(`/tournament/leaderboard/${code}`);
+            router.replace(`/leaderboard/${code}`);
         });
 
         // Handle redirect to lobby if tournament hasn't started yet,

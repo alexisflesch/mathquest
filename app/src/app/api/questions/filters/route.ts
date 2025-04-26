@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-const createLogger = require('@logger');
-const logger = createLogger('API:QuestionsFilters');
+import createLogger from '@logger';
+import { Logger } from '@/types';
+
+const logger = createLogger('API:QuestionsFilters') as Logger;
 
 const prisma = new PrismaClient();
 

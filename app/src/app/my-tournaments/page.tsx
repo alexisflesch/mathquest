@@ -82,7 +82,7 @@ export default function MyTournamentsPage() {
                                     <span className="font-mono text-lg">{t.code}</span>
                                     <span className="flex-1 truncate">{t.nom}</span>
                                     <span className="badge badge-secondary text-xs px-2 py-1">#{t.position || "-"}</span>
-                                    <Link href={`/tournament/leaderboard/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Voir le classement">
+                                    <Link href={`/leaderboard/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Voir le classement">
                                         <SquareArrowRight style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
                                     </Link>
                                 </li>

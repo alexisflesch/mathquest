@@ -23,3 +23,17 @@ export interface QuizState {
     ended: boolean;
     stats: Record<string, unknown>;
 }
+
+/**
+ * Shared Logger interface for server-side logging
+ * 
+ * This interface is used to provide consistent typing for the logger
+ * created by the createLogger function from @logger.
+ * Use this interface when importing the logger in API routes.
+ */
+export interface Logger {
+    debug: (message: string, context?: unknown) => void;
+    info: (message: string, context?: unknown) => void;
+    warn: (message: string, context?: unknown) => void;
+    error: (message: string, context?: unknown) => void;
+}

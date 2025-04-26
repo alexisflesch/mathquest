@@ -39,7 +39,7 @@ export default function StudentJoinPage() {
             const data = await res.json();
             const tournoiCode = data.code || code; // prefer code over id
             if (data.type === 'differé' || data.type === 'différé') {
-                router.push(`/tournament/${tournoiCode}`);
+                router.push(`/live/${tournoiCode}`);
                 return;
             }
             if (data.type === 'direct') {
@@ -48,12 +48,12 @@ export default function StudentJoinPage() {
                     return;
                 }
                 if (data.statut === 'en cours') {
-                    router.push(`/tournament/${tournoiCode}`);
+                    router.push(`/live/${tournoiCode}`);
                     return;
                 }
                 if (data.statut === 'terminé') {
                     // Allow differed play for finished tournaments
-                    router.push(`/tournament/${tournoiCode}?differed=1`);
+                    router.push(`/live/${tournoiCode}?differed=1`);
                     return;
                 }
             }

@@ -110,6 +110,10 @@ export default function CreateQuizPage() {
                                 niveau: selectedNiveau,
                                 theme: selectedTheme,
                             }}
+                            timerStatus="stop"
+                            timerQuestionId={null}
+                            timeLeft={0}
+                            onTimerAction={() => { }}
                         />
                         <input
                             className="input input-bordered input-lg w-full mt-2"

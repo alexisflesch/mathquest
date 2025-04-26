@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import createLogger from '@logger';
+import { Logger } from '@/types';
 
-const createLogger = require('@logger');
-const logger = createLogger('API:ResetPassword');
+const logger = createLogger('API:ResetPassword') as Logger;
 
 const prisma = new PrismaClient();
-
 
 // Helper: send email (mock)
 async function sendResetEmail(email: string, token: string) {

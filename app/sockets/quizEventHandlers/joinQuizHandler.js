@@ -1,4 +1,9 @@
-const handleJoinQuiz = (io, socket, prisma, quizState, logger) => async ({ quizId, role }) => {
+const createLogger = require('../../logger');
+const logger = createLogger('JoinQuizHandler');
+const quizState = require('../quizState');
+const prisma = require('../../db'); // Ensure prisma is required
+
+async function handleJoinQuiz(io, socket, prisma, { quizId, role }) {
     socket.join(`quiz_${quizId}`);
     logger.info(`Socket ${socket.id} joined room quiz_${quizId} with role ${role}`);
     socket.emit("joined_room", {
@@ -16,6 +21,11 @@ const handleJoinQuiz = (io, socket, prisma, quizState, logger) => async ({ quizI
             ended: false,
             stats: {},
             profSocketId: role === 'prof' ? socket.id : null,
+            // Initialize timer action fields as well
+            timerStatus: null,
+            timerQuestionId: null,
+            timerTimeLeft: null,
+            timerTimestamp: null,
         };
 
         try {
@@ -41,6 +51,6 @@ const handleJoinQuiz = (io, socket, prisma, quizState, logger) => async ({ quizI
     }
 
     socket.emit("quiz_state", quizState[quizId]);
-};
+}
 
 module.exports = handleJoinQuiz;

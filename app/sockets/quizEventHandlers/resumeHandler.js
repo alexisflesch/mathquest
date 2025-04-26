@@ -1,4 +1,10 @@
-const handleResume = (io, socket, quizState, tournamentState, tournamentHandler, logger) => ({ quizId }) => {
+const createLogger = require('../../logger');
+const logger = createLogger('ResumeQuizHandler');
+const quizState = require('../quizState');
+const { tournamentState, triggerTournamentResume } = require('../tournamentHandler');
+
+// Note: prisma is not needed here
+function handleResume(io, socket, prisma, { quizId }) {
     if (!quizState[quizId] || quizState[quizId].profSocketId !== socket.id) {
         logger.warn(`Unauthorized attempt to resume quiz ${quizId} from socket ${socket.id}`);
         return;
@@ -8,15 +14,10 @@ const handleResume = (io, socket, quizState, tournamentState, tournamentHandler,
     quizState[quizId].chrono.running = true;
     io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
 
-    // Find the linked tournament code
     const code = Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
     if (code) {
-        // Trigger resume in the tournament handler
-        tournamentHandler.triggerTournamentResume(io, code);
-        logger.info(`Triggered resume for linked tournament ${code}`);
-    } else {
-        logger.debug(`No tournament linked to quiz ${quizId} found for resume action.`);
+        triggerTournamentResume(io, code);
     }
-};
+}
 
 module.exports = handleResume;

@@ -1,22 +1,24 @@
-const handleTimerAction = (io, socket, prisma, quizState, tournamentState, tournamentHandler, logger) => async ({ status, questionId, timeLeft, quizId }) => {
+const createLogger = require('../../logger');
+const logger = createLogger('TimerActionHandler');
+const quizState = require('../quizState');
+const { tournamentState, triggerTournamentPause, triggerTournamentTimerSet } = require('../tournamentHandler');
+const prisma = require('../../db'); // Ensure prisma is required
+
+async function handleTimerAction(io, socket, prisma, { status, questionId, timeLeft, quizId }) {
     logger.info(`Received quiz_timer_action: status=${status}, question=${questionId}, timeLeft=${timeLeft}, quizId=${quizId}`);
 
     if (!quizState[quizId]) {
-        logger.info(`Quiz state not found for quizId=${quizId}, initializing it...`);
-        quizState[quizId] = {
-            currentQuestionIdx: null,
-            questions: [],
-            chrono: { timeLeft: null, running: false },
-            locked: false,
-            ended: false,
-            stats: {},
-            profSocketId: socket.id,
-            timerStatus: null,
-            timerQuestionId: null,
-            timerTimeLeft: null,
-            timerTimestamp: null,
-        };
+        logger.warn(`Quiz state not found for quizId=${quizId} during timer action. Socket ${socket.id}`);
+        // Optionally initialize state if it makes sense in your flow, or return error
+        // For now, just return to prevent errors
+        return;
     }
+
+    // Teacher/Auth check (optional but recommended)
+    // if (quizState[quizId].profSocketId !== socket.id) {
+    //     logger.warn(`Unauthorized timer action attempt on quiz ${quizId} from socket ${socket.id}`);
+    //     return;
+    // }
 
     // If this is a resume action (play after pause), check if the timer has been updated
     if (status === 'play' && quizState[quizId].timerStatus === 'pause' && quizState[quizId].timerQuestionId === questionId) {
@@ -132,7 +134,9 @@ const handleTimerAction = (io, socket, prisma, quizState, tournamentState, tourn
                             socketToJoueur: {},
                             paused: false,
                             pausedRemainingTime: null,
-                            linkedQuizId: quizId
+                            linkedQuizId: quizId,
+                            currentQuestionDuration: timeLeft, // Initialize duration
+                            stopped: false,
                         };
 
                         // Notify lobby participants
@@ -178,12 +182,12 @@ const handleTimerAction = (io, socket, prisma, quizState, tournamentState, tourn
                 }
             } else if (status === 'stop') {
                 // Use trigger function
-                tournamentHandler.triggerTournamentTimerSet(io, code, 0); // Setting timer to 0 handles stop logic
+                triggerTournamentTimerSet(io, code, 0); // Setting timer to 0 handles stop logic
                 logger.info(`Triggered stop for tournament ${code}`);
 
             } else if (status === 'pause') {
                 // Use trigger function
-                tournamentHandler.triggerTournamentPause(io, code);
+                triggerTournamentPause(io, code);
                 logger.info(`Triggered pause for tournament ${code}`);
             }
         } else {
@@ -192,6 +196,6 @@ const handleTimerAction = (io, socket, prisma, quizState, tournamentState, tourn
     } catch (err) {
         logger.error(`Error handling quiz_timer_action:`, err);
     }
-};
+}
 
 module.exports = handleTimerAction;

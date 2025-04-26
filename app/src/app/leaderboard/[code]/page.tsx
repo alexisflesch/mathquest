@@ -1,5 +1,5 @@
 /**
- * Tournament Leaderboard Page Component
+ * Leaderboard Page Component
  * 
  * This component displays the results and rankings of a completed tournament.
  * Key features include:
@@ -9,9 +9,6 @@
  * - Highlighting of the current user in the leaderboard
  * - Sharing functionality for the leaderboard
  * - Link to play the tournament in differed mode if not yet attempted
- * 
- * The leaderboard is fetched from server-side storage and includes
- * all participants regardless of when they completed the tournament.
  */
 
 "use client";
@@ -103,7 +100,7 @@ export default function TournamentLeaderboardPage() {
                     <div className="w-full text-left text-base mb-4">
                         Pas encore joué ?{" "}
                         <Link
-                            href={`/tournament/${code}`}
+                            href={`/live/${code}`}
                             className="text-primary underline hover:text-primary/80 font-semibold"
                         >
                             Tentez votre chance en différé

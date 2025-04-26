@@ -59,7 +59,14 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
                 <div className="flex flex-col gap-6 w-full">
                     {/* Pass a dummy function or handle selection if needed */}
                     <QuizList quizzes={quizzes} onSelect={() => { /* TODO: Handle quiz selection */ }} />
-                    <QuestionSelector onSelect={setSelectedQuestions} selectedQuestionIds={selectedQuestions} />
+                    <QuestionSelector
+                        onSelect={setSelectedQuestions}
+                        selectedQuestionIds={selectedQuestions}
+                        timerStatus="stop"
+                        timerQuestionId={null}
+                        timeLeft={0}
+                        onTimerAction={() => { }}
+                    />
                     <input
                         className="w-full py-2 px-4 rounded border border-gray-300 mt-2"
                         type="text"
