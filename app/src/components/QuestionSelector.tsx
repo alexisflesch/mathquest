@@ -98,7 +98,10 @@ export default function QuestionSelector({
         fetch(url)
             .then(res => res.json())
             .then(setQuestions);
-    }, [effectiveFilter.discipline, effectiveFilter.niveau, effectiveFilter.theme]);
+    }, [effectiveFilter.discipline, effectiveFilter.niveau,
+    // Use JSON.stringify for array comparison to ensure changes are detected
+    Array.isArray(effectiveFilter.theme) ? JSON.stringify(effectiveFilter.theme) : effectiveFilter.theme
+    ]);
 
     useEffect(() => {
         // Add any selectedQuestionIds that are in the current questions list

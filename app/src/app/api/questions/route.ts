@@ -12,13 +12,16 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import createLogger from '@logger';
 import { Logger } from '@/types';
 
 const logger = createLogger('API:Questions') as Logger;
 
 const prisma = new PrismaClient();
+
+// Define type for where clause
+type QuestionWhereInput = Prisma.QuestionWhereInput;
 
 // GET: List all questions for quiz creation
 export async function GET(request: NextRequest) {
@@ -28,15 +31,29 @@ export async function GET(request: NextRequest) {
         const discipline = searchParams.get('discipline');
         const niveau = searchParams.get('niveau');
         const theme = searchParams.get('theme');
+        const themesParam = searchParams.get('themes');
         const limit = parseInt(searchParams.get('limit') || '10', 10);
 
-        const where: Record<string, string> = {};
+        const where: QuestionWhereInput = {};
         if (discipline) where.discipline = discipline;
         if (niveau) where.niveau = niveau;
-        if (theme) where.theme = theme;
+
+        // Handle both single theme and multiple themes
+        if (themesParam) {
+            const themes = themesParam.split(',').map(t => t.trim()).filter(Boolean);
+            if (themes.length > 0) {
+                where.theme = { in: themes };
+            }
+        } else if (theme) {
+            where.theme = theme;
+        }
+
+        logger.debug('Question filtering criteria:', where);
 
         // Get all matching questions
         const all = await prisma.question.findMany({ where });
+        logger.debug(`Found ${all.length} questions matching criteria`);
+
         // Shuffle and take 'limit' questions
         const shuffled = all.sort(() => Math.random() - 0.5).slice(0, limit);
         return NextResponse.json(shuffled);

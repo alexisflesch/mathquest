@@ -42,7 +42,12 @@ const mathJaxConfig = {
         // Si une erreur survient, n'affiche pas d'erreur visible
         renderActions: {
             findScript: [10, () => { }],
-            typeset: [200, (doc: { typesetClear: () => void }) => doc.typesetClear()],
+            typeset: [200, (doc: { typesetClear: () => void }) => {
+                // Check if the document exists before calling methods on it
+                if (doc && typeof doc.typesetClear === 'function') {
+                    doc.typesetClear();
+                }
+            }],
         }
     }
 };

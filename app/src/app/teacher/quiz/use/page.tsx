@@ -114,7 +114,7 @@ export default function UseQuizPage() {
                                 className="btn btn-primary btn-lg w-full"
                                 disabled={!selectedQuizId}
                                 onClick={() => {
-                                    if (selectedQuizId) router.push(`/teacher/home/${selectedQuizId}`);
+                                    if (selectedQuizId) router.push(`/teacher/dashboard/${selectedQuizId}`);
                                 }}
                             >
                                 Utiliser ce quiz

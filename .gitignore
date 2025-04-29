@@ -1,6 +1,9 @@
 # Ignore admin secret file
 .admin_secret
 
+# Ignore .vscode directory
+.vscode/
+
 # Ignore database info
 postgre.md
 
