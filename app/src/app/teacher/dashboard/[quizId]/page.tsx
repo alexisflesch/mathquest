@@ -64,7 +64,13 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         const fetchQuizData = async () => {
             try {
                 // Fetch quiz name
-                const quizListRes = await fetch(`/api/quiz`);
+                const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+                let quizListRes;
+                if (teacherId) {
+                    quizListRes = await fetch(`/api/quiz?enseignant_id=${teacherId}`);
+                } else {
+                    quizListRes = await fetch(`/api/quiz`); // Will return error, but keeps logic safe
+                }
                 if (!quizListRes.ok) throw new Error("Erreur lors du chargement des quiz");
                 const quizzes: { id: string; nom: string }[] = await quizListRes.json();
                 const found = Array.isArray(quizzes) ? quizzes.find((q) => q.id === quizId) : null;
@@ -360,98 +366,79 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
     if (!quizId) return <div className="p-8 text-orange-600">Aucun ID de quiz fourni.</div>;
 
-
     return (
-        <>
-            <main className="p-8 space-y-8">
-                {/* Ligne 1 : Titre + bouton terminer */}
-                <div className="flex flex-row items-center justify-between mb-2 gap-2">
-                    <h1 className="text-3xl font-bold">Tableau de bord – {quizName}</h1>
-                    <button className="btn btn-secondary" onClick={handleEndQuiz} disabled={!quizSocket || quizState?.ended}>
-                        {quizState?.ended ? 'Quiz Terminé' : 'Terminer le quiz'}
-                    </button>
-
-                    <ConfirmDialog
-                        open={showEndQuizConfirm}
-                        title="Terminer le quiz ?"
-                        message="Êtes-vous sûr de vouloir terminer ce quiz ? Cette action est irréversible."
-                        onConfirm={confirmEndQuiz}
-                        onCancel={cancelEndQuiz}
-                    />
-                </div>
-                {/* Ligne 2 : TournamentCodeManager + compteur, responsive */}
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-                    {/* TournamentCodeManager (gère code + bouton) */}
-                    <div>
-                        <TournamentCodeManager
-                            ref={tournamentCodeManagerRef}
-                            quizId={quizId}
-                            quizSocket={quizSocket}
-                            quizState={quizState}
-                            initialTournamentCode={initialTournamentCode}
-                            onCodeGenerated={handleCodeGenerated}
-                            onCodeUpdateEmitted={handleCodeUpdateEmitted}
-                            onRequestGenerateCode={handleRequestGenerateCode}
-                        />
-                    </div>
-                    {/* Saut de ligne forcé sur mobile après le bouton */}
-                    <div className="basis-full h-0 sm:hidden" />
-                    {/* Compteur utilisateurs connectés */}
-                    <div className="flex items-center gap-2 ml-auto text-base-content/80">
-                        <UsersRound className="w-6 h-6" />
-                        <span className="font-semibold">{connectedCount}</span>
-                    </div>
-                </div>
-                {/* Sur mobile, couper la ligne en 2 (3+3) */}
-                {/* Les autres sections restent inchangées */}
-                <section>
-                    <h2 className="text-xl font-semibold mb-4">Questions</h2>
-                    {/* Add a message if socket is not connected */}
-                    {!quizSocket || !quizSocket.connected && (
-                        <div className="alert alert-warning mb-4">
-                            Connexion au serveur en cours ou perdue... Les contrôles sont désactivés.
+        <div className="main-content">
+            <div className="card w-full max-w-4xl shadow-xl bg-base-100 m-4 my-6">
+                <div className="flex flex-col gap-8">
+                    <div className="card-body flex-1 flex flex-col gap-8 min-h-0 overflow-y-auto w-full p-0">
+                        <div className="flex flex-row items-center justify-between mb-2 gap-2">
+                            <h1 className="card-title text-3xl">Tableau de bord – {quizName}</h1>
+                            <button className="btn btn-secondary" onClick={handleEndQuiz} disabled={!quizSocket || quizState?.ended}>
+                                {quizState?.ended ? 'Quiz Terminé' : 'Terminer le quiz'}
+                            </button>
+                            <ConfirmDialog
+                                open={showEndQuizConfirm}
+                                title="Terminer le quiz ?"
+                                message="Êtes-vous sûr de vouloir terminer ce quiz ? Cette action est irréversible."
+                                onConfirm={confirmEndQuiz}
+                                onCancel={cancelEndQuiz}
+                            />
                         </div>
-                    )}
-                    <DraggableQuestionsList
-                        questions={questions} // Pass local questions state for ordering/display
-                        // Pass state derived from the hook
-                        currentQuestionIdx={quizState?.currentQuestionIdx} // Pass specific prop
-                        isChronoRunning={quizState?.chrono?.running} // Pass specific prop
-                        isQuizEnded={quizState?.ended} // Pass specific prop
-                        questionActiveUid={questionActiveUid} // Pass local UI selection state
-                        timerStatus={timerStatus}
-                        timerQuestionId={timerQuestionId}
-                        timeLeft={localTimeLeft ?? 0} // Use local countdown for display
-                        // Pass handlers
-                        onSelect={handleSelect}
-                        onPlay={handlePlay}
-                        onPause={handlePause}
-                        onStop={handleStop}
-                        onEditTimer={handleEditTimer}
-                        onReorder={handleReorder}
-                        onTimerAction={handleTimerAction} // Keep if DraggableQuestionsList needs it
-                        // Disable controls if socket is not connected or quiz ended
-                        disabled={!quizSocket || !quizSocket.connected || quizState?.ended}
-                    />
-                </section>
-
-                {/* Statistics Section (Placeholder) */}
-                <section>
-                    <h2 className="text-xl font-semibold mb-2">Statistiques en temps réel</h2>
-                    <div className="bg-base-200 rounded p-4 text-base-content/80">
-                        <p>Statistiques à venir… (nombre de réponses, répartition, score moyen, taux de réussite)</p>
-                        {/* Display raw quizState for debugging */}
-                        {/* <pre className="text-xs mt-4 overflow-auto max-h-60 bg-base-300 p-2 rounded">
-                            {JSON.stringify(quizState, null, 2)}
-                        </pre> */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+                            <div>
+                                <TournamentCodeManager
+                                    ref={tournamentCodeManagerRef}
+                                    quizId={quizId}
+                                    quizSocket={quizSocket}
+                                    quizState={quizState}
+                                    initialTournamentCode={initialTournamentCode}
+                                    onCodeGenerated={handleCodeGenerated}
+                                    onCodeUpdateEmitted={handleCodeUpdateEmitted}
+                                    onRequestGenerateCode={handleRequestGenerateCode}
+                                />
+                            </div>
+                            <div className="basis-full h-0 sm:hidden" />
+                            <div className="flex items-center gap-2 ml-auto text-base-content/80">
+                                <UsersRound className="w-6 h-6" />
+                                <span className="font-semibold">{connectedCount}</span>
+                            </div>
+                        </div>
+                        <section>
+                            <h2 className="text-xl font-semibold mb-4">Questions</h2>
+                            {!quizSocket || !quizSocket.connected && (
+                                <div className="alert alert-warning mb-4">
+                                    Connexion au serveur en cours ou perdue... Les contrôles sont désactivés.
+                                </div>
+                            )}
+                            <DraggableQuestionsList
+                                questions={questions}
+                                currentQuestionIdx={quizState?.currentQuestionIdx}
+                                isChronoRunning={quizState?.chrono?.running}
+                                isQuizEnded={quizState?.ended}
+                                questionActiveUid={questionActiveUid}
+                                timerStatus={timerStatus}
+                                timerQuestionId={timerQuestionId}
+                                timeLeft={localTimeLeft ?? 0}
+                                onSelect={handleSelect}
+                                onPlay={handlePlay}
+                                onPause={handlePause}
+                                onStop={handleStop}
+                                onEditTimer={handleEditTimer}
+                                onReorder={handleReorder}
+                                onTimerAction={handleTimerAction}
+                                disabled={!quizSocket || !quizSocket.connected || quizState?.ended}
+                            />
+                        </section>
+                        <section>
+                            <h2 className="text-xl font-semibold mb-2">Statistiques en temps réel</h2>
+                            <div className="bg-base-200 rounded p-4 text-base-content/80">
+                                <p>Statistiques à venir… (nombre de réponses, répartition, score moyen, taux de réussite)</p>
+                            </div>
+                        </section>
                     </div>
-                </section>
-
-                {/* Removed "Gestion des sessions" placeholder */}
-
-            </main>
-
-            {/* Confirmation Dialog */}
+                </div>
+            </div>
+            {/* Confirmation Dialogs */}
             <ConfirmDialog
                 open={showConfirm}
                 title="Changer de question ?"
@@ -459,8 +446,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 onConfirm={confirmPlay}
                 onCancel={cancelPlay}
             />
-
-            {/* Change Question Confirmation Dialog */}
             <ConfirmDialog
                 open={showChangeQuestionConfirm}
                 title="Changer de question ?"
@@ -468,8 +453,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 onConfirm={confirmChangeQuestion}
                 onCancel={cancelChangeQuestion}
             />
-
-            {/* Confirmation Dialog pour la génération d'un nouveau code tournoi */}
             <ConfirmDialog
                 open={showGenerateCodeConfirm}
                 title="Générer un nouveau code"
@@ -477,7 +460,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 onConfirm={confirmGenerateCode}
                 onCancel={cancelGenerateCode}
             />
-        </>
+        </div>
     );
 }
 

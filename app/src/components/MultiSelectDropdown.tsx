@@ -58,10 +58,10 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     }, [open]);
 
     const handleToggle = (option: string) => {
-        if (selected.includes(option)) {
-            onChange(selected.filter((t) => t !== option));
+        if ((selected ?? []).includes(option)) {
+            onChange((selected ?? []).filter((t) => t !== option));
         } else {
-            onChange([...selected, option]);
+            onChange([...(selected ?? []), option]);
         }
     };
 
@@ -70,13 +70,16 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
             {label && <label className="font-bold text-lg mb-1">{label}</label>}
             <div className="relative w-full" ref={dropdownRef}>
                 <button
-                    className="btn btn-outline btn-lg w-full text-left bg-dropdown text-dropdown"
+                    className="btn btn-outline btn-lg w-full text-left bg-dropdown text-dropdown no-dropdown-hover"
                     onClick={e => { e.preventDefault(); if (!disabled) setOpen(o => !o); }}
                     type="button"
                     disabled={disabled}
+                    style={{
+                        transition: 'none',
+                    }}
                 >
-                    <span className={selected.length === 0 ? "text-placeholder" : "text-dropdown"}>
-                        {selected.length === 0 ? placeholder : selected.join(", ")}
+                    <span className={(selected?.length ?? 0) === 0 ? "text-placeholder" : "text-dropdown"}>
+                        {(selected?.length ?? 0) === 0 ? placeholder : (selected || []).join(", ")}
                     </span>
                     <span className="float-right ml-2 select-none text-primary">▼</span>
                 </button>
@@ -97,12 +100,12 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
                     {options.map((option) => (
                         <label
                             key={option}
-                            className={`multi-dropdown-option flex items-center px-4 py-2 cursor-pointer ${selected.includes(option) ? 'bg-base-200 font-bold' : ''}`}
+                            className={`multi-dropdown-option flex items-center px-4 py-2 cursor-pointer ${(selected ?? []).includes(option) ? 'bg-base-200 font-bold' : ''}`}
                             style={{ userSelect: 'none' }}
                         >
                             <input
                                 type="checkbox"
-                                checked={selected.includes(option)}
+                                checked={(selected ?? []).includes(option)}
                                 onChange={() => handleToggle(option)}
                                 className="checkbox mr-2"
                             />

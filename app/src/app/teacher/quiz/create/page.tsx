@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import QuestionSelector from '@/components/QuestionSelector';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import CustomDropdown from '@/components/CustomDropdown';
+import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 
 export default function CreateQuizPage() {
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
@@ -16,6 +18,7 @@ export default function CreateQuizPage() {
     const [selectedNiveau, setSelectedNiveau] = useState('');
     const [selectedDiscipline, setSelectedDiscipline] = useState('');
     const [selectedTheme, setSelectedTheme] = useState('');
+    const [selectedThemes, setSelectedThemes] = useState<string[]>([]); // Pour MultiSelectDropdown
 
     useEffect(() => {
         fetch('/api/questions/filters')
@@ -73,25 +76,34 @@ export default function CreateQuizPage() {
         <div className="main-content">
             <div className="card w-full max-w-5xl shadow-xl bg-base-100 my-6">
                 <div className="card-body items-center gap-8">
-                    <div className="w-full">
-                        <Link href="/teacher/dashboard" className="text-primary underline hover:text-primary/80 font-semibold">&larr; Retour au tableau de bord</Link>
+                    <h1 className="card-title text-3xl mb-4 mt-4 text-center">Créer un Nouveau Quiz</h1>
+                    <div className="text-base text-muted mb-6">
+                        Sélectionnez des questions pour créer un quiz. Aidez-vous des filtres ci-dessous au besoin, puis nommez votre quiz et sauvegardez-le.
                     </div>
-                    <h1 className="card-title text-3xl mb-2 mt-4 text-center">Créer un Nouveau Quiz</h1>
-                    <div className="flex flex-col gap-6 w-full">
-                        {/* Consistent dropdowns for filters */}
-                        <div className="flex flex-col gap-4 w-full mb-2">
-                            <select className="select select-bordered select-lg w-full" value={selectedNiveau} onChange={e => setSelectedNiveau(e.target.value)}>
-                                <option value="">Niveau</option>
-                                {filters.niveaux.map((n: string) => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                            <select className="select select-bordered select-lg w-full" value={selectedDiscipline} onChange={e => setSelectedDiscipline(e.target.value)}>
-                                <option value="">Discipline</option>
-                                {filters.disciplines.map((d: string) => <option key={d} value={d}>{d}</option>)}
-                            </select>
-                            <select className="select select-bordered select-lg w-full" value={selectedTheme} onChange={e => setSelectedTheme(e.target.value)}>
-                                <option value="">Thème</option>
-                                {filters.themes.map((t: string) => <option key={t} value={t}>{t}</option>)}
-                            </select>
+                    <div className="flex flex-col gap-6 w-full mb-0">
+                        {/* Filtres groupés avec composants custom */}
+                        <div className="flex flex-col gap-4 w-full -mb-1">
+                            <CustomDropdown
+                                // label="Niveau"
+                                options={filters.niveaux || []}
+                                value={selectedNiveau}
+                                onChange={setSelectedNiveau}
+                                placeholder="Niveau"
+                            />
+                            <CustomDropdown
+                                // label="Discipline"
+                                options={filters.disciplines || []}
+                                value={selectedDiscipline}
+                                onChange={setSelectedDiscipline}
+                                placeholder="Discipline"
+                            />
+                            <MultiSelectDropdown
+                                // label="Thèmes"
+                                options={filters.themes || []}
+                                selected={selectedThemes ?? []}
+                                onChange={setSelectedThemes}
+                                placeholder="Thèmes"
+                            />
                         </div>
                         <QuestionSelector
                             onSelect={(ids, meta) => {
@@ -108,7 +120,7 @@ export default function CreateQuizPage() {
                             externalFilter={{
                                 discipline: selectedDiscipline,
                                 niveau: selectedNiveau,
-                                theme: selectedTheme,
+                                theme: selectedThemes || [], // Passer le tableau directement sans conversion
                             }}
                             timerStatus="stop"
                             timerQuestionId={null}

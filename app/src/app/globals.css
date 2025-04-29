@@ -246,6 +246,14 @@ html[data-theme="light"] {
     box-shadow: 0 2px 8px rgba(95, 188, 211, 0.15);
   }
 
+  .card-accent {
+    background: var(--accent) !important;
+    color: var(--accent-foreground) !important;
+    border: 2px solid var(--accent) !important;
+    box-shadow: 0 2px 8px rgba(156, 137, 184, 0.15);
+    border: none;
+  }
+
   .answer-selected {
     border: 3px solid var(--primary) !important;
     border-radius: var(--radius);
@@ -425,19 +433,27 @@ textarea:focus {
   font-size: 1rem;
 }
 
-.badge-accent {
-  background: var(--accent) !important;
-  color: var(--accent-foreground) !important;
+.badge-accent,
+.badge-ghost {
   border-radius: 9999px !important;
   font-weight: 700;
   padding: 0.25rem 0.75rem;
   font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
 }
 
 .badge-ghost {
-  border: 3px solid var(--primary) !important;
   background: var(--dropdown) !important;
   color: var(--primary) !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+}
+
+.badge-accent {
+  background: var(--accent) !important;
+  color: var(--accent-foreground) !important;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
 }
 

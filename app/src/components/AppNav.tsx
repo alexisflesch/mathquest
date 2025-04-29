@@ -165,7 +165,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                 { label: 'Mes tournois', href: '/my-tournaments' },
                 {
                     label: 'Espace enseignant',
-                    href: '/teacher/dashboard',
+                    href: '/teacher/home',
                     submenu: [
                         { label: 'Utiliser un quiz existant', href: '/teacher/quiz/use' },
                         { label: 'Créer un quiz', href: '/teacher/quiz/create' },

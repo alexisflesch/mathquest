@@ -87,7 +87,7 @@ export default function TeacherLoginPage() {
                 });
             }
             if (refreshAuth) refreshAuth(); // Trigger refreshAuth after successful login
-            router.push('/teacher/dashboard'); // Redirect to dashboard
+            router.push('/teacher/home'); // Redirect to home
         } catch (err: unknown) {
             logger.error('Login error', err);
             setError((err as Error).message || 'Une erreur est survenue.');

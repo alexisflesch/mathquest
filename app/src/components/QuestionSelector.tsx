@@ -42,7 +42,11 @@ interface TimerProps {
 interface QuestionSelectorProps extends TimerProps {
     onSelect: (selected: string[], meta: { niveaux: string[], categories: string[], themes: string[] }) => void;
     selectedQuestionIds: string[];
-    externalFilter?: { discipline?: string; niveau?: string; theme?: string };
+    externalFilter?: {
+        discipline?: string;
+        niveau?: string;
+        theme?: string | string[]; // Accepter string ou string[]
+    };
 }
 
 export default function QuestionSelector({
@@ -72,10 +76,25 @@ export default function QuestionSelector({
         const params = [];
         if (effectiveFilter.discipline) params.push(`discipline=${encodeURIComponent(effectiveFilter.discipline)}`);
         if (effectiveFilter.niveau) params.push(`niveau=${encodeURIComponent(effectiveFilter.niveau)}`);
-        if (effectiveFilter.theme) params.push(`theme=${encodeURIComponent(effectiveFilter.theme)}`);
+
+        // Gestion du filtrage OU pour les thèmes
+        if (effectiveFilter.theme) {
+            if (Array.isArray(effectiveFilter.theme) && effectiveFilter.theme.length > 0) {
+                // Utiliser le paramètre 'themes' (pluriel) comme dans create-tournament/page.tsx
+                const themeString = effectiveFilter.theme.filter(t => t).join(',');
+                if (themeString) {
+                    params.push(`themes=${encodeURIComponent(themeString)}`);
+                }
+            } else if (typeof effectiveFilter.theme === 'string' && effectiveFilter.theme) {
+                // Pour la rétrocompatibilité, on garde 'theme' (singulier) pour une chaîne unique
+                params.push(`theme=${encodeURIComponent(effectiveFilter.theme)}`);
+            }
+        }
+
         // Always limit to 100 questions max
         params.push('limit=100');
         if (params.length) url += '?' + params.join('&');
+
         fetch(url)
             .then(res => res.json())
             .then(setQuestions);
@@ -134,9 +153,38 @@ export default function QuestionSelector({
         ? questions.filter(q => (q.tags || []).some(t => t.toLowerCase().includes(filter.tag.toLowerCase())))
         : questions;
 
+    // Filtrer les questions en fonction des critères externes
+    const filterQuestions = (questions: Question[]): Question[] => {
+        return questions.filter(q => {
+            // Vérification de la discipline
+            if (externalFilter?.discipline && q.discipline !== externalFilter.discipline) {
+                return false;
+            }
+            // Vérification du niveau
+            if (externalFilter?.niveau && q.niveau !== externalFilter.niveau) {
+                return false;
+            }
+            // Vérification du thème (accepte string ou string[])
+            if (externalFilter?.theme) {
+                if (Array.isArray(externalFilter.theme)) {
+                    // Si c'est un tableau et non vide, vérifie si le thème de la question est inclus
+                    if (externalFilter.theme.length > 0 && !externalFilter.theme.includes(q.theme)) {
+                        return false;
+                    }
+                } else {
+                    // Si c'est une chaîne et non vide, vérifie l'égalité exacte
+                    if (externalFilter.theme && q.theme !== externalFilter.theme) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        });
+    };
+
     return (
         <div>
-            <h2 className="text-xl font-bold mb-2">Sélectionner des questions</h2>
+            {/* <h2 className="text-xl font-bold mb-2">Sélectionner des questions</h2> */}
             {!externalFilter && (
                 <div className="flex flex-col gap-4 w-full mb-4">
                     <select

@@ -24,7 +24,14 @@ const prisma = new PrismaClient();
 export async function GET(req: NextRequest) {
     logger.debug('GET /api/quiz called');
     try {
+        const { searchParams } = new URL(req.url);
+        const enseignant_id = searchParams.get('enseignant_id');
+        if (!enseignant_id) {
+            logger.warn('GET /api/quiz called without enseignant_id');
+            return NextResponse.json({ error: 'enseignant_id requis' }, { status: 400 });
+        }
         const quizzes = await prisma.quiz.findMany({
+            where: { enseignant_id },
             select: {
                 id: true,
                 nom: true,

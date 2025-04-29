@@ -29,8 +29,8 @@ export default function TeacherDashboard() {
 
     return (
         <MathJaxWrapper>
-            <div className="h-[calc(100vh-56px)] flex items-center justify-center p-4 pt-14 md:h-screen md:pt-0">
-                <div className="w-full max-w-lg shadow-xl bg-base-100 p-6 rounded-lg">
+            <div className="main-content">
+                <div className="card w-full max-w-lg bg-base-100 rounded-lg shadow-xl my-6">
                     <div className="flex flex-col gap-8">
                         <div className="flex items-center justify-center gap-4 mb-5">
                             <Image src="/favicon.svg" alt="MathQuest logo" width={64} height={64} priority />
@@ -47,7 +47,6 @@ export default function TeacherDashboard() {
                             </li>
                             <li>Affichez le quiz en direct sur grand écran.</li>
                         </ul>
-
                         <div className="w-full flex flex-col mb-4 mt-6">
                             Utilisez le menu pour naviguer entre les différentes fonctionnalités. Préférez l&apos;utilisation d&apos;un ordinateur pour une meilleure expérience.
                         </div>
