@@ -16,6 +16,6 @@ export async function GET(req: NextRequest) {
         select: { theme: true },
         distinct: ['theme'],
     });
-    const themeList = themes.map(t => t.theme).filter(Boolean);
+    const themeList = themes.map((t: { theme: string }) => t.theme).filter(Boolean);
     return NextResponse.json({ themes: themeList });
 }

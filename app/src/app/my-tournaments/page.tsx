@@ -50,8 +50,8 @@ export default function MyTournamentsPage() {
     if (error) return <div className="min-h-screen flex items-center justify-center bg-base-200"><div className="alert alert-error">{error}</div></div>;
 
     return (
-        <div className="min-h-screen flex flex-col items-center bg-base-200 p-2">
-            <div className="card w-full max-w-2xl shadow-xl bg-base-100 mt-8">
+        <div className="main-content">
+            <div className="card w-full max-w-2xl shadow-xl bg-base-100 my-6">
                 <div className="card-body items-center gap-8 w-full">
                     <h1 className="card-title text-3xl mb-8">Mes tournois</h1>
                     {/* Section tournois créés non lancés */}

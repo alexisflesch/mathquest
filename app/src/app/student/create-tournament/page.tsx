@@ -126,7 +126,7 @@ export default function StudentCreateTournamentPage() {
         "Discipline",
         "Thèmes",
         "Questions",
-        "Confirmation"
+        "Valider"
     ];
 
     // Determine if a step is available to go back to
@@ -196,8 +196,8 @@ export default function StudentCreateTournamentPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center bg-base-200 py-2 px-2 md:py-4 mt-6 md:mt-16">
-            <div className="card w-full max-w-xl shadow-xl bg-base-100">
+        <div className="main-content">
+            <div className="card w-full max-w-xl shadow-xl bg-base-100 my-6">
                 <div className="card-body items-center gap-8">
                     {/* Progress Bar DaisyUI */}
                     {/* All steps in a single row */}
@@ -207,7 +207,7 @@ export default function StudentCreateTournamentPage() {
                                 <div key={stepLabel} className="flex-1 flex flex-col items-center">
                                     <button
                                         type="button"
-                                        className={`badge badge-lg badge-stepper ${step > idx + 1 ? "" : "badge-stepper-ghost"} ${canGoToStep(idx) && step !== idx + 1 ? "cursor-pointer" : "cursor-default"} transition`}
+                                        className={`badge badge-stepper-xs badge-stepper ${step > idx + 1 ? "" : "badge-stepper-ghost"} ${canGoToStep(idx) && step !== idx + 1 ? "cursor-pointer" : "cursor-default"} transition`}
                                         style={{
                                             pointerEvents: canGoToStep(idx) && step !== idx + 1 ? "auto" : "none",
                                             background: "none",
@@ -224,7 +224,7 @@ export default function StudentCreateTournamentPage() {
                                     >
                                         {idx + 1}
                                     </button>
-                                    <span className="text-xs text-center w-16 h-5 whitespace-nowrap flex items-center justify-center">{stepLabel}</span>
+                                    <span className="text-xs text-center w-14 h-5 whitespace-nowrap flex items-center justify-center step-label-xs">{stepLabel}</span>
                                 </div>
                             ))}
                         </div>

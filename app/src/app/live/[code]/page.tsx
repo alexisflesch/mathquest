@@ -15,10 +15,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
-import { useAuth } from '@/components/AuthProvider';
-import { Timer } from 'lucide-react';
 import Snackbar from '@/components/Snackbar';
 import { createLogger } from '@/clientLogger';
+import MathJaxWrapper from '@/components/MathJaxWrapper';
+import TournamentTimer from '@/components/TournamentTimer';
+import TournamentQuestionCard from '@/components/TournamentQuestionCard';
+
 
 // Create a logger for this component
 const logger = createLogger('Tournament');
@@ -41,6 +43,16 @@ interface TournamentQuestion {
 export default function TournamentSessionPage() {
     const { code } = useParams();
     const router = useRouter();
+    // --- LOGIN CHECK AND REDIRECT ---
+    React.useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const pseudo = localStorage.getItem('mathquest_pseudo');
+        const avatar = localStorage.getItem('mathquest_avatar');
+        if (!pseudo || !avatar) {
+            // Redirect to /student with redirect param
+            router.replace(`/student?redirect=/live/${code}`);
+        }
+    }, [code, router]);
     // DEV MODE: check for ?dev=1&mode=choix_simple or ?dev=1&mode=choix_multiple
     const [devMode, setDevMode] = useState(false);
     const [devModeType, setDevModeType] = useState<'choix_simple' | 'choix_multiple'>('choix_simple');
@@ -51,21 +63,26 @@ export default function TournamentSessionPage() {
     const [answered, setAnswered] = useState(false);
     const [timer, setTimer] = useState<number | null>(null);
     const [waiting, setWaiting] = useState(false);
-    const [showResult, setShowResult] = useState(false);
-    const [result, setResult] = useState<string>("");
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const { isStudent, isTeacher } = useAuth();
-    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-    const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]); // For multiple choice
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState<string>("");
     const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
     const [paused, setPaused] = useState(false);
+    const [showResult, setShowResult] = useState(false);
     const pausedRef = useRef(paused);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+    const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+    const [isQuizMode, setIsQuizMode] = useState(false);
+
     useEffect(() => { pausedRef.current = paused; }, [paused]);
 
     // Add responsive countdown timer display
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setIsMobile(window.innerWidth < 768);
+        }
+    }, []);
 
     // Detect differed mode from URL
     const [isDiffered, setIsDiffered] = useState(false);
@@ -152,7 +169,7 @@ export default function TournamentSessionPage() {
         s.emit("join_tournament", { code, cookie_id, pseudo, avatar, isDiffered });
 
         // Receive a new question
-        s.on("tournament_question", ({ question, index, total, remainingTime, questionState }) => {
+        s.on("tournament_question", ({ question, index, total, remainingTime, questionState, isQuizMode }) => {
             // Round timer to nearest second
             const roundedTime = remainingTime != null ? Math.round(remainingTime) : 20;
             logger.debug('tournament_question RECEIVED', {
@@ -162,7 +179,8 @@ export default function TournamentSessionPage() {
                 total,
                 remainingTime: roundedTime,
                 questionState,
-                responseCount: question?.reponses?.length
+                responseCount: question?.reponses?.length,
+                isQuizMode, // <--- Log the received value
             });
 
             if (!question) {
@@ -179,6 +197,8 @@ export default function TournamentSessionPage() {
             setWaiting(false);
             setPaused(questionState === "paused");
             pausedRef.current = questionState === "paused";
+            setIsQuizMode(!!isQuizMode); // <--- Store quiz mode
+            logger.info('UI setIsQuizMode', { isQuizMode: !!isQuizMode }); // <--- Log what is set in state
 
             logger.debug('Updated state with question data', {
                 questionSet: !!question,
@@ -395,7 +415,6 @@ export default function TournamentSessionPage() {
         // Receive tournament end
         s.on("tournament_end", ({ finalScore }) => {
             setShowResult(true);
-            setResult(`Tournoi terminé ! Score : ${finalScore}`);
             setCurrentQuestion(null);
             setWaiting(false);
             if (timerRef.current) clearInterval(timerRef.current);
@@ -404,9 +423,9 @@ export default function TournamentSessionPage() {
 
         // Get pseudo/avatar from localStorage for highlighting
         if (typeof window !== 'undefined') {
-            if (isStudent) {
-            } else if (isTeacher) {
-            }
+            // if (isStudent) {
+            // } else if (isTeacher) {
+            // }
         }
 
         // Handle tournament code updates
@@ -435,7 +454,7 @@ export default function TournamentSessionPage() {
             s.disconnect();
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [code, isStudent, isTeacher, devMode, devModeType, isDiffered]);
+    }, [code, devMode, devModeType, isDiffered]);
 
     // --- SOCKET EVENTS LOGGING ---
     useEffect(() => {
@@ -541,12 +560,13 @@ export default function TournamentSessionPage() {
         };
     }, [socket, router, currentQuestion]);
 
-    // Reset selected answers when new question arrives
+    // Reset selected answers ONLY when the question UID changes
     useEffect(() => {
         setSelectedAnswer(null);
         setSelectedAnswers([]);
         setSnackbarOpen(false);
-    }, [currentQuestion]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentQuestion?.uid]);
 
     // Helper: is multiple choice
     const isMultipleChoice = currentQuestion?.type === "choix_multiple";
@@ -581,21 +601,19 @@ export default function TournamentSessionPage() {
 
     // Handle multiple choice answer submission
     const handleSubmitMultiple = () => {
-        logger.debug('handleSubmitMultiple called', { selectedAnswers, answered, waiting, socket: !!socket, currentQuestion });
+        logger.debug('handleSubmitMultiple called', { selectedAnswers, waiting, socket: !!socket, currentQuestion });
         if (devMode) {
-            if (!currentQuestion || answered || selectedAnswers.length === 0) return;
-            setAnswered(true);
+            if (!currentQuestion || selectedAnswers.length === 0) return;
             setSnackbarMessage("Réponse enregistrée");
             setSnackbarOpen(true);
             return;
         }
 
         // Only validate that we have answers to send - server will handle timing validation
-        if (!socket || !currentQuestion || answered || selectedAnswers.length === 0) {
+        if (!socket || !currentQuestion || selectedAnswers.length === 0) {
             logger.warn('handleSubmitMultiple: missing requirements', {
                 socket: !!socket,
                 currentQuestion,
-                answered,
                 selectedAnswers
             });
             return;
@@ -616,145 +634,37 @@ export default function TournamentSessionPage() {
             clientTimestamp,
             isDiffered,
         });
-        setAnswered(true);
-        // Don't show snackbar immediately - wait for server response
+        // Do not setAnswered(true) here; allow resubmission until timer/lock
     };
 
-    // Instead, just show a simple end message if needed
-    if (devMode && !currentQuestion) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-base-200">
-                <div className="card bg-base-100 shadow-xl p-2">
-                    <div className="card-body items-center">
-                        <div className="text-xl font-bold">Fin du test dev mode.</div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (!currentQuestion && !showResult) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-base-200">
-                <div className="card bg-base-100 shadow-xl p-2">
-                    <div className="card-body items-center">
-                        <div className="text-xl font-bold">En attente du début du tournoi…</div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // In the return, show the result if showResult is true
-    if (showResult) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-base-200">
-                <div className="card bg-base-100 shadow-xl p-2">
-                    <div className="card-body items-center">
-                        <div className="text-xl font-bold">{result || "Tournoi terminé !"}</div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // Helper to format timer as MM:SS if >= 60, else just seconds
-    function formatTimer(val: number | null) {
-        if (val === null) return '-';
-        if (val >= 60) {
-            const m = Math.floor(val / 60);
-            const s = val % 60;
-            return `${m}:${s.toString().padStart(2, '0')}`;
-        }
-        return val.toString();
-    }
-
     return (
-        <div className="min-h-screen flex flex-col items-center bg-base-200 p-2">
-            {isMobile ? (
-                <div className="fixed top-24 right-4 z-50 flex items-center navbar-timer-bg px-4 py-2 rounded-full shadow-lg border border-primary"
-                    style={{ background: 'var(--navbar)', color: 'var(--primary-foreground)' }}>
-                    <div className="flex items-center gap-1 align-middle">
-                        <Timer className="w-5 h-5" style={{ display: 'block', color: 'var(--primary-foreground)' }} />
-                        <span className="text-lg font-bold flex items-center leading-none" style={{ color: 'var(--primary-foreground)' }}>{formatTimer(timer)}</span>
-                    </div>
-                </div>
-            ) : (
-                <div className="fixed top-4 right-4 z-50 flex items-center navbar-timer-bg px-4 py-2 rounded-full shadow-lg border border-primary"
-                    style={{ background: 'var(--navbar)', color: 'var(--primary-foreground)' }}>
-                    <Timer className="w-5 h-5 mr-2" style={{ display: 'block', color: 'var(--primary-foreground)' }} />
-                    <span className="text-lg font-bold flex items-center leading-none" style={{ color: 'var(--primary-foreground)' }}>{formatTimer(timer)}</span>
-                </div>
-            )}
-            <Snackbar
-                open={snackbarOpen}
-                message={snackbarMessage}
-                type={snackbarType}
-                onClose={() => setSnackbarOpen(false)}
-            />
-            <div className="card w-full max-w-xl shadow-xl bg-base-100 mt-6 md:mt-16">
-                <div className="card-body items-center gap-8">
+        <div className="main-content">
+            <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
+                <TournamentTimer timer={timer} isMobile={isMobile} />
+                <Snackbar
+                    open={snackbarOpen}
+                    message={snackbarMessage}
+                    type={snackbarType}
+                    onClose={() => setSnackbarOpen(false)}
+                />
+                <MathJaxWrapper>
                     {currentQuestion && (
-                        <>
-                            <div className="w-full bg-base-200 rounded-xl p-6 flex flex-col gap-6 items-center">
-                                <h3 className="text-2xl mb-2 font-bold">Question {questionIndex + 1} / {totalQuestions}</h3>
-                                <div className="mb-4 text-xl font-semibold text-center">
-                                    {currentQuestion.question}
-                                </div>
-                                <ul className="flex flex-col w-full">
-                                    {currentQuestion.reponses.map((rep, idx) => {
-                                        const isSelected = isMultipleChoice
-                                            ? selectedAnswers.includes(idx)
-                                            : selectedAnswer === idx;
-                                        return (
-                                            <li
-                                                key={idx}
-                                                className={idx !== currentQuestion.reponses.length - 1 ? "mb-2" : ""}
-                                            >
-                                                <button
-                                                    className={[
-                                                        "btn-answer w-full text-left transition-colors",
-                                                        "bg-base-100",
-                                                        "rounded-lg py-3 px-4"
-                                                    ].join(" ")}
-                                                    style={{
-                                                        border: isSelected ? '2px solid var(--navbar)' : '2px solid transparent',
-                                                        boxShadow: isSelected ? '0 0 0 2px var(--navbar)' : undefined,
-                                                        background: isSelected ? 'var(--light-blue)' : undefined,
-                                                    }}
-                                                    onClick={() => {
-                                                        if (isMultipleChoice) {
-                                                            setSelectedAnswers((prev) =>
-                                                                prev.includes(idx)
-                                                                    ? prev.filter((i) => i !== idx)
-                                                                    : [...prev, idx]
-                                                            );
-                                                        } else {
-                                                            handleSingleChoice(idx);
-                                                        }
-                                                    }}
-                                                >
-                                                    {rep.texte}
-                                                </button>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                                {isMultipleChoice && (
-                                    <button
-                                        className="btn btn-primary mt-2 self-end"
-                                        onClick={handleSubmitMultiple}
-                                        disabled={selectedAnswers.length === 0}
-                                    >
-                                        Valider
-                                    </button>
-                                )}
-                                {/* Remove score display */}
-                                {/* <div className="font-bold">Score: {score}</div> */}
-                            </div>
-                        </>
+                        <TournamentQuestionCard
+                            currentQuestion={currentQuestion}
+                            questionIndex={questionIndex}
+                            totalQuestions={totalQuestions}
+                            isMultipleChoice={isMultipleChoice}
+                            selectedAnswer={selectedAnswer}
+                            setSelectedAnswer={setSelectedAnswer}
+                            selectedAnswers={selectedAnswers}
+                            setSelectedAnswers={setSelectedAnswers}
+                            handleSingleChoice={handleSingleChoice}
+                            handleSubmitMultiple={handleSubmitMultiple}
+                            answered={answered}
+                            isQuizMode={isQuizMode}
+                        />
                     )}
-                </div>
+                </MathJaxWrapper>
             </div>
         </div>
     );

@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         orderBy: { date_score: 'desc' },
     });
     // Calcul dynamique de la position pour chaque tournoi joué
-    const played = await Promise.all(scores.map(async (s) => {
+    const played = await Promise.all(scores.map(async (s: typeof scores[number]) => {
         // Récupérer tous les scores de ce tournoi
         const allScores = await prisma.score.findMany({
             where: { tournoi_id: s.tournoi_id },
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
             ],
         });
         // Trouver la position du joueur (1-based)
-        const sorted = allScores.map(sc => sc.joueur_id);
+        const sorted = allScores.map((sc: typeof allScores[number]) => sc.joueur_id);
         const position = sorted.indexOf(s.joueur_id) + 1;
         return {
             ...s.tournoi,

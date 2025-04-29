@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
             // Update in-memory tournament state for SSE
             // Fetch all scores for this tournament
             const allScores = await prisma.score.findMany({ where: { tournoi_id }, include: { joueur: true } });
-            const scores: { pseudo: string; score: number; avatar: string | null }[] = allScores.map(s => ({ pseudo: s.joueur.pseudo, score: s.score, avatar: s.joueur.avatar }));
+            const scores: { pseudo: string; score: number; avatar: string | null }[] = allScores.map((s: { score: number; joueur: { pseudo: string; avatar: string | null } }) => ({ pseudo: s.joueur.pseudo, score: s.score, avatar: s.joueur.avatar }));
             // Update the SSE state
             await fetch('http://localhost:3000/api/tournament/stream', {
                 method: 'POST',

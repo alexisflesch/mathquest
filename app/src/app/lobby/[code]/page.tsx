@@ -37,6 +37,7 @@ export default function LobbyPage() {
     const socketRef = useRef<Socket | null>(null);
     const [participants, setParticipants] = useState<{ id: string; pseudo: string; avatar: string }[]>([]);
     const [creator, setCreator] = useState<{ pseudo: string; avatar: string } | null>(null);
+    const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);
 
     // Get correct pseudo/avatar for current session
     const getCurrentIdentity = useCallback(() => {
@@ -46,8 +47,8 @@ export default function LobbyPage() {
         }
         logger.debug('Identity check', { isTeacher, isStudent });
         if (isTeacher) {
-            const pseudo = localStorage.getItem('mathquest_teacher_pseudo');
-            const avatar = localStorage.getItem('mathquest_teacher_avatar');
+            const pseudo = localStorage.getItem('mathquest_pseudo');
+            const avatar = localStorage.getItem('mathquest_avatar');
             logger.debug('Teacher identity', { pseudo, avatar });
             if (pseudo && avatar) return { pseudo, avatar: `/avatars/${avatar}` };
         } else if (isStudent) {
@@ -59,17 +60,6 @@ export default function LobbyPage() {
         logger.warn('No valid identity found');
         return null;
     }, [isTeacher, isStudent]);
-
-    // Redirect to home if not logged in as teacher or student
-    useEffect(() => {
-        if (isLoading) return; // Wait for auth state to load
-        const identity = getCurrentIdentity();
-        logger.debug('Redirect check', { identity });
-        if (!identity) {
-            logger.info('No identity, redirecting to home page');
-            router.replace('/');
-        }
-    }, [isTeacher, isStudent, isLoading, getCurrentIdentity, router]);
 
     // Fetch tournament and creator info
     useEffect(() => {
@@ -167,9 +157,14 @@ export default function LobbyPage() {
         socket.emit("get_participants", { code });
 
         // Listen for the full participants list
-        socket.on("participants_list", (list) => {
-            logger.debug("Received participants list", { count: list.length });
-            setParticipants(list);
+        socket.on("participants_list", (data) => {
+            if (Array.isArray(data)) {
+                setParticipants(data);
+                setIsQuizLinked(false); // fallback for old format
+            } else {
+                setParticipants(data.participants || []);
+                setIsQuizLinked(data.isQuizLinked === undefined ? false : !!data.isQuizLinked);
+            }
         });
 
         // Listen for participant join/leave events
@@ -200,9 +195,7 @@ export default function LobbyPage() {
                     if (prev === null) return null;
                     if (prev <= 1) {
                         clearInterval(interval);
-                        // Redirect to tournament page when countdown ends
-                        logger.info("Countdown finished, redirecting to tournament");
-                        router.push(`/live/${code}`);
+                        // Only update state here; navigation is handled in useEffect below
                         return 0;
                     }
                     return prev - 1;
@@ -275,18 +268,27 @@ export default function LobbyPage() {
             alert("Lien copié dans le presse-papier !");
         }
     };
+    // --- LOGIN CHECK AND REDIRECT ---
+    React.useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const pseudo = localStorage.getItem('mathquest_pseudo');
+        const avatar = localStorage.getItem('mathquest_avatar');
+        if (!pseudo || !avatar) {
+            router.replace(`/student?redirect=/lobby/${code}`);
+        }
+    }, [code, router]);
 
     return (
-        <div className="m-2 min-h-screen flex items-center justify-center bg-base-200">
-            <div className="card w-full max-w-2xl shadow-xl bg-base-100 relative">
-                <div className="card-body items-center gap-8 w-full">
+        <div className="main-content">
+            <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
+                <div className="flex flex-col gap-8 w-full">
                     {/* First row: Avatar/pseudo | Code | Share button */}
                     <div className="flex flex-row items-center justify-between w-full gap-4">
                         {/* Avatar + pseudo */}
                         <div className="flex items-center gap-3 min-w-0">
                             {creator ? (
                                 <>
-                                    <Image src={creator.avatar} alt="avatar" width={44} height={44} className="w-[44px] h-[44px] rounded-full border-2 border-primary" />
+                                    <Image src={creator.avatar} alt="avatar" width={44} height={44} className="w-[50px] h-[50px] rounded-full border-2" style={{ borderColor: "var(--secondary)" }} />
                                     <span className="font-bold text-lg truncate">{creator.pseudo}</span>
                                 </>
                             ) : (
@@ -295,7 +297,6 @@ export default function LobbyPage() {
                         </div>
                         {/* Tournament code */}
                         <div className="flex flex-col items-center flex-1">
-                            {/* Removed "Code du tournoi" text */}
                             <span className="text-lg font-mono font-bold tracking-widest bg-base-200 rounded px-2 py-0.5 mt-1">{code}</span>
                         </div>
                         {/* Share button */}
@@ -308,40 +309,34 @@ export default function LobbyPage() {
                             <Share2 className="w-5 h-5" />
                         </button>
                     </div>
-                    {/* Horizontal line after first row */}
-                    <hr className="w-full border-base-300 my-2" />
-                    {/* Second row: Participants connectés */}
-                    <div className="w-full mt-10 mb-0 text-left">
+                    <hr className="w-full border-base-300" />
+                    <div className="w-full mt-0 mb-0 text-left">
                         <div className="font-semibold text-lg">Participants connectés</div>
-                        <div className="h-4" /> {/* Add spacing after title */}
+                        <div className="h-4" />
                     </div>
-                    {/* Third row: Participants list, start button, countdown */}
-                    <div className="w-full flex flex-col gap-6">
-                        {/* Participants list */}
-                        <div className="flex flex-wrap gap-4 justify-start w-full">
+                    <div className="w-full flex flex-col gap-0">
+                        <div className="flex-1 min-h-0 overflow-y-auto flex flex-wrap gap-4 justify-start w-full" style={{ maxHeight: '40vh' }}>
                             {participants.map((p, i) => (
-                                <div key={p.id || i} className="flex flex-col items-center">
+                                <div key={p.id ? `${p.id}-${i}` : i} className="flex flex-col items-center">
                                     <Image
                                         src={p.avatar.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`}
                                         alt="avatar"
                                         width={40}
                                         height={40}
-                                        className="w-[47px] h-[47px] rounded-full border-2"
-                                        style={{ borderColor: "var(--secondary)" }}
+                                        className="w-[49px] h-[49px] rounded-full border-2"
+                                        style={{ borderColor: "var(--primary)" }}
                                     />
                                     <span className="text-sm mt-0 truncate max-w-[70px]">{p.pseudo}</span>
                                 </div>
                             ))}
                         </div>
-                        {/* Only show the start button for the creator */}
-                        {isCreator && countdown === null && (
+                        {isCreator && countdown === null && isQuizLinked === false && (
                             <div className="w-full flex justify-end">
                                 <button className="btn btn-primary btn-lg mt-4" onClick={handleStart}>
                                     Démarrer le tournoi
                                 </button>
                             </div>
                         )}
-                        {/* Countdown timer */}
                         {countdown !== null && (
                             <div className="text-5xl font-extrabold text-primary mt-2 text-right w-full">{countdown}</div>
                         )}

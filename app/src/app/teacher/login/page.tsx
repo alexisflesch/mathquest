@@ -97,7 +97,7 @@ export default function TeacherLoginPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-56px)] flex items-center justify-center  p-4 pt-14 md:h-screen md:pt-0">
+        <div className="main-content">
             <div className="card w-full max-w-md shadow-xl bg-base-100">
                 <div className="card-body items-center gap-8">
                     <h1 className="card-title text-3xl mb-4">Connexion Enseignant</h1>

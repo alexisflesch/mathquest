@@ -258,10 +258,49 @@ function triggerTournamentTimerSet(io, code, timeLeft) {
     }
 }
 
+// --- Force end of tournament, save scores, update leaderboard, emit redirect ---
+async function forceTournamentEnd(io, code) {
+    const state = tournamentState[code];
+    if (!state) return;
+    const prisma = require('../../db');
+    logger.info(`[FORCE END] Forcing end of tournament ${code}`);
+    logger.info(`[FORCE END] Tournament state:`, JSON.stringify(state, null, 2));
+    // Calculer le score final pour chaque participant (même si pas de question active)
+    const leaderboard = Object.values(state.participants || {})
+        .map(p => ({ id: p.id, pseudo: p.pseudo, avatar: p.avatar, score: p.score, isDiffered: !!p.isDiffered }))
+        .sort((a, b) => b.score - a.score);
+    logger.info(`[FORCE END] Computed leaderboard:`, JSON.stringify(leaderboard, null, 2));
+    io.to(`tournament_${code}`).emit("tournament_end", { leaderboard });
+    try {
+        const tournoi = await prisma.tournoi.findUnique({ where: { code } });
+        logger.info(`[FORCE END] Prisma tournoi found:`, tournoi ? tournoi.id : 'not found');
+        if (tournoi) {
+            for (const participant of Object.values(state.participants || {})) {
+                logger.info(`[FORCE END] Saving score for participant:`, participant);
+                if (!participant.isDiffered && participant.id && !participant.id.startsWith('socket_')) {
+                    const existing = await prisma.score.findFirst({ where: { tournoi_id: tournoi.id, joueur_id: participant.id } });
+                    if (existing) {
+                        logger.info(`[FORCE END] Updating existing score for joueur_id=${participant.id}`);
+                        await prisma.score.update({ where: { id: existing.id }, data: { score: participant.score, date_score: new Date() } });
+                    } else {
+                        logger.info(`[FORCE END] Creating new score for joueur_id=${participant.id}`);
+                        await prisma.score.create({ data: { tournoi_id: tournoi.id, joueur_id: participant.id, score: participant.score, date_score: new Date() } });
+                    }
+                }
+            }
+            logger.info(`[FORCE END] Updating tournoi leaderboard and status`);
+            await prisma.tournoi.update({ where: { code }, data: { date_fin: new Date(), statut: 'terminé', leaderboard } });
+        }
+    } catch (err) { logger.error(`[FORCE END] Error saving scores/updating tournament ${code}:`, err); }
+    logger.info(`[FORCE END] Emitting tournament_finished_redirect to all clients`);
+    io.to(`tournament_${code}`).emit("tournament_finished_redirect", { code });
+    delete tournamentState[code];
+}
 
 module.exports = {
     triggerTournamentQuestion,
     triggerTournamentPause,
     triggerTournamentResume,
     triggerTournamentTimerSet,
+    forceTournamentEnd,
 };

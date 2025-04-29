@@ -30,7 +30,7 @@ export default function StudentMenuPage() {
         // For teachers, try to get pseudo from teacher profile in localStorage
         let teacherPseudo = '';
         if (isTeacher) {
-            teacherPseudo = localStorage.getItem('mathquest_teacher_pseudo') || '';
+            teacherPseudo = localStorage.getItem('mathquest_pseudo') || '';
         }
         if (localPseudo) setPseudo(localPseudo);
         else if (isTeacher && teacherPseudo) setPseudo(teacherPseudo);

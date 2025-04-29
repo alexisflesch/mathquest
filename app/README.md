@@ -380,4 +380,31 @@ The application uses a combined server (Next.js + Socket.IO) and must be deploye
 
 - **Persistence**: Socket.IO state is in-memory and will reset on server restart - consider adding Redis for state persistence
 - **Authentication**: The current auth system uses simple cookie-based identification for students and password auth for teachers
-- **Scaling**: For multi-server deployments, Socket.IO requires a Redis adapter for proper room functionality
+- **Scaling**: For multi-server deployments, Socket.IO requires a Redis adapter for proper room functionality.
+
+## Local Storage Usage
+
+MathQuest uses browser localStorage to persist user identity and settings across sessions:
+
+- `mathquest_pseudo`: Stores the pseudo (username) for both students and teachers.
+- `mathquest_avatar`: Stores the avatar filename for both students and teachers.
+- `mathquest_cookie_id`: Unique identifier for gameplay and leaderboard tracking (set for both roles).
+- `mathquest_teacher_id`: The teacher's database ID (set only for teachers).
+- `CLIENT_LOG_LEVEL`: Controls the client logger verbosity at runtime.
+
+All components and routes now use only `mathquest_pseudo` and `mathquest_avatar` for identity, regardless of user role. This simplifies logic and avoids ambiguity. On logout, all these keys are removed.
+
+## Real-Time Lobby and Tournament Redirection
+
+### Classic vs Quiz-Linked Tournaments
+
+- **Classic Tournament**: When a teacher starts a classic tournament, the server emits a `tournament_started` event to all lobby clients. The lobby UI displays a countdown before redirecting students to the live tournament page (`/live/[code]`).
+- **Quiz-Linked Tournament**: When a teacher starts a quiz-linked tournament from the dashboard, the server emits a `redirect_to_tournament` event to all lobby clients for that code. The lobby UI immediately redirects students to `/live/[code]` with no countdown. This ensures a seamless and immediate transition for students.
+
+#### Implementation Details
+- The backend emits `redirect_to_tournament` only for quiz-linked tournaments, and only if the tournament state is being initialized.
+- The lobby page listens for `redirect_to_tournament` and performs an immediate redirect. It only shows a countdown if it receives a `tournament_started` event (used for classic tournaments).
+- Students in the lobby for a quiz-linked tournament cannot see a countdown timer, as the timer signal is only sent to live participants, not to the lobby.
+
+#### Troubleshooting
+- If students ever see a countdown in the lobby for a quiz-linked tournament, this indicates a UI bug or a misrouted event. The correct behavior is always an immediate redirect for quiz-linked tournaments.

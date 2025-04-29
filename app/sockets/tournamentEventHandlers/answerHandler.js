@@ -101,7 +101,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
                 correct: false,
                 rejected: true,
                 reason: "late",
-                message: "Réponse trop tardive"
+                message: "Temps dépassé !"
             });
             return;
         }
@@ -115,7 +115,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
                 correct: false,
                 rejected: true,
                 reason: "late",
-                message: "Réponse trop tardive"
+                message: "Temps dépassé !"
             });
             return;
         }
@@ -125,24 +125,28 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
 
     // Store the answer (overwrite previous answer for the same question if any)
     if (!state.answers[joueurId]) state.answers[joueurId] = {};
+    const alreadyAnswered = !!state.answers[joueurId][questionUid];
     state.answers[joueurId][questionUid] = { answerIdx, clientTimestamp };
     logger.debug(`Stored answer for joueur ${joueurId} on question ${questionUid} in state ${stateKey}`);
 
-    // *** ADD LOGGING HERE ***
-    logger.debug(`Checking quiz mode for state ${stateKey}: linkedQuizId = ${state.linkedQuizId}`);
-
-    // In quiz mode, send immediate feedback to the client,
-    // but ONLY that the answer was received, never revealing correctness
-    if (state.linkedQuizId) {
-        // Emit result back to the client without revealing correctness
-        socket.emit("tournament_answer_result", {
-            message: "Réponse envoyée",
-            received: true
-            // NEVER include correct/incorrect information to prevent cheating
-        });
-
-        logger.debug(`Sent receipt confirmation in quiz mode to joueur ${joueurId} for answer on question ${questionUid}`);
+    // --- SCORE IMMEDIATELY IF NOT ALREADY SCORED ---
+    if (!alreadyAnswered) {
+        const { calculateScore } = require('../tournamentUtils/tournamentHelpers');
+        const { baseScore, rapidity, totalScore } = calculateScore(question, { answerIdx, clientTimestamp }, questionStart);
+        if (!state.participants[joueurId].scoredQuestions) state.participants[joueurId].scoredQuestions = {};
+        if (!state.participants[joueurId].scoredQuestions[questionUid]) {
+            state.participants[joueurId].score += totalScore;
+            state.participants[joueurId].scoredQuestions[questionUid] = true;
+            logger.info(`Scored immediately for joueur ${joueurId} on question ${questionUid}: +${totalScore} (base=${baseScore}, rapidity=${rapidity})`);
+        }
     }
+
+    // Always send feedback to the client for accepted answers (quiz or tournament mode)
+    socket.emit("tournament_answer_result", {
+        message: "Réponse enregistrée",
+        received: true
+    });
+    logger.debug(`Sent receipt confirmation to joueur ${joueurId} for answer on question ${questionUid}`);
     // Note: For regular tournaments (live or differed without quiz link), scoring happens when the timer ends or next question starts.
 }
 

@@ -81,12 +81,14 @@ async function sendQuestionWithState(io, code, idx, initialTime = null) {
     }
 
     logger.info(`Emitting tournament_question (idx: ${idx}, uid: ${q.uid}) to room tournament_${code}`);
+    logger.info(`[QUIZMODE DEBUG] Emitting tournament_question for code=${code} with state.linkedQuizId=${state.linkedQuizId}`);
     io.to(`tournament_${code}`).emit("tournament_question", {
         question: q,
         index: idx,
         total: state.questions.length,
         remainingTime: time, // Send full time initially
         questionState: "active",
+        isQuizMode: !!state.linkedQuizId, // <--- Add this flag
     });
 
     if (state.timer) clearTimeout(state.timer);

@@ -64,10 +64,10 @@ export default function StudentJoinPage() {
     };
 
     return (
-        <div className="h-[100dvh] w-full flex flex-col items-center justify-center px-4">
+        <div className="main-content">
             <form
                 onSubmit={handleSubmit}
-                className="card w-full max-w-md shadow-xl bg-base-100"
+                className="card w-full max-w-md shadow-xl bg-base-100 my-6"
             >
                 <div className="card-body items-center gap-8">
                     <h1 className="card-title text-3xl mb-4">Rejoindre un tournoi</h1>

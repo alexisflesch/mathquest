@@ -88,8 +88,8 @@ export default function PracticePage() {
     }, [practiceTimer, practiceDone, practiceStarted, handlePracticeAnswer]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-200">
-            <div className="card w-full max-w-xl shadow-xl bg-base-100">
+        <div className="main-content">
+            <div className="card w-full max-w-xl shadow-xl bg-base-100 m-4 my-6">
                 <div className="card-body items-center gap-8">
                     <h1 className="card-title text-3xl">Entraînement Libre</h1>
                     {/* Add spacing after the title using a div with a fixed height */}

@@ -70,13 +70,13 @@ def import_questions():
             try:
                 cur.execute(
                     '''INSERT INTO "Question"
-                    (uid, question, reponses, type, discipline, theme, difficulte, niveau, auteur, explication, tags, temps)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (uid, question, reponses, type, discipline, theme, difficulte, niveau, auteur, explication, tags, temps, titre, hidden)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (uid) DO NOTHING''',
                     [
                         q.get('uid'),
-                        q['question'],
-                        json.dumps(q['reponses']),
+                        q.get('question'),
+                        json.dumps(q.get('reponses')) if q.get('reponses') is not None else None,
                         q.get('type'),
                         q.get('discipline'),
                         q.get('theme'),
@@ -86,11 +86,13 @@ def import_questions():
                         q.get('explication'),
                         q.get('tags'),
                         q.get('temps'),
+                        q.get('titre'),
+                        q.get('hidden')
                     ]
                 )
-                logging.info(f"Imported: {q['question']}")
+                logging.info(f"Imported: {q.get('question')}")
             except Exception as e:
-                logging.error(f"Error importing: {q['question']}\n{e}")
+                logging.error(f"Error importing: {q.get('question')}\n{e}")
         conn.commit()
         cur.close()
         conn.close()

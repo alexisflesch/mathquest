@@ -70,8 +70,8 @@ export default function CreateQuizPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-base-200 py-2 px-2 md:py-4">
-            <div className="card w-full max-w-2xl shadow-xl bg-base-100">
+        <div className="main-content">
+            <div className="card w-full max-w-5xl shadow-xl bg-base-100 my-6">
                 <div className="card-body items-center gap-8">
                     <div className="w-full">
                         <Link href="/teacher/dashboard" className="text-primary underline hover:text-primary/80 font-semibold">&larr; Retour au tableau de bord</Link>

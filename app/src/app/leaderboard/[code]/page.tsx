@@ -30,8 +30,8 @@ export default function TournamentLeaderboardPage() {
     let currentPseudo: string | null = null;
     let currentAvatar: string | null = null;
     if (typeof window !== "undefined") {
-        currentPseudo = localStorage.getItem("mathquest_pseudo") || localStorage.getItem("mathquest_teacher_pseudo");
-        currentAvatar = localStorage.getItem("mathquest_avatar") || localStorage.getItem("mathquest_teacher_avatar");
+        currentPseudo = localStorage.getItem("mathquest_pseudo");
+        currentAvatar = localStorage.getItem("mathquest_avatar");
         if (currentAvatar && !currentAvatar.startsWith("/")) {
             currentAvatar = `/avatars/${currentAvatar}`;
         }

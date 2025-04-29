@@ -3,6 +3,7 @@ const createLogger = require('../../logger');
 const logger = createLogger('JoinTournamentHandler');
 const { tournamentState } = require('../tournamentUtils/tournamentState');
 const { calculateScore } = require('../tournamentUtils/tournamentHelpers'); // Import calculateScore
+const { emitQuizConnectedCount } = require('../quizUtils');
 
 async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar }) {
     logger.info(`join_tournament received`, { code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar, socketId: socket.id });
@@ -112,6 +113,16 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                 return;
             }
 
+            // --- PATCH: Look up quiz by tournament_code ---
+            let linkedQuizId = null;
+            try {
+                const quiz = await prisma.quiz.findFirst({ where: { tournament_code: code } });
+                linkedQuizId = quiz ? quiz.id : null;
+                logger.info(`[QUIZMODE DEBUG] For tournament code ${code}, found linkedQuizId: ${linkedQuizId}`);
+            } catch (err) {
+                logger.error(`[QUIZMODE DEBUG] Error looking up quiz for tournament code ${code}:`, err);
+            }
+
             // Create new state for this tournament
             state = tournamentState[code] = {
                 participants: {},
@@ -124,7 +135,7 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                 socketToJoueur: {},
                 paused: false, // Assume not paused initially
                 pausedRemainingTime: null,
-                linkedQuizId: tournoi.linkedQuizId || null,
+                linkedQuizId: linkedQuizId, // <-- PATCHED: set linkedQuizId if quiz found
                 currentQuestionDuration: questions[0]?.temps || 20, // Initialize with first question time
                 stopped: false, // Initialize stopped state
             };
@@ -379,6 +390,7 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                 total: state.questions.length,
                 remainingTime: remaining,
                 questionState,
+                isQuizMode: !!state.linkedQuizId, // <-- PATCHED: always include this
             });
         } else {
             logger.info(`Live player ${joueurId} (socket ${socket.id}) joined tournament ${code} but current question index (${state?.currentIndex}) is invalid or questions array is empty`);
@@ -391,6 +403,9 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
             }
         }
     }
+
+    // Appeler emitQuizConnectedCount après qu'un étudiant rejoint le live
+    await emitQuizConnectedCount(io, prisma, code);
 }
 
 module.exports = handleJoinTournament;

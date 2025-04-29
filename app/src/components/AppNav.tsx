@@ -87,8 +87,8 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                     const data = await res.json();
                     setPseudo(data.pseudo || null);
                     setAvatar(data.avatar || null);
-                    localStorage.setItem('mathquest_teacher_pseudo', data.pseudo || '');
-                    localStorage.setItem('mathquest_teacher_avatar', data.avatar || '');
+                    localStorage.setItem('mathquest_pseudo', data.pseudo || '');
+                    localStorage.setItem('mathquest_avatar', data.avatar || '');
                 }
             } catch (e) {
                 setPseudo(null);
@@ -124,8 +124,6 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         // Remove localStorage/session data if needed
         localStorage.removeItem('mathquest_pseudo');
         localStorage.removeItem('mathquest_avatar');
-        localStorage.removeItem('mathquest_teacher_pseudo');
-        localStorage.removeItem('mathquest_teacher_avatar');
         localStorage.removeItem('mathquest_teacher_id');
         localStorage.removeItem('mathquest_cookie_id');
         // Optionally call logout API
@@ -171,7 +169,6 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                     submenu: [
                         { label: 'Utiliser un quiz existant', href: '/teacher/quiz/use' },
                         { label: 'Créer un quiz', href: '/teacher/quiz/create' },
-                        { label: 'Tableau de bord', href: '/teacher/dashboard' },
                         { label: 'Vidéoprojecteur', href: '/teacher/projection' },
                     ],
                 },
@@ -243,7 +240,18 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                                             <Icon className="w-5 h-5" />
                                             {!sidebarCollapsed && <span>{item.label}</span>}
                                         </Link>
-                                        {!sidebarCollapsed && (
+                                        {sidebarCollapsed ? (
+                                            <div className="flex flex-col items-center mt-1">
+                                                {item.submenu.map((sub) => {
+                                                    const SubIcon = (iconMap as Record<string, typeof Home>)[sub.label] || Home;
+                                                    return (
+                                                        <Link key={sub.href} href={sub.href} className="flex items-center justify-center px-2 py-2 rounded hover:bg-gray-700 transition-colors" title={sub.label}>
+                                                            <SubIcon className="w-5 h-5" />
+                                                        </Link>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
                                             <div className="ml-8 mt-1 space-y-1">
                                                 {item.submenu.map((sub) => {
                                                     const SubIcon = (iconMap as Record<string, typeof Home>)[sub.label] || Home;
@@ -292,32 +300,34 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                     </button>
                 </div>
             </aside>
-            {/* Burger menu for small screens */}
-            <div className="md:hidden flex items-center justify-between bg-[color:var(--navbar)] text-white h-14 px-4">
-                {/* Burger menu button on the left */}
-                <button onClick={() => setOpen(o => !o)} aria-label="Ouvrir le menu" className="focus:outline-none">
-                    <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-                {/* Avatar/Pseudo on the right */}
-                <div className="flex items-center gap-2">
-                    {isTeacher ? (
-                        <>
-                            {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
-                            {pseudo && <span className="font-bold text-base">{pseudo}</span>}
-                        </>
-                    ) : isStudent && (
-                        <>
-                            {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
-                            {pseudo && <span className="font-bold text-base">{pseudo}</span>}
-                        </>
-                    )}
+            {/* Top bar for mobile only */}
+            <div className="md:hidden" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '56px', zIndex: 100, background: 'var(--navbar)' }}>
+                <div className="flex items-center justify-between h-14 px-4 text-white">
+                    {/* Burger menu button on the left */}
+                    <button onClick={() => setOpen(o => !o)} aria-label="Ouvrir le menu" className="focus:outline-none">
+                        <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    {/* Avatar/Pseudo on the right */}
+                    <div className="flex items-center gap-2">
+                        {isTeacher ? (
+                            <>
+                                {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
+                                {pseudo && <span className="font-bold text-base">{pseudo}</span>}
+                            </>
+                        ) : isStudent && (
+                            <>
+                                {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
+                                {pseudo && <span className="font-bold text-base">{pseudo}</span>}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
             {/* Drawer menu for small screens */}
             {open && (
-                <div className="fixed inset-0 z-50 bg-black bg-opacity-40">
+                <div className="fixed inset-0 z-[200] bg-black bg-opacity-40">
                     {/* Overlay click closes menu with animation */}
                     <div className="absolute inset-0" onClick={() => setOpen(false)} />
                     <nav

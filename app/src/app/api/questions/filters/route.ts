@@ -25,9 +25,9 @@ export async function GET() {
             orderBy: { theme: 'asc' },
         });
         return NextResponse.json({
-            disciplines: disciplines.map(d => d.discipline).filter(Boolean),
-            niveaux: niveaux.map(n => n.niveau).filter(Boolean),
-            themes: themes.map(t => t.theme).filter(Boolean),
+            disciplines: disciplines.map((d: { discipline: string }) => d.discipline).filter(Boolean),
+            niveaux: niveaux.map((n: { niveau: string | null }) => n.niveau).filter(Boolean),
+            themes: themes.map((t: { theme: string }) => t.theme).filter(Boolean),
         });
     } catch (e) {
         logger.error('API /api/questions/filters error', e);

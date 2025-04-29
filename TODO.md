@@ -8,18 +8,20 @@ Test it
 Do it
 
 # Teacher dashboard
-Travailler sur les couleurs et lier à globals.css
+Reprendre les éléments de l'interface qui ont disparu comme :
+- bonton pour envoyer feedback aux étudiants ? Y'a du boulot côté ui
+- Dialogue d'alerte quand on change de question
 
-Ajouter un chrono à côté du bouton play/pause avec socket serveur
-Ajouter un bouton stop ?
+# UI
+Vérifier qu'on n'a bien des scrollbars sur les pages qui le nécessitent (pas le cas !)
 
 # Afficher les stats des réponses
 les mettre directement en mode histogramme sur les réponses ?
 
 
-# tournament/[code]
+# live/[code]
 Si étudiant pas encore loggé, rediriger vers login étudiant puis renvoyer vers le tournoi dans la foulée
 Si tournoi déjà terminé, envoyer vers leaderboard et proposer de jouer en différé
 
 # IMPORTANT / DEBUG
-En mode différé, des fois, la question suivante n'est pas envoyée
+En mode différé, des fois, la question suivante n'est pas envoyée (à vérifier)

@@ -40,8 +40,8 @@ export default function AvatarSelector({ onSelect, selected }: { onSelect?: (ava
     }, []);
 
     return (
-        <div className="flex justify-center w-full">
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-xs sm:max-w-xl overflow-y-auto max-h-[220px] sm:max-h-72">
+        <div className="flex justify-center w-full h-full">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 w-full overflow-y-auto">
                 {avatars.map((file) => (
                     <button
                         key={file}

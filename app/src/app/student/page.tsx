@@ -14,16 +14,17 @@
  */
 
 "use client";
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AvatarSelector from '@/components/AvatarSelector';
 import { useAuth } from '@/components/AuthProvider';
 
-export default function StudentPage() {
+function StudentPageInner() {
     const [pseudo, setPseudo] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('');
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { refreshAuth } = useAuth() || {};
 
     useEffect(() => {
@@ -31,10 +32,15 @@ export default function StudentPage() {
             const storedPseudo = localStorage.getItem('mathquest_pseudo');
             const storedAvatar = localStorage.getItem('mathquest_avatar');
             if (storedPseudo && storedAvatar) {
-                router.replace('/student/menu');
+                const redirect = searchParams?.get('redirect');
+                if (redirect) {
+                    router.replace(redirect);
+                } else {
+                    router.replace('/student/menu');
+                }
             }
         }
-    }, [router]);
+    }, [router, searchParams]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,47 +57,58 @@ export default function StudentPage() {
             localStorage.setItem('mathquest_cookie_id', cookie_id);
         }
         if (refreshAuth) refreshAuth();
-        router.push('/student/menu');
+        const redirect = searchParams?.get('redirect');
+        if (redirect) {
+            router.push(redirect);
+        } else {
+            router.push('/student/menu');
+        }
     };
 
     return (
-        <div className="h-[calc(100vh-56px)] flex items-center justify-center p-2 md:p-4 pt-4 md:h-screen md:pt-0">
-            <div className="card w-full max-w-lg shadow-xl bg-base-100 h-full md:h-[calc(100vh-56px)] m-2 flex flex-col">
-                <div className="card-body flex-1 flex flex-col items-center gap-6 min-h-0 overflow-y-auto w-full">
-                    <h1 className="card-title text-4xl md:mb-2">Espace Élève</h1>
-                    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6 flex-1 min-h-0">
-                        <div>
-                            <label className="block text-lg font-bold mb-2" htmlFor="pseudo">
-                                Pseudo
-                            </label>
-                            <input
-                                className="input input-bordered input-lg w-full"
-                                id="pseudo"
-                                type="text"
-                                placeholder="Votre pseudo"
-                                value={pseudo}
-                                onChange={e => setPseudo(e.target.value)}
-                                autoComplete="off"
-                            />
+        <div className="main-content">
+            <div className="card w-full max-w-lg bg-base-100 rounded-lg shadow-xl my-6 flex flex-col max-h-[calc(100dvh-104px)] md:max-h-[calc(100dvh-48px)]">
+                <h1 className="text-4xl font-bold text-center mb-6 shrink-0">Espace Élève</h1>
+                <form onSubmit={handleSubmit} className="flex flex-col gap-6 flex-1 min-h-0">
+                    <div className="shrink-0">
+                        <label className="block text-lg font-bold mb-2" htmlFor="pseudo">
+                            Pseudo
+                        </label>
+                        <input
+                            className="input input-bordered input-lg w-full"
+                            id="pseudo"
+                            type="text"
+                            placeholder="Votre pseudo"
+                            value={pseudo}
+                            onChange={e => setPseudo(e.target.value)}
+                            autoComplete="off"
+                        />
+                    </div>
+                    <div className="flex flex-col flex-1 min-h-0">
+                        <label className="block text-lg font-bold mb-2 shrink-0">
+                            Avatar
+                        </label>
+                        <div className="flex-1 min-h-0 overflow-y-auto flex justify-center items-start">
+                            <AvatarSelector onSelect={setSelectedAvatar} selected={selectedAvatar} />
                         </div>
-                        <div>
-                            <label className="block text-lg font-bold mb-2">
-                                Avatar
-                            </label>
-                            <div className="flex justify-center max-h-72 overflow-y-auto">
-                                <AvatarSelector onSelect={setSelectedAvatar} selected={selectedAvatar} />
-                            </div>
-                        </div>
-                        {error && <div className="alert alert-error justify-center">{error}</div>}
-                        <button
-                            type="submit"
-                            className="btn btn-primary btn-lg w-full"
-                        >
-                            OK
-                        </button>
-                    </form>
-                </div>
+                    </div>
+                    {error && <div className="alert alert-error justify-center shrink-0">{error}</div>}
+                    <button
+                        type="submit"
+                        className="btn btn-primary btn-lg w-full shrink-0"
+                    >
+                        OK
+                    </button>
+                </form>
             </div>
         </div>
+    );
+}
+
+export default function StudentPage() {
+    return (
+        <Suspense>
+            <StudentPageInner />
+        </Suspense>
     );
 }

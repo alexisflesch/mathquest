@@ -15,6 +15,6 @@ export async function GET(req: NextRequest) {
         select: { discipline: true },
         distinct: ['discipline'],
     });
-    const disciplineList = disciplines.map(d => d.discipline).filter(Boolean);
+    const disciplineList = disciplines.map((d: { discipline: string | null }) => d.discipline).filter(Boolean);
     return NextResponse.json({ disciplines: disciplineList });
 }

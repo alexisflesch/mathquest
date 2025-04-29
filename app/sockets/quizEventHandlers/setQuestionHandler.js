@@ -26,7 +26,7 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionIdx, chro
 
     if (code) {
         if (!tournamentState[code]) {
-            logger.info(`Initializing tournament state for code=${code}`);
+            logger.info(`[QUIZMODE DEBUG] Initializing tournamentState[${code}] with linkedQuizId=${quizId}`);
             const tournoi = await prisma.tournoi.findUnique({ where: { code } });
             if (!tournoi) {
                 logger.error(`Tournament ${code} not found for quiz ${quizId}`);
@@ -51,11 +51,13 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionIdx, chro
                 currentQuestionDuration: typeof chrono === 'number' ? chrono : null, // Initialize duration
                 stopped: false,
             };
+            logger.info(`[QUIZMODE DEBUG] tournamentState[${code}].linkedQuizId set to`, tournamentState[code].linkedQuizId);
             // Emit immediate redirect for quiz-linked tournaments
             io.to(code).emit("redirect_to_tournament", { code });
             logger.debug(`Emitted redirect_to_tournament to lobby room ${code}`);
         } else {
             tournamentState[code].linkedQuizId = quizId; // Ensure always set
+            logger.info(`[QUIZMODE DEBUG] tournamentState[${code}].linkedQuizId updated to`, quizId);
             tournamentState[code].currentIndex = questionIdx;
             tournamentState[code].currentQuestionDuration = typeof chrono === 'number' ? chrono : null; // Update duration
             tournamentState[code].stopped = false; // Reset stopped state

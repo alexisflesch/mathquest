@@ -2,8 +2,10 @@ const createLogger = require('../../logger');
 const logger = createLogger('JoinQuizHandler');
 const quizState = require('../quizState');
 const prisma = require('../../db'); // Ensure prisma is required
+const { emitQuizConnectedCount } = require('../quizUtils');
 
-async function handleJoinQuiz(io, socket, prisma, { quizId, role }) {
+async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
+    logger.info(`[DEBUG] handleJoinQuiz called for quizId=${quizId}, role=${role}, socket.id=${socket.id}`);
     socket.join(`quiz_${quizId}`);
     logger.info(`Socket ${socket.id} joined room quiz_${quizId} with role ${role}`);
     socket.emit("joined_room", {
@@ -21,11 +23,12 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role }) {
             ended: false,
             stats: {},
             profSocketId: role === 'prof' ? socket.id : null,
-            // Initialize timer action fields as well
+            profTeacherId: (role === 'teacher' || role === 'prof') ? teacherId : null,
             timerStatus: null,
             timerQuestionId: null,
             timerTimeLeft: null,
             timerTimestamp: null,
+            connectedSockets: new Set(), // Ajout du suivi des connexions
         };
 
         try {
@@ -45,10 +48,29 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role }) {
         } catch (e) {
             logger.error(`Error loading quiz ${quizId} questions:`, e);
         }
-    } else if (role === 'prof') {
+    } else if (role === 'prof' || role === 'teacher') {
         quizState[quizId].profSocketId = socket.id;
-        logger.info(`Updated professor socket ID for quiz ${quizId}`);
+        if (teacherId) quizState[quizId].profTeacherId = teacherId;
+        logger.info(`Updated professor socket ID and teacherId for quiz ${quizId}`);
     }
+
+    // --- Ajout du socket à la liste des connectés ---
+    if (!quizState[quizId].connectedSockets) quizState[quizId].connectedSockets = new Set();
+    quizState[quizId].connectedSockets.add(socket.id);
+    logger.info(`[QUIZ_CONNECTED] Ajout socket ${socket.id} à quiz ${quizId}. Sockets connectés:`, Array.from(quizState[quizId].connectedSockets));
+    // Émettre le nombre de connectés
+    // --- Calcul du nombre total de connectés (lobby + live) ---
+    let code = null;
+    if (quizState[quizId] && quizState[quizId].tournament_code) {
+        code = quizState[quizId].tournament_code;
+    } else {
+        try {
+            const quiz = await prisma.quiz.findUnique({ where: { id: quizId }, select: { tournament_code: true } });
+            if (quiz && quiz.tournament_code) code = quiz.tournament_code;
+        } catch (e) { logger.error('Erreur récupération code tournoi', e); }
+    }
+    if (code) await emitQuizConnectedCount(io, prisma, code);
+    else logger.warn(`[QUIZ_CONNECTED] Aucun code tournoi trouvé pour quizId=${quizId}`);
 
     socket.emit("quiz_state", quizState[quizId]);
 }

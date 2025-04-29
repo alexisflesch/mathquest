@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+//  output   = "./node_modules/@prisma/client"
 }
 
 datasource db {
@@ -20,12 +21,14 @@ model Question {
   type        String // e.g., 'choix_multiple', 'choix_simple'
   discipline  String
   theme       String
-  difficulte  Int
-  niveau      String
+  difficulte  Int?
+  niveau      String?
   auteur      String?
   explication String?
   tags        String[]
   temps       Int? // Time in seconds
+  titre       String? // Optional title for the question
+  hidden      Boolean? // Optional boolean to hide the question for student tournaments
 
   // Relation placeholder if questions are linked to quizzes/tournaments directly
   // tournois Tournoi[] @relation("TournoiQuestions")

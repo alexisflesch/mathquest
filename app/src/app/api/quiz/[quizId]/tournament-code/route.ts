@@ -40,6 +40,11 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Quiz introuvable' }, { status: 404 });
         }
 
+        if (!quiz.tournament_code) {
+            logger.debug(`No tournament_code found for quiz ${quizId}`);
+            return NextResponse.json({ tournament_code: null });
+        }
+
         logger.debug(`Found tournament_code for quiz ${quizId}: ${quiz.tournament_code || 'none'}`);
         return NextResponse.json({ tournament_code: quiz.tournament_code });
     } catch (error) {

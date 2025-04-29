@@ -44,18 +44,18 @@ export default function ConfirmDialog({
                 <div className="mb-6 text-base text-center text-base-content">{message}</div>
                 <div className="flex gap-4 w-full justify-center">
                     <button
-                        className="btn btn-primary px-6 font-bold"
-                        style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
-                        onClick={onConfirm}
-                    >
-                        {confirmText}
-                    </button>
-                    <button
                         className="btn btn-outline px-6 font-bold"
                         style={{ borderColor: "var(--primary)", color: "var(--primary)" }}
                         onClick={onCancel}
                     >
                         {cancelText}
+                    </button>
+                    <button
+                        className="btn btn-primary px-6 font-bold"
+                        style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+                        onClick={onConfirm}
+                    >
+                        {confirmText}
                     </button>
                 </div>
             </div>

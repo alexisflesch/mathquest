@@ -12,6 +12,14 @@ export interface Question {
     temps?: number;
     type?: string;
     explication?: string;
+    difficulte?: number;
+    niveau?: string;
+    auteur?: string;
+    titre?: string;      // Optional title
+    hidden?: boolean;    // Optional hidden flag
+    tags?: string[];
+    discipline?: string;
+    theme?: string;
 }
 
 // Shared quiz state type

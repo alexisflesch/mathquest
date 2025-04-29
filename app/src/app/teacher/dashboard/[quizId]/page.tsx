@@ -1,455 +1,488 @@
 /**
- * Teacher Dashboard Page Component
- * 
- * This component provides the teacher control interface for managing live quizzes.
- * Key functionality includes:
- * 
- * - Real-time control of quiz questions and timing via Socket.IO
- * - Question navigation and display management
- * - Timer controls (play, pause, stop, adjust time)
- * - Tournament code generation and management
- * - Quiz state synchronization between teacher and student views
- * 
- * The dashboard maintains a bidirectional connection with both the server-side
- * quiz state and the student tournament interface. When a teacher takes actions
- * in this dashboard, they are propagated to all connected student devices.
+ * Teacher Dashboard Page Component - Refactored
+ *
+ * Uses useTeacherQuizSocket hook for real-time logic and TournamentCodeManager
+ * component for code handling.
  */
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { io, Socket } from "socket.io-client";
+import React, { useEffect, useState, useCallback } from "react";
+// Removed direct socket import
 import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
+import TournamentCodeManager from '@/components/TournamentCodeManager'; // Import new component
+import { useTeacherQuizSocket, Question, QuizState } from '@/hooks/useTeacherQuizSocket'; // Import hook and types
+import { UsersRound } from "lucide-react";
 
 // Create a logger for this component
-const logger = createLogger('TeacherDashboard');
+const logger = createLogger('TeacherDashboardPage');
 
-// --- Types ---
-interface Response {
-    texte: string;
-    correct: boolean;
-}
-interface Question {
-    uid: string;
-    question: string;
-    reponses: Response[];
-    temps?: number;
-    type?: string;
-    explication?: string;
-}
-interface QuizState {
-    currentQuestionIdx: number | null;
-    questions: Question[];
-    chrono: { timeLeft: number | null; running: boolean };
-    locked: boolean;
-    ended: boolean;
-    stats: Record<string, unknown>;
-}
+
+// --- Types moved to hook ---
+
 
 export default function TeacherDashboardPage({ params }: { params: Promise<{ quizId: string }> }) {
     const { quizId } = React.use(params);
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const [questions, setQuestions] = useState<Question[]>([]); // Keep local question state for UI ordering/editing
     const [quizName, setQuizName] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null);
-    const [quizSocket, setQuizSocket] = useState<Socket | null>(null);
-    const [quizState, setQuizState] = useState<QuizState | null>(null);
-    const [tournamentCode, setTournamentCode] = useState<string | null>(null);
-    const [generating, setGenerating] = useState(false);
+    const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null); // UI state for selected question
+    const [initialTournamentCode, setInitialTournamentCode] = useState<string | null>(null); // Fetched code
+    const [currentTournamentCode, setCurrentTournamentCode] = useState<string | null>(null); // Active code (from fetch or generation)
+
+    // --- Confirmation Dialog State ---
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingPlayIdx, setPendingPlayIdx] = useState<number | null>(null);
-    const [timerStatus, setTimerStatus] = useState<'play' | 'pause' | 'stop'>('stop');
-    const [timerQuestionId, setTimerQuestionId] = useState<string | null>(null);
-    const [timeLeft, setTimeLeft] = useState<number>(0);
 
-    // Local timer state for countdown
-    const [localTimeLeft, setLocalTimeLeft] = useState<number | null>(null);
-    const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+    // --- Use the Custom Hook ---
+    const {
+        quizSocket,
+        quizState,
+        timerStatus,
+        timerQuestionId,
+        localTimeLeft,
+        emitSetQuestion,
+        emitEndQuiz,
+        emitPauseQuiz,
+        emitResumeQuiz,
+        emitSetTimer,
+        emitTimerAction,
+        emitUpdateTournamentCode,
+        connectedCount, // Ajout du compteur de connectés
+    } = useTeacherQuizSocket(quizId, currentTournamentCode); // Pass quizId and current code to hook
 
-    // Sync local timer with quizState
+    // --- Initial Data Fetching (Quiz Name, Questions, Initial Code) ---
     useEffect(() => {
-        if (!quizState || !quizState.chrono) return;
-        setLocalTimeLeft(quizState.chrono.timeLeft);
-        if (timerRef.current) clearInterval(timerRef.current);
-        if (quizState.chrono.running && quizState.chrono.timeLeft !== null) {
-            timerRef.current = setInterval(() => {
-                setLocalTimeLeft(prev => {
-                    if (prev === null) return null;
-                    if (prev <= 1) {
-                        clearInterval(timerRef.current!);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-        return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [quizState?.chrono.running, quizState?.chrono.timeLeft]);
-
-    // --- Tournament Code Generation ---
-    const handleGenerateTournament = async () => {
-        setGenerating(true);
-        setTournamentCode(null);
-        try {
-            const res = await fetch(`/api/quiz/${quizId}/tournament-code`, {
-                method: 'POST',
-            });
-            const data = await res.json();
-            if (res.ok && data.tournament_code) {
-                const newCode = data.tournament_code;
-                setTournamentCode(newCode);
-
-                // After generating a new code, inform the server to update socket communications
-                if (quizSocket) {
-                    logger.info(`New tournament code generated: ${newCode}, informing server`);
-                    quizSocket.emit("update_tournament_code", {
-                        quizId,
-                        tournamentCode: newCode
-                    });
-
-                    // If there's an active question, re-emit it with the new tournament code
-                    if (quizState &&
-                        typeof quizState.currentQuestionIdx === 'number' &&
-                        quizState.currentQuestionIdx >= 0) {
-
-                        logger.info(`Re-emitting current question with new tournament code`);
-                        const currentIdx = quizState.currentQuestionIdx;
-                        const currentQuestion = quizState.questions[currentIdx];
-
-                        // Re-emit the current question with the new tournament code
-                        quizSocket.emit("quiz_set_question", {
-                            quizId,
-                            questionIdx: currentIdx,
-                            chrono: quizState.chrono.timeLeft,
-                            code: newCode
-                        });
-                    }
-                }
-            } else {
-                setTournamentCode(data.message || 'Erreur lors de la génération');
-            }
-        } catch {
-            setTournamentCode('Erreur lors de la génération');
-        } finally {
-            setGenerating(false);
-        }
-    }
-
-    useEffect(() => {
+        let isMounted = true;
         setLoading(true);
         setError(null);
-        // Fetch the tournament code for this quiz (single source of truth)
-        fetch(`/api/quiz/${quizId}/tournament-code`)
-            .then(res => res.json())
-            .then(async data => {
-                if (data && data.tournament_code) {
-                    // Check if a tournament with this code actually exists
-                    const tournoiRes = await fetch(`/api/tournament?code=${data.tournament_code}`);
-                    if (tournoiRes.ok) {
-                        setTournamentCode(data.tournament_code);
-                    } else {
-                        setTournamentCode(null);
-                    }
-                } else {
-                    setTournamentCode(null);
-                }
-            });
-        // Fetch questions and quiz name as before
-        fetch(`/api/teacher/quiz/${quizId}/questions`)
-            .then(res => {
-                if (!res.ok) throw new Error("Erreur lors du chargement des questions");
-                return res.json();
-            })
-            .then(data => {
-                setQuestions(data.questions || []);
-                setLoading(false);
-            })
-            .catch(err => {
-                setError(err.message);
-                setLoading(false);
-            });
-        fetch(`/api/quiz`)
-            .then(res => res.json())
-            .then((quizzes: { id: string; nom: string }[]) => {
+        setInitialTournamentCode(null); // Reset on quizId change
+
+        const fetchQuizData = async () => {
+            try {
+                // Fetch quiz name
+                const quizListRes = await fetch(`/api/quiz`);
+                if (!quizListRes.ok) throw new Error("Erreur lors du chargement des quiz");
+                const quizzes: { id: string; nom: string }[] = await quizListRes.json();
                 const found = Array.isArray(quizzes) ? quizzes.find((q) => q.id === quizId) : null;
-                setQuizName(found?.nom || "Quiz");
-            })
-            .catch(() => setQuizName("Quiz"));
+                if (isMounted) setQuizName(found?.nom || "Quiz");
+
+                // Fetch questions
+                const questionsRes = await fetch(`/api/teacher/quiz/${quizId}/questions`);
+                if (!questionsRes.ok) throw new Error("Erreur lors du chargement des questions");
+                const questionsData = await questionsRes.json();
+                // Initialize local question state, ensuring 'temps' exists
+                const initialQuestions = (questionsData.questions || []).map((q: Question) => ({
+                    ...q,
+                    temps: q.temps ?? 60 // Default to 60s if undefined
+                }));
+                if (isMounted) setQuestions(initialQuestions);
+
+
+                // Fetch initial tournament code
+                const codeRes = await fetch(`/api/quiz/${quizId}/tournament-code`);
+                if (!codeRes.ok && codeRes.status !== 404) { // Allow 404 (no code exists)
+                    logger.warn(`Failed to fetch initial tournament code: ${codeRes.status}`);
+                    // Don't throw, just proceed without an initial code
+                } else if (codeRes.ok) {
+                    const codeData = await codeRes.json();
+                    if (codeData && codeData.tournament_code) {
+                        // Verify the tournament exists before setting the code
+                        try {
+                            const tournoiRes = await fetch(`/api/tournament?code=${codeData.tournament_code}`);
+                            if (tournoiRes.ok && isMounted) {
+                                logger.info(`Fetched initial tournament code: ${codeData.tournament_code}`);
+                                setInitialTournamentCode(codeData.tournament_code);
+                                setCurrentTournamentCode(codeData.tournament_code); // Set current code
+                            } else if (isMounted) {
+                                logger.warn(`Fetched tournament code ${codeData.tournament_code}, but tournament not found or component unmounted.`);
+                                setInitialTournamentCode(null); // Treat as no code if tournament doesn't exist
+                                setCurrentTournamentCode(null);
+                            }
+                        } catch (tournoiErr) {
+                            logger.error("Error verifying tournament existence:", tournoiErr);
+                            if (isMounted) {
+                                setInitialTournamentCode(null);
+                                setCurrentTournamentCode(null);
+                            }
+                        }
+                    } else if (isMounted) {
+                        setInitialTournamentCode(null); // No code found
+                        setCurrentTournamentCode(null);
+                    }
+                } else if (isMounted) {
+                    // Handle 404 explicitly - no code exists yet
+                    logger.info("No initial tournament code found (404).");
+                    setInitialTournamentCode(null);
+                    setCurrentTournamentCode(null);
+                }
+
+            } catch (err: unknown) {
+                logger.error("Error fetching initial data:", err);
+                if (isMounted) setError((err as Error).message || "Une erreur est survenue");
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        if (quizId) {
+            fetchQuizData();
+        } else {
+            setLoading(false); // No quizId, nothing to load
+        }
+
+        return () => { isMounted = false; };
     }, [quizId]);
 
-    // Connexion socket.io pour le quiz
+
+    // --- Sync UI Active Question with Hook's Timer State ---
+    // This ensures the UI highlights the correct question based on the *actual* running timer
     useEffect(() => {
-        if (!quizId) return;
-        const s = io({ path: "/api/socket/io", transports: ["websocket"] });
-        setQuizSocket(s);
-        s.emit("join_quiz", { quizId, role: "teacher" });
-        s.on("joined_room", ({ room, socketId, rooms }) => {
-            logger.debug("Server confirms join", { room, socketId });
-        });
-        // Log all socket events for debugging
-        s.onAny((event, ...args) => {
-            logger.debug(`Socket event: ${event}`, args);
-        });
-        return () => { s.disconnect(); };
-    }, [quizId]);
+        if (timerQuestionId) {
+            setQuestionActiveUid(timerQuestionId);
+        }
+        // Optional: Clear selection if timer stops? Depends on desired UX.
+        // else if (timerStatus === 'stop') {
+        //     setQuestionActiveUid(null);
+        // }
+    }, [timerQuestionId, timerStatus]);
 
-    // Listen for quiz_state events
-    useEffect(() => {
-        if (!quizSocket) return;
-        const handleQuizState = (state: QuizState) => {
-            setQuizState(state);
-        };
-        quizSocket.on("quiz_state", handleQuizState);
-        return () => {
-            quizSocket.off("quiz_state", handleQuizState);
-        };
-    }, [quizSocket]);
 
-    // --- Socket Actions ---
-    const setQuestion = (idx: number, chrono?: number) => {
-        const code = tournamentCode;
-        quizSocket?.emit("quiz_set_question", { quizId, questionIdx: idx, chrono, code });
-    };
-    const endQuiz = () => {
-        quizSocket?.emit("quiz_end", { quizId });
-    };
+    // --- Handlers (using hook emitters) ---
 
-    // --- Handlers ---
-    const handlePlay = (idx: number, chrono?: number) => {
-        // If a question is running or paused (timeLeft > 0), and it's not the same question, show confirm dialog
-        if (
-            quizState &&
-            quizState.chrono &&
-            typeof quizState.currentQuestionIdx === 'number' &&
-            quizState.chrono.timeLeft !== null && quizState.chrono.timeLeft > 0 &&
-            quizState.currentQuestionIdx !== idx
-        ) {
+    // Corrected signature: uid and startTime
+    const handlePlay = useCallback((uid: string, startTime: number) => {
+        const idx = questions.findIndex(q => q.uid === uid); // Find index using uid
+        if (idx === -1) return;
+        const questionToPlay = questions[idx];
+
+        const currentQuestionUid = timerQuestionId;
+        const isTimerRunningOrPaused = timerStatus === 'play' || timerStatus === 'pause';
+
+        if (isTimerRunningOrPaused && currentQuestionUid && currentQuestionUid !== questionToPlay.uid) {
             setPendingPlayIdx(idx);
             setShowConfirm(true);
             return;
         }
 
-        // If the same question is already selected but paused, resume it
-        if (quizState &&
-            quizState.chrono &&
-            quizState.chrono.running === false &&
-            quizState.currentQuestionIdx === idx) {
-            logger.info(`Resuming paused timer for question ${idx}`);
-            quizSocket?.emit("quiz_resume", { quizId });
+        if (timerStatus === 'pause' && currentQuestionUid === questionToPlay.uid) {
+            logger.info(`Resuming paused timer for question ${questionToPlay.uid}`);
+            emitResumeQuiz();
         } else {
-            // Starting a new question
-            setQuestionActiveUid(questions[idx].uid);
-            // Always use the latest edited timer value for this question
-            const chronoToUse = questions[idx]?.temps;
-            setQuestion(idx, chronoToUse);
-            // Emit timer change for tournament clients right after starting the question
-            if (tournamentCode && typeof chronoToUse === 'number') {
-                quizSocket?.emit("quiz_set_timer", { quizId, timeLeft: chronoToUse });
-            }
+            logger.info(`Starting timer for question ${questionToPlay.uid}`);
+            setQuestionActiveUid(questionToPlay.uid);
+            // Use startTime passed from DraggableQuestionsList (which defaults to q.temps)
+            emitSetQuestion(idx, startTime);
         }
-    };
+        // Updated dependencies
+    }, [questions, timerStatus, timerQuestionId, emitResumeQuiz, emitSetQuestion, setPendingPlayIdx, setShowConfirm]);
 
-    const handlePause = (idx: number) => {
-        quizSocket?.emit("quiz_pause", { quizId });
-    };
+    // Corrected signature: no index needed
+    const handlePause = useCallback(() => {
+        if (timerStatus === 'play' && timerQuestionId) {
+            logger.info(`Pausing timer for question ${timerQuestionId}`);
+            emitPauseQuiz();
+        } else {
+            logger.warn("Cannot pause: Timer not playing or no active question ID.");
+        }
+    }, [timerStatus, timerQuestionId, emitPauseQuiz]);
 
-    const handleStop = (idx: number) => {
-        // Get the active question ID
-        if (quizState && typeof quizState.currentQuestionIdx === 'number') {
-            const activeQuestionIdx = quizState.currentQuestionIdx;
-            const activeQuestionId = quizState.questions[activeQuestionIdx]?.uid;
+    // Corrected signature: no index needed
+    const handleStop = useCallback(() => {
+        if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
+            logger.info(`Stopping timer for question ${timerQuestionId}`);
+            emitTimerAction({
+                status: 'stop',
+                questionId: timerQuestionId,
+                timeLeft: 0,
+            });
+        } else {
+            logger.warn("Cannot stop: No active question ID or timer already stopped.");
+        }
+    }, [timerStatus, timerQuestionId, emitTimerAction]);
 
-            if (activeQuestionId && quizSocket) {
-                logger.info('Stopping question timer, emitting quiz_timer_action with stop status');
-                // This will both set timer to 0 and change the status to stopped
-                quizSocket.emit("quiz_timer_action", {
-                    status: 'stop',
-                    questionId: activeQuestionId,
-                    timeLeft: 0,
-                    quizId
+
+    // CHANGED: handleEditTimer now takes uid instead of idx
+    const handleEditTimer = useCallback((uid: string, newTime: number) => {
+        const question = questions.find(q => q.uid === uid);
+        if (!question) return;
+
+        logger.info(`Editing timer for question ${uid} to ${newTime}s`);
+
+        // 1. Update local question state immediately for UI responsiveness
+        setQuestions(prev => prev.map(q => q.uid === uid ? { ...q, temps: newTime } : q));
+
+        // 2. For active questions, update the server based on timer status
+        if (timerQuestionId === question.uid) {
+            if (timerStatus === 'pause') {
+                logger.info(`Updating paused timer value via timerAction: ${newTime}s`);
+                emitTimerAction({
+                    status: 'pause',
+                    questionId: question.uid,
+                    timeLeft: newTime,
                 });
+            } else if (timerStatus === 'play') {
+                logger.info(`Updating running timer value via setTimer: ${newTime}s`);
+                emitSetTimer(newTime);
             } else {
-                logger.warn('Cannot stop timer: no active question or socket connection');
+                // For stopped timers, just update local state (no need to tell server)
+                logger.info(`Timer for question ${question.uid} is stopped, only local 'temps' updated.`);
             }
-        }
-    };
-
-    const handleEditTimer = (idx: number, newTime: number) => {
-        logger.info(`Editing timer for question ${idx} to ${newTime}s (active: ${quizState?.currentQuestionIdx === idx})`);
-
-        // Always update local state for questions[idx].temps
-        setQuestions(prev => prev.map((q, i) => i === idx ? { ...q, temps: newTime } : q));
-
-        // If the question is currently selected, also update the active timer
-        if (quizState && typeof quizState.currentQuestionIdx === 'number' && quizState.currentQuestionIdx === idx) {
-            // Important: Update the timeLeft state to match the new edited value
-            setTimeLeft(newTime);
-
-            // Get the question ID for timer updates
-            const questionId = questions[idx]?.uid;
-
-            if (questionId && quizSocket) {
-                // For paused questions, use quiz_timer_action to force a complete timer update
-                if (quizState.chrono && quizState.chrono.running === false) {
-                    logger.info(`Sending complete timer update for paused question: ${newTime}s`);
-                    quizSocket.emit("quiz_timer_action", {
-                        status: 'pause',
-                        questionId: questionId,
-                        timeLeft: newTime,
-                        quizId
-                    });
-                } else {
-                    // For running or stopped questions, just update the timer value
-                    logger.info(`Updating timer value: ${newTime}s`);
-                    quizSocket.emit("quiz_set_timer", { quizId, timeLeft: newTime });
-                }
-            }
-        }
-    };
-
-    const handleSelect = (uid: string) => {
-        setQuestionActiveUid(uid);
-    };
-
-    const handleReorder = (newQuestions: typeof questions) => {
-        setQuestions(newQuestions);
-    };
-
-    // Callback for QuestionSelector
-    const handleTimerAction = ({ status, questionId, timeLeft }: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
-        logger.debug('handleTimerAction', { status, questionId, timeLeft });
-        setTimerStatus(status);
-        setTimerQuestionId(questionId);
-        setTimeLeft(timeLeft);
-        if (quizSocket) {
-            logger.info('Emitting quiz_timer_action', { status, questionId, timeLeft, quizId });
-            quizSocket.emit("quiz_timer_action", { status, questionId, timeLeft, quizId });
         } else {
-            logger.warn('quizSocket not ready');
+            // For non-active questions, we only update local state
+            // The new time will be used when this question is activated
+            logger.info(`Editing timer for non-active question ${question.uid}. Local 'temps' updated to ${newTime}s.`);
+            // No server emit needed - the server will get the updated time when the question is played
+        }
+
+    }, [questions, timerQuestionId, timerStatus, emitTimerAction, emitSetTimer]);
+
+
+    const handleSelect = useCallback((uid: string) => {
+        // Only update the visual selection, don't trigger socket events
+        setQuestionActiveUid(uid);
+    }, []);
+
+    const handleReorder = useCallback((newQuestions: Question[]) => {
+        // Update local order. Does NOT inform the server yet.
+        // TODO: Need a mechanism to persist this order if desired (e.g., emit a 'reorder_questions' event).
+        logger.info("Questions reordered locally.");
+        setQuestions(newQuestions);
+    }, []);
+
+    // Callback for DraggableQuestionsList's internal timer buttons (if any)
+    // This might be redundant now if all actions go through handlePlay/Pause/Stop/Edit
+    const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
+        logger.debug('handleTimerAction called from DraggableQuestionsList', action);
+        // Directly emit the action using the hook's emitter
+        emitTimerAction(action);
+    }, [emitTimerAction]);
+
+    // Callback from TournamentCodeManager when a new code is generated
+    const handleCodeGenerated = useCallback((newCode: string | null) => {
+        logger.info(`Tournament code updated via TournamentCodeManager: ${newCode}`);
+        setCurrentTournamentCode(newCode); // Update the code used by the hook
+    }, []);
+
+    // Callback from TournamentCodeManager when it emits update_tournament_code
+    const handleCodeUpdateEmitted = useCallback((newCode: string) => {
+        // Use the hook's emitter function
+        emitUpdateTournamentCode(newCode);
+    }, [emitUpdateTournamentCode]);
+
+
+    // --- Confirmation Dialog Logic ---
+    const confirmPlay = () => {
+        setShowConfirm(false);
+        if (pendingPlayIdx !== null) {
+            const questionToPlay = questions[pendingPlayIdx];
+            logger.info(`Confirmed play for question ${pendingPlayIdx} (${questionToPlay?.uid})`);
+            if (questionToPlay) {
+                setQuestionActiveUid(questionToPlay.uid); // Update UI selection
+                emitSetQuestion(pendingPlayIdx, questionToPlay.temps); // Use hook emitter
+            }
+            setPendingPlayIdx(null);
         }
     };
 
-    // Listen for timer updates from server
-    useEffect(() => {
-        if (!quizSocket) return;
-        const handleTimerUpdate = (data: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
-            logger.debug('Received quiz_timer_update', data);
-            setTimerStatus(data.status);
-            setTimerQuestionId(data.questionId);
-            setTimeLeft(data.timeLeft);
-            // Also update the active question if needed
-            if (data.status === 'play' && data.questionId) {
-                setQuestionActiveUid(data.questionId);
-            }
-        };
-        quizSocket.on("quiz_timer_update", handleTimerUpdate);
-        return () => {
-            quizSocket.off("quiz_timer_update", handleTimerUpdate);
-        };
-    }, [quizSocket]);
+    const cancelPlay = () => {
+        setShowConfirm(false);
+        setPendingPlayIdx(null);
+    };
 
-    if (loading) return <div className="p-8">Chargement…</div>;
-    if (error) return <div className="p-8 text-red-600">{error}</div>;
+    // --- End Quiz Confirmation Logic ---
+    const [showEndQuizConfirm, setShowEndQuizConfirm] = useState(false);
+
+    const handleEndQuiz = () => {
+        setShowEndQuizConfirm(true);
+    };
+
+    const confirmEndQuiz = () => {
+        setShowEndQuizConfirm(false);
+        emitEndQuiz();
+    };
+
+    const cancelEndQuiz = () => {
+        setShowEndQuizConfirm(false);
+    };
+
+    // --- Change Question Confirmation Logic ---
+    const [showChangeQuestionConfirm, setShowChangeQuestionConfirm] = useState(false);
+    const [pendingQuestionUid, setPendingQuestionUid] = useState<string | null>(null);
+
+    const handleChangeQuestion = (uid: string) => {
+        if (timerStatus === 'play' || timerStatus === 'pause') {
+            setPendingQuestionUid(uid);
+            setShowChangeQuestionConfirm(true);
+        } else {
+            setQuestionActiveUid(uid);
+            emitSetQuestion(questions.findIndex(q => q.uid === uid), questions.find(q => q.uid === uid)?.temps || 60);
+        }
+    };
+
+    const confirmChangeQuestion = () => {
+        if (pendingQuestionUid) {
+            setQuestionActiveUid(pendingQuestionUid);
+            emitSetQuestion(questions.findIndex(q => q.uid === pendingQuestionUid), questions.find(q => q.uid === pendingQuestionUid)?.temps || 60);
+        }
+        setShowChangeQuestionConfirm(false);
+        setPendingQuestionUid(null);
+    };
+
+    const cancelChangeQuestion = () => {
+        setShowChangeQuestionConfirm(false);
+        setPendingQuestionUid(null);
+    };
+
+    // --- Confirmation Dialog for Tournament Code Generation ---
+    const [showGenerateCodeConfirm, setShowGenerateCodeConfirm] = useState(false);
+    const tournamentCodeManagerRef = React.useRef<TournamentCodeManagerRef | null>(null);
+
+    const handleRequestGenerateCode = () => {
+        setShowGenerateCodeConfirm(true);
+    };
+    const confirmGenerateCode = () => {
+        setShowGenerateCodeConfirm(false);
+        // Appelle la méthode de génération du code du composant enfant
+        if (tournamentCodeManagerRef.current && tournamentCodeManagerRef.current.generateTournament) {
+            tournamentCodeManagerRef.current.generateTournament();
+        }
+    };
+    const cancelGenerateCode = () => {
+        setShowGenerateCodeConfirm(false);
+    };
+
+    // --- Render Logic ---
+    if (loading) return <div className="p-8">Chargement du tableau de bord...</div>;
+    if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
+    if (!quizId) return <div className="p-8 text-orange-600">Aucun ID de quiz fourni.</div>;
+
 
     return (
         <>
             <main className="p-8 space-y-8">
-                <div className="flex items-center justify-between mb-6">
+                {/* Ligne 1 : Titre + bouton terminer */}
+                <div className="flex flex-row items-center justify-between mb-2 gap-2">
                     <h1 className="text-3xl font-bold">Tableau de bord – {quizName}</h1>
-                    <button className="btn btn-primary" onClick={handleGenerateTournament} disabled={generating}>
-                        {generating ? 'Génération...' : 'Générer un code tournoi'}
+                    <button className="btn btn-secondary" onClick={handleEndQuiz} disabled={!quizSocket || quizState?.ended}>
+                        {quizState?.ended ? 'Quiz Terminé' : 'Terminer le quiz'}
                     </button>
+
+                    <ConfirmDialog
+                        open={showEndQuizConfirm}
+                        title="Terminer le quiz ?"
+                        message="Êtes-vous sûr de vouloir terminer ce quiz ? Cette action est irréversible."
+                        onConfirm={confirmEndQuiz}
+                        onCancel={cancelEndQuiz}
+                    />
                 </div>
-                {tournamentCode && (
-                    <div className="alert alert-info flex items-center gap-4 mb-4">
-                        <span>Code tournoi à donner aux élèves :</span>
-                        <span className="font-mono text-2xl font-bold">{tournamentCode}</span>
-                        <button className="btn btn-xs btn-outline" onClick={() => navigator.clipboard.writeText(tournamentCode)}>Copier</button>
+                {/* Ligne 2 : TournamentCodeManager + compteur, responsive */}
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+                    {/* TournamentCodeManager (gère code + bouton) */}
+                    <div>
+                        <TournamentCodeManager
+                            ref={tournamentCodeManagerRef}
+                            quizId={quizId}
+                            quizSocket={quizSocket}
+                            quizState={quizState}
+                            initialTournamentCode={initialTournamentCode}
+                            onCodeGenerated={handleCodeGenerated}
+                            onCodeUpdateEmitted={handleCodeUpdateEmitted}
+                            onRequestGenerateCode={handleRequestGenerateCode}
+                        />
                     </div>
-                )}
+                    {/* Saut de ligne forcé sur mobile après le bouton */}
+                    <div className="basis-full h-0 sm:hidden" />
+                    {/* Compteur utilisateurs connectés */}
+                    <div className="flex items-center gap-2 ml-auto text-base-content/80">
+                        <UsersRound className="w-6 h-6" />
+                        <span className="font-semibold">{connectedCount}</span>
+                    </div>
+                </div>
+                {/* Sur mobile, couper la ligne en 2 (3+3) */}
+                {/* Les autres sections restent inchangées */}
                 <section>
-                    <h2 className="text-xl font-semibold mb-2">Navigation et contrôle</h2>
-                    {/* Affichage de l'état temps réel du quiz */}
-                    {quizState && (
-                        <div className="mb-4 p-4 bg-base-200 rounded-xl">
-                            <div className="flex items-center gap-4">
-                                <span className="font-bold">Question en cours :</span>
-                                {typeof quizState.currentQuestionIdx === 'number' && quizState.questions[quizState.currentQuestionIdx] ? (
-                                    <span>{quizState.questions[quizState.currentQuestionIdx].question}</span>
-                                ) : <span className="italic text-gray-500">Aucune</span>}
-                                {quizState.chrono && localTimeLeft !== null && (
-                                    <span className="ml-4 px-3 py-1 rounded-full bg-primary text-primary-foreground font-bold">{localTimeLeft}s</span>
-                                )}
-                                {quizState.locked && <span className="ml-2 badge badge-warning">Verrouillée</span>}
-                                {quizState.ended && <span className="ml-2 badge badge-error">Quiz terminé</span>}
-                            </div>
+                    <h2 className="text-xl font-semibold mb-4">Questions</h2>
+                    {/* Add a message if socket is not connected */}
+                    {!quizSocket || !quizSocket.connected && (
+                        <div className="alert alert-warning mb-4">
+                            Connexion au serveur en cours ou perdue... Les contrôles sont désactivés.
                         </div>
                     )}
-                    {/* Contrôles prof */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <button className="btn btn-error" onClick={endQuiz}>Terminer le quiz</button>
-                    </div>
                     <DraggableQuestionsList
-                        questions={questions}
-                        quizState={quizState}
-                        questionActiveUid={questionActiveUid}
+                        questions={questions} // Pass local questions state for ordering/display
+                        // Pass state derived from the hook
+                        currentQuestionIdx={quizState?.currentQuestionIdx} // Pass specific prop
+                        isChronoRunning={quizState?.chrono?.running} // Pass specific prop
+                        isQuizEnded={quizState?.ended} // Pass specific prop
+                        questionActiveUid={questionActiveUid} // Pass local UI selection state
+                        timerStatus={timerStatus}
+                        timerQuestionId={timerQuestionId}
+                        timeLeft={localTimeLeft ?? 0} // Use local countdown for display
+                        // Pass handlers
                         onSelect={handleSelect}
                         onPlay={handlePlay}
                         onPause={handlePause}
                         onStop={handleStop}
                         onEditTimer={handleEditTimer}
                         onReorder={handleReorder}
-                        timerStatus={timerStatus}
-                        timerQuestionId={timerQuestionId}
-                        timeLeft={timeLeft}
-                        onTimerAction={handleTimerAction}
+                        onTimerAction={handleTimerAction} // Keep if DraggableQuestionsList needs it
+                        // Disable controls if socket is not connected or quiz ended
+                        disabled={!quizSocket || !quizSocket.connected || quizState?.ended}
                     />
                 </section>
+
+                {/* Statistics Section (Placeholder) */}
                 <section>
                     <h2 className="text-xl font-semibold mb-2">Statistiques en temps réel</h2>
-                    <div className="bg-white/80 rounded p-4 text-gray-700">
+                    <div className="bg-base-200 rounded p-4 text-base-content/80">
                         <p>Statistiques à venir… (nombre de réponses, répartition, score moyen, taux de réussite)</p>
+                        {/* Display raw quizState for debugging */}
+                        {/* <pre className="text-xs mt-4 overflow-auto max-h-60 bg-base-300 p-2 rounded">
+                            {JSON.stringify(quizState, null, 2)}
+                        </pre> */}
                     </div>
                 </section>
-                <section>
-                    <h2 className="text-xl font-semibold mb-2">Gestion des sessions</h2>
-                    <div className="bg-white/80 rounded p-4 text-gray-700">
-                        <p>Contrôles à venir… (lancer, rejouer, chrono, verrouiller)</p>
-                    </div>
-                </section>
+
+                {/* Removed "Gestion des sessions" placeholder */}
+
             </main>
+
+            {/* Confirmation Dialog */}
             <ConfirmDialog
                 open={showConfirm}
                 title="Changer de question ?"
-                message="Êtes-vous sûr de vouloir changer de question ? Une question est toujours en cours."
-                onConfirm={() => {
-                    setShowConfirm(false);
-                    if (pendingPlayIdx !== null) {
-                        // Force play the pending question
-                        setQuestionActiveUid(questions[pendingPlayIdx].uid);
-                        setQuestion(pendingPlayIdx, questions[pendingPlayIdx].temps);
-                        setPendingPlayIdx(null);
-                    }
-                }}
-                onCancel={() => {
-                    setShowConfirm(false);
-                    setPendingPlayIdx(null);
-                }}
+                message="Une autre question est en cours ou en pause. Voulez-vous vraiment lancer cette nouvelle question et arrêter la précédente ?"
+                onConfirm={confirmPlay}
+                onCancel={cancelPlay}
+            />
+
+            {/* Change Question Confirmation Dialog */}
+            <ConfirmDialog
+                open={showChangeQuestionConfirm}
+                title="Changer de question ?"
+                message="Une question est en cours. Voulez-vous vraiment passer à une autre question ?"
+                onConfirm={confirmChangeQuestion}
+                onCancel={cancelChangeQuestion}
+            />
+
+            {/* Confirmation Dialog pour la génération d'un nouveau code tournoi */}
+            <ConfirmDialog
+                open={showGenerateCodeConfirm}
+                title="Générer un nouveau code"
+                message="Les résultats du tournoi actuel seront perdus. Continuer ?"
+                onConfirm={confirmGenerateCode}
+                onCancel={cancelGenerateCode}
             />
         </>
     );
 }
 
-// Helper function to format seconds into MM:SS
-function formatTime(seconds: number): string {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    const paddedMinutes = String(minutes).padStart(2, '0');
-    const paddedSeconds = String(remainingSeconds).padStart(2, '0');
-    return `${paddedMinutes}:${paddedSeconds}`;
+interface TournamentCodeManagerRef {
+    generateTournament: () => void;
 }
 
 

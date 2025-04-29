@@ -2,11 +2,12 @@
 
 import { Inter } from "next/font/google";
 import "./globals.css";
-import AppNav from '@/components/AppNav';
 import { AuthProvider } from '../components/AuthProvider';
 import Head from 'next/head';
 import React, { useState, useEffect } from 'react';
 import { logger, getCurrentLogLevel, setLogLevel, LogLevel } from '@/clientLogger';
+import { MathJaxContext } from 'better-react-mathjax';
+import AppNav from '@/components/AppNav';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -54,12 +55,17 @@ export default function RootLayout({
         <link rel="alternate icon" href="/favicon.svg" type="image/svg+xml" />
       </Head>
       <body>
-        <AuthProvider>
-          <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
-          <main className={`min-h-screen transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
-            {children}
-          </main>
-        </AuthProvider>
+        <MathJaxContext config={{
+          loader: { load: ["[tex]/ams"] },
+          tex: { packages: { '[+]': ["ams"] } }
+        }}>
+          <AuthProvider>
+            <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
+            <main className={`min-h-screen transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+              {children}
+            </main>
+          </AuthProvider>
+        </MathJaxContext>
       </body>
     </html>
   );

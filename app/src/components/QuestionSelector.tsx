@@ -18,6 +18,9 @@
 
 import React, { useEffect, useState } from 'react';
 import type { Question as BaseQuestion } from '../types';
+import MathJaxWrapper from '@/components/MathJaxWrapper';
+import { Check, X } from 'lucide-react';
+
 
 // Extend the shared Question interface with additional fields for this component
 interface Question extends BaseQuestion {
@@ -180,10 +183,10 @@ export default function QuestionSelector({
             )}
             <div className="max-h-96 overflow-y-auto border-2 rounded-2xl p-4 shadow-inner">
                 {filteredQuestions.length === 0 && <div>Aucune question trouvée.</div>}
-                <ul className="space-y-2">
+                <ul className="pl-0">
                     {filteredQuestions.map(q => (
-                        <li key={q.uid}>
-                            <div className="flex items-center gap-2 cursor-pointer group" onClick={e => {
+                        <li key={q.uid} className='mb-2'>
+                            <div className="flex items-start gap-2 cursor-pointer group" onClick={e => {
                                 // Only expand/collapse if not clicking the checkbox
                                 if ((e.target as HTMLElement).tagName !== 'INPUT') {
                                     setExpanded(prev => ({ ...prev, [q.uid]: !prev[q.uid] }));
@@ -194,16 +197,20 @@ export default function QuestionSelector({
                                     checked={selectedQuestionIds.includes(q.uid)}
                                     onChange={() => handleToggle(q.uid)}
                                     onClick={e => e.stopPropagation()}
+                                    style={{ transform: 'scale(1.3)' }}
+                                    className="mt-1.5"
                                 />
-                                <span className="font-semibold select-none flex-1">{q.question}</span>
-                                <span className="text-xs">[{q.discipline} - {q.niveau} - {q.theme}]</span>
-                                <span className={`ml-2 transition-transform ${expanded[q.uid] ? 'rotate-90' : ''}`}>▼</span>
+                                <span className="flex-1 select-none ml-1 mr-1">
+                                    <MathJaxWrapper>{q.question}</MathJaxWrapper>
+                                </span>
+                                <span className="text-xs text-muted mt-1.5">[{q.discipline} - {q.niveau} - {q.theme}]</span>
+                                <span className={`ml-2 mt-1 transition-transform couleur-global-neutral-400 ${expanded[q.uid] ? 'rotate-90' : ''}`}>▼</span>
                             </div>
                             {expanded[q.uid] && (
                                 <div
                                     className={
-                                        `ml-8 mt-2 rounded-xl p-3 shadow-inner border` +
-                                        `transition-all duration-300 ease-in-out overflow-hidden ` +
+                                        `ml-8 mt-2 rounded-xl p-3 shadow-inner border couleur-global-border bg-couleur-global-bg` +
+                                        ` transition-all duration-300 ease-in-out overflow-hidden ` +
                                         (expanded[q.uid] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0')
                                     }
                                     style={{
@@ -215,15 +222,29 @@ export default function QuestionSelector({
                                         transition: 'max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s, margin 0.3s, padding 0.3s',
                                     }}
                                 >
-                                    <div className="font-bold mb-1 ">Réponses :</div>
-                                    <ul className="list-disc pl-5">
+                                    <div className="font-medium mb-1 couleur-global-neutral-700">Réponses&nbsp;:</div>
+                                    <ul className="pl-0">
                                         {q.reponses.map((rep, idx) => (
-                                            <li key={idx} className={rep.correct ? 'font-semibold' : ''}>
-                                                {rep.texte} {rep.correct && <span className="ml-1 text-xs text-secondary">(correct)</span>}
+                                            <li key={idx} className="flex gap-2 mb-1" style={{ listStyle: 'none', alignItems: 'flex-start' }}>
+                                                <span style={{ display: 'inline-flex', alignItems: 'flex-start', height: '18px', minWidth: '18px' }}>
+                                                    {rep.correct ? (
+                                                        <Check size={18} strokeWidth={3} className="text-primary mt-1" style={{ display: 'block' }} />
+                                                    ) : (
+                                                        <X size={18} strokeWidth={3} className="text-secondary mt-1" style={{ display: 'block' }} />
+                                                    )}
+                                                </span>
+                                                <span style={{ lineHeight: '1.5' }}>
+                                                    <MathJaxWrapper>{rep.texte}</MathJaxWrapper>
+                                                </span>
                                             </li>
                                         ))}
                                     </ul>
-                                    {q.explication && <div className="mt-2 text-sm text-gray-600">{q.explication}</div>}
+                                    {q.explication && <div className="mt-2 text-sm couleur-global-neutral-600">
+                                        <MathJaxWrapper>
+                                            <span className="font-semibold">Justification&nbsp;:</span>
+                                            {q.explication}
+                                        </MathJaxWrapper>
+                                    </div>}
                                 </div>
                             )}
                         </li>

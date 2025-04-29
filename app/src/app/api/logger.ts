@@ -10,8 +10,6 @@
  * but is specifically tailored for use in API routes and other server-side code.
  */
 
-import { PrismaClient } from '@prisma/client';
-
 // Define log levels and their priorities
 const LOG_LEVELS = {
     DEBUG: 0,

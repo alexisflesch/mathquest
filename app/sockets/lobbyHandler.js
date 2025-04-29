@@ -18,6 +18,8 @@ const { PrismaClient } = require('@prisma/client');
 const db = new PrismaClient();
 const createLogger = require('../logger');
 const logger = createLogger('LobbyHandler');
+const { emitQuizConnectedCount } = require('./quizUtils');
+const prisma = require('../db');
 
 const lobbyParticipants = {};
 
@@ -54,6 +56,15 @@ function registerLobbyHandlers(io, socket) {
             // --- Tournament is 'en préparation', proceed with joining the lobby ---
             logger.info(`Tournament ${code} is 'en préparation'. Proceeding to join lobby for socket ${socket.id}.`); // Log normal join
 
+            // Check if this tournament is linked to a quiz
+            let isQuizLinked = false;
+            try {
+                const quiz = await db.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
+                if (quiz && quiz.id) isQuizLinked = true;
+            } catch (e) {
+                logger.error('Error checking if tournament is quiz-linked:', e);
+            }
+
             // Join both the plain code room (for lobby communications) and the tournament room
             socket.join(code);
             socket.join(`tournament_${code}`); // Also join the tournament room preemptively
@@ -67,7 +78,10 @@ function registerLobbyHandlers(io, socket) {
             ];
             logger.debug(`lobbyParticipants[${code}]:`, lobbyParticipants[code]);
             io.to(code).emit("participant_joined", { pseudo, avatar, id: socket.id });
-            io.to(code).emit("participants_list", lobbyParticipants[code]);
+            io.to(code).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
+
+            // Appeler emitQuizConnectedCount après qu'un étudiant rejoint le lobby
+            await emitQuizConnectedCount(io, prisma, code);
 
         } catch (error) {
             logger.error(`Error processing join_lobby for code ${code}:`, error);
@@ -76,7 +90,7 @@ function registerLobbyHandlers(io, socket) {
         }
     });
 
-    socket.on("leave_lobby", ({ code }) => {
+    socket.on("leave_lobby", async ({ code }) => {
         logger.info(`leave_lobby: code=${code}, socket.id=${socket.id}`);
 
         // Leave both the lobby code room and the tournament room
@@ -88,27 +102,50 @@ function registerLobbyHandlers(io, socket) {
             lobbyParticipants[code] = lobbyParticipants[code].filter((p) => p.id !== socket.id);
             logger.debug(`lobbyParticipants[${code}] after leave:`, lobbyParticipants[code]);
             io.to(code).emit("participant_left", { id: socket.id });
-            io.to(code).emit("participants_list", lobbyParticipants[code]);
+            // Always emit participants_list as an object with isQuizLinked
+            let isQuizLinked = false;
+            try {
+                const quiz = await db.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
+                if (quiz && quiz.id) isQuizLinked = true;
+            } catch (e) {
+                logger.error('Error checking if tournament is quiz-linked (leave_lobby):', e);
+            }
+            io.to(code).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
         }
     });
 
-    socket.on("get_participants", ({ code }) => {
+    socket.on("get_participants", async ({ code }) => {
         logger.debug(`get_participants: code=${code}, socket.id=${socket.id}`);
         logger.debug(`lobbyParticipants[${code}] on get_participants:`, lobbyParticipants[code]);
-        socket.emit("participants_list", lobbyParticipants[code] || []);
+        // Check if this tournament is linked to a quiz
+        let isQuizLinked = false;
+        try {
+            const quiz = await db.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
+            if (quiz && quiz.id) isQuizLinked = true;
+        } catch (e) {
+            logger.error('Error checking if tournament is quiz-linked (get_participants):', e);
+        }
+        socket.emit("participants_list", { participants: lobbyParticipants[code] || [], isQuizLinked });
     });
 
     // Handle disconnect within the lobby context as well
-    socket.on("disconnecting", () => {
-        socket.rooms.forEach((room) => {
-            // Check if the room is a lobby code (simple check, might need refinement)
+    socket.on("disconnecting", async () => {
+        for (const room of socket.rooms) {
             if (room !== socket.id && lobbyParticipants[room]) {
                 lobbyParticipants[room] = lobbyParticipants[room].filter((p) => p.id !== socket.id);
                 logger.info(`Socket ${socket.id} disconnecting from lobby ${room}`);
                 io.to(room).emit("participant_left", { id: socket.id });
-                io.to(room).emit("participants_list", lobbyParticipants[room]);
+                // Always emit participants_list as an object with isQuizLinked
+                let isQuizLinked = false;
+                try {
+                    const quiz = await db.quiz.findUnique({ where: { tournament_code: room }, select: { id: true } });
+                    if (quiz && quiz.id) isQuizLinked = true;
+                } catch (e) {
+                    logger.error('Error checking if tournament is quiz-linked (disconnecting):', e);
+                }
+                io.to(room).emit("participants_list", { participants: lobbyParticipants[room], isQuizLinked });
             }
-        });
+        }
     });
 }
 

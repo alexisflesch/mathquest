@@ -21,15 +21,13 @@ export default function Home() {
   const studentHref = isStudent || isTeacher ? '/student/menu' : '/student';
 
   return (
-    <div className="h-[calc(100vh-56px)] flex items-center justify-center  p-4 pt-14 md:h-screen md:pt-0">
-      <div className="w-full max-w-lg shadow-xl bg-base-100 p-6 rounded-lg">
+    <div className="main-content">
+      <div className="card w-full max-w-lg bg-base-100 rounded-lg shadow-xl my-6">
         <div className="flex flex-col gap-8">
-          {/* Move icon and title into a flex row */}
           <div className="flex items-center justify-center gap-4 mb-5">
             <Image src="/favicon.svg" alt="MathQuest logo" width={64} height={64} priority />
             <h1 className="text-2xl text-center font-bold text-base-content">Bienvenue sur MathQuest</h1>
           </div>
-          {/* <ThemeSelector /> */}
           <p className="text-base text-muted mb-2 max-w-md">
             Révisez en solo ou défiez vos amis dans des tournois en direct ou en différé. Choisissez un niveau, une discipline, des thèmes, et c&apos;est parti !
           </p>
