@@ -15,10 +15,26 @@
 "use client";
 import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function Home() {
-  const { isStudent, isTeacher } = useAuth();
-  const studentHref = isStudent || isTeacher ? '/student/menu' : '/student';
+  const { isStudent, isTeacher, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (isTeacher) {
+      router.replace('/teacher/home');
+    } else if (isStudent) {
+      router.replace('/student/home');
+    }
+  }, [isTeacher, isStudent, isLoading, router]);
+
+  if (isLoading || isTeacher || isStudent) {
+    // Ne rien afficher pendant le chargement ou la redirection
+    return null;
+  }
 
   return (
     <div className="main-content">
@@ -35,7 +51,7 @@ export default function Home() {
             Choisissez votre rôle puis utilisez le menu pour naviguer.
           </div>
           <div className="flex flex-col md:flex-row gap-4 w-full">
-            <a href={studentHref} className="flex-1">
+            <a href="/student" className="flex-1">
               <button className="btn btn-primary btn-lg w-full">Élève</button>
             </a>
             <a href="/teacher" className="flex-1">

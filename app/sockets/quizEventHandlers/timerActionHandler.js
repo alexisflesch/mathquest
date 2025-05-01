@@ -93,6 +93,23 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
             });
             logger.debug(`Emitted quiz_update to tournament_${code}`);
 
+            // Reset stopped flag BEFORE any timer logic if relance (play)
+            if (status === 'play' && tournamentState[code].stopped) {
+                logger.info(`Resetting stopped flag for tournament ${code} on play action`);
+                tournamentState[code].stopped = false;
+                // Force resend of tournament_question to all students
+                const idx = tournamentState[code].currentIndex;
+                const q = tournamentState[code].questions[idx];
+                io.to(`tournament_${code}`).emit("tournament_question", {
+                    question: q,
+                    index: idx,
+                    total: tournamentState[code].questions.length,
+                    remainingTime: tournamentState[code].currentQuestionDuration,
+                    questionState: "active"
+                });
+                logger.info(`Resent tournament_question with state 'active' to tournament_${code} after stop/play`);
+            }
+
             // If this is a play action, also update tournament state AND DATABASE STATUS
             if (status === 'play') {
                 // *** ADDED: Logging before DB update ***
@@ -181,12 +198,21 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
                     }
                 }
             } else if (status === 'stop') {
-                // Use trigger function
-                triggerTournamentTimerSet(io, code, 0); // Setting timer to 0 handles stop logic
+                triggerTournamentTimerSet(io, code, 0);
                 logger.info(`Triggered stop for tournament ${code}`);
 
             } else if (status === 'pause') {
-                // Use trigger function
+                triggerTournamentPause(io, code);
+                logger.info(`Triggered pause for tournament ${code}`);
+            }
+
+            // When resuming after a stop, forceActive=true to ensure timer restarts
+            if (status === 'play') {
+                triggerTournamentTimerSet(io, code, timeLeft, true);
+            } else if (status === 'stop') {
+                triggerTournamentTimerSet(io, code, 0);
+                logger.info(`Triggered stop for tournament ${code}`);
+            } else if (status === 'pause') {
                 triggerTournamentPause(io, code);
                 logger.info(`Triggered pause for tournament ${code}`);
             }

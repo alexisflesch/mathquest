@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
 
     if (isAuthenticated && request.nextUrl.pathname === '/student') {
         // Redirect authenticated users away from the avatar selection page
-        return NextResponse.redirect(new URL('/student/menu', request.url));
+        return NextResponse.redirect(new URL('/student/home', request.url));
     }
 
     return NextResponse.next(); // Allow the request to proceed

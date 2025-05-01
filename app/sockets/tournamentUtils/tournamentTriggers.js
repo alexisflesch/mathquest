@@ -38,14 +38,27 @@ function triggerTournamentQuestion(io, code, index, linkedQuizId = null, initial
     sendQuestionWithState(io, code, index, initialTime);
 }
 
-function triggerTournamentPause(io, code) {
+function triggerTournamentPause(io, code, remainingTime = null) {
     const state = tournamentState[code]; // Only applicable to live tournaments
     if (state && !state.isDiffered && !state.paused) {
-        // Calculate remaining time based on elapsed time since question start
-        const elapsed = (Date.now() - state.questionStart) / 1000;
-        // Use currentQuestionDuration if available, otherwise fallback
-        const timeAllowed = state.currentQuestionDuration || state.questions[state.currentIndex]?.temps || 20;
-        state.pausedRemainingTime = Math.max(0, timeAllowed - elapsed);
+        // Use provided remainingTime if available, otherwise calculate it
+        let pausedTime;
+
+        if (typeof remainingTime === 'number') {
+            // Use the remaining time provided from the quiz handler
+            pausedTime = remainingTime;
+            logger.debug(`Using provided remaining time for pause: ${pausedTime}s`);
+        } else {
+            // Calculate remaining time based on elapsed time since question start
+            const elapsed = (Date.now() - state.questionStart) / 1000;
+            // Use currentQuestionDuration if available, otherwise fallback
+            const timeAllowed = state.currentQuestionDuration || state.questions[state.currentIndex]?.temps || 20;
+            pausedTime = Math.max(0, timeAllowed - elapsed);
+            logger.debug(`Calculated remaining time for pause: ${pausedTime}s (elapsed: ${elapsed}s, timeAllowed: ${timeAllowed}s)`);
+        }
+
+        // Store the calculated/provided remaining time
+        state.pausedRemainingTime = pausedTime;
 
         // Set paused flag to true
         state.paused = true;
@@ -108,7 +121,19 @@ function triggerTournamentResume(io, code) {
 
             // --- Move to next question or end ---
             if (idx + 1 < state.questions.length) {
-                await sendQuestionWithState(io, code, idx + 1); // Use await
+                // Vérifier si c'est un quiz-linked tournament
+                if (state.linkedQuizId) {
+                    // En mode quiz, ne pas passer automatiquement à la question suivante
+                    // juste envoyer un événement de fin de timer
+                    logger.info(`Timer expired for quiz-linked tournament ${code}, but not auto-advancing (waiting for teacher action)`);
+                    io.to(`tournament_${code}`).emit("tournament_question_state_update", {
+                        questionState: "ended",
+                        remainingTime: 0
+                    });
+                } else {
+                    // Pour un tournoi classique, passer automatiquement à la question suivante
+                    await sendQuestionWithState(io, code, idx + 1); // Use await
+                }
             } else {
                 logger.info(`Ending tournament ${code} after resume timer`);
                 const leaderboard = Object.values(state.participants)
@@ -143,7 +168,7 @@ function triggerTournamentResume(io, code) {
     }
 }
 
-function triggerTournamentTimerSet(io, code, timeLeft) {
+function triggerTournamentTimerSet(io, code, timeLeft, forceActive = false) {
     const state = tournamentState[code];
     if (state) {
         logger.info(`Timer set to ${timeLeft} seconds for tournament ${code}`);
@@ -156,103 +181,118 @@ function triggerTournamentTimerSet(io, code, timeLeft) {
 
         // Update state
         if (timeLeft === 0) {
-            // If timer is set to 0, consider the question "stopped"
-            state.stopped = true; // Use explicit stopped state
-            state.paused = false; // Not paused - this is a stopped state
-            state.currentQuestionDuration = 0; // Update duration
-
-            // Notify clients that time is up
+            state.stopped = true;
+            state.paused = false;
+            state.currentQuestionDuration = 0;
             io.to(`tournament_${code}`).emit("tournament_set_timer", {
                 timeLeft: 0,
                 questionState: "stopped"
             });
         } else {
-            // For other time settings, update the remaining time
-            state.stopped = false; // Ensure not in stopped state
-
-            // If paused, just store the new time
-            if (state.paused) {
-                state.pausedRemainingTime = timeLeft;
-                state.currentQuestionDuration = timeLeft; // Update duration
+            // FIX: Always reset stopped if forceActive is true (i.e. on play)
+            if (forceActive) {
+                state.stopped = false;
+                logger.info(`forceActive: stopped flag reset to false for tournament ${code}`);
+            }
+            state.currentQuestionDuration = timeLeft;
+            // FIX: Check stopped AFTER possible reset by forceActive
+            if (state.stopped === true) {
+                logger.info(`Updated timer duration to ${timeLeft}s for stopped question in tournament ${code}, but keeping it stopped.`);
                 io.to(`tournament_${code}`).emit("tournament_set_timer", {
                     timeLeft,
-                    questionState: "paused"
+                    questionState: "stopped"
                 });
             } else {
-                // Active: restart timer and update duration
-                const oldDuration = state.currentQuestionDuration; // Log old value
-                state.questionStart = Date.now(); // Reset start time for new duration
-                state.currentQuestionDuration = timeLeft; // Update duration
-
-                // Re-use the timer logic from sendQuestionWithState (needs refactoring there ideally)
-                state.timer = setTimeout(async () => {
-                    // --- This logic is duplicated from sendQuestionWithState ---
-                    // TODO: Refactor timer logic into a separate reusable function
-                    const prisma = require('../../db'); // Need prisma here too
-                    const idx = state.currentIndex;
-                    const q = state.questions[idx];
-
-                    if (state.paused) return; // Check pause again just in case
-
-                    logger.info(`Timer expired after set timer for question ${idx} (uid: ${q.uid}) in tournament ${code}`);
-
-                    const { calculateScore } = require('./tournamentHelpers'); // Import calculateScore
-
-                    // --- SCORING ---
-                    const participantScores = {};
-                    Object.entries(state.participants).forEach(([joueurId, participant]) => {
-                        const answer = state.answers[joueurId]?.[q.uid];
-                        const { baseScore, rapidity, totalScore } = calculateScore(q, answer, state.questionStart);
-                        participant.score += totalScore;
-                        participantScores[joueurId] = { baseScore, rapidity, totalScore, currentTotal: participant.score };
-                        const socketId = Object.entries(state.socketToJoueur || {}).find(([sid, jid]) => jid === joueurId)?.[0];
-                        if (socketId) {
-                            io.to(socketId).emit("tournament_answer_result", {
-                                correct: baseScore > 0, score: participant.score, explanation: q?.explication || null,
-                                baseScore, rapidity: Math.round(rapidity * 100) / 100, totalScore,
-                            });
-                        }
+                state.stopped = false;
+                if (state.paused) {
+                    state.pausedRemainingTime = timeLeft;
+                    io.to(`tournament_${code}`).emit("tournament_set_timer", {
+                        timeLeft,
+                        questionState: "paused"
                     });
+                } else {
+                    state.questionStart = Date.now();
+                    state.timer = setTimeout(async () => {
+                        // --- This logic is duplicated from sendQuestionWithState ---
+                        // TODO: Refactor timer logic into a separate reusable function
+                        const prisma = require('../../db'); // Need prisma here too
+                        const idx = state.currentIndex;
+                        const q = state.questions[idx];
 
-                    // --- Move to next question or end ---
-                    if (idx + 1 < state.questions.length) {
-                        await sendQuestionWithState(io, code, idx + 1); // Use await
-                    } else {
-                        logger.info(`Ending tournament ${code} after set timer`);
-                        const leaderboard = Object.values(state.participants)
-                            .map(p => ({ id: p.id, pseudo: p.pseudo, avatar: p.avatar, score: p.score, isDiffered: !!p.isDiffered }))
-                            .sort((a, b) => b.score - a.score);
-                        io.to(`tournament_${code}`).emit("tournament_end", { leaderboard });
-                        try {
-                            const tournoi = await prisma.tournoi.findUnique({ where: { code } });
-                            if (tournoi) {
-                                for (const participant of Object.values(state.participants)) {
-                                    if (!participant.isDiffered) {
-                                        const joueurId = participant.id;
-                                        const scoreValue = participant.score;
-                                        if (!joueurId.startsWith('socket_')) {
-                                            const existing = await prisma.score.findFirst({ where: { tournoi_id: tournoi.id, joueur_id: joueurId } });
-                                            if (existing) {
-                                                await prisma.score.update({ where: { id: existing.id }, data: { score: scoreValue, date_score: new Date() } });
-                                            } else {
-                                                await prisma.score.create({ data: { tournoi_id: tournoi.id, joueur_id: joueurId, score: scoreValue, date_score: new Date() } });
+                        if (state.paused) return; // Check pause again just in case
+
+                        logger.info(`Timer expired after set timer for question ${idx} (uid: ${q.uid}) in tournament ${code}`);
+
+                        const { calculateScore } = require('./tournamentHelpers'); // Import calculateScore
+
+                        // --- SCORING ---
+                        const participantScores = {};
+                        Object.entries(state.participants).forEach(([joueurId, participant]) => {
+                            const answer = state.answers[joueurId]?.[q.uid];
+                            const { baseScore, rapidity, totalScore } = calculateScore(q, answer, state.questionStart);
+                            participant.score += totalScore;
+                            participantScores[joueurId] = { baseScore, rapidity, totalScore, currentTotal: participant.score };
+                            const socketId = Object.entries(state.socketToJoueur || {}).find(([sid, jid]) => jid === joueurId)?.[0];
+                            if (socketId) {
+                                io.to(socketId).emit("tournament_answer_result", {
+                                    correct: baseScore > 0, score: participant.score, explanation: q?.explication || null,
+                                    baseScore, rapidity: Math.round(rapidity * 100) / 100, totalScore,
+                                });
+                            }
+                        });
+
+                        // --- Move to next question or end ---
+                        if (idx + 1 < state.questions.length) {
+                            // Vérifier si c'est un quiz-linked tournament
+                            if (state.linkedQuizId) {
+                                // En mode quiz, ne pas passer automatiquement à la question suivante
+                                // juste envoyer un événement de fin de timer
+                                logger.info(`Timer expired for quiz-linked tournament ${code}, but not auto-advancing (waiting for teacher action)`);
+                                io.to(`tournament_${code}`).emit("tournament_question_state_update", {
+                                    questionState: "ended",
+                                    remainingTime: 0
+                                });
+                            } else {
+                                // Pour un tournoi classique, passer automatiquement à la question suivante
+                                await sendQuestionWithState(io, code, idx + 1); // Use await
+                            }
+                        } else {
+                            logger.info(`Ending tournament ${code} after set timer`);
+                            const leaderboard = Object.values(state.participants)
+                                .map(p => ({ id: p.id, pseudo: p.pseudo, avatar: p.avatar, score: p.score, isDiffered: !!p.isDiffered }))
+                                .sort((a, b) => b.score - a.score);
+                            io.to(`tournament_${code}`).emit("tournament_end", { leaderboard });
+                            try {
+                                const tournoi = await prisma.tournoi.findUnique({ where: { code } });
+                                if (tournoi) {
+                                    for (const participant of Object.values(state.participants)) {
+                                        if (!participant.isDiffered) {
+                                            const joueurId = participant.id;
+                                            const scoreValue = participant.score;
+                                            if (!joueurId.startsWith('socket_')) {
+                                                const existing = await prisma.score.findFirst({ where: { tournoi_id: tournoi.id, joueur_id: joueurId } });
+                                                if (existing) {
+                                                    await prisma.score.update({ where: { id: existing.id }, data: { score: scoreValue, date_score: new Date() } });
+                                                } else {
+                                                    await prisma.score.create({ data: { tournoi_id: tournoi.id, joueur_id: joueurId, score: scoreValue, date_score: new Date() } });
+                                                }
                                             }
                                         }
                                     }
+                                    await prisma.tournoi.update({ where: { code }, data: { date_fin: new Date(), statut: 'terminé', leaderboard } });
                                 }
-                                await prisma.tournoi.update({ where: { code }, data: { date_fin: new Date(), statut: 'terminé', leaderboard } });
-                            }
-                        } catch (err) { logger.error(`Error saving scores/updating tournament ${code} after set timer:`, err); }
-                        io.to(`tournament_${code}`).emit("tournament_finished_redirect", { code });
-                        delete tournamentState[code];
-                    }
-                    // --- End of duplicated logic ---
-                }, timeLeft * 1000);
+                            } catch (err) { logger.error(`Error saving scores/updating tournament ${code} after set timer:`, err); }
+                            io.to(`tournament_${code}`).emit("tournament_finished_redirect", { code });
+                            delete tournamentState[code];
+                        }
+                        // --- End of duplicated logic ---
+                    }, timeLeft * 1000);
 
-                io.to(`tournament_${code}`).emit("tournament_set_timer", {
-                    timeLeft,
-                    questionState: "active"
-                });
+                    io.to(`tournament_${code}`).emit("tournament_set_timer", {
+                        timeLeft,
+                        questionState: "active"
+                    });
+                }
             }
         }
     }

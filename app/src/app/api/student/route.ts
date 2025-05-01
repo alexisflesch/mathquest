@@ -21,6 +21,32 @@ import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import createLogger from '@logger';
 import { Logger } from '@/types';
+import Filter from 'bad-words-next';
+import fs from 'fs';
+import path from 'path';
+import { checkPseudoWithSubstrings } from '@/app/utils/pseudoFilter';
+
+// Import CommonJS pour french-badwords-list
+const frenchBadwordsList = require('french-badwords-list');
+// Charger zacangerWords
+const zacangerWords = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'dictionaries', 'words.json'), 'utf-8'));
+// Charger le dictionnaire fr.txt personnalisé
+const frTxtWords = fs.readFileSync(path.join(process.cwd(), 'dictionaries', 'fr.txt'), 'utf-8')
+    .split('\n')
+    .map(w => w.trim())
+    .filter(Boolean);
+// Fusionne toutes les listes (fr.txt + french-badwords-list + zacanger)
+const allBadWords = [
+    ...frTxtWords,
+    ...frenchBadwordsList.array,
+    ...zacangerWords
+];
+const data = {
+    id: 'custom',
+    words: allBadWords,
+    lookalike: {} // Provide an empty object or a valid Lookalike map if needed
+};
+const filter = new Filter({ data });
 
 const prisma = new PrismaClient();
 const logger = createLogger('API:Questions') as Logger;
@@ -33,15 +59,20 @@ export async function POST(request: NextRequest) {
 
         if (action === 'join') {
             const { pseudo, code, avatar, cookie_id } = data;
-            if (!pseudo || !code || !cookie_id) {
+            if (!pseudo || !cookie_id) {
                 logger.warn('Missing fields in join action', { pseudo, code, cookie_id });
                 return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
             }
-            const tournoi = await prisma.tournoi.findUnique({ where: { code } });
-            if (!tournoi) {
-                logger.warn('Tournament not found', { code });
-                return NextResponse.json({ message: 'Tournoi introuvable.' }, { status: 404 });
+            // --- PSEUDO VALIDATION ---
+            if (typeof pseudo !== 'string' || pseudo.length > 15) {
+                return NextResponse.json({ message: 'Le pseudo doit faire 15 caractères maximum.' }, { status: 400 });
             }
+            // Active/désactive la détection par sous-chaînes ici :
+            const useSubstrings = true;
+            if (checkPseudoWithSubstrings(pseudo, useSubstrings)) {
+                return NextResponse.json({ message: 'Le pseudo contient un mot inapproprié.' }, { status: 400 });
+            }
+            // --- END VALIDATION ---
             let joueur = await prisma.joueur.findUnique({ where: { cookie_id } });
             if (!joueur) {
                 joueur = await prisma.joueur.create({
@@ -51,8 +82,17 @@ export async function POST(request: NextRequest) {
             } else {
                 logger.debug('Found existing Player', { id: joueur.id, pseudo: joueur.pseudo });
             }
-            // Optionally: add to a join table if needed
-            return NextResponse.json({ message: 'Joueur connecté.', joueurId: joueur.id, tournoiId: tournoi.id }, { status: 200 });
+            // Si un code tournoi est fourni, vérifier et retourner l'id du tournoi
+            let tournoiId = undefined;
+            if (code) {
+                const tournoi = await prisma.tournoi.findUnique({ where: { code } });
+                if (!tournoi) {
+                    logger.warn('Tournament not found', { code });
+                    return NextResponse.json({ message: 'Tournoi introuvable.' }, { status: 404 });
+                }
+                tournoiId = tournoi.id;
+            }
+            return NextResponse.json({ message: 'Joueur connecté.', joueurId: joueur.id, tournoiId }, { status: 200 });
         }
 
         if (action === 'answer') {

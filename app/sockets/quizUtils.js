@@ -1,6 +1,6 @@
 const quizState = require('./quizState'); // Ajouté pour accéder au profSocketId
 
-// Utilitaire pour émettre le nombre de connectés (lobby + live) à la room quiz_${quizId}
+// Utilitaire pour émettre le nombre de connectés UNIQUEMENT dans le tournoi actif
 async function emitQuizConnectedCount(io, prisma, code) {
     if (!code) return;
     let quizId = null;
@@ -12,17 +12,15 @@ async function emitQuizConnectedCount(io, prisma, code) {
     }
     if (!quizId) return;
 
-    // Compter les sockets dans lobby et live, en excluant le prof
-    const lobbyRoom = io.sockets.adapter.rooms.get(`lobby_${code}`) || new Set();
+    // FIXED: Only count sockets in the active tournament room, not in the lobby
     const liveRoom = io.sockets.adapter.rooms.get(`tournament_${code}`) || new Set();
-    const allSockets = new Set([...lobbyRoom, ...liveRoom]);
 
     // Récupère le socketId du prof pour ce quiz
     const profSocketId = quizState[quizId]?.profSocketId;
 
     // Exclut le prof du comptage
     let totalCount = 0;
-    for (const socketId of allSockets) {
+    for (const socketId of liveRoom) {
         if (socketId !== profSocketId) totalCount++;
     }
 

@@ -5,7 +5,7 @@ const { tournamentState } = require('../tournamentUtils/tournamentState');
 const { calculateScore } = require('../tournamentUtils/tournamentHelpers'); // Import calculateScore
 const { emitQuizConnectedCount } = require('../quizUtils');
 
-async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar }) {
+async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar, isDiffered }) {
     logger.info(`join_tournament received`, { code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar, socketId: socket.id });
     socket.join(`tournament_${code}`);
 
@@ -50,7 +50,6 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
     }
 
     // 3. Determine live/differed status
-    let isDiffered = false;
     let tournoi = null;
     try {
         tournoi = await prisma.tournoi.findUnique({ where: { code } });
@@ -123,25 +122,80 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                 logger.error(`[QUIZMODE DEBUG] Error looking up quiz for tournament code ${code}:`, err);
             }
 
+            // --- CRITICAL FIX: Fetch existing timer value from quiz state ---
+            let initialTimeLeft = null;
+            let initialQuestionIdx = 0;
+            let initialQuestionStart = Date.now();
+            let initialQuestionUid = null; // Track the questionUid directly
+
+            if (linkedQuizId) {
+                // Look up current question and time from the quiz state
+                const quizState = require('../quizState');
+                if (quizState[linkedQuizId]) {
+                    logger.info(`Found quiz state for linkedQuizId=${linkedQuizId}`);
+                    
+                    // Get question index and timer value
+                    const currentQuestionIdx = quizState[linkedQuizId].currentQuestionIdx;
+                    if (typeof currentQuestionIdx === 'number' && currentQuestionIdx >= 0) {
+                        // CRITICAL FIX: Get the current question UID from quizState
+                        initialQuestionUid = quizState[linkedQuizId].timerQuestionId || 
+                                            (quizState[linkedQuizId].questions[currentQuestionIdx]?.uid);
+                        
+                        logger.info(`Current question UID from quiz state: ${initialQuestionUid}`);
+                        
+                        // Find the matching question index in our questions array using the UID
+                        if (initialQuestionUid) {
+                            const matchingQuestionIdx = questions.findIndex(q => q.uid === initialQuestionUid);
+                            if (matchingQuestionIdx >= 0) {
+                                initialQuestionIdx = matchingQuestionIdx;
+                                logger.info(`Found matching question at index ${initialQuestionIdx} (uid: ${initialQuestionUid})`);
+                            } else {
+                                logger.warn(`Question with UID ${initialQuestionUid} not found in tournament questions`);
+                            }
+                        } else {
+                            logger.warn(`No current question UID found in quiz state, using default index ${currentQuestionIdx}`);
+                            initialQuestionIdx = currentQuestionIdx;
+                        }
+                        
+                        // Get timer value from quizState
+                        if (quizState[linkedQuizId].chrono && typeof quizState[linkedQuizId].chrono.timeLeft === 'number') {
+                            initialTimeLeft = quizState[linkedQuizId].chrono.timeLeft;
+                            logger.info(`Using timeLeft=${initialTimeLeft}s from quiz state for tournament ${code}`);
+                        }
+                        
+                        // Calculate the questionStart time based on the timer value
+                        if (typeof initialTimeLeft === 'number' && quizState[linkedQuizId].timerTimestamp) {
+                            // Use timerTimestamp to reconstruct when the question actually started
+                            const timeAllowed = questions[initialQuestionIdx]?.temps || 20;
+                            const elapsed = timeAllowed - initialTimeLeft;
+                            
+                            // Calculate the actual question start time by going back 'elapsed' seconds from timerTimestamp
+                            initialQuestionStart = quizState[linkedQuizId].timerTimestamp - (elapsed * 1000);
+                            logger.info(`Reconstructed questionStart time: ${new Date(initialQuestionStart).toISOString()}, elapsed=${elapsed}s, timeAllowed=${timeAllowed}s`);
+                        }
+                    }
+                } else {
+                    logger.warn(`No quiz state found for linkedQuizId=${linkedQuizId}`);
+                }
+            }
+
             // Create new state for this tournament
             state = tournamentState[code] = {
                 participants: {},
                 questions,
-                currentIndex: 0, // Start with first question (or should it be -1 and wait for trigger?) - Let's assume 0 for late joiners
+                currentIndex: initialQuestionIdx, // Use the index from quiz state if available
                 started: true,
                 answers: {},
                 timer: null,
-                questionStart: Date.now(), // Assume question started when state was created? Risky.
+                questionStart: initialQuestionStart, // Use calculated start time
                 socketToJoueur: {},
                 paused: false, // Assume not paused initially
                 pausedRemainingTime: null,
-                linkedQuizId: linkedQuizId, // <-- PATCHED: set linkedQuizId if quiz found
-                currentQuestionDuration: questions[0]?.temps || 20, // Initialize with first question time
-                stopped: false, // Initialize stopped state
+                linkedQuizId: linkedQuizId,
+                currentQuestionDuration: questions[initialQuestionIdx]?.temps || 20,
+                stopped: false,
             };
-            logger.info(`Created new state for tournament ${code} with ${questions.length} questions`);
-            // Note: This late joiner might miss the very beginning if the state was lost.
-            // Consider sending the current question immediately if state.currentIndex >= 0
+            logger.info(`Created new state for tournament ${code} with ${questions.length} questions, questionStart=${new Date(initialQuestionStart).toISOString()}`);
         } catch (err) {
             logger.error(`Error initializing tournament state for code ${code}:`, err);
             socket.emit("tournament_error", { message: "Erreur d'initialisation du tournoi." });
@@ -358,39 +412,50 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                 return;
             }
 
-            // *** Use currentQuestionDuration from state if available ***
-            const timeAllowed = state.currentQuestionDuration || q.temps || 20;
-            let remaining = timeAllowed;
+            // Get the correct remaining time based on the current state
+            let remaining = 0;
             let questionState = "active";
 
-            // Calculate remaining time if question has started
-            if (state.questionStart) {
-                const elapsed = (Date.now() - state.questionStart) / 1000;
-                // *** Calculate remaining based on the potentially updated timeAllowed ***
-                remaining = Math.max(0, timeAllowed - elapsed);
-            }
-
-            // Check stopped/paused state (uses state.pausedRemainingTime if paused)
+            // Determine state and remaining time
             if (state.stopped) {
                 questionState = "stopped";
                 remaining = 0;
             } else if (state.paused) {
                 questionState = "paused";
-                // *** Use pausedRemainingTime, which should reflect edited time if paused ***
-                remaining = state.pausedRemainingTime !== null ? state.pausedRemainingTime : timeAllowed;
-            } else if (remaining <= 0) {
-                questionState = "stopped"; // Use "stopped" for consistency
-                remaining = 0;
+                // For paused questions, use the exact pausedRemainingTime
+                remaining = state.pausedRemainingTime ?? 0;
+                logger.debug(`Question is paused. Using pausedRemainingTime=${remaining}s`);
+            } else {
+                // For active (running) questions, calculate based on elapsed time
+                const timeAllowed = q.temps || 20; // Use the question's original time
+
+                // Make sure we're using the actual question start time, not the current time
+                let elapsed = 0;
+                if (state.questionStart) {
+                    elapsed = (Date.now() - state.questionStart) / 1000;
+                    logger.debug(`Using actual question start time for timer. questionStart=${new Date(state.questionStart).toISOString()}, now=${new Date().toISOString()}`);
+                } else {
+                    logger.warn(`No questionStart found in state for tournament ${code}. Using 0 for elapsed time.`);
+                }
+
+                remaining = Math.max(0, timeAllowed - elapsed);
+
+                if (remaining <= 0) {
+                    questionState = "stopped";
+                    remaining = 0;
+                }
+
+                logger.debug(`Active timer: elapsed=${elapsed.toFixed(1)}s, remaining=${remaining.toFixed(1)}s, timeAllowed=${timeAllowed}s`);
             }
 
-            logger.info(`Sending question to joiner ${joueurId} (socket ${socket.id}) for tournament ${code}. Question ${idx} (${q.uid}), state: ${questionState}, remaining: ${remaining.toFixed(1)}s, timeAllowed: ${timeAllowed}s`);
+            logger.info(`Sending question to joiner ${joueurId} (socket ${socket.id}) for tournament ${code}. Question ${idx} (${q.uid}), state: ${questionState}, remaining: ${remaining.toFixed(1)}s`);
             socket.emit("tournament_question", {
                 question: q,
                 index: idx,
                 total: state.questions.length,
                 remainingTime: remaining,
                 questionState,
-                isQuizMode: !!state.linkedQuizId, // <-- PATCHED: always include this
+                isQuizMode: !!state.linkedQuizId
             });
         } else {
             logger.info(`Live player ${joueurId} (socket ${socket.id}) joined tournament ${code} but current question index (${state?.currentIndex}) is invalid or questions array is empty`);

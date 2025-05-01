@@ -234,7 +234,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                                 )}
                                 {item.href && item.submenu && (
                                     <>
-                                        <Link href={item.href} className={`flex items-center gap-3 px-2 py-2 rounded hover:bg-gray-700 font-bold transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
+                                        <Link href={item.href} className={`flex items-center gap-3 px-2 py-2 rounded hover:bg-gray-700 transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
                                             title={sidebarCollapsed ? item.label : undefined}
                                         >
                                             <Icon className="w-5 h-5" />
@@ -252,7 +252,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                                                 })}
                                             </div>
                                         ) : (
-                                            <div className="ml-8 mt-1 space-y-1">
+                                            <div className="ml-4 mt-1 space-y-1">
                                                 {item.submenu.map((sub) => {
                                                     const SubIcon = (iconMap as Record<string, typeof Home>)[sub.label] || Home;
                                                     return (
@@ -365,11 +365,11 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                                         )}
                                         {item.href && item.submenu && (
                                             <>
-                                                <Link href={item.href} className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700 font-bold" onClick={() => setOpen(false)}>
+                                                <Link href={item.href} className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700" onClick={() => setOpen(false)}>
                                                     <Icon className="w-5 h-5" />
                                                     <span>{item.label}</span>
                                                 </Link>
-                                                <div className="ml-8 mt-1 space-y-1">
+                                                <div className="ml-4 mt-1 space-y-1">
                                                     {item.submenu.map(sub => {
                                                         const SubIcon = (iconMap as Record<string, typeof Home>)[sub.label] || Home;
                                                         return (

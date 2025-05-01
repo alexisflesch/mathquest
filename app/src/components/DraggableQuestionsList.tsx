@@ -83,113 +83,51 @@ export default function DraggableQuestionsList({
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
     );
     const [openUid, setOpenUid] = useState<string | null>(null);
-    const [localStatus, setLocalStatus] = React.useState<'play' | 'pause' | 'stop'>(timerStatus || 'stop');
-    const [localQuestionId, setLocalQuestionId] = React.useState<string | null>(timerQuestionId || null);
-    const [localTimeLeft, setLocalTimeLeft] = React.useState<number>(timeLeft || 0);
-    const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
-    // Add a local state to track edited timers immediately
-    const [localEditedTimers, setLocalEditedTimers] = useState<Record<string, number>>({});
-
-    // Log timer prop changes for debugging
+    // Ajout d'un état pour bloquer le bouton tant qu'une action est en attente
+    const [isPending, setIsPending] = useState(false);
     React.useEffect(() => {
-        logger.debug('Timer state updated', { timerStatus, timerQuestionId, timeLeft });
+        // Dès qu'on reçoit un nouvel état du serveur, on autorise à nouveau le clic
+        setIsPending(false);
     }, [timerStatus, timerQuestionId, timeLeft]);
 
-    // Sync local timer with props and always restart interval if needed
-    React.useEffect(() => {
-        if (timerRef.current) clearInterval(timerRef.current);
-        setLocalStatus(timerStatus || 'stop');
-        setLocalQuestionId(timerQuestionId || null);
-        setLocalTimeLeft(typeof timeLeft === 'number' ? timeLeft : 0);
-        if (
-            timerStatus === 'play' &&
-            timerQuestionId &&
-            typeof timeLeft === 'number' &&
-            timeLeft > 0
-        ) {
-            logger.debug('Starting timer interval', { timerStatus, timerQuestionId, timeLeft });
-            timerRef.current = setInterval(() => {
-                setLocalTimeLeft(prev => {
-                    if (prev <= 1) {
-                        clearInterval(timerRef.current!);
-                        setLocalStatus('stop');
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        } else {
-            logger.debug('Not starting timer interval', { timerStatus, timerQuestionId, timeLeft });
-        }
-        return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [timerStatus, timerQuestionId, timeLeft]);
-
-    // Add back the isQuestionPaused helper function
+    // Helper pour savoir si la question est en pause
     const isQuestionPaused = useCallback((questionId: string): boolean => {
         return (
-            localQuestionId === questionId &&
-            localStatus === 'pause' &&
-            localTimeLeft > 0
+            timerQuestionId === questionId &&
+            timerStatus === 'pause' &&
+            (typeof timeLeft === 'number' && timeLeft > 0)
         );
-    }, [localQuestionId, localStatus, localTimeLeft]);
+    }, [timerQuestionId, timerStatus, timeLeft]);
 
-    // Fix the handlePlay function to properly use the timer value passed as startTime
+    // Handler play/pause strictement basé sur l'état serveur
     const handlePlay = useCallback((questionId: string, startTime: number) => {
-        // Find the question in the questions array
-        const idx = questions.findIndex(q => q.uid === questionId);
-        if (idx === -1) return;
-
-        const currentQuestion = questions[idx];
-        logger.info(`Playing question ${questionId} - current q.temps=${currentQuestion.temps}, startTime=${startTime}`);
-
-        const isPaused = isQuestionPaused(questionId);
-
-        if (isPaused) {
-            // Resume logic remains the same
-            logger.info(`Resuming paused timer for question ${questionId}`);
-            setLocalStatus('play');
-            setLocalQuestionId(questionId);
-
-            if (onTimerAction) {
-                const resumeTime = localTimeLeft;
-                logger.debug(`Resuming with timeLeft: ${resumeTime} (from component's localTimeLeft state)`);
-                onTimerAction({ status: 'play', questionId, timeLeft: resumeTime });
+        if (isPending) return;
+        setIsPending(true);
+        if (timerQuestionId === questionId) {
+            if (timerStatus === 'play') {
+                onPause && onPause();
+            } else if (timerStatus === 'pause') {
+                onPlay && onPlay(questionId, timeLeft ?? startTime);
             } else {
-                if (onPlay) onPlay(questionId, localTimeLeft);
+                onPlay && onPlay(questionId, startTime);
             }
         } else {
-            // IMPORTANT: Use the startTime parameter that's passed in
-            // This now contains the correct timer value from localStorage
-            logger.info(`Starting new timer for question ${questionId} with time ${startTime}s (from startTime parameter)`);
-            setLocalStatus('play');
-            setLocalQuestionId(questionId);
-            setLocalTimeLeft(startTime);
-
-            if (onTimerAction) {
-                onTimerAction({ status: 'play', questionId, timeLeft: startTime });
-            } else {
-                if (onPlay) onPlay(questionId, startTime);
-            }
+            onPlay && onPlay(questionId, startTime);
         }
-    }, [questions, isQuestionPaused, onTimerAction, localTimeLeft, onPlay]);
+    }, [isPending, timerQuestionId, timerStatus, timeLeft, onPause, onPlay]);
 
     const handlePause = useCallback(() => {
-        setLocalStatus('pause');
-        if (onTimerAction) {
-            onTimerAction({ status: 'pause', questionId: localQuestionId!, timeLeft: localTimeLeft });
-        }
-        // Assuming onPause prop doesn't need memoization here if it comes from higher up and is stable
-    }, [onTimerAction, localQuestionId, localTimeLeft]); // Add dependencies
+        if (isPending) return;
+        setIsPending(true);
+        onPause && onPause();
+    }, [isPending, onPause]);
 
     const handleStop = useCallback(() => {
-        setLocalStatus('stop');
-        setLocalTimeLeft(0);
-        if (onTimerAction) {
-            onTimerAction({ status: 'stop', questionId: localQuestionId!, timeLeft: 0 });
-        }
-        // Assuming onStop prop doesn't need memoization here if it comes from higher up and is stable
-    }, [onTimerAction, localQuestionId]); // Add dependencies
+        if (isPending) return;
+        setIsPending(true);
+        onStop && onStop();
+    }, [isPending, onStop]);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
@@ -204,7 +142,8 @@ export default function DraggableQuestionsList({
     // *** ADDED: Define the handler to immediately update the parent's localTimeLeft ***
     const handleImmediateUpdate = useCallback((newTime: number) => {
         logger.debug(`DraggableQuestionsList: Immediately setting localTimeLeft to ${newTime}`);
-        setLocalTimeLeft(newTime);
+        // Suppression de l'ancien état local du timer
+        // setLocalTimeLeft(newTime);
     }, []);
 
     // Create a ref to store stable callback functions by question UID
@@ -260,6 +199,21 @@ export default function DraggableQuestionsList({
         stableCallbacksRef.current = updatedCallbacks;
     }, [questions, handlePlay, openUid, setOpenUid, onSelect, onEditTimer]);
 
+    // Ajouter un effet pour surveiller les changements de questionActiveUid
+    React.useEffect(() => {
+        logger.debug(`questionActiveUid changed to: ${questionActiveUid}`);
+
+        // Vérifier si la question est bien dans la liste
+        if (questionActiveUid) {
+            const question = questions.find(q => q.uid === questionActiveUid);
+            if (question) {
+                logger.debug(`Question active found: ${question.question.substring(0, 20)}...`);
+            } else {
+                logger.warn(`Question active ${questionActiveUid} NOT found in questions array!`);
+            }
+        }
+    }, [questionActiveUid, questions]);
+
     return (
         <DndContext
             sensors={sensors}
@@ -291,15 +245,15 @@ export default function DraggableQuestionsList({
                                 isRunning={currentQuestionIdx === idx ? isChronoRunning : false}
                                 open={openUid === q.uid}
                                 setOpen={stableCallbacks.setOpen}
-                                onPlay={stableCallbacks.onPlay}
+                                onPlay={() => handlePlay(q.uid, q.temps ?? 20)}
                                 onSelect={stableCallbacks.onSelect}
                                 onEditTimer={stableCallbacks.onEditTimer}
                                 onPause={handlePause}
                                 onStop={handleStop}
-                                liveTimeLeft={isActive ? localTimeLeft : undefined}
-                                liveStatus={isActive ? localStatus : undefined}
+                                liveTimeLeft={isActive ? timeLeft : undefined}
+                                liveStatus={isActive ? timerStatus : undefined}
                                 onImmediateUpdateActiveTimer={handleImmediateUpdate}
-                                disabled={disabled}
+                                disabled={disabled || isPending}
                             />
                         );
                     })}

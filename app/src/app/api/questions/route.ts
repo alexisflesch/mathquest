@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
         }
 
         logger.debug('Question filtering criteria:', where);
-
+        logger.debug('themesParam:', themesParam);
+        logger.debug('theme:', theme);
         // Get all matching questions
         const all = await prisma.question.findMany({ where });
         logger.debug(`Found ${all.length} questions matching criteria`);

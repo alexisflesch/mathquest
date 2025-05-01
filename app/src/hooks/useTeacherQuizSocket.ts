@@ -39,7 +39,12 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [localTimeLeft, setLocalTimeLeft] = useState<number | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(1); // 1 = prof connecté par défaut
+
+    // Références pour le timer basé sur l'horloge système
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const startTimeRef = useRef<number | null>(null);
+    const initialDurationRef = useRef<number | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
 
     // --- Socket Connection ---
     useEffect(() => {
@@ -163,37 +168,74 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
         };
     }, [quizSocket, quizId]);
 
-    // --- Local Timer Countdown ---
+    // --- Local Timer Countdown basé sur l'horloge système ---
     useEffect(() => {
-        if (timerRef.current) clearInterval(timerRef.current); // Clear previous interval
+        // Nettoyage des références et intervalles précédents
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
 
-        if (timerStatus === 'play' && localTimeLeft !== null && localTimeLeft > 0) {
-            timerRef.current = setInterval(() => {
-                setLocalTimeLeft(prev => {
-                    if (prev === null || prev <= 1) {
-                        clearInterval(timerRef.current!);
-                        // Optionally emit a stop event or let server handle timeout?
-                        // For now, just stop locally. Server should handle actual expiry.
-                        // setTimerStatus('stop'); // Avoid changing status based on local timer
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
+        if (timerStatus === 'play' && timeLeft !== null && timeLeft > 0) {
+            // Initialisation du timer avec valeurs serveur
+            startTimeRef.current = Date.now();
+            initialDurationRef.current = timeLeft;
+            setLocalTimeLeft(timeLeft);
+
+            // Fonction de tick qui utilise l'horloge système
+            const tick = () => {
+                if (startTimeRef.current === null || initialDurationRef.current === null) return;
+
+                const now = Date.now();
+                const elapsed = (now - startTimeRef.current) / 1000; // en secondes
+                const remaining = Math.max(initialDurationRef.current - elapsed, 0);
+
+                // Arrondi à 1 décimale pour stabiliser l'affichage
+                const roundedRemaining = Math.ceil(remaining);
+                setLocalTimeLeft(roundedRemaining);
+
+                if (remaining <= 0) {
+                    // Timer terminé
+                    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+                } else {
+                    // Continuer la boucle d'animation
+                    animationFrameRef.current = requestAnimationFrame(tick);
+                }
+            };
+
+            // Démarrer la boucle d'animation
+            animationFrameRef.current = requestAnimationFrame(tick);
+        } else if (timerStatus === 'pause') {
+            // En pause, conserver la dernière valeur
+            initialDurationRef.current = localTimeLeft;
+            startTimeRef.current = null;
+        } else {
+            // Arrêt ou autre état
+            startTimeRef.current = null;
+            initialDurationRef.current = null;
         }
 
-        return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [timerStatus, localTimeLeft]); // Rerun effect when status or initial localTimeLeft changes
-
+        // Nettoyage au démontage ou changement d'état
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+            if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        };
+    }, [timerStatus, timeLeft]);
 
     // --- Emitter Functions ---
     const getTeacherId = () => (typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null);
 
-    const emitSetQuestion = useCallback((idx: number, chrono?: number) => {
+    // PATCH: Utilise l'UID pour set la question active
+    const emitSetQuestion = useCallback((questionUid: string, chrono?: number) => {
         const code = tournamentCode;
         const teacherId = getTeacherId();
-        logger.info('Emitting quiz_set_question', { quizId, questionIdx: idx, chrono, code, teacherId });
-        quizSocket?.emit("quiz_set_question", { quizId, questionIdx: idx, chrono, code, teacherId });
+        logger.info('Emitting quiz_set_question', { quizId, questionUid, chrono, code, teacherId });
+        quizSocket?.emit("quiz_set_question", { quizId, questionUid, chrono, code, teacherId });
+        // Optimistic local timer update for immediate UI feedback
+        setTimerQuestionId(questionUid);
+        setTimerStatus('play');
+        if (typeof chrono === 'number') {
+            setTimeLeft(chrono);
+            setLocalTimeLeft(chrono);
+        }
     }, [quizSocket, quizId, tournamentCode]);
 
     const emitEndQuiz = useCallback(() => {
@@ -234,14 +276,14 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
 
 
     return {
-        quizSocket, // Expose socket if direct access is needed (use with caution)
+        quizSocket,
         quizState,
         timerStatus,
         timerQuestionId,
-        timeLeft, // The 'official' time from the server/state
-        localTimeLeft, // The local countdown value for display
-        connectedCount, // Ajout du nombre de connectés
-        emitSetQuestion,
+        timeLeft,
+        localTimeLeft,
+        connectedCount,
+        emitSetQuestion, // PATCH: renvoie la version UID
         emitEndQuiz,
         emitPauseQuiz,
         emitResumeQuiz,

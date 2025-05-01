@@ -148,52 +148,65 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     // This ensures the UI highlights the correct question based on the *actual* running timer
     useEffect(() => {
         if (timerQuestionId) {
-            setQuestionActiveUid(timerQuestionId);
+            setQuestionActiveUid(timerQuestionId); // Synchronise toujours sur l'UID
         }
-        // Optional: Clear selection if timer stops? Depends on desired UX.
-        // else if (timerStatus === 'stop') {
-        //     setQuestionActiveUid(null);
-        // }
-    }, [timerQuestionId, timerStatus]);
+    }, [timerQuestionId]);
 
 
     // --- Handlers (using hook emitters) ---
 
-    // Corrected signature: uid and startTime
-    const handlePlay = useCallback((uid: string, startTime: number) => {
-        const idx = questions.findIndex(q => q.uid === uid); // Find index using uid
-        if (idx === -1) return;
-        const questionToPlay = questions[idx];
+    const handleSelect = useCallback((uid: string) => {
+        // Only update the visual selection, don't trigger socket events
+        logger.info(`Manually selecting question with uid: ${uid}`);
+        setQuestionActiveUid(uid);
+    }, []);
 
+    const handleReorder = useCallback((newQuestions: Question[]) => {
+        // Update local order only, does NOT inform the server yet
+        logger.info("Questions reordered locally:", newQuestions.map(q => q.uid));
+        setQuestions(newQuestions);
+    }, []);
+
+    const handlePlay = useCallback((uid: string, startTime: number) => {
+        logger.info('[handlePlay] called', { uid, startTime, timerStatus, timerQuestionId, questions });
+        const questionToPlay = questions.find(q => q.uid === uid);
+        if (!questionToPlay) {
+            logger.warn('[handlePlay] Question not found', { uid });
+            return;
+        }
         const currentQuestionUid = timerQuestionId;
         const isTimerRunningOrPaused = timerStatus === 'play' || timerStatus === 'pause';
 
+        // Si on clique sur la question déjà sélectionnée
+        if (currentQuestionUid === questionToPlay.uid) {
+            if (timerStatus === 'play') {
+                logger.info('[handlePlay] Play on already running question: will pause');
+                emitPauseQuiz();
+                return;
+            }
+            if (timerStatus === 'pause') {
+                logger.info('[handlePlay] Play on paused question: will resume');
+                emitResumeQuiz();
+                return;
+            }
+        }
+
         if (isTimerRunningOrPaused && currentQuestionUid && currentQuestionUid !== questionToPlay.uid) {
-            setPendingPlayIdx(idx);
+            logger.info('[handlePlay] Should show confirmation popup', { pendingPlayUid: uid });
+            setPendingPlayIdx(questions.findIndex(q => q.uid === uid));
             setShowConfirm(true);
             return;
         }
 
-        if (timerStatus === 'pause' && currentQuestionUid === questionToPlay.uid) {
-            logger.info(`Resuming paused timer for question ${questionToPlay.uid}`);
-            emitResumeQuiz();
-        } else {
-            logger.info(`Starting timer for question ${questionToPlay.uid}`);
-            setQuestionActiveUid(questionToPlay.uid);
-            // Use startTime passed from DraggableQuestionsList (which defaults to q.temps)
-            emitSetQuestion(idx, startTime);
-        }
-        // Updated dependencies
-    }, [questions, timerStatus, timerQuestionId, emitResumeQuiz, emitSetQuestion, setPendingPlayIdx, setShowConfirm]);
+        logger.info(`[handlePlay] Starting timer for question ${questionToPlay.uid}`);
+        setQuestionActiveUid(questionToPlay.uid);
+        emitSetQuestion(questionToPlay.uid, startTime); // ENVOIE L'UID UNIQUEMENT
+    }, [questions, timerStatus, timerQuestionId, emitPauseQuiz, emitResumeQuiz, emitSetQuestion]);
 
     // Corrected signature: no index needed
     const handlePause = useCallback(() => {
-        if (timerStatus === 'play' && timerQuestionId) {
-            logger.info(`Pausing timer for question ${timerQuestionId}`);
-            emitPauseQuiz();
-        } else {
-            logger.warn("Cannot pause: Timer not playing or no active question ID.");
-        }
+        logger.info(`Pausing timer for question ${timerQuestionId}`);
+        emitPauseQuiz();
     }, [timerStatus, timerQuestionId, emitPauseQuiz]);
 
     // Corrected signature: no index needed
@@ -234,8 +247,10 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 logger.info(`Updating running timer value via setTimer: ${newTime}s`);
                 emitSetTimer(newTime);
             } else {
-                // For stopped timers, just update local state (no need to tell server)
-                logger.info(`Timer for question ${question.uid} is stopped, only local 'temps' updated.`);
+                // Pour les timers arrêtés (status = 'stop'), on utilise également emitSetTimer
+                // pour mettre à jour le temps sur le serveur
+                logger.info(`Updating stopped timer value via setTimer: ${newTime}s`);
+                emitSetTimer(newTime);
             }
         } else {
             // For non-active questions, we only update local state
@@ -246,21 +261,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
     }, [questions, timerQuestionId, timerStatus, emitTimerAction, emitSetTimer]);
 
-
-    const handleSelect = useCallback((uid: string) => {
-        // Only update the visual selection, don't trigger socket events
-        setQuestionActiveUid(uid);
-    }, []);
-
-    const handleReorder = useCallback((newQuestions: Question[]) => {
-        // Update local order. Does NOT inform the server yet.
-        // TODO: Need a mechanism to persist this order if desired (e.g., emit a 'reorder_questions' event).
-        logger.info("Questions reordered locally.");
-        setQuestions(newQuestions);
-    }, []);
-
-    // Callback for DraggableQuestionsList's internal timer buttons (if any)
-    // This might be redundant now if all actions go through handlePlay/Pause/Stop/Edit
     const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
         logger.debug('handleTimerAction called from DraggableQuestionsList', action);
         // Directly emit the action using the hook's emitter
@@ -286,14 +286,16 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         if (pendingPlayIdx !== null) {
             const questionToPlay = questions[pendingPlayIdx];
             logger.info(`Confirmed play for question ${pendingPlayIdx} (${questionToPlay?.uid})`);
+            if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
+                emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeft: 0 });
+            }
             if (questionToPlay) {
-                setQuestionActiveUid(questionToPlay.uid); // Update UI selection
-                emitSetQuestion(pendingPlayIdx, questionToPlay.temps); // Use hook emitter
+                setQuestionActiveUid(questionToPlay.uid);
+                emitSetQuestion(questionToPlay.uid, questionToPlay.temps); // ENVOIE L'UID UNIQUEMENT
             }
             setPendingPlayIdx(null);
         }
     };
-
     const cancelPlay = () => {
         setShowConfirm(false);
         setPendingPlayIdx(null);
@@ -321,18 +323,18 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
     const handleChangeQuestion = (uid: string) => {
         if (timerStatus === 'play' || timerStatus === 'pause') {
-            setPendingQuestionUid(uid);
+            setPendingPlayIdx(questions.findIndex(q => q.uid === uid));
             setShowChangeQuestionConfirm(true);
         } else {
             setQuestionActiveUid(uid);
-            emitSetQuestion(questions.findIndex(q => q.uid === uid), questions.find(q => q.uid === uid)?.temps || 60);
+            emitSetQuestion(uid, questions.find(q => q.uid === uid)?.temps || 60); // ENVOIE L'UID UNIQUEMENT
         }
     };
 
     const confirmChangeQuestion = () => {
         if (pendingQuestionUid) {
             setQuestionActiveUid(pendingQuestionUid);
-            emitSetQuestion(questions.findIndex(q => q.uid === pendingQuestionUid), questions.find(q => q.uid === pendingQuestionUid)?.temps || 60);
+            emitSetQuestion(pendingQuestionUid, questions.find(q => q.uid === pendingQuestionUid)?.temps || 60); // ENVOIE L'UID UNIQUEMENT
         }
         setShowChangeQuestionConfirm(false);
         setPendingQuestionUid(null);

@@ -100,7 +100,7 @@ export default function TeacherLoginPage() {
         <div className="main-content">
             <div className="card w-full max-w-md shadow-xl bg-base-100">
                 <div className="card-body items-center gap-8">
-                    <h1 className="card-title text-3xl mb-4">Connexion Enseignant</h1>
+                    <h1 className="card-title text-center text-3xl mb-6">Connexion Enseignant</h1>
                     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6" autoComplete="on">
                         <div>
                             <label className="block text-lg font-bold mb-2" htmlFor="email">

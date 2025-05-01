@@ -25,6 +25,7 @@ export default function TournamentLeaderboardPage() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [canPlayDiffered, setCanPlayDiffered] = useState(false);
 
     // Get current player pseudo and avatar from localStorage
     let currentPseudo: string | null = null;
@@ -48,6 +49,18 @@ export default function TournamentLeaderboardPage() {
                 if (!lbRes.ok) throw new Error('Impossible de charger le classement');
                 const lb = await lbRes.json();
                 setLeaderboard(lb.leaderboard || []);
+                // Vérifier si l'utilisateur peut jouer en différé
+                if (currentPseudo) {
+                    const canPlayRes = await fetch(`/api/can-play-differed?code=${code}&pseudo=${encodeURIComponent(currentPseudo)}`);
+                    if (canPlayRes.ok) {
+                        const { canPlay } = await canPlayRes.json();
+                        setCanPlayDiffered(!!canPlay);
+                    } else {
+                        setCanPlayDiffered(false);
+                    }
+                } else {
+                    setCanPlayDiffered(false);
+                }
             } catch (err) {
                 const errorMsg = err instanceof Error ? err.message : 'Erreur inconnue';
                 setError(errorMsg);
@@ -98,13 +111,17 @@ export default function TournamentLeaderboardPage() {
                     </div>
                     <h1 className="card-title text-3xl mb-6 text-center">Tournoi terminé</h1>
                     <div className="w-full text-left text-base mb-4">
-                        Pas encore joué ?{" "}
-                        <Link
-                            href={`/live/${code}`}
-                            className="text-primary underline hover:text-primary/80 font-semibold"
-                        >
-                            Tentez votre chance en différé
-                        </Link>
+                        {canPlayDiffered && (
+                            <>
+                                Pas encore joué ?{" "}
+                                <Link
+                                    href={`/live/${code}`}
+                                    className="text-primary underline hover:text-primary/80 font-semibold"
+                                >
+                                    Tentez votre chance en différé
+                                </Link>
+                            </>
+                        )}
                     </div>
                     <hr className="w-full border-base-300 my-2" />
                     <ol className="w-full flex flex-col gap-2">

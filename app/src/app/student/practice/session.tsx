@@ -86,7 +86,6 @@ function PracticeSessionContent() {
         <div className="min-h-screen flex items-center justify-center bg-base-200">
             <div className="card w-full max-w-xl shadow-xl bg-base-100">
                 <div className="card-body items-center gap-8">
-                    <h1 className="card-title text-3xl mb-2 text-center">Entraînement Libre</h1>
                     {!practiceDone && practiceQuestions.length > 0 && (
                         <div className="card w-full bg-base-200 shadow-inner">
                             <div className="card-body flex flex-col gap-6 items-center">

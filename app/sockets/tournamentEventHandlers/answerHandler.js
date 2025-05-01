@@ -101,7 +101,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
                 correct: false,
                 rejected: true,
                 reason: "late",
-                message: "Temps dépassé !"
+                message: "Trop tard !"
             });
             return;
         }
@@ -115,7 +115,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
                 correct: false,
                 rejected: true,
                 reason: "late",
-                message: "Temps dépassé !"
+                message: "Trop tard !"
             });
             return;
         }

@@ -68,6 +68,8 @@ function registerLobbyHandlers(io, socket) {
             // Join both the plain code room (for lobby communications) and the tournament room
             socket.join(code);
             socket.join(`tournament_${code}`); // Also join the tournament room preemptively
+            socket.join(`lobby_${code}`); // PATCH: ensure student is in lobby_<code> room for redirect
+            logger.info(`[DEBUG] After join, socket ${socket.id} rooms:`, Array.from(socket.rooms));
 
             logger.debug(`Socket ${socket.id} joined rooms: ${code} and tournament_${code}`);
 

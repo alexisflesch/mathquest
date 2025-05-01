@@ -9,7 +9,7 @@
  * 
  * The practice mode allows students to improve their skills independently,
  * focusing on specific subject areas without the competitive pressure of
- * tournaments. It implements a local timer for each question and tracks
+ * tournaments. It tracks
  * the student's progress through the selected question set.
  */
 
@@ -17,6 +17,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import CustomDropdown from "@/components/CustomDropdown";
+import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 
 interface CurrentQuestion {
     uid: string;
@@ -36,7 +37,7 @@ interface CurrentQuestion {
 export default function PracticePage() {
     const [practiceDiscipline, setPracticeDiscipline] = useState('');
     const [practiceNiveau, setPracticeNiveau] = useState('');
-    const [practiceTheme, setPracticeTheme] = useState('');
+    const [practiceThemes, setPracticeThemes] = useState<string[]>([]);
     const [practiceFilters, setPracticeFilters] = useState<{ disciplines: string[], niveaux: string[], themes: string[] }>({ disciplines: [], niveaux: [], themes: [] });
     const [practiceQuestions, setPracticeQuestions] = useState<CurrentQuestion[]>([]);
     const [practiceStarted, setPracticeStarted] = useState(false);
@@ -91,11 +92,14 @@ export default function PracticePage() {
         <div className="main-content">
             <div className="card w-full max-w-xl shadow-xl bg-base-100 m-4 my-6">
                 <div className="card-body items-center gap-8">
-                    <h1 className="card-title text-3xl">Entraînement Libre</h1>
+                    <h1 className="card-title text-3xl mb-6 text-center">Entraînement Libre</h1>
+                    <div className="text-base text-muted mb-6">
+                        Entraînez-vous à votre rythme sur les questions de votre choix. Sélectionnez vos préférences ci-dessous pour commencer.
+                    </div>
                     {/* Add spacing after the title using a div with a fixed height */}
                     <div style={{ height: 32 }} />
                     {!practiceStarted && (
-                        <div className="flex flex-col gap-6 w-full">
+                        <div className="flex flex-col gap-4 w-full">
                             <CustomDropdown
                                 options={practiceFilters.disciplines}
                                 value={practiceDiscipline}
@@ -110,11 +114,11 @@ export default function PracticePage() {
                                 placeholder="Niveau"
                                 className="mb-2"
                             />
-                            <CustomDropdown
+                            <MultiSelectDropdown
                                 options={practiceFilters.themes}
-                                value={practiceTheme}
-                                onChange={setPracticeTheme}
-                                placeholder="Thème"
+                                selected={practiceThemes}
+                                onChange={setPracticeThemes}
+                                placeholder="Thèmes"
                                 className="mb-2"
                             />
                             <CustomDropdown
@@ -130,7 +134,7 @@ export default function PracticePage() {
                                     const params = new URLSearchParams();
                                     if (practiceDiscipline) params.append('discipline', practiceDiscipline);
                                     if (practiceNiveau) params.append('niveau', practiceNiveau);
-                                    if (practiceTheme) params.append('theme', practiceTheme);
+                                    if (practiceThemes.length > 0) params.append('themes', practiceThemes.join(","));
                                     params.append('limit', String(practiceLimit));
                                     router.push(`/student/practice/session?${params.toString()}`);
                                 }}

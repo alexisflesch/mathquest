@@ -325,9 +325,12 @@ export default function StudentCreateTournamentPage() {
                                 <li><b>Nombre de questions :</b> {numQuestions}</li>
                             </ul>
                             {error && (
-                                <div className={`alert ${error.startsWith("Seulement") ? "alert-warning" : "alert-error"} justify-center mb-2`}>
-                                    {error}
-                                </div>
+                                <>
+                                    {logger.debug('Résumé création tournoi', { niveau, discipline, themes, numQuestions, error })}
+                                    <div className={`alert ${error.startsWith("Seulement") ? "alert-warning" : "alert-error"} justify-center mb-2`}>
+                                        {error}
+                                    </div>
+                                </>
                             )}
                             {/* Info message before creating the tournament */}
                             <div className="text-base text-base-content/80 mb-2 mt-2">

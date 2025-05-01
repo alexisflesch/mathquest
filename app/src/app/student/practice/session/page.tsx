@@ -15,6 +15,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import MathJaxWrapper from '@/components/MathJaxWrapper';
+import TournamentQuestionCard from '@/components/TournamentQuestionCard';
 
 interface CurrentQuestion {
     uid: string;
@@ -38,18 +40,33 @@ export default function PracticeSessionPage() {
     const [practiceScore, setPracticeScore] = useState(0);
     const [practiceDone, setPracticeDone] = useState(false);
     const [loading, setLoading] = useState(true);
+    // Timer state for visual coherence (simulate timer if temps existe)
+    const [timer, setTimer] = useState<number | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setIsMobile(window.innerWidth < 768);
+        }
+    }, []);
+    useEffect(() => {
+        if (!practiceDone && practiceQuestions.length > 0) {
+            const t = practiceQuestions[practiceIndex]?.temps;
+            if (typeof t === 'number') setTimer(t);
+            else setTimer(null);
+        }
+    }, [practiceIndex, practiceQuestions, practiceDone]);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
         const discipline = searchParams.get("discipline") || "";
         const niveau = searchParams.get("niveau") || "";
-        const theme = searchParams.get("theme") || "";
+        const themesParam = searchParams.get("themes") || "";
         const limit = searchParams.get("limit") || "10";
 
         const params = new URLSearchParams();
         if (discipline) params.append("discipline", discipline);
         if (niveau) params.append("niveau", niveau);
-        if (theme) params.append("theme", theme);
+        if (themesParam) params.append("themes", themesParam);
         params.append("limit", limit);
 
         fetch(`/api/questions?${params.toString()}`)
@@ -59,6 +76,31 @@ export default function PracticeSessionPage() {
                 setLoading(false);
             });
     }, []);
+
+    // Handlers for TournamentQuestionCard
+    const isMultipleChoice = practiceQuestions[practiceIndex]?.type === 'choix_multiple';
+    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+    const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+    useEffect(() => {
+        setSelectedAnswer(null);
+        setSelectedAnswers([]);
+    }, [practiceIndex]);
+    const handleSingleChoice = (idx: number) => {
+        setSelectedAnswer(idx === selectedAnswer ? null : idx);
+        const rep = practiceQuestions[practiceIndex].reponses[idx];
+        handlePracticeAnswer(rep.correct);
+    };
+    const handleSubmitMultiple = () => {
+        // At least one answer selected
+        if (selectedAnswers.length === 0) return;
+        // All selected must be correct, and all correct must be selected
+        const reps = practiceQuestions[practiceIndex].reponses;
+        const correctIndexes = reps.map((r, i) => r.correct ? i : null).filter(i => i !== null);
+        const isCorrect =
+            selectedAnswers.length === correctIndexes.length &&
+            selectedAnswers.every(idx => reps[idx].correct);
+        handlePracticeAnswer(isCorrect);
+    };
 
     const handlePracticeAnswer = (isCorrect: boolean) => {
         if (isCorrect) setPracticeScore((s) => s + 1);
@@ -71,9 +113,9 @@ export default function PracticeSessionPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-base-200">
-                <div className="card bg-base-100 shadow-xl p-8">
-                    <div className="card-body items-center">
+            <div className="main-content">
+                <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
+                    <div className="card-body items-center justify-center min-h-[300px]">
                         <div className="text-xl font-bold">Chargement…</div>
                     </div>
                 </div>
@@ -82,52 +124,41 @@ export default function PracticeSessionPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-200">
-            <div className="card w-full max-w-xl shadow-xl bg-base-100">
-                <div className="card-body items-center gap-8">
-                    <h1 className="card-title text-3xl mb-2 text-center">Entraînement Libre</h1>
+        <div className="main-content">
+            <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
+                {/* Timer visuel supprimé */}
+                <MathJaxWrapper>
                     {!practiceDone && practiceQuestions.length > 0 && (
-                        <div className="card w-full bg-base-200 shadow-inner">
-                            <div className="card-body flex flex-col gap-6 items-center">
-                                <h3 className="card-title text-2xl mb-2">
-                                    Question {practiceIndex + 1} / {practiceQuestions.length}
-                                </h3>
-                                <div className="mb-4 text-xl font-semibold text-center">
-                                    {practiceQuestions[practiceIndex].question}
-                                </div>
-                                <ul className="flex flex-col gap-3 w-full">
-                                    {practiceQuestions[practiceIndex].reponses.map((rep, idx) => (
-                                        <li key={idx} className="card-answer">
-                                            <button
-                                                className="btn-answer w-full text-left"
-                                                onClick={() => handlePracticeAnswer(rep.correct)}
-                                            >
-                                                {rep.texte}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <div className="font-bold">Score: {practiceScore}</div>
-                            </div>
-                        </div>
+                        <TournamentQuestionCard
+                            currentQuestion={practiceQuestions[practiceIndex]}
+                            questionIndex={practiceIndex}
+                            totalQuestions={practiceQuestions.length}
+                            isMultipleChoice={isMultipleChoice}
+                            selectedAnswer={selectedAnswer}
+                            setSelectedAnswer={setSelectedAnswer}
+                            selectedAnswers={selectedAnswers}
+                            setSelectedAnswers={setSelectedAnswers}
+                            handleSingleChoice={handleSingleChoice}
+                            handleSubmitMultiple={handleSubmitMultiple}
+                            answered={false}
+                            isQuizMode={false}
+                        />
                     )}
-                    {practiceDone && (
-                        <div className="card w-full bg-base-200 shadow-inner">
-                            <div className="card-body flex flex-col items-center gap-4 text-center">
-                                <h3 className="card-title text-2xl mb-2">Entraînement terminé !</h3>
-                                <div className="text-2xl mb-2 font-extrabold">
-                                    Score : {practiceScore} / {practiceQuestions.length}
-                                </div>
-                                <button
-                                    className="btn btn-primary btn-lg"
-                                    onClick={() => router.push("/student/practice")}
-                                >
-                                    Recommencer
-                                </button>
-                            </div>
+                </MathJaxWrapper>
+                {practiceDone && (
+                    <div className="w-full flex flex-col items-center gap-4 text-center">
+                        <h3 className="card-title text-2xl mb-2">Entraînement terminé !</h3>
+                        <div className="text-2xl mb-2 font-extrabold">
+                            Score : {practiceScore} / {practiceQuestions.length}
                         </div>
-                    )}
-                </div>
+                        <button
+                            className="btn btn-primary btn-lg"
+                            onClick={() => router.push("/student/practice")}
+                        >
+                            Recommencer
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

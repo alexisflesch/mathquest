@@ -231,39 +231,6 @@ export default function TournamentSessionPage() {
             }, 1000);
         });
 
-        // Handle pause event from server
-        s.on("tournament_pause", () => {
-            logger.debug('tournament_pause');
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-            }
-            setPaused(true);
-            pausedRef.current = true;
-            setWaiting(true);
-            logger.debug('paused set to true');
-        });
-
-        // Handle resume event from server
-        s.on("tournament_resume", () => {
-            logger.debug('tournament_resume');
-            setWaiting(false);
-            setPaused(false);
-            pausedRef.current = false;
-            if (timerRef.current) clearInterval(timerRef.current);
-            timerRef.current = setInterval(() => {
-                setTimer((prev) => {
-                    if (prev === null) return null;
-                    if (prev <= 1) {
-                        clearInterval(timerRef.current!);
-                        setWaiting(true);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        });
-
         // Handle tournament_timer_update events from server
         s.on("tournament_timer_update", (data) => {
             logger.debug('tournament_timer_update', data);
@@ -358,36 +325,50 @@ export default function TournamentSessionPage() {
         });
 
         // Handle set timer to 0 from server (stop button)
-        s.on("tournament_set_timer", ({ timeLeft }) => {
-            logger.debug('tournament_set_timer', { timeLeft, paused: pausedRef.current });
+        s.on("tournament_set_timer", ({ timeLeft, questionState }) => {
+            logger.debug('tournament_set_timer', { timeLeft, questionState, paused: pausedRef.current });
+
+            // Quand l'état est explicitement "stopped", forcer le timer à zéro
+            // peu importe la valeur de timeLeft reçue du serveur
+            if (questionState === "stopped") {
+                logger.info('Setting timer to 0 because questionState="stopped"');
+                setTimer(0); // Force à zéro même si timeLeft > 0
+
+                if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                    timerRef.current = null;
+                }
+                // Ne pas redémarrer le timer même si timeLeft > 0
+                setWaiting(true);
+                return;
+            }
+
+            // Pour les autres états, utiliser la valeur reçue
             setTimer(timeLeft);
+
             if (timerRef.current) {
                 clearInterval(timerRef.current);
                 timerRef.current = null;
             }
             if (timeLeft === 0) {
                 setWaiting(true);
-                logger.debug('setWaiting(true) because timeLeft is 0');
-            } else if (typeof timeLeft === 'number' && timeLeft > 0) {
-                // Only start countdown if not paused
-                if (!pausedRef.current) {
-                    setWaiting(false);
-                    logger.debug('Starting countdown interval (not paused)');
-                    timerRef.current = setInterval(() => {
-                        setTimer((prev) => {
-                            if (prev === null) return null;
-                            if (prev <= 1) {
-                                if (timerRef.current) clearInterval(timerRef.current);
-                                setWaiting(true);
-                                logger.debug('Timer reached 0, setWaiting(true)');
-                                return 0;
-                            }
-                            return prev - 1;
-                        });
-                    }, 1000);
-                } else {
-                    logger.debug('Timer updated but NOT starting countdown (paused)');
-                }
+                return;
+            }
+            // Only start timer if not paused
+            if (!pausedRef.current && timeLeft > 0) {
+                setWaiting(false);
+                logger.debug('Starting timer interval from tournament_set_timer:', timeLeft);
+                timerRef.current = setInterval(() => {
+                    setTimer((prev) => {
+                        if (prev === null) return null;
+                        if (prev <= 1) {
+                            if (timerRef.current) clearInterval(timerRef.current);
+                            setWaiting(true);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
             }
         });
 
@@ -636,6 +617,56 @@ export default function TournamentSessionPage() {
         });
         // Do not setAnswered(true) here; allow resubmission until timer/lock
     };
+
+    useEffect(() => {
+        logger.info('Attaching tournament_question_state_update listener, socket:', !!socket);
+        if (!socket) return;
+        socket.on("tournament_question_state_update", (updates) => {
+            logger.info('Handler called for tournament_question_state_update', updates);
+            // PATCH: handle both array and object
+            const update = Array.isArray(updates) ? updates[0] : updates;
+            if (!update) return;
+            logger.info('tournament_question_state_update received, questionState:', update.questionState);
+            if (typeof update.remainingTime === 'number') {
+                setTimer(Math.round(update.remainingTime));
+            }
+            if (update.questionState === 'paused') {
+                logger.info('PAUSE branch entered');
+                if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                    timerRef.current = null;
+                }
+                setPaused(true);
+                pausedRef.current = true;
+                setWaiting(true);
+                logger.debug('paused set to true from tournament_question_state_update');
+                logger.info('UI: Timer PAUSED by tournament_question_state_update, timer value:', timer);
+            } else if (update.questionState === 'active') {
+                logger.info('ACTIVE branch entered');
+                setPaused(false);
+                pausedRef.current = false;
+                setWaiting(false);
+                if (!timerRef.current && typeof update.remainingTime === 'number' && update.remainingTime > 0) {
+                    timerRef.current = setInterval(() => {
+                        setTimer((prev) => {
+                            if (prev === null) return null;
+                            if (prev <= 1) {
+                                if (timerRef.current) clearInterval(timerRef.current);
+                                setWaiting(true);
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                }
+            } else {
+                logger.info('Other state branch entered:', update.questionState);
+            }
+        });
+        return () => {
+            if (socket) socket.off("tournament_question_state_update");
+        };
+    }, [socket]);
 
     return (
         <div className="main-content">

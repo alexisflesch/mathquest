@@ -36,32 +36,47 @@ function StudentPageInner() {
                 if (redirect) {
                     router.replace(redirect);
                 } else {
-                    router.replace('/student/menu');
+                    router.replace('/student/home');
                 }
             }
         }
     }, [router, searchParams]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
         if (!pseudo || !selectedAvatar) {
             setError('Veuillez choisir un pseudo et un avatar.');
             return;
         }
-        localStorage.setItem('mathquest_pseudo', pseudo);
-        localStorage.setItem('mathquest_avatar', selectedAvatar);
-        // Ensure mathquest_cookie_id is set for this student
+        // Appel API pour valider le pseudo côté serveur
         let cookie_id = localStorage.getItem('mathquest_cookie_id');
         if (!cookie_id) {
             cookie_id = Math.random().toString(36).substring(2) + Date.now();
             localStorage.setItem('mathquest_cookie_id', cookie_id);
         }
-        if (refreshAuth) refreshAuth();
-        const redirect = searchParams?.get('redirect');
-        if (redirect) {
-            router.push(redirect);
-        } else {
-            router.push('/student/menu');
+        try {
+            const res = await fetch('/api/student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'join', pseudo, avatar: selectedAvatar, cookie_id }),
+            });
+            const result = await res.json();
+            if (!res.ok) {
+                setError(result.message || 'Erreur lors de la validation du pseudo.');
+                return;
+            }
+            localStorage.setItem('mathquest_pseudo', pseudo);
+            localStorage.setItem('mathquest_avatar', selectedAvatar);
+            if (refreshAuth) refreshAuth();
+            const redirect = searchParams?.get('redirect');
+            if (redirect) {
+                router.push(redirect);
+            } else {
+                router.push('/student/home');
+            }
+        } catch (err) {
+            setError('Erreur réseau ou serveur.');
         }
     };
 
@@ -78,11 +93,13 @@ function StudentPageInner() {
                             className="input input-bordered input-lg w-full"
                             id="pseudo"
                             type="text"
+                            maxLength={15}
                             placeholder="Votre pseudo"
                             value={pseudo}
                             onChange={e => setPseudo(e.target.value)}
                             autoComplete="off"
                         />
+                        {error && <div className="alert alert-error justify-center shrink-0 mt-2">{error}</div>}
                     </div>
                     <div className="flex flex-col flex-1 min-h-0">
                         <label className="block text-lg font-bold mb-2 shrink-0">
@@ -92,7 +109,6 @@ function StudentPageInner() {
                             <AvatarSelector onSelect={setSelectedAvatar} selected={selectedAvatar} />
                         </div>
                     </div>
-                    {error && <div className="alert alert-error justify-center shrink-0">{error}</div>}
                     <button
                         type="submit"
                         className="btn btn-primary btn-lg w-full shrink-0"
