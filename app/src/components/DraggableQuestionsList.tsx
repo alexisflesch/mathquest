@@ -106,27 +106,27 @@ export default function DraggableQuestionsList({
         setIsPending(true);
         if (timerQuestionId === questionId) {
             if (timerStatus === 'play') {
-                onPause && onPause();
+                if (onPause) onPause();
             } else if (timerStatus === 'pause') {
-                onPlay && onPlay(questionId, timeLeft ?? startTime);
+                if (onPlay) onPlay(questionId, timeLeft ?? startTime);
             } else {
-                onPlay && onPlay(questionId, startTime);
+                if (onPlay) onPlay(questionId, startTime);
             }
         } else {
-            onPlay && onPlay(questionId, startTime);
+            if (onPlay) onPlay(questionId, startTime);
         }
     }, [isPending, timerQuestionId, timerStatus, timeLeft, onPause, onPlay]);
 
     const handlePause = useCallback(() => {
         if (isPending) return;
         setIsPending(true);
-        onPause && onPause();
+        if (onPause) onPause();
     }, [isPending, onPause]);
 
     const handleStop = useCallback(() => {
         if (isPending) return;
         setIsPending(true);
-        onStop && onStop();
+        if (onStop) onStop();
     }, [isPending, onStop]);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
@@ -240,13 +240,10 @@ export default function DraggableQuestionsList({
                             <SortableQuestion
                                 key={q.uid}
                                 q={q}
-                                idx={idx}
                                 isActive={isActive}
-                                isRunning={currentQuestionIdx === idx ? isChronoRunning : false}
                                 open={openUid === q.uid}
                                 setOpen={stableCallbacks.setOpen}
                                 onPlay={() => handlePlay(q.uid, q.temps ?? 20)}
-                                onSelect={stableCallbacks.onSelect}
                                 onEditTimer={stableCallbacks.onEditTimer}
                                 onPause={handlePause}
                                 onStop={handleStop}

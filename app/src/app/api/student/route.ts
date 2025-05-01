@@ -25,10 +25,8 @@ import Filter from 'bad-words-next';
 import fs from 'fs';
 import path from 'path';
 import { checkPseudoWithSubstrings } from '@/app/utils/pseudoFilter';
+import frenchBadwordsList from 'french-badwords-list';
 
-// Import CommonJS pour french-badwords-list
-const frenchBadwordsList = require('french-badwords-list');
-// Charger zacangerWords
 const zacangerWords = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'dictionaries', 'words.json'), 'utf-8'));
 // Charger le dictionnaire fr.txt personnalisé
 const frTxtWords = fs.readFileSync(path.join(process.cwd(), 'dictionaries', 'fr.txt'), 'utf-8')

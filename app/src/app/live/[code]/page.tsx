@@ -327,25 +327,30 @@ export default function TournamentSessionPage() {
         // Handle set timer to 0 from server (stop button)
         s.on("tournament_set_timer", ({ timeLeft, questionState }) => {
             logger.debug('tournament_set_timer', { timeLeft, questionState, paused: pausedRef.current });
-
-            // Quand l'état est explicitement "stopped", forcer le timer à zéro
-            // peu importe la valeur de timeLeft reçue du serveur
             if (questionState === "stopped") {
                 logger.info('Setting timer to 0 because questionState="stopped"');
-                setTimer(0); // Force à zéro même si timeLeft > 0
-
+                setTimer(0);
                 if (timerRef.current) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
                 }
-                // Ne pas redémarrer le timer même si timeLeft > 0
                 setWaiting(true);
                 return;
             }
-
-            // Pour les autres états, utiliser la valeur reçue
+            // For paused state, update timer value immediately but do not start countdown
+            if (questionState === "paused") {
+                setTimer(timeLeft);
+                if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                    timerRef.current = null;
+                }
+                setPaused(true);
+                pausedRef.current = true;
+                setWaiting(true);
+                return;
+            }
+            // ...existing code for other states...
             setTimer(timeLeft);
-
             if (timerRef.current) {
                 clearInterval(timerRef.current);
                 timerRef.current = null;
@@ -354,7 +359,6 @@ export default function TournamentSessionPage() {
                 setWaiting(true);
                 return;
             }
-            // Only start timer if not paused
             if (!pausedRef.current && timeLeft > 0) {
                 setWaiting(false);
                 logger.debug('Starting timer interval from tournament_set_timer:', timeLeft);

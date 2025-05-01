@@ -74,6 +74,11 @@ async function handleStartTournament(io, socket, { code }) {
                 if (tournamentState[code]) {
                     // Use await here since sendQuestionWithState is now async
                     await sendQuestionWithState(io, code, 0);
+                    // Start the timer for the first question (classic tournaments)
+                    const firstQ = tournamentState[code].questions[0];
+                    const firstTime = firstQ?.temps || 20;
+                    const { triggerTournamentTimerSet } = require('../tournamentUtils/tournamentTriggers');
+                    triggerTournamentTimerSet(io, code, firstTime, true);
                 }
             }, 5000);
         }

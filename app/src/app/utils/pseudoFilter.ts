@@ -1,8 +1,7 @@
 import Filter from 'bad-words-next';
 import fs from 'fs';
 import path from 'path';
-// Import CommonJS pour french-badwords-list
-const frenchBadwordsList = require('french-badwords-list');
+import frenchBadwordsList from 'french-badwords-list';
 
 // Charger zacangerWords
 const zacangerWords = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'dictionaries', 'words.json'), 'utf-8'));
@@ -18,7 +17,7 @@ const allBadWords = [
     ...frenchBadwordsList.array,
     ...zacangerWords
 ];
-const data = { id: 'custom', words: allBadWords };
+const data = { id: 'custom', words: allBadWords, lookalike: {} };
 const filter = new Filter({ data });
 
 // Fonction utilitaire pour vérifier un pseudo

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react"; // Ajout de useEffect, useRef
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Check, X, Pencil, Play, GripVertical, Pause, Square } from 'lucide-react';
+import { Check, X, GripVertical } from 'lucide-react';
 import type { Question, QuizState } from "../types";
 import { createLogger } from '@/clientLogger';
 import { formatTime } from "@/utils";
@@ -13,16 +13,16 @@ const logger = createLogger('SortableQuestion');
 // --- Types ---
 export interface SortableQuestionProps {
     q: Question;
-    idx: number;
+    // idx: number;
     isActive?: boolean;
-    isRunning?: boolean; // Gardé pour la logique interne si besoin
+    // isRunning?: boolean; // Gardé pour la logique interne si besoin
     quizState?: QuizState | null; // Gardé pour la logique interne si besoin
     open: boolean;
     setOpen: () => void;
     onPlay: () => void;
     onPause: () => void;
     onStop?: () => void;
-    onSelect: () => void; // Gardé pour la sélection via clic/touche
+    // onSelect: () => void; // Gardé pour la sélection via clic/touche
     onEditTimer: (newTime: number) => void; // Callback parent pour la validation de l'édition
     liveTimeLeft?: number;
     liveStatus?: 'play' | 'pause' | 'stop';
@@ -36,7 +36,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
     if (prevProps.isActive !== nextProps.isActive) return false;
     if (prevProps.open !== nextProps.open) return false;
     if (prevProps.disabled !== nextProps.disabled) return false;
-    if (prevProps.idx !== nextProps.idx) return false;
+    // if (prevProps.idx !== nextProps.idx) return false;
 
     // For live timer props
     if (prevProps.isActive || nextProps.isActive) {
@@ -54,7 +54,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
     if (prevProps.onPlay !== nextProps.onPlay) return false;
     if (prevProps.onPause !== nextProps.onPause) return false;
     if (prevProps.onStop !== nextProps.onStop) return false;
-    if (prevProps.onSelect !== nextProps.onSelect) return false;
+    // if (prevProps.onSelect !== nextProps.onSelect) return false;
     if (prevProps.onEditTimer !== nextProps.onEditTimer) return false;
     if (prevProps.onImmediateUpdateActiveTimer !== nextProps.onImmediateUpdateActiveTimer) return false;
 
@@ -63,7 +63,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, idx, isActive, isRunning, open, setOpen, onPlay, onPause, onStop, onSelect, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, /* onSelect, */ onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled }: SortableQuestionProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(q.uid)
     });
@@ -208,46 +208,49 @@ export const SortableQuestion = React.memo(({ q, idx, isActive, isRunning, open,
 
     // JSX pour l'input d'édition (rendu conditionnellement)
     const timerEditInput = editingTimer ? (
-        <div className={`card flex items-center justify-between gap-3 question-selected no-bottom-border no-bottom-radius p-4 ${isActive ? ' question-selected' : ''}`}> {/* Mimic header style */}
-            <div className="flex items-center gap-3 flex-grow min-w-0">
-                <span ref={inputWrapperRef} className="flex items-center gap-1">
-                    <input
-                        ref={timerInputRef}
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        className="w-20 px-1 py-0.5 rounded border border-gray-300 text-lg font-mono text-center bg-input text-foreground" // Style adapté
-                        value={formatTime(parseInt(editTimerValue, 10) || 0)} // Affiche formaté
-                        onChange={e => {
-                            const val = e.target.value.replace(/[^0-9:]/g, '');
-                            if (val.includes(':')) {
-                                const [mm, ss] = val.split(':');
-                                const total = (parseInt(mm, 10) || 0) * 60 + (parseInt(ss, 10) || 0);
-                                setEditTimerValue(String(total));
-                            } else {
-                                setEditTimerValue(val.replace(/[^0-9]/g, ''));
-                            }
-                        }}
-                        onClick={e => e.stopPropagation()}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter') handleValidateEdit(e as React.KeyboardEvent<HTMLInputElement>);
-                            if (e.key === 'Escape') handleCancelEdit(e as React.KeyboardEvent<HTMLInputElement>);
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const val = parseInt(editTimerValue, 10) || 0;
-                                if (e.key === 'ArrowUp') setEditTimerValue(String(val + 1));
-                                if (e.key === 'ArrowDown') setEditTimerValue(String(Math.max(0, val - 1)));
-                            }
-                        }}
-                    />
-                    <button onClick={handleValidateEdit} className="p-1 text-foreground hover:text-primary" title="Valider"><Check size={18} /></button>
-                    <button onClick={handleCancelEdit} className="p-1 text-foreground hover:text-destructive" title="Annuler"><X size={18} /></button>
-                </span>
-                <div className="ml-4 font-medium flex-grow fade-right-bottom-crop">
-                    <MathJaxWrapper>{q.titre ? q.titre : q.question}</MathJaxWrapper>
+        <div className={`card flex flex-col ${isActive ? 'question-selected' : ''} p-0`}> {/* Match QuestionDisplay structure */}
+            <div className="flex flex-col gap-1 p-2 pb-0">
+                <div className="flex items-center justify-between gap-3 question-header no-bottom-border no-bottom-radius">
+                    <div className="ml-0 font-medium flex-grow fade-right-bottom-crop">
+                        <MathJaxWrapper>{q.titre ? q.titre : q.question}</MathJaxWrapper>
+                    </div>
+                    <div className="flex items-center gap-0 ml-2">
+                        <span ref={inputWrapperRef} className="flex items-center gap-1">
+                            <input
+                                ref={timerInputRef}
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                className="w-20 px-1 py-0.5 rounded border border-gray-300 text-lg font-mono text-center bg-input text-foreground"
+                                value={formatTime(parseInt(editTimerValue, 10) || 0)}
+                                onChange={e => {
+                                    const val = e.target.value.replace(/[^0-9:]/g, '');
+                                    if (val.includes(':')) {
+                                        const [mm, ss] = val.split(':');
+                                        const total = (parseInt(mm, 10) || 0) * 60 + (parseInt(ss, 10) || 0);
+                                        setEditTimerValue(String(total));
+                                    } else {
+                                        setEditTimerValue(val.replace(/[^0-9]/g, ''));
+                                    }
+                                }}
+                                onClick={e => e.stopPropagation()}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') handleValidateEdit(e as React.KeyboardEvent<HTMLInputElement>);
+                                    if (e.key === 'Escape') handleCancelEdit(e as React.KeyboardEvent<HTMLInputElement>);
+                                    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const val = parseInt(editTimerValue, 10) || 0;
+                                        if (e.key === 'ArrowUp') setEditTimerValue(String(val + 1));
+                                        if (e.key === 'ArrowDown') setEditTimerValue(String(Math.max(0, val - 1)));
+                                    }
+                                }}
+                            />
+                            <button onClick={handleValidateEdit} className="p-1 text-foreground hover:text-primary" title="Valider"><Check size={18} /></button>
+                            <button onClick={handleCancelEdit} className="p-1 text-foreground hover:text-destructive" title="Annuler"><X size={18} /></button>
+                        </span>
+                    </div>
                 </div>
             </div>
-            {/* Pas de boutons play/pause/stop pendant l'édition */}
         </div>
     ) : null;
 
@@ -307,6 +310,7 @@ export const SortableQuestion = React.memo(({ q, idx, isActive, isRunning, open,
                 ) : (
                     // Affiche le composant QuestionDisplay normal
                     <QuestionDisplay
+                        className="question-dashboard"
                         question={q}
                         isOpen={open}
                         onToggleOpen={setOpen} // Passe la fonction pour ouvrir/fermer

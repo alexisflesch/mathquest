@@ -1,52 +1,39 @@
 const createLogger = require('../../logger');
 const logger = createLogger('TimerActionHandler');
 const quizState = require('../quizState');
-const { tournamentState, triggerTournamentPause, triggerTournamentTimerSet } = require('../tournamentHandler');
+const { tournamentState, triggerTournamentPause, triggerTournamentTimerSet, triggerTournamentQuestion } = require('../tournamentHandler'); // Import triggerTournamentQuestion
 const prisma = require('../../db'); // Ensure prisma is required
 
-async function handleTimerAction(io, socket, prisma, { status, questionId, timeLeft, quizId }) {
-    logger.info(`Received quiz_timer_action: status=${status}, question=${questionId}, timeLeft=${timeLeft}, quizId=${quizId}`);
+async function handleTimerAction(io, socket, prisma, { status, questionId, timeLeft, quizId, teacherId }) {
+    logger.info(`[TimerAction] Received: status=${status}, question=${questionId}, timeLeft=${timeLeft}, quizId=${quizId}, teacherId=${teacherId}`);
 
-    if (!quizState[quizId]) {
-        logger.warn(`Quiz state not found for quizId=${quizId} during timer action. Socket ${socket.id}`);
-        // Optionally initialize state if it makes sense in your flow, or return error
-        // For now, just return to prevent errors
+    if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
+        logger.warn(`[TimerAction] Unauthorized attempt for quiz ${quizId} from socket ${socket.id} (teacherId=${teacherId})`);
         return;
     }
+    // Update profSocketId to current socket
+    quizState[quizId].profSocketId = socket.id;
 
     // Teacher/Auth check (optional but recommended)
-    // if (quizState[quizId].profSocketId !== socket.id) {
-    //     logger.warn(`Unauthorized timer action attempt on quiz ${quizId} from socket ${socket.id}`);
-    //     return;
-    // }
+    // ...
 
-    // If this is a resume action (play after pause), check if the timer has been updated
+    // --- Update Quiz State --- (This part remains largely the same)
+    // If resuming, potentially use edited time from question state
     if (status === 'play' && quizState[quizId].timerStatus === 'pause' && quizState[quizId].timerQuestionId === questionId) {
-        // Find the current question index
         const currentQuestionIdx = quizState[quizId].currentQuestionIdx;
         if (typeof currentQuestionIdx === 'number' && currentQuestionIdx >= 0) {
-            // Check if the question has a stored temps value that's different from the current timeLeft
             const currentQuestion = quizState[quizId].questions[currentQuestionIdx];
-
-            // If question exists and the chrono.timeLeft doesn't match what's coming in
-            if (currentQuestion && typeof currentQuestion.temps === 'number' &&
-                currentQuestion.temps !== timeLeft && quizState[quizId].chrono.timeLeft !== currentQuestion.temps) {
-                // Log that we're updating to the edited value
-                logger.info(`Resuming with updated timer value: ${currentQuestion.temps}s instead of ${timeLeft}s`);
-
-                // Update the timeLeft from the edited value
+            if (currentQuestion && typeof currentQuestion.temps === 'number' && quizState[quizId].chrono.timeLeft !== currentQuestion.temps) {
+                logger.info(`[TimerAction] Resuming with updated timer value: ${currentQuestion.temps}s instead of ${timeLeft}s`);
                 timeLeft = currentQuestion.temps;
             }
         }
     }
 
-    // Update the timer status and time left for the quiz
     quizState[quizId].timerStatus = status;
     quizState[quizId].timerQuestionId = questionId;
     quizState[quizId].timerTimeLeft = timeLeft;
     quizState[quizId].timerTimestamp = Date.now();
-
-    // Also update the main chrono timeLeft to keep it in sync
     quizState[quizId].chrono.timeLeft = timeLeft;
     quizState[quizId].chrono.running = status === 'play';
 
@@ -56,171 +43,69 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
         timeLeft,
         timestamp: quizState[quizId].timerTimestamp,
     });
-    logger.debug(`Emitted quiz_timer_update to quiz_${quizId}`);
-
-    // Also emit the updated quiz state to ensure all state is in sync
     io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+    logger.debug(`[TimerAction] Emitted quiz_timer_update & quiz_state to quiz_${quizId}`);
 
-    // Look up the tournament_code
+    // --- Update Tournament State using Triggers --- 
     try {
-        logger.debug(`Looking up tournament_code for quiz ${quizId} in database...`);
         const quiz = await prisma.quiz.findUnique({
             where: { id: quizId },
             select: { tournament_code: true }
         });
+        // Always use the *actual live* tournament code for quiz-linked tournaments
+        const code = Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
 
-        let code = null;
-        if (quiz && quiz.tournament_code) {
-            code = quiz.tournament_code;
-            logger.debug(`Found tournament_code in database: ${code}`);
-        } else {
-            // Fallback to memory-based lookup
-            code = Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
-            logger.debug(`No tournament_code in database, memory lookup result: ${code || 'not found'}`);
-        }
+        if (code && tournamentState[code]) { // Ensure tournament state exists
+            logger.info(`[TimerAction] Found linked tournament ${code}. Applying action: ${status}`);
 
-        if (code) {
-            // Emit to lobby to redirect to tournament
-            io.to(code).emit("redirect_to_tournament", { code });
-            logger.debug(`Emitted redirect_to_tournament to lobby room ${code}`);
-
-            // Emit to tournament room
-            io.to(`tournament_${code}`).emit("quiz_update", {
-                status,
-                questionId,
-                timeLeft,
-                timestamp: quizState[quizId].timerTimestamp,
-            });
-            logger.debug(`Emitted quiz_update to tournament_${code}`);
-
-            // Reset stopped flag BEFORE any timer logic if relance (play)
-            if (status === 'play' && tournamentState[code].stopped) {
-                logger.info(`Resetting stopped flag for tournament ${code} on play action`);
-                tournamentState[code].stopped = false;
-                // Force resend of tournament_question to all students
-                const idx = tournamentState[code].currentIndex;
-                const q = tournamentState[code].questions[idx];
-                io.to(`tournament_${code}`).emit("tournament_question", {
-                    question: q,
-                    index: idx,
-                    total: tournamentState[code].questions.length,
-                    remainingTime: tournamentState[code].currentQuestionDuration,
-                    questionState: "active"
-                });
-                logger.info(`Resent tournament_question with state 'active' to tournament_${code} after stop/play`);
+            // Use trigger functions based on status
+            switch (status) {
+                case 'play':
+                    // If resuming from stop, need to re-send question info
+                    if (tournamentState[code].stopped) {
+                        logger.info(`[TimerAction] Resuming from STOP for ${code}. Re-triggering question.`);
+                        const idx = tournamentState[code].currentIndex;
+                        // Re-trigger question first (sets state, emits question)
+                        triggerTournamentQuestion(io, code, idx, quizId, timeLeft);
+                    }
+                    // Always set the timer (starts/resumes)
+                    // forceActive = true ensures it runs even if paused/stopped
+                    triggerTournamentTimerSet(io, code, timeLeft, true);
+                    break;
+                case 'pause':
+                    // Pass the current timeLeft from quiz state as remainingTime
+                    triggerTournamentPause(io, code, timeLeft);
+                    break;
+                case 'stop':
+                    // Setting timeLeft to 0 stops the timer via the trigger
+                    triggerTournamentTimerSet(io, code, 0);
+                    break;
+                default:
+                    logger.warn(`[TimerAction] Unknown status received: ${status}`);
             }
 
-            // If this is a play action, also update tournament state AND DATABASE STATUS
-            if (status === 'play') {
-                // *** ADDED: Logging before DB update ***
-                logger.info(`Attempting to update Tournoi ${code} status to 'en cours' in database...`);
+            // Update DB status to 'en cours' only on the first 'play' action if needed
+            if (status === 'play' && tournamentState[code].statut !== 'en cours') {
+                logger.info(`[TimerAction] Attempting to update Tournoi ${code} status to 'en cours' in database...`);
                 try {
-                    const updateResult = await prisma.tournoi.update({
+                    await prisma.tournoi.update({
                         where: { code: code },
                         data: { statut: 'en cours' },
                     });
-                    // *** ADDED: Logging after successful DB update ***
-                    logger.info(`Successfully updated Tournoi ${code} status to 'en cours'. Result:`, updateResult);
+                    tournamentState[code].statut = 'en cours'; // Update in-memory status too
+                    logger.info(`[TimerAction] Successfully updated Tournoi ${code} status to 'en cours'.`);
                 } catch (dbError) {
-                    // *** ADDED: More detailed logging on DB error ***
-                    logger.error(`Failed to update Tournoi ${code} status to 'en cours' in database:`, dbError);
-                    // Decide if we should proceed or return an error
+                    logger.error(`[TimerAction] Failed to update Tournoi ${code} status to 'en cours' in database:`, dbError);
                 }
-                // *** END ADDED ***
-
-                // Initialize or update tournament state
-                if (!tournamentState[code]) {
-                    logger.info(`Initializing tournament state for code=${code}`);
-                    const tournoi = await prisma.tournoi.findUnique({ where: { code } });
-                    if (tournoi) {
-                        const questions = await prisma.question.findMany({
-                            where: { uid: { in: tournoi.questions_ids || [] } },
-                            orderBy: [{ niveau: 'asc' }, { theme: 'asc' }]
-                        });
-
-                        const questionIndex = questions.findIndex(q => q.uid === questionId);
-
-                        tournamentState[code] = {
-                            participants: {},
-                            questions,
-                            currentIndex: questionIndex >= 0 ? questionIndex : 0,
-                            started: true,
-                            answers: {},
-                            timer: null,
-                            questionStart: Date.now(),
-                            socketToJoueur: {},
-                            paused: false,
-                            pausedRemainingTime: null,
-                            linkedQuizId: quizId,
-                            currentQuestionDuration: timeLeft, // Initialize duration
-                            stopped: false,
-                        };
-
-                        // Notify lobby participants
-                        io.to(code).emit("tournament_started");
-                        logger.info(`Emitted tournament_started to lobby room ${code}`);
-
-                        // Send question to tournament room
-                        const question = questions[tournamentState[code].currentIndex];
-                        if (question) {
-                            io.to(`tournament_${code}`).emit("tournament_question", {
-                                question,
-                                index: tournamentState[code].currentIndex,
-                                total: questions.length,
-                                remainingTime: timeLeft,
-                                questionState: "active"
-                            });
-                            logger.info(`Sent question ${question.uid} to tournament_${code}`);
-                        }
-                    }
-                } else {
-                    // Update existing tournament state
-                    const questionIndex = tournamentState[code].questions.findIndex(q => q.uid === questionId);
-                    if (questionIndex >= 0) {
-                        tournamentState[code].currentIndex = questionIndex;
-                        tournamentState[code].paused = false;
-                        tournamentState[code].stopped = false; // Reset stopped state when starting/restarting a question
-                        tournamentState[code].questionStart = Date.now();
-
-                        // *** Explicitly update currentQuestionDuration on 'play' ***
-                        tournamentState[code].currentQuestionDuration = timeLeft;
-                        logger.info(`Updated currentQuestionDuration to ${timeLeft}s on 'play' action for tournament ${code}`);
-
-                        const question = tournamentState[code].questions[questionIndex];
-                        io.to(`tournament_${code}`).emit("tournament_question", {
-                            question,
-                            index: questionIndex,
-                            total: tournamentState[code].questions.length,
-                            remainingTime: timeLeft,
-                            questionState: "active"
-                        });
-                        logger.info(`Sent question ${question.uid} to tournament_${code}`);
-                    }
-                }
-            } else if (status === 'stop') {
-                triggerTournamentTimerSet(io, code, 0);
-                logger.info(`Triggered stop for tournament ${code}`);
-
-            } else if (status === 'pause') {
-                triggerTournamentPause(io, code);
-                logger.info(`Triggered pause for tournament ${code}`);
             }
 
-            // When resuming after a stop, forceActive=true to ensure timer restarts
-            if (status === 'play') {
-                triggerTournamentTimerSet(io, code, timeLeft, true);
-            } else if (status === 'stop') {
-                triggerTournamentTimerSet(io, code, 0);
-                logger.info(`Triggered stop for tournament ${code}`);
-            } else if (status === 'pause') {
-                triggerTournamentPause(io, code);
-                logger.info(`Triggered pause for tournament ${code}`);
-            }
+        } else if (code) {
+            logger.warn(`[TimerAction] Tournament state for code ${code} not found in memory. Cannot apply action.`);
         } else {
-            logger.warn(`No tournament linked to quiz ${quizId}. Cannot send events or update status.`);
+            logger.warn(`[TimerAction] No tournament linked to quiz ${quizId}. Cannot apply action.`);
         }
     } catch (err) {
-        logger.error(`Error handling quiz_timer_action:`, err);
+        logger.error(`[TimerAction] Error handling action:`, err);
     }
 }
 

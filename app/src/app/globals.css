@@ -266,6 +266,46 @@ html[data-theme="light"] {
     background: inherit;
     color: inherit;
   }
+
+  .question-compact,
+  .card-compact {
+    padding: 0.1rem !important;
+    font-size: 0.95rem !important;
+    gap: 0rem !important;
+    box-shadow: 0 4px 24px 0 rgba(37, 99, 235, 0.18), 0 8px 32px 0 rgba(0, 0, 0, 0.13);
+  }
+
+  .question-compact .question-header,
+  .card-compact .question-header {
+    padding: 0.25rem 0 !important;
+  }
+
+  .question-compact .answers-list,
+  .card-compact .answers-list {
+    padding: 0.5rem 0.5rem !important;
+  }
+
+  .question-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .question-header>.fade-right-bottom-crop {
+    flex-grow: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .question-header>span {
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+    text-align: right;
+  }
 }
 
 @layer components {
@@ -286,11 +326,23 @@ html[data-theme="light"] {
 
   .card {
     border: 1px solid var(--border);
-    color: var(--foreground);
+    border-radius: var(--radius);
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: unset;
   }
 
   html[data-theme="dark"] .card {
     border: 1px solid var(--foreground);
+  }
+
+  .answers-list {
+    border: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 1rem 0 0 0;
   }
 
   .answers-list {
@@ -303,6 +355,88 @@ html[data-theme="light"] {
   html[data-theme="dark"] .answers-list {
     border-color: #fff !important;
     border-top: none !important;
+  }
+}
+
+@layer components {
+
+  .question-dashboard,
+  .card-dashboard {
+    padding: 0rem 1rem !important;
+    font-size: 1.03rem !important;
+    gap: 0.75rem !important;
+    border: 1.5px solid var(--border) !important;
+    background: var(--card) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: 0 2px 12px rgba(21, 59, 80, 0.08);
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .question-dashboard .question-header,
+  .card-dashboard .question-header {
+    padding: 0.5rem 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    min-height: 2.5rem;
+  }
+
+  .question-dashboard .answers-list,
+  .card-dashboard .answers-list {
+    padding: 0.75rem 0.75rem !important;
+  }
+}
+
+@layer components {
+
+  .question-compact.card,
+  .card-compact.card {
+    border: none !important;
+    box-shadow: 0 4px 4px 0 rgba(37, 99, 235, 0.18), 0 4px 8px 0 rgba(0, 0, 0, 0.13) !important;
+  }
+}
+
+@layer components {
+
+  .question-dashboard .question-header,
+  .card-dashboard .question-header,
+  .question-dashboard .answers-list,
+  .card-dashboard .answers-list {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+@layer components {
+
+  .question-dashboard .question-header,
+  .card-dashboard .question-header,
+  .question-dashboard .answers-list,
+  .card-dashboard .answers-list,
+  .question-compact .question-header,
+  .card-compact .question-header,
+  .question-compact .answers-list,
+  .card-compact .answers-list {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+@layer components {
+
+  /* Remove any left margin/padding from the title container in the header */
+  .question-header>.ml-0,
+  .question-header>.fade-right-bottom-crop {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  /* Remove flex-grow from the title container in the header to prevent extra space on the left */
+  .question-header>.fade-right-bottom-crop,
+  .question-header>.ml-0 {
+    flex-grow: 0 !important;
   }
 }
 
@@ -425,8 +559,8 @@ textarea:focus {
 }
 
 .badge-success {
-  background: var(--success) !important;
-  color: var(--success-foreground) !important;
+  background: var (--success) !important;
+  color: var (--success-foreground) !important;
   border-radius: 9999px !important;
   font-weight: 700;
   padding: 0.25rem 0.75rem;
@@ -605,6 +739,18 @@ textarea:focus {
   }
 }
 
+@layer components {
+
+  /* Ensure metadata (span) in .question-header is always right-aligned, even in compact mode */
+  .question-header>span {
+    margin-left: auto !important;
+    text-align: right !important;
+    flex-shrink: 0;
+    min-width: 80px;
+    display: inline-block;
+  }
+}
+
 .main-content {
   min-height: 100dvh;
   padding-top: 56px;
@@ -653,7 +799,7 @@ textarea:focus {
 .tqcard-answer-unselected {
   border: 2px solid var(--primary);
   background: var(--dropdown);
-  color: var(--foreground);
+  color: var (--foreground);
 }
 
 .tqcard-answer-unselected:hover {
@@ -672,4 +818,85 @@ textarea:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.answers-transition {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.answers-transition.open {
+  max-height: 800px;
+  opacity: 1;
+}
+
+.answers-open {
+  max-height: 800px;
+  opacity: 1;
+  pointer-events: auto;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-top: 1px solid var(--border);
+}
+
+.answers-closed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  border-top: none;
+}
+
+.answers-closed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.answers-open {
+  max-height: 800px;
+  /* Large enough for most questions */
+  opacity: 1;
+  pointer-events: auto;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.answers-closed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.quiz-create-question-list .card-compact:not(:last-child),
+.quiz-create-question-list .question-compact:not(:last-child) {
+  margin-bottom: 0.25rem !important;
+}
+
+@layer components {
+
+  /* Remove left margin from the title container in the header */
+  .question-header>.ml-0 {
+    margin-left: 0 !important;
+  }
+
+  /* Remove left padding from header and answers-list, and set it on the card itself for alignment */
+  .question-dashboard.card,
+  .question-compact.card,
+  .card-dashboard.card,
+  .card-compact.card {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .question-dashboard .question-header,
+  .card-dashboard .question-header,
+  .question-compact .question-header,
+  .card-compact .question-header,
+  .question-dashboard .answers-list,
+  .card-dashboard .answers-list,
+  .question-compact .answers-list,
+  .card-compact .answers-list {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 }

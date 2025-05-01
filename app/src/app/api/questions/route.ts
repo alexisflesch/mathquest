@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
         const niveau = searchParams.get('niveau');
         const theme = searchParams.get('theme');
         const themesParam = searchParams.get('themes');
-        const limit = parseInt(searchParams.get('limit') || '10', 10);
+        const limit = parseInt(searchParams.get('limit') || '20', 10);
+        const offset = parseInt(searchParams.get('offset') || '0', 10);
+        const shuffle = searchParams.get('shuffle') !== 'false'; // default true, but allow ?shuffle=false
 
         const where: QuestionWhereInput = {};
         if (discipline) where.discipline = discipline;
@@ -52,12 +54,22 @@ export async function GET(request: NextRequest) {
         logger.debug('themesParam:', themesParam);
         logger.debug('theme:', theme);
         // Get all matching questions
-        const all = await prisma.question.findMany({ where });
+        let all;
+        if (shuffle) {
+            all = await prisma.question.findMany({ where });
+        } else {
+            all = await prisma.question.findMany({ where, orderBy: { uid: 'asc' } });
+        }
         logger.debug(`Found ${all.length} questions matching criteria`);
 
-        // Shuffle and take 'limit' questions
-        const shuffled = all.sort(() => Math.random() - 0.5).slice(0, limit);
-        return NextResponse.json(shuffled);
+        // Shuffle and take 'limit' questions with offset for pagination
+        let result: typeof all;
+        if (shuffle) {
+            result = all.sort(() => Math.random() - 0.5).slice(offset, offset + limit);
+        } else {
+            result = all.slice(offset, offset + limit);
+        }
+        return NextResponse.json(result);
     } catch (error: unknown) {
         logger.error('API /api/questions error:', error);
         return NextResponse.json({ message: 'Erreur serveur.', error: String(error) }, { status: 500 });

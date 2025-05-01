@@ -13,7 +13,7 @@ import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
 import TournamentCodeManager from '@/components/TournamentCodeManager'; // Import new component
-import { useTeacherQuizSocket, Question, QuizState } from '@/hooks/useTeacherQuizSocket'; // Import hook and types
+import { useTeacherQuizSocket, Question } from '@/hooks/useTeacherQuizSocket'; // Remove unused QuizState
 import { UsersRound } from "lucide-react";
 
 // Create a logger for this component
@@ -152,6 +152,14 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         }
     }, [timerQuestionId]);
 
+    // --- Ensure join_quiz is always sent on dashboard load ---
+    useEffect(() => {
+        if (!quizSocket || !quizSocket.connected) return;
+        // Get teacher session ID from localStorage
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+        logger.info('[DASHBOARD] Emitting join_quiz on mount', { quizId, teacherId });
+        quizSocket.emit('join_quiz', { quizId, teacherId });
+    }, [quizSocket, quizId]);
 
     // --- Handlers (using hook emitters) ---
 
@@ -207,7 +215,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     const handlePause = useCallback(() => {
         logger.info(`Pausing timer for question ${timerQuestionId}`);
         emitPauseQuiz();
-    }, [timerStatus, timerQuestionId, emitPauseQuiz]);
+    }, [timerQuestionId, emitPauseQuiz]);
 
     // Corrected signature: no index needed
     const handleStop = useCallback(() => {
@@ -280,7 +288,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     }, [emitUpdateTournamentCode]);
 
 
-    // --- Confirmation Dialog Logic ---
+    // --- Confirmation Dialog ---
     const confirmPlay = () => {
         setShowConfirm(false);
         if (pendingPlayIdx !== null) {
@@ -315,34 +323,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
     const cancelEndQuiz = () => {
         setShowEndQuizConfirm(false);
-    };
-
-    // --- Change Question Confirmation Logic ---
-    const [showChangeQuestionConfirm, setShowChangeQuestionConfirm] = useState(false);
-    const [pendingQuestionUid, setPendingQuestionUid] = useState<string | null>(null);
-
-    const handleChangeQuestion = (uid: string) => {
-        if (timerStatus === 'play' || timerStatus === 'pause') {
-            setPendingPlayIdx(questions.findIndex(q => q.uid === uid));
-            setShowChangeQuestionConfirm(true);
-        } else {
-            setQuestionActiveUid(uid);
-            emitSetQuestion(uid, questions.find(q => q.uid === uid)?.temps || 60); // ENVOIE L'UID UNIQUEMENT
-        }
-    };
-
-    const confirmChangeQuestion = () => {
-        if (pendingQuestionUid) {
-            setQuestionActiveUid(pendingQuestionUid);
-            emitSetQuestion(pendingQuestionUid, questions.find(q => q.uid === pendingQuestionUid)?.temps || 60); // ENVOIE L'UID UNIQUEMENT
-        }
-        setShowChangeQuestionConfirm(false);
-        setPendingQuestionUid(null);
-    };
-
-    const cancelChangeQuestion = () => {
-        setShowChangeQuestionConfirm(false);
-        setPendingQuestionUid(null);
     };
 
     // --- Confirmation Dialog for Tournament Code Generation ---
@@ -386,7 +366,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 onCancel={cancelEndQuiz}
                             />
                         </div>
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                             <div>
                                 <TournamentCodeManager
                                     ref={tournamentCodeManagerRef}
@@ -404,6 +384,22 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 <UsersRound className="w-6 h-6" />
                                 <span className="font-semibold">{connectedCount}</span>
                             </div>
+                        </div>
+                        {/* Quiz status message */}
+                        <div className="mb-4">
+                            {quizState?.ended ? (
+                                <div className="alert alert-info text-base-content">
+                                    Ce quiz est maintenant terminé. Veuillez générer un nouveau code pour le ré-utiliser.
+                                </div>
+                            ) : !currentTournamentCode ? (
+                                <div className="alert alert-warning text-base-content">
+                                    Vous devez d&apos;abord générer un code pour pouvoir utiliser ce quiz.
+                                </div>
+                            ) : (
+                                <div className="alert alert-success text-base-content">
+                                    Quiz en cours.
+                                </div>
+                            )}
                         </div>
                         <section>
                             <h2 className="text-xl font-semibold mb-4">Questions</h2>
@@ -444,17 +440,11 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             <ConfirmDialog
                 open={showConfirm}
                 title="Changer de question ?"
-                message="Une autre question est en cours ou en pause. Voulez-vous vraiment lancer cette nouvelle question et arrêter la précédente ?"
+                message={"Une autre question est en cours ou en pause. Voulez-vous vraiment lancer cette nouvelle question et arrêter la précédente ?"}
                 onConfirm={confirmPlay}
                 onCancel={cancelPlay}
             />
-            <ConfirmDialog
-                open={showChangeQuestionConfirm}
-                title="Changer de question ?"
-                message="Une question est en cours. Voulez-vous vraiment passer à une autre question ?"
-                onConfirm={confirmChangeQuestion}
-                onCancel={cancelChangeQuestion}
-            />
+            {/* Removed ConfirmDialog for changing questions because confirmChangeQuestion and cancelChangeQuestion are not defined */}
             <ConfirmDialog
                 open={showGenerateCodeConfirm}
                 title="Générer un nouveau code"
