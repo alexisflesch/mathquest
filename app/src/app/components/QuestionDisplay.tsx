@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Play, Pause, Square, Check, X, Pencil } from "lucide-react";
 import { formatTime } from "@/utils"; // Assure-toi que ce chemin est correct
 import MathJaxWrapper from '@/components/MathJaxWrapper'; // Assure-toi que ce chemin est correct
@@ -78,6 +78,25 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         if (onToggleOpen) onToggleOpen();
     };
 
+    // For smooth expand/collapse
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [maxHeight, setMaxHeight] = useState('0px');
+
+    useEffect(() => {
+        if (isOpen && contentRef.current) {
+            requestAnimationFrame(() => {
+                if (contentRef.current) {
+                    setMaxHeight(contentRef.current.scrollHeight + 'px');
+                }
+            });
+        } else if (!isOpen && contentRef.current) {
+            setMaxHeight(contentRef.current.scrollHeight + 'px');
+            requestAnimationFrame(() => {
+                setMaxHeight('0px');
+            });
+        }
+    }, [isOpen, question]);
+
     // Affichage du timer (non éditable dans ce composant)
     const timerDisplay = (
         <span className="flex items-center gap-1">
@@ -128,12 +147,16 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                 <MathJaxWrapper>{question.titre}</MathJaxWrapper>
                             ) : (
                                 <span
-                                    className={`transition-all duration-400 ease-in-out block absolute left-0 right-0 ${isOpen ? 'opacity-0 translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}
                                     style={{
-                                        transitionProperty: 'opacity, transform',
-                                        willChange: 'opacity, transform',
+                                        display: 'block',
+                                        position: 'absolute',
+                                        left: 0,
+                                        right: 0,
+                                        top: 0,
+                                        zIndex: 2,
+                                        transition: `transform ${isOpen ? '.5s' : '1s'} cubic-bezier(0.4,0,0.2,1)`,
+                                        transform: isOpen ? 'translateY(120px)' : 'translateY(0)'
                                     }}
-                                    aria-hidden={isOpen}
                                 >
                                     <MathJaxWrapper>{question.question}</MathJaxWrapper>
                                 </span>
@@ -167,15 +190,49 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                         ) : null}
                     </div>
                     {/* Move the gap to the expanded content only */}
-                    {isOpen && (
-                        <div className="mt-1">
-                            {/* Animated full question + answers for no-title case */}
-                            {!question.titre ? (
-                                <div
-                                    className={`transition-all duration-400 ease-in-out ${isOpen ? 'max-h-[800px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-2'} overflow-hidden`}
-                                    style={{ transitionProperty: 'max-height, opacity, transform', willChange: 'max-height, opacity, transform' }}
-                                    aria-hidden={!isOpen && 'true'}
+                    <div className="mt-1 transition-all duration-500 ease-in-out" style={{ transitionProperty: 'margin-top', willChange: 'margin-top' }}>
+                        {/* Animated full question + answers for both cases */}
+                        <div
+                            ref={contentRef}
+                            className="collapsible-content"
+                            style={{ maxHeight, zIndex: 1, position: 'relative' }}
+                            aria-hidden={!isOpen && 'true'}
+                        >
+                            {question.titre ? (
+                                <ul
+                                    className={[
+                                        "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",
+                                        isActive ? "answers-selected" : "",
+                                        isOpen ? "no-top-border" : ""
+                                    ].join(" ")}
                                 >
+                                    <li className="mb-2 font-medium text-base text-couleur-global-neutral-700">
+                                        <MathJaxWrapper>{question.question}</MathJaxWrapper>
+                                    </li>
+                                    {Array.isArray(question.reponses) && question.reponses.length > 0
+                                        ? question.reponses.map((r, idx) => (
+                                            <li key={idx} className="flex gap-2 ml-4 mb-1">
+                                                <span className="answer-icon">
+                                                    {r.correct ? (
+                                                        <Check size={18} strokeWidth={3} className="text-primary mt-1" />
+                                                    ) : (
+                                                        <X size={18} strokeWidth={3} className="text-secondary mt-1" />
+                                                    )}
+                                                </span>
+                                                <MathJaxWrapper>
+                                                    <span className="answer-text">{r.texte}</span>
+                                                </MathJaxWrapper>
+                                            </li>
+                                        ))
+                                        : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
+                                    {question.justification && (
+                                        <div className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70">
+                                            <span className="font-semibold">Justification :</span> {question.justification}
+                                        </div>
+                                    )}
+                                </ul>
+                            ) : (
+                                <>
                                     <div className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2">
                                         <MathJaxWrapper>{question.question}</MathJaxWrapper>
                                     </div>
@@ -208,48 +265,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                             </div>
                                         )}
                                     </ul>
-                                </div>
-                            ) : (
-                                <div
-                                    className={`answers-transition${isOpen ? " open" : ""}`}
-                                    aria-hidden={!isOpen}
-                                >
-                                    <ul
-                                        className={[
-                                            "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",
-                                            isActive ? "answers-selected" : "",
-                                            isOpen ? "no-top-border" : ""
-                                        ].join(" ")}
-                                    >
-                                        <li className="mb-2 font-medium text-base text-couleur-global-neutral-700">
-                                            <MathJaxWrapper>{question.question}</MathJaxWrapper>
-                                        </li>
-                                        {Array.isArray(question.reponses) && question.reponses.length > 0
-                                            ? question.reponses.map((r, idx) => (
-                                                <li key={idx} className="flex gap-2 ml-4 mb-1">
-                                                    <span className="answer-icon">
-                                                        {r.correct ? (
-                                                            <Check size={18} strokeWidth={3} className="text-primary mt-1" />
-                                                        ) : (
-                                                            <X size={18} strokeWidth={3} className="text-secondary mt-1" />
-                                                        )}
-                                                    </span>
-                                                    <MathJaxWrapper>
-                                                        <span className="answer-text">{r.texte}</span>
-                                                    </MathJaxWrapper>
-                                                </li>
-                                            ))
-                                            : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
-                                        {question.justification && (
-                                            <div className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70">
-                                                <span className="font-semibold">Justification :</span> {question.justification}
-                                            </div>
-                                        )}
-                                    </ul>
-                                </div>
+                                </>
                             )}
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>

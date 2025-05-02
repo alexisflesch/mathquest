@@ -69,6 +69,11 @@ html[data-theme="dark"] {
   --badge-stepper-color: #5fbcd3;
 }
 
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+  color: var(--foreground);
+  background: var(--background);
+}
 
 html[data-theme="light"] {
   --background: #ebf0f5;
@@ -95,6 +100,11 @@ html[data-theme="light"] {
   --badge-stepper-color: #153B50;
 }
 
+html[data-theme="light"],
+html[data-theme="light"] body {
+  color: var(--foreground);
+  background: var(--background);
+}
 
 @layer components {
   .btn-primary {
@@ -332,6 +342,7 @@ html[data-theme="light"] {
     flex-direction: column;
     height: auto;
     min-height: unset;
+    color: var(--foreground);
   }
 
   html[data-theme="dark"] .card {
@@ -373,6 +384,7 @@ html[data-theme="light"] {
     flex-direction: column !important;
     justify-content: flex-start !important;
     align-items: stretch !important;
+    color: var(--foreground);
   }
 
   .question-dashboard .question-header,
@@ -899,4 +911,11 @@ textarea:focus {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
+}
+
+.collapsible-content {
+  transition-property: max-height;
+  transition-duration: 0.5s;
+  transition-timing-function: ease-in-out;
+  overflow: hidden;
 }
