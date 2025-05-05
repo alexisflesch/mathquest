@@ -101,6 +101,21 @@ async function handleTimerExpiration(io, code) {
     } else {
         logger.info(`Quiz-linked tournament ${code}: Timer expired, waiting for teacher action.`);
         state.stopped = true;
+        // --- EMIT TO TEACHER DASHBOARD (quiz_${quizId}) ---
+        if (state.linkedQuizId) {
+            // Try to get the current question UID
+            let questionUid = null;
+            if (typeof state.currentIndex === 'number' && state.questions && state.questions[state.currentIndex]) {
+                questionUid = state.questions[state.currentIndex].uid;
+            }
+            io.to(`quiz_${state.linkedQuizId}`).emit("quiz_timer_update", {
+                status: 'stop',
+                questionId: questionUid,
+                timeLeft: 0,
+                timestamp: Date.now()
+            });
+            logger.info(`[handleTimerExpiration] Emitted quiz_timer_update (stop) to quiz_${state.linkedQuizId} (questionId=${questionUid})`);
+        }
     }
 }
 

@@ -69,6 +69,7 @@ html[data-theme="dark"] {
   --badge-stepper-color: #5fbcd3;
   /* Pour le react-grid-layout */
   --grid-layout-background: #1a4962;
+  --bar-stat: #9ca3af;
 }
 
 html[data-theme="dark"],
@@ -101,6 +102,7 @@ html[data-theme="light"] {
   --dropdown-foreground: #23272f;
   --badge-stepper-color: #153B50;
   --grid-layout-background: #cce5ff;
+  --bar-stat: #9ca3af;
 }
 
 html[data-theme="light"],
@@ -816,6 +818,11 @@ textarea:focus {
   flex-direction: column;
   gap: 1.5rem;
   align-items: center;
+  /* Remove border and box-shadow from the card container */
+  border: none;
+  box-shadow: none;
+  border-radius: 1rem;
+  background: var(--card-bg, #fff);
 }
 
 .tqcard-answer {
@@ -964,4 +971,18 @@ textarea:focus {
   background-color: rgba(0, 123, 255, 0.1) !important;
   border: 2px dashed var(--grid-layout-background);
   transition: background-color 0.2s;
+}
+
+.histogram-bars {
+  /* Ensures spacing and separation from the card border */
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.histogram-bar {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+  height: 24px;
+  background: var(--bar-stat, #b3e5fc);
+  /* No border, so card border remains visible */
 }

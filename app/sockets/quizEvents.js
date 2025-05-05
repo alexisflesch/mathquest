@@ -137,6 +137,13 @@ function registerQuizEvents(io, socket, prisma) {
             io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
         }
     });
+
+    socket.on("quiz_toggle_stats", ({ quizId, questionUid, show }) => {
+        logger.info(`[quiz_toggle_stats] Received for quizId=${quizId}, questionUid=${questionUid}, show=${show}`);
+        // Forward to projector room
+        io.to(`projection_${quizId}`).emit("quiz_toggle_stats", { quizId, questionUid, show });
+        logger.debug(`[quiz_toggle_stats] Forwarded to projection_${quizId}`);
+    });
 }
 
 module.exports = registerQuizEvents;

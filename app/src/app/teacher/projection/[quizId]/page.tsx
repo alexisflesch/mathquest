@@ -18,7 +18,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import "@/app/globals.css";
 import { createLogger } from '@/clientLogger';
-import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
+import { useProjectionQuizSocket } from '@/hooks/useProjectionQuizSocket';
 import { useRouter } from 'next/navigation';
 import TournamentQuestionCard from '@/components/TournamentQuestionCard';
 import { Timer } from 'lucide-react'; // Suppression de MoveDiagonal2 et ZoomIn/ZoomOut car géré par ZoomControls
@@ -61,15 +61,21 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     const [leaderboard, setLeaderboard] = useState<{ pseudo: string; avatar: string; score: number }[]>([]); // Specify type
     const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
 
-    // Move the useTeacherQuizSocket hook call to the top, before any useEffect or code that uses quizSocket
+    // --- Stats state ---
+    type StatsData = { stats: number[]; totalAnswers: number };
+    const [questionStats, setQuestionStats] = useState<Record<string, StatsData>>({});
+    const [showStats, setShowStats] = useState<Record<string, boolean>>({});
+
+    // Move the useProjectionQuizSocket hook call to the top, before any useEffect or code that uses quizSocket
     const {
         quizSocket,
         quizState,
-        // timerStatus, // TODO: Remove if not used
+        timerStatus,
         timerQuestionId,
         localTimeLeft,
-        // connectedCount, // TODO: Remove if not used
-    } = useTeacherQuizSocket(quizId, currentTournamentCode);
+        setLocalTimeLeft, // <-- Now available
+        connectedCount,
+    } = useProjectionQuizSocket(quizId, currentTournamentCode);
 
     // Move this function here, after setCorrectAnswers is defined:
     const debugSetCorrectAnswers = (val: number[], reason: string) => {
@@ -104,6 +110,30 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
         };
     }, [quizSocket]);
 
+    // Listen for stats updates
+    useEffect(() => {
+        if (!quizSocket) return;
+        const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
+            setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
+        };
+        quizSocket.on('quiz_answer_stats_update', handleStatsUpdate);
+        return () => {
+            quizSocket.off('quiz_answer_stats_update', handleStatsUpdate);
+        };
+    }, [quizSocket]);
+
+    // Listen for show/hide stats toggle
+    useEffect(() => {
+        if (!quizSocket) return;
+        const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
+            setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
+        };
+        quizSocket.on('quiz_toggle_stats', handleToggleStats);
+        return () => {
+            quizSocket.off('quiz_toggle_stats', handleToggleStats);
+        };
+    }, [quizSocket]);
+
     // Clear correctAnswers when a new question is set
     const lastQuestionIdRef = useRef<string | null>(null);
     useEffect(() => {
@@ -117,19 +147,28 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     // --- Patch: Ensure timer is set to 0 and countdown is stopped when quiz is stopped ---
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
-        if (!quizState) return;
-        // If timer is stopped, clear any countdown (let localTimeLeft update via the hook)
-        if (
-            quizState.timerStatus === 'stop' ||
-            (quizState.chrono && quizState.chrono.timeLeft === 0 && quizState.chrono.running === false)
-        ) {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-            }
-            // No need to set localTimeLeft here; the hook will update it
+        // Always clear any running timer interval when timer is stopped or at zero
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
         }
-    }, [quizState]);
+    }, [timerStatus, localTimeLeft]);
+
+    // --- Force timer to zero if stopped, even if localTimeLeft is not zero ---
+    useEffect(() => {
+        if (timerStatus === 'stop' && localTimeLeft !== 0) {
+            logger.debug('[Projection] Forcing localTimeLeft to 0 because timerStatus is stop. Previous value:', localTimeLeft);
+            setLocalTimeLeft(0);
+        }
+    }, [timerStatus, localTimeLeft]);
+
+    // Log every timer update for debugging the blinking effect
+    useEffect(() => {
+        logger.debug('[Projection] Timer display update:', {
+            timerStatus,
+            localTimeLeft,
+        });
+    }, [timerStatus, localTimeLeft]);
 
     // Set the base URL for QR code generation
     useEffect(() => {
@@ -275,10 +314,10 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     if (!layout || layout.length === 0) return <div className="p-8 text-orange-600">Aucun layout défini pour la projection.</div>;
 
     const currentQuestion = getCurrentQuestion();
-    // Check if currentQuestion has the required fields before passing to TournamentQuestionCard
-    // Assuming the actual data in quizState.questions conforms to TournamentQuestion structure
     const currentTournamentQuestion = currentQuestion as TournamentQuestion | null;
-    // const isMultipleChoice = currentQuestion?.type === 'choix_multiple';
+    const currentQuestionUid = currentTournamentQuestion?.uid;
+    const statsToShow = currentQuestionUid && showStats[currentQuestionUid] ? questionStats[currentQuestionUid] : undefined;
+    const showStatsFlag = !!(currentQuestionUid && showStats[currentQuestionUid]);
 
     // Generate the full tournament URL for the QR code
     const tournamentUrl = currentTournamentCode ? `${baseUrl}/live/${currentTournamentCode}` : '';
@@ -390,6 +429,8 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                                             isQuizMode={true}
                                             readonly={true}
                                             correctAnswers={correctAnswers}
+                                            stats={statsToShow}
+                                            showStats={showStatsFlag}
                                         />
                                     </div>
                                 </div>

@@ -30,6 +30,7 @@ export interface SortableQuestionProps {
     disabled?: boolean;
     onShowResults?: () => void;
     showResultsDisabled?: boolean;
+    onStatsToggle?: (show: boolean) => void;
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -65,7 +66,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, /* onSelect, */ onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled, onStatsToggle }: SortableQuestionProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(q.uid)
     });
@@ -210,48 +211,58 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
 
     // JSX pour l'input d'édition (rendu conditionnellement)
     const timerEditInput = editingTimer ? (
-        <div className={`card flex flex-col ${isActive ? 'question-selected' : ''} p-0`}> {/* Match QuestionDisplay structure */}
-            <div className="flex flex-col gap-1 p-2 pb-0">
-                <div className="flex items-center justify-between gap-3 question-header no-bottom-border no-bottom-radius">
-                    <div className="ml-0 font-medium flex-grow fade-right-bottom-crop">
-                        <MathJaxWrapper>{q.titre ? q.titre : q.question}</MathJaxWrapper>
-                    </div>
-                    <div className="flex items-center gap-0 ml-2">
-                        <span ref={inputWrapperRef} className="flex items-center gap-1">
-                            <input
-                                ref={timerInputRef}
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                className="w-20 px-1 py-0.5 rounded border border-gray-300 text-lg font-mono text-center bg-input text-foreground"
-                                value={formatTime(parseInt(editTimerValue, 10) || 0)}
-                                onChange={e => {
-                                    const val = e.target.value.replace(/[^0-9:]/g, '');
-                                    if (val.includes(':')) {
-                                        const [mm, ss] = val.split(':');
-                                        const total = (parseInt(mm, 10) || 0) * 60 + (parseInt(ss, 10) || 0);
-                                        setEditTimerValue(String(total));
-                                    } else {
-                                        setEditTimerValue(val.replace(/[^0-9]/g, ''));
-                                    }
-                                }}
-                                onClick={e => e.stopPropagation()}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') handleValidateEdit(e as React.KeyboardEvent<HTMLInputElement>);
-                                    if (e.key === 'Escape') handleCancelEdit(e as React.KeyboardEvent<HTMLInputElement>);
-                                    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                        e.preventDefault();
-                                        const val = parseInt(editTimerValue, 10) || 0;
-                                        if (e.key === 'ArrowUp') setEditTimerValue(String(val + 1));
-                                        if (e.key === 'ArrowDown') setEditTimerValue(String(Math.max(0, val - 1)));
-                                    }
-                                }}
-                            />
-                            <button onClick={handleValidateEdit} className="p-1 text-foreground hover:text-primary" title="Valider"><Check size={18} /></button>
-                            <button onClick={handleCancelEdit} className="p-1 text-foreground hover:text-destructive" title="Annuler"><X size={18} /></button>
-                        </span>
-                    </div>
-                </div>
+        <div className="relative"> {/* Make this container relative for absolute overlay */}
+            <QuestionDisplay
+                className="question-dashboard opacity-40 pointer-events-none select-none"
+                question={q}
+                isOpen={open}
+                onToggleOpen={setOpen}
+                timerStatus={(isActive ? liveStatus : 'stop') ?? 'stop'}
+                timeLeft={displayedTimeLeft}
+                onPlay={handlePlayWithCurrentTime}
+                onPause={handlePauseClick}
+                onStop={onStop}
+                isActive={isActive}
+                disabled={true}
+                onEditTimerRequest={() => { }}
+                onShowResults={onShowResults}
+                showResultsDisabled={showResultsDisabled}
+                onStatsToggle={onStatsToggle}
+            />
+            <div className="absolute left-0 top-0 w-full h-full flex items-center justify-center z-20">
+                <span ref={inputWrapperRef} className="flex items-center gap-1 bg-background p-2 rounded shadow-lg border border-gray-200">
+                    <input
+                        ref={timerInputRef}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        className="w-20 px-1 py-0.5 rounded border border-gray-300 text-lg font-mono text-center bg-input text-foreground"
+                        value={formatTime(parseInt(editTimerValue, 10) || 0)}
+                        onChange={e => {
+                            const val = e.target.value.replace(/[^0-9:]/g, '');
+                            if (val.includes(':')) {
+                                const [mm, ss] = val.split(':');
+                                const total = (parseInt(mm, 10) || 0) * 60 + (parseInt(ss, 10) || 0);
+                                setEditTimerValue(String(total));
+                            } else {
+                                setEditTimerValue(val.replace(/[^0-9]/g, ''));
+                            }
+                        }}
+                        onClick={e => e.stopPropagation()}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') handleValidateEdit(e as React.KeyboardEvent<HTMLInputElement>);
+                            if (e.key === 'Escape') handleCancelEdit(e as React.KeyboardEvent<HTMLInputElement>);
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const val = parseInt(editTimerValue, 10) || 0;
+                                if (e.key === 'ArrowUp') setEditTimerValue(String(val + 1));
+                                if (e.key === 'ArrowDown') setEditTimerValue(String(Math.max(0, val - 1)));
+                            }
+                        }}
+                    />
+                    <button onClick={handleValidateEdit} className="p-1 text-foreground hover:text-primary" title="Valider"><Check size={18} /></button>
+                    <button onClick={handleCancelEdit} className="p-1 text-foreground hover:text-destructive" title="Annuler"><X size={18} /></button>
+                </span>
             </div>
         </div>
     ) : null;
@@ -325,6 +336,7 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
                         onEditTimerRequest={handleEditTimerRequest}
                         onShowResults={onShowResults}
                         showResultsDisabled={showResultsDisabled}
+                        onStatsToggle={onStatsToggle}
                     />
                 )}
                 {/* Affiche les réponses si en mode édition ET si elles sont ouvertes */}

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Play, Pause, Square, Check, X, Pencil, Trophy } from "lucide-react";
+import { Play, Pause, Square, Check, X, Pencil, Trophy, ChartBarBig } from "lucide-react";
 import { formatTime } from "@/utils"; // Assure-toi que ce chemin est correct
 import MathJaxWrapper from '@/components/MathJaxWrapper'; // Assure-toi que ce chemin est correct
 
@@ -39,6 +39,7 @@ export interface QuestionDisplayProps {
     onShowResults?: () => void; // Ajouté pour le bouton Trophy
     showResultsDisabled?: boolean; // Désactive le bouton Trophy
     correctAnswers?: number[]; // NEW: indices des réponses correctes à afficher (ex: [1,2])
+    onStatsToggle?: (isDisplayed: boolean) => void; // NEW: callback for stats toggle
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -60,6 +61,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onShowResults, // Ajouté
     showResultsDisabled = false, // Ajouté
     correctAnswers,
+    onStatsToggle, // NEW: destructure onStatsToggle
 }) => {
 
     // Détermine l'état effectif des boutons play/pause
@@ -122,7 +124,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const timerDisplay = (
         <span className="flex items-center gap-1">
             <span
-                className="font-mono text-lg px-2 py-1 rounded bg-muted text-muted-foreground min-w-[60px] text-center select-none"
+                className="font-mono text-lg pl-2 pr-0 py-1 rounded bg-muted text-muted-foreground min-w-[60px] text-center select-none"
                 title="Temps de la question"
             >
                 {formatTime(timeLeft)}
@@ -130,7 +132,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             {/* Bouton pour demander l'édition (si callback fourni) */}
             {onEditTimerRequest && (
                 <button
-                    className="ml-1 p-1 icon-control-hover"
+                    className="ml-1 pl-0 pr-3 icon-control-hover"
                     title="Modifier le timer"
                     onClick={(e) => { e.stopPropagation(); onEditTimerRequest(); }}
                     tabIndex={-1}
@@ -148,6 +150,19 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         question.discipline || (question.categories && question.categories.join(', ')),
         question.theme || (question.themes && question.themes.join(', '))
     ].filter(Boolean).join(' · ');
+
+    // --- Stats display toggle state (for ChartBarBig) ---
+    const [isStatsDisplayed, setIsStatsDisplayed] = useState(false);
+
+    // Handler for ChartBarBig click
+    const handleStatsToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsStatsDisplayed((prev) => {
+            const newState = !prev;
+            if (onStatsToggle) onStatsToggle(newState);
+            return newState;
+        });
+    };
 
     return (
         <div
@@ -220,6 +235,17 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     disabled={disabled || showResultsDisabled}
                                 >
                                     <Trophy size={20} />
+                                </button>
+                                {/* ChartBarBig button for statistics */}
+                                <button
+                                    type="button"
+                                    className={`p-1 icon-control-hover rounded-full transition-colors duration-150 ml-1 ${isStatsDisplayed ? 'text-primary' : ''}`}
+                                    title={isStatsDisplayed ? "Masquer les statistiques" : "Afficher les statistiques"}
+                                    aria-label={isStatsDisplayed ? "Masquer les statistiques" : "Afficher les statistiques"}
+                                    onClick={handleStatsToggle}
+                                    disabled={disabled}
+                                >
+                                    <ChartBarBig size={20} />
                                 </button>
                             </div>
                         ) : showMeta && metaString ? (

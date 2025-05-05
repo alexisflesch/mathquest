@@ -1,11 +1,19 @@
-# Code refactoring
-fichiers trop gros (partie serveur), l'IA fait n'importe quoi.
-
 # Favicon
 Test it
 
 # PWA
 Do it
+
+
+# Videoproj
+- Tant que le quiz n'a pas commencé, afficher un QR-Code à la place de la question
+- Au fur et à mesure que les étudiants rejoignent, les placer sur le podium
+
+# Late join
+Vérifier que le backend fait son boulot puis tester le front
+- videoproj : le timer fait n'imp quand il devrait être stoppé
+- live : vérifier que le timer marche quand stoppé/en pause
+- dashboard : pareil
 
 # Teacher dashboard
 
@@ -16,9 +24,7 @@ Reprendre les éléments de l'interface qui ont disparu comme :
 - Dialogue d'alerte quand on change de question
 
 # Afficher les stats des réponses
-les mettre directement en mode histogramme sur les réponses ?
+bosser sur l'ui
 
 
-
-# IMPORTANT / DEBUG
-En mode différé, des fois, la question suivante n'est pas envoyée (à vérifier)
+# Retester le mode entraînement libre (filtres en particulier)

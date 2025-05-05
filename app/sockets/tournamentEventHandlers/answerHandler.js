@@ -150,6 +150,48 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     });
     logger.debug(`Sent receipt confirmation to joueur ${joueurId} for answer on question ${questionUid}`);
     // Note: For regular tournaments (live or differed without quiz link), scoring happens when the timer ends or next question starts.
+
+    // --- QUIZ MODE: Compute and emit answer stats ---
+    if (isQuizMode && state.linkedQuizId) {
+        try {
+            // Aggregate all answers for this question
+            const answerCounts = Array.isArray(question.reponses) ? new Array(question.reponses.length).fill(0) : [];
+            let total = 0;
+            for (const jId in state.answers) {
+                const ans = state.answers[jId][questionUid];
+                if (!ans) continue;
+                // Support both single and multiple answers (choix_multiple)
+                if (Array.isArray(ans.answerIdx)) {
+                    ans.answerIdx.forEach(idx => {
+                        if (typeof idx === 'number' && answerCounts[idx] !== undefined) {
+                            answerCounts[idx]++;
+                        }
+                    });
+                    total++;
+                } else if (typeof ans.answerIdx === 'number' && answerCounts[ans.answerIdx] !== undefined) {
+                    answerCounts[ans.answerIdx]++;
+                    total++;
+                }
+            }
+            // Compute percentages
+            const stats = answerCounts.map(count => total > 0 ? Math.round((count / total) * 100) : 0);
+            // Emit to both quiz and projection rooms
+            const quizId = state.linkedQuizId;
+            io.to(`quiz_${quizId}`).emit("quiz_answer_stats_update", {
+                questionUid,
+                stats, // Array of percentages per answer index
+                totalAnswers: total
+            });
+            io.to(`projection_${quizId}`).emit("quiz_answer_stats_update", {
+                questionUid,
+                stats,
+                totalAnswers: total
+            });
+            logger.info(`[QUIZ_STATS] Emitted quiz_answer_stats_update for quiz_${quizId} (question ${questionUid}):`, stats);
+        } catch (err) {
+            logger.error(`[QUIZ_STATS] Failed to compute or emit stats for quiz mode:`, err);
+        }
+    }
 }
 
 module.exports = handleTournamentAnswer;

@@ -103,6 +103,21 @@ function triggerTournamentTimerSet(io, code, timeLeft, forceActive = false) {
             timeLeft: 0,
             questionState: "stopped" // Use specific state for stop
         });
+        // --- NEW: Also notify dashboard if quiz-linked ---
+        if (state.linkedQuizId) {
+            // Try to get the current question UID
+            let questionUid = null;
+            if (typeof state.currentIndex === 'number' && state.questions && state.questions[state.currentIndex]) {
+                questionUid = state.questions[state.currentIndex].uid;
+            }
+            io.to(`quiz_${state.linkedQuizId}`).emit("quiz_timer_update", {
+                status: 'stop',
+                questionId: questionUid,
+                timeLeft: 0,
+                timestamp: Date.now()
+            });
+            logger.info(`[TimerSet] Emitted quiz_timer_update (stop) to quiz_${state.linkedQuizId} (questionId=${questionUid})`);
+        }
         // Note: We don't call handleTimerExpiration here, stopping is an explicit action.
         return; // Stop processing here
     }

@@ -60,6 +60,7 @@ interface DraggableQuestionsListProps {
     disabled?: boolean;
     onShowResults?: (uid: string) => void;
     showResultsDisabled?: (uid: string) => boolean;
+    onStatsToggle?: (uid: string, show: boolean) => void; // NEW: stats toggle handler
 }
 
 export default function DraggableQuestionsList({
@@ -82,6 +83,7 @@ export default function DraggableQuestionsList({
     disabled,
     onShowResults,
     showResultsDisabled,
+    onStatsToggle,
 }: DraggableQuestionsListProps) {
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -257,6 +259,7 @@ export default function DraggableQuestionsList({
                                 disabled={disabled || isPending}
                                 onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
                                 showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
+                                onStatsToggle={onStatsToggle ? (show) => onStatsToggle(q.uid, show) : undefined}
                             />
                         );
                     })}

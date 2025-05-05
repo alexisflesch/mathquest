@@ -152,6 +152,9 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         }
     }, [timerQuestionId]);
 
+    // --- Compute effective timeLeft for DraggableQuestionsList ---
+    const effectiveTimeLeft = timerStatus === 'stop' ? 0 : (localTimeLeft ?? 0);
+
     // --- Handlers (using hook emitters) ---
 
     const handleSelect = useCallback((uid: string) => {
@@ -388,7 +391,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 questionActiveUid={questionActiveUid}
                                 timerStatus={timerStatus}
                                 timerQuestionId={timerQuestionId}
-                                timeLeft={localTimeLeft ?? 0}
+                                timeLeft={effectiveTimeLeft}
                                 onSelect={handleSelect}
                                 onPlay={handlePlay}
                                 onPause={handlePause}
@@ -399,6 +402,16 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 disabled={!quizSocket || !quizSocket.connected || quizState?.ended}
                                 onShowResults={handleShowResults}
                                 showResultsDisabled={() => false}
+                                onStatsToggle={(uid, show) => {
+                                    logger.info(`[DASHBOARD] Emitting quiz_toggle_stats`, { quizId, questionUid: uid, show });
+                                    if (quizSocket && quizId) {
+                                        quizSocket.emit('quiz_toggle_stats', {
+                                            quizId,
+                                            questionUid: uid,
+                                            show
+                                        });
+                                    }
+                                }}
                             />
                         </section>
                     </div>

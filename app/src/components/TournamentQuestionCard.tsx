@@ -18,6 +18,11 @@ interface TournamentQuestion {
     temps?: number;
 }
 
+interface StatsData {
+    stats: number[];
+    totalAnswers: number;
+}
+
 interface TournamentQuestionCardProps {
     currentQuestion: TournamentQuestion;
     questionIndex: number;
@@ -34,6 +39,8 @@ interface TournamentQuestionCardProps {
     readonly?: boolean;   // New prop to make the component display-only
     zoomFactor?: number;  // Conservé pour compatibilité mais n'est plus utilisé
     correctAnswers?: number[]; // Add this prop
+    stats?: StatsData; // Optional stats prop for question statistics
+    showStats?: boolean; // Whether to display the stats
 }
 
 const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
@@ -52,6 +59,8 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
     readonly = false,  // Default to interactive mode
     zoomFactor = 1,    // Conservé mais n'est plus utilisé
     correctAnswers = [], // Add default value
+    stats, // Destructure stats
+    showStats = false, // Destructure showStats
 }) => {
     // For readonly mode, only block pointer events without affecting visual appearance
     const readonlyStyle = readonly ? {
@@ -71,14 +80,16 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
             </div>
             <ul className="flex flex-col w-full">
                 {currentQuestion.reponses.map((rep, idx) => {
-                    // Show selection even in readonly mode
                     const isSelected = isMultipleChoice
                         ? selectedAnswers.includes(idx)
                         : selectedAnswer === idx;
                     const isCorrect = correctAnswers.includes(idx);
-                    // Show wrong if selected but not correct (readonly mode)
                     const showGood = readonly && isCorrect;
                     const showWrong = readonly && isSelected && !isCorrect;
+                    let statPercent: number | null = null;
+                    if (showStats && stats && Array.isArray(stats.stats) && typeof stats.stats[idx] === 'number') {
+                        statPercent = stats.stats[idx];
+                    }
                     return (
                         <li
                             key={idx}
@@ -92,7 +103,7 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                                     isSelected ? "tqcard-answer-selected" : "tqcard-answer-unselected"
                                 ].join(" ")}
                                 onClick={() => {
-                                    if (readonly) return; // No action in readonly mode
+                                    if (readonly) return;
                                     if (isMultipleChoice) {
                                         setSelectedAnswers((prev) =>
                                             prev.includes(idx)
@@ -106,21 +117,48 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                                 disabled={false}
                                 aria-disabled={readonly}
                                 tabIndex={readonly ? -1 : 0}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}
                             >
-                                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                {/* Histogram bar as background */}
+                                {showStats && statPercent !== null && (
+                                    <div
+                                        className="histogram-bar-bg"
+                                        style={{
+                                            position: 'absolute',
+                                            left: 0,
+                                            top: 0,
+                                            bottom: 0,
+                                            width: `${statPercent}%`,
+                                            background: 'var(--bar-stat, #b3e5fc)',
+                                            // Remove border radius for square corners
+                                            zIndex: 0,
+                                            pointerEvents: 'none',
+                                            transition: 'width 0.3s',
+                                        }}
+                                    />
+                                )}
+                                {/* Button content above the bar */}
+                                <span style={{ display: 'inline-flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
                                     <MathJaxWrapper>{rep.texte}</MathJaxWrapper>
                                 </span>
-                                {showGood && (
-                                    <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
-                                        <GoodAnswer size={18} iconColor="currentColor" />
-                                    </span>
-                                )}
-                                {showWrong && (
-                                    <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
-                                        <WrongAnswer size={18} iconColor="currentColor" />
-                                    </span>
-                                )}
+                                {/* Right-aligned percentage and icon */}
+                                <span style={{ display: 'flex', alignItems: 'center', minWidth: 48, marginLeft: 'auto', position: 'relative', zIndex: 1 }}>
+                                    {showStats && statPercent !== null && (
+                                        <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--foreground)' }}>
+                                            {statPercent.toFixed(1)}%
+                                        </span>
+                                    )}
+                                    {showGood && (
+                                        <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
+                                            <GoodAnswer size={18} iconColor="currentColor" />
+                                        </span>
+                                    )}
+                                    {showWrong && (
+                                        <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
+                                            <WrongAnswer size={18} iconColor="currentColor" />
+                                        </span>
+                                    )}
+                                </span>
                             </button>
                         </li>
                     );
