@@ -36,6 +36,19 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
         }
     }
 
+    // --- DEBUG: Log timer state before updating ---
+    logger.debug('[TimerAction][BEFORE UPDATE]', {
+        quizId,
+        status,
+        questionId,
+        timeLeft,
+        timerStatus: quizState[quizId].timerStatus,
+        timerQuestionId: quizState[quizId].timerQuestionId,
+        timerTimeLeft: quizState[quizId].timerTimeLeft,
+        chrono: quizState[quizId].chrono,
+        timerTimestamp: quizState[quizId].timerTimestamp,
+    });
+
     // PATCH: If stopping, force all timer fields to 0
     if (status === 'stop') {
         quizState[quizId].timerTimeLeft = 0;
@@ -49,6 +62,19 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
     quizState[quizId].timerStatus = status;
     quizState[quizId].timerQuestionId = questionId;
     quizState[quizId].timerTimestamp = Date.now();
+
+    // --- DEBUG: Log timer state after updating ---
+    logger.debug('[TimerAction][AFTER UPDATE]', {
+        quizId,
+        status,
+        questionId,
+        timeLeft,
+        timerStatus: quizState[quizId].timerStatus,
+        timerQuestionId: quizState[quizId].timerQuestionId,
+        timerTimeLeft: quizState[quizId].timerTimeLeft,
+        chrono: quizState[quizId].chrono,
+        timerTimestamp: quizState[quizId].timerTimestamp,
+    });
 
     io.to(`quiz_${quizId}`).emit("quiz_timer_update", {
         status,

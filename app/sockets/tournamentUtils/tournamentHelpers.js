@@ -1,6 +1,7 @@
 const createLogger = require('../../logger');
 const logger = createLogger('TournamentHelpers');
 const { tournamentState } = require('./tournamentState');
+const { sendTournamentQuestion } = require('./sendTournamentQuestion');
 
 // Helper function to calculate score (extracted for clarity)
 function calculateScore(question, answer, questionStartTime) {
@@ -64,14 +65,22 @@ async function handleTimerExpiration(io, code) {
         // Emit result to each participant
         const socketId = Object.entries(state.socketToJoueur || {}).find(([sid, jid]) => jid === joueurId)?.[0];
         if (socketId) {
-            io.to(socketId).emit("tournament_answer_result", {
-                correct: baseScore > 0,
-                score: participant.score, // Send updated total score
-                explanation: q?.explication || null,
-                baseScore,
-                rapidity: Math.round(rapidity * 100) / 100,
-                totalScore, // Score for this question
-            });
+            if (state.linkedQuizId) {
+                // QUIZ MODE: Do not send correctness or explanation
+                io.to(socketId).emit("tournament_answer_result", {
+                    received: true
+                });
+            } else {
+                // Classic mode: send full feedback
+                io.to(socketId).emit("tournament_answer_result", {
+                    correct: baseScore > 0,
+                    score: participant.score, // Send updated total score
+                    explanation: q?.explication || null,
+                    baseScore,
+                    rapidity: Math.round(rapidity * 100) / 100,
+                    totalScore, // Score for this question
+                });
+            }
         }
     });
 
@@ -143,6 +152,15 @@ async function sendQuestionWithState(io, code, idx, initialTime = null) {
     state.stopped = false;            // Reset stopped state when sending a new question
     state.currentQuestionDuration = time; // Set current duration based on initialTime or q.temps
 
+    // Filter reponses for students (remove 'correct')
+    const filteredReponses = Array.isArray(q.reponses)
+        ? q.reponses.map(r => ({ texte: r.texte }))
+        : [];
+    const filteredQuestion = {
+        ...q,
+        reponses: filteredReponses
+    };
+
     // Enhanced debug logging
     logger.debug(`Preparing to emit tournament_question:`, {
         code,
@@ -165,14 +183,7 @@ async function sendQuestionWithState(io, code, idx, initialTime = null) {
 
     logger.info(`Emitting tournament_question (idx: ${idx}, uid: ${q.uid}) to room tournament_${code}`);
     logger.info(`[QUIZMODE DEBUG] Emitting tournament_question for code=${code} with state.linkedQuizId=${state.linkedQuizId}`);
-    io.to(`tournament_${code}`).emit("tournament_question", {
-        question: q,
-        index: idx,
-        total: state.questions.length,
-        remainingTime: time, // Send full time initially
-        questionState: "active",
-        isQuizMode: !!state.linkedQuizId, // <--- Add this flag
-    });
+    sendTournamentQuestion(io, `tournament_${code}`, q, idx, state.questions.length, time, "active", !!state.linkedQuizId);
 
     // --- Timer logic removed from here for quiz-linked tournaments ---
     // The timer will be started/managed by triggerTournamentTimerSet

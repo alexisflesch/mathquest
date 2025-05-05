@@ -130,7 +130,12 @@ export default function PracticeSessionPage() {
                 <MathJaxWrapper>
                     {!practiceDone && practiceQuestions.length > 0 && (
                         <TournamentQuestionCard
-                            currentQuestion={practiceQuestions[practiceIndex]}
+                            currentQuestion={{
+                                uid: practiceQuestions[practiceIndex].uid,
+                                question: practiceQuestions[practiceIndex].question,
+                                type: practiceQuestions[practiceIndex].type,
+                                answers: Array.isArray(practiceQuestions[practiceIndex].reponses) ? practiceQuestions[practiceIndex].reponses.map(r => r.texte) : []
+                            }}
                             questionIndex={practiceIndex}
                             totalQuestions={practiceQuestions.length}
                             isMultipleChoice={isMultipleChoice}

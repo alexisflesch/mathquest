@@ -6,16 +6,8 @@ import WrongAnswer from '@/components/WrongAnswer';
 interface TournamentQuestion {
     uid: string;
     question: string;
-    reponses: { texte: string; correct?: boolean }[];
     type: string | undefined;
-    discipline: string;
-    theme: string;
-    difficulte: number;
-    niveau: string;
-    auteur?: string;
-    explication?: string;
-    tags?: string[];
-    temps?: number;
+    answers: string[]; // Only use the new backend format
 }
 
 interface StatsData {
@@ -68,18 +60,23 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
         userSelect: 'none' as const,    // Prevents text selection
     } : {};
 
+    // Use only the new backend format
+    const answers = Array.isArray(currentQuestion.answers) ? currentQuestion.answers : [];
+    console.debug('[TournamentQuestionCard] question:', currentQuestion);
+    console.debug('[TournamentQuestionCard] answers:', answers);
+
     return (
         <div className="tqcard-content w-full flex flex-col gap-6 items-center" style={readonlyStyle}>
             {/* Only show question number if not in quiz mode */}
             {!isQuizMode && (
                 <h3 className="text-2xl mb-2 font-bold">Question {questionIndex + 1} / {totalQuestions}</h3>
             )}
-            {/* Question text - enlever les styles de zoom */}
+            {/* Question text */}
             <div className="mb-4 text-xl font-semibold text-center w-full">
                 <MathJaxWrapper>{currentQuestion.question}</MathJaxWrapper>
             </div>
             <ul className="flex flex-col w-full">
-                {currentQuestion.reponses.map((rep, idx) => {
+                {answers.map((answerText, idx) => {
                     const isSelected = isMultipleChoice
                         ? selectedAnswers.includes(idx)
                         : selectedAnswer === idx;
@@ -93,7 +90,7 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                     return (
                         <li
                             key={idx}
-                            className={idx !== currentQuestion.reponses.length - 1 ? "mb-2" : ""}
+                            className={idx !== answers.length - 1 ? "mb-2" : ""}
                             style={{ position: 'relative' }}
                         >
                             <button
@@ -139,7 +136,7 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                                 )}
                                 {/* Button content above the bar */}
                                 <span style={{ display: 'inline-flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                                    <MathJaxWrapper>{rep.texte}</MathJaxWrapper>
+                                    <MathJaxWrapper>{answerText}</MathJaxWrapper>
                                 </span>
                                 {/* Right-aligned percentage and icon */}
                                 <span style={{ display: 'flex', alignItems: 'center', minWidth: 48, marginLeft: 'auto', position: 'relative', zIndex: 1 }}>

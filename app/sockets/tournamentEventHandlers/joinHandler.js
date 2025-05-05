@@ -4,6 +4,7 @@ const logger = createLogger('JoinTournamentHandler');
 const { tournamentState } = require('../tournamentUtils/tournamentState');
 const { calculateScore } = require('../tournamentUtils/tournamentHelpers'); // Import calculateScore
 const { emitQuizConnectedCount } = require('../quizUtils');
+const { sendTournamentQuestion } = require('../tournamentUtils/sendTournamentQuestion');
 
 async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar, isDiffered }) {
     logger.info(`join_tournament received`, { code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar, socketId: socket.id });
@@ -328,13 +329,12 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
             const q = state.questions[0];
             const time = q.temps || 20;
             state.currentQuestionDuration = time; // Set duration for the question
-            socket.emit("tournament_question", {
-                question: q,
-                index: 0,
-                total: state.questions.length,
-                remainingTime: time,
-                questionState: "active",
-            });
+            // Filter reponses for students (remove 'correct')
+            const filteredReponses = Array.isArray(q.reponses)
+                ? q.reponses.map(r => ({ texte: r.texte }))
+                : [];
+            const filteredQuestion = { ...q, reponses: filteredReponses };
+            sendTournamentQuestion(socket, null, q, 0, state.questions.length, time, "active");
             if (state.timer) clearTimeout(state.timer);
             state.timer = setTimeout(async function handleNextQuestion() { // Make async
                 const qIdx = state.currentIndex;
@@ -396,13 +396,12 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                     const nextTime = nextQ.temps || 20;
                     state.currentQuestionDuration = nextTime; // Update duration
                     logger.info(`Sending next question (idx: ${qIdx + 1}) for differed player ${joueurId} (socket ${socket.id}) in tournament ${code}`);
-                    socket.emit("tournament_question", {
-                        question: nextQ,
-                        index: qIdx + 1,
-                        total: state.questions.length,
-                        remainingTime: nextTime,
-                        questionState: "active",
-                    });
+                    // Filter reponses for students (remove 'correct')
+                    const filteredReponses2 = Array.isArray(nextQ.reponses)
+                        ? nextQ.reponses.map(r => ({ texte: r.texte }))
+                        : [];
+                    const filteredNextQuestion = { ...nextQ, reponses: filteredReponses2 };
+                    sendTournamentQuestion(socket, null, nextQ, qIdx + 1, state.questions.length, nextTime, "active");
                     state.timer = setTimeout(handleNextQuestion, nextTime * 1000);
                 } else {
                     // End of quiz for this user
@@ -545,14 +544,12 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
             }
 
             logger.info(`Sending question to joiner ${joueurId} (socket ${socket.id}) for tournament ${code}. Question ${idx} (${q.uid}), state: ${questionState}, remaining: ${remaining.toFixed(1)}s`);
-            socket.emit("tournament_question", {
-                question: q,
-                index: idx,
-                total: state.questions.length,
-                remainingTime: remaining,
-                questionState,
-                isQuizMode: !!state.linkedQuizId
-            });
+            // Filter reponses for students (remove 'correct')
+            const filteredReponses3 = Array.isArray(q.reponses)
+                ? q.reponses.map(r => ({ texte: r.texte }))
+                : [];
+            const filteredLiveQuestion = { ...q, reponses: filteredReponses3 };
+            sendTournamentQuestion(socket, null, q, idx, state.questions.length, remaining, questionState, !!state.linkedQuizId);
         } else {
             logger.info(`Live player ${joueurId} (socket ${socket.id}) joined tournament ${code} but current question index (${state?.currentIndex}) is invalid or questions array is empty`);
             // If tournament hasn't started (currentIndex is -1), they just wait.

@@ -314,7 +314,17 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     if (!layout || layout.length === 0) return <div className="p-8 text-orange-600">Aucun layout défini pour la projection.</div>;
 
     const currentQuestion = getCurrentQuestion();
-    const currentTournamentQuestion = currentQuestion as TournamentQuestion | null;
+    // Map to TournamentQuestionCard's expected format
+    const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
+        ? {
+            uid: currentQuestion.uid,
+            question: currentQuestion.question,
+            type: currentQuestion.type,
+            answers: Array.isArray(currentQuestion.reponses)
+                ? currentQuestion.reponses.map(r => r.texte)
+                : [],
+        }
+        : null;
     const currentQuestionUid = currentTournamentQuestion?.uid;
     const statsToShow = currentQuestionUid && showStats[currentQuestionUid] ? questionStats[currentQuestionUid] : undefined;
     const showStatsFlag = !!(currentQuestionUid && showStats[currentQuestionUid]);
@@ -416,9 +426,9 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                                         <TournamentQuestionCard
                                             key={questionKey}
                                             currentQuestion={currentTournamentQuestion}
-                                            questionIndex={quizState?.questions.findIndex(q => q.uid === currentTournamentQuestion.uid) ?? 0}
+                                            questionIndex={quizState?.questions.findIndex(q => q.uid === currentTournamentQuestion?.uid) ?? 0}
                                             totalQuestions={quizState?.questions.length ?? 0}
-                                            isMultipleChoice={currentTournamentQuestion.type === 'choix_multiple'}
+                                            isMultipleChoice={currentTournamentQuestion?.type === 'choix_multiple'}
                                             selectedAnswer={null}
                                             setSelectedAnswer={noopSetState}
                                             selectedAnswers={[]}

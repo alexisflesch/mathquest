@@ -23,7 +23,7 @@ import TournamentQuestionCard from '@/components/TournamentQuestionCard';
 
 
 // Create a logger for this component
-const logger = createLogger('Tournament');
+const logger = createLogger('TournamentLivePage');
 
 interface TournamentQuestion {
     uid: string;
@@ -185,47 +185,38 @@ export default function TournamentSessionPage() {
         s.emit("join_tournament", { code, cookie_id, pseudo, avatar, isDiffered });
 
         // Receive a new question
-        s.on("tournament_question", ({ question, index, total, remainingTime, questionState, isQuizMode }) => {
+        s.on("tournament_question", (payload) => {
             // Round timer to nearest second
-            const roundedTime = remainingTime != null ? Math.round(remainingTime) : 20;
-            logger.debug('tournament_question RECEIVED', {
-                questionId: question?.uid,
-                questionText: question?.question?.substring(0, 30) + (question?.question?.length > 30 ? '...' : ''),
-                index,
-                total,
-                remainingTime: roundedTime,
-                questionState,
-                responseCount: question?.reponses?.length,
-                isQuizMode, // <--- Log the received value
-            });
+            const roundedTime = payload.remainingTime != null ? Math.round(payload.remainingTime) : 20;
+            logger.debug('tournament_question RECEIVED', payload);
+            setCurrentQuestion(payload); // Pass the full payload, not just payload.question
 
-            if (!question) {
+            if (!payload.question) {
                 logger.error('Received tournament_question event with no question data');
                 return;
             }
 
-            setCurrentQuestion(question);
-            setQuestionIndex(index);
-            setTotalQuestions(total);
+            setQuestionIndex(payload.index);
+            setTotalQuestions(payload.total);
             setAnswered(false);
             setTimer(roundedTime);
             setWaiting(false);
-            setPaused(questionState === "paused");
-            pausedRef.current = questionState === "paused";
-            setIsQuizMode(!!isQuizMode); // <--- Store quiz mode
-            logger.info('UI setIsQuizMode', { isQuizMode: !!isQuizMode }); // <--- Log what is set in state
+            setPaused(payload.questionState === "paused");
+            pausedRef.current = payload.questionState === "paused";
+            setIsQuizMode(!!payload.isQuizMode); // <--- Store quiz mode
+            logger.info('UI setIsQuizMode', { isQuizMode: !!payload.isQuizMode }); // <--- Log what is set in state
 
             logger.debug('Updated state with question data', {
-                questionSet: !!question,
+                questionSet: !!payload.question,
                 timer: roundedTime,
-                paused: questionState === "paused"
+                paused: payload.questionState === "paused"
             });
 
             if (timerRef.current) {
                 clearInterval(timerRef.current);
                 timerRef.current = null;
             }
-            if (questionState === "paused") {
+            if (payload.questionState === "paused") {
                 // Do not start timer interval if paused
                 logger.debug('Timer not started because question is paused');
                 return;
@@ -723,6 +714,10 @@ export default function TournamentSessionPage() {
         };
     }, [socket]);
 
+    useEffect(() => {
+        logger.debug('CurrentQuestion state changed', currentQuestion);
+    }, [currentQuestion]);
+
     return (
         <div className="main-content">
             <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
@@ -734,23 +729,34 @@ export default function TournamentSessionPage() {
                     onClose={() => setSnackbarOpen(false)}
                 />
                 <MathJaxWrapper>
-                    {currentQuestion && (
-                        <TournamentQuestionCard
-                            currentQuestion={currentQuestion}
-                            questionIndex={questionIndex}
-                            totalQuestions={totalQuestions}
-                            isMultipleChoice={isMultipleChoice}
-                            selectedAnswer={selectedAnswer}
-                            setSelectedAnswer={setSelectedAnswer}
-                            selectedAnswers={selectedAnswers}
-                            setSelectedAnswers={setSelectedAnswers}
-                            handleSingleChoice={handleSingleChoice}
-                            handleSubmitMultiple={handleSubmitMultiple}
-                            answered={answered}
-                            isQuizMode={isQuizMode}
-                            correctAnswers={correctAnswers}
-                            readonly={readonly}
-                        />
+                    {currentQuestion ? (
+                        <>
+                            {logger.debug('Rendering TournamentQuestionCard', currentQuestion)}
+                            <TournamentQuestionCard
+                                currentQuestion={{
+                                    uid: currentQuestion.uid,
+                                    question: currentQuestion.question,
+                                    type: currentQuestion.type,
+                                    answers: Array.isArray(currentQuestion.reponses) ? currentQuestion.reponses.map(r => r.texte) : []
+                                }}
+                                questionIndex={questionIndex}
+                                totalQuestions={totalQuestions}
+                                isMultipleChoice={isMultipleChoice}
+                                selectedAnswer={selectedAnswer}
+                                setSelectedAnswer={setSelectedAnswer}
+                                selectedAnswers={selectedAnswers}
+                                setSelectedAnswers={setSelectedAnswers}
+                                handleSingleChoice={handleSingleChoice}
+                                handleSubmitMultiple={handleSubmitMultiple}
+                                answered={answered}
+                                isQuizMode={isQuizMode}
+                                correctAnswers={correctAnswers}
+                                readonly={readonly}
+                            />
+                        </>
+                    ) : (
+                        logger.debug('No currentQuestion, nothing to render'),
+                        <div className="text-center text-lg text-gray-500">Aucune question à afficher.</div>
                     )}
                 </MathJaxWrapper>
             </div>

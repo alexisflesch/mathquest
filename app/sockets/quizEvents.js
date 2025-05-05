@@ -84,8 +84,54 @@ function registerQuizEvents(io, socket, prisma) {
         const quizState = require('./quizState');
         logger.info(`Socket ${socket.id} requested quiz state for quiz ${quizId}`);
         if (quizState[quizId]) {
-            socket.emit("quiz_state", quizState[quizId]);
-            logger.debug(`Sent quiz state for quiz ${quizId}`, quizState[quizId]);
+            const state = quizState[quizId];
+            // Store the initial timer value if not present (for backward compatibility)
+            if (state.chrono && typeof state.chrono.timeLeft === 'number' && !state.timerInitialValue) {
+                state.timerInitialValue = state.chrono.timeLeft;
+            }
+            // Determine if this socket is a teacher/projector (full state) or student (filtered)
+            const isTeacherOrProjector = socket.rooms.has(`quiz_${quizId}`) || socket.rooms.has(`projection_${quizId}`);
+            if (!isTeacherOrProjector) {
+                // STUDENT: Only send current question (no correct answers)
+                const idx = state.currentQuestionIdx;
+                let question = null;
+                if (typeof idx === 'number' && state.questions && state.questions[idx]) {
+                    // Remove 'correct' field from answers
+                    const q = state.questions[idx];
+                    question = {
+                        uid: q.uid,
+                        texte: q.texte,
+                        type: q.type,
+                        answers: Array.isArray(q.answers)
+                            ? q.answers.map(a => ({ texte: a.texte }))
+                            : [],
+                    };
+                }
+                const filteredState = {
+                    currentQuestionIdx: idx,
+                    question,
+                    chrono: state.chrono,
+                    locked: state.locked,
+                    ended: state.ended,
+                };
+                socket.emit("quiz_state", filteredState);
+                logger.debug(`Sent filtered quiz state for quiz ${quizId} to student`, filteredState);
+                return;
+            }
+            // TEACHER/PROJECTOR: Full state, with timer patch
+            if (state.chrono && state.chrono.running && typeof state.timerInitialValue === 'number' && state.timerTimestamp) {
+                const now = Date.now();
+                const elapsed = Math.floor((now - state.timerTimestamp) / 1000);
+                const original = state.timerInitialValue;
+                const remaining = Math.max(original - elapsed, 0);
+                logger.info(`[get_quiz_state] Recalculated timeLeft: original=${original}s, elapsed=${elapsed}s, remaining=${remaining}s`);
+                const stateCopy = { ...state, chrono: { ...state.chrono, timeLeft: remaining }, timerTimeLeft: remaining };
+                socket.emit("quiz_state", stateCopy);
+                logger.debug(`Sent quiz state for quiz ${quizId}`, stateCopy);
+            } else {
+                socket.emit("quiz_state", state);
+                logger.debug(`Sent quiz state for quiz ${quizId}`, state);
+            }
         } else {
             logger.warn(`Quiz state requested for non-existent quiz ${quizId}`);
         }

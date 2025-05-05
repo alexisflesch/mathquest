@@ -28,3 +28,7 @@ bosser sur l'ui
 
 
 # Retester le mode entraînement libre (filtres en particulier)
+
+# Score
+
+Faire en sorte que le score max soit 1000 points (sauf quiz ?)
