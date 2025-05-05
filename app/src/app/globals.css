@@ -67,6 +67,8 @@ html[data-theme="dark"] {
   --dropdown: #2d3340;
   --dropdown-foreground: #f3f4f6;
   --badge-stepper-color: #5fbcd3;
+  /* Pour le react-grid-layout */
+  --grid-layout-background: #1a4962;
 }
 
 html[data-theme="dark"],
@@ -98,6 +100,7 @@ html[data-theme="light"] {
   --dropdown: #fff;
   --dropdown-foreground: #23272f;
   --badge-stepper-color: #153B50;
+  --grid-layout-background: #cce5ff;
 }
 
 html[data-theme="light"],
@@ -452,6 +455,32 @@ html[data-theme="light"] body {
   }
 }
 
+@layer components {
+  .icon-control-hover {
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    border-radius: 9999px;
+  }
+
+  .icon-control-hover:hover {
+    background: #fffbe6 !important;
+    color: #b45309 !important;
+    box-shadow: 0 2px 8px rgba(255, 200, 0, 0.10);
+  }
+
+  html[data-theme="dark"] .icon-control-hover:hover {
+    background: #3b2f14 !important;
+    color: #ffe066 !important;
+  }
+}
+
+@layer components {
+  .active-question-border {
+    border: 2.5px solid var(--primary) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: 0 0 0 2px var(--primary), 0 1px 2px 0 rgba(95, 188, 211, 0.08);
+  }
+}
+
 html,
 body {
   margin: 0;
@@ -802,7 +831,7 @@ textarea:focus {
 }
 
 .tqcard-answer-selected {
-  border: var(--navbar);
+  border: var (--navbar);
   box-shadow: 0 0 0 2px var(--navbar);
   background: var(--primary);
   color: var(--primary-foreground);
@@ -918,4 +947,21 @@ textarea:focus {
   transition-duration: 0.5s;
   transition-timing-function: ease-in-out;
   overflow: hidden;
+}
+
+.react-grid-item.react-draggable-dragging {
+  background-color: var(--grid-layout-background) !important;
+  /* jaune pâle par exemple */
+  transition: background-color 0.2s;
+}
+
+.react-grid-item.resizing {
+  background-color: var(--grid-layout-background) !important;
+  /* bleu clair */
+}
+
+.react-grid-placeholder {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  border: 2px dashed var(--grid-layout-background);
+  transition: background-color 0.2s;
 }

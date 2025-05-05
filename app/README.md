@@ -408,3 +408,32 @@ All components and routes now use only `mathquest_pseudo` and `mathquest_avatar`
 
 #### Troubleshooting
 - If students ever see a countdown in the lobby for a quiz-linked tournament, this indicates a UI bug or a misrouted event. The correct behavior is always an immediate redirect for quiz-linked tournaments.
+
+## Real-Time Room Naming Conventions
+
+MathQuest uses Socket.IO rooms to organize real-time communication between different roles (students, teachers, projector, lobby). The naming conventions are as follows:
+
+| Room Name                | Used For                        | Example                | Who Joins/Sends?         |
+|--------------------------|----------------------------------|------------------------|--------------------------|
+| `tournament_${code}`     | Live tournament participants     | tournament_123456      | Students (live), server  |
+| `quiz_${quizId}`         | Teacher dashboard (quiz control) | quiz_abc123            | Teacher dashboard, server|
+| `projection_${quizId}`   | Projector/classroom display      | projection_abc123      | Projector view, server   |
+| `${code}`                | Lobby waiting room               | 123456                 | Students (lobby), server |
+| `lobby_${code}`          | Quiz-linked tournament lobby     | lobby_123456           | Students (lobby), server |
+
+**Guidelines:**
+- All live gameplay events for students (questions, timer, results, etc.) are sent to `tournament_${code}`.
+- Teacher dashboard events (state, timer, lock/unlock, etc.) are sent to `quiz_${quizId}`.
+- Projector events are sent to `projection_${quizId}`.
+- Lobby events are sent to `${code}` or `lobby_${code}` depending on context.
+
+**Example:**
+- When a student joins a live tournament, they join `tournament_${code}`.
+- When a teacher controls a quiz, their dashboard joins `quiz_${quizId}`.
+- When showing the projector view, it joins `projection_${quizId}`.
+
+**Note:**
+- Always use the correct room for the intended audience to avoid leaking information (e.g., do not send the full leaderboard to all students).
+- When mapping between quiz and tournament, use the `tournament_code` field in the Quiz table and the `linkedQuizId` in the tournament state.
+
+---

@@ -4,7 +4,7 @@ const quizState = require('../quizState');
 const { tournamentState, triggerTournamentTimerSet } = require('../tournamentHandler');
 
 // Note: prisma is not needed here
-function handleResume(io, socket, prisma, { quizId, teacherId }) {
+function handleResume(io, socket, prisma, { quizId, teacherId, tournamentCode }) {
     if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
         logger.warn(`[ResumeQuiz] Unauthorized attempt for quiz ${quizId} from socket ${socket.id} (teacherId=${teacherId})`);
         return;
@@ -22,10 +22,11 @@ function handleResume(io, socket, prisma, { quizId, teacherId }) {
     quizState[quizId].timerStatus = 'play';
     quizState[quizId].timerTimestamp = Date.now(); // Reset timestamp for the new run period
     io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+    io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
     logger.debug(`[ResumeQuiz] Emitted quiz_state update for ${quizId}`);
 
-    // Find the *actual live* tournament code for this quiz
-    const code = Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
+    // Use tournamentCode from payload if present, else fallback
+    const code = tournamentCode || Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
     if (code) {
         logger.info(`[ResumeQuiz] Triggering timer set (resume) for linked tournament ${code} with timeLeft=${timeLeft}s`);
         // Use triggerTournamentTimerSet with forceActive=true to resume

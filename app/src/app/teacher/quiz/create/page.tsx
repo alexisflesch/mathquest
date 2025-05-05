@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import QuestionDisplay from '@/app/components/QuestionDisplay';
+import QuestionDisplay from '@/components/QuestionDisplay';
 import type { Question } from '@/types';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';

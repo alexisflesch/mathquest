@@ -11,10 +11,16 @@ const quizState = require('../quizState');
 const { tournamentState, triggerTournamentQuestion, triggerTournamentTimerSet } = require('../tournamentHandler'); // Ensure triggerTournamentTimerSet is imported
 const prisma = require('../../db'); // Ensure prisma is required
 
-async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, chrono, code, teacherId }) {
+async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, chrono, code: tournamentCode, teacherId }) {
     if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
-        logger.warn(`[SetQuestion] Unauthorized access for quiz ${quizId} from socket ${socket.id} (teacherId=${teacherId})`);
-        return;
+        // Fallback: check DB if teacherId matches quiz owner
+        const quiz = await prisma.quiz.findUnique({ where: { id: quizId }, select: { enseignant_id: true } });
+        if (!quiz || quiz.enseignant_id !== teacherId) {
+            logger.warn(`[SetQuestion] Unauthorized access for quiz ${quizId} from socket ${socket.id} (teacherId=${teacherId})`);
+            return;
+        }
+        // Update in-memory state for future requests
+        quizState[quizId].profTeacherId = teacherId;
     }
     // Update profSocketId to current socket
     quizState[quizId].profSocketId = socket.id;
@@ -26,7 +32,7 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, chro
     }
 
     const initialTime = typeof chrono === 'number' ? chrono : null;
-    logger.info(`[SetQuestion] Setting question ${questionUid} (idx: ${idx}) for quiz ${quizId}, time: ${initialTime}, code: ${code || 'none'}`);
+    logger.info(`[SetQuestion] Setting question ${questionUid} (idx: ${idx}) for quiz ${quizId}, time: ${initialTime}, code: ${tournamentCode || 'none'}`);
 
     // --- Update Quiz State --- 
     quizState[quizId].currentQuestionIdx = idx;
@@ -41,64 +47,63 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, chro
     quizState[quizId].ended = false;
 
     io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+    io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
     logger.debug(`[SetQuestion] Emitted quiz_state update for ${quizId}`);
 
     // --- Initialize or Update Tournament State using Triggers --- 
     // Always use the *actual live* tournament code for quiz-linked tournaments
-    let liveTournamentCode = code;
-    if (quizId) {
+    let liveTournamentCode = tournamentCode;
+    if (!liveTournamentCode && quizId) {
         const found = Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
         if (found) liveTournamentCode = found;
     }
     if (liveTournamentCode) {
         try {
-            // Check if tournament state needs initialization
-            if (!tournamentState[liveTournamentCode]) {
-                logger.info(`[SetQuestion] Initializing tournament state for code=${liveTournamentCode}`);
-                const tournoi = await prisma.tournoi.findUnique({ where: { code: liveTournamentCode } });
-                if (!tournoi) {
-                    logger.error(`[SetQuestion] Tournoi with code ${liveTournamentCode} not found in database for initialization.`);
-                    return;
-                }
-                if (!tournoi.questions_ids || tournoi.questions_ids.length === 0) {
-                    logger.error(`[SetQuestion] Tournoi ${liveTournamentCode} has no questions_ids defined.`);
-                    return;
-                }
-
-                const questions = await prisma.question.findMany({
-                    where: { uid: { in: tournoi.questions_ids } },
-                    // Ensure consistent order if needed, e.g., by order in questions_ids
-                    // This requires fetching questions individually or sorting post-fetch
-                    // For simplicity, using default order for now.
-                });
-
-                // Reorder questions based on tournoi.questions_ids
-                const orderedQuestions = tournoi.questions_ids.map(uid => questions.find(q => q.uid === uid)).filter(q => q);
-
-                if (orderedQuestions.length !== tournoi.questions_ids.length) {
-                    logger.warn(`[SetQuestion] Mismatch between questions_ids and found questions for tournoi ${liveTournamentCode}. Some questions might be missing.`);
-                }
-
-                tournamentState[liveTournamentCode] = {
-                    participants: {},
-                    questions: orderedQuestions, // Use ordered questions
-                    currentIndex: -1, // Will be set below
-                    started: true,
-                    answers: {},
-                    timer: null,
-                    questionStart: null,
-                    socketToJoueur: {},
-                    paused: false,
-                    pausedRemainingTime: null,
-                    linkedQuizId: quizId,
-                    currentQuestionDuration: null,
-                    stopped: false,
-                    statut: tournoi.statut, // Initialize status from DB
-                };
-                logger.info(`[SetQuestion] Tournament state initialized for ${liveTournamentCode} with ${orderedQuestions.length} questions.`);
-                // Emit redirect/started event *after* initialization and status update
-                // This logic is moved down to ensure state exists before emitting
+            // Always fetch tournoi at the top so it's in scope for all logic
+            const tournoi = await prisma.tournoi.findUnique({ where: { code: liveTournamentCode } });
+            if (!tournoi) {
+                logger.error(`[SetQuestion] Tournoi with code ${liveTournamentCode} not found in database for initialization.`);
+                return;
             }
+            if (!tournoi.questions_ids || tournoi.questions_ids.length === 0) {
+                logger.error(`[SetQuestion] Tournoi ${liveTournamentCode} has no questions_ids defined.`);
+                return;
+            }
+
+            const questions = await prisma.question.findMany({
+                where: { uid: { in: tournoi.questions_ids } },
+                // Ensure consistent order if needed, e.g., by order in questions_ids
+                // This requires fetching questions individually or sorting post-fetch
+                // For simplicity, using default order for now.
+            });
+
+            // Reorder questions based on tournoi.questions_ids
+            const orderedQuestions = tournoi.questions_ids.map(uid => questions.find(q => q.uid === uid)).filter(q => q);
+
+            if (orderedQuestions.length !== tournoi.questions_ids.length) {
+                logger.warn(`[SetQuestion] Mismatch between questions_ids and found questions for tournoi ${liveTournamentCode}. Some questions might be missing.`);
+            }
+
+            // Patch: preserve participants and socketToJoueur if they exist
+            const prevState = tournamentState[liveTournamentCode] || {};
+            tournamentState[liveTournamentCode] = {
+                ...prevState,
+                questions: orderedQuestions, // Use ordered questions
+                currentIndex: -1, // Will be set below
+                started: true,
+                answers: {},
+                timer: null,
+                questionStart: null,
+                paused: false,
+                pausedRemainingTime: null,
+                linkedQuizId: quizId,
+                currentQuestionDuration: null,
+                stopped: false,
+                statut: tournoi.statut, // Initialize status from DB
+            };
+            logger.info(`[SetQuestion] Tournament state initialized for ${liveTournamentCode} with ${orderedQuestions.length} questions.`);
+            // Emit redirect/started event *after* initialization and status update
+            // This logic is moved down to ensure state exists before emitting
 
             // Now tournamentState[liveTournamentCode] is guaranteed to exist
             const tournamentIdx = tournamentState[liveTournamentCode].questions.findIndex(q => q.uid === questionUid);
@@ -114,15 +119,18 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, chro
                 }
             }
 
-            // --- Always mark as started and emit redirect for quiz-linked tournaments ---
-            const tournoi = await prisma.tournoi.findUnique({ where: { code: liveTournamentCode } });
+            // --- Always mark as started for quiz-linked tournaments ---
             if (tournoi && tournoi.linkedQuizId && tournamentState[liveTournamentCode].statut !== 'en cours') {
-                logger.info(`[SetQuestion] Forcing statut 'en cours' and emitting redirect_to_tournament for quiz-linked tournament ${liveTournamentCode}`);
+                logger.info(`[SetQuestion] Forcing statut 'en cours' for quiz-linked tournament ${liveTournamentCode}`);
                 await prisma.tournoi.update({
                     where: { code: liveTournamentCode },
                     data: { statut: "en cours" }
                 });
                 tournamentState[liveTournamentCode].statut = 'en cours';
+            }
+            // Always emit redirect for quiz-linked tournaments
+            if (tournoi && tournoi.linkedQuizId) {
+                logger.info(`[SetQuestion] Emitting redirect_to_tournament for quiz-linked tournament ${liveTournamentCode} to lobby_${liveTournamentCode}`);
                 io.to(`lobby_${liveTournamentCode}`).emit("redirect_to_tournament", { code: liveTournamentCode });
             }
 

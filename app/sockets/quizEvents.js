@@ -19,6 +19,50 @@ const handleEnd = require('./quizEventHandlers/endHandler');
 const handlePause = require('./quizEventHandlers/pauseHandler');
 const handleResume = require('./quizEventHandlers/resumeHandler');
 const handleDisconnecting = require('./quizEventHandlers/disconnectingHandler'); // Added
+const handleCloseQuestion = require('./quizEventHandlers/closeQuestionHandler');
+
+// --- Shared quiz state initialization for dashboard and projector ---
+async function ensureQuizStateInitialized(quizId, prisma, socket, role = null, teacherId = null) {
+    const quizState = require('./quizState');
+    if (!quizState[quizId]) {
+        quizState[quizId] = {
+            currentQuestionIdx: null,
+            questions: [],
+            chrono: { timeLeft: null, running: false },
+            locked: false,
+            ended: false,
+            stats: {},
+            profSocketId: (role === 'prof' || role === 'teacher') ? socket.id : null,
+            profTeacherId: (role === 'prof' || role === 'teacher') ? teacherId : null,
+            timerStatus: null,
+            timerQuestionId: null,
+            timerTimeLeft: null,
+            timerTimestamp: null,
+            connectedSockets: new Set(),
+        };
+        try {
+            const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });
+            if (quiz && quiz.questions_ids) {
+                const orderedQuestions = [];
+                const questionsData = await prisma.question.findMany({ where: { uid: { in: quiz.questions_ids } } });
+                const questionMap = new Map(questionsData.map(q => [q.uid, q]));
+                quiz.questions_ids.forEach(uid => {
+                    if (questionMap.has(uid)) {
+                        orderedQuestions.push(questionMap.get(uid));
+                    }
+                });
+                quizState[quizId].questions = orderedQuestions;
+            }
+            if (quiz && quiz.tournament_code) {
+                quizState[quizId].tournament_code = quiz.tournament_code;
+            }
+        } catch (e) {
+            const logger = require('../logger')("QuizEvents");
+            logger.error(`[ensureQuizStateInitialized] Error loading quiz ${quizId} questions:`, e);
+        }
+    }
+    return quizState[quizId];
+}
 
 function registerQuizEvents(io, socket, prisma) {
     logger.info(`[DEBUG] registerQuizEvents for socket.id=${socket.id}`);
@@ -33,6 +77,7 @@ function registerQuizEvents(io, socket, prisma) {
     socket.on("quiz_pause", (payload) => handlePause(io, socket, prisma, payload));
     socket.on("quiz_resume", (payload) => handleResume(io, socket, prisma, payload));
     socket.on("disconnecting", () => handleDisconnecting(io, socket, prisma)); // Pass prisma if needed by handler
+    socket.on("quiz_close_question", (payload) => handleCloseQuestion(io, socket, payload));
 
     // Add handler for get_quiz_state event
     socket.on("get_quiz_state", ({ quizId }) => {
@@ -44,6 +89,34 @@ function registerQuizEvents(io, socket, prisma) {
         } else {
             logger.warn(`Quiz state requested for non-existent quiz ${quizId}`);
         }
+    });
+
+    // Add handler for updating tournament code from dashboard
+    socket.on("update_tournament_code", async ({ quizId, tournamentCode, teacherId, cookie_id }) => {
+        const quizState = require("./quizState");
+        if (!quizId || !tournamentCode) {
+            logger.warn(`[update_tournament_code] Missing quizId or tournamentCode`);
+            return;
+        }
+        if (!quizState[quizId]) {
+            logger.warn(`[update_tournament_code] No quizState found for quizId=${quizId}`);
+            return;
+        }
+        quizState[quizId].tournament_code = tournamentCode;
+        logger.info(`[update_tournament_code] Updated quizState[${quizId}].tournament_code to ${tournamentCode}`);
+    });
+
+    // Add handler for projector view joining the projection room
+    socket.on("join_projection", async ({ quizId, teacherId, cookie_id }) => {
+        socket.join(`projection_${quizId}`);
+        logger.info(`Socket ${socket.id} joined room projection_${quizId} (projector)`);
+        // Ensure quiz state is initialized for the projector
+        await ensureQuizStateInitialized(quizId, prisma, socket);
+        socket.emit("joined_room", {
+            room: `projection_${quizId}`,
+            socketId: socket.id,
+            rooms: Array.from(socket.rooms),
+        });
     });
 
     socket.on("quiz_reset_ended", ({ quizId }) => {

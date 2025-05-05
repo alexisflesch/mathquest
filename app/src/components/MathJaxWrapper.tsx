@@ -14,12 +14,17 @@
  *     {contentWithLatex}
  *   </MathJaxWrapper>
  *
+ * Zoom Support:
+ *   <MathJaxWrapper zoomFactor={1.5}>
+ *     {contentWithLatex}
+ *   </MathJaxWrapper>
+ *
  * Logging:
  *   Uses the clientLogger to log mount/unmount and any MathJax errors.
  *
  * See README.md for logging and documentation standards.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MathJaxContext, MathJax } from 'better-react-mathjax';
 import { createLogger } from '../clientLogger';
 import dynamic from 'next/dynamic';
@@ -54,11 +59,14 @@ const mathJaxConfig = {
 
 export interface MathJaxWrapperProps {
     children: React.ReactNode;
+    zoomFactor?: number; // Optional zoom factor prop
 }
 
 // Client-side only MathJax component
-const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children }) => {
+const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor = 1 }) => {
     const [isClient, setIsClient] = useState(false);
+    // Ref to track changes to zoomFactor
+    const prevZoomRef = useRef(zoomFactor);
 
     useEffect(() => {
         setIsClient(true);
@@ -68,12 +76,30 @@ const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children }) => {
         };
     }, []);
 
+    useEffect(() => {
+        // Log zoom factor changes
+        if (isClient && prevZoomRef.current !== zoomFactor) {
+            logger.debug(`MathJax zoom factor changed from ${prevZoomRef.current} to ${zoomFactor}`);
+            prevZoomRef.current = zoomFactor;
+        }
+    }, [zoomFactor, isClient]);
+
+    // Create an inline style for the container with scaling
+    const containerStyle: React.CSSProperties = {
+        fontSize: `${zoomFactor}rem`,
+    };
+
     return (
         <MathJaxContext config={mathJaxConfig} version={3}>
             {isClient ? (
-                <MathJax dynamic onError={err => logger.error('MathJax error', err)}>
-                    {children}
-                </MathJax>
+                <div style={containerStyle}>
+                    <MathJax
+                        dynamic={true}
+                        onError={err => logger.error('MathJax error', err)}
+                    >
+                        {children}
+                    </MathJax>
+                </div>
             ) : (
                 <span suppressHydrationWarning>{children}</span>
             )}

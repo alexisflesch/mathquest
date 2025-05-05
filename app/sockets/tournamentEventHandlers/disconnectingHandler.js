@@ -1,8 +1,10 @@
 const createLogger = require('../../logger');
 const logger = createLogger('DisconnectTournamentHandler');
 const { tournamentState } = require('../tournamentUtils/tournamentState');
+const { emitQuizConnectedCount } = require('../quizUtils');
+const prisma = require('../../db');
 
-function handleDisconnecting(io, socket) {
+async function handleDisconnecting(io, socket) {
     logger.info(`disconnecting: socket.id=${socket.id}`);
     // Find which tournament states this socket was part of
     for (const stateKey in tournamentState) {
@@ -12,6 +14,23 @@ function handleDisconnecting(io, socket) {
             logger.info(`Socket ${socket.id} (joueurId: ${joueurId}) disconnecting from tournament state ${stateKey}`);
             // Remove the socket mapping. Participant data remains for scoring (in live) or potential rejoin (in differed).
             delete state.socketToJoueur[socket.id];
+
+            // --- Emit real-time participant update to tournament room ---
+            // Only emit for live tournaments (not differed)
+            if (!state.isDiffered && state.participants) {
+                const participantsList = Object.values(state.participants).map(p => ({
+                    id: p.id,
+                    pseudo: p.pseudo,
+                    avatar: p.avatar,
+                }));
+                io.to(`tournament_${stateKey}`).emit("tournament_participants_update", {
+                    participants: participantsList,
+                    playerCount: participantsList.length
+                });
+            }
+
+            // Appeler emitQuizConnectedCount après qu'un étudiant rejoint le live
+            await emitQuizConnectedCount(io, prisma, stateKey);
 
             // If it's a differed state with no other sockets mapped to it, clean it up?
             // Let's NOT clean up differed state here, allow rejoin or timeout/end logic to handle it.

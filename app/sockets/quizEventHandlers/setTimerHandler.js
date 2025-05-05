@@ -4,7 +4,7 @@ const quizState = require('../quizState');
 const { tournamentState, triggerTournamentTimerSet } = require('../tournamentHandler');
 
 // Note: prisma is not needed here, so we don't pass it in registerQuizEvents
-function handleSetTimer(io, socket, prisma, { quizId, timeLeft, teacherId }) {
+function handleSetTimer(io, socket, prisma, { quizId, timeLeft, teacherId, tournamentCode }) {
     logger.info(`[SetTimer] Received quiz_set_timer for quiz ${quizId} with timeLeft=${timeLeft}s`);
 
     if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
@@ -43,9 +43,8 @@ function handleSetTimer(io, socket, prisma, { quizId, timeLeft, teacherId }) {
         logger.debug(`[SetTimer] Emitted quiz_state and quiz_timer_update for ${quizId}`);
     }
 
-    // --- Update Tournament State using Trigger --- 
-    // Find the *actual live* tournament code for this quiz
-    const code = Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
+    // Use tournamentCode from payload if present, else fallback
+    const code = tournamentCode || Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
     if (code) {
         logger.info(`[SetTimer] Triggering timer set for linked tournament ${code} with timeLeft=${timeLeft}s`);
         // Use triggerTournamentTimerSet. forceActive=false because we are just editing the time,

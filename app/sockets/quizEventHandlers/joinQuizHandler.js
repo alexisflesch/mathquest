@@ -48,10 +48,28 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
         } catch (e) {
             logger.error(`Error loading quiz ${quizId} questions:`, e);
         }
-    } else if (role === 'prof' || role === 'teacher') {
+    }
+
+    // Always update profTeacherId and profSocketId when the teacher dashboard joins
+    if (role === 'prof' || role === 'teacher') {
         quizState[quizId].profSocketId = socket.id;
         if (teacherId) quizState[quizId].profTeacherId = teacherId;
         logger.info(`Updated professor socket ID and teacherId for quiz ${quizId}`);
+    }
+
+    // Always ensure tournament_code is set in quizState
+    if (!quizState[quizId].tournament_code) {
+        try {
+            const quiz = await prisma.quiz.findUnique({ where: { id: quizId }, select: { tournament_code: true } });
+            if (quiz && quiz.tournament_code) {
+                quizState[quizId].tournament_code = quiz.tournament_code;
+                logger.info(`[JoinQuiz] Set tournament_code for quizId=${quizId}: ${quiz.tournament_code}`);
+            } else {
+                logger.warn(`[JoinQuiz] No tournament_code found in DB for quizId=${quizId}`);
+            }
+        } catch (e) {
+            logger.error(`[JoinQuiz] Error fetching tournament_code for quizId=${quizId}:`, e);
+        }
     }
 
     // --- Ajout du socket à la liste des connectés ---

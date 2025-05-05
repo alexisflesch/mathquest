@@ -54,11 +54,11 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
         const s = io({ path: "/api/socket/io", transports: ["websocket"] });
         setQuizSocket(s);
 
-        // Récupère l'id enseignant depuis le localStorage
+        // Always get both teacherId and cookie_id from localStorage
         const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-
-        logger.info(`[DEBUG][CLIENT] Emitting join_quiz for quizId=${quizId}, teacherId=${teacherId}`);
-        s.emit("join_quiz", { quizId, role: "teacher", teacherId });
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info(`[DEBUG][CLIENT] Emitting join_quiz for quizId=${quizId}, teacherId=${teacherId}, cookie_id=${cookie_id}`);
+        s.emit("join_quiz", { quizId, teacherId, role: 'teacher', cookie_id });
 
         s.on("connect", () => {
             logger.info(`Socket connected: ${s.id}`);
@@ -100,12 +100,34 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
     // --- State Synchronization ---
     useEffect(() => {
         if (!quizSocket) return;
+        logger.info('Socket info', {
+            id: quizSocket.id,
+        });
+        quizSocket.on("joined_room", ({ room, socketId }) => {
+            logger.info('joined_room', { room, socketId });
+        });
+
+        // Log all socket events for debugging
+        quizSocket.onAny((event, ...args) => {
+            logger.debug(`[SOCKET EVENT RECEIVED]`, event, args);
+        });
 
         const handleQuizState = (state: QuizState) => {
             logger.debug('Processing quiz_state', state);
             setQuizState(state);
 
-            // Sync timer state from the comprehensive quizState
+            // --- PATCH: If timer is stopped, always set localTimeLeft to 0 ---
+            if (
+                state.timerStatus === 'stop' ||
+                (state.chrono && state.chrono.timeLeft === 0 && state.chrono.running === false)
+            ) {
+                setTimerStatus('stop');
+                setLocalTimeLeft(0);
+                setTimeLeft(0);
+                return;
+            }
+
+            // ...existing logic for play/pause...
             if (state.timerQuestionId) {
                 setTimerQuestionId(state.timerQuestionId);
                 setTimerStatus(state.timerStatus || 'stop');
@@ -113,7 +135,6 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
                     setTimeLeft(state.timerTimeLeft);
                     setLocalTimeLeft(state.timerTimeLeft); // Sync local timer immediately
                 } else {
-                    // If timerTimeLeft is null/undefined in state, ensure local timer reflects this
                     setTimeLeft(0);
                     setLocalTimeLeft(null);
                 }
@@ -130,7 +151,6 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
                     setTimerStatus('stop');
                 }
             } else {
-                // No active question or timer info in quizState
                 setTimerQuestionId(null);
                 setTimerStatus('stop');
                 setTimeLeft(0);
@@ -143,7 +163,12 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             setTimerStatus(data.status);
             setTimerQuestionId(data.questionId);
             setTimeLeft(data.timeLeft);
-            setLocalTimeLeft(data.timeLeft); // Sync local timer
+            // Always sync localTimeLeft to 0 if stopped
+            if (data.status === 'stop' && data.timeLeft === 0) {
+                setLocalTimeLeft(0);
+            } else {
+                setLocalTimeLeft(data.timeLeft);
+            }
         };
 
         quizSocket.on("quiz_state", handleQuizState);
@@ -165,6 +190,7 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             quizSocket.off("quiz_timer_update", handleTimerUpdate);
             quizSocket.off("quiz_connected_count");
             quizSocket.off("connect"); // Clean up reconnect listener
+            quizSocket.offAny();
         };
     }, [quizSocket, quizId]);
 
@@ -226,9 +252,10 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
     // PATCH: Utilise l'UID pour set la question active
     const emitSetQuestion = useCallback((questionUid: string, chrono?: number) => {
         const code = tournamentCode;
-        const teacherId = getTeacherId();
-        logger.info('Emitting quiz_set_question', { quizId, questionUid, chrono, code, teacherId });
-        quizSocket?.emit("quiz_set_question", { quizId, questionUid, chrono, code, teacherId });
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info('Emitting quiz_set_question', { quizId, questionUid, chrono, code, teacherId, cookie_id });
+        quizSocket?.emit("quiz_set_question", { quizId, questionUid, chrono, code, teacherId, cookie_id });
         // Optimistic local timer update for immediate UI feedback
         setTimerQuestionId(questionUid);
         setTimerStatus('play');
@@ -239,39 +266,45 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
     }, [quizSocket, quizId, tournamentCode]);
 
     const emitEndQuiz = useCallback(() => {
-        const teacherId = getTeacherId();
-        logger.info('Emitting quiz_end', { quizId, teacherId });
-        quizSocket?.emit("quiz_end", { quizId, teacherId });
-    }, [quizSocket, quizId]);
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info('Emitting quiz_end', { quizId, teacherId, cookie_id, tournamentCode });
+        quizSocket?.emit("quiz_end", { quizId, teacherId, cookie_id, tournamentCode });
+    }, [quizSocket, quizId, tournamentCode]);
 
     const emitPauseQuiz = useCallback(() => {
-        const teacherId = getTeacherId();
-        logger.info('Emitting quiz_pause', { quizId, teacherId });
-        quizSocket?.emit("quiz_pause", { quizId, teacherId });
-    }, [quizSocket, quizId]);
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info('Emitting quiz_pause', { quizId, teacherId, cookie_id, tournamentCode });
+        quizSocket?.emit("quiz_pause", { quizId, teacherId, cookie_id, tournamentCode });
+    }, [quizSocket, quizId, tournamentCode]);
 
     const emitResumeQuiz = useCallback(() => {
-        const teacherId = getTeacherId();
-        logger.info('Emitting quiz_resume', { quizId, teacherId });
-        quizSocket?.emit("quiz_resume", { quizId, teacherId });
-    }, [quizSocket, quizId]);
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info('Emitting quiz_resume', { quizId, teacherId, cookie_id, tournamentCode });
+        quizSocket?.emit("quiz_resume", { quizId, teacherId, cookie_id, tournamentCode });
+    }, [quizSocket, quizId, tournamentCode]);
 
     const emitSetTimer = useCallback((newTime: number) => {
-        const teacherId = getTeacherId();
-        logger.info('Emitting quiz_set_timer', { quizId, timeLeft: newTime, teacherId });
-        quizSocket?.emit("quiz_set_timer", { quizId, timeLeft: newTime, teacherId });
-    }, [quizSocket, quizId]);
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info('Emitting quiz_set_timer', { quizId, timeLeft: newTime, teacherId, cookie_id, tournamentCode });
+        quizSocket?.emit("quiz_set_timer", { quizId, timeLeft: newTime, teacherId, cookie_id, tournamentCode });
+    }, [quizSocket, quizId, tournamentCode]);
 
     const emitTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
-        const teacherId = getTeacherId();
-        logger.info('Emitting quiz_timer_action', { ...action, quizId, teacherId });
-        quizSocket?.emit("quiz_timer_action", { ...action, quizId, teacherId });
-    }, [quizSocket, quizId]);
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info('Emitting quiz_timer_action', { ...action, quizId, teacherId, cookie_id, tournamentCode });
+        quizSocket?.emit("quiz_timer_action", { ...action, quizId, teacherId, cookie_id, tournamentCode });
+    }, [quizSocket, quizId, tournamentCode]);
 
     const emitUpdateTournamentCode = useCallback((newCode: string) => {
-        const teacherId = getTeacherId();
-        logger.info('Emitting update_tournament_code', { quizId, tournamentCode: newCode, teacherId });
-        quizSocket?.emit("update_tournament_code", { quizId, tournamentCode: newCode, teacherId });
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        logger.info('Emitting update_tournament_code', { quizId, tournamentCode: newCode, teacherId, cookie_id });
+        quizSocket?.emit("update_tournament_code", { quizId, tournamentCode: newCode, teacherId, cookie_id });
     }, [quizSocket, quizId]);
 
 

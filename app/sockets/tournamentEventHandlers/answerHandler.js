@@ -124,8 +124,10 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     }
 
     // Store the answer (overwrite previous answer for the same question if any)
+    // Defensive: check state.answers and state.answers[joueurId] before accessing
+    const alreadyAnswered = !!(state.answers && state.answers[joueurId] && state.answers[joueurId][questionUid]);
+    if (!state.answers) state.answers = {};
     if (!state.answers[joueurId]) state.answers[joueurId] = {};
-    const alreadyAnswered = !!state.answers[joueurId][questionUid];
     state.answers[joueurId][questionUid] = { answerIdx, clientTimestamp };
     logger.debug(`Stored answer for joueur ${joueurId} on question ${questionUid} in state ${stateKey}`);
 

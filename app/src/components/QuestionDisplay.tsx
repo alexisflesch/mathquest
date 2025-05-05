@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, Play, Pause, Square, Check, X, Pencil } from "lucide-react";
+import { Play, Pause, Square, Check, X, Pencil, Trophy } from "lucide-react";
 import { formatTime } from "@/utils"; // Assure-toi que ce chemin est correct
 import MathJaxWrapper from '@/components/MathJaxWrapper'; // Assure-toi que ce chemin est correct
 
@@ -35,6 +35,10 @@ export interface QuestionDisplayProps {
     showControls?: boolean; // hide timer/play/stop if false
     className?: string; // allow passing custom className
     showMeta?: boolean; // show metadata if true
+    zoomFactor?: number; // Add zoomFactor prop
+    onShowResults?: () => void; // Ajouté pour le bouton Trophy
+    showResultsDisabled?: boolean; // Désactive le bouton Trophy
+    correctAnswers?: number[]; // NEW: indices des réponses correctes à afficher (ex: [1,2])
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -52,11 +56,21 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     showControls = true,
     className = "",
     showMeta = false,
+    zoomFactor = 1, // Destructure zoomFactor with default
+    onShowResults, // Ajouté
+    showResultsDisabled = false, // Ajouté
+    correctAnswers,
 }) => {
 
     // Détermine l'état effectif des boutons play/pause
     const effectiveIsRunning = timerStatus === 'play';
     const effectiveIsPaused = timerStatus === 'pause';
+
+    // Helper: is this answer correct (from prop)?
+    const isAnswerCorrect = (idx: number) => {
+        if (Array.isArray(correctAnswers)) return correctAnswers.includes(idx);
+        return false;
+    };
 
     // Handler robuste pour le bouton play/pause
     const handlePlayPause = (e: React.MouseEvent) => {
@@ -97,6 +111,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         }
     }, [isOpen, question]);
 
+    // Base font sizes (adjust based on actual Tailwind classes used)
+    const baseTitleFontSize = '1rem'; // Assuming default size for title/cropped question
+    const baseQuestionFontSize = '1rem'; // Assuming default size for full question body
+    const baseAnswerFontSize = '1rem'; // Assuming default size for answer text
+    const baseJustificationFontSize = '0.875rem'; // Assuming text-sm for justification
+    const baseMetaFontSize = '0.75rem'; // Assuming text-xs for metadata
+
     // Affichage du timer (non éditable dans ce composant)
     const timerDisplay = (
         <span className="flex items-center gap-1">
@@ -109,8 +130,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             {/* Bouton pour demander l'édition (si callback fourni) */}
             {onEditTimerRequest && (
                 <button
-                    className="ml-1 p-1 rounded hover:bg-accent hover:text-accent-foreground"
-                    title="Éditer le temps"
+                    className="ml-1 p-1 icon-control-hover"
+                    title="Modifier le timer"
                     onClick={(e) => { e.stopPropagation(); onEditTimerRequest(); }}
                     tabIndex={-1}
                     type="button"
@@ -137,14 +158,16 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             aria-expanded={isOpen}
         >
             <div
-                className={`card w-full flex flex-col ${isActive ? 'question-selected' : ''} ${className}`}
+                className={`card w-full flex flex-col ${isActive ? 'active-question-border' : ''} ${className}`}
             >
                 <div className="flex flex-col">
                     <div className={`flex items-center justify-between gap-3 question-header ${isOpen ? 'no-bottom-border no-bottom-radius' : ''}`} style={{ paddingTop: 0, paddingBottom: 0 }}>
                         <div className="font-medium fade-right-bottom-crop relative" style={{ minHeight: '1.8em', marginLeft: 0, flexGrow: 0, paddingLeft: 0 }}>
                             {/* Animated cropped question for no-title case */}
                             {question.titre ? (
-                                <MathJaxWrapper>{question.titre}</MathJaxWrapper>
+                                <div style={{ fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})` }}>
+                                    <MathJaxWrapper>{question.titre}</MathJaxWrapper>
+                                </div>
                             ) : (
                                 <span
                                     style={{
@@ -155,7 +178,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         top: 0,
                                         zIndex: 2,
                                         transition: `transform ${isOpen ? '.5s' : '1s'} cubic-bezier(0.4,0,0.2,1)`,
-                                        transform: isOpen ? 'translateY(120px)' : 'translateY(0)'
+                                        transform: isOpen ? 'translateY(120px)' : 'translateY(0)',
+                                        fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
                                     }}
                                 >
                                     <MathJaxWrapper>{question.question}</MathJaxWrapper>
@@ -168,25 +192,43 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                 {timerDisplay}
                                 <button
                                     data-play-pause-btn
-                                    className={`p-1 rounded-full hover:bg-accent hover:text-accent-foreground transition-colors duration-150 ${isActive ? '' : 'text-muted-foreground'}`}
+                                    className={`p-1 icon-control-hover rounded-full transition-colors duration-150 ${isActive ? '' : 'text-muted-foreground'}`}
                                     onClick={handlePlayPause}
-                                    aria-label={effectiveIsRunning ? "Pause Question" : "Play Question"}
+                                    aria-label={effectiveIsRunning ? "Mettre en pause" : "Démarrer le chronomètre"}
+                                    title={effectiveIsRunning ? "Mettre en pause" : "Démarrer le chronomètre"}
                                     disabled={disabled}
                                 >
                                     {effectiveIsRunning ? <Pause size={20} /> : <Play size={20} />}
                                 </button>
                                 <button
                                     data-stop-btn
-                                    className="p-1 rounded-full hover:bg-alert hover:text-alert-foreground transition-colors duration-150"
+                                    className="p-1 icon-control-hover rounded-full transition-colors duration-150"
                                     onClick={(e) => { e.stopPropagation(); if (onStop) onStop(); }}
-                                    aria-label="Stop Question"
+                                    aria-label="Arrêter le chronomètre"
+                                    title="Arrêter le chronomètre"
                                     disabled={disabled || (!effectiveIsRunning && timerStatus !== 'pause')}
                                 >
                                     <Square size={20} />
                                 </button>
+                                {/* Trophy button for closing and showing results */}
+                                <button
+                                    type="button"
+                                    className="p-1 icon-control-hover rounded-full transition-colors duration-150 ml-1"
+                                    title="Clôturer la question et afficher les résultats"
+                                    aria-label="Clôturer la question et afficher les résultats"
+                                    onClick={e => { e.stopPropagation(); if (onShowResults) onShowResults(); }}
+                                    disabled={disabled || showResultsDisabled}
+                                >
+                                    <Trophy size={20} />
+                                </button>
                             </div>
                         ) : showMeta && metaString ? (
-                            <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{metaString}</span>
+                            <span
+                                className="text-xs text-muted-foreground whitespace-nowrap ml-2"
+                                style={{ fontSize: `calc(${baseMetaFontSize} * ${zoomFactor})` }}
+                            >
+                                {metaString}
+                            </span>
                         ) : null}
                     </div>
                     {/* Move the gap to the expanded content only */}
@@ -206,12 +248,15 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         isOpen ? "no-top-border" : ""
                                     ].join(" ")}
                                 >
-                                    <li className="mb-2 font-medium text-base text-couleur-global-neutral-700">
+                                    <li
+                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700"
+                                        style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
+                                    >
                                         <MathJaxWrapper>{question.question}</MathJaxWrapper>
                                     </li>
                                     {Array.isArray(question.reponses) && question.reponses.length > 0
                                         ? question.reponses.map((r, idx) => (
-                                            <li key={idx} className="flex gap-2 ml-4 mb-1">
+                                            <li key={idx} className="flex gap-2 ml-4 mb-1 items-center">
                                                 <span className="answer-icon">
                                                     {r.correct ? (
                                                         <Check size={18} strokeWidth={3} className="text-primary mt-1" />
@@ -219,21 +264,29 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                         <X size={18} strokeWidth={3} className="text-secondary mt-1" />
                                                     )}
                                                 </span>
-                                                <MathJaxWrapper>
-                                                    <span className="answer-text">{r.texte}</span>
-                                                </MathJaxWrapper>
+                                                <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
+                                                    <MathJaxWrapper>
+                                                        <span className="answer-text">{r.texte}</span>
+                                                    </MathJaxWrapper>
+                                                </div>
                                             </li>
                                         ))
                                         : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
                                     {question.justification && (
-                                        <div className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70">
+                                        <div
+                                            className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
+                                            style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
+                                        >
                                             <span className="font-semibold">Justification :</span> {question.justification}
                                         </div>
                                     )}
                                 </ul>
                             ) : (
                                 <>
-                                    <div className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2">
+                                    <div
+                                        className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2"
+                                        style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
+                                    >
                                         <MathJaxWrapper>{question.question}</MathJaxWrapper>
                                     </div>
                                     <ul
@@ -245,7 +298,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     >
                                         {Array.isArray(question.reponses) && question.reponses.length > 0
                                             ? question.reponses.map((r, idx) => (
-                                                <li key={idx} className="flex gap-2 ml-4 mb-1">
+                                                <li key={idx} className="flex gap-2 ml-4 mb-1 items-center">
                                                     <span className="answer-icon">
                                                         {r.correct ? (
                                                             <Check size={18} strokeWidth={3} className="text-primary mt-1" />
@@ -253,14 +306,19 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                             <X size={18} strokeWidth={3} className="text-secondary mt-1" />
                                                         )}
                                                     </span>
-                                                    <MathJaxWrapper>
-                                                        <span className="answer-text">{r.texte}</span>
-                                                    </MathJaxWrapper>
+                                                    <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
+                                                        <MathJaxWrapper>
+                                                            <span className="answer-text">{r.texte}</span>
+                                                        </MathJaxWrapper>
+                                                    </div>
                                                 </li>
                                             ))
                                             : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
                                         {question.justification && (
-                                            <div className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70">
+                                            <div
+                                                className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
+                                                style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
+                                            >
                                                 <span className="font-semibold">Justification :</span> {question.justification}
                                             </div>
                                         )}

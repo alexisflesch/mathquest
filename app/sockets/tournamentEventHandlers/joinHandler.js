@@ -96,6 +96,22 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
         socket.join(`tournament_${code}`);
     }
 
+    // Ensure state has required properties if it exists
+    if (state) {
+        if (!state.participants) {
+            logger.info(`State exists for ${stateKey}, but participants is undefined. Initializing empty participants object.`);
+            state.participants = {};
+        }
+        if (!state.answers) {
+            logger.info(`State exists for ${stateKey}, but answers is undefined. Initializing empty answers object.`);
+            state.answers = {};
+        }
+        if (!state.socketToJoueur) {
+            logger.info(`State exists for ${stateKey}, but socketToJoueur is undefined. Initializing empty socketToJoueur mapping.`);
+            state.socketToJoueur = {};
+        }
+    }
+
     // IMPORTANT: If no state exists but tournament is 'en cours', let's initialize it
     if (!state && tournoi.statut === 'en cours' && !isDiffered) { // Only initialize for live if missing
         logger.info(`Tournament ${code} is in progress but state not found. Creating state.`);
@@ -133,16 +149,16 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                 const quizState = require('../quizState');
                 if (quizState[linkedQuizId]) {
                     logger.info(`Found quiz state for linkedQuizId=${linkedQuizId}`);
-                    
+
                     // Get question index and timer value
                     const currentQuestionIdx = quizState[linkedQuizId].currentQuestionIdx;
                     if (typeof currentQuestionIdx === 'number' && currentQuestionIdx >= 0) {
                         // CRITICAL FIX: Get the current question UID from quizState
-                        initialQuestionUid = quizState[linkedQuizId].timerQuestionId || 
-                                            (quizState[linkedQuizId].questions[currentQuestionIdx]?.uid);
-                        
+                        initialQuestionUid = quizState[linkedQuizId].timerQuestionId ||
+                            (quizState[linkedQuizId].questions[currentQuestionIdx]?.uid);
+
                         logger.info(`Current question UID from quiz state: ${initialQuestionUid}`);
-                        
+
                         // Find the matching question index in our questions array using the UID
                         if (initialQuestionUid) {
                             const matchingQuestionIdx = questions.findIndex(q => q.uid === initialQuestionUid);
@@ -156,19 +172,19 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                             logger.warn(`No current question UID found in quiz state, using default index ${currentQuestionIdx}`);
                             initialQuestionIdx = currentQuestionIdx;
                         }
-                        
+
                         // Get timer value from quizState
                         if (quizState[linkedQuizId].chrono && typeof quizState[linkedQuizId].chrono.timeLeft === 'number') {
                             initialTimeLeft = quizState[linkedQuizId].chrono.timeLeft;
                             logger.info(`Using timeLeft=${initialTimeLeft}s from quiz state for tournament ${code}`);
                         }
-                        
+
                         // Calculate the questionStart time based on the timer value
                         if (typeof initialTimeLeft === 'number' && quizState[linkedQuizId].timerTimestamp) {
                             // Use timerTimestamp to reconstruct when the question actually started
                             const timeAllowed = questions[initialQuestionIdx]?.temps || 20;
                             const elapsed = timeAllowed - initialTimeLeft;
-                            
+
                             // Calculate the actual question start time by going back 'elapsed' seconds from timerTimestamp
                             initialQuestionStart = quizState[linkedQuizId].timerTimestamp - (elapsed * 1000);
                             logger.info(`Reconstructed questionStart time: ${new Date(initialQuestionStart).toISOString()}, elapsed=${elapsed}s, timeAllowed=${timeAllowed}s`);
@@ -245,6 +261,35 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
         }
     }
 
+    // DEBUG: Add detailed logging to diagnose the issue with participants
+    logger.info(`[CRITICAL DEBUG] Before accessing state.participants[joueurId]:`, {
+        stateKey,
+        joueurId,
+        // Remove reference to undefined question.uid
+        hasStateParticipants: !!state.participants,
+        participantKeys: state.participants ? Object.keys(state.participants) : [],
+        hasJoueurIdInParticipants: state.participants && state.participants[joueurId] ? true : false
+    });
+
+    if (!state.participants) {
+        logger.error(`[CRITICAL ERROR] state.participants is undefined or null for stateKey=${stateKey}`);
+        state.participants = {}; // Ensure it's initialized to prevent crash
+    }
+
+    if (!state.participants[joueurId]) {
+        logger.error(`[CRITICAL ERROR] Participant ${joueurId} not found in state.participants for tournament code=${code}, stateKey=${stateKey}`);
+        // Create the participant entry to prevent crash
+        state.participants[joueurId] = {
+            score: 0,
+            id: joueurId,
+            pseudo,
+            avatar,
+            isDiffered: true,
+            createdByFallback: true // Flag to track these fallback creations
+        };
+        logger.info(`Created fallback participant entry for joueurId=${joueurId}`);
+    }
+
     // 6. Add/update participant in the state
     if (!state.participants[joueurId]) {
         state.participants[joueurId] = {
@@ -261,8 +306,15 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
         state.participants[joueurId].isDiffered = isDiffered; // Ensure mode is correct
     }
 
+    // CRITICAL FIX: Double-check that socketToJoueur is initialized
+    if (!state.socketToJoueur) {
+        logger.warn(`socketToJoueur is undefined for state ${stateKey} even after initialization checks. Creating it now.`);
+        state.socketToJoueur = {};
+    }
+
     // Map current socket ID to joueurId for this state
     state.socketToJoueur[socket.id] = joueurId;
+    logger.info(`[JOIN_HANDLER] socketToJoueur mapping:`, { socketId: socket.id, joueurId, stateKey });
     logger.debug(`Mapped socket ${socket.id} to joueur ${joueurId} in state ${stateKey}`);
 
     // 7. Send current/first question
@@ -286,12 +338,46 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
             if (state.timer) clearTimeout(state.timer);
             state.timer = setTimeout(async function handleNextQuestion() { // Make async
                 const qIdx = state.currentIndex;
-                const question = state.questions[qIdx];
-                // --- SCORING: Evaluate latest answer for this user/question ---\
-                const answer = state.answers[joueurId]?.[question.uid];
-                const { baseScore, rapidity, totalScore } = calculateScore(question, answer, state.questionStart); // Use imported helper
 
-                if (!state.participants[joueurId]) state.participants[joueurId] = { score: 0, id: joueurId, pseudo, avatar, isDiffered: true }; // Ensure participant exists
+                // Safely get the current question
+                if (!state || !state.questions || qIdx < 0 || qIdx >= state.questions.length) {
+                    logger.error(`[DEFENSIVE] Invalid state or question index in timer callback for joueurId=${joueurId}`);
+                    return;
+                }
+
+                const question = state.questions[qIdx];
+                if (!question) {
+                    logger.error(`[DEFENSIVE] Question at index ${qIdx} is null or undefined for joueurId=${joueurId}`);
+                    return;
+                }
+
+                // Initialize answer with a safe default
+                let answer = undefined;
+
+                // CRITICAL FIX: Super defensive approach to avoid any TypeError
+                try {
+                    // Only try to access if every part of the path exists
+                    if (state.answers &&
+                        joueurId &&
+                        state.answers[joueurId] &&
+                        question.uid &&
+                        state.answers[joueurId][question.uid]) {
+
+                        answer = state.answers[joueurId][question.uid];
+                        logger.debug(`Found answer for joueur ${joueurId} on question ${question.uid}`);
+                    } else {
+                        logger.warn(`[DEFENSIVE] No answer found for joueurId=${joueurId}, questionUid=${question?.uid}`);
+                    }
+                } catch (err) {
+                    logger.error(`[DEFENSIVE] Error accessing answer for joueurId=${joueurId}, questionUid=${question?.uid}:`, err);
+                }
+
+                // Proceed with score calculation
+                const { baseScore, rapidity, totalScore } = calculateScore(question, answer, state.questionStart);
+
+
+
+                // Now safely update the score
                 state.participants[joueurId].score += totalScore;
                 logger.debug(`Score computed for joueur ${joueurId} on question ${question.uid} in state ${stateKey}: baseScore=${baseScore}, rapidity=${rapidity}, totalScore=${totalScore}`);
 
@@ -412,6 +498,16 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                 return;
             }
 
+            // Defensive: check state.answers and state.answers[joueurId] before accessing
+            let answer = undefined;
+            if (state.answers && state.answers[joueurId] && q && q.uid) {
+                answer = state.answers[joueurId][q.uid];
+            } else {
+                logger.warn(`[DEFENSIVE] state.answers or state.answers[${joueurId}] is undefined in handleJoinTournament (live join) for question ${q ? q.uid : 'unknown'}`);
+            }
+            // Optionally, you can calculate score or just log for now
+            // const { baseScore, rapidity, totalScore } = calculateScore(q, answer, state.questionStart);
+
             // Get the correct remaining time based on the current state
             let remaining = 0;
             let questionState = "active";
@@ -471,6 +567,20 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
 
     // Appeler emitQuizConnectedCount après qu'un étudiant rejoint le live
     await emitQuizConnectedCount(io, prisma, code);
+
+    // --- Emit real-time participant update to tournament room ---
+    // Only emit for live tournaments (not differed)
+    if (!isDiffered && state && state.participants) {
+        const participantsList = Object.values(state.participants).map(p => ({
+            id: p.id,
+            pseudo: p.pseudo,
+            avatar: p.avatar,
+        }));
+        io.to(`tournament_${code}`).emit("tournament_participants_update", {
+            participants: participantsList,
+            playerCount: participantsList.length
+        });
+    }
 }
 
 module.exports = handleJoinTournament;

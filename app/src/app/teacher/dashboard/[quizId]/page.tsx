@@ -152,25 +152,14 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         }
     }, [timerQuestionId]);
 
-    // --- Ensure join_quiz is always sent on dashboard load ---
-    useEffect(() => {
-        if (!quizSocket || !quizSocket.connected) return;
-        // Get teacher session ID from localStorage
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        logger.info('[DASHBOARD] Emitting join_quiz on mount', { quizId, teacherId });
-        quizSocket.emit('join_quiz', { quizId, teacherId });
-    }, [quizSocket, quizId]);
-
     // --- Handlers (using hook emitters) ---
 
     const handleSelect = useCallback((uid: string) => {
-        // Only update the visual selection, don't trigger socket events
         logger.info(`Manually selecting question with uid: ${uid}`);
         setQuestionActiveUid(uid);
     }, []);
 
     const handleReorder = useCallback((newQuestions: Question[]) => {
-        // Update local order only, does NOT inform the server yet
         logger.info("Questions reordered locally:", newQuestions.map(q => q.uid));
         setQuestions(newQuestions);
     }, []);
@@ -185,7 +174,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         const currentQuestionUid = timerQuestionId;
         const isTimerRunningOrPaused = timerStatus === 'play' || timerStatus === 'pause';
 
-        // Si on clique sur la question déjà sélectionnée
         if (currentQuestionUid === questionToPlay.uid) {
             if (timerStatus === 'play') {
                 logger.info('[handlePlay] Play on already running question: will pause');
@@ -208,72 +196,52 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
         logger.info(`[handlePlay] Starting timer for question ${questionToPlay.uid}`);
         setQuestionActiveUid(questionToPlay.uid);
-        emitSetQuestion(questionToPlay.uid, startTime); // ENVOIE L'UID UNIQUEMENT
-    }, [questions, timerStatus, timerQuestionId, emitPauseQuiz, emitResumeQuiz, emitSetQuestion]);
+        emitSetQuestion(questionToPlay.uid, startTime);
+    }, [questions, timerStatus, timerQuestionId, emitPauseQuiz, emitResumeQuiz, emitSetQuestion, currentTournamentCode]);
 
-    // Corrected signature: no index needed
     const handlePause = useCallback(() => {
         logger.info(`Pausing timer for question ${timerQuestionId}`);
         emitPauseQuiz();
     }, [timerQuestionId, emitPauseQuiz]);
 
-    // Corrected signature: no index needed
     const handleStop = useCallback(() => {
         if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
             logger.info(`Stopping timer for question ${timerQuestionId}`);
-            emitTimerAction({
-                status: 'stop',
-                questionId: timerQuestionId,
-                timeLeft: 0,
-            });
+            emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeft: 0 });
         } else {
             logger.warn("Cannot stop: No active question ID or timer already stopped.");
         }
     }, [timerStatus, timerQuestionId, emitTimerAction]);
 
-
-    // CHANGED: handleEditTimer now takes uid instead of idx
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
         const question = questions.find(q => q.uid === uid);
         if (!question) return;
-
         logger.info(`Editing timer for question ${uid} to ${newTime}s`);
-
-        // 1. Update local question state immediately for UI responsiveness
         setQuestions(prev => prev.map(q => q.uid === uid ? { ...q, temps: newTime } : q));
-
-        // 2. For active questions, update the server based on timer status
         if (timerQuestionId === question.uid) {
             if (timerStatus === 'pause') {
                 logger.info(`Updating paused timer value via timerAction: ${newTime}s`);
-                emitTimerAction({
-                    status: 'pause',
-                    questionId: question.uid,
-                    timeLeft: newTime,
-                });
+                emitTimerAction({ status: 'pause', questionId: question.uid, timeLeft: newTime });
             } else if (timerStatus === 'play') {
                 logger.info(`Updating running timer value via setTimer: ${newTime}s`);
                 emitSetTimer(newTime);
             } else {
-                // Pour les timers arrêtés (status = 'stop'), on utilise également emitSetTimer
-                // pour mettre à jour le temps sur le serveur
                 logger.info(`Updating stopped timer value via setTimer: ${newTime}s`);
                 emitSetTimer(newTime);
             }
-        } else {
-            // For non-active questions, we only update local state
-            // The new time will be used when this question is activated
-            logger.info(`Editing timer for non-active question ${question.uid}. Local 'temps' updated to ${newTime}s.`);
-            // No server emit needed - the server will get the updated time when the question is played
         }
-
     }, [questions, timerQuestionId, timerStatus, emitTimerAction, emitSetTimer]);
 
     const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
         logger.debug('handleTimerAction called from DraggableQuestionsList', action);
-        // Directly emit the action using the hook's emitter
         emitTimerAction(action);
     }, [emitTimerAction]);
+
+    const handleShowResults = useCallback((uid: string) => {
+        logger.info(`[handleShowResults] Clôturer la question et afficher les résultats`, { uid });
+        emitTimerAction({ status: 'stop', questionId: uid, timeLeft: 0 });
+        quizSocket?.emit('quiz_close_question', { quizId, tournamentCode: currentTournamentCode, questionUid: uid });
+    }, [emitTimerAction, quizSocket, quizId, currentTournamentCode]);
 
     // Callback from TournamentCodeManager when a new code is generated
     const handleCodeGenerated = useCallback((newCode: string | null) => {
@@ -299,7 +267,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             }
             if (questionToPlay) {
                 setQuestionActiveUid(questionToPlay.uid);
-                emitSetQuestion(questionToPlay.uid, questionToPlay.temps); // ENVOIE L'UID UNIQUEMENT
+                emitSetQuestion(questionToPlay.uid, questionToPlay.temps);
             }
             setPendingPlayIdx(null);
         }
@@ -396,8 +364,12 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                     Vous devez d&apos;abord générer un code pour pouvoir utiliser ce quiz.
                                 </div>
                             ) : (
-                                <div className="alert alert-success text-base-content">
-                                    Quiz en cours.
+                                <div className="alert alert-success text-base-content flex justify-between items-center">
+                                    <span>Quiz en cours.</span>
+                                    <a href={`/teacher/projection/${quizId}`} target="_blank" rel="noopener noreferrer"
+                                        className="text-primary underline font-medium">
+                                        Afficher la vue projecteur
+                                    </a>
                                 </div>
                             )}
                         </div>
@@ -425,13 +397,9 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 onReorder={handleReorder}
                                 onTimerAction={handleTimerAction}
                                 disabled={!quizSocket || !quizSocket.connected || quizState?.ended}
+                                onShowResults={handleShowResults}
+                                showResultsDisabled={() => false}
                             />
-                        </section>
-                        <section>
-                            <h2 className="text-xl font-semibold mb-2">Statistiques en temps réel</h2>
-                            <div className="bg-base-200 rounded p-4 text-base-content/80">
-                                <p>Statistiques à venir… (nombre de réponses, répartition, score moyen, taux de réussite)</p>
-                            </div>
                         </section>
                     </div>
                 </div>

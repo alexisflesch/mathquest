@@ -4,12 +4,18 @@ const quizState = require('../quizState');
 const { tournamentState, triggerTournamentPause, triggerTournamentTimerSet, triggerTournamentQuestion } = require('../tournamentHandler'); // Import triggerTournamentQuestion
 const prisma = require('../../db'); // Ensure prisma is required
 
-async function handleTimerAction(io, socket, prisma, { status, questionId, timeLeft, quizId, teacherId }) {
-    logger.info(`[TimerAction] Received: status=${status}, question=${questionId}, timeLeft=${timeLeft}, quizId=${quizId}, teacherId=${teacherId}`);
+async function handleTimerAction(io, socket, prisma, { status, questionId, timeLeft, quizId, teacherId, tournamentCode }) {
+    logger.info(`[TimerAction] Received: status=${status}, question=${questionId}, timeLeft=${timeLeft}, quizId=${quizId}, teacherId=${teacherId}, tournamentCode=${tournamentCode}`);
 
     if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
-        logger.warn(`[TimerAction] Unauthorized attempt for quiz ${quizId} from socket ${socket.id} (teacherId=${teacherId})`);
-        return;
+        // Fallback: check DB if teacherId matches quiz owner
+        const quiz = await prisma.quiz.findUnique({ where: { id: quizId }, select: { enseignant_id: true } });
+        if (!quiz || quiz.enseignant_id !== teacherId) {
+            logger.warn(`[TimerAction] Unauthorized attempt for quiz ${quizId} from socket ${socket.id} (teacherId=${teacherId})`);
+            return;
+        }
+        // Update in-memory state for future requests
+        quizState[quizId].profTeacherId = teacherId;
     }
     // Update profSocketId to current socket
     quizState[quizId].profSocketId = socket.id;
@@ -30,12 +36,19 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
         }
     }
 
+    // PATCH: If stopping, force all timer fields to 0
+    if (status === 'stop') {
+        quizState[quizId].timerTimeLeft = 0;
+        quizState[quizId].chrono.timeLeft = 0;
+        quizState[quizId].chrono.running = false;
+    } else {
+        quizState[quizId].timerTimeLeft = timeLeft;
+        quizState[quizId].chrono.timeLeft = timeLeft;
+        quizState[quizId].chrono.running = status === 'play';
+    }
     quizState[quizId].timerStatus = status;
     quizState[quizId].timerQuestionId = questionId;
-    quizState[quizId].timerTimeLeft = timeLeft;
     quizState[quizId].timerTimestamp = Date.now();
-    quizState[quizId].chrono.timeLeft = timeLeft;
-    quizState[quizId].chrono.running = status === 'play';
 
     io.to(`quiz_${quizId}`).emit("quiz_timer_update", {
         status,
@@ -43,8 +56,15 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
         timeLeft,
         timestamp: quizState[quizId].timerTimestamp,
     });
+    io.to(`projection_${quizId}`).emit("quiz_timer_update", {
+        status,
+        questionId,
+        timeLeft,
+        timestamp: quizState[quizId].timerTimestamp,
+    });
     io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
-    logger.debug(`[TimerAction] Emitted quiz_timer_update & quiz_state to quiz_${quizId}`);
+    io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
+    logger.debug(`[TimerAction] Emitted quiz_timer_update & quiz_state to quiz_${quizId} and projection_${quizId}`);
 
     // --- Update Tournament State using Triggers --- 
     try {
@@ -52,8 +72,8 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
             where: { id: quizId },
             select: { tournament_code: true }
         });
-        // Always use the *actual live* tournament code for quiz-linked tournaments
-        const code = Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
+        // Use tournamentCode from payload if present, else fallback
+        const code = tournamentCode || Object.keys(tournamentState).find(c => tournamentState[c] && tournamentState[c].linkedQuizId === quizId);
 
         if (code && tournamentState[code]) { // Ensure tournament state exists
             logger.info(`[TimerAction] Found linked tournament ${code}. Applying action: ${status}`);

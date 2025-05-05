@@ -1,10 +1,13 @@
 import React from "react";
+import MathJaxWrapper from '@/components/MathJaxWrapper';
+import GoodAnswer from '@/components/GoodAnswer';
+import WrongAnswer from '@/components/WrongAnswer';
 
 interface TournamentQuestion {
     uid: string;
     question: string;
     reponses: { texte: string; correct?: boolean }[];
-    type: string;
+    type: string | undefined;
     discipline: string;
     theme: string;
     difficulte: number;
@@ -27,7 +30,10 @@ interface TournamentQuestionCardProps {
     handleSingleChoice: (idx: number) => void;
     handleSubmitMultiple: () => void;
     answered: boolean;
-    isQuizMode?: boolean; // <--- Add optional prop
+    isQuizMode?: boolean; // Whether to show question numbers
+    readonly?: boolean;   // New prop to make the component display-only
+    zoomFactor?: number;  // Conservé pour compatibilité mais n'est plus utilisé
+    correctAnswers?: number[]; // Add this prop
 }
 
 const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
@@ -42,26 +48,42 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
     handleSingleChoice,
     handleSubmitMultiple,
     answered,
-    isQuizMode = true, // <--- Default to false
+    isQuizMode = true,
+    readonly = false,  // Default to interactive mode
+    zoomFactor = 1,    // Conservé mais n'est plus utilisé
+    correctAnswers = [], // Add default value
 }) => {
+    // For readonly mode, only block pointer events without affecting visual appearance
+    const readonlyStyle = readonly ? {
+        pointerEvents: 'none' as const, // Blocks all mouse interactions
+        userSelect: 'none' as const,    // Prevents text selection
+    } : {};
+
     return (
-        <div className="tqcard-content w-full flex flex-col gap-6 items-center">
+        <div className="tqcard-content w-full flex flex-col gap-6 items-center" style={readonlyStyle}>
             {/* Only show question number if not in quiz mode */}
             {!isQuizMode && (
                 <h3 className="text-2xl mb-2 font-bold">Question {questionIndex + 1} / {totalQuestions}</h3>
             )}
-            <div className="mb-4 text-xl font-semibold text-center">
-                {currentQuestion.question}
+            {/* Question text - enlever les styles de zoom */}
+            <div className="mb-4 text-xl font-semibold text-center w-full">
+                <MathJaxWrapper>{currentQuestion.question}</MathJaxWrapper>
             </div>
             <ul className="flex flex-col w-full">
                 {currentQuestion.reponses.map((rep, idx) => {
+                    // Show selection even in readonly mode
                     const isSelected = isMultipleChoice
                         ? selectedAnswers.includes(idx)
                         : selectedAnswer === idx;
+                    const isCorrect = correctAnswers.includes(idx);
+                    // Show wrong if selected but not correct (readonly mode)
+                    const showGood = readonly && isCorrect;
+                    const showWrong = readonly && isSelected && !isCorrect;
                     return (
                         <li
                             key={idx}
                             className={idx !== currentQuestion.reponses.length - 1 ? "mb-2" : ""}
+                            style={{ position: 'relative' }}
                         >
                             <button
                                 className={[
@@ -70,6 +92,7 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                                     isSelected ? "tqcard-answer-selected" : "tqcard-answer-unselected"
                                 ].join(" ")}
                                 onClick={() => {
+                                    if (readonly) return; // No action in readonly mode
                                     if (isMultipleChoice) {
                                         setSelectedAnswers((prev) =>
                                             prev.includes(idx)
@@ -81,8 +104,23 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                                     }
                                 }}
                                 disabled={false}
+                                aria-disabled={readonly}
+                                tabIndex={readonly ? -1 : 0}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                             >
-                                {rep.texte}
+                                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                    <MathJaxWrapper>{rep.texte}</MathJaxWrapper>
+                                </span>
+                                {showGood && (
+                                    <span className="badge bg-primary text-primary-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
+                                        <GoodAnswer size={18} iconColor="currentColor" />
+                                    </span>
+                                )}
+                                {showWrong && (
+                                    <span className="badge bg-alert text-alert-content ml-2 flex items-center justify-center" style={{ minWidth: 28, minHeight: 28, padding: 0 }}>
+                                        <WrongAnswer size={18} iconColor="currentColor" />
+                                    </span>
+                                )}
                             </button>
                         </li>
                     );
@@ -92,7 +130,8 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                 <button
                     className="btn btn-primary mt-2 self-end"
                     onClick={handleSubmitMultiple}
-                    disabled={selectedAnswers.length === 0}
+                    disabled={readonly || selectedAnswers.length === 0}
+                    aria-disabled={readonly || selectedAnswers.length === 0}
                 >
                     Valider
                 </button>
@@ -102,3 +141,4 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
 };
 
 export default TournamentQuestionCard;
+export type { TournamentQuestion };

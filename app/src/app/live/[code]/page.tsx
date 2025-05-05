@@ -67,7 +67,6 @@ export default function TournamentSessionPage() {
     const [snackbarMessage, setSnackbarMessage] = useState<string>("");
     const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
     const [paused, setPaused] = useState(false);
-    const [showResult, setShowResult] = useState(false);
     const pausedRef = useRef(paused);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -143,7 +142,6 @@ export default function TournamentSessionPage() {
             setQuestionIndex(0);
             setTotalQuestions(1);
             setAnswered(false);
-            setShowResult(false);
             setTimer(20); // Only set timer here, when question changes
             setWaiting(false);
             return;
@@ -153,6 +151,24 @@ export default function TournamentSessionPage() {
             transports: ["websocket"],
         });
         setSocket(s);
+        logger.info('Socket.IO client created and set in state', { socketInstance: !!s });
+
+        // Helper to emit join_tournament
+        const emitJoinTournament = () => {
+            let cookie_id = null;
+            let pseudo = null;
+            let avatar = null;
+            if (typeof window !== 'undefined') {
+                cookie_id = localStorage.getItem('mathquest_cookie_id');
+                pseudo = localStorage.getItem('mathquest_pseudo');
+                avatar = localStorage.getItem('mathquest_avatar');
+            }
+            s.emit("join_tournament", { code, cookie_id, pseudo, avatar, isDiffered });
+        };
+
+        // Emit join_tournament on initial connect and every reconnect
+        s.on("connect", emitJoinTournament);
+        emitJoinTournament();
 
         // Join the tournament room
         let cookie_id = null;
@@ -192,7 +208,6 @@ export default function TournamentSessionPage() {
             setQuestionIndex(index);
             setTotalQuestions(total);
             setAnswered(false);
-            setShowResult(false);
             setTimer(roundedTime);
             setWaiting(false);
             setPaused(questionState === "paused");
@@ -394,12 +409,10 @@ export default function TournamentSessionPage() {
             }
 
             setAnswered(true);
-            setShowResult(false); // Don't show result
         });
 
         // Receive tournament end
-        s.on("tournament_end", ({ finalScore }) => {
-            setShowResult(true);
+        s.on("tournament_end", () => {
             setCurrentQuestion(null);
             setWaiting(false);
             if (timerRef.current) clearInterval(timerRef.current);
@@ -436,6 +449,7 @@ export default function TournamentSessionPage() {
         });
 
         return () => {
+            s.off("connect", emitJoinTournament);
             s.disconnect();
             if (timerRef.current) clearInterval(timerRef.current);
         };
@@ -443,7 +457,11 @@ export default function TournamentSessionPage() {
 
     // --- SOCKET EVENTS LOGGING ---
     useEffect(() => {
-        if (!socket) return;
+        if (!socket) {
+            logger.warn('Socket is not set in state!');
+            return;
+        }
+        logger.info('Socket is set in state and ready for event listeners', { socketInstance: !!socket });
         // Log all socket events for debug
         socket.onAny((event, ...args) => {
             logger.debug(`socket event: ${event}`, args);
@@ -550,7 +568,6 @@ export default function TournamentSessionPage() {
         setSelectedAnswer(null);
         setSelectedAnswers([]);
         setSnackbarOpen(false);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentQuestion?.uid]);
 
     // Helper: is multiple choice
@@ -672,6 +689,40 @@ export default function TournamentSessionPage() {
         };
     }, [socket]);
 
+    // --- Trophy/correctAnswers logic for LIVE PAGE ---
+    // State for correct answers to show trophy
+    const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
+    // Track last question UID to clear trophy when question changes
+    const lastQuestionUidRef = useRef<string | null>(null);
+    const [readonly, setReadonly] = useState(false);
+
+    // Clear correctAnswers and readonly when question changes
+    useEffect(() => {
+        if (!currentQuestion?.uid) return;
+        if (lastQuestionUidRef.current !== currentQuestion.uid) {
+            setCorrectAnswers([]);
+            setReadonly(false);
+            lastQuestionUidRef.current = currentQuestion.uid;
+        }
+    }, [currentQuestion?.uid]);
+
+    // Listen for results/closed events to set correctAnswers and enable readonly
+    useEffect(() => {
+        if (!socket) return;
+        const handleResults = (data: { leaderboard?: unknown[]; correctAnswers?: number[] }) => {
+            if (Array.isArray(data.correctAnswers)) {
+                setCorrectAnswers(data.correctAnswers);
+                setReadonly(true);
+            }
+        };
+        socket.on('quiz_question_results', handleResults);
+        socket.on('quiz_question_closed', handleResults);
+        return () => {
+            socket.off('quiz_question_results', handleResults);
+            socket.off('quiz_question_closed', handleResults);
+        };
+    }, [socket]);
+
     return (
         <div className="main-content">
             <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
@@ -697,6 +748,8 @@ export default function TournamentSessionPage() {
                             handleSubmitMultiple={handleSubmitMultiple}
                             answered={answered}
                             isQuizMode={isQuizMode}
+                            correctAnswers={correctAnswers}
+                            readonly={readonly}
                         />
                     )}
                 </MathJaxWrapper>

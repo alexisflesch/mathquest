@@ -58,6 +58,8 @@ interface DraggableQuestionsListProps {
     onTimerAction?: (info: { status: 'play' | 'pause' | 'stop'; questionId: string; timeLeft: number }) => void;
     onImmediateUpdateActiveTimer?: (newTime: number) => void;
     disabled?: boolean;
+    onShowResults?: (uid: string) => void;
+    showResultsDisabled?: (uid: string) => boolean;
 }
 
 export default function DraggableQuestionsList({
@@ -78,6 +80,8 @@ export default function DraggableQuestionsList({
     onTimerAction,
     onImmediateUpdateActiveTimer,
     disabled,
+    onShowResults,
+    showResultsDisabled,
 }: DraggableQuestionsListProps) {
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -251,6 +255,8 @@ export default function DraggableQuestionsList({
                                 liveStatus={isActive ? timerStatus : undefined}
                                 onImmediateUpdateActiveTimer={handleImmediateUpdate}
                                 disabled={disabled || isPending}
+                                onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
+                                showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
                             />
                         );
                     })}

@@ -6,7 +6,7 @@ import type { Question, QuizState } from "../types";
 import { createLogger } from '@/clientLogger';
 import { formatTime } from "@/utils";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
-import QuestionDisplay from "@/app/components/QuestionDisplay"; // Import du nouveau composant
+import QuestionDisplay from "@/components/QuestionDisplay"; // Import du nouveau composant
 
 const logger = createLogger('SortableQuestion');
 
@@ -28,6 +28,8 @@ export interface SortableQuestionProps {
     liveStatus?: 'play' | 'pause' | 'stop';
     onImmediateUpdateActiveTimer?: (newTime: number) => void; // Gardé pour la synchro active
     disabled?: boolean;
+    onShowResults?: () => void;
+    showResultsDisabled?: boolean;
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -63,7 +65,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, /* onSelect, */ onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, /* onSelect, */ onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled }: SortableQuestionProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(q.uid)
     });
@@ -285,9 +287,8 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
         <li
             ref={setNodeRef}
             style={style}
-            className={`flex flex-row items-start select-none transition-all duration-150 ease-in-out ${isDragging ? 'opacity-70' : ''} ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`flex flex-row items-start select-none transition-all duration-150 ease-in-out${isDragging ? ' opacity-70' : ''}${disabled ? ' opacity-50 pointer-events-none' : ''}`}
             {...attributes} // Attributs pour dnd-kit
-        // onClick et onKeyDown sont gérés DANS QuestionDisplay maintenant (ou pas du tout si drag handle)
         >
             {/* --- Drag Handle (extérieur à QuestionDisplay) --- */}
             <button
@@ -313,17 +314,17 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
                         className="question-dashboard"
                         question={q}
                         isOpen={open}
-                        onToggleOpen={setOpen} // Passe la fonction pour ouvrir/fermer
-                        // Détermine le statut à passer à QuestionDisplay
+                        onToggleOpen={setOpen}
                         timerStatus={(isActive ? liveStatus : 'stop') ?? 'stop'}
-                        // Utilise la valeur en attente ou la valeur synchronisée pour l'affichage
                         timeLeft={displayedTimeLeft}
-                        onPlay={handlePlayWithCurrentTime} // Passe le handler custom
-                        onPause={handlePauseClick} // Passe le handler simple
-                        onStop={onStop} // Passe directement le prop
+                        onPlay={handlePlayWithCurrentTime}
+                        onPause={handlePauseClick}
+                        onStop={onStop}
                         isActive={isActive}
                         disabled={disabled}
-                        onEditTimerRequest={handleEditTimerRequest} // Passe le handler pour demander l'édition
+                        onEditTimerRequest={handleEditTimerRequest}
+                        onShowResults={onShowResults}
+                        showResultsDisabled={showResultsDisabled}
                     />
                 )}
                 {/* Affiche les réponses si en mode édition ET si elles sont ouvertes */}
