@@ -40,6 +40,7 @@ export interface QuestionDisplayProps {
     showResultsDisabled?: boolean; // Désactive le bouton Trophy
     correctAnswers?: number[]; // NEW: indices des réponses correctes à afficher (ex: [1,2])
     onStatsToggle?: (isDisplayed: boolean) => void; // NEW: callback for stats toggle
+    stats?: number[]; // NEW: answer stats (count per answer)
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -62,6 +63,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     showResultsDisabled = false, // Ajouté
     correctAnswers,
     onStatsToggle, // NEW: destructure onStatsToggle
+    stats, // NEW: destructure stats
 }) => {
 
     // Détermine l'état effectif des boutons play/pause
@@ -153,6 +155,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
     // --- Stats display toggle state (for ChartBarBig) ---
     const [isStatsDisplayed, setIsStatsDisplayed] = useState(false);
+
+    // Compute stats bar widths
+    // The server already sends stats as percentages (0-100)
+    const getBarWidth = (idx: number) => {
+        if (!stats || typeof stats[idx] !== 'number') return 0;
+        return stats[idx]; // Already a percentage
+    };
 
     // Handler for ChartBarBig click
     const handleStatsToggle = (e: React.MouseEvent) => {
@@ -282,18 +291,41 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     </li>
                                     {Array.isArray(question.reponses) && question.reponses.length > 0
                                         ? question.reponses.map((r, idx) => (
-                                            <li key={idx} className="flex gap-2 ml-4 mb-1 items-center">
-                                                <span className="answer-icon">
-                                                    {r.correct ? (
-                                                        <Check size={18} strokeWidth={3} className="text-primary mt-1" />
-                                                    ) : (
-                                                        <X size={18} strokeWidth={3} className="text-secondary mt-1" />
+                                            <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
+                                                <div className="flex gap-2 items-center relative z-10 w-full">
+                                                    {/* Percentage before icon, rounded to nearest integer */}
+                                                    {typeof stats !== 'undefined' && (
+                                                        <span className="font-semibold text-xs text-couleur-global-neutral-700" style={{ minWidth: 32, textAlign: 'right' }}>
+                                                            {Math.round(getBarWidth(idx))}%
+                                                        </span>
                                                     )}
-                                                </span>
-                                                <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
-                                                    <MathJaxWrapper>
-                                                        <span className="answer-text">{r.texte}</span>
-                                                    </MathJaxWrapper>
+                                                    <span className="answer-icon flex items-center">
+                                                        {r.correct ? (
+                                                            <Check size={18} strokeWidth={3} className="text-primary" />
+                                                        ) : (
+                                                            <X size={18} strokeWidth={3} className="text-secondary" />
+                                                        )}
+                                                    </span>
+                                                    {/* Histogram bar as background, but starting after the icon */}
+                                                    {typeof stats !== 'undefined' && (
+                                                        <div
+                                                            className="absolute left-0 top-1/2 -translate-y-1/2 rounded z-0"
+                                                            style={{
+                                                                left: 64, // 32px for percent + 32px for icon (adjust if needed)
+                                                                width: `calc(${getBarWidth(idx)}% - 64px)`,
+                                                                height: 'calc(100%)', // a few pixels taller than the row
+                                                                background: 'var(--bar-stat, #888)',
+                                                                opacity: 0.25,
+                                                                transition: 'width 0.3s',
+                                                                pointerEvents: 'none',
+                                                            }}
+                                                        />
+                                                    )}
+                                                    <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
+                                                        <MathJaxWrapper>
+                                                            <span className="answer-text">{r.texte}</span>
+                                                        </MathJaxWrapper>
+                                                    </div>
                                                 </div>
                                             </li>
                                         ))
@@ -324,18 +356,41 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     >
                                         {Array.isArray(question.reponses) && question.reponses.length > 0
                                             ? question.reponses.map((r, idx) => (
-                                                <li key={idx} className="flex gap-2 ml-4 mb-1 items-center">
-                                                    <span className="answer-icon">
-                                                        {r.correct ? (
-                                                            <Check size={18} strokeWidth={3} className="text-primary mt-1" />
-                                                        ) : (
-                                                            <X size={18} strokeWidth={3} className="text-secondary mt-1" />
+                                                <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
+                                                    <div className="flex gap-2 items-center relative z-10 w-full">
+                                                        {/* Percentage before icon, rounded to nearest integer */}
+                                                        {typeof stats !== 'undefined' && (
+                                                            <span className="font-semibold text-xs text-couleur-global-neutral-700" style={{ minWidth: 32, textAlign: 'right' }}>
+                                                                {Math.round(getBarWidth(idx))}%
+                                                            </span>
                                                         )}
-                                                    </span>
-                                                    <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
-                                                        <MathJaxWrapper>
-                                                            <span className="answer-text">{r.texte}</span>
-                                                        </MathJaxWrapper>
+                                                        <span className="answer-icon flex items-center">
+                                                            {r.correct ? (
+                                                                <Check size={18} strokeWidth={3} className="text-primary" />
+                                                            ) : (
+                                                                <X size={18} strokeWidth={3} className="text-secondary" />
+                                                            )}
+                                                        </span>
+                                                        {/* Histogram bar as background, but starting after the icon */}
+                                                        {typeof stats !== 'undefined' && (
+                                                            <div
+                                                                className="absolute left-0 top-1/2 -translate-y-1/2 rounded z-0"
+                                                                style={{
+                                                                    left: 64, // 32px for percent + 32px for icon (adjust if needed)
+                                                                    width: `calc(${getBarWidth(idx)}% - 64px)`,
+                                                                    height: 'calc(100% + 6px)', // a few pixels taller than the row
+                                                                    background: 'var(--bar-stat, #888)',
+                                                                    opacity: 0.25,
+                                                                    transition: 'width 0.3s',
+                                                                    pointerEvents: 'none',
+                                                                }}
+                                                            />
+                                                        )}
+                                                        <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
+                                                            <MathJaxWrapper>
+                                                                <span className="answer-text">{r.texte}</span>
+                                                            </MathJaxWrapper>
+                                                        </div>
                                                     </div>
                                                 </li>
                                             ))

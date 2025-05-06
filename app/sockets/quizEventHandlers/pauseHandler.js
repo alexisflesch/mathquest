@@ -2,6 +2,7 @@ const createLogger = require('../../logger');
 const logger = createLogger('PauseQuizHandler');
 const quizState = require('../quizState');
 const { tournamentState, triggerTournamentPause } = require('../tournamentHandler');
+const { patchQuizStateForBroadcast } = require('../quizUtils');
 
 // Note: prisma is not needed here
 function handlePause(io, socket, prisma, { quizId, teacherId, tournamentCode }) {
@@ -38,7 +39,7 @@ function handlePause(io, socket, prisma, { quizId, teacherId, tournamentCode }) 
             // Update quiz state flags and emit
             quizState[quizId].chrono.running = false;
             quizState[quizId].timerStatus = 'pause';
-            io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+            io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
             io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
             logger.debug(`[PauseQuiz] Emitted quiz_state update for ${quizId}`);
 
@@ -77,7 +78,7 @@ function handlePause(io, socket, prisma, { quizId, teacherId, tournamentCode }) 
     // Update quiz state flags and emit
     quizState[quizId].chrono.running = false;
     quizState[quizId].timerStatus = 'pause';
-    io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+    io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
     io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
     logger.debug(`[PauseQuiz] Emitted quiz_state update for ${quizId}`);
 

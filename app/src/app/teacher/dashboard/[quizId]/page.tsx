@@ -54,6 +54,22 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         connectedCount, // Ajout du compteur de connectés
     } = useTeacherQuizSocket(quizId, currentTournamentCode); // Pass quizId and current code to hook
 
+    // --- Stats state for answer histograms ---
+    type StatsData = { stats: number[]; totalAnswers: number };
+    const [questionStats, setQuestionStats] = useState<Record<string, StatsData>>({});
+
+    // Listen for stats updates from the socket
+    useEffect(() => {
+        if (!quizSocket) return;
+        const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
+            setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
+        };
+        quizSocket.on('quiz_answer_stats_update', handleStatsUpdate);
+        return () => {
+            quizSocket.off('quiz_answer_stats_update', handleStatsUpdate);
+        };
+    }, [quizSocket]);
+
     // --- Initial Data Fetching (Quiz Name, Questions, Initial Code) ---
     useEffect(() => {
         let isMounted = true;
@@ -402,6 +418,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 disabled={!quizSocket || !quizSocket.connected || quizState?.ended}
                                 onShowResults={handleShowResults}
                                 showResultsDisabled={() => false}
+                                // Always show stats if available
+                                getStatsForQuestion={uid => questionStats[uid]?.stats}
                                 onStatsToggle={(uid, show) => {
                                     logger.info(`[DASHBOARD] Emitting quiz_toggle_stats`, { quizId, questionUid: uid, show });
                                     if (quizSocket && quizId) {

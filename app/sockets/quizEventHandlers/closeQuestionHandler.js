@@ -33,33 +33,20 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
         return;
     }
 
-    // --- PATCH: Get leaderboard from tournamentState if available ---
+    // --- PATCH: Get leaderboard from tournamentState if available, using shared utility ---
     let leaderboard = [];
     let playerCount = 0; // <-- NEW: Track number of players
     try {
         const { tournamentState } = require('../tournamentHandler');
+        const { computeLeaderboard } = require('../tournamentUtils/computeLeaderboard');
         const tState = tournamentState[tournamentCode];
         if (tState && tState.participants) {
-            leaderboard = Object.values(tState.participants)
-                .map(p => ({
-                    id: p.id,
-                    pseudo: p.pseudo,
-                    avatar: p.avatar ? (p.avatar.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`) : undefined,
-                    score: p.score
-                }))
-                .sort((a, b) => b.score - a.score);
-            playerCount = leaderboard.length; // <-- NEW
+            leaderboard = computeLeaderboard(tState);
+            playerCount = leaderboard.length;
         } else {
             logger.warn(`[CloseQuestion] No tournamentState or participants for code ${tournamentCode}, falling back to quizState leaderboard.`);
-            leaderboard = Object.values(state.participants || {})
-                .map(p => ({
-                    id: p.id,
-                    pseudo: p.pseudo,
-                    avatar: p.avatar ? (p.avatar.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`) : undefined,
-                    score: p.score
-                }))
-                .sort((a, b) => b.score - a.score);
-            playerCount = leaderboard.length; // <-- NEW
+            leaderboard = computeLeaderboard(state); // fallback: use quizState participants
+            playerCount = leaderboard.length;
         }
     } catch (err) {
         logger.error(`[CloseQuestion] Error fetching leaderboard from tournamentState:`, err);

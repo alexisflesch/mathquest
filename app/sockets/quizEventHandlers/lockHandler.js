@@ -1,6 +1,7 @@
 const createLogger = require('../../logger');
 const logger = createLogger('LockQuizHandler');
 const quizState = require('../quizState');
+const { patchQuizStateForBroadcast } = require('../quizUtils');
 
 // Note: prisma is not needed here
 function handleLock(io, socket, prisma, { quizId }) {
@@ -11,7 +12,7 @@ function handleLock(io, socket, prisma, { quizId }) {
 
     logger.info(`Locking quiz ${quizId}`);
     quizState[quizId].locked = true;
-    io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+    io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
 }
 
 module.exports = handleLock;

@@ -733,12 +733,7 @@ export default function TournamentSessionPage() {
                         <>
                             {logger.debug('Rendering TournamentQuestionCard', currentQuestion)}
                             <TournamentQuestionCard
-                                currentQuestion={{
-                                    uid: currentQuestion.uid,
-                                    question: currentQuestion.question,
-                                    type: currentQuestion.type,
-                                    answers: Array.isArray(currentQuestion.reponses) ? currentQuestion.reponses.map(r => r.texte) : []
-                                }}
+                                currentQuestion={currentQuestion}
                                 questionIndex={questionIndex}
                                 totalQuestions={totalQuestions}
                                 isMultipleChoice={isMultipleChoice}

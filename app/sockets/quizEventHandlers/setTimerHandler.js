@@ -2,6 +2,7 @@ const createLogger = require('../../logger');
 const logger = createLogger('SetTimerHandler');
 const quizState = require('../quizState');
 const { tournamentState, triggerTournamentTimerSet } = require('../tournamentHandler');
+const { patchQuizStateForBroadcast } = require('../quizUtils');
 
 // Note: prisma is not needed here, so we don't pass it in registerQuizEvents
 function handleSetTimer(io, socket, prisma, { quizId, timeLeft, teacherId, tournamentCode }) {
@@ -32,7 +33,8 @@ function handleSetTimer(io, socket, prisma, { quizId, timeLeft, teacherId, tourn
     }
 
     // Emit updated quiz state and specific timer update
-    io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+    // Patch: Recalculate timer for dashboard broadcast
+    io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
     if (quizState[quizId].timerQuestionId) {
         io.to(`quiz_${quizId}`).emit("quiz_timer_update", {
             status: quizState[quizId].chrono.running ? 'play' : 'pause',

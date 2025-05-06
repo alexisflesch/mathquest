@@ -293,9 +293,12 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     // const formatTime = (seconds: number | null): string => { ... };
 
     // Get current question from quiz state
-    const getCurrentQuestion = (): Question | null => { // Explicit return type Question
-        if (!quizState || !timerQuestionId) return null;
-        return quizState.questions.find(q => q.uid === timerQuestionId) || null;
+    const getCurrentQuestion = (): Question | null => {
+        if (!quizState || !timerQuestionId) {
+            return null;
+        }
+        const found = quizState.questions.find(q => q.uid === timerQuestionId) || null;
+        return found;
     };
 
     // Empty handler functions (needed for props but won't be used because of readonly mode)
@@ -333,7 +336,6 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     const tournamentUrl = currentTournamentCode ? `${baseUrl}/live/${currentTournamentCode}` : '';
 
     return (
-        // Ne plus envelopper toute la page avec MathJaxWrapper
         <div className="main-content w-full max-w-none px-0">
             {!currentTournamentCode ? (
                 <div className="alert alert-warning justify-center m-4">
@@ -360,7 +362,6 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                     onDragStart={(layout, oldItem, newItem) => {
                         bringToFront(newItem.i);
                     }}
-                // Suppression des props resizeHandles et resizeHandle
                 >
                     {/* Live-timer */}
                     <div

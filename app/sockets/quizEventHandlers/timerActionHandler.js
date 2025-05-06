@@ -3,6 +3,7 @@ const logger = createLogger('TimerActionHandler');
 const quizState = require('../quizState');
 const { tournamentState, triggerTournamentPause, triggerTournamentTimerSet, triggerTournamentQuestion } = require('../tournamentHandler'); // Import triggerTournamentQuestion
 const prisma = require('../../db'); // Ensure prisma is required
+const { patchQuizStateForBroadcast } = require('../quizUtils');
 
 async function handleTimerAction(io, socket, prisma, { status, questionId, timeLeft, quizId, teacherId, tournamentCode }) {
     logger.info(`[TimerAction] Received: status=${status}, question=${questionId}, timeLeft=${timeLeft}, quizId=${quizId}, teacherId=${teacherId}, tournamentCode=${tournamentCode}`);
@@ -88,7 +89,9 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
         timeLeft,
         timestamp: quizState[quizId].timerTimestamp,
     });
-    io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+
+    // Patch: Recalculate timer for dashboard broadcast
+    io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
     io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
     logger.debug(`[TimerAction] Emitted quiz_timer_update & quiz_state to quiz_${quizId} and projection_${quizId}`);
 

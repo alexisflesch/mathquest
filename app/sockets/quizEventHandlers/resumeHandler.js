@@ -2,6 +2,7 @@ const createLogger = require('../../logger');
 const logger = createLogger('ResumeQuizHandler');
 const quizState = require('../quizState');
 const { tournamentState, triggerTournamentTimerSet } = require('../tournamentHandler');
+const { patchQuizStateForBroadcast } = require('../quizUtils');
 
 // Note: prisma is not needed here
 function handleResume(io, socket, prisma, { quizId, teacherId, tournamentCode }) {
@@ -21,7 +22,8 @@ function handleResume(io, socket, prisma, { quizId, teacherId, tournamentCode })
     quizState[quizId].chrono.running = true;
     quizState[quizId].timerStatus = 'play';
     quizState[quizId].timerTimestamp = Date.now(); // Reset timestamp for the new run period
-    io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+    // Patch: Recalculate timer for dashboard broadcast
+    io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
     io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
     logger.debug(`[ResumeQuiz] Emitted quiz_state update for ${quizId}`);
 

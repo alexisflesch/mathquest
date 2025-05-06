@@ -10,6 +10,7 @@ const logger = createLogger('SetQuestionHandler');
 const quizState = require('../quizState');
 const { tournamentState, triggerTournamentQuestion, triggerTournamentTimerSet } = require('../tournamentHandler'); // Ensure triggerTournamentTimerSet is imported
 const prisma = require('../../db'); // Ensure prisma is required
+const { patchQuizStateForBroadcast } = require('../quizUtils');
 
 async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, chrono, code: tournamentCode, teacherId }) {
     if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
@@ -42,11 +43,13 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, chro
         ? { timeLeft: initialTime, running: true }
         : { timeLeft: null, running: false };
     quizState[quizId].timerTimeLeft = initialTime;
+    quizState[quizId].timerInitialValue = initialTime; // <-- Ensure this is set!
     quizState[quizId].timerTimestamp = Date.now();
     quizState[quizId].locked = false;
     quizState[quizId].ended = false;
 
-    io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+    // --- Patch: Recalculate timer for dashboard broadcast ---
+    io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
     io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
     logger.debug(`[SetQuestion] Emitted quiz_state update for ${quizId}`);
 
@@ -86,12 +89,14 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, chro
 
             // Patch: preserve participants and socketToJoueur if they exist
             const prevState = tournamentState[liveTournamentCode] || {};
+            // --- PATCH: Only reset answers if state is new, otherwise preserve existing answers ---
+            const preservedAnswers = prevState.answers && typeof prevState.answers === 'object' ? prevState.answers : {};
             tournamentState[liveTournamentCode] = {
                 ...prevState,
                 questions: orderedQuestions, // Use ordered questions
                 currentIndex: -1, // Will be set below
                 started: true,
-                answers: {},
+                answers: preservedAnswers, // PATCH: preserve answers if present
                 timer: null,
                 questionStart: null,
                 paused: false,

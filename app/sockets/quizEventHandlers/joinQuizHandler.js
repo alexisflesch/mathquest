@@ -2,7 +2,7 @@ const createLogger = require('../../logger');
 const logger = createLogger('JoinQuizHandler');
 const quizState = require('../quizState');
 const prisma = require('../../db'); // Ensure prisma is required
-const { emitQuizConnectedCount } = require('../quizUtils');
+const { emitQuizConnectedCount, patchQuizStateForBroadcast } = require('../quizUtils');
 
 async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
     logger.info(`[DEBUG] handleJoinQuiz called for quizId=${quizId}, role=${role}, socket.id=${socket.id}`);
@@ -90,7 +90,7 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
     if (code) await emitQuizConnectedCount(io, prisma, code);
     else logger.warn(`[QUIZ_CONNECTED] Aucun code tournoi trouvé pour quizId=${quizId}`);
 
-    socket.emit("quiz_state", quizState[quizId]);
+    socket.emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
 }
 
 module.exports = handleJoinQuiz;

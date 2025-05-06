@@ -143,7 +143,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         'Utiliser un quiz existant': ListChecks,
         'Créer un quiz': FilePlus,
         'Consulter les résultats': BarChart2,
-        'Vidéoprojecteur': Monitor,
+        // 'Vidéoprojecteur': Monitor, // Removed
         'Déconnexion': LogOut,
     };
 
@@ -167,9 +167,9 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                     label: 'Espace enseignant',
                     href: '/teacher/home',
                     submenu: [
-                        { label: 'Utiliser un quiz existant', href: '/teacher/quiz/use' },
                         { label: 'Créer un quiz', href: '/teacher/quiz/create' },
-                        { label: 'Vidéoprojecteur', href: '/teacher/projection' },
+                        { label: 'Utiliser un quiz existant', href: '/teacher/quiz/use' },
+                        // { label: 'Vidéoprojecteur', href: '/teacher/projection' }, // Removed
                     ],
                 },
                 { label: 'Déconnexion', action: handleDisconnect },

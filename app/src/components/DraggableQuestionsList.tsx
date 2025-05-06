@@ -61,6 +61,7 @@ interface DraggableQuestionsListProps {
     onShowResults?: (uid: string) => void;
     showResultsDisabled?: (uid: string) => boolean;
     onStatsToggle?: (uid: string, show: boolean) => void; // NEW: stats toggle handler
+    getStatsForQuestion?: (uid: string) => number[] | undefined; // Provide stats for each question
 }
 
 export default function DraggableQuestionsList({
@@ -84,6 +85,7 @@ export default function DraggableQuestionsList({
     onShowResults,
     showResultsDisabled,
     onStatsToggle,
+    getStatsForQuestion,
 }: DraggableQuestionsListProps) {
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -155,7 +157,7 @@ export default function DraggableQuestionsList({
     // Create a ref to store stable callback functions by question UID
     const stableCallbacksRef = useRef<Map<string, {
         setOpen: () => void;
-        onPlay: () => void;
+        onPlay: (uid: string, timerValue: number) => void;
         onSelect: () => void;
         onEditTimer: (newTime: number) => void;
     }>>(new Map());
@@ -169,23 +171,8 @@ export default function DraggableQuestionsList({
         questions.forEach((q) => {
             updatedCallbacks.set(q.uid, {
                 setOpen: () => setOpenUid(prev => prev === q.uid ? null : q.uid),
-                onPlay: () => {
-                    // Try to get the most recent timer value from localStorage
-                    let timerValue = q.temps ?? 20;
-                    const storedValue = window.localStorage.getItem(`question_timer_${q.uid}`);
-
-                    if (storedValue) {
-                        const parsedValue = parseInt(storedValue, 10);
-                        if (!isNaN(parsedValue)) {
-                            timerValue = parsedValue;
-                            logger.info(`Found timer value in localStorage: ${timerValue}s for question ${q.uid}`);
-                            // Clean up after ourselves
-                            window.localStorage.removeItem(`question_timer_${q.uid}`);
-                        }
-                    }
-
-                    // Call handlePlay with the most accurate timer value
-                    handlePlay(q.uid, timerValue);
+                onPlay: (uid: string, timerValue: number) => {
+                    handlePlay(uid, timerValue);
                 },
                 onSelect: () => onSelect(q.uid),
                 onEditTimer: (newTime: number) => {
@@ -235,7 +222,7 @@ export default function DraggableQuestionsList({
                         // Get stable callbacks for this question from the ref
                         const stableCallbacks = stableCallbacksRef.current.get(q.uid) || {
                             setOpen: () => setOpenUid(openUid === q.uid ? null : q.uid),
-                            onPlay: () => handlePlay(q.uid, q.temps ?? 20),
+                            onPlay: (uid: string, timerValue: number) => handlePlay(uid, timerValue),
                             onSelect: () => onSelect(q.uid),
                             onEditTimer: (newTime: number) => {
                                 if (onEditTimer) onEditTimer(q.uid, newTime);
@@ -249,7 +236,7 @@ export default function DraggableQuestionsList({
                                 isActive={isActive}
                                 open={openUid === q.uid}
                                 setOpen={stableCallbacks.setOpen}
-                                onPlay={() => handlePlay(q.uid, q.temps ?? 20)}
+                                onPlay={stableCallbacks.onPlay}
                                 onEditTimer={stableCallbacks.onEditTimer}
                                 onPause={handlePause}
                                 onStop={handleStop}
@@ -260,6 +247,7 @@ export default function DraggableQuestionsList({
                                 onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
                                 showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
                                 onStatsToggle={onStatsToggle ? (show) => onStatsToggle(q.uid, show) : undefined}
+                                stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
                             />
                         );
                     })}

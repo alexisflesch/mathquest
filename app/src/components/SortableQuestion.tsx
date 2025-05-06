@@ -19,7 +19,7 @@ export interface SortableQuestionProps {
     quizState?: QuizState | null; // Gardé pour la logique interne si besoin
     open: boolean;
     setOpen: () => void;
-    onPlay: () => void;
+    onPlay: (uid: string, time: number) => void;
     onPause: () => void;
     onStop?: () => void;
     // onSelect: () => void; // Gardé pour la sélection via clic/touche
@@ -31,6 +31,7 @@ export interface SortableQuestionProps {
     onShowResults?: () => void;
     showResultsDisabled?: boolean;
     onStatsToggle?: (show: boolean) => void;
+    stats?: number[]; // Pass answer stats to QuestionDisplay
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -66,7 +67,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled, onStatsToggle }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled, onStatsToggle, stats }: SortableQuestionProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(q.uid)
     });
@@ -198,13 +199,11 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
         }
     };
 
-    // Handler pour PLAY (utilise la valeur serveur la plus à jour)
+    // Handler for PLAY (now passes the displayed timer value)
     const handlePlayWithCurrentTime = () => {
-        const currentTimer = liveTimeLeft !== undefined && liveTimeLeft !== null ? liveTimeLeft : q.temps ?? 0;
+        const currentTimer = displayedTimeLeft;
         logger.info(`Playing question ${q.uid} with current timer value: ${currentTimer}s`);
-        // Stocke temporairement pour que le hook puisse le récupérer si besoin (alternative à l'event)
-        window.localStorage.setItem(`question_timer_${q.uid}`, String(currentTimer));
-        onPlay(); // Appelle le onPlay parent
+        onPlay(q.uid, currentTimer); // Pass the value directly
     };
 
     // --- Rendu ---
@@ -228,6 +227,7 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
                 onShowResults={onShowResults}
                 showResultsDisabled={showResultsDisabled}
                 onStatsToggle={onStatsToggle}
+                stats={stats}
             />
             <div className="absolute left-0 top-0 w-full h-full flex items-center justify-center z-20">
                 <span ref={inputWrapperRef} className="flex items-center gap-1 bg-background p-2 rounded shadow-lg border border-gray-200">
@@ -337,6 +337,7 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
                         onShowResults={onShowResults}
                         showResultsDisabled={showResultsDisabled}
                         onStatsToggle={onStatsToggle}
+                        stats={stats}
                     />
                 )}
                 {/* Affiche les réponses si en mode édition ET si elles sont ouvertes */}

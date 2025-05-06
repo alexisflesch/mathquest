@@ -44,4 +44,18 @@ async function emitQuizConnectedCount(io, prisma, code) {
     }
 }
 
-module.exports = { emitQuizConnectedCount };
+// Helper to patch quiz state with recalculated timer for broadcast
+function patchQuizStateForBroadcast(state) {
+    if (state && state.chrono && state.chrono.running && typeof state.timerInitialValue === 'number' && state.timerTimestamp) {
+        const now = Date.now();
+        const elapsed = (now - state.timerTimestamp) / 1000; // Use float seconds
+        const original = state.timerInitialValue;
+        const remaining = Math.max(original - elapsed, 0);
+        // Use 1 decimal of precision
+        const remainingPrecise = Math.round(remaining * 10) / 10;
+        return { ...state, chrono: { ...state.chrono, timeLeft: remainingPrecise }, timerTimeLeft: remainingPrecise };
+    }
+    return state;
+}
+
+module.exports = { emitQuizConnectedCount, patchQuizStateForBroadcast };

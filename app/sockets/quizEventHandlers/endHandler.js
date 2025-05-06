@@ -12,7 +12,10 @@ function handleEnd(io, socket, prisma, { quizId, teacherId, tournamentCode }) {
     }
     logger.info(`Ending quiz ${quizId}`);
     quizState[quizId].ended = true;
-    io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+
+    // Patch: Recalculate timer for dashboard broadcast
+    const { patchQuizStateForBroadcast } = require('../quizUtils');
+    io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
 
     // --- PATCH: Trigger tournament end if linked ---
     // 1. Use tournamentCode from payload if present, else fallback

@@ -20,6 +20,7 @@ const handlePause = require('./quizEventHandlers/pauseHandler');
 const handleResume = require('./quizEventHandlers/resumeHandler');
 const handleDisconnecting = require('./quizEventHandlers/disconnectingHandler'); // Added
 const handleCloseQuestion = require('./quizEventHandlers/closeQuestionHandler');
+const { patchQuizStateForBroadcast } = require('./quizUtils');
 
 // --- Shared quiz state initialization for dashboard and projector ---
 async function ensureQuizStateInitialized(quizId, prisma, socket, role = null, teacherId = null) {
@@ -163,6 +164,28 @@ function registerQuizEvents(io, socket, prisma) {
             socketId: socket.id,
             rooms: Array.from(socket.rooms),
         });
+
+        // --- PATCH: Immediately emit leaderboard to projection room ---
+        try {
+            const quizState = require('./quizState');
+            const { tournamentState } = require('./tournamentHandler');
+            const { computeLeaderboard } = require('./tournamentUtils/computeLeaderboard');
+            const quiz = quizState[quizId];
+            if (!quiz) return;
+            const code = quiz.tournament_code;
+            if (!code || !tournamentState[code]) return;
+            const tState = tournamentState[code];
+            const leaderboard = computeLeaderboard(tState);
+            const playerCount = leaderboard.length;
+            io.to(`projection_${quizId}`).emit('quiz_question_results', {
+                leaderboard,
+                correctAnswers: [], // No correct answers context here
+                playerCount
+            });
+            logger.info(`[join_projection] Emitted leaderboard to projection_${quizId}`);
+        } catch (err) {
+            logger.error(`[join_projection] Failed to emit leaderboard:`, err);
+        }
     });
 
     socket.on("quiz_reset_ended", ({ quizId }) => {
@@ -180,7 +203,10 @@ function registerQuizEvents(io, socket, prisma) {
             quizState[quizId].timerTimestamp = null;
             // Optionally, keep profTeacherId and questions
             logger.info(`Quiz ${quizId} state fully reset for new session`);
-            io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+            // --- PATCH: RECALCULATE TIMER FOR BROADCAST ---
+            let state = quizState[quizId];
+            let patchedState = patchQuizStateForBroadcast(state);
+            io.to(`quiz_${quizId}`).emit("quiz_state", patchedState);
         }
     });
 
@@ -189,6 +215,27 @@ function registerQuizEvents(io, socket, prisma) {
         // Forward to projector room
         io.to(`projection_${quizId}`).emit("quiz_toggle_stats", { quizId, questionUid, show });
         logger.debug(`[quiz_toggle_stats] Forwarded to projection_${quizId}`);
+
+        // Use shared stats utility
+        try {
+            const quizState = require('./quizState');
+            const { tournamentState } = require('./tournamentHandler');
+            const { computeAnswerStats } = require('./tournamentUtils/computeStats');
+            const quiz = quizState[quizId];
+            if (!quiz) return;
+            const code = quiz.tournament_code;
+            if (!code || !tournamentState[code]) return;
+            const tState = tournamentState[code];
+            const { stats, totalAnswers } = computeAnswerStats(tState, questionUid);
+            io.to(`projection_${quizId}`).emit("quiz_answer_stats_update", {
+                questionUid,
+                stats,
+                totalAnswers
+            });
+            logger.info(`[quiz_toggle_stats] Emitted quiz_answer_stats_update to projection_${quizId} for question ${questionUid}`);
+        } catch (err) {
+            logger.error(`[quiz_toggle_stats] Failed to emit stats:`, err);
+        }
     });
 }
 

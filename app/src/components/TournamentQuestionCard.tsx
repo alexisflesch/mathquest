@@ -7,7 +7,8 @@ interface TournamentQuestion {
     uid: string;
     question: string;
     type: string | undefined;
-    answers: string[]; // Only use the new backend format
+    answers?: string[]; // Make optional to support both formats
+    reponses?: { texte: string }[]; // Add this for compatibility
 }
 
 interface StatsData {
@@ -60,8 +61,12 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
         userSelect: 'none' as const,    // Prevents text selection
     } : {};
 
-    // Use only the new backend format
-    const answers = Array.isArray(currentQuestion.answers) ? currentQuestion.answers : [];
+    // Normalize answers: support both { answers: string[] } and { reponses: { texte }[] }
+    const answers = Array.isArray(currentQuestion.answers)
+        ? currentQuestion.answers
+        : Array.isArray(currentQuestion.reponses)
+            ? currentQuestion.reponses.map((r) => r.texte)
+            : [];
     console.debug('[TournamentQuestionCard] question:', currentQuestion);
     console.debug('[TournamentQuestionCard] answers:', answers);
 
@@ -76,7 +81,7 @@ const TournamentQuestionCard: React.FC<TournamentQuestionCardProps> = ({
                 <MathJaxWrapper>{currentQuestion.question}</MathJaxWrapper>
             </div>
             <ul className="flex flex-col w-full">
-                {answers.map((answerText, idx) => {
+                {answers.map((answerText: string, idx: number) => {
                     const isSelected = isMultipleChoice
                         ? selectedAnswers.includes(idx)
                         : selectedAnswer === idx;

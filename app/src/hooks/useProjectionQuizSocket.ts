@@ -69,6 +69,16 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
         const handleQuizState = (state: QuizState) => {
             logger.debug('Processing quiz_state', state);
             setQuizState(state);
+            // Always set timerQuestionId from state if present
+            if (state.timerQuestionId) {
+                setTimerQuestionId(state.timerQuestionId);
+            } else if (state.currentQuestionIdx !== null && typeof state.currentQuestionIdx === 'number' && state.questions[state.currentQuestionIdx]) {
+                const currentQuestion = state.questions[state.currentQuestionIdx];
+                setTimerQuestionId(currentQuestion.uid);
+            } else {
+                setTimerQuestionId(null);
+            }
+            // Now handle timer status and time left
             if (
                 state.timerStatus === 'stop' ||
                 (state.chrono && state.chrono.timeLeft === 0 && state.chrono.running === false)
@@ -79,7 +89,6 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
                 return; // Ensure no further state updates after stop
             }
             if (state.timerQuestionId) {
-                setTimerQuestionId(state.timerQuestionId);
                 setTimerStatus(state.timerStatus || 'stop');
                 if (state.timerTimeLeft !== undefined && state.timerTimeLeft !== null) {
                     setTimeLeft(state.timerTimeLeft);
@@ -89,8 +98,6 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
                     setLocalTimeLeft(null);
                 }
             } else if (state.currentQuestionIdx !== null && typeof state.currentQuestionIdx === 'number' && state.questions[state.currentQuestionIdx]) {
-                const currentQuestion = state.questions[state.currentQuestionIdx];
-                setTimerQuestionId(currentQuestion.uid);
                 if (state.chrono && state.chrono.timeLeft !== null) {
                     setTimeLeft(state.chrono.timeLeft);
                     setLocalTimeLeft(state.chrono.timeLeft);
@@ -101,7 +108,6 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
                     setTimerStatus('stop');
                 }
             } else {
-                setTimerQuestionId(null);
                 setTimerStatus('stop');
                 setTimeLeft(0);
                 setLocalTimeLeft(null);
