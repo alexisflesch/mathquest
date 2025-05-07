@@ -20,7 +20,7 @@ import { createLogger } from '@/clientLogger';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
 import TournamentQuestionCard from '@/components/TournamentQuestionCard';
-
+import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 
 // Create a logger for this component
 const logger = createLogger('TournamentLivePage');
@@ -72,6 +72,9 @@ export default function TournamentSessionPage() {
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
     const [isQuizMode, setIsQuizMode] = useState(false);
+    const [showExplication, setShowExplication] = useState(false);
+    const [explicationText, setExplicationText] = useState<string>("");
+    const [explicationDuration, setExplicationDuration] = useState<number>(5);
 
     useEffect(() => { pausedRef.current = paused; }, [paused]);
 
@@ -697,7 +700,7 @@ export default function TournamentSessionPage() {
         }
     }, [currentQuestion?.uid]);
 
-    // Listen for results/closed events to set correctAnswers and enable readonly
+    // Unified: Listen for quiz_question_results, quiz_question_closed, and tournament_correct_answers
     useEffect(() => {
         if (!socket) return;
         const handleResults = (data: { leaderboard?: unknown[]; correctAnswers?: number[] }) => {
@@ -718,16 +721,55 @@ export default function TournamentSessionPage() {
         logger.debug('CurrentQuestion state changed', currentQuestion);
     }, [currentQuestion]);
 
+    useEffect(() => {
+        if (!socket) return;
+        // Listen for explication event (tournament mode only)
+        const handler = (payload: { questionUid: string; explication: string }) => {
+            if (!isQuizMode && payload?.explication) {
+                setExplicationText(payload.explication);
+                setShowExplication(true);
+                // setExplicationDuration(5);
+                setTimeout(() => setShowExplication(false), explicationDuration * 1000);
+            }
+        };
+        socket.on("explication", handler);
+        return () => { socket.off("explication", handler); };
+    }, [socket, isQuizMode]);
+
+    // Fermer l'overlay d'explication dès qu'on reçoit un nouvel état de question ou la fin du tournoi
+    useEffect(() => {
+        if (!socket) return;
+        // Ferme l'overlay à l'arrivée d'une nouvelle question ou d'un changement d'état
+        const closeExplication = () => setShowExplication(false);
+        socket.on("tournament_question_state_update", closeExplication);
+        socket.on("quiz_state", closeExplication);
+        socket.on("tournament_question", closeExplication);
+        socket.on("tournament_end", closeExplication);
+        return () => {
+            socket.off("tournament_question_state_update", closeExplication);
+            socket.off("quiz_state", closeExplication);
+            socket.off("tournament_question", closeExplication);
+            socket.off("tournament_end", closeExplication);
+        };
+    }, [socket]);
+
+    // En mode dev, fermer l'overlay quand la question change
+    useEffect(() => {
+        if (devMode) setShowExplication(false);
+    }, [currentQuestion?.uid, devMode]);
+
     return (
         <div className="main-content">
-            <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
+            {showExplication && (
+                <div className="feedback-overlay">
+                    <AnswerFeedbackOverlay
+                        explanation={explicationText}
+                        duration={explicationDuration}
+                    />
+                </div>
+            )}
+            <div className={`card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6 relative${showExplication ? " blur-sm" : ""}`}>
                 <TournamentTimer timer={timer} isMobile={isMobile} />
-                <Snackbar
-                    open={snackbarOpen}
-                    message={snackbarMessage}
-                    type={snackbarType}
-                    onClose={() => setSnackbarOpen(false)}
-                />
                 <MathJaxWrapper>
                     {currentQuestion ? (
                         <>
@@ -751,10 +793,19 @@ export default function TournamentSessionPage() {
                         </>
                     ) : (
                         logger.debug('No currentQuestion, nothing to render'),
-                        <div className="text-center text-lg text-gray-500">Aucune question à afficher.</div>
+                        <div className="text-center text-lg text-gray-500">Chargement...</div>
                     )}
                 </MathJaxWrapper>
             </div>
+
+            {/* Apply the same blur effect to the Snackbar when the overlay is shown, but keep its fixed position */}
+            <Snackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                type={snackbarType}
+                onClose={() => setSnackbarOpen(false)}
+                className={showExplication ? "blur-sm" : ""}
+            />
         </div>
     );
 }

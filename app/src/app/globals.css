@@ -271,7 +271,7 @@ html[data-theme="light"] body {
 
   .answer-selected {
     border: 3px solid var(--primary) !important;
-    border-radius: var(--radius);
+    border-radius: var (--radius);
     background: transparent !important;
   }
 
@@ -804,12 +804,26 @@ textarea:focus {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 @media (min-width: 768px) {
   .main-content {
     padding-top: 0;
   }
+}
+
+.main-content-alignment {
+  width: 100%;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .tqcard-content {
@@ -985,4 +999,95 @@ textarea:focus {
   height: 24px;
   background: var(--bar-stat, #b3e5fc);
   /* No border, so card border remains visible */
+}
+
+
+.feedback-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.feedback-overlay-inner {
+  /* supprimé : plus de max-width, plus de centrage, plus de flex, etc. */
+}
+
+.feedback-card {
+  background: var(--card, white);
+  color: var(--foreground);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  width: 100%;
+  /* max-width supprimé */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  pointer-events: auto;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.feedback-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.feedback-title {
+  margin-top: 0.5rem;
+  font-weight: bold;
+}
+
+.feedback-text {
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.feedback-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.feedback-text {
+  flex: 1;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.feedback-timer-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--muted);
+  /* margin-top: 0.75rem; */
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.feedback-timer-progress {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.1s linear;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

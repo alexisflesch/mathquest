@@ -158,7 +158,7 @@ export default function PracticeSessionPage() {
                         </div>
                         <button
                             className="btn btn-primary btn-lg"
-                            onClick={() => router.push("/student/practice")}
+                            onClick={() => router.push("/student/create-tournament/?training=true")}
                         >
                             Recommencer
                         </button>

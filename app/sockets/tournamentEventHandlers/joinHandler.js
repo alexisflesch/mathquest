@@ -19,36 +19,29 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
     if (cookie_id) {
         try {
             joueur = await prisma.joueur.findUnique({ where: { cookie_id } });
+            logger.info(`[JOIN_HANDLER] Looked up joueur by cookie_id=${cookie_id}: ${joueur ? 'FOUND' : 'NOT FOUND'}`);
             if (!joueur) {
                 joueur = await prisma.joueur.create({ data: { pseudo, avatar, cookie_id } });
+                logger.info(`[JOIN_HANDLER] Created new joueur: id=${joueur.id}, pseudo=${pseudo}, avatar=${avatar}`);
             } else {
                 pseudo = joueur.pseudo;
                 avatar = joueur.avatar || avatar;
+                logger.info(`[JOIN_HANDLER] Using existing joueur: id=${joueur.id}, pseudo=${pseudo}, avatar=${avatar}`);
             }
             joueurId = joueur.id;
         } catch (err) {
-            logger.error(`Error finding/creating joueur with cookie_id ${cookie_id}:`, err);
+            logger.error(`[JOIN_HANDLER] Error finding/creating joueur with cookie_id ${cookie_id}:`, err);
         }
     }
 
     // 2. If no persistent joueurId, generate a temporary one for this session
     if (!joueurId) {
-        // --- LOBBY FALLBACK LOGIC ---\
-        // Try to get pseudo/avatar from lobbyParticipants if available
-        try {
-            // Avoid circular dependency - access lobby state carefully if needed, or remove this fallback
-            // const { lobbyParticipants } = require('../lobbyHandler'); // Potential circular dependency
-            // const lobby = lobbyParticipants[code] || [];
-            // const found = lobby.find(p => p.id === socket.id);
-            // if (found) {
-            //     pseudo = found.pseudo || pseudo;
-            //     avatar = found.avatar || avatar;
-            // }
-            logger.warn(`Lobby fallback for pseudo/avatar is disabled due to potential circular dependency.`);
-        } catch (e) { /* fallback silently */ }
+        logger.warn(`[JOIN_HANDLER] No persistent joueurId found, using temporary socket-based joueurId for socket ${socket.id}`);
         joueurId = `socket_${socket.id}`;
         logger.info(`No cookie_id or DB error, using temporary joueurId: ${joueurId}`);
     }
+
+    logger.info(`[JOIN_HANDLER] Final joueurId for this session: ${joueurId}`);
 
     // 3. Determine live/differed status
     let tournoi = null;
@@ -68,6 +61,14 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
         logger.error(`Error fetching tournoi status for code ${code}:`, err);
         socket.emit("tournament_error", { message: "Erreur de connexion au tournoi." });
         return;
+    }
+
+    // --- Room logic for differed mode ---
+    let differedRoom = null;
+    if (isDiffered && joueurId && !joueurId.startsWith('socket_')) {
+        differedRoom = `tournament_${code}_${joueurId}`;
+        socket.join(differedRoom);
+        logger.info(`Joined differed room: ${differedRoom}`);
     }
 
     // 4. Prevent replay in differed mode if already played (only if we have a persistent joueurId)
@@ -222,7 +223,17 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
 
     if (!state) {
         if (isDiffered && tournoi) {
-            // Create a personal state for this differed user
+            // Defensive: check for leftover state with no score in DB
+            let existingScore = null;
+            if (joueurId && !joueurId.startsWith('socket_')) {
+                existingScore = await prisma.score.findFirst({ where: { tournoi_id: tournoi.id, joueur_id: joueurId } });
+            }
+            if (state && !existingScore) {
+                logger.warn(`Found leftover differed state for ${stateKey} with no score in DB. Deleting and starting fresh.`);
+                if (tournamentState[stateKey]?.timer) clearTimeout(tournamentState[stateKey].timer);
+                delete tournamentState[stateKey];
+                state = undefined;
+            }
             logger.info(`Creating new state for differed player ${joueurId} in tournament ${code}`);
             let questions = [];
             try {
@@ -320,170 +331,25 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
 
     // 7. Send current/first question
     if (isDiffered) {
-        // Send first question immediately to this user only
+        const { scheduleNextQuestionWithTimer } = require('../tournamentUtils/tournamentHelpers');
         if (state.questions && state.questions.length > 0 && state.currentIndex === -1) {
             logger.info(`Sending first question for differed player ${joueurId} (socket ${socket.id}) in tournament ${code}`);
-            // Set up per-user timer for differed mode
-            state.currentIndex = 0;
-            state.questionStart = Date.now();
-            const q = state.questions[0];
-            const time = q.temps || 20;
-            state.currentQuestionDuration = time; // Set duration for the question
-            // Filter reponses for students (remove 'correct')
-            const filteredReponses = Array.isArray(q.reponses)
-                ? q.reponses.map(r => ({ texte: r.texte }))
-                : [];
-            const filteredQuestion = { ...q, reponses: filteredReponses };
-            sendTournamentQuestion(socket, null, q, 0, state.questions.length, time, "active");
-            if (state.timer) clearTimeout(state.timer);
-            state.timer = setTimeout(async function handleNextQuestion() { // Make async
-                const qIdx = state.currentIndex;
-
-                // Safely get the current question
-                if (!state || !state.questions || qIdx < 0 || qIdx >= state.questions.length) {
-                    logger.error(`[DEFENSIVE] Invalid state or question index in timer callback for joueurId=${joueurId}`);
-                    return;
-                }
-
-                const question = state.questions[qIdx];
-                if (!question) {
-                    logger.error(`[DEFENSIVE] Question at index ${qIdx} is null or undefined for joueurId=${joueurId}`);
-                    return;
-                }
-
-                // Initialize answer with a safe default
-                let answer = undefined;
-
-                // CRITICAL FIX: Super defensive approach to avoid any TypeError
-                try {
-                    // Only try to access if every part of the path exists
-                    if (state.answers &&
-                        joueurId &&
-                        state.answers[joueurId] &&
-                        question.uid &&
-                        state.answers[joueurId][question.uid]) {
-
-                        answer = state.answers[joueurId][question.uid];
-                        logger.debug(`Found answer for joueur ${joueurId} on question ${question.uid}`);
-                    } else {
-                        logger.warn(`[DEFENSIVE] No answer found for joueurId=${joueurId}, questionUid=${question?.uid}`);
-                    }
-                } catch (err) {
-                    logger.error(`[DEFENSIVE] Error accessing answer for joueurId=${joueurId}, questionUid=${question?.uid}:`, err);
-                }
-
-                // Proceed with score calculation
-                const { baseScore, rapidity, totalScore } = calculateScore(question, answer, state.questionStart);
-
-
-
-                // Now safely update the score
-                state.participants[joueurId].score += totalScore;
-                logger.debug(`Score computed for joueur ${joueurId} on question ${question.uid} in state ${stateKey}: baseScore=${baseScore}, rapidity=${rapidity}, totalScore=${totalScore}`);
-
-                socket.emit("tournament_answer_result", {
-                    correct: baseScore > 0,
-                    score: state.participants[joueurId]?.score || 0,
-                    explanation: question?.explication || null,
-                    baseScore,
-                    rapidity: Math.round(rapidity * 100) / 100,
-                    totalScore,
-                });
-                if (state.questions && qIdx + 1 < state.questions.length) {
-                    state.currentIndex = qIdx + 1;
-                    state.questionStart = Date.now();
-                    const nextQ = state.questions[qIdx + 1];
-                    const nextTime = nextQ.temps || 20;
-                    state.currentQuestionDuration = nextTime; // Update duration
-                    logger.info(`Sending next question (idx: ${qIdx + 1}) for differed player ${joueurId} (socket ${socket.id}) in tournament ${code}`);
-                    // Filter reponses for students (remove 'correct')
-                    const filteredReponses2 = Array.isArray(nextQ.reponses)
-                        ? nextQ.reponses.map(r => ({ texte: r.texte }))
-                        : [];
-                    const filteredNextQuestion = { ...nextQ, reponses: filteredReponses2 };
-                    sendTournamentQuestion(socket, null, nextQ, qIdx + 1, state.questions.length, nextTime, "active");
-                    state.timer = setTimeout(handleNextQuestion, nextTime * 1000);
-                } else {
-                    // End of quiz for this user
-                    logger.info(`End of differed tournament for joueur ${joueurId} (socket ${socket.id}) in tournament ${code}`);
-                    const finalLeaderboard = Object.values(state.participants)
-                        .map(p => ({ id: p.id, pseudo: p.pseudo, avatar: p.avatar, score: p.score, isDiffered: !!p.isDiffered }))
-                        .sort((a, b) => b.score - a.score);
-
-                    socket.emit("tournament_end", {
-                        finalScore: state.participants[joueurId]?.score || 0,
-                        leaderboard: finalLeaderboard,
-                    });
-                    // Save score and update leaderboard in DB for differed mode
-                    (async () => {
-                        try {
-                            const tournoi = await prisma.tournoi.findUnique({ where: { code } });
-                            if (tournoi && joueurId && !joueurId.startsWith('socket_') && state.participants[joueurId]) {
-                                const scoreValue = state.participants[joueurId].score;
-                                const joueur = await prisma.joueur.findUnique({ where: { id: joueurId } });
-                                if (joueur) {
-                                    const existing = await prisma.score.findFirst({ where: { tournoi_id: tournoi.id, joueur_id: joueurId } });
-                                    if (existing) {
-                                        await prisma.score.update({ where: { id: existing.id }, data: { score: scoreValue, date_score: new Date() } });
-                                    } else {
-                                        await prisma.score.create({ data: { tournoi_id: tournoi.id, joueur_id: joueurId, score: scoreValue, date_score: new Date() } });
-                                    }
-                                }
-                                // --- Update leaderboard field in Tournoi ---\
-                                const prevLeaderboard = Array.isArray(tournoi.leaderboard) ? tournoi.leaderboard : [];
-                                const allScores = await prisma.score.findMany({
-                                    where: { tournoi_id: tournoi.id },
-                                    include: { joueur: true },
-                                });
-                                // Build a map of new scores by joueur_id
-                                const newScoresMap = new Map();
-                                allScores.forEach(s => {
-                                    if (s.joueur) { // Ensure joueur exists
-                                        newScoresMap.set(s.joueur_id, {
-                                            id: s.joueur_id,
-                                            pseudo: s.joueur.pseudo,
-                                            avatar: s.joueur.avatar,
-                                            score: s.score,
-                                            isDiffered: true // Assume anyone in scores might be differed, or fetch live status? Let's mark true for simplicity here.
-                                        });
-                                    }
-                                });
-                                // Merge with previous leaderboard (keep highest score per joueur_id)
-                                const mergedLeaderboardMap = new Map();
-                                for (const entry of prevLeaderboard) {
-                                    if (entry && entry.id) { // Check if entry and id exist
-                                        mergedLeaderboardMap.set(entry.id, entry);
-                                    }
-                                }
-                                for (const [id, entry] of newScoresMap.entries()) {
-                                    if (!mergedLeaderboardMap.has(id) || entry.score > mergedLeaderboardMap.get(id).score) {
-                                        mergedLeaderboardMap.set(id, entry);
-                                    }
-                                }
-                                const mergedLeaderboard = Array.from(mergedLeaderboardMap.values()).sort((a, b) => b.score - a.score);
-                                await prisma.tournoi.update({ where: { id: tournoi.id }, data: { leaderboard: mergedLeaderboard } });
-                            }
-                        } catch (err) {
-                            logger.error('Error saving score for differed mode:', err);
-                        } finally {
-                            // Clean up differed state after saving
-                            if (tournamentState[stateKey]) {
-                                if (tournamentState[stateKey].timer) clearTimeout(tournamentState[stateKey].timer);
-                                delete tournamentState[stateKey];
-                                logger.info(`Cleaned up differed state ${stateKey}`);
-                            }
-                            socket.emit("tournament_finished_redirect", { code });
-                        }
-                    })();
-                }
-            }, time * 1000);
+            scheduleNextQuestionWithTimer(io, stateKey, 0, differedRoom);
         } else {
             logger.warn(`Differed player ${joueurId} (socket ${socket.id}) rejoining or no questions. State: currentIndex=${state?.currentIndex}, questions=${state?.questions?.length}`);
-            // Handle rejoining differed? Maybe send current state?
-            // If they rejoin mid-question, we might need similar logic to live late joiners.
-            // For now, if currentIndex > -1, they might have missed the start.
             if (state?.currentIndex > -1) {
-                socket.emit("tournament_error", { message: "Reconnexion en cours..." }); // Or a more specific message
+                let existingScore = null;
+                if (joueurId && !joueurId.startsWith('socket_')) {
+                    existingScore = await prisma.score.findFirst({ where: { tournoi_id: tournoi.id, joueur_id: joueurId } });
+                }
+                if (existingScore) {
+                    socket.emit("tournament_error", { message: "Reconnexion en cours... (différé)" });
+                } else {
+                    logger.warn(`State has currentIndex > -1 but no score in DB. Forcibly resetting for joueurId=${joueurId}`);
+                    if (tournamentState[stateKey]?.timer) clearTimeout(tournamentState[stateKey].timer);
+                    delete tournamentState[stateKey];
+                    return handleJoinTournament(io, socket, { code, cookie_id, pseudo: clientPseudo, avatar: clientAvatar, isDiffered });
+                }
             }
         }
     } else {
@@ -557,7 +423,7 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
                 socket.emit("tournament_wait_start"); // Inform client to wait
             } else {
                 // If state is missing or index is invalid after start, emit error
-                socket.emit("tournament_error", { message: "En attente de la prochaine question..." });
+                socket.emit("tournament_error", { message: "En attente de la prochaine question... (live)" });
             }
         }
     }

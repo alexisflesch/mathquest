@@ -3,7 +3,7 @@ const logger = createLogger('AnswerTournamentHandler');
 const { tournamentState } = require('../tournamentUtils/tournamentState');
 
 function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clientTimestamp }) {
-    logger.info(`tournament_answer received`, { code, questionUid, answerIdx, clientTimestamp, socketId: socket.id });
+    logger.info(`tournament_answer received`);
     // Determine the correct state (live or differed)
     let joueurId = null;
     let stateKey = null;
@@ -62,21 +62,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     const elapsed = (serverReceiveTime - questionStart) / 1000;
     const remaining = timeAllowed - elapsed;
 
-    // Log detailed state information to help diagnose timing issues
-    logger.info(`tournament_answer: Quiz state details for ${stateKey}:`, {
-        isDiffered,
-        isPaused,
-        isStopped,
-        isQuizMode,
-        linkedQuizId: state.linkedQuizId,
-        elapsed: elapsed.toFixed(2) + 's',
-        timeAllowed: timeAllowed + 's',
-        remaining: remaining.toFixed(2) + 's',
-        questionStart: new Date(questionStart).toISOString(),
-        serverReceiveTime: new Date(serverReceiveTime).toISOString(),
-        answerTooLate: elapsed > timeAllowed,
-        pausedRemainingTime: state.pausedRemainingTime ? state.pausedRemainingTime.toFixed(2) + 's' : 'none'
-    });
+    logger.debug(`tournament_answer: Received answer for questionUid=${questionUid}, answerIdx=${answerIdx}, clientTimestamp=${clientTimestamp}`);
 
     // First check if the question is stopped - reject answers if it is
     if (state.stopped) {
@@ -126,15 +112,24 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     // Store the answer (overwrite previous answer for the same question if any)
     // Defensive: check state.answers and state.answers[joueurId] before accessing
     const alreadyAnswered = !!(state.answers && state.answers[joueurId] && state.answers[joueurId][questionUid]);
-    if (!state.answers) state.answers = {};
-    if (!state.answers[joueurId]) state.answers[joueurId] = {};
+    if (!state.answers) {
+        logger.warn(`tournament_answer: Initializing state.answers for stateKey=${stateKey}`);
+        state.answers = {};
+    }
+    if (!state.answers[joueurId]) {
+        logger.warn(`tournament_answer: Initializing state.answers[${joueurId}] for stateKey=${stateKey}`);
+        state.answers[joueurId] = {};
+    }
+    logger.debug(`tournament_answer: Storing answer for joueurId=${joueurId}, questionUid=${questionUid}, answerIdx=${answerIdx}, clientTimestamp=${clientTimestamp}`);
+    logger.debug(`tournament_answer: Current state.answers=${JSON.stringify(state.answers)}`);
     state.answers[joueurId][questionUid] = { answerIdx, clientTimestamp };
     logger.debug(`Stored answer for joueur ${joueurId} on question ${questionUid} in state ${stateKey}`);
 
     // --- SCORE IMMEDIATELY IF NOT ALREADY SCORED ---
     if (!alreadyAnswered) {
         const { calculateScore } = require('../tournamentUtils/tournamentHelpers');
-        const { baseScore, rapidity, totalScore } = calculateScore(question, { answerIdx, clientTimestamp }, questionStart);
+        const totalQuestions = state.questions.length;
+        const { baseScore, rapidity, totalScore } = calculateScore(question, { answerIdx, clientTimestamp }, questionStart, totalQuestions);
         if (!state.participants[joueurId].scoredQuestions) state.participants[joueurId].scoredQuestions = {};
         if (!state.participants[joueurId].scoredQuestions[questionUid]) {
             state.participants[joueurId].score += totalScore;
@@ -190,6 +185,15 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
             logger.info(`[QUIZ_STATS] Emitted quiz_answer_stats_update for quiz_${quizId} (question ${questionUid}):`, stats);
         } catch (err) {
             logger.error(`[QUIZ_STATS] Failed to compute or emit stats for quiz mode:`, err);
+        }
+    }
+
+    // After storing the answer and sending receipt, log timer info for debugging
+    if (isDiffered) {
+        if (state.timer) {
+            logger.info(`[DIFF-TIMER][ANSWER] Timer is set for stateKey=${stateKey}, will fire at ${state.questionStart ? new Date(state.questionStart + (state.currentQuestionDuration || 0) * 1000).toISOString() : 'unknown'}`);
+        } else {
+            logger.warn(`[DIFF-TIMER][ANSWER] No timer set for stateKey=${stateKey} after answer!`);
         }
     }
 }

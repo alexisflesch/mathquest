@@ -159,7 +159,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         if (isTeacher) {
             return [
                 { label: 'Accueil', href: '/' },
-                { label: 'Entraînement libre', href: '/student/practice' },
+                { label: 'Entraînement libre', href: '/student/create-tournament?training=true' },
                 { label: 'Rejoindre un tournoi', href: '/student/join' },
                 { label: 'Créer un tournoi', href: '/student/create-tournament' },
                 { label: 'Mes tournois', href: '/my-tournaments' },
@@ -178,7 +178,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         if (isStudent) {
             return [
                 { label: 'Accueil', href: '/' },
-                { label: 'Entraînement libre', href: '/student/practice' },
+                { label: 'Entraînement libre', href: '/student/create-tournament?training=true' },
                 { label: 'Rejoindre un tournoi', href: '/student/join' },
                 { label: 'Créer un tournoi', href: '/student/create-tournament' },
                 { label: 'Mes tournois', href: '/my-tournaments' },

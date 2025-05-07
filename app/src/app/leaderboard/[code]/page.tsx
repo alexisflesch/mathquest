@@ -50,8 +50,12 @@ export default function TournamentLeaderboardPage() {
                 const lb = await lbRes.json();
                 setLeaderboard(lb.leaderboard || []);
                 // Vérifier si l'utilisateur peut jouer en différé
-                if (currentPseudo) {
-                    const canPlayRes = await fetch(`/api/can-play-differed?code=${code}&pseudo=${encodeURIComponent(currentPseudo)}`);
+                let userId = null;
+                if (typeof window !== 'undefined') {
+                    userId = localStorage.getItem('mathquest_cookie_id');
+                }
+                if (userId) {
+                    const canPlayRes = await fetch(`/api/can-play-differed?code=${code}&userId=${encodeURIComponent(userId)}`);
                     if (canPlayRes.ok) {
                         const { canPlay } = await canPlayRes.json();
                         setCanPlayDiffered(!!canPlay);

@@ -2,7 +2,7 @@ const createLogger = require('../../logger');
 const logger = createLogger('TournamentTriggers');
 const { tournamentState } = require('./tournamentState');
 // Import helpers at the top level now
-const { sendQuestionWithState, handleTimerExpiration, calculateScore } = require('./tournamentHelpers');
+const { sendQuestionWithState, handleTimerExpiration, calculateScore, saveParticipantScore } = require('./tournamentHelpers');
 
 // --- Trigger Functions (Exported) ---
 
@@ -203,34 +203,29 @@ async function forceTournamentEnd(io, code) {
 
     const prisma = require('../../db');
     logger.info(`[ForceEnd] Forcing end of tournament ${code}`);
-    // ... (rest of the logic: calculate leaderboard, emit tournament_end, save scores, update DB, emit redirect, delete state) ...
-    // Ensure logging uses [ForceEnd] prefix for consistency
+
     const leaderboard = Object.values(state.participants || {})
         .map(p => ({ id: p.id, pseudo: p.pseudo, avatar: p.avatar, score: p.score, isDiffered: !!p.isDiffered }))
         .sort((a, b) => b.score - a.score);
     logger.info(`[ForceEnd] Computed leaderboard for ${code}:`, leaderboard.length, 'participants');
     io.to(`tournament_${code}`).emit("tournament_end", { leaderboard });
+
     try {
         const tournoi = await prisma.tournoi.findUnique({ where: { code } });
         logger.info(`[ForceEnd] Prisma tournoi found: ${tournoi ? tournoi.id : 'not found'}`);
         if (tournoi) {
             for (const participant of Object.values(state.participants || {})) {
-                // logger.debug(`[ForceEnd] Processing participant score:`, participant); // Can be verbose
                 if (!participant.isDiffered && participant.id && !participant.id.startsWith('socket_')) {
-                    const existing = await prisma.score.findFirst({ where: { tournoi_id: tournoi.id, joueur_id: participant.id } });
-                    if (existing) {
-                        // logger.debug(`[ForceEnd] Updating existing score for joueur_id=${participant.id}`);
-                        await prisma.score.update({ where: { id: existing.id }, data: { score: participant.score, date_score: new Date() } });
-                    } else {
-                        // logger.debug(`[ForceEnd] Creating new score for joueur_id=${participant.id}`);
-                        await prisma.score.create({ data: { tournoi_id: tournoi.id, joueur_id: participant.id, score: participant.score, date_score: new Date() } });
-                    }
+                    await saveParticipantScore(prisma, tournoi.id, participant);
                 }
             }
             logger.info(`[ForceEnd] Updating tournoi ${code} leaderboard and status to 'terminé'`);
             await prisma.tournoi.update({ where: { code }, data: { date_fin: new Date(), statut: 'terminé', leaderboard } });
         }
-    } catch (err) { logger.error(`[ForceEnd] Error saving scores/updating tournament ${code}:`, err); }
+    } catch (err) {
+        logger.error(`[ForceEnd] Error saving scores/updating tournament ${code}:`, err);
+    }
+
     logger.info(`[ForceEnd] Emitting tournament_finished_redirect to tournament_${code}`);
     io.to(`tournament_${code}`).emit("tournament_finished_redirect", { code });
     delete tournamentState[code];

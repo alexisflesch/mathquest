@@ -2,7 +2,21 @@ This document is intended for developers and agents contributing to the MathQues
 
 # MathQuest - AGI Agent Guide
 
-This guide provides technical documentation for an AI agent working on the MathQuest project. It covers the application architecture, database schema, event system, and key workflows.
+## VERY IMPORTANT: Documentation & Code DRYness
+
+> **MANDATORY: All changes to backend, frontend, hooks, or API logic must be reflected and documented in the corresponding technical reference files:**
+>
+> - [`backend.md`](./backend.md): Backend/server architecture, event flows, and state
+> - [`frontend.md`](./frontend.md): Frontend architecture, UI flows, and state
+> - [`hook.md`](./hook.md): All custom React hooks and their APIs
+> - [`api.md`](./api.md): All API endpoints, request/response, and business logic
+>
+> **You MUST update these files whenever you modify or add backend, frontend, hook, or API code.**
+>
+> **DRY Principle:**
+> - Always check for existing utilities, components, or logic before writing new code.
+> - Reuse and refactor existing code where possible to keep the codebase maintainable and avoid duplication.
+> - Document any new abstractions or shared logic in the appropriate technical reference file.
 
 ## Project Overview
 
@@ -435,5 +449,37 @@ MathQuest uses Socket.IO rooms to organize real-time communication between diffe
 **Note:**
 - Always use the correct room for the intended audience to avoid leaking information (e.g., do not send the full leaderboard to all students).
 - When mapping between quiz and tournament, use the `tournament_code` field in the Quiz table and the `linkedQuizId` in the tournament state.
+
+## Answer Feedback Overlay & Explication Event
+
+### Overview
+
+When a tournament question timer expires, if the question has an `explication` field, the backend emits a new `explication` socket event to all participants in the tournament room. The frontend displays a floating overlay with the explanation for 5 seconds before advancing to the next question (classic mode) or before allowing the teacher to advance (quiz-linked mode).
+
+### Backend Changes
+- In `handleTimerExpiration` (tournamentHelpers.js):
+  - After scoring and emitting the `tournament_question_state_update`, the server checks if the current question has an `explication`.
+  - If so, emits an `explication` event: `{ questionUid, explication }` to `tournament_${code}`.
+  - Waits 5 seconds before sending the next question or ending the tournament.
+  - If no explication, proceeds as before.
+
+### Frontend Changes
+- In `/src/app/live/[code]/page.tsx`:
+  - Listens for the `explication` event from the socket.
+  - If in tournament mode (not quiz mode), displays the `AnswerFeedbackOverlay` component with the explanation for 5 seconds.
+  - The overlay blocks main content but not the navbar.
+
+### Event Details
+- **Event name:** `explication`
+- **Payload:** `{ questionUid: string, explication: string }`
+- **Emitted by:** Server (after timer expires, if explication exists)
+- **Received by:** Tournament participants (students)
+- **UI:** Overlay with explanation, animated timer bar, and BookOpenCheck icon.
+
+### Example
+
+When a question ends:
+- If the question has an explication, students see an overlay for 5 seconds with the explanation before the next question appears.
+- If not, the next question appears immediately as before.
 
 ---

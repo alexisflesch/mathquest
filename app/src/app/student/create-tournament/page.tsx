@@ -14,8 +14,8 @@
  */
 
 "use client";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import CustomDropdown from "@/components/CustomDropdown";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import { createLogger } from '@/clientLogger';
@@ -31,7 +31,7 @@ interface Filters {
 
 const QUESTION_OPTIONS = [10, 20, 30];
 
-export default function StudentCreateTournamentPage() {
+function StudentCreateTournamentPageInner() {
     const [step, setStep] = useState(1);
     const [filters, setFilters] = useState<Filters>({ niveaux: [], disciplines: [], themes: [] });
     const [niveau, setNiveau] = useState("");
@@ -42,6 +42,8 @@ export default function StudentCreateTournamentPage() {
     const [loading, setLoading] = useState(false);
     const [canCreate, setCanCreate] = useState(true);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const [isTraining, setIsTraining] = useState(false);
     const [availableDisciplines, setAvailableDisciplines] = useState<string[]>([]);
     const [availableThemes, setAvailableThemes] = useState<string[]>([]);
 
@@ -120,6 +122,14 @@ export default function StudentCreateTournamentPage() {
         }
     }, [niveau, discipline, themes, numQuestions]);
 
+    useEffect(() => {
+        // Detect 'training' flag in URL
+        if (searchParams) {
+            const trainingFlag = searchParams.get('training');
+            setIsTraining(trainingFlag === '1' || trainingFlag === 'true');
+        }
+    }, [searchParams]);
+
     // Stepper UI
     const steps = [
         "Niveau",
@@ -156,10 +166,19 @@ export default function StudentCreateTournamentPage() {
                 setLoading(false);
                 return;
             }
+            if (isTraining) {
+                // Only redirect to practice session, do NOT create a tournament
+                const params = new URLSearchParams({
+                    niveau,
+                    discipline,
+                    themes: themes.join(","),
+                    limit: String(numQuestions),
+                });
+                router.push(`/student/practice/session?${params.toString()}`);
+                return;
+            }
             const questions_ids = questions.map(q => q.uid);
-            // inside handleCreateTournament, above student/teacher logic
             const avatar = localStorage.getItem('mathquest_avatar') || '';
-            // Toujours logique "élève" : pseudo/avatar/cookie_id, jamais teacherId
             const pseudo = localStorage.getItem('mathquest_pseudo') || 'Élève';
             let cookie_id = localStorage.getItem('mathquest_cookie_id');
             if (!cookie_id) {
@@ -168,7 +187,6 @@ export default function StudentCreateTournamentPage() {
             }
             const cree_par_id = cookie_id;
             const nom = `${pseudo}`;
-            // build request body including pseudo/avatar if set
             const requestBody = {
                 action: 'create', nom, questions_ids,
                 type: 'direct',
@@ -184,7 +202,6 @@ export default function StudentCreateTournamentPage() {
             const tData = await tRes.json();
             logger.info("Tournament created successfully", { code: tData.code });
             if (!tRes.ok) throw new Error(tData.message || 'Erreur lors de la création du tournoi.');
-            // Redirect after creation
             router.push(`/lobby/${tData.code}`);
         } catch (err: unknown) {
             logger.error("Error creating tournament", err);
@@ -316,8 +333,8 @@ export default function StudentCreateTournamentPage() {
                     )}
                     {/* Step 5: Confirmation */}
                     {step === 5 && (
-                        <div className="w-full flex flex-col gap-4 items-center">
-                            <div className="text-lg font-bold mb-2">Résumé</div>
+                        <div className="w-full flex flex-col gap-4">
+                            <div className="text-lg font-bold mb-2 text-center mt-2">Résumé</div>
                             <ul className="mb-2">
                                 <li><b>Niveau :</b> {niveau}</li>
                                 <li><b>Discipline :</b> {discipline}</li>
@@ -334,14 +351,16 @@ export default function StudentCreateTournamentPage() {
                             )}
                             {/* Info message before creating the tournament */}
                             <div className="text-base text-base-content/80 mb-2 mt-2">
-                                Le tournoi est prêt ! Vous allez être redirigé vers le lobby, où vous pourrez récupérer le lien à partager.
+                                {isTraining
+                                    ? "Mode entraînement : vous allez être redirigé vers une session d'entraînement personnalisée."
+                                    : "Le tournoi est prêt ! Vous allez être redirigé vers le lobby, où vous pourrez récupérer le lien à partager."}
                             </div>
                             <button
-                                className="btn btn-primary btn-lg mt-2"
+                                className="btn btn-primary w-fit self-center mt-4"
                                 disabled={!canCreate || loading}
                                 onClick={handleCreateTournament}
                             >
-                                {loading ? 'Création...' : 'Continuer'}
+                                {loading ? 'Création...' : isTraining ? 'Commencer l\'entraînement' : 'Continuer'}
                             </button>
                             {/* The tournament code and copy button are no longer shown after creation */}
                             {/* 
@@ -364,5 +383,13 @@ export default function StudentCreateTournamentPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function StudentCreateTournamentPage() {
+    return (
+        <Suspense fallback={<div>Chargement...</div>}>
+            <StudentCreateTournamentPageInner />
+        </Suspense>
     );
 }
