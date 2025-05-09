@@ -1,6 +1,6 @@
 const createLogger = require('../../logger');
 const logger = createLogger('UnlockQuizHandler');
-const quizState = require('../quizState');
+const { quizState } = require('../quizState');
 const { patchQuizStateForBroadcast } = require('../quizUtils');
 
 // Note: prisma is not needed here

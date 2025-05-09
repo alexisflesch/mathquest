@@ -483,3 +483,15 @@ When a question ends:
 - If not, the next question appears immediately as before.
 
 ---
+
+## Changelog
+
+### 2025-05-09
+- **Performance:** Removed redundant polling in teacher dashboard that was requesting timer updates every 5 seconds, reducing server load and network traffic
+- **Documentation:** Added detailed explanation of timer synchronization mechanism in `timer-bugs.md`
+
+### 2025-05-08
+- **Bugfix:** Fixed critical bug in quiz state synchronization where `currentQuestionUid` was not properly synchronized with `timerQuestionId`
+- **Documentation:** Added comprehensive timer state documentation in `backend.md`
+
+---

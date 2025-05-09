@@ -1,6 +1,6 @@
 const createLogger = require('../../logger');
 const logger = createLogger('DisconnectQuizHandler');
-const quizState = require('../quizState');
+const { quizState } = require('../quizState');
 const { emitQuizConnectedCount } = require('../quizUtils');
 
 // Note: prisma is not needed here, but passed for consistency

@@ -1,7 +1,7 @@
 // closeQuestionHandler.js - Handles closing a quiz question, sending results, and locking further answers
 const createLogger = require('../../logger');
 const logger = createLogger('CloseQuestionHandler');
-const quizState = require('../quizState');
+const { quizState } = require('../quizState');
 
 function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     logger.info(`[CloseQuestion] Received for quiz ${quizId}, question ${questionUid}`);
@@ -19,6 +19,12 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     // Lock further answers for this question
     if (!state.lockedQuestions) state.lockedQuestions = {};
     state.lockedQuestions[questionUid] = true;
+
+    // --- CRITICAL FIX: In quiz mode, ensure currentQuestionUid is set to the closed question ---
+    if (!state.tournament_code) {
+        state.currentQuestionUid = questionUid;
+        logger.debug(`[CloseQuestionHandler] [QUIZ MODE] Set quizState[${quizId}].currentQuestionUid = ${questionUid} on close`);
+    }
 
     // Find correct answers for the question
     const question = (state.questions || []).find(q => q.uid === questionUid);

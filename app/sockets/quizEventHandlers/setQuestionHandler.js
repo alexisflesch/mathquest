@@ -144,36 +144,20 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, code
         }
     }
 
-    // Always reset timer to initial value and STOPPED state for the new question in quiz mode
-    triggerQuizTimerAction(io, quizId, questionUid, 'stop', initialTime);
-    quizState[quizId].chrono = initializeChrono(initialTime);
-    quizState[quizId].timerInitialValue = initialTime;
-    logger.info(`[SetQuestion][Patch] Reset timer for question ${questionUid} to initialTime=${initialTime} and status=stop`);
-    emitQuizTimerUpdate(io, quizId, 'stop', questionUid, initialTime);
-
-    // Emit success message to teacher
-    io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
-        status: 'success',
-        message: 'Question set successfully.'
-    });
-
-    // Ensure the `questionStates` object is initialized and updated correctly
-    if (!quizState[quizId].questionStates) {
-        quizState[quizId].questionStates = {};
-    }
-
-    // Mark the current question as played
-    if (questionUid) {
-        quizState[quizId].questionStates[questionUid] = true;
-        logger.debug(`[SetQuestionHandler] Updated questionStates: ${JSON.stringify(quizState[quizId].questionStates)}`);
-    }
-
     // --- Update Quiz State ---
     quizState[quizId].currentQuestionIdx = idx;
-    quizState[quizId].currentQuestionUid = questionUid;
+    // Always set currentQuestionUid in quiz mode (not tournament) BEFORE any timer/chrono logic
+    if (!quizState[quizId].tournament_code) {
+        quizState[quizId].currentQuestionUid = questionUid;
+        logger.debug(`[SetQuestionHandler] Set currentQuestionUid = ${questionUid} for quizId=${quizId} (stack: ${new Error().stack})`);
+    }
     quizState[quizId].timerQuestionId = questionUid;  // The question ID for the timer
     quizState[quizId].locked = false;
     quizState[quizId].ended = false;
+
+    // Log current question index and UID
+    logger.debug(`[SetQuestion] Updated quizState[${quizId}].currentQuestionUid = ${questionUid}`);
+
 
     // --- Handle Question Timer State ---
     // Get this question's existing timer or create a new one
@@ -183,7 +167,6 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, code
     triggerQuizTimerAction(io, quizId, questionUid, 'stop', initialTime);
     quizState[quizId].chrono = initializeChrono(initialTime);
     quizState[quizId].timerInitialValue = initialTime;
-    logger.info(`[SetQuestion] Reset timer for question ${questionUid} to initialTime=${initialTime}`);
     emitQuizTimerUpdate(io, quizId, 'stop', questionUid, initialTime);
 
     // Add quiz ID to quizState for use by patchQuizStateForBroadcast

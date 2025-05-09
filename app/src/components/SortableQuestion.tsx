@@ -246,6 +246,10 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     const validateEditHandler = (e: React.MouseEvent | React.KeyboardEvent<HTMLInputElement>) => {
         e.stopPropagation();
         const newTime = parseInt(editTimerValue, 10);
+
+        logger.debug(`validateEditHandler triggered for question ${q.uid}`);
+        logger.debug(`Current editTimerValue: ${editTimerValue}`);
+
         if (!isNaN(newTime) && newTime >= 0) {
             logger.info(`Validating timer edit for question ${q.uid}: ${newTime}s`);
 
@@ -255,11 +259,15 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
             // Wait for backend confirmation before clearing pendingTimeValue
             setPendingTimeValue(newTime);
 
+            logger.debug(`Pending time value set to ${newTime} for question ${q.uid}`);
+
             // Close the edit mode
             setEditingTimer(false);
+            logger.debug(`Editing mode closed for question ${q.uid}`);
+
             // Do NOT trigger play/resume here. Timer should remain paused or stopped.
         } else {
-            logger.error("Invalid timer value entered.");
+            logger.error(`Invalid timer value entered for question ${q.uid}: ${editTimerValue}`);
         }
     };
 

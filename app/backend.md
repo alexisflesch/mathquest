@@ -251,5 +251,50 @@ This document provides a comprehensive technical reference for MathQuest's backe
 - Frontend maintains a local timer only for smooth UI countdown between updates
 - For pause/resume actions, frontend never sends timeLeft values to backend
 - Only explicit timer edits (`emitSetTimer`) send time values to the backend
+- Frontend relies on socket events rather than polling for timer updates (fix: removed polling mechanism)
+
+---
+
+## 12. Known Issues & Solutions
+
+### 12.1. Quiz State Synchronization Bug
+
+#### Issue: 
+A critical bug was identified where `currentQuestionUid` in the `quizState` was not being properly synchronized across different components of the application. This manifested as the dashboard/projection views showing "question A" as active, while the backend was processing "question B" during timer actions.
+
+#### Root Cause:
+1. **Inconsistent Import Pattern**: In `quizEvents.js` and certain other files, `quizState` was imported directly as:
+   ```javascript
+   const quizState = require('./quizState');
+   ```
+   But the correct export from `quizState.js` had it as a property:
+   ```javascript
+   module.exports = { quizState: _quizState, createDefaultQuestionTimer, getQuestionTimer };
+   ```
+
+   This created separate, disconnected copies of the state object, where:
+   - Some files accessed the correct shared state via proper destructuring: `const { quizState } = require('./quizState');`
+   - Other files created local copies that didn't reflect updates made elsewhere
+
+2. **Timer vs. currentQuestionUid Desynchronization**: When a timer action occurred, `timerQuestionId` would be updated correctly, but the `currentQuestionUid` property, accessed through the incorrect import, wasn't being synchronized.
+
+#### Solution:
+1. **Consistent Import Pattern**: Updated all imports in `quizEvents.js` and other affected files to properly destructure the quizState object:
+   ```javascript
+   const { quizState } = require('./quizState');
+   ```
+
+2. **Explicit Synchronization**: Added checks to synchronize `currentQuestionUid` with `timerQuestionId` when:
+   - A state object is first accessed/initialized (`ensureQuizStateInitialized`)
+   - Timer actions occur (`timerActionHandler.js`)
+   - Quiz state is requested (`get_quiz_state` handler)
+   - State is patched for broadcast (`patchQuizStateForBroadcast`)
+
+3. **Property Redundancy**: Ensured both `id` and `quizId` properties are set on state objects to prevent "UNKNOWN_QUIZ_ID" issues in logs and to ensure consistent identification.
+
+#### Prevention:
+- Added extensive logging around state synchronization points
+- Implemented destructuring imports consistently across all files
+- Added explicit property validation in state access functions
 
 ---

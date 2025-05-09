@@ -24,7 +24,8 @@ const { patchQuizStateForBroadcast } = require('./quizUtils');
 
 // --- Shared quiz state initialization for dashboard and projector ---
 async function ensureQuizStateInitialized(quizId, prisma, socket, role = null, teacherId = null) {
-    const quizState = require('./quizState');
+    // CRITICAL FIX: Import the quizState object correctly
+    const { quizState } = require('./quizState');
     if (!quizState[quizId]) {
         quizState[quizId] = {
             currentQuestionUid: null,
@@ -57,10 +58,26 @@ async function ensureQuizStateInitialized(quizId, prisma, socket, role = null, t
             if (quiz && quiz.tournament_code) {
                 quizState[quizId].tournament_code = quiz.tournament_code;
             }
+
+            // Always set quizId as 'id' property to help with patching
+            quizState[quizId].id = quizId;
+
         } catch (e) {
             const logger = require('../logger')("QuizEvents");
             logger.error(`[ensureQuizStateInitialized] Error loading quiz ${quizId} questions:`, e);
         }
+    } else {
+        // CRITICAL FIX: If state already exists, ensure currentQuestionUid and timerQuestionId are in sync if timer is active
+        if (quizState[quizId].timerStatus === 'play' &&
+            quizState[quizId].timerQuestionId &&
+            quizState[quizId].currentQuestionUid !== quizState[quizId].timerQuestionId) {
+
+            logger.warn(`[ensureQuizStateInitialized] Fixing mismatch: currentQuestionUid=${quizState[quizId].currentQuestionUid}, active timerQuestionId=${quizState[quizId].timerQuestionId}`);
+            quizState[quizId].currentQuestionUid = quizState[quizId].timerQuestionId;
+        }
+
+        // Ensure quizId is set as 'id' property
+        quizState[quizId].id = quizId;
     }
     return quizState[quizId];
 }
@@ -71,7 +88,7 @@ function registerQuizEvents(io, socket, prisma) {
     socket.on("join_quiz", (payload) => handleJoinQuiz(io, socket, prisma, payload));
     socket.on("quiz_set_question", (payload) => {
         handleSetQuestion(io, socket, prisma, payload);
-        const quizState = require('./quizState');
+        const { quizState } = require('./quizState');
         const { quizId } = payload;
         // Ensure askedQuestions set is initialized
         if (!quizState[quizId].askedQuestions) {
@@ -90,7 +107,7 @@ function registerQuizEvents(io, socket, prisma) {
     socket.on("quiz_lock", (payload) => handleLock(io, socket, prisma, payload));
     socket.on("quiz_unlock", (payload) => handleUnlock(io, socket, prisma, payload));
     socket.on("quiz_end", async (payload) => {
-        const quizState = require('./quizState');
+        const { quizState } = require('./quizState');
         const { quizId } = payload;
         if (!payload.tournamentCode && quizState[quizId]?.tournament_code) {
             payload.tournamentCode = quizState[quizId].tournament_code;
@@ -109,10 +126,24 @@ function registerQuizEvents(io, socket, prisma) {
 
     // Add handler for get_quiz_state event
     socket.on("get_quiz_state", ({ quizId }) => {
-        const quizState = require('./quizState');
-        logger.info(`Socket ${socket.id} requested quiz state for quiz ${quizId}`);
+        const { quizState } = require('./quizState');
+        logger.info(`[get_quiz_state] Socket ${socket.id} requested quiz state for quiz ${quizId}, current state: ${JSON.stringify({
+            currentQuestionUid: quizState[quizId]?.currentQuestionUid,
+            timerStatus: quizState[quizId]?.timerStatus,
+            timerQuestionId: quizState[quizId]?.timerQuestionId
+        })}`);
+
         if (quizState[quizId]) {
             const state = quizState[quizId];
+
+            // CRITICAL FIX: Ensure currentQuestionUid matches timerQuestionId when timer is active
+            if (state.timerQuestionId && state.timerStatus === 'play') {
+                if (state.currentQuestionUid !== state.timerQuestionId) {
+                    logger.warn(`[get_quiz_state] FIXING MISMATCH: currentQuestionUid=${state.currentQuestionUid} doesn't match active timer questionId=${state.timerQuestionId}`);
+                    state.currentQuestionUid = state.timerQuestionId;
+                }
+            }
+
             // Store the initial timer value if not present (for backward compatibility)
             if (state.chrono && typeof state.chrono.timeLeft === 'number' && !state.timerInitialValue) {
                 state.timerInitialValue = state.chrono.timeLeft;
@@ -142,7 +173,7 @@ function registerQuizEvents(io, socket, prisma) {
                     ended: state.ended,
                 };
                 socket.emit("quiz_state", filteredState);
-                logger.debug(`Sent filtered quiz state for quiz ${quizId} to student`, filteredState);
+                logger.debug(`[get_quiz_state] Sent filtered quiz state for quiz ${quizId} to student, UID: ${filteredState.currentQuestionUid}`);
                 return;
             }
             // TEACHER/PROJECTOR: Full state, with timer patch
@@ -153,20 +184,29 @@ function registerQuizEvents(io, socket, prisma) {
                 const remaining = Math.max(original - elapsed, 0);
                 logger.info(`[get_quiz_state] Recalculated timeLeft: original=${original}s, elapsed=${elapsed}s, remaining=${remaining}s`);
                 const stateCopy = { ...state, chrono: { ...state.chrono, timeLeft: remaining }, timerTimeLeft: remaining };
+                logger.debug(`[get_quiz_state] About to send state with UID: ${stateCopy.currentQuestionUid}, timerQuestionId: ${stateCopy.timerQuestionId}`);
                 socket.emit("quiz_state", stateCopy);
-                logger.debug(`Sent quiz state for quiz ${quizId}`);
+                logger.debug(`[get_quiz_state] Sent quiz state copy for quiz ${quizId}, UID: ${stateCopy.currentQuestionUid}`);
             } else {
+                logger.debug(`[get_quiz_state] About to send state with UID: ${state.currentQuestionUid}, timerQuestionId: ${state.timerQuestionId}`);
                 socket.emit("quiz_state", state);
-                logger.debug(`Sent quiz state for quiz ${quizId}`);
+                logger.debug(`[get_quiz_state] Sent quiz state for quiz ${quizId}, UID: ${state.currentQuestionUid}`);
             }
         } else {
-            logger.warn(`Quiz state requested for non-existent quiz ${quizId}`);
+            logger.warn(`[get_quiz_state] Quiz state requested for non-existent quiz ${quizId}`);
+            // Add timer state to logs
+            logger.debug(`[get_quiz_state] Timer state: ${JSON.stringify({
+                timerStatus: quizState[quizId]?.timerStatus,
+                timerQuestionId: quizState[quizId]?.timerQuestionId,
+                timerTimeLeft: quizState[quizId]?.timerTimeLeft,
+                timerTimestamp: quizState[quizId]?.timerTimestamp
+            })}`);
         }
     });
 
     // Add handler for updating tournament code from dashboard
     socket.on("update_tournament_code", async ({ quizId, tournamentCode, teacherId, cookie_id }) => {
-        const quizState = require("./quizState");
+        const { quizState } = require("./quizState");
         if (!quizId || !tournamentCode) {
             logger.warn(`[update_tournament_code] Missing quizId or tournamentCode`);
             return;
@@ -193,7 +233,7 @@ function registerQuizEvents(io, socket, prisma) {
 
         // --- PATCH: Immediately emit leaderboard to projection room ---
         try {
-            const quizState = require('./quizState');
+            const { quizState } = require('./quizState');
             const { tournamentState } = require('./tournamentHandler');
             const { computeLeaderboard } = require('./tournamentUtils/computeLeaderboard');
             const quiz = quizState[quizId];
@@ -215,7 +255,7 @@ function registerQuizEvents(io, socket, prisma) {
     });
 
     socket.on("quiz_reset_ended", ({ quizId }) => {
-        const quizState = require('./quizState');
+        const { quizState } = require('./quizState');
         if (quizState[quizId]) {
             // Reset all relevant fields for a fresh session
             quizState[quizId].ended = false;
@@ -229,8 +269,13 @@ function registerQuizEvents(io, socket, prisma) {
             quizState[quizId].timerTimestamp = null;
             // Optionally, keep profTeacherId and questions
             logger.info(`Quiz ${quizId} state fully reset for new session`);
-            // --- PATCH: RECALCULATE TIMER FOR BROADCAST ---
+
+            // --- CRITICAL FIX: Ensure ID is set before patching ---
             let state = quizState[quizId];
+            state.id = quizId;
+            state.quizId = quizId; // Set both properties for redundancy
+
+            // --- PATCH: RECALCULATE TIMER FOR BROADCAST ---
             let patchedState = patchQuizStateForBroadcast(state);
             io.to(`dashboard_${quizId}`).emit("quiz_state", patchedState);
         }
@@ -244,7 +289,7 @@ function registerQuizEvents(io, socket, prisma) {
 
         // Use shared stats utility
         try {
-            const quizState = require('./quizState');
+            const { quizState } = require('./quizState');
             const { tournamentState } = require('./tournamentHandler');
             const { computeAnswerStats } = require('./tournamentUtils/computeStats');
             const quiz = quizState[quizId];

@@ -1,6 +1,6 @@
 const createLogger = require('../../logger');
 const logger = createLogger('EndQuizHandler');
-const quizState = require('../quizState');
+const { quizState } = require('../quizState');
 const { tournamentState } = require('../tournamentUtils/tournamentState');
 logger.debug(`[handleEnd] tournamentState: ${JSON.stringify(tournamentState)}`);
 

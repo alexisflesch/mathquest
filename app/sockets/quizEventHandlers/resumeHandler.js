@@ -1,6 +1,6 @@
 const createLogger = require('../../logger');
 const logger = createLogger('ResumeQuizHandler');
-const quizState = require('../quizState');
+const { quizState } = require('../quizState');
 const { tournamentState } = require('../tournamentHandler');
 const { patchQuizStateForBroadcast, updateChrono, emitQuizTimerUpdate } = require('../quizUtils');
 const { manageTimer } = require('../tournamentUtils/tournamentTriggers');
@@ -41,6 +41,18 @@ function handleResume(io, socket, prisma, { quizId, teacherId, tournamentCode })
     }
 
     logger.info(`[ResumeQuiz] Resuming with timeLeft=${timeLeft}s from paused state`);
+
+    // Add logging for any assignment to currentQuestionUid
+    Object.defineProperty(quizState[quizId], 'currentQuestionUid', {
+        set(value) {
+            logger.debug(`[ResumeHandler] Set currentQuestionUid = ${value} for quizId=${quizId} (stack: ${new Error().stack})`);
+            this._currentQuestionUid = value;
+        },
+        get() {
+            return this._currentQuestionUid;
+        },
+        configurable: true
+    });
 
     // Update quiz state flags
     quizState[quizId] = updateChrono(quizState[quizId], timeLeft, 'play');

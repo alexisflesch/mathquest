@@ -1,6 +1,6 @@
 const createLogger = require('../../logger');
 const logger = createLogger('JoinQuizHandler');
-const quizState = require('../quizState');
+const { quizState } = require('../quizState');
 const prisma = require('../../db'); // Ensure prisma is required
 const { emitQuizConnectedCount, patchQuizStateForBroadcast } = require('../quizUtils');
 
@@ -56,7 +56,7 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
                 });
                 logger.info(`Loaded ${orderedQuestions.length} questions for quiz ${quizId}`);
 
-                // Set default current question if not set and questions exist
+                // Set default currentQuestionUid and currentQuestionIdx if not set and questions exist
                 if (
                     quizState[quizId].questions &&
                     quizState[quizId].questions.length > 0 &&
@@ -64,6 +64,7 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
                 ) {
                     quizState[quizId].currentQuestionUid = quizState[quizId].questions[0].uid;
                     quizState[quizId].currentQuestionIdx = 0;
+                    logger.info(`[JoinQuiz] Set default currentQuestionUid to ${quizState[quizId].currentQuestionUid} for quiz ${quizId}`);
                 }
             }
         } catch (e) {

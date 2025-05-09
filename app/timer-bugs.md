@@ -19,6 +19,42 @@
 - **Stop:**
   - Resets the timer for that question to its initial value and stops it.
 
+## Timer Bugs Fixed
+
+### 1. Redundant Polling for Timer Updates (Fixed: 2025-05-09)
+
+#### Issue:
+The frontend (useTeacherQuizSocket.ts) was making unnecessary API calls to the backend every 5 seconds to request the latest timer state, even though proper event-based communication channels were already in place.
+
+```typescript
+// Problematic code in useTeacherQuizSocket.ts
+const pingInterval = setInterval(() => {
+    if (timerStatus === 'play' && timerQuestionId) {
+        logger.debug('Requesting latest timer state from backend');
+        quizSocket.emit("get_quiz_state", { quizId });
+    }
+}, 5000); // Request updates every 5 seconds while timer is running
+```
+
+#### Root Cause:
+- This polling mechanism was likely introduced as a fallback synchronization method
+- However, the application already had a robust event-based system:
+  1. Backend emits `quiz_timer_update` events whenever timer state changes
+  2. Frontend maintains local timer with `requestAnimationFrame` for smooth UI countdown
+  3. Socket events already provide reliable synchronization points
+
+#### Impact:
+- Unnecessary server load, especially in classrooms with many connections
+- Potential race conditions where polling responses could arrive out of order
+- Redundant updates that could cause UI flicker or inconsistent state
+
+#### Solution:
+- Removed the redundant polling interval entirely
+- Relied on the existing event-based system for timer synchronization:
+  - `quiz_timer_update` events from backend for state changes
+  - Local requestAnimationFrame-based timer for smooth countdown between updates
+  - Initial state synchronization on connection or reconnection
+
 ### 3. Tournament Synchronization
 - Tournament timer state should be synchronized with the per-question timer in the quiz.
 - Each question in the tournament should also have its own timer state, not a global one.

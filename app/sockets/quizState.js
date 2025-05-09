@@ -69,4 +69,31 @@ function getQuestionTimer(quizId, questionId) {
     return quizState[quizId].questionTimers[questionId];
 }
 
-module.exports = { quizState, createDefaultQuestionTimer, getQuestionTimer };
+/**
+ * Wraps a quiz state object with a setter for currentQuestionUid that logs every assignment
+ * @param {string} quizId
+ * @param {object} state
+ */
+function wrapQuizStateWithCurrentQuestionUidLogger(quizId, state) {
+    if (!state || Object.getOwnPropertyDescriptor(state, 'currentQuestionUid')?.set) return;
+    let _currentQuestionUid = state.currentQuestionUid;
+    Object.defineProperty(state, 'currentQuestionUid', {
+        get() { return _currentQuestionUid; },
+        set(value) {
+            const logger = require('../../logger')("QuizState");
+            logger.debug(`[GLOBAL] Set currentQuestionUid = ${value} for quizId=${quizId} (stack: ${new Error().stack})`);
+            _currentQuestionUid = value;
+        },
+        configurable: true,
+        enumerable: true
+    });
+}
+
+// Patch: Wrap every new quizState object with the logger
+const _quizState = quizState;
+Object.defineProperty(_quizState, 'wrapWithLogger', {
+    value: wrapQuizStateWithCurrentQuestionUidLogger,
+    enumerable: false
+});
+
+module.exports = { quizState: _quizState, createDefaultQuestionTimer, getQuestionTimer };

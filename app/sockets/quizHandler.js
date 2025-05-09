@@ -26,7 +26,7 @@ const {
     triggerTournamentResume,
     triggerTournamentTimerSet,
 } = require('./tournamentHandler'); // Import trigger functions
-const quizState = require('./quizState');
+const { quizState } = require('./quizState');
 const registerQuizEvents = require('./quizEvents');
 const { calculateScore } = require('./tournamentUtils/scoreUtils');
 

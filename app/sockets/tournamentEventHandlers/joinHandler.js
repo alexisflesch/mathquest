@@ -148,7 +148,7 @@ async function handleJoinTournament(io, socket, { code, cookie_id, pseudo: clien
 
             if (linkedQuizId) {
                 // Look up current question and time from the quiz state
-                const quizState = require('../quizState');
+                const { quizState } = require('../quizState');
                 if (quizState[linkedQuizId]) {
                     logger.info(`Found quiz state for linkedQuizId=${linkedQuizId}`);
 

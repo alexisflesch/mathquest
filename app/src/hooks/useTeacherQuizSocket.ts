@@ -134,14 +134,6 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
     useEffect(() => {
         if (!quizSocket) return;
 
-        // Set up a periodic ping to request latest timer state from backend
-        const pingInterval = setInterval(() => {
-            if (timerStatus === 'play' && timerQuestionId) {
-                logger.debug('Requesting latest timer state from backend');
-                quizSocket.emit("get_quiz_state", { quizId });
-            }
-        }, 5000); // Request updates every 5 seconds while timer is running
-
         const handleQuizState = (state: QuizState) => {
             logger.debug('Processing quiz_state', state);
             setQuizState(state);
@@ -298,7 +290,6 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
         });
 
         return () => {
-            clearInterval(pingInterval);
             quizSocket.off("quiz_state", handleQuizState);
             quizSocket.off("quiz_timer_update", handleTimerUpdate);
             quizSocket.off("quiz_connected_count");

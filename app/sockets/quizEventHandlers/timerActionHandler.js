@@ -63,20 +63,8 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
                         }
                     });
 
-                    // PATCH: If timer edits exist in questionTimers, apply them to the question objects (preserve edits from dashboard)
-                    if (quizState[quizId].questionTimers && Object.keys(quizState[quizId].questionTimers).length > 0) {
-                        orderedQuestions.forEach(q => {
-                            if (
-                                quizState[quizId].questionTimers[q.uid] &&
-                                typeof quizState[quizId].questionTimers[q.uid].initialTime === 'number'
-                            ) {
-                                q.temps = quizState[quizId].questionTimers[q.uid].initialTime;
-                            }
-                        });
-                    }
-
                     quizState[quizId].questions = orderedQuestions;
-                    // Initialize questionTimers for all questions (using possibly patched q.temps)
+                    // Initialize questionTimers for all questions
                     quizState[quizId].questionTimers = {};
                     orderedQuestions.forEach(q => {
                         quizState[quizId].questionTimers[q.uid] = {
@@ -86,6 +74,13 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
                             timestamp: null
                         };
                     });
+                    // Set currentQuestionUid and currentQuestionIdx to the question being played
+                    const idx = orderedQuestions.findIndex(q => q.uid === questionId);
+                    if (idx !== -1) {
+                        quizState[quizId].currentQuestionUid = questionId;
+                        quizState[quizId].currentQuestionIdx = idx;
+                        logger.info(`[TimerAction] [INIT] Set currentQuestionUid to ${questionId} (idx: ${idx}) for quizId=${quizId}`);
+                    }
                     logger.info(`[TimerAction] Loaded questions for quizId=${quizId}: [${orderedQuestions.map(q => q.uid).join(', ')}]`);
                 }
             }
@@ -209,9 +204,14 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
 
     // Update the question timer state
     triggerQuizTimerAction(io, quizId, questionId, status, finalTimeLeft);
-    quizState[quizId].timerQuestionId = questionId;
-    quizState[quizId] = updateChrono(quizState[quizId], finalTimeLeft, status);
-    quizState[quizId].id = quizId;
+    quizState[quizId].timerQuestionId = questionId; // Identifies which question's timer is being referred to
+    // Always set currentQuestionUid for dashboard/projection sync
+    quizState[quizId].currentQuestionUid = questionId;
+    logger.debug(`[TimerAction] Set quizState[${quizId}].currentQuestionUid = ${questionId} (mode: ${quizState[quizId].tournament_code ? 'tournament' : 'quiz'})`);
+    quizState[quizId] = updateChrono(quizState[quizId], finalTimeLeft, status); // Updates general chrono if used
+    quizState[quizId].id = quizId; // Ensure quizId is part of the state object
+
+    logger.debug(`[TimerAction] Set quizState[${quizId}].currentQuestionUid = ${questionId}`); // Log for verification
 
     logger.debug(`[TimerAction] Emitting quiz_timer_update with status=${status}, questionId=${questionId}, timeLeft=${finalTimeLeft}`);
 
@@ -245,10 +245,9 @@ async function handleTimerAction(io, socket, prisma, { status, questionId, timeL
                     const prevTimer = quizState[quizId].questionTimers[prevUid];
                     // CRITICAL FIX: Only reset timer if status is not 'pause'
                     if (prevTimer.status !== 'pause') {
-                        logger.info(`[TimerAction] Resetting timer for previous question ${prevUid} to initial time`);
-                        prevTimer.status = 'stop';
-                        prevTimer.timeLeft = prevTimer.initialTime;
-                        prevTimer.timestamp = null;
+                        logger.info(`[TimerAction] Stopping timer for previous question ${prevUid} by calling triggerQuizTimerAction`);
+                        // Call triggerQuizTimerAction to properly stop the timer and clear its countdown
+                        triggerQuizTimerAction(io, quizId, prevUid, 'stop', prevTimer.initialTime);
                     } else {
                         // If timer is paused, preserve its state
                         logger.info(`[TimerAction] Preserving paused timer for question ${prevUid} (${prevTimer.timeLeft}s)`);

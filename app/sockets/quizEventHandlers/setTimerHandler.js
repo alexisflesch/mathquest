@@ -1,6 +1,6 @@
 const createLogger = require('../../logger');
 const logger = createLogger('SetTimerHandler');
-const quizState = require('../quizState');
+const { quizState } = require('../quizState');
 const { tournamentState, triggerTournamentTimerSet } = require('../tournamentHandler');
 const { patchQuizStateForBroadcast, updateChrono } = require('../quizUtils');
 const { triggerQuizSetTimer } = require('../quizTriggers');

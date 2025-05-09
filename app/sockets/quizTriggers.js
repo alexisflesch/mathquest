@@ -152,7 +152,12 @@ function triggerQuizTimerAction(io, quizId, questionId, action, timeLeft) {
             logger.info(`[triggerQuizTimerAction] Countdown expired for quizId=${quizId}, questionId=${questionId}`);
             updateQuestionTimer(quizId, questionId, 'stop', 0);
             emitQuizTimerUpdate(io, quizId, 'stop', questionId, 0);
-            io.to(`dashboard_${quizId}`).emit('quiz_state', patchQuizStateForBroadcast(quizState[quizId]));
+            // CRITICAL FIX: Ensure quizId is set in quizState before patching
+            if (quizState[quizId]) {
+                quizState[quizId].id = quizId;
+                quizState[quizId].quizId = quizId; // Set both properties for redundancy
+                io.to(`dashboard_${quizId}`).emit('quiz_state', patchQuizStateForBroadcast(quizState[quizId]));
+            }
         }, msLeft);
 
         // Debug: Log after setting the timeout

@@ -48,20 +48,7 @@ async function emitQuizConnectedCount(io, prisma, code) {
 
 // Centralized function to emit quiz_timer_update
 function emitQuizTimerUpdate(io, quizId, status, questionId, timeLeft) {
-    const timestamp = Date.now();
-    io.to(`dashboard_${quizId}`).emit("quiz_timer_update", {
-        status,
-        questionId,
-        timeLeft,
-        timestamp,
-    });
-    io.to(`projection_${quizId}`).emit("quiz_timer_update", {
-        status,
-        questionId,
-        timeLeft,
-        timestamp,
-    });
-    console.info(`[emitQuizTimerUpdate] Emitted quiz_timer_update for quizId=${quizId}, status=${status}, questionId=${questionId}, timeLeft=${timeLeft}`);
+    io.to(quizId).emit('quiz_timer_update', { quizId, status, questionId, timeLeft });
 }
 
 // Helper to patch quiz state with recalculated timer for broadcast
@@ -70,9 +57,22 @@ function patchQuizStateForBroadcast(state) {
         logger.warn('[patchQuizStateForBroadcast] Received null or undefined state.');
         return state;
     }
+
+    // CRITICAL FIX: Ensure we have a valid quizId in state.id
+    if (!state.id && state.quizId) {
+        logger.warn(`[patchQuizStateForBroadcast] Missing state.id but found state.quizId: ${state.quizId}. Setting id.`);
+        state.id = state.quizId;
+    }
+
     // Ensure state.id (quizId) is present for logging context
     const quizIdForLog = state.id || 'UNKNOWN_QUIZ_ID';
     logger.info(`[patchQuizStateForBroadcast] Patching state for quizId: ${quizIdForLog}, currentQuestionUid: ${state.currentQuestionUid}, currentQuestionIdx: ${state.currentQuestionIdx}`);
+
+    // CRITICAL FIX: If timerQuestionId exists and is different from currentQuestionUid, sync them
+    if (state.timerQuestionId && state.timerStatus === 'play' && state.currentQuestionUid !== state.timerQuestionId) {
+        logger.warn(`[patchQuizStateForBroadcast] Fixing mismatch: currentQuestionUid=${state.currentQuestionUid}, active timerQuestionId=${state.timerQuestionId}`);
+        state.currentQuestionUid = state.timerQuestionId;
+    }
 
     let currentQuestionObject = null;
     if (state.questions && Array.isArray(state.questions) && state.questions.length > 0) {
@@ -191,7 +191,6 @@ function updateQuestionTimer(quizId, questionId, status, timeLeft) {
         console.info(`[updateQuestionTimer][ACTION] Setting questionId=${questionId} in quizId=${quizId} to PLAY`);
         if (prevStatus === 'play' && questionTimer.timeLeft > 0) {
             console.warn(`[updateQuestionTimer] Ignoring play: timer already running for quizId=${quizId}, questionId=${questionId}`);
-            console.warn(new Error().stack); // Log stack trace for duplicate play
             return;
         }
         if (prevStatus === 'pause') {
