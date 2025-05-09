@@ -6,10 +6,10 @@ const { emitQuizConnectedCount, patchQuizStateForBroadcast } = require('../quizU
 
 async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
     logger.info(`[DEBUG] handleJoinQuiz called for quizId=${quizId}, role=${role}, socket.id=${socket.id}`);
-    socket.join(`quiz_${quizId}`);
-    logger.info(`Socket ${socket.id} joined room quiz_${quizId} with role ${role}`);
+    socket.join(`dashboard_${quizId}`);
+    logger.info(`Socket ${socket.id} joined room dashboard_${quizId} with role ${role}`);
     socket.emit("joined_room", {
-        room: `quiz_${quizId}`,
+        room: `dashboard_${quizId}`,
         socketId: socket.id,
         rooms: Array.from(socket.rooms),
     });
@@ -28,7 +28,8 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
             timerQuestionId: null,
             timerTimeLeft: null,
             timerTimestamp: null,
-            connectedSockets: new Set(), // Ajout du suivi des connexions
+            connectedSockets: new Set(),
+            questionTimers: {}, // <-- Add this for per-question timers
         };
 
         try {
@@ -43,11 +44,44 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
                     }
                 });
                 quizState[quizId].questions = orderedQuestions;
+                // Initialize questionTimers for all questions
+                quizState[quizId].questionTimers = {};
+                orderedQuestions.forEach(q => {
+                    quizState[quizId].questionTimers[q.uid] = {
+                        status: 'stop',
+                        timeLeft: q.temps || 20,
+                        initialTime: q.temps || 20,
+                        timestamp: null
+                    };
+                });
                 logger.info(`Loaded ${orderedQuestions.length} questions for quiz ${quizId}`);
+
+                // Set default current question if not set and questions exist
+                if (
+                    quizState[quizId].questions &&
+                    quizState[quizId].questions.length > 0 &&
+                    !quizState[quizId].currentQuestionUid
+                ) {
+                    quizState[quizId].currentQuestionUid = quizState[quizId].questions[0].uid;
+                    quizState[quizId].currentQuestionIdx = 0;
+                }
             }
         } catch (e) {
             logger.error(`Error loading quiz ${quizId} questions:`, e);
         }
+    }
+
+    // PATCH: If timer edits exist in questionTimers, apply them to the question objects (only if not first init)
+    if (Object.keys(quizState[quizId].questionTimers).length > 0) {
+        const orderedQuestions = quizState[quizId].questions;
+        orderedQuestions.forEach(q => {
+            if (
+                quizState[quizId].questionTimers[q.uid] &&
+                typeof quizState[quizId].questionTimers[q.uid].initialTime === 'number'
+            ) {
+                q.temps = quizState[quizId].questionTimers[q.uid].initialTime;
+            }
+        });
     }
 
     // Always update profTeacherId and profSocketId when the teacher dashboard joins
@@ -89,6 +123,10 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
     }
     if (code) await emitQuizConnectedCount(io, prisma, code);
     else logger.warn(`[QUIZ_CONNECTED] Aucun code tournoi trouvé pour quizId=${quizId}`);
+
+    if (!quizState[quizId].id) {
+        quizState[quizId].id = quizId;
+    }
 
     socket.emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
 }

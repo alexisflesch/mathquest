@@ -4,6 +4,12 @@ Test it
 # PWA
 Do it
 
+# Timer issues
+Even though we've patched timerActionHandler.js to preserve timer edits when reinitializing from the database, there's still an issue with how initialTime is set during various operations.
+
+I notice that in setTimerHandler.js, we update both timeLeft and initialTime when editing a timer value, but this change might not be properly reflected in the question's temps property or in other question timers.
+
+There appears to be confusion between the global chrono state and the per-question timer states, especially during timer actions.
 
 # Feedback :
 - mettre en option dans un fichier bien visible :

@@ -70,9 +70,9 @@ const ClientOnlyMathJax: React.FC<MathJaxWrapperProps> = ({ children, zoomFactor
 
     useEffect(() => {
         setIsClient(true);
-        logger.info('MathJaxWrapper mounted');
+        // logger.info('MathJaxWrapper mounted');
         return () => {
-            logger.info('MathJaxWrapper unmounted');
+            // logger.info('MathJaxWrapper unmounted');
         };
     }, []);
 

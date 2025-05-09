@@ -68,6 +68,11 @@ async function handleStartTournament(io, socket, { code }) {
             stopped: false, // Initialize stopped state
         };
 
+        // Ensure askedQuestions set is initialized in tournamentState
+        if (!tournamentState[code].askedQuestions) {
+            tournamentState[code].askedQuestions = new Set();
+        }
+
         // Only wait 5 seconds before starting the first question if NOT linked to a quiz (classic mode)
         if (!tournamentState[code].linkedQuizId) {
             setTimeout(async () => { // Make inner function async
@@ -82,6 +87,16 @@ async function handleStartTournament(io, socket, { code }) {
                 }
             }, 5000);
         }
+
+        // Add the first question UID to the askedQuestions set
+        const firstQuestion = tournamentState[code].questions[0];
+        if (firstQuestion && firstQuestion.uid) {
+            tournamentState[code].askedQuestions.add(firstQuestion.uid);
+            logger.debug(`[startHandler] Added question UID ${firstQuestion.uid} to askedQuestions for tournament ${code}`);
+            // Log the addition of the first question UID to the askedQuestions set
+            logger.info(`[startHandler] Adding first question UID ${firstQuestion.uid} to askedQuestions for tournament ${code}. Current set: ${Array.from(tournamentState[code].askedQuestions).join(', ')}`);
+        }
+
         // In quiz mode (linkedQuizId set), the teacher will trigger the first question manually
     } catch (err) {
         logger.error(`Error in start_tournament for code ${code}:`, err);

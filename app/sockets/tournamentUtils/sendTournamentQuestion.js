@@ -13,6 +13,9 @@
  *
  * If 'target' is null, emits directly to the socket (for socket.emit). Otherwise, emits to a room (for io.to(...)).
  */
+const createLogger = require('../../logger');
+const logger = createLogger('SendTournamentQuestion');
+
 function sendTournamentQuestion(socketOrIo, target, questionObj, index, total, remainingTime, questionState, isQuizMode) {
     const payload = {
         type: questionObj.type,
@@ -27,6 +30,10 @@ function sendTournamentQuestion(socketOrIo, target, questionObj, index, total, r
         questionState,
         isQuizMode
     };
+
+    // Add logging to verify the payload being sent to students
+    logger.info(`[sendTournamentQuestion] Emitting tournament_question to ${target} with payload:`, payload);
+
     if (target) {
         socketOrIo.to(target).emit('tournament_question', payload);
     } else {

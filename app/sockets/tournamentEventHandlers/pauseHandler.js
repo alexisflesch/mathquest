@@ -8,7 +8,7 @@ function handleTournamentPause(io, socket, { code }) {
         // Calculate remaining time based on elapsed time since question start
         const elapsed = (Date.now() - state.questionStart) / 1000;
         // Use currentQuestionDuration if available, otherwise fallback
-        const timeAllowed = state.currentQuestionDuration || state.questions[state.currentIndex]?.temps || 20;
+        const timeAllowed = state.currentQuestionDuration || state.questions.find(q => q.uid === state.currentQuestionUid)?.temps || 20;
         state.pausedRemainingTime = Math.max(0, timeAllowed - elapsed);
 
         // Set paused flag to true
@@ -21,7 +21,7 @@ function handleTournamentPause(io, socket, { code }) {
         }
 
         logger.info(`Paused tournament ${code}. Remaining time: ${state.pausedRemainingTime.toFixed(1)}s`);
-        io.to(`tournament_${code}`).emit("tournament_question_state_update", { questionState: "paused", remainingTime: state.pausedRemainingTime });
+        io.to(`live_${code}`).emit("tournament_question_state_update", { questionState: "paused", remainingTime: state.pausedRemainingTime });
     } else {
         logger.warn(`Received tournament_pause for ${code}, but state not found, is differed, or already paused.`);
     }

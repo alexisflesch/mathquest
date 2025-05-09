@@ -67,11 +67,11 @@ function registerLobbyHandlers(io, socket) {
 
             // Join both the plain code room (for lobby communications) and the tournament room
             socket.join(code);
-            socket.join(`tournament_${code}`); // Also join the tournament room preemptively
+            socket.join(`live_${code}`); // Also join the tournament room preemptively
             socket.join(`lobby_${code}`); // PATCH: ensure student is in lobby_<code> room for redirect
             logger.info(`[DEBUG] After join, socket ${socket.id} rooms:`, Array.from(socket.rooms));
 
-            logger.debug(`Socket ${socket.id} joined rooms: ${code} and tournament_${code}`);
+            logger.debug(`Socket ${socket.id} joined rooms: ${code} and live_${code}`);
 
             if (!lobbyParticipants[code]) lobbyParticipants[code] = [];
             lobbyParticipants[code] = [
@@ -97,8 +97,8 @@ function registerLobbyHandlers(io, socket) {
 
         // Leave both the lobby code room and the tournament room
         socket.leave(code);
-        socket.leave(`tournament_${code}`);
-        logger.debug(`Socket ${socket.id} left rooms: ${code} and tournament_${code}`);
+        socket.leave(`live_${code}`);
+        logger.debug(`Socket ${socket.id} left rooms: ${code} and live_${code}`);
 
         if (lobbyParticipants[code]) {
             lobbyParticipants[code] = lobbyParticipants[code].filter((p) => p.id !== socket.id);

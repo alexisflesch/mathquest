@@ -68,18 +68,8 @@ function calculateScore(question, answer, questionStartTime, totalQuestions) {
     return { baseScore, timePenalty, totalScore };
 }
 
-/**
- * Scale scores for quiz mode if not all questions are answered.
- * @param {Object} participants - The participants object.
- * @param {number} totalQuestions - The total number of questions in the tournament.
- * @param {number} answeredQuestions - The number of questions answered.
- */
-function scaleScoresForQuiz(participants, totalQuestions, answeredQuestions) {
-    const scaleFactor = totalQuestions / answeredQuestions;
-    Object.values(participants).forEach(participant => {
-        participant.score = Math.round(participant.score * scaleFactor);
-    });
-}
+// Temporarily remove the `scaleScoresForQuiz` function
+// Function removed for now
 
 // Refactor saveParticipantScore to handle database operations
 async function saveParticipantScore(prisma, tournoiId, participant) {
@@ -88,10 +78,14 @@ async function saveParticipantScore(prisma, tournoiId, participant) {
         return;
     }
 
-    if (isNaN(participant.score) || participant.score === undefined) {
-        logger.error(`[saveParticipantScore] Invalid score for joueurId=${participant.id}. Skipping save operation.`);
-        return;
+    // Check for invalid scores (NaN, undefined, Infinity)
+    if (isNaN(participant.score) || participant.score === undefined || !isFinite(participant.score)) {
+        logger.error(`[saveParticipantScore] Invalid score ${participant.score} for joueurId=${participant.id}. Setting to 0.`);
+        participant.score = 0;
     }
+
+    // Convert score to integer before saving to database
+    participant.score = Math.round(participant.score);
 
     logger.info(`[saveParticipantScore] Saving score for tournoiId=${tournoiId}, joueurId=${participant.id}, score=${participant.score}`);
     logger.debug(`[saveParticipantScore] Received score=${participant.score} for joueurId=${participant.id}`);
@@ -114,24 +108,38 @@ async function saveParticipantScore(prisma, tournoiId, participant) {
     logger.debug(`[saveParticipantScore] Validated existence of Tournoi (id=${tournoiIdUUID}) and Joueur (id=${participant.id})`);
 
     const existing = await prisma.score.findFirst({ where: { tournoi: { id: tournoiIdUUID }, joueur: { id: participant.id } } });
-    if (existing) {
-        logger.info(`[saveParticipantScore] Updating existing score record id=${existing.id}`);
-        await prisma.score.update({ where: { id: existing.id }, data: { score: participant.score, date_score: new Date() } });
-    } else {
-        logger.info(`[saveParticipantScore] Creating new score record`);
-        await prisma.score.create({
-            data: {
-                score: participant.score,
-                date_score: new Date(),
-                tournoi: {
-                    connect: { id: tournoiIdUUID } // Ensure the tournoi relation is properly connected
-                },
-                joueur: {
-                    connect: { id: participant.id } // Ensure the joueur relation is properly connected
+    // Ensure the score is a valid integer before saving to database
+    const scoreInt = Math.max(0, Math.min(1000, Math.round(participant.score || 0))); // Clamp score between 0 and 1000
+
+    try {
+        if (existing) {
+            logger.info(`[saveParticipantScore] Updating existing score record id=${existing.id} with score=${scoreInt}`);
+            await prisma.score.update({
+                where: { id: existing.id },
+                data: {
+                    score: scoreInt, // Use the integer score
+                    date_score: new Date()
                 }
-            }
-        });
+            });
+        } else {
+            logger.info(`[saveParticipantScore] Creating new score record with score=${scoreInt}`);
+            await prisma.score.create({
+                data: {
+                    score: scoreInt, // Use the integer score
+                    date_score: new Date(),
+                    tournoi: {
+                        connect: { id: tournoiIdUUID } // Ensure the tournoi relation is properly connected
+                    },
+                    joueur: {
+                        connect: { id: participant.id } // Ensure the joueur relation is properly connected
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        logger.error(`[saveParticipantScore] Error saving score: ${error.message}`);
+        logger.error(`[saveParticipantScore] Error details: ${JSON.stringify(error)}`);
     }
 }
 
-module.exports = { calculateScore, scaleScoresForQuiz, saveParticipantScore };
+module.exports = { calculateScore, saveParticipantScore };

@@ -31,13 +31,21 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
         return;
     }
 
-    const qIdx = state.currentIndex;
+    // Replace currentIndex with currentQuestionUid for fetching the active question
+    const question = state.questions.find(q => q.uid === state.currentQuestionUid);
+    if (!question) {
+        logger.error(`[AnswerHandler] Question UID ${state.currentQuestionUid} not found in tournament state.`);
+        return;
+    }
+
+    // Update all references to question properties
+    const qIdx = state.questions.indexOf(question);
+
     if (qIdx < 0 || !state.questions || qIdx >= state.questions.length) {
         logger.warn(`tournament_answer: Invalid question index (${qIdx}) or missing questions for state ${stateKey}. Ignoring.`);
         return;
     }
 
-    const question = state.questions[qIdx];
     // Check if the answer is for the *current* question
     if (question.uid !== questionUid) {
         logger.warn(`tournament_answer: Answer received for wrong question (expected ${question.uid}, got ${questionUid}) for state ${stateKey}. Ignoring.`);
@@ -126,17 +134,23 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     logger.debug(`Stored answer for joueur ${joueurId} on question ${questionUid} in state ${stateKey}`);
 
     // --- SCORE IMMEDIATELY IF NOT ALREADY SCORED ---
-    if (!alreadyAnswered) {
-        const { calculateScore } = require('../tournamentUtils/tournamentHelpers');
-        const totalQuestions = state.questions.length;
-        const { baseScore, rapidity, totalScore } = calculateScore(question, { answerIdx, clientTimestamp }, questionStart, totalQuestions);
-        if (!state.participants[joueurId].scoredQuestions) state.participants[joueurId].scoredQuestions = {};
-        if (!state.participants[joueurId].scoredQuestions[questionUid]) {
-            state.participants[joueurId].score += totalScore;
-            state.participants[joueurId].scoredQuestions[questionUid] = true;
-            logger.info(`Scored immediately for joueur ${joueurId} on question ${questionUid}: +${totalScore} (base=${baseScore}, rapidity=${rapidity})`);
-        }
+    // Ensure scoredQuestions is initialized for the participant
+    if (!state.participants[joueurId].scoredQuestions) {
+        state.participants[joueurId].scoredQuestions = {};
     }
+
+    // Calculate the score for the current answer
+    const { calculateScore } = require('../tournamentUtils/tournamentHelpers');
+    const totalQuestions = state.questions.length;
+    const { baseScore, rapidity, totalScore } = calculateScore(question, { answerIdx, clientTimestamp }, questionStart, totalQuestions);
+
+    // Update the score for the current question
+    state.participants[joueurId].scoredQuestions[questionUid] = totalScore;
+
+    // Recalculate the total score for the participant
+    state.participants[joueurId].score = Object.values(state.participants[joueurId].scoredQuestions).reduce((sum, score) => sum + score, 0);
+
+    logger.info(`Updated score for joueur ${joueurId} on question ${questionUid}: +${totalScore} (base=${baseScore}, rapidity=${rapidity})`);
 
     // Always send feedback to the client for accepted answers (quiz or tournament mode)
     socket.emit("tournament_answer_result", {
@@ -172,7 +186,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
             const stats = answerCounts.map(count => total > 0 ? Math.round((count / total) * 100) : 0);
             // Emit to both quiz and projection rooms
             const quizId = state.linkedQuizId;
-            io.to(`quiz_${quizId}`).emit("quiz_answer_stats_update", {
+            io.to(`dashboard_${quizId}`).emit("quiz_answer_stats_update", {
                 questionUid,
                 stats, // Array of percentages per answer index
                 totalAnswers: total
@@ -182,7 +196,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
                 stats,
                 totalAnswers: total
             });
-            logger.info(`[QUIZ_STATS] Emitted quiz_answer_stats_update for quiz_${quizId} (question ${questionUid}):`, stats);
+            logger.info(`[QUIZ_STATS] Emitted quiz_answer_stats_update for dashboard_${quizId} (question ${questionUid}):`, stats);
         } catch (err) {
             logger.error(`[QUIZ_STATS] Failed to compute or emit stats for quiz mode:`, err);
         }

@@ -27,7 +27,7 @@ async function ensureQuizStateInitialized(quizId, prisma, socket, role = null, t
     const quizState = require('./quizState');
     if (!quizState[quizId]) {
         quizState[quizId] = {
-            currentQuestionIdx: null,
+            currentQuestionUid: null,
             questions: [],
             chrono: { timeLeft: null, running: false },
             locked: false,
@@ -69,12 +69,39 @@ function registerQuizEvents(io, socket, prisma) {
     logger.info(`[DEBUG] registerQuizEvents for socket.id=${socket.id}`);
     // Register handlers
     socket.on("join_quiz", (payload) => handleJoinQuiz(io, socket, prisma, payload));
-    socket.on("quiz_set_question", (payload) => handleSetQuestion(io, socket, prisma, payload));
+    socket.on("quiz_set_question", (payload) => {
+        handleSetQuestion(io, socket, prisma, payload);
+        const quizState = require('./quizState');
+        const { quizId } = payload;
+        // Ensure askedQuestions set is initialized
+        if (!quizState[quizId].askedQuestions) {
+            quizState[quizId].askedQuestions = new Set();
+        }
+
+        // Add the current question UID to the askedQuestions set
+        const currentQuestion = quizState[quizId].questions.find(q => q.uid === quizState[quizId].currentQuestionUid);
+        if (currentQuestion && currentQuestion.uid) {
+            quizState[quizId].askedQuestions.add(currentQuestion.uid);
+            logger.debug(`[quiz_set_question] Added question UID ${currentQuestion.uid} to askedQuestions for quiz ${quizId}`);
+        }
+    });
     socket.on("quiz_timer_action", (payload) => handleTimerAction(io, socket, prisma, payload));
     socket.on("quiz_set_timer", (payload) => handleSetTimer(io, socket, prisma, payload));
     socket.on("quiz_lock", (payload) => handleLock(io, socket, prisma, payload));
     socket.on("quiz_unlock", (payload) => handleUnlock(io, socket, prisma, payload));
-    socket.on("quiz_end", (payload) => handleEnd(io, socket, prisma, payload));
+    socket.on("quiz_end", async (payload) => {
+        const quizState = require('./quizState');
+        const { quizId } = payload;
+        if (!payload.tournamentCode && quizState[quizId]?.tournament_code) {
+            payload.tournamentCode = quizState[quizId].tournament_code;
+            logger.info(`[quiz_end] Retrieved tournamentCode from quizState for quizId=${quizId}: ${payload.tournamentCode}`);
+        }
+        if (!payload.tournamentCode) {
+            logger.warn(`[quiz_end] No tournamentCode found for quizId=${quizId}. Cannot proceed.`);
+            return;
+        }
+        handleEnd(io, socket, prisma, payload);
+    });
     socket.on("quiz_pause", (payload) => handlePause(io, socket, prisma, payload));
     socket.on("quiz_resume", (payload) => handleResume(io, socket, prisma, payload));
     socket.on("disconnecting", () => handleDisconnecting(io, socket, prisma)); // Pass prisma if needed by handler
@@ -91,25 +118,24 @@ function registerQuizEvents(io, socket, prisma) {
                 state.timerInitialValue = state.chrono.timeLeft;
             }
             // Determine if this socket is a teacher/projector (full state) or student (filtered)
-            const isTeacherOrProjector = socket.rooms.has(`quiz_${quizId}`) || socket.rooms.has(`projection_${quizId}`);
+            const isTeacherOrProjector = socket.rooms.has(`dashboard_${quizId}`) || socket.rooms.has(`projection_${quizId}`);
             if (!isTeacherOrProjector) {
                 // STUDENT: Only send current question (no correct answers)
-                const idx = state.currentQuestionIdx;
+                const currentQuestion = state.questions.find(q => q.uid === state.currentQuestionUid);
                 let question = null;
-                if (typeof idx === 'number' && state.questions && state.questions[idx]) {
+                if (currentQuestion) {
                     // Remove 'correct' field from answers
-                    const q = state.questions[idx];
                     question = {
-                        uid: q.uid,
-                        texte: q.texte,
-                        type: q.type,
-                        answers: Array.isArray(q.answers)
-                            ? q.answers.map(a => ({ texte: a.texte }))
+                        uid: currentQuestion.uid,
+                        texte: currentQuestion.texte,
+                        type: currentQuestion.type,
+                        answers: Array.isArray(currentQuestion.answers)
+                            ? currentQuestion.answers.map(a => ({ texte: a.texte }))
                             : [],
                     };
                 }
                 const filteredState = {
-                    currentQuestionIdx: idx,
+                    currentQuestionUid: state.currentQuestionUid,
                     question,
                     chrono: state.chrono,
                     locked: state.locked,
@@ -128,10 +154,10 @@ function registerQuizEvents(io, socket, prisma) {
                 logger.info(`[get_quiz_state] Recalculated timeLeft: original=${original}s, elapsed=${elapsed}s, remaining=${remaining}s`);
                 const stateCopy = { ...state, chrono: { ...state.chrono, timeLeft: remaining }, timerTimeLeft: remaining };
                 socket.emit("quiz_state", stateCopy);
-                logger.debug(`Sent quiz state for quiz ${quizId}`, stateCopy);
+                logger.debug(`Sent quiz state for quiz ${quizId}`);
             } else {
                 socket.emit("quiz_state", state);
-                logger.debug(`Sent quiz state for quiz ${quizId}`, state);
+                logger.debug(`Sent quiz state for quiz ${quizId}`);
             }
         } else {
             logger.warn(`Quiz state requested for non-existent quiz ${quizId}`);
@@ -194,7 +220,7 @@ function registerQuizEvents(io, socket, prisma) {
             // Reset all relevant fields for a fresh session
             quizState[quizId].ended = false;
             quizState[quizId].locked = false;
-            quizState[quizId].currentQuestionIdx = null;
+            quizState[quizId].currentQuestionUid = null;
             quizState[quizId].chrono = { timeLeft: null, running: false };
             quizState[quizId].stats = {};
             quizState[quizId].timerStatus = null;
@@ -206,7 +232,7 @@ function registerQuizEvents(io, socket, prisma) {
             // --- PATCH: RECALCULATE TIMER FOR BROADCAST ---
             let state = quizState[quizId];
             let patchedState = patchQuizStateForBroadcast(state);
-            io.to(`quiz_${quizId}`).emit("quiz_state", patchedState);
+            io.to(`dashboard_${quizId}`).emit("quiz_state", patchedState);
         }
     });
 

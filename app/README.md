@@ -221,7 +221,7 @@ The application uses in-memory state objects for real-time functionality:
 1. **tournamentState**: Tracks active tournaments with:
    - participants: Map of players in the tournament
    - questions: Array of question objects
-   - currentIndex: Current question index
+   - currentQuestionUid: UID of the current question
    - answers: Recorded answers from players
    - timer: Question timer control
    - paused: Whether the tournament is paused
@@ -295,7 +295,7 @@ The application uses in-memory state objects for real-time functionality:
 ## Troubleshooting Common Issues
 
 1. **Socket Disconnections**: Check socket room membership with io.sockets.adapter.rooms
-2. **Question Sync Issues**: Check tournamentState[code].currentIndex vs quizState[quizId].currentQuestionIdx
+2. **Question Sync Issues**: Check tournamentState[code].currentQuestionUid vs quizState[quizId].currentQuestionIdx
 3. **Timer Problems**: Check for paused state and pausedRemainingTime in tournamentState
 
 ## Event Handling Between Quiz and Tournament
@@ -429,21 +429,21 @@ MathQuest uses Socket.IO rooms to organize real-time communication between diffe
 
 | Room Name                | Used For                        | Example                | Who Joins/Sends?         |
 |--------------------------|----------------------------------|------------------------|--------------------------|
-| `tournament_${code}`     | Live tournament participants     | tournament_123456      | Students (live), server  |
-| `quiz_${quizId}`         | Teacher dashboard (quiz control) | quiz_abc123            | Teacher dashboard, server|
+| `live_${code}`     | Live tournament participants     | tournament_123456      | Students (live), server  |
+| `dashboard_${quizId}`         | Teacher dashboard (quiz control) | quiz_abc123            | Teacher dashboard, server|
 | `projection_${quizId}`   | Projector/classroom display      | projection_abc123      | Projector view, server   |
 | `${code}`                | Lobby waiting room               | 123456                 | Students (lobby), server |
 | `lobby_${code}`          | Quiz-linked tournament lobby     | lobby_123456           | Students (lobby), server |
 
 **Guidelines:**
-- All live gameplay events for students (questions, timer, results, etc.) are sent to `tournament_${code}`.
-- Teacher dashboard events (state, timer, lock/unlock, etc.) are sent to `quiz_${quizId}`.
+- All live gameplay events for students (questions, timer, results, etc.) are sent to `live_${code}`.
+- Teacher dashboard events (state, timer, lock/unlock, etc.) are sent to `dashboard_${quizId}`.
 - Projector events are sent to `projection_${quizId}`.
 - Lobby events are sent to `${code}` or `lobby_${code}` depending on context.
 
 **Example:**
-- When a student joins a live tournament, they join `tournament_${code}`.
-- When a teacher controls a quiz, their dashboard joins `quiz_${quizId}`.
+- When a student joins a live tournament, they join `live_${code}`.
+- When a teacher controls a quiz, their dashboard joins `dashboard_${quizId}`.
 - When showing the projector view, it joins `projection_${quizId}`.
 
 **Note:**
@@ -459,7 +459,7 @@ When a tournament question timer expires, if the question has an `explication` f
 ### Backend Changes
 - In `handleTimerExpiration` (tournamentHelpers.js):
   - After scoring and emitting the `tournament_question_state_update`, the server checks if the current question has an `explication`.
-  - If so, emits an `explication` event: `{ questionUid, explication }` to `tournament_${code}`.
+  - If so, emits an `explication` event: `{ questionUid, explication }` to `live_${code}`.
   - Waits 5 seconds before sending the next question or ending the tournament.
   - If no explication, proceeds as before.
 

@@ -23,7 +23,7 @@ async function handleDisconnecting(io, socket) {
                     pseudo: p.pseudo,
                     avatar: p.avatar,
                 }));
-                io.to(`tournament_${stateKey}`).emit("tournament_participants_update", {
+                io.to(`live_${stateKey}`).emit("tournament_participants_update", {
                     participants: participantsList,
                     playerCount: participantsList.length
                 });

@@ -245,6 +245,56 @@ export default function LobbyPage() {
         }
     }, [countdown, code, router]);
 
+    useEffect(() => {
+        if (!socketRef.current) {
+            socketRef.current = io();
+        }
+
+        const socket = socketRef.current;
+
+        // Listen for redirect_to_quiz event
+        socket.on('redirect_to_quiz', ({ quizId }) => {
+            logger.info(`Received redirect_to_quiz for quiz ${quizId}, redirecting...`);
+            router.push(`/quiz/${quizId}`);
+        });
+
+        return () => {
+            if (socket) {
+                socket.off('redirect_to_quiz');
+            }
+        };
+    }, [router]);
+
+    // Add debug logging to see which events are received
+    useEffect(() => {
+        if (!socketRef.current) return;
+
+        const socket = socketRef.current;
+
+        socket.onAny((event, ...args) => {
+            console.log(`[Lobby] Socket event received: ${event}`, args);
+        });
+
+        // Listen for classic tournament start
+        socket.on("tournament_started", (data) => {
+            console.log("[Lobby] Received tournament_started event", data);
+            // ... existing countdown code ...
+        });
+
+        // Make sure we're also listening for the direct redirect event for quiz-linked tournaments
+        socket.on("redirect_to_tournament", (data) => {
+            console.log("[Lobby] Received redirect_to_tournament event", data);
+            // Immediately redirect without countdown
+            router.push(`/live/${data.code}`);
+        });
+
+        return () => {
+            socket.off("tournament_started");
+            socket.off("redirect_to_tournament");
+            // ... other cleanup ...
+        };
+    }, [socketRef, router, code]);
+
     // Handler for start button
     const handleStart = () => {
         if (isCreator && socketRef.current) {

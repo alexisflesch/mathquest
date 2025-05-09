@@ -123,13 +123,14 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const baseMetaFontSize = '0.75rem'; // Assuming text-xs for metadata
 
     // Affichage du timer (non éditable dans ce composant)
+    const roundedTimeLeft = typeof timeLeft === 'number' ? Math.floor(timeLeft) : 0;
     const timerDisplay = (
         <span className="flex items-center gap-1">
             <span
                 className="font-mono text-lg pl-2 pr-0 py-1 rounded bg-muted text-muted-foreground min-w-[60px] text-center select-none"
                 title="Temps de la question"
             >
-                {formatTime(timeLeft)}
+                {formatTime(roundedTimeLeft)}
             </span>
             {/* Bouton pour demander l'édition (si callback fourni) */}
             {onEditTimerRequest && (

@@ -34,12 +34,17 @@ import {
 import type { Question } from "../types";
 import { createLogger } from '@/clientLogger';
 import { SortableQuestion } from './SortableQuestion';
+import { Socket } from 'socket.io-client';
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 // Create a logger for this component
 const logger = createLogger('DraggableQuestions');
 
 // --- Types ---
 interface DraggableQuestionsListProps {
+    quizId: string;
+    currentTournamentCode: string;
+    quizSocket?: Socket | null; // Make quizSocket optional
     questions: Question[];
     currentQuestionIdx: number | null | undefined;
     isChronoRunning: boolean | undefined;
@@ -65,6 +70,9 @@ interface DraggableQuestionsListProps {
 }
 
 export default function DraggableQuestionsList({
+    quizId,
+    currentTournamentCode,
+    quizSocket,
     questions,
     currentQuestionIdx,
     isChronoRunning,
@@ -91,51 +99,203 @@ export default function DraggableQuestionsList({
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
     );
     const [openUid, setOpenUid] = useState<string | null>(null);
+    // Add the missing state variable for tracking pending status
+    const [isPendingMap, setPendingMap] = useState<Record<string, boolean>>({});
+    // Add the missing ref for tracking timeout IDs
+    const pendingTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
 
-    // Ajout d'un état pour bloquer le bouton tant qu'une action est en attente
-    const [isPending, setIsPending] = useState(false);
+    // Add state for confirmation dialog
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        questionId: string;
+        startTime: number;
+    }>({
+        isOpen: false,
+        questionId: "",
+        startTime: 0
+    });
+
     React.useEffect(() => {
-        // Dès qu'on reçoit un nouvel état du serveur, on autorise à nouveau le clic
-        setIsPending(false);
+        logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionId}, Time left: ${timeLeft}`);
     }, [timerStatus, timerQuestionId, timeLeft]);
+
+    // Add logging to confirm re-renders
+    React.useEffect(() => {
+        logger.debug(`[RENDER CHECK] DraggableQuestionsList re-rendered with timeLeft: ${timeLeft}`);
+    }, [timeLeft]);
+
+    // Ensure timeLeft has a default value
+    const effectiveTimeLeft = timeLeft ?? 0;
 
     // Helper pour savoir si la question est en pause
     const isQuestionPaused = useCallback((questionId: string): boolean => {
         return (
             timerQuestionId === questionId &&
             timerStatus === 'pause' &&
-            (typeof timeLeft === 'number' && timeLeft > 0)
+            (typeof effectiveTimeLeft === 'number' && effectiveTimeLeft > 0)
         );
-    }, [timerQuestionId, timerStatus, timeLeft]);
+    }, [timerQuestionId, timerStatus, effectiveTimeLeft]);
 
-    // Handler play/pause strictement basé sur l'état serveur
+    // Ref to store the fallback timeout
+    const fallbackResetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Clear fallback timeout when the component unmounts
+    React.useEffect(() => {
+        return () => {
+            if (fallbackResetTimeoutRef.current) {
+                clearTimeout(fallbackResetTimeoutRef.current);
+                fallbackResetTimeoutRef.current = null;
+            }
+        };
+    }, []);
+
     const handlePlay = useCallback((questionId: string, startTime: number) => {
-        if (isPending) return;
-        setIsPending(true);
-        if (timerQuestionId === questionId) {
-            if (timerStatus === 'play') {
-                if (onPause) onPause();
-            } else if (timerStatus === 'pause') {
-                if (onPlay) onPlay(questionId, timeLeft ?? startTime);
+        logger.info(`handlePlay called for questionId: ${questionId}, startTime: ${startTime}`);
+
+        // Check if the current question's timer has naturally expired
+        const timerHasExpired = timerQuestionId &&
+            (effectiveTimeLeft === 0 || effectiveTimeLeft === null) &&
+            timerStatus !== 'play';
+
+        // If the timer for the current question has reached zero, no need for confirmation
+        if (timerHasExpired) {
+            logger.info(`Current question timer has expired, switching directly to: ${questionId}`);
+            onSelect(questionId);
+            if (onTimerAction) {
+                onTimerAction({
+                    status: 'play',
+                    questionId,
+                    timeLeft: startTime,
+                });
+            }
+            return;
+        }
+
+        // If there is an active question with a running or paused timer with time left,
+        // confirm the switch to avoid accidental question changes
+        if (timerQuestionId &&
+            timerQuestionId !== questionId &&
+            ((timerStatus === 'play' && effectiveTimeLeft > 0) ||
+                (timerStatus === 'pause' && effectiveTimeLeft > 0))) {
+
+            // Open the confirmation dialog instead of using window.confirm()
+            setConfirmDialog({
+                isOpen: true,
+                questionId: questionId,
+                startTime: startTime
+            });
+            return;
+        } else {
+            // Regular scenario - no active question or same question
+            if (onTimerAction) {
+                // When resuming a paused question, always use the timeLeft from server state
+                // This ensures we don't reset the timer to the full duration
+                if (timerQuestionId === questionId && timerStatus === 'pause' && effectiveTimeLeft !== null) {
+                    logger.info(`Resuming paused question: ${questionId}, using server timeLeft: ${effectiveTimeLeft}s`);
+                    onTimerAction({
+                        status: 'play',
+                        questionId,
+                        timeLeft: effectiveTimeLeft, // Use the server's timeLeft value for consistency
+                    });
+                } else {
+                    // Normal start - for non-paused questions
+                    logger.info(`Starting question: ${questionId}, timeLeft: ${startTime}s`);
+                    onTimerAction({
+                        status: 'play',
+                        questionId,
+                        timeLeft: startTime,
+                    });
+                }
             } else {
+                logger.warn('onTimerAction is not defined. Cannot emit quiz_set_question.');
+            }
+
+            logger.info(`Setting active question in UI to: ${questionId}`);
+            onSelect(questionId);
+
+            if (timerQuestionId === questionId) {
+                if (timerStatus === 'play') {
+                    logger.info(`Pausing question: ${questionId}`);
+                    if (onPause) onPause();
+                } else if (timerStatus === 'pause') {
+                    logger.info(`Resuming question: ${questionId}`);
+                    // When resuming from pause, use the backend's timeLeft value
+                    if (onPlay) onPlay(questionId, effectiveTimeLeft ?? startTime);
+                } else {
+                    logger.info(`Starting question: ${questionId} from stopped state, timeLeft: ${startTime}s`);
+                    if (onPlay) onPlay(questionId, startTime);
+                }
+            } else {
+                logger.info(`Playing new question: ${questionId}, timeLeft: ${startTime}s`);
                 if (onPlay) onPlay(questionId, startTime);
             }
-        } else {
-            if (onPlay) onPlay(questionId, startTime);
         }
-    }, [isPending, timerQuestionId, timerStatus, timeLeft, onPause, onPlay]);
+    }, [timerQuestionId, timerStatus, effectiveTimeLeft, onPause, onPlay, onTimerAction, onSelect, quizSocket]);
+
+    // Handler for confirmation dialog confirm action
+    const handleConfirmationConfirm = useCallback(() => {
+        const { questionId, startTime } = confirmDialog;
+
+        logger.info(`User confirmed switch to question ${questionId}`);
+
+        if (onTimerAction) {
+            onTimerAction({
+                status: 'play',
+                questionId,
+                timeLeft: startTime,
+            });
+        }
+
+        logger.info(`Setting active question in UI to: ${questionId}`);
+        onSelect(questionId);
+
+        // Close the dialog
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+    }, [confirmDialog, onTimerAction, onSelect]);
+
+    // Handler for confirmation dialog cancel action
+    const handleConfirmationCancel = useCallback(() => {
+        logger.info(`User canceled switch to question ${confirmDialog.questionId}`);
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+    }, [confirmDialog.questionId]);
 
     const handlePause = useCallback(() => {
-        if (isPending) return;
-        setIsPending(true);
-        if (onPause) onPause();
-    }, [isPending, onPause]);
+        logger.info('handlePause called');
+
+        // Emit quiz_timer_action with status: 'pause'
+        if (onTimerAction) {
+            logger.info('Emitting quiz_timer_action for pause');
+            onTimerAction({
+                status: 'pause',
+                questionId: timerQuestionId || '',
+                timeLeft: effectiveTimeLeft || 0,
+            });
+        } else {
+            logger.warn('onTimerAction is not defined. Cannot emit quiz_timer_action for pause.');
+        }
+    }, [onTimerAction, timerQuestionId, effectiveTimeLeft]);
 
     const handleStop = useCallback(() => {
-        if (isPending) return;
-        setIsPending(true);
-        if (onStop) onStop();
-    }, [isPending, onStop]);
+        logger.info('handleStop called');
+
+        // Emit quiz_timer_action with status: 'stop'
+        if (onTimerAction) {
+            logger.info('Emitting quiz_timer_action for stop');
+            onTimerAction({
+                status: 'stop',
+                questionId: timerQuestionId || '',
+                timeLeft: 0,
+            });
+        } else {
+            logger.warn('onTimerAction is not defined. Cannot emit quiz_timer_action for stop.');
+        }
+
+        if (onStop) {
+            onStop();
+        } else {
+            logger.warn('onStop is not defined. Cannot handle stop action.');
+        }
+    }, [onTimerAction, timerQuestionId, onStop]);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
@@ -207,52 +367,115 @@ export default function DraggableQuestionsList({
         }
     }, [questionActiveUid, questions]);
 
+    React.useEffect(() => {
+        const handleQuizTimerUpdateStop = () => {
+            logger.debug('Received quizTimerUpdateStop event, resetting isPending');
+        };
+
+        window.addEventListener('quizTimerUpdateStop', handleQuizTimerUpdateStop);
+
+        return () => {
+            window.removeEventListener('quizTimerUpdateStop', handleQuizTimerUpdateStop);
+        };
+    }, []);
+
+    // Centralize quiz_action_response handling for all actions
+    React.useEffect(() => {
+        if (!quizSocket) {
+            logger.warn('quizSocket is not available. Cannot listen for quiz_action_response.');
+            return;
+        }
+
+        const handleQuizActionResponse = (data: { status: string; message: string }) => {
+            // Enhanced debugging for quiz_action_response handling
+            logger.debug('Received quiz_action_response from quizSocket:', data);
+            if (data.status === 'success' || data.status === 'error') {
+                logger.debug(`Resetting isPending to false for response: ${JSON.stringify(data)}`);
+
+                // Reset all pending questions to false
+                setPendingMap({});
+
+                // Clear all pending timeouts
+                Object.keys(pendingTimeoutsRef.current).forEach(questionId => {
+                    clearTimeout(pendingTimeoutsRef.current[questionId]);
+                    delete pendingTimeoutsRef.current[questionId];
+                });
+
+                // Clear any existing fallback timeout to prevent unnecessary warnings
+                if (fallbackResetTimeoutRef.current) {
+                    logger.debug('Clearing fallback timeout after receiving valid response');
+                    clearTimeout(fallbackResetTimeoutRef.current);
+                    fallbackResetTimeoutRef.current = null;
+                }
+            } else {
+                logger.warn(`Unexpected quiz_action_response received: ${JSON.stringify(data)}`);
+            }
+        };
+
+        quizSocket.on('quiz_action_response', handleQuizActionResponse);
+
+        return () => {
+            quizSocket.off('quiz_action_response', handleQuizActionResponse);
+        };
+    }, [quizSocket]);
+
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd} // Use memoized handler
-        >
-            <SortableContext items={questions.map(q => String(q.uid))} strategy={verticalListSortingStrategy}>
-                <ul className="space-y-4">
-                    {questions.length === 0 && <li>Aucune question pour ce quiz.</li>}
-                    {questions.map((q, idx) => {
-                        const isActive = q.uid === questionActiveUid;
+        <>
+            <ConfirmDialog
+                open={confirmDialog.isOpen}
+                title="Changer de question"
+                message="Une question est actuellement active. Voulez-vous passer à une autre question? Le temps sera réinitialisé."
+                onConfirm={handleConfirmationConfirm}
+                onCancel={handleConfirmationCancel}
+            />
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd} // Use memoized handler
+            >
+                <SortableContext items={questions.map(q => String(q.uid))} strategy={verticalListSortingStrategy}>
+                    <ul className="space-y-4">
+                        {questions.length === 0 && <li>Aucune question pour ce quiz.</li>}
+                        {questions.map((q, idx) => {
+                            const isActive = q.uid === questionActiveUid;
 
-                        // Get stable callbacks for this question from the ref
-                        const stableCallbacks = stableCallbacksRef.current.get(q.uid) || {
-                            setOpen: () => setOpenUid(openUid === q.uid ? null : q.uid),
-                            onPlay: (uid: string, timerValue: number) => handlePlay(uid, timerValue),
-                            onSelect: () => onSelect(q.uid),
-                            onEditTimer: (newTime: number) => {
-                                if (onEditTimer) onEditTimer(q.uid, newTime);
-                            }
-                        };
+                            // Get stable callbacks for this question from the ref
+                            const stableCallbacks = stableCallbacksRef.current.get(q.uid) || {
+                                setOpen: () => setOpenUid(openUid === q.uid ? null : q.uid),
+                                onPlay: (uid: string, timerValue: number) => handlePlay(uid, timerValue),
+                                onSelect: () => onSelect(q.uid),
+                                onEditTimer: (newTime: number) => {
+                                    if (onEditTimer) onEditTimer(q.uid, newTime);
+                                }
+                            };
 
-                        return (
-                            <SortableQuestion
-                                key={q.uid}
-                                q={q}
-                                isActive={isActive}
-                                open={openUid === q.uid}
-                                setOpen={stableCallbacks.setOpen}
-                                onPlay={stableCallbacks.onPlay}
-                                onEditTimer={stableCallbacks.onEditTimer}
-                                onPause={handlePause}
-                                onStop={handleStop}
-                                liveTimeLeft={isActive ? timeLeft : undefined}
-                                liveStatus={isActive ? timerStatus : undefined}
-                                onImmediateUpdateActiveTimer={handleImmediateUpdate}
-                                disabled={disabled || isPending}
-                                onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
-                                showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
-                                onStatsToggle={onStatsToggle ? (show) => onStatsToggle(q.uid, show) : undefined}
-                                stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
-                            />
-                        );
-                    })}
-                </ul>
-            </SortableContext>
-        </DndContext>
+                            return (
+                                <SortableQuestion
+                                    key={q.uid}
+                                    q={q}
+                                    isActive={isActive}
+                                    open={openUid === q.uid}
+                                    setOpen={stableCallbacks.setOpen}
+                                    onPlay={stableCallbacks.onPlay}
+                                    onEditTimer={stableCallbacks.onEditTimer}
+                                    onPause={handlePause}
+                                    onStop={handleStop}
+                                    liveTimeLeft={isActive ? effectiveTimeLeft : undefined}
+                                    liveStatus={isActive ? timerStatus : undefined}
+                                    onImmediateUpdateActiveTimer={handleImmediateUpdate}
+                                    disabled={disabled}
+                                    onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
+                                    showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
+                                    onStatsToggle={onStatsToggle ? (show) => onStatsToggle(q.uid, show) : undefined}
+                                    stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
+                                    quizId={quizId}
+                                    currentTournamentCode={currentTournamentCode}
+                                />
+                            );
+                        })}
+                    </ul>
+                </SortableContext>
+            </DndContext>
+        </>
     );
 }

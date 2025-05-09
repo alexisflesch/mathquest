@@ -9,6 +9,10 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     const state = quizState[quizId];
     if (!state) {
         logger.warn(`[CloseQuestion] No quiz state for ${quizId}`);
+        socket.emit('quiz_action_response', {
+            status: 'error',
+            message: 'Erreur : état du quiz introuvable.'
+        });
         return;
     }
 
@@ -30,6 +34,10 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     let tournamentCode = state.tournament_code;
     if (!tournamentCode) {
         logger.error(`[CloseQuestion] No tournament_code found in quizState for quizId=${quizId}`);
+        socket.emit('quiz_action_response', {
+            status: 'error',
+            message: 'Erreur : code du tournoi introuvable.'
+        });
         return;
     }
 
@@ -41,7 +49,9 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
         const { computeLeaderboard } = require('../tournamentUtils/computeLeaderboard');
         const tState = tournamentState[tournamentCode];
         if (tState && tState.participants) {
-            leaderboard = computeLeaderboard(tState);
+            const askedQuestions = tState.askedQuestions || new Set();
+            const totalQuestions = tState.questions.length;
+            leaderboard = computeLeaderboard(tState, askedQuestions, totalQuestions);
             playerCount = leaderboard.length;
         } else {
             logger.warn(`[CloseQuestion] No tournamentState or participants for code ${tournamentCode}, falling back to quizState leaderboard.`);
@@ -77,13 +87,13 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
 
     // Log sockets in projection and tournament rooms before emitting
     const projectionRoom = io.sockets.adapter.rooms.get(`projection_${quizId}`);
-    const tournamentRoom = io.sockets.adapter.rooms.get(`tournament_${tournamentCode}`);
+    const tournamentRoom = io.sockets.adapter.rooms.get(`live_${tournamentCode}`);
     logger.info(`[CloseQuestion] Sockets in projection_${quizId}:`, projectionRoom ? Array.from(projectionRoom) : []);
-    logger.info(`[CloseQuestion] Sockets in tournament_${quizId}:`, tournamentRoom ? Array.from(tournamentRoom) : []);
+    logger.info(`[CloseQuestion] Sockets in live_${quizId}:`, tournamentRoom ? Array.from(tournamentRoom) : []);
 
     // Emit question closed event to all live tournament participants (students)
-    logger.info(`[CloseQuestion] Emitting quiz_question_closed to tournament_${tournamentCode}`);
-    io.to(`tournament_${tournamentCode}`).emit('quiz_question_closed', {
+    logger.info(`[CloseQuestion] Emitting quiz_question_closed to live_${tournamentCode}`);
+    io.to(`live_${tournamentCode}`).emit('quiz_question_closed', {
         questionUid,
         correctAnswers,
         leaderboard,
@@ -99,6 +109,12 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     });
 
     logger.info(`[CloseQuestion] Results sent for quiz ${quizId}, question ${questionUid}`);
+
+    // Emit success message after sending results
+    io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
+        status: 'success',
+        message: 'Question closed successfully.'
+    });
 }
 
 module.exports = handleCloseQuestion;

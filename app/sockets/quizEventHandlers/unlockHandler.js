@@ -7,12 +7,22 @@ const { patchQuizStateForBroadcast } = require('../quizUtils');
 function handleUnlock(io, socket, prisma, { quizId }) {
     if (!quizState[quizId] || quizState[quizId].profSocketId !== socket.id) {
         logger.warn(`Unauthorized attempt to unlock quiz ${quizId} from socket ${socket.id}`);
+        socket.emit('quiz_action_response', {
+            status: 'error',
+            message: 'Erreur : accès non autorisé.'
+        });
         return;
     }
 
     logger.info(`Unlocking quiz ${quizId}`);
     quizState[quizId].locked = false;
-    io.to(`quiz_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
+    io.to(`dashboard_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
+
+    // Emit success message after unlocking the quiz
+    io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
+        status: 'success',
+        message: 'Quiz unlocked successfully.'
+    });
 }
 
 module.exports = handleUnlock;

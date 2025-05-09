@@ -104,7 +104,7 @@ This document provides a comprehensive technical reference for MathQuest's backe
 ## 5. Socket Event Flows
 
 ### 5.1. Quiz (Teacher Dashboard)
-- `join_quiz` → Initializes quizState, joins `quiz_${quizId}` room.
+- `join_quiz` → Initializes quizState, joins `dashboard_${quizId}` room.
 - `quiz_set_question` → Sets active question, updates state, triggers tournament question if linked.
 - `quiz_timer_action` → Play/pause/stop, updates state, triggers tournament timer if linked.
 - `quiz_set_timer` → Edits timer, updates state, triggers tournament timer if linked.
@@ -115,7 +115,7 @@ This document provides a comprehensive technical reference for MathQuest's backe
 
 ### 5.2. Tournament (Student Gameplay)
 - `start_tournament` → Initializes tournamentState, emits `tournament_started` to lobby.
-- `join_tournament` → Finds/creates Joueur, joins `tournament_${code}` room, sends current question.
+- `join_tournament` → Finds/creates Joueur, joins `live_${code}` room, sends current question.
 - `tournament_answer` → Validates and records answer, computes score, emits result.
 - `tournament_pause` / `tournament_resume` → Pauses/resumes timer.
 - `disconnecting` → Cleans up socket-to-joueur mapping.
@@ -194,7 +194,7 @@ This document provides a comprehensive technical reference for MathQuest's backe
 
 ## Differed Mode Isolation & DRY Event Emission
 
-- In differed mode, each student must receive tournament events (question, explication, end, etc.) only on their own socket (or a unique room), never in the shared `tournament_${code}` room.
+- In differed mode, each student must receive tournament events (question, explication, end, etc.) only on their own socket (or a unique room), never in the shared `live_${code}` room.
 - All backend emit logic (question, explication, etc.) is DRY: the same handler functions accept a `targetSocket` parameter. In live mode, events are sent to the shared room; in differed mode, they are sent only to the individual socket.
 - This ensures:
   - No cross-talk between students playing the same tournament asynchronously
@@ -206,12 +206,50 @@ This document provides a comprehensive technical reference for MathQuest's backe
 
 ## Differed Mode Room Isolation (Robust to Reconnection)
 
-- In differed mode, each student joins a dedicated room: `tournament_${code}_${joueurId}`.
-- All emits for that session (questions, explication, etc.) use this room, not the shared `tournament_${code}` room.
+- In differed mode, each student joins a dedicated room: `live_${code}_${joueurId}`.
+- All emits for that session (questions, explication, etc.) use this room, not the shared `live_${code}` room.
 - On reconnection, the backend ensures the socket rejoins the same room, so the user continues their session seamlessly.
 - The same DRY handler functions are used for both live and differed modes, with a `targetRoom` parameter.
 - See `handleTimerExpiration` and `sendQuestionWithState` in `tournamentHelpers.js` for implementation details.
 
 ---
 
-*This document is auto-generated for AI agent use. For questions, consult the code comments and logger output for each handler.*
+## 11. Timer Management & Synchronization
+
+### 11.1. Single Source of Truth
+- The backend is the single source of truth for all timer values.
+- Timer values are always stored with 1 decimal place precision.
+- Frontend never determines timer values; it only displays and sends control actions.
+
+### 11.2. Backend Timer Sources (in order of precedence)
+- When starting a question: Value comes from the question object's `temps` field
+- When pausing: Backend calculates and stores the precise remaining time
+- When resuming: Backend uses its stored `pausedRemainingTime` value
+- When editing: Frontend sends an explicit update via `quiz_set_timer`
+
+### 11.3. Key Timer State Fields
+- In quizState:
+  - `chrono.timeLeft`: Timer value in seconds (with 1 decimal precision)
+  - `timerTimeLeft`: Duplicate of chrono.timeLeft for compatibility
+  - `timerInitialValue`: Original timer value for the current question
+  - `timerTimestamp`: When the timer was last started
+  - `timerStatus`: Current status ('play', 'pause', 'stop')
+
+- In tournamentState:
+  - `currentQuestionDuration`: Total time for the question
+  - `pausedRemainingTime`: Stored time when paused
+  - `paused`, `stopped`: Boolean flags for timer state
+  - `questionStart`: Timestamp when question timer started
+
+### 11.4. Timer Synchronization Logic
+- `synchronizeTimerValues()` in `quizUtils.js` ensures consistent timer values between quiz and tournament states
+- `triggerTournamentPause()`, `triggerTournamentTimerSet()` in `tournamentTriggers.js` manage timer state transitions
+- `updateChrono()` in `quizUtils.js` maintains synchronized timer properties
+
+### 11.5. Frontend Timer Handling
+- Frontend uses `quiz_timer_update` events to synchronize its local timer
+- Frontend maintains a local timer only for smooth UI countdown between updates
+- For pause/resume actions, frontend never sends timeLeft values to backend
+- Only explicit timer edits (`emitSetTimer`) send time values to the backend
+
+---

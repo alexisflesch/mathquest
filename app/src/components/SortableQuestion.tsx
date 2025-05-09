@@ -7,12 +7,15 @@ import { createLogger } from '@/clientLogger';
 import { formatTime } from "@/utils";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import QuestionDisplay from "@/components/QuestionDisplay"; // Import du nouveau composant
+import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
 
 const logger = createLogger('SortableQuestion');
 
 // --- Types ---
 export interface SortableQuestionProps {
     q: Question;
+    quizId: string;
+    currentTournamentCode: string;
     // idx: number;
     isActive?: boolean;
     // isRunning?: boolean; // Gardé pour la logique interne si besoin
@@ -67,7 +70,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled, onStatsToggle, stats }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled, onStatsToggle, stats }: SortableQuestionProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(q.uid)
     });
@@ -90,11 +93,58 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
     // État local pour stocker la valeur modifiée en attente de synchronisation
     const [pendingTimeValue, setPendingTimeValue] = useState<number | null>(null);
 
-    // Déterminer quelle valeur de timer afficher dans le composant QuestionDisplay
-    // Priorité : 1. Valeur en attente  2. Valeur du serveur  3. Valeur par défaut de la question
-    const displayedTimeLeft = pendingTimeValue !== null
-        ? pendingTimeValue
-        : (liveTimeLeft ?? q.temps ?? 0);
+    // --- Timer fallback logic ---
+    // Store paused values per UID
+    const [pausedTimeLeftByUid, setPausedTimeLeftByUid] = useState<Record<string, number>>({});
+
+    // Track the last paused value for each question UID
+    useEffect(() => {
+        if (isActive && liveStatus === 'pause' && typeof liveTimeLeft === 'number') {
+            setPausedTimeLeftByUid(prev => ({ ...prev, [q.uid]: liveTimeLeft }));
+        }
+    }, [isActive, liveStatus, liveTimeLeft, q.uid]);
+
+    // Effect to clear paused timer values when stop action is detected
+    useEffect(() => {
+        if (isActive && liveStatus === 'stop') {
+            // Clear any paused timer value for this question when stop is clicked
+            setPausedTimeLeftByUid(prev => {
+                const newValues = { ...prev };
+                delete newValues[q.uid];
+                logger.debug(`[Timer Display] Cleared paused timer value for ${q.uid} after stop action`);
+                return newValues;
+            });
+        }
+    }, [isActive, liveStatus, q.uid]);
+
+    // Effect to store original time when stopping a question for later restoration
+    useEffect(() => {
+        // When a question gets stopped, store its original time for later restoration
+        if (isActive && liveStatus === 'stop') {
+            // When a question is stopped, remember its original time
+            const originalTime = liveTimeLeft && liveTimeLeft > 0 ? liveTimeLeft : q.temps;
+            logger.debug(`[Timer Display] Question ${q.uid} was stopped. Original time ${originalTime}s is preserved for future restoration`);
+            // The initialTime storage is handled in useTeacherQuizSocket.ts
+        }
+    }, [isActive, liveStatus, liveTimeLeft, q.temps, q.uid]);
+
+    // Optimize displayedTimeLeft logic
+    let displayedTimeLeft: number;
+    if (pendingTimeValue !== null && liveTimeLeft === pendingTimeValue) {
+        // Clear pendingTimeValue once backend confirms the update
+        setPendingTimeValue(null);
+    }
+    if (isActive) {
+        if (liveStatus === 'stop') {
+            displayedTimeLeft = liveTimeLeft ?? q.temps ?? 0;
+        } else if (liveStatus === 'pause' || liveStatus === 'play') {
+            displayedTimeLeft = liveTimeLeft ?? q.temps ?? 0;
+        } else {
+            displayedTimeLeft = q.temps ?? 0;
+        }
+    } else {
+        displayedTimeLeft = q.temps ?? 0;
+    }
 
     // --- Effets (conservés ici pour la synchro et l'édition) ---
     // Effet pour synchroniser localTimeLeft avec liveTimeLeft (si active) ou q.temps
@@ -106,10 +156,10 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
         }
 
         if (isActive && typeof liveTimeLeft === 'number') {
-            // logger.debug(`Syncing active question timer ${q.uid}: localTimeLeft <- liveTimeLeft (${liveTimeLeft})`);
+            logger.debug(`Syncing active question timer ${q.uid}: localTimeLeft <- liveTimeLeft (${liveTimeLeft})`);
             setEditTimerValue(String(liveTimeLeft));
         } else if (!isActive && q.temps !== undefined && editTimerValue !== String(q.temps)) {
-            // logger.debug(`Syncing inactive question timer ${q.uid}: localTimeLeft <- q.temps (${q.temps})`);
+            logger.debug(`Syncing inactive question timer ${q.uid}: localTimeLeft <- q.temps (${q.temps})`);
             setEditTimerValue(String(q.temps));
         }
         // Assurons-nous que toutes les dépendances sont explicitement listées
@@ -160,42 +210,56 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
         }
     }, [pendingTimeValue, liveTimeLeft]);
 
-    // --- Handlers (conservés ici) ---
-    const handlePauseClick = () => { onPause(); }; // Simple wrapper
+    // Reduce logging for syncing timers
+    useEffect(() => {
+        if (isActive && liveStatus === 'pause' && typeof liveTimeLeft === 'number') {
+            setPausedTimeLeftByUid(prev => ({ ...prev, [q.uid]: liveTimeLeft }));
+        }
+    }, [isActive, liveStatus, liveTimeLeft, q.uid]);
 
-    // Handler pour DEMANDER l'édition (appelé par QuestionDisplay)
-    const handleEditTimerRequest = () => {
-        logger.debug(`Edit timer requested for ${q.uid}`);
-        setEditingTimer(true); // Active le mode édition dans SortableQuestion
+    // Refine logging for timer updates
+    useEffect(() => {
+        if (isActive && Math.abs((liveTimeLeft ?? 0) - (displayedTimeLeft ?? 0)) >= 1) {
+            logger.info(`Question ${q.uid}: Timer updated to ${liveTimeLeft}s`);
+        }
+    }, [isActive, liveTimeLeft, displayedTimeLeft, q.uid]);
+
+    // --- Handlers (conservés ici) ---
+    const pauseHandler = () => { onPause(); }; // Simple wrapper
+
+    // Define the missing handleEditTimerRequest function
+    const editTimerRequestHandler = () => {
+        logger.debug(`Edit timer requested for question ${q.uid}`);
+        setEditingTimer(true);
     };
 
     // Handlers pour VALIDER ou ANNULER l'édition
-    const handleCancelEdit = (e: React.MouseEvent | React.KeyboardEvent<HTMLInputElement>) => {
+    const cancelEditHandler = (e: React.MouseEvent | React.KeyboardEvent<HTMLInputElement>) => {
         e.stopPropagation();
         setEditingTimer(false);
     };
-    const handleValidateEdit = (e: React.MouseEvent | React.KeyboardEvent<HTMLInputElement>) => {
+
+    // Removed destructuring of subscribeToTimerUpdate as it no longer exists
+    const { quizSocket, quizState, timerStatus, ...rest } = useTeacherQuizSocket(quizId, currentTournamentCode);
+
+    // Simplified validateEditHandler to remove subscribeToTimerUpdate logic
+    const validateEditHandler = (e: React.MouseEvent | React.KeyboardEvent<HTMLInputElement>) => {
         e.stopPropagation();
         const newTime = parseInt(editTimerValue, 10);
         if (!isNaN(newTime) && newTime >= 0) {
             logger.info(`Validating timer edit for question ${q.uid}: ${newTime}s`);
 
-            // Stocker la nouvelle valeur comme "en attente de synchronisation"
-            setPendingTimeValue(newTime);
-
-            // Appeler le callback parent pour persister/synchroniser
+            // Emit the new timer value to the backend
             onEditTimer(newTime);
 
-            // Pour les questions actives, effectuer une mise à jour immédiate par le callback spécial
-            if (isActive && onImmediateUpdateActiveTimer) {
-                onImmediateUpdateActiveTimer(newTime);
-            }
+            // Wait for backend confirmation before clearing pendingTimeValue
+            setPendingTimeValue(newTime);
 
-            // Fermer le mode édition
+            // Close the edit mode
             setEditingTimer(false);
+            // Do NOT trigger play/resume here. Timer should remain paused or stopped.
         } else {
-            // En cas de valeur invalide, on reste en mode édition
-            logger.warn(`Invalid timer value: ${editTimerValue}`);
+            logger.error("Invalid timer value entered.");
         }
     };
 
@@ -219,7 +283,7 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
                 timerStatus={(isActive ? liveStatus : 'stop') ?? 'stop'}
                 timeLeft={displayedTimeLeft}
                 onPlay={handlePlayWithCurrentTime}
-                onPause={handlePauseClick}
+                onPause={pauseHandler}
                 onStop={onStop}
                 isActive={isActive}
                 disabled={true}
@@ -250,8 +314,8 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
                         }}
                         onClick={e => e.stopPropagation()}
                         onKeyDown={e => {
-                            if (e.key === 'Enter') handleValidateEdit(e as React.KeyboardEvent<HTMLInputElement>);
-                            if (e.key === 'Escape') handleCancelEdit(e as React.KeyboardEvent<HTMLInputElement>);
+                            if (e.key === 'Enter') validateEditHandler(e as React.KeyboardEvent<HTMLInputElement>);
+                            if (e.key === 'Escape') cancelEditHandler(e as React.KeyboardEvent<HTMLInputElement>);
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const val = parseInt(editTimerValue, 10) || 0;
@@ -260,8 +324,8 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
                             }
                         }}
                     />
-                    <button onClick={handleValidateEdit} className="p-1 text-foreground hover:text-primary" title="Valider"><Check size={18} /></button>
-                    <button onClick={handleCancelEdit} className="p-1 text-foreground hover:text-destructive" title="Annuler"><X size={18} /></button>
+                    <button onClick={validateEditHandler} className="p-1 text-foreground hover:text-primary" title="Valider"><Check size={18} /></button>
+                    <button onClick={cancelEditHandler} className="p-1 text-foreground hover:text-destructive" title="Annuler"><X size={18} /></button>
                 </span>
             </div>
         </div>
@@ -329,11 +393,11 @@ export const SortableQuestion = React.memo(({ q, /* idx, */ isActive, /* isRunni
                         timerStatus={(isActive ? liveStatus : 'stop') ?? 'stop'}
                         timeLeft={displayedTimeLeft}
                         onPlay={handlePlayWithCurrentTime}
-                        onPause={handlePauseClick}
+                        onPause={pauseHandler}
                         onStop={onStop}
                         isActive={isActive}
                         disabled={disabled}
-                        onEditTimerRequest={handleEditTimerRequest}
+                        onEditTimerRequest={editTimerRequestHandler}
                         onShowResults={onShowResults}
                         showResultsDisabled={showResultsDisabled}
                         onStatsToggle={onStatsToggle}

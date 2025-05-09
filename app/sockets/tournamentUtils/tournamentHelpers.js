@@ -6,7 +6,7 @@ const { calculateScore, scaleScoresForQuiz, saveParticipantScore } = require('./
 
 // Ensure live and differed modes share the same logic by unifying the handling of room sockets and the isDiffered flag.
 function getEmitTarget(io, code, targetRoom, isDiffered) {
-    return targetRoom ? io.to(targetRoom) : io.to(isDiffered ? `differed_${code}` : `tournament_${code}`);
+    return targetRoom ? io.to(targetRoom) : io.to(isDiffered ? `differed_${code}` : `live_${code}`);
 }
 
 // --- Centralized Timer Expiration Logic ---
@@ -20,21 +20,24 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
     }
 
     const prisma = require('../../db');
-    const idx = state.currentIndex;
-    const q = state.questions[idx];
+    const question = state.questions.find(q => q.uid === state.currentQuestionUid);
+    if (!question) {
+        logger.error(`[handleTimerExpiration] Question UID ${state.currentQuestionUid} not found in tournament state.`);
+        return;
+    }
 
-    logger.info(`Timer expired for question ${idx} (uid: ${q?.uid}) in tournament ${code}`);
+    logger.info(`Timer expired for question ${state.currentQuestionUid} (uid: ${question?.uid}) in tournament ${code}`);
 
     // --- SCORING ---
-    logger.info(`[handleTimerExpiration] Scoring for question ${q?.uid} in tournament ${code}. Participants: ${Object.keys(state.participants || {}).join(', ')}`);
+    logger.info(`[handleTimerExpiration] Scoring for question ${question?.uid} in tournament ${code}. Participants: ${Object.keys(state.participants || {}).join(', ')}`);
     const participantScores = {};
     Object.entries(state.participants || {}).forEach(([joueurId, participant]) => {
-        const answer = state.answers[joueurId]?.[q?.uid];
+        const answer = state.answers[joueurId]?.[question?.uid];
         if (!answer) {
-            logger.warn(`[handleTimerExpiration] No answer found for participant ${joueurId} on question ${q?.uid}. Assigning score of 0.`);
+            logger.warn(`[handleTimerExpiration] No answer found for participant ${joueurId} on question ${question?.uid}. Assigning score of 0.`);
         }
         // Use calculateScore helper
-        const { baseScore, timePenalty, totalScore } = calculateScore(q, answer, state.questionStart, state.questions.length);
+        const { baseScore, timePenalty, totalScore } = calculateScore(question, answer, state.questionStart, state.questions.length);
         logger.info(`[handleTimerExpiration] Participant ${joueurId}: baseScore=${baseScore}, timePenalty=${timePenalty}, totalScore=${totalScore}`);
 
         // Ensure participant.score is updated correctly
@@ -62,7 +65,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
                 io.to(socketId).emit("tournament_answer_result", {
                     correct: baseScore > 0,
                     score: participant.score, // Send updated total score
-                    explanation: q?.explication || null,
+                    explanation: question?.explication || null,
                     baseScore,
                     timePenalty: Math.round(timePenalty * 100) / 100,
                     totalScore, // Score for this question
@@ -73,7 +76,12 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
 
     // Ensure scores are saved after calculation
     async function saveScoresAfterCalculation(prisma, code, participants) {
+        if (!participants || typeof participants !== 'object') {
+            logger.error(`[saveScoresAfterCalculation] Invalid participants object for code=${code}. Skipping score saving.`);
+            return;
+        }
         const tournoi = await prisma.tournoi.findUnique({ where: { code } });
+        logger.info(`[Leaderboard Fetch] Retrieved tournoi data for code ${code}`);
         if (!tournoi) {
             logger.error(`[saveScoresAfterCalculation] Tournoi with code=${code} does not exist. Skipping score saving.`);
             return;
@@ -91,7 +99,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
     // Update handleTimerExpiration to save scores
     await saveScoresAfterCalculation(prisma, code, state.participants);
 
-    // Use targetRoom for emits in differed mode, or default to io.to(`tournament_${code}`) for live
+    // Use targetRoom for emits in differed mode, or default to io.to(`live_${code}`) for live
     const emitTarget = getEmitTarget(io, code, targetRoom, code.includes('_'));
 
     // Emit state update indicating the question time ended
@@ -103,58 +111,58 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
 
     // --- Move to next question or end tournament (ONLY FOR CLASSIC TOURNAMENTS) ---
     if (!state.linkedQuizId) {
-        if (idx + 1 < state.questions.length) {
+        if (state.questions.findIndex(q => q.uid === state.currentQuestionUid) + 1 < state.questions.length) {
             // --- Explication Overlay Logic ---
-            if (q?.explication) {
-                logger.info(`[handleTimerExpiration] Preparing to emit explication for question ${q.uid} to room ${targetRoom ? targetRoom : `tournament_${code}`}`);
+            if (question?.explication) {
+                logger.info(`[handleTimerExpiration] Preparing to emit explication for question ${question.uid} to room ${targetRoom ? targetRoom : `live_${code}`}`);
                 // Build array of correct answers (indices)
-                const correctAnswers = Array.isArray(q?.reponses)
-                    ? q.reponses.map((rep, idx) => rep.correct ? idx : null).filter(idx => idx !== null)
+                const correctAnswers = Array.isArray(question?.reponses)
+                    ? question.reponses.map((rep, idx) => rep.correct ? idx : null).filter(idx => idx !== null)
                     : [];
                 // Emit correct answers to students using unified event name
                 emitTarget.emit("quiz_question_results", {
-                    questionUid: q.uid,
+                    questionUid: question.uid,
                     correctAnswers
                 });
                 // Wait 1.5 seconds before sending explication
                 await new Promise(res => setTimeout(res, 1500));
                 emitTarget.emit("explication", {
-                    questionUid: q.uid,
-                    explication: q.explication
+                    questionUid: question.uid,
+                    explication: question.explication
                 });
-                logger.info(`[handleTimerExpiration] Emitted explication event for question ${q.uid} to room ${targetRoom ? targetRoom : `tournament_${code}`}`);
-                logger.info(`[handleTimerExpiration] Emitted explication for question ${q.uid} in tournament ${code} at ${new Date().toISOString()}`);
+                logger.info(`[handleTimerExpiration] Emitted explication event for question ${question.uid} to room ${targetRoom ? targetRoom : `live_${code}`}`);
+                logger.info(`[handleTimerExpiration] Emitted explication for question ${question.uid} in tournament ${code} at ${new Date().toISOString()}`);
                 // Wait 5000 seconds before proceeding (for testing)
                 await new Promise(res => setTimeout(res, 5 * 1000));
-                logger.info(`[handleTimerExpiration] Finished explication delay for question ${q.uid} in tournament ${code} at ${new Date().toISOString()}`);
+                logger.info(`[handleTimerExpiration] Finished explication delay for question ${question.uid} in tournament ${code} at ${new Date().toISOString()}`);
             }
             logger.info(`Classic tournament ${code}: Moving to next question at ${new Date().toISOString()}`);
             // Send the next question and set the timer
-            scheduleNextQuestionWithTimer(io, code, idx + 1, targetRoom);
+            scheduleNextQuestionWithTimer(io, code, state.questions.findIndex(q => q.uid === state.currentQuestionUid) + 1, targetRoom);
         } else {
             // --- PATCH: End tournament for differed mode (per-user room) ---
             // Detect differed mode by room naming convention (code contains '_')
             const isDiffered = code.includes('_');
-            if (q) {
+            if (question) {
                 // Build array of correct answers (indices)
-                const correctAnswers = Array.isArray(q?.reponses)
-                    ? q.reponses.map((rep, idx) => rep.correct ? idx : null).filter(idx => idx !== null)
+                const correctAnswers = Array.isArray(question?.reponses)
+                    ? question.reponses.map((rep, idx) => rep.correct ? idx : null).filter(idx => idx !== null)
                     : [];
                 emitTarget.emit("quiz_question_results", {
-                    questionUid: q.uid,
+                    questionUid: question.uid,
                     correctAnswers
                 });
                 await new Promise(res => setTimeout(res, 1500));
-                if (q.explication) {
-                    logger.info(`[handleTimerExpiration] Preparing to emit explication for last question ${q.uid} to room ${targetRoom ? targetRoom : `tournament_${code}`}`);
+                if (question.explication) {
+                    logger.info(`[handleTimerExpiration] Preparing to emit explication for last question ${question.uid} to room ${targetRoom ? targetRoom : `live_${code}`}`);
                     emitTarget.emit("explication", {
-                        questionUid: q.uid,
-                        explication: q.explication
+                        questionUid: question.uid,
+                        explication: question.explication
                     });
-                    logger.info(`[handleTimerExpiration] Emitted explication event for last question ${q.uid} to room ${targetRoom ? targetRoom : `tournament_${code}`}`);
-                    logger.info(`[handleTimerExpiration] Emitted explication for last question ${q.uid} in tournament ${code} at ${new Date().toISOString()}`);
+                    logger.info(`[handleTimerExpiration] Emitted explication event for last question ${question.uid} to room ${targetRoom ? targetRoom : `live_${code}`}`);
+                    logger.info(`[handleTimerExpiration] Emitted explication for last question ${question.uid} in tournament ${code} at ${new Date().toISOString()}`);
                     await new Promise(res => setTimeout(res, 5 * 1000));
-                    logger.info(`[handleTimerExpiration] Finished explication delay for last question ${q.uid} in tournament ${code} at ${new Date().toISOString()}`);
+                    logger.info(`[handleTimerExpiration] Finished explication delay for last question ${question.uid} in tournament ${code} at ${new Date().toISOString()}`);
                 }
             }
             if (isDiffered) {
@@ -191,20 +199,20 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
     } else {
         logger.info(`Quiz-linked tournament ${code}: Timer expired, waiting for teacher action.`);
         state.stopped = true;
-        // --- EMIT TO TEACHER DASHBOARD (quiz_${quizId}) ---
+        // --- EMIT TO TEACHER DASHBOARD (dashboard_${quizId}) ---
         if (state.linkedQuizId) {
             // Try to get the current question UID
             let questionUid = null;
-            if (typeof state.currentIndex === 'number' && state.questions && state.questions[state.currentIndex]) {
-                questionUid = state.questions[state.currentIndex].uid;
+            if (typeof state.currentQuestionUid === 'string') {
+                questionUid = state.currentQuestionUid;
             }
-            io.to(`quiz_${state.linkedQuizId}`).emit("quiz_timer_update", {
+            io.to(`dashboard_${state.linkedQuizId}`).emit("quiz_timer_update", {
                 status: 'stop',
                 questionId: questionUid,
                 timeLeft: 0,
                 timestamp: Date.now()
             });
-            logger.info(`[handleTimerExpiration] Emitted quiz_timer_update (stop) to quiz_${state.linkedQuizId} (questionId=${questionUid})`);
+            logger.info(`[handleTimerExpiration] Emitted quiz_timer_update (stop) to dashboard_${state.linkedQuizId} (questionId=${questionUid})`);
         }
     }
     logger.info(`[handleTimerExpiration] END for code=${code} at ${new Date().toISOString()}`);
@@ -219,27 +227,42 @@ async function sendQuestionWithState(io, code, idx, initialTime = null, targetRo
         return; // Should ideally handle end of tournament here or before calling
     }
 
-    const q = state.questions[idx];
-    if (!q) {
+    const question = state.questions[idx];
+    if (!question) {
         logger.error(`Question not found at index ${idx} for code ${code}`);
         return;
     }
 
+    // Store both index and UID for consistent question identification
+    state.currentQuestionUid = question.uid; // Explicitly store the UID for consistent communication
+
     // *** Use initialTime if provided, otherwise use question's time ***
-    const time = initialTime !== null ? initialTime : (q.temps || 20);
-    state.currentIndex = idx;
+    const time = initialTime !== null ? initialTime : (question.temps || 20);
     state.questionStart = Date.now();
     state.paused = false;
     state.pausedRemainingTime = null;
     state.stopped = false;            // Reset stopped state when sending a new question
-    state.currentQuestionDuration = time; // Set current duration based on initialTime or q.temps
+    state.currentQuestionDuration = time; // Set current duration based on initialTime or question.temps
+
+    // Ensure askedQuestions set is initialized in tournamentState
+    if (!state.askedQuestions) {
+        state.askedQuestions = new Set();
+    }
+
+    // Add the current question UID to the askedQuestions set
+    if (question && question.uid) {
+        state.askedQuestions.add(question.uid);
+        logger.debug(`[sendQuestionWithState] Added question UID ${question.uid} to askedQuestions for tournament ${code}`);
+        // Log the addition of the question UID to the askedQuestions set
+        logger.info(`[sendQuestionWithState] Adding question UID ${question.uid} to askedQuestions for tournament ${code}. Current set: ${Array.from(state.askedQuestions).join(', ')}`);
+    }
 
     // Filter reponses for students (remove 'correct')
-    const filteredReponses = Array.isArray(q.reponses)
-        ? q.reponses.map(r => ({ texte: r.texte }))
+    const filteredReponses = Array.isArray(question.reponses)
+        ? question.reponses.map(r => ({ texte: r.texte }))
         : [];
     const filteredQuestion = {
-        ...q,
+        ...question,
         reponses: filteredReponses
     };
 
@@ -247,14 +270,14 @@ async function sendQuestionWithState(io, code, idx, initialTime = null, targetRo
     logger.debug(`Preparing to emit tournament_question:`, {
         code,
         questionIndex: idx,
-        questionId: q.uid,
-        questionText: q.question.substring(0, 30) + (q.question.length > 30 ? '...' : ''),
+        questionId: question.uid,
+        questionText: question.question.substring(0, 30) + (question.question.length > 30 ? '...' : ''),
         time,
-        responseCount: q.reponses ? q.reponses.length : 0
+        responseCount: question.reponses ? question.reponses.length : 0
     });
 
     // Log room info before emitting
-    const roomName = `tournament_${code}`;
+    const roomName = `live_${code}`;
     const room = io.sockets.adapter.rooms.get(roomName);
     logger.debug(`Emitting to room ${roomName} with ${room ? room.size : 0} connected sockets`);
     if (room && room.size > 0) {
@@ -263,14 +286,14 @@ async function sendQuestionWithState(io, code, idx, initialTime = null, targetRo
         logger.warn(`No sockets in room ${roomName} to receive question`);
     }
 
-    logger.info(`Emitting tournament_question (idx: ${idx}, uid: ${q.uid}) to room tournament_${code}`);
+    logger.info(`Emitting tournament_question (idx: ${idx}, uid: ${question.uid}) to room live_${code}`);
     logger.info(`[QUIZMODE DEBUG] Emitting tournament_question for code=${code} with state.linkedQuizId=${state.linkedQuizId}`);
 
     // Use targetRoom if provided, else emit to room
     if (targetRoom) {
-        sendTournamentQuestion(io, targetRoom, q, idx, state.questions.length, time, "active", !!state.linkedQuizId);
+        sendTournamentQuestion(io, targetRoom, question, idx, state.questions.length, time, "active", !!state.linkedQuizId);
     } else {
-        sendTournamentQuestion(io, `tournament_${code}`, q, idx, state.questions.length, time, "active", !!state.linkedQuizId);
+        sendTournamentQuestion(io, `live_${code}`, question, idx, state.questions.length, time, "active", !!state.linkedQuizId);
     }
 
     // --- Timer logic removed from here for quiz-linked tournaments ---
@@ -300,8 +323,8 @@ function scheduleNextQuestionWithTimer(io, code, idx, targetRoom = null) {
         state.timer = null;
         logger.debug(`[scheduleNextQuestionWithTimer] Cleared previous timer for code=${code}`);
     }
-    const q = state.questions[idx];
-    const time = q.temps || 20;
+    const question = state.questions[idx];
+    const time = question.temps || 20;
     logger.info(`[scheduleNextQuestionWithTimer] Setting timer for code=${code}, idx=${idx}, duration=${time}s`);
     state.timer = setTimeout(async function () {
         logger.info(`[scheduleNextQuestionWithTimer] Timer fired for code=${code}, idx=${idx}`);
@@ -344,7 +367,15 @@ async function saveAllTournamentScores(prisma, tournoi, participants) {
 
 // DRY helper: Update the leaderboard field in the tournoi table
 async function updateTournamentLeaderboard(prisma, tournoi) {
-    if (!tournoi || !tournoi.id) return;
+    // Log when updateTournamentLeaderboard is called
+    logger.info(`[updateTournamentLeaderboard] Called for tournoi ${tournoi.id}`);
+
+    // Check if the leaderboard is already scaled and saved
+    const existingTournoi = await prisma.tournoi.findUnique({ where: { id: tournoi.id } });
+    if (existingTournoi && existingTournoi.leaderboard && existingTournoi.leaderboard.length > 0) {
+        logger.info(`[updateTournamentLeaderboard] Skipping update as scaled leaderboard already exists for tournoi ${tournoi.id}`);
+        return;
+    }
     // Fetch all scores for this tournament
     const scores = await prisma.score.findMany({
         where: { tournoi_id: tournoi.id },

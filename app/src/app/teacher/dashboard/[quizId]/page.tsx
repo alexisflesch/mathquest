@@ -15,6 +15,7 @@ import { createLogger } from '@/clientLogger';
 import TournamentCodeManager from '@/components/TournamentCodeManager'; // Import new component
 import { useTeacherQuizSocket, Question } from '@/hooks/useTeacherQuizSocket'; // Remove unused QuizState
 import { UsersRound } from "lucide-react";
+import { log } from "console";
 
 // Create a logger for this component
 const logger = createLogger('TeacherDashboardPage');
@@ -32,6 +33,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null); // UI state for selected question
     const [initialTournamentCode, setInitialTournamentCode] = useState<string | null>(null); // Fetched code
     const [currentTournamentCode, setCurrentTournamentCode] = useState<string | null>(null); // Active code (from fetch or generation)
+    const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
 
     // --- Confirmation Dialog State ---
     const [showConfirm, setShowConfirm] = useState(false);
@@ -43,7 +45,9 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         quizState,
         timerStatus,
         timerQuestionId,
+        timeLeft,
         localTimeLeft,
+        connectedCount,
         emitSetQuestion,
         emitEndQuiz,
         emitPauseQuiz,
@@ -51,7 +55,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         emitSetTimer,
         emitTimerAction,
         emitUpdateTournamentCode,
-        connectedCount, // Ajout du compteur de connectés
     } = useTeacherQuizSocket(quizId, currentTournamentCode); // Pass quizId and current code to hook
 
     // --- Stats state for answer histograms ---
@@ -69,6 +72,34 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             quizSocket.off('quiz_answer_stats_update', handleStatsUpdate);
         };
     }, [quizSocket]);
+
+    useEffect(() => {
+        if (!quizSocket) return;
+
+        const handleActionResponse = (data: { status: string; message: string }) => {
+            logger.info(`[Snackbar] Received action response:`, data);
+            setSnackbarMessage(data.message);
+        };
+
+        quizSocket.on('quiz_action_response', handleActionResponse);
+
+        return () => {
+            quizSocket.off('quiz_action_response', handleActionResponse);
+        };
+    }, [quizSocket]);
+
+    useEffect(() => {
+        const handleQuizTimerUpdateStop = () => {
+            logger.info(`[Snackbar] Received quizTimerUpdateStop event`);
+            setSnackbarMessage('Timer arrêté.');
+        };
+
+        window.addEventListener('quizTimerUpdateStop', handleQuizTimerUpdateStop);
+
+        return () => {
+            window.removeEventListener('quizTimerUpdateStop', handleQuizTimerUpdateStop);
+        };
+    }, []);
 
     // --- Initial Data Fetching (Quiz Name, Questions, Initial Code) ---
     useEffect(() => {
@@ -169,25 +200,21 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     }, [timerQuestionId]);
 
     // --- Compute effective timeLeft for DraggableQuestionsList ---
-    const effectiveTimeLeft = timerStatus === 'stop' ? 0 : (localTimeLeft ?? 0);
+    const effectiveTimeLeft = timerStatus === 'stop' ? 0 : (localTimeLeft ?? timeLeft ?? 0);
 
     // --- Handlers (using hook emitters) ---
 
     const handleSelect = useCallback((uid: string) => {
-        logger.info(`Manually selecting question with uid: ${uid}`);
         setQuestionActiveUid(uid);
     }, []);
 
     const handleReorder = useCallback((newQuestions: Question[]) => {
-        logger.info("Questions reordered locally:", newQuestions.map(q => q.uid));
         setQuestions(newQuestions);
     }, []);
 
     const handlePlay = useCallback((uid: string, startTime: number) => {
-        logger.info('[handlePlay] called', { uid, startTime, timerStatus, timerQuestionId, questions });
         const questionToPlay = questions.find(q => q.uid === uid);
         if (!questionToPlay) {
-            logger.warn('[handlePlay] Question not found', { uid });
             return;
         }
         const currentQuestionUid = timerQuestionId;
@@ -195,76 +222,70 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
         if (currentQuestionUid === questionToPlay.uid) {
             if (timerStatus === 'play') {
-                logger.info('[handlePlay] Play on already running question: will pause');
                 emitPauseQuiz();
                 return;
             }
             if (timerStatus === 'pause') {
-                logger.info('[handlePlay] Play on paused question: will resume');
                 emitResumeQuiz();
                 return;
             }
         }
 
         if (isTimerRunningOrPaused && currentQuestionUid && currentQuestionUid !== questionToPlay.uid) {
-            logger.info('[handlePlay] Should show confirmation popup', { pendingPlayUid: uid });
             setPendingPlayIdx(questions.findIndex(q => q.uid === uid));
             setShowConfirm(true);
             return;
         }
 
-        logger.info(`[handlePlay] Starting timer for question ${questionToPlay.uid}`);
-        setQuestionActiveUid(questionToPlay.uid);
-        emitSetQuestion(questionToPlay.uid, startTime);
+        if (timerStatus === 'stop' || timerStatus === 'pause') {
+            setQuestionActiveUid(questionToPlay.uid);
+            emitSetQuestion(questionToPlay.uid); // Do not send startTime to avoid resetting backend timer
+        } else {
+            setQuestionActiveUid(questionToPlay.uid);
+            emitSetQuestion(questionToPlay.uid, startTime);
+        }
     }, [questions, timerStatus, timerQuestionId, emitPauseQuiz, emitResumeQuiz, emitSetQuestion, currentTournamentCode]);
 
     const handlePause = useCallback(() => {
-        logger.info(`Pausing timer for question ${timerQuestionId}`);
         emitPauseQuiz();
     }, [timerQuestionId, emitPauseQuiz]);
 
     const handleStop = useCallback(() => {
         if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
-            logger.info(`Stopping timer for question ${timerQuestionId}`);
             emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeft: 0 });
-        } else {
-            logger.warn("Cannot stop: No active question ID or timer already stopped.");
         }
     }, [timerStatus, timerQuestionId, emitTimerAction]);
 
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
         const question = questions.find(q => q.uid === uid);
         if (!question) return;
-        logger.info(`Editing timer for question ${uid} to ${newTime}s`);
         setQuestions(prev => prev.map(q => q.uid === uid ? { ...q, temps: newTime } : q));
-        if (timerQuestionId === question.uid) {
-            if (timerStatus === 'pause') {
-                logger.info(`Updating paused timer value via timerAction: ${newTime}s`);
-                emitTimerAction({ status: 'pause', questionId: question.uid, timeLeft: newTime });
-            } else if (timerStatus === 'play') {
-                logger.info(`Updating running timer value via setTimer: ${newTime}s`);
-                emitSetTimer(newTime);
-            } else {
-                logger.info(`Updating stopped timer value via setTimer: ${newTime}s`);
-                emitSetTimer(newTime);
-            }
-        }
-    }, [questions, timerQuestionId, timerStatus, emitTimerAction, emitSetTimer]);
+        // Only emitSetTimer for paused or inactive timer edits. Do NOT auto-resume.
+        emitSetTimer(newTime, question.uid);
+        logger.info(`[DASHBOARD] Timer updated for question ${question.uid}: ${newTime}`);
+        // Do NOT call emitTimerAction({ status: 'play', ... }) here. Only resume on explicit user action.
+    }, [questions, timerQuestionId, timerStatus, emitSetTimer]);
 
     const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
-        logger.debug('handleTimerAction called from DraggableQuestionsList', action);
         emitTimerAction(action);
-    }, [emitTimerAction]);
+        logger.info(`[DASHBOARD] Timer action emitted:`, action);
+
+        // Force synchronization after emitting the action
+        if (action.status === 'play') {
+            quizSocket?.emit('quiz_get_timer', { quizId: action.questionId }, (response: { timeLeft: number }) => {
+                logger.info(`[DASHBOARD] Timer synchronized after play action:`, response);
+                setQuestions(prev => prev.map(q => q.uid === action.questionId ? { ...q, temps: response.timeLeft } : q));
+            });
+        }
+    }, [emitTimerAction, quizSocket]);
 
     const handleShowResults = useCallback((uid: string) => {
-        logger.info(`[handleShowResults] Clôturer la question et afficher les résultats`, { uid });
         emitTimerAction({ status: 'stop', questionId: uid, timeLeft: 0 });
         quizSocket?.emit('quiz_close_question', { quizId, tournamentCode: currentTournamentCode, questionUid: uid });
     }, [emitTimerAction, quizSocket, quizId, currentTournamentCode]);
 
     // Callback from TournamentCodeManager when a new code is generated
     const handleCodeGenerated = useCallback((newCode: string | null) => {
-        logger.info(`Tournament code updated via TournamentCodeManager: ${newCode}`);
         setCurrentTournamentCode(newCode); // Update the code used by the hook
     }, []);
 
@@ -280,7 +301,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         setShowConfirm(false);
         if (pendingPlayIdx !== null) {
             const questionToPlay = questions[pendingPlayIdx];
-            logger.info(`Confirmed play for question ${pendingPlayIdx} (${questionToPlay?.uid})`);
             if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
                 emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeft: 0 });
             }
@@ -400,6 +420,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 </div>
                             )}
                             <DraggableQuestionsList
+                                quizSocket={quizSocket} // Pass the quizSocket prop
                                 questions={questions}
                                 currentQuestionIdx={quizState?.currentQuestionIdx}
                                 isChronoRunning={quizState?.chrono?.running}
@@ -430,6 +451,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                         });
                                     }
                                 }}
+                                quizId={quizId} // Added missing prop
+                                currentTournamentCode={currentTournamentCode || ''} // Added fallback for null
                             />
                         </section>
                     </div>
@@ -451,6 +474,11 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 onConfirm={confirmGenerateCode}
                 onCancel={cancelGenerateCode}
             />
+            {snackbarMessage && (
+                <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg">
+                    {snackbarMessage}
+                </div>
+            )}
         </div>
     );
 }

@@ -9,12 +9,13 @@ interface TournamentTimerProps {
 // Helper to format timer as MM:SS if >= 60, else just seconds
 function formatTimer(val: number | null) {
     if (val === null) return '-';
-    if (val >= 60) {
-        const m = Math.floor(val / 60);
-        const s = val % 60;
+    const rounded = Math.floor(val);
+    if (rounded >= 60) {
+        const m = Math.floor(rounded / 60);
+        const s = rounded % 60;
         return `${m}:${s.toString().padStart(2, '0')}`;
     }
-    return val.toString();
+    return rounded.toString();
 }
 
 const TournamentTimer: React.FC<TournamentTimerProps> = ({ timer, isMobile }) => {

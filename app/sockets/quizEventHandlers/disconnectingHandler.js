@@ -28,7 +28,7 @@ async function handleDisconnecting(io, socket, prisma) {
             quizState[quizId].profSocketId = null;
             logger.info(`Professor disconnected from quiz ${quizId}`);
             // Optionally emit an update to other clients in the quiz room
-            // io.to(`quiz_${quizId}`).emit("quiz_state", quizState[quizId]);
+            // io.to(`dashboard_${quizId}`).emit("quiz_state", quizState[quizId]);
         }
     }
     // Appeler emitQuizConnectedCount après qu'un étudiant se déconnecte

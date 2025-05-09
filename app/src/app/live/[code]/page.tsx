@@ -86,6 +86,13 @@ export default function TournamentSessionPage() {
         }
     }, []);
 
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Set initial value
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // Detect differed mode from URL
     const [isDiffered, setIsDiffered] = useState(false);
     useEffect(() => {
@@ -189,8 +196,8 @@ export default function TournamentSessionPage() {
 
         // Receive a new question
         s.on("tournament_question", (payload) => {
-            // Round timer to nearest second
-            const roundedTime = payload.remainingTime != null ? Math.round(payload.remainingTime) : 20;
+            // Round timer down to nearest second
+            const roundedTime = payload.remainingTime != null ? Math.floor(payload.remainingTime) : 20;
             logger.debug('tournament_question RECEIVED', payload);
             setCurrentQuestion(payload); // Pass the full payload, not just payload.question
 
@@ -426,7 +433,7 @@ export default function TournamentSessionPage() {
 
             // If this is our tournament, update our rooms and state
             if (oldCode === code) {
-                logger.info(`Our tournament code changed, joining new room: tournament_${newCode}`);
+                logger.info(`Our tournament code changed, joining new room: live_${newCode}`);
 
                 // Join the new tournament room
                 s.emit("join_tournament", {
@@ -643,7 +650,7 @@ export default function TournamentSessionPage() {
             if (!update) return;
             logger.info('tournament_question_state_update received, questionState:', update.questionState);
             if (typeof update.remainingTime === 'number') {
-                setTimer(Math.round(update.remainingTime));
+                setTimer(Math.floor(update.remainingTime));
             }
             if (update.questionState === 'paused') {
                 logger.info('PAUSE branch entered');
@@ -757,6 +764,10 @@ export default function TournamentSessionPage() {
     useEffect(() => {
         if (devMode) setShowExplication(false);
     }, [currentQuestion?.uid, devMode]);
+
+    useEffect(() => {
+        logger.debug('currentQuestion updated:', currentQuestion);
+    }, [currentQuestion]);
 
     return (
         <div className="main-content">
