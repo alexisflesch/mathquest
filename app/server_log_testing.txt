@@ -1,0 +1,120 @@
+[TypeScript] Successfully registered ts-node for TypeScript file handling
+[2025-05-11 15:36:02.902] [33m[WARN][0m [TournamentHandlerBridge] Could not find registerTournamentHandlers function directly, trying delayed import
+Could not find trigger functions directly, trying delayed import
+Could not find handler function directly, trying delayed import
+Failed to load TypeScript handler directly, falling back to legacy: Cannot find module '/home/aflesch/mathquest/app/sockets/quizState' imported from /home/aflesch/mathquest/app/sockets/quizEventHandlers/lockHandler.ts
+Failed to load TypeScript handler directly, falling back to legacy: Cannot find module '/home/aflesch/mathquest/app/sockets/quizState' imported from /home/aflesch/mathquest/app/sockets/quizEventHandlers/unlockHandler.ts
+Failed to load TypeScript handler directly, falling back to legacy: Cannot find module '/home/aflesch/mathquest/app/sockets/quizState' imported from /home/aflesch/mathquest/app/sockets/quizEventHandlers/endHandler.ts
+[2025-05-11 15:36:03.185] [36m[DEBUG][0m [EndQuizHandler] [handleEnd] tournamentState: {}
+Failed to load TypeScript handler directly, falling back to legacy: Cannot find module '/home/aflesch/mathquest/app/sockets/quizState' imported from /home/aflesch/mathquest/app/sockets/quizEventHandlers/pauseHandler.ts
+Failed to load TypeScript handler directly, falling back to legacy: Cannot find module '/home/aflesch/mathquest/app/sockets/quizState' imported from /home/aflesch/mathquest/app/sockets/quizEventHandlers/resumeHandler.ts
+Failed to load TypeScript handler directly, falling back to legacy: Cannot find module '/home/aflesch/mathquest/app/sockets/quizState' imported from /home/aflesch/mathquest/app/sockets/quizEventHandlers/closeQuestionHandler.ts
+Could not find calculateScore function directly, trying delayed import
+(node:112077) Warning: Accessing non-existent property 'registerTournamentHandlers' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:112077) Warning: Accessing non-existent property 'default' of module exports inside circular dependency
+(node:112077) Warning: Accessing non-existent property 'triggerTournamentQuestion' of module exports inside circular dependency
+(node:112077) Warning: Accessing non-existent property 'default' of module exports inside circular dependency
+(node:112077) Warning: Accessing non-existent property 'default' of module exports inside circular dependency
+(node:112077) ExperimentalWarning: CommonJS module /home/aflesch/mathquest/app/sockets/quizEventHandlers/lockHandler.js is loading ES Module /home/aflesch/mathquest/app/sockets/quizEventHandlers/lockHandler.ts using require().
+Support for loading ES Module in require() is an experimental feature and might change at any time
+(node:112077) Warning: Accessing non-existent property 'calculateScore' of module exports inside circular dependency
+(node:112077) Warning: Accessing non-existent property 'default' of module exports inside circular dependency
+[2025-05-11 15:36:05.329] [32m[INFO][0m [Server] Server ready on http://localhost:3007
+ ○ Compiling / ...
+ ✓ Compiled / in 3.6s (828 modules)
+ GET / 200 in 5035ms
+ ✓ Compiled in 1355ms (375 modules)
+ ○ Compiling /api/auth/status ...
+ ✓ Compiled /api/auth/status in 995ms (839 modules)
+ GET /api/auth/status 200 in 1833ms
+ ○ Compiling /teacher/home ...
+ ✓ Compiled /teacher/home in 1986ms (865 modules)
+ GET /teacher/home 200 in 2633ms
+ GET /api/teacher/profile?id=8faeb437-06ca-496c-9b27-2d3f1a5156dc 200 in 2647ms
+ ○ Compiling /student/create-tournament ...
+ ✓ Compiled /student/create-tournament in 1023ms (876 modules)
+ GET /student/create-tournament 200 in 1264ms
+ ○ Compiling /api/questions/filters ...
+ ✓ Compiled /api/questions/filters in 691ms (879 modules)
+ GET /api/questions/filters 200 in 1017ms
+ GET /api/questions/filters 200 in 58ms
+ ○ Compiling /api/questions/disciplines ...
+ ✓ Compiled /api/questions/disciplines in 535ms (881 modules)
+ GET /api/questions/disciplines?niveau=TEST 200 in 774ms
+ ✓ Compiled /api/questions/themes in 435ms (883 modules)
+ GET /api/questions/themes?niveau=TEST&discipline=Math%C3%A9matiques 200 in 682ms
+ ✓ Compiled /api/questions/count in 393ms (885 modules)
+ GET /api/questions/count?niveau=TEST&discipline=Math%C3%A9matiques&themes=addition 200 in 650ms
+ ✓ Compiled /api/questions/list in 427ms (887 modules)
+ GET /api/questions/list?niveau=TEST&discipline=Math%C3%A9matiques&themes=addition&limit=10 200 in 632ms
+ ✓ Compiled /api/tournament in 478ms (889 modules)
+ POST /api/tournament 201 in 698ms
+ ○ Compiling /lobby/[code] ...
+ ✓ Compiled /lobby/[code] in 1459ms (1006 modules)
+ GET /lobby/670075 200 in 2249ms
+[2025-05-11 15:37:15.717] [32m[INFO][0m [Server] New connection: socket.id=UKZSZ8qI8jgN0AArAAAC
+ ⨯ uncaughtException: TypeError: registerTournamentHandlers is not a function
+    at Namespace.<anonymous> (server.js:52:9)
+ ⨯ uncaughtException:  TypeError: registerTournamentHandlers is not a function
+    at Namespace.<anonymous> (server.js:52:9)
+[2025-05-11 15:37:15.739] [32m[INFO][0m [LobbyHandler] join_lobby received: code=670075, pseudo=Alexis, cookie_id=teacher_8faeb437-06ca-496c-9b27-2d3f1a5156dc, socket.id=UKZSZ8qI8jgN0AArAAAC
+[2025-05-11 15:37:15.740] [36m[DEBUG][0m [LobbyHandler] Avatar for Alexis: /avatars/rat.svg
+[2025-05-11 15:37:15.740] [36m[DEBUG][0m [LobbyHandler] Fetching tournament status for code 670075...
+[2025-05-11 15:37:15.786] [36m[DEBUG][0m [LobbyHandler] get_participants: code=670075, socket.id=UKZSZ8qI8jgN0AArAAAC
+[2025-05-11 15:37:15.786] [36m[DEBUG][0m [LobbyHandler] lobbyParticipants[670075] on get_participants: undefined
+[2025-05-11 15:37:15.925] [36m[DEBUG][0m [LobbyHandler] Socket UKZSZ8qI8jgN0AArAAAC joined lobby_670075 room during get_participants
+[2025-05-11 15:37:15.934] [32m[INFO][0m [LobbyHandler] Tournament 670075 status found: en préparation
+[2025-05-11 15:37:15.934] [32m[INFO][0m [LobbyHandler] Tournament 670075 is 'en préparation'. Proceeding to join lobby for socket UKZSZ8qI8jgN0AArAAAC.
+[2025-05-11 15:37:15.943] [32m[INFO][0m [LobbyHandler] [DEBUG] After join, socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:15.946] [36m[DEBUG][0m [LobbyHandler] Socket UKZSZ8qI8jgN0AArAAAC joined ONLY the lobby_670075 room
+[2025-05-11 15:37:15.946] [36m[DEBUG][0m [LobbyHandler] lobbyParticipants[670075]: [
+  {
+    id: 'UKZSZ8qI8jgN0AArAAAC',
+    pseudo: 'Alexis',
+    avatar: '/avatars/rat.svg',
+    cookie_id: 'teacher_8faeb437-06ca-496c-9b27-2d3f1a5156dc'
+  }
+]
+ ○ Compiling /api/tournament-status ...
+ ✓ Compiled /api/tournament-status in 692ms (1008 modules)
+ GET /api/tournament-status?code=670075 200 in 979ms
+ GET /api/tournament-status?code=670075 200 in 30ms
+ GET /api/tournament-status?code=670075 200 in 27ms
+ GET /api/tournament-status?code=670075 200 in 17ms
+ GET /api/tournament?code=670075 200 in 142ms
+ GET /api/tournament?code=670075 200 in 39ms
+[2025-05-11 15:37:17.104] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+ ✓ Compiled /api/joueur in 499ms (1010 modules)
+[2025-05-11 15:37:17.362] [36m[DEBUG][0m [API:Joueur] Requested id: eee24868-a897-4dd8-a8ff-b7f0da0c6d6b
+[2025-05-11 15:37:17.488] [36m[DEBUG][0m [API:Joueur] Found joueur: { id: 'eee24868-a897-4dd8-a8ff-b7f0da0c6d6b', pseudo: 'Alexis' }
+ GET /api/joueur?id=eee24868-a897-4dd8-a8ff-b7f0da0c6d6b 200 in 743ms
+[2025-05-11 15:37:17.522] [36m[DEBUG][0m [API:Joueur] Requested id: eee24868-a897-4dd8-a8ff-b7f0da0c6d6b
+[2025-05-11 15:37:17.524] [36m[DEBUG][0m [API:Joueur] Found joueur: { id: 'eee24868-a897-4dd8-a8ff-b7f0da0c6d6b', pseudo: 'Alexis' }
+ GET /api/joueur?id=eee24868-a897-4dd8-a8ff-b7f0da0c6d6b 200 in 33ms
+[2025-05-11 15:37:18.105] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:19.106] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:20.108] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:21.109] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:22.111] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:23.111] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:24.112] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:25.113] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:26.113] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:27.114] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:28.115] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:29.116] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:30.117] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:31.118] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:32.119] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:33.120] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:34.122] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:35.122] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:36.122] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:37.123] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:38.124] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:39.125] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:40.125] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:41.126] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:42.127] [36m[DEBUG][0m [LobbyHandler] [STATUS CHECK] Socket UKZSZ8qI8jgN0AArAAAC rooms: [ 'UKZSZ8qI8jgN0AArAAAC', 'lobby_670075' ]
+[2025-05-11 15:37:42.289] [32m[INFO][0m [LobbyHandler] Socket UKZSZ8qI8jgN0AArAAAC disconnecting from lobby 670075

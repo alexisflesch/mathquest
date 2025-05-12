@@ -1,28 +1,36 @@
-// computeStats.js - Utility to compute answer stats for a question in a tournament
-// Returns { stats: number[], totalAnswers: number }
-function computeAnswerStats(tState, questionUid) {
-    if (!tState || !tState.questions) return { stats: [], totalAnswers: 0 };
-    const question = (tState.questions || []).find(q => q.uid === questionUid);
-    if (!question || !Array.isArray(question.reponses)) return { stats: [], totalAnswers: 0 };
-    const answerCounts = new Array(question.reponses.length).fill(0);
-    let total = 0;
-    for (const jId in tState.answers) {
-        const ans = tState.answers[jId][questionUid];
-        if (!ans) continue;
-        if (Array.isArray(ans.answerIdx)) {
-            ans.answerIdx.forEach(idx => {
-                if (typeof idx === 'number' && answerCounts[idx] !== undefined) {
-                    answerCounts[idx]++;
-                }
-            });
-            total++;
-        } else if (typeof ans.answerIdx === 'number' && answerCounts[ans.answerIdx] !== undefined) {
-            answerCounts[ans.answerIdx]++;
-            total++;
-        }
+// filepath: /home/aflesch/mathquest/app/sockets/tournamentUtils/computeStats.js
+/**
+ * computeStats.js - JavaScript bridge to TypeScript module
+ * 
+ * This file serves as a bridge between JavaScript and TypeScript modules
+ * to ensure compatibility when TypeScript transpilation is not available.
+ */
+
+// Import the TypeScript module with fallback options
+let tsModule;
+try {
+    // Try direct import
+    tsModule = require('./computeStats');
+
+    // Check if the module is using default export or named exports
+    if (tsModule.default && typeof tsModule.default.computeAnswerStats === 'function') {
+        // Use the default export
+        tsModule = tsModule.default;
+    } else if (typeof tsModule.computeAnswerStats !== 'function') {
+        // Neither format worked, throw an error
+        throw new Error('Could not find computeAnswerStats function in module');
     }
-    const stats = answerCounts.map(count => total > 0 ? Math.round((count / total) * 100) : 0);
-    return { stats, totalAnswers: total };
+} catch (error) {
+    console.error('Error importing computeStats.ts module:', error);
+
+    // Provide fallback implementation
+    tsModule = {
+        computeAnswerStats: function (tState, questionUid) {
+            console.warn('Using fallback computeAnswerStats function');
+            return { stats: [], totalAnswers: 0 };
+        }
+    };
 }
 
-module.exports = { computeAnswerStats };
+// Export the module functions
+module.exports = tsModule;

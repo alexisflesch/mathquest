@@ -1,28 +1,15 @@
-const createLogger = require('../../logger');
-const logger = createLogger('LockQuizHandler');
-const { quizState } = require('../quizState');
-const { patchQuizStateForBroadcast } = require('../quizUtils');
+/**
+ * lockHandler.js - JavaScript bridge to TypeScript handler
+ * 
+ * This file serves as a bridge between JavaScript and TypeScript modules
+ * to ensure compatibility when TypeScript transpilation is not available.
+ */
 
-// Note: prisma is not needed here
-function handleLock(io, socket, prisma, { quizId }) {
-    if (!quizState[quizId] || quizState[quizId].profSocketId !== socket.id) {
-        logger.warn(`Unauthorized attempt to lock quiz ${quizId} from socket ${socket.id}`);
-        socket.emit('quiz_action_response', {
-            status: 'error',
-            message: 'Erreur : accès non autorisé.'
-        });
-        return;
-    }
-
-    logger.info(`Locking quiz ${quizId}`);
-    quizState[quizId].locked = true;
-    io.to(`dashboard_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
-
-    // Emit success message after locking the quiz
-    io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
-        status: 'success',
-        message: 'Quiz locked successfully.'
-    });
+try {
+    // First try to load the TypeScript file directly (for use with ts-node)
+    module.exports = require('./lockHandler.ts').default;
+} catch (e) {
+    console.error('Failed to load TypeScript handler directly, falling back to legacy:', e.message);
+    // Fallback to legacy version if TypeScript loading fails
+    module.exports = require('./lockHandler.legacy.js');
 }
-
-module.exports = handleLock;

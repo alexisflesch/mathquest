@@ -1,0 +1,39 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "CommonJS",
+        "allowJs": true,
+        "checkJs": false,
+        "outDir": "./dist",
+        "rootDir": "./",
+        "strict": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "baseUrl": ".",
+        "paths": {
+            "@logger": [
+                "logger.ts"
+            ],
+            "@sockets/*": [
+                "sockets/*"
+            ],
+            "@db/*": [
+                "db/*"
+            ]
+        }
+    },
+    "include": [
+        "sockets/**/*.ts",
+        "sockets/**/*.js",
+        "server.js",
+        "db/**/*.js",
+        "logger.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "src"
+    ]
+}

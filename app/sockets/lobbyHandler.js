@@ -18,7 +18,7 @@ const { PrismaClient } = require('@prisma/client');
 const db = new PrismaClient();
 const createLogger = require('../logger');
 const logger = createLogger('LobbyHandler');
-const { emitQuizConnectedCount } = require('./quizUtils');
+const { emitQuizConnectedCount } = require('./quizUtils.legacy.js');
 const prisma = require('../db');
 
 const lobbyParticipants = {};
@@ -49,7 +49,24 @@ function registerLobbyHandlers(io, socket) {
             if (tournoi.statut === 'en cours' || tournoi.statut === 'terminé') {
                 logger.info(`Tournament ${code} already ${tournoi.statut}. Emitting 'tournament_already_started' to client ${socket.id}.`); // Log before emitting
                 socket.emit('tournament_already_started', { code, status: tournoi.statut });
-                // Do not proceed to join lobby rooms or add to participants list
+
+                // Always join the lobby room first for consistent event handling
+                socket.join(`lobby_${code}`);
+
+                // If tournament is currently in progress, immediately send redirect
+                if (tournoi.statut === 'en cours') {
+                    logger.info(`Tournament ${code} is in progress, emitting redirect_to_tournament to socket ${socket.id}`);
+                    socket.emit('redirect_to_tournament', { code });
+
+                    // Add a brief delay and then resend the redirect in case the client missed it
+                    setTimeout(() => {
+                        if (socket.connected) {
+                            logger.info(`Sending follow-up redirect_to_tournament for ${code} to socket ${socket.id}`);
+                            socket.emit('redirect_to_tournament', { code });
+                        }
+                    }, 2000);
+                }
+
                 return;
             }
 
@@ -58,20 +75,47 @@ function registerLobbyHandlers(io, socket) {
 
             // Check if this tournament is linked to a quiz
             let isQuizLinked = false;
+            let quizId = null;
             try {
                 const quiz = await db.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
-                if (quiz && quiz.id) isQuizLinked = true;
+                if (quiz && quiz.id) {
+                    isQuizLinked = true;
+                    quizId = quiz.id;
+                    logger.info(`Tournament ${code} is linked to quiz ${quizId}`);
+
+                    // For quiz-linked tournaments, check if the quiz is active
+                    // This is a critical check for late joiners
+                    if (tournoi.statut === 'en préparation') {
+                        // Double-check the tournament status in the database
+                        const freshTournoi = await db.tournoi.findUnique({
+                            where: { code },
+                            select: { statut: true }
+                        });
+
+                        if (freshTournoi && freshTournoi.statut === 'en cours') {
+                            logger.info(`Quiz-linked tournament ${code} is actually active but marked as 'en préparation'. Forcing redirect.`);
+                            socket.emit('redirect_to_tournament', { code });
+
+                            // Also update the tournament status in database
+                            await db.tournoi.update({
+                                where: { code },
+                                data: { statut: 'en cours' }
+                            });
+
+                            // Return early to prevent joining lobby unnecessarily
+                            return;
+                        }
+                    }
+                }
             } catch (e) {
                 logger.error('Error checking if tournament is quiz-linked:', e);
             }
 
-            // Join both the plain code room (for lobby communications) and the tournament room
-            socket.join(code);
-            socket.join(`live_${code}`); // Also join the tournament room preemptively
-            socket.join(`lobby_${code}`); // PATCH: ensure student is in lobby_<code> room for redirect
+            // Join ONLY the lobby room - to avoid receiving live tournament events prematurely
+            socket.join(`lobby_${code}`); // Join the lobby room ONLY - we'll join live_${code} after redirect
             logger.info(`[DEBUG] After join, socket ${socket.id} rooms:`, Array.from(socket.rooms));
 
-            logger.debug(`Socket ${socket.id} joined rooms: ${code} and live_${code}`);
+            logger.debug(`Socket ${socket.id} joined ONLY the lobby_${code} room`);
 
             if (!lobbyParticipants[code]) lobbyParticipants[code] = [];
             lobbyParticipants[code] = [
@@ -79,11 +123,81 @@ function registerLobbyHandlers(io, socket) {
                 { id: socket.id, pseudo, avatar, cookie_id },
             ];
             logger.debug(`lobbyParticipants[${code}]:`, lobbyParticipants[code]);
-            io.to(code).emit("participant_joined", { pseudo, avatar, id: socket.id });
-            io.to(code).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
+            io.to(`lobby_${code}`).emit("participant_joined", { pseudo, avatar, id: socket.id });
+            io.to(`lobby_${code}`).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
 
             // Appeler emitQuizConnectedCount après qu'un étudiant rejoint le lobby
-            await emitQuizConnectedCount(io, prisma, code);
+            await emitQuizConnectedCount(io, prisma, code);            // Periodically check tournament status for this lobby
+            // This helps catch situations where tournament status was changed from elsewhere
+            const checkInterval = setInterval(async () => {
+                try {
+                    // Stop checking if socket disconnected
+                    if (!socket.connected) {
+                        clearInterval(checkInterval);
+                        return;
+                    }
+
+                    // Verify the client is still in the lobby room
+                    const clientRooms = Array.from(socket.rooms);
+                    logger.debug(`[STATUS CHECK] Socket ${socket.id} rooms:`, clientRooms);
+
+                    // Verify that client is in correct room - if not, rejoin them
+                    if (!clientRooms.includes(`lobby_${code}`)) {
+                        logger.warn(`[STATUS CHECK] Socket ${socket.id} not in lobby_${code} room, rejoining...`);
+                        socket.join(`lobby_${code}`);
+                    }
+
+                    const updatedTournoi = await db.tournoi.findUnique({
+                        where: { code },
+                        select: { statut: true }
+                    });
+
+                    if (updatedTournoi && updatedTournoi.statut === 'en cours') {
+                        logger.info(`Tournament ${code} status is now en cours, emitting redirect_to_tournament (periodic check)`);
+
+                        // Use multiple techniques to ensure the client receives the redirect
+
+                        // 1. Direct socket event
+                        socket.emit('redirect_to_tournament', { code });
+
+                        // 2. Broadcast to the entire lobby room
+                        io.to(`lobby_${code}`).emit('redirect_to_tournament', { code });
+
+                        // 3. Global notification
+                        io.emit("tournament_notification", {
+                            type: "redirect",
+                            code: code,
+                            message: "Tournament has started",
+                            isQuizMode: true,
+                            immediate: true
+                        });
+
+                        // 4. Multiple delayed attempts with increasing delays
+                        const redirectDelays = [500, 1000, 2000, 5000];
+                        redirectDelays.forEach(delay => {
+                            setTimeout(() => {
+                                if (socket.connected) {
+                                    logger.info(`[STATUS CHECK] Sending delayed (${delay}ms) redirect for ${code} to socket ${socket.id}`);
+                                    socket.emit('redirect_to_tournament', { code });
+                                }
+                            }, delay);
+                        });
+
+                        clearInterval(checkInterval);
+                    } else if (updatedTournoi && updatedTournoi.statut === 'terminé') {
+                        logger.info(`Tournament ${code} status is now terminé, emitting tournament_end`);
+                        socket.emit('tournament_already_started', { code, status: 'terminé' });
+                        clearInterval(checkInterval);
+                    }
+                } catch (statusCheckError) {
+                    logger.error(`Error checking tournament status after join: ${statusCheckError}`);
+                }
+            }, 1000); // Check every second for faster response
+
+            // Clear interval when socket disconnects
+            socket.on('disconnect', () => {
+                clearInterval(checkInterval);
+            });
 
         } catch (error) {
             logger.error(`Error processing join_lobby for code ${code}:`, error);
@@ -95,15 +209,14 @@ function registerLobbyHandlers(io, socket) {
     socket.on("leave_lobby", async ({ code }) => {
         logger.info(`leave_lobby: code=${code}, socket.id=${socket.id}`);
 
-        // Leave both the lobby code room and the tournament room
-        socket.leave(code);
-        socket.leave(`live_${code}`);
-        logger.debug(`Socket ${socket.id} left rooms: ${code} and live_${code}`);
+        // Leave only the lobby room
+        socket.leave(`lobby_${code}`);
+        logger.debug(`Socket ${socket.id} left room: lobby_${code}`);
 
         if (lobbyParticipants[code]) {
             lobbyParticipants[code] = lobbyParticipants[code].filter((p) => p.id !== socket.id);
             logger.debug(`lobbyParticipants[${code}] after leave:`, lobbyParticipants[code]);
-            io.to(code).emit("participant_left", { id: socket.id });
+            io.to(`lobby_${code}`).emit("participant_left", { id: socket.id });
             // Always emit participants_list as an object with isQuizLinked
             let isQuizLinked = false;
             try {
@@ -112,7 +225,7 @@ function registerLobbyHandlers(io, socket) {
             } catch (e) {
                 logger.error('Error checking if tournament is quiz-linked (leave_lobby):', e);
             }
-            io.to(code).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
+            io.to(`lobby_${code}`).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
         }
     });
 
@@ -127,16 +240,42 @@ function registerLobbyHandlers(io, socket) {
         } catch (e) {
             logger.error('Error checking if tournament is quiz-linked (get_participants):', e);
         }
+
+        // Make sure the socket has joined the correct lobby room
+        if (!socket.rooms.has(`lobby_${code}`)) {
+            socket.join(`lobby_${code}`);
+            logger.debug(`Socket ${socket.id} joined lobby_${code} room during get_participants`);
+        }
+
         socket.emit("participants_list", { participants: lobbyParticipants[code] || [], isQuizLinked });
     });
 
     // Handle disconnect within the lobby context as well
     socket.on("disconnecting", async () => {
         for (const room of socket.rooms) {
-            if (room !== socket.id && lobbyParticipants[room]) {
+            // Check if this is a lobby room (starts with "lobby_")
+            if (room.startsWith('lobby_')) {
+                const code = room.replace('lobby_', '');
+                if (lobbyParticipants[code]) {
+                    lobbyParticipants[code] = lobbyParticipants[code].filter((p) => p.id !== socket.id);
+                    logger.info(`Socket ${socket.id} disconnecting from lobby ${code}`);
+                    io.to(`lobby_${code}`).emit("participant_left", { id: socket.id });
+                    // Always emit participants_list as an object with isQuizLinked
+                    let isQuizLinked = false;
+                    try {
+                        const quiz = await db.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
+                        if (quiz && quiz.id) isQuizLinked = true;
+                    } catch (e) {
+                        logger.error('Error checking if tournament is quiz-linked (disconnecting):', e);
+                    }
+                    io.to(`lobby_${code}`).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
+                }
+            }
+            // Legacy support for old room format (just the code)
+            else if (room !== socket.id && lobbyParticipants[room]) {
                 lobbyParticipants[room] = lobbyParticipants[room].filter((p) => p.id !== socket.id);
-                logger.info(`Socket ${socket.id} disconnecting from lobby ${room}`);
-                io.to(room).emit("participant_left", { id: socket.id });
+                logger.info(`Socket ${socket.id} disconnecting from legacy lobby ${room}`);
+                io.to(`lobby_${room}`).emit("participant_left", { id: socket.id });
                 // Always emit participants_list as an object with isQuizLinked
                 let isQuizLinked = false;
                 try {
@@ -145,7 +284,7 @@ function registerLobbyHandlers(io, socket) {
                 } catch (e) {
                     logger.error('Error checking if tournament is quiz-linked (disconnecting):', e);
                 }
-                io.to(room).emit("participants_list", { participants: lobbyParticipants[room], isQuizLinked });
+                io.to(`lobby_${room}`).emit("participants_list", { participants: lobbyParticipants[room], isQuizLinked });
             }
         }
     });

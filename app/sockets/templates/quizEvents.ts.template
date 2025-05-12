@@ -1,0 +1,75 @@
+/**
+ * quizEvents.ts - Quiz Socket Event Registration
+ *
+ * This module imports individual event handlers for quiz-related actions
+ * and registers them with the Socket.IO socket instance.
+ */
+
+import { Server, Socket } from 'socket.io';
+import { PrismaClient } from '@prisma/client';
+import { QuizState } from './types/quizTypes';
+import { QuizEventHandler } from './types/socketTypes';
+import { patchQuizStateForBroadcast } from './quizUtils';
+
+// Import individual handlers
+// TODO: Convert these imports to TypeScript imports after handlers are converted
+const handleJoinQuiz = require('./quizEventHandlers/joinQuizHandler');
+const handleSetQuestion = require('./quizEventHandlers/setQuestionHandler');
+const handleTimerAction = require('./quizEventHandlers/timerActionHandler');
+const handleSetTimer = require('./quizEventHandlers/setTimerHandler');
+const handleLock = require('./quizEventHandlers/lockHandler');
+const handleUnlock = require('./quizEventHandlers/unlockHandler');
+const handleEnd = require('./quizEventHandlers/endHandler');
+const handlePause = require('./quizEventHandlers/pauseHandler');
+const handleResume = require('./quizEventHandlers/resumeHandler');
+const handleDisconnecting = require('./quizEventHandlers/disconnectingHandler');
+const handleCloseQuestion = require('./quizEventHandlers/closeQuestionHandler');
+
+// Import for logger
+const createLogger = require('../logger');
+const logger = createLogger('QuizEvents');
+
+// --- Shared quiz state initialization for dashboard and projector ---
+async function ensureQuizStateInitialized(
+  quizId: string, 
+  prisma: PrismaClient, 
+  socket: Socket, 
+  role: string | null = null, 
+  teacherId: string | null = null
+): Promise<void> {
+  // Import the quizState correctly
+  const { quizState } = require('./quizState');
+  if (!quizState[quizId]) {
+    quizState[quizId] = {
+      currentQuestionUid: null,
+      questions: [],
+      chrono: { timeLeft: null, running: false },
+      locked: false,
+      ended: false,
+      stats: {},
+      profSocketId: (role === 'prof' || role === 'teacher') ? socket.id : null,
+      profTeacherId: (role === 'prof' || role === 'teacher') ? teacherId : null,
+      timerStatus: null,
+      timerQuestionId: null,
+      timerTimeLeft: null,
+      timerTimestamp: null,
+      connectedSockets: new Set(),
+    };
+    
+    // Implementation for database loading...
+  }
+}
+
+/**
+ * Register all quiz-related event handlers for a socket
+ * @param io - Socket.IO server instance
+ * @param socket - Client socket connection
+ * @param prisma - Prisma database client
+ */
+function registerQuizEvents(io: Server, socket: Socket, prisma: PrismaClient): void {
+  // Event registrations
+  // Will be implemented with proper TypeScript handlers
+}
+
+// Export for use in main socket handler
+export { registerQuizEvents };

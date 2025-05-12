@@ -1,81 +1,73 @@
 /**
- * logger.js - Centralized Logging Utility for MathQuest
- * 
- * This module provides a consistent logging interface with:
- * - Multiple log levels (DEBUG, INFO, WARN, ERROR)
- * - Automatic timestamps
- * - Contextual prefixes for easier log filtering
- * - Environment-based configuration
- * 
- * Usage:
- *   const logger = require('./logger')('ComponentName');
- *   logger.debug('Detailed info for debugging');
- *   logger.info('Normal operation information');
- *   logger.warn('Warning that might need attention');
- *   logger.error('Error condition', errorObject);
+ * logger.js - JavaScript bridge to TypeScript logger module
+ *
+ * This file serves as a bridge between JavaScript and TypeScript modules
+ * to ensure compatibility.
  */
 
-// Log levels and their priorities
-const LOG_LEVELS = {
-    DEBUG: 0,
-    INFO: 1,
-    WARN: 2,
-    ERROR: 3,
-    NONE: 4
-};
+let createLoggerTs;
 
-// Set minimum log level based on environment (can be overridden via env var)
-// Default level is DEBUG in development, INFO in production
-const DEFAULT_LOG_LEVEL = process.env.NODE_ENV === 'production' ? LOG_LEVELS.INFO : LOG_LEVELS.DEBUG;
-const MIN_LOG_LEVEL = process.env.LOG_LEVEL
-    ? (LOG_LEVELS[process.env.LOG_LEVEL.toUpperCase()] || DEFAULT_LOG_LEVEL)
-    : DEFAULT_LOG_LEVEL;
+try {
+    // Try to require the TypeScript compiled output
+    // It might be resolved directly as .ts by ts-node, or as .js if pre-compiled
+    const tsModule = require('./logger.ts');
 
-// ANSI color codes for different log levels
-const COLORS = {
-    DEBUG: '\x1b[36m', // Cyan
-    INFO: '\x1b[32m',  // Green
-    WARN: '\x1b[33m',  // Yellow
-    ERROR: '\x1b[31m', // Red
-    RESET: '\x1b[0m'   // Reset
-};
-
-/**
- * Format the current timestamp
- * @returns {string} Formatted timestamp [YYYY-MM-DD HH:MM:SS.mmm]
- */
-function getTimestamp() {
-    const now = new Date();
-    return `[${now.toISOString().replace('T', ' ').replace('Z', '')}]`;
-}
-
-/**
- * Create a logger instance for a specific component
- * @param {string} context - The name of the component using this logger
- * @returns {object} Logger object with methods for each log level
- */
-function createLogger(context) {
-    // Common logging function
-    const log = (level, message, ...args) => {
-        if (LOG_LEVELS[level] < MIN_LOG_LEVEL) return;
-
-        const color = COLORS[level] || COLORS.RESET;
-        const prefix = `${getTimestamp()} ${color}[${level}]\x1b[0m [${context}]`;
-
-        if (level === 'ERROR') {
-            console.error(prefix, message, ...args);
+    if (typeof tsModule === 'function') {
+        createLoggerTs = tsModule;
+    } else if (tsModule && typeof tsModule.default === 'function') {
+        // This handles if logger.ts has `export default createLogger`
+        createLoggerTs = tsModule.default;
+    } else if (tsModule && typeof tsModule.createLogger === 'function') {
+        // This handles if logger.ts has `export { createLogger }` (less likely for a single function export)
+        createLoggerTs = tsModule.createLogger;
+    }
+    else {
+        // Fallback for other structures or if direct require('./logger.ts') fails to find the function
+        console.warn('Could not directly load createLogger from logger.ts, attempting fallback require patterns.');
+        // Attempt to require without extension, letting Node's resolution work (e.g. for dist/logger.js)
+        const fallbackModule = require('./logger'); // This would point to itself if not careful, but with .ts above, it might try .js
+        if (typeof fallbackModule === 'function') {
+            createLoggerTs = fallbackModule;
+        } else if (fallbackModule && typeof fallbackModule.default === 'function') {
+            createLoggerTs = fallbackModule.default;
+        } else if (fallbackModule && typeof fallbackModule.createLogger === 'function') {
+            createLoggerTs = fallbackModule.createLogger;
         } else {
-            console.log(prefix, message, ...args);
+            // If logger.ts exists, this path suggests its export structure is not recognized.
+            throw new Error('Logger function not found in logger.ts or its compiled output. Check export structure.');
         }
-    };
+    }
+} catch (error) {
+    console.error('Error importing logger.ts module, falling back to basic JS logger:', error);
+    const LOG_LEVELS_JS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3, NONE: 4 };
+    // Ensure LOG_LEVEL is a string before calling toUpperCase
+    const currentLogLevelEnv = typeof process.env.LOG_LEVEL === 'string' ? process.env.LOG_LEVEL : 'DEBUG';
+    const MIN_LOG_LEVEL_JS = LOG_LEVELS_JS[currentLogLevelEnv.toUpperCase()] || LOG_LEVELS_JS.DEBUG;
 
-    return {
-        debug: (message, ...args) => log('DEBUG', message, ...args),
-        info: (message, ...args) => log('INFO', message, ...args),
-        warn: (message, ...args) => log('WARN', message, ...args),
-        error: (message, ...args) => log('ERROR', message, ...args)
+    createLoggerTs = function (prefix) { // Using function keyword
+        return {
+            debug: function (...args) { // Using function keyword
+                if (MIN_LOG_LEVEL_JS <= LOG_LEVELS_JS.DEBUG) {
+                    console.log(`[${prefix}] DEBUG:`, ...args);
+                }
+            },
+            info: function (...args) { // Using function keyword
+                if (MIN_LOG_LEVEL_JS <= LOG_LEVELS_JS.INFO) {
+                    console.log(`[${prefix}] INFO:`, ...args);
+                }
+            },
+            warn: function (...args) { // Using function keyword
+                if (MIN_LOG_LEVEL_JS <= LOG_LEVELS_JS.WARN) {
+                    console.warn(`[${prefix}] WARN:`, ...args);
+                }
+            },
+            error: function (...args) { // Using function keyword
+                if (MIN_LOG_LEVEL_JS <= LOG_LEVELS_JS.ERROR) {
+                    console.error(`[${prefix}] ERROR:`, ...args);
+                }
+            }
+        };
     };
 }
 
-// At the end of logger.js, use only CommonJS export for server-side compatibility
-module.exports = createLogger;
+module.exports = createLoggerTs;

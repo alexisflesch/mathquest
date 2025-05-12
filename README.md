@@ -1,3 +1,8 @@
+# Trouver un nouvea nom !
+ARQOS : Advanced Realtime Quiz(zing) Online System
+IRQOS : Interactive Real-time Quiz(zing) Online System
+ASTOR — Advanced System for Trivia, Open-source, and Real-time
+
 # MathQuest
 
 MathQuest est une application inspirée de Kahoot, destinée aux enseignants. Son but est de :

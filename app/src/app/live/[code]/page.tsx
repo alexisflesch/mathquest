@@ -52,6 +52,27 @@ export default function TournamentSessionPage() {
             // Redirect to /student with redirect param
             router.replace(`/student?redirect=/live/${code}`);
         }
+
+        // Also check tournament status to ensure we're on the correct page
+        async function checkTournamentStatus() {
+            try {
+                const res = await fetch(`/api/tournament-status?code=${code}`);
+                if (!res.ok) return;
+                const status = await res.json();
+
+                if (status.statut === 'terminé') {
+                    logger.info(`Tournament ${code} is finished but we're on live page, redirecting to leaderboard`);
+                    router.replace(`/leaderboard/${code}`);
+                } else if (status.statut === 'en préparation') {
+                    logger.info(`Tournament ${code} is still in preparation, redirecting to lobby`);
+                    router.replace(`/lobby/${code}`);
+                }
+            } catch (err) {
+                logger.error(`Error checking tournament status: ${err}`);
+            }
+        }
+
+        checkTournamentStatus();
     }, [code, router]);
     // DEV MODE: check for ?dev=1&mode=choix_simple or ?dev=1&mode=choix_multiple
     const [devMode, setDevMode] = useState(false);
@@ -173,11 +194,51 @@ export default function TournamentSessionPage() {
                 pseudo = localStorage.getItem('mathquest_pseudo');
                 avatar = localStorage.getItem('mathquest_avatar');
             }
+            logger.info(`Joining tournament ${code}`, { cookie_id, pseudo, avatar, isDiffered });
             s.emit("join_tournament", { code, cookie_id, pseudo, avatar, isDiffered });
+
+            // Also verify tournament status when joining to ensure we have the latest state
+            // This helps with cases where we missed earlier events
+            fetch(`/api/tournament-status?code=${code}`)
+                .then(res => res.json())
+                .then(status => {
+                    logger.info(`Tournament ${code} status check on join:`, status);
+                    // If tournament is finished but we're still on the live page, redirect to leaderboard
+                    if (status.statut === 'terminé') {
+                        logger.info(`Tournament ${code} is finished, redirecting to leaderboard`);
+                        window.location.href = `/leaderboard/${code}`;
+                    }
+                })
+                .catch(err => {
+                    logger.error(`Error checking tournament status on join: ${err}`);
+                });
         };
 
         // Emit join_tournament on initial connect and every reconnect
-        s.on("connect", emitJoinTournament);
+        s.on("connect", () => {
+            logger.info("Socket connected, joining tournament...");
+            emitJoinTournament();
+        });
+
+        // Handle disconnection and reconnection
+        s.on("disconnect", (reason) => {
+            logger.warn(`Socket disconnected: ${reason}`);
+            // Show a visual indication that we're disconnected
+            setSnackbarOpen(true);
+            setSnackbarMessage("Connexion perdue, tentative de reconnexion...");
+            setSnackbarType("error");
+        });
+
+        s.on("reconnect", (attemptNumber) => {
+            logger.info(`Socket reconnected after ${attemptNumber} attempts`);
+            setSnackbarOpen(true);
+            setSnackbarMessage("Reconnecté!");
+            setSnackbarType("success");
+            // Wait a moment before joining to ensure clean reconnection
+            setTimeout(emitJoinTournament, 500);
+        });
+
+        // Initial join
         emitJoinTournament();
 
         // Join the tournament room

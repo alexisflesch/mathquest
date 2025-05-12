@@ -9,18 +9,19 @@
 const createLogger = require('../logger');
 const logger = createLogger('QuizEvents');
 // Import individual handlers
-const handleJoinQuiz = require('./quizEventHandlers/joinQuizHandler');
-const handleSetQuestion = require('./quizEventHandlers/setQuestionHandler');
-const handleTimerAction = require('./quizEventHandlers/timerActionHandler');
-const handleSetTimer = require('./quizEventHandlers/setTimerHandler');
-const handleLock = require('./quizEventHandlers/lockHandler');
-const handleUnlock = require('./quizEventHandlers/unlockHandler');
-const handleEnd = require('./quizEventHandlers/endHandler');
-const handlePause = require('./quizEventHandlers/pauseHandler');
-const handleResume = require('./quizEventHandlers/resumeHandler');
-const handleDisconnecting = require('./quizEventHandlers/disconnectingHandler'); // Added
-const handleCloseQuestion = require('./quizEventHandlers/closeQuestionHandler');
-const { patchQuizStateForBroadcast } = require('./quizUtils');
+// Using JavaScript bridge files that handle both TypeScript and legacy versions
+const handleJoinQuiz = require('./quizEventHandlers/joinQuizHandler.js');
+const handleSetQuestion = require('./quizEventHandlers/setQuestionHandler.js');
+const handleTimerAction = require('./quizEventHandlers/timerActionHandler.js');
+const handleSetTimer = require('./quizEventHandlers/setTimerHandler.js');
+const handleLock = require('./quizEventHandlers/lockHandler.js');
+const handleUnlock = require('./quizEventHandlers/unlockHandler.js');
+const handleEnd = require('./quizEventHandlers/endHandler.js');
+const handlePause = require('./quizEventHandlers/pauseHandler.js');
+const handleResume = require('./quizEventHandlers/resumeHandler.js');
+const handleDisconnecting = require('./quizEventHandlers/disconnectingHandler.js');
+const handleCloseQuestion = require('./quizEventHandlers/closeQuestionHandler.js');
+const { patchQuizStateForBroadcast } = require('./quizUtils.legacy.js');
 
 // --- Shared quiz state initialization for dashboard and projector ---
 async function ensureQuizStateInitialized(quizId, prisma, socket, role = null, teacherId = null) {
@@ -29,18 +30,20 @@ async function ensureQuizStateInitialized(quizId, prisma, socket, role = null, t
     if (!quizState[quizId]) {
         quizState[quizId] = {
             currentQuestionUid: null,
+            currentQuestionIdx: null,
             questions: [],
             chrono: { timeLeft: null, running: false },
             locked: false,
             ended: false,
             stats: {},
-            profSocketId: (role === 'prof' || role === 'teacher') ? socket.id : null,
-            profTeacherId: (role === 'prof' || role === 'teacher') ? teacherId : null,
-            timerStatus: null,
+            profSocketId: (role === 'teacher') ? socket.id : null,
+            profTeacherId: (role === 'teacher') ? teacherId : null,
+            timerStatus: 'stop',
             timerQuestionId: null,
             timerTimeLeft: null,
             timerTimestamp: null,
             connectedSockets: new Set(),
+            questionTimers: {},
         };
         try {
             const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });

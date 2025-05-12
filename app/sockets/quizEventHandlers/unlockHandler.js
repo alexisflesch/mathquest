@@ -1,28 +1,15 @@
-const createLogger = require('../../logger');
-const logger = createLogger('UnlockQuizHandler');
-const { quizState } = require('../quizState');
-const { patchQuizStateForBroadcast } = require('../quizUtils');
+/**
+ * unlockHandler.js - JavaScript bridge to TypeScript handler
+ * 
+ * This file serves as a bridge between JavaScript and TypeScript modules
+ * to ensure compatibility when TypeScript transpilation is not available.
+ */
 
-// Note: prisma is not needed here
-function handleUnlock(io, socket, prisma, { quizId }) {
-    if (!quizState[quizId] || quizState[quizId].profSocketId !== socket.id) {
-        logger.warn(`Unauthorized attempt to unlock quiz ${quizId} from socket ${socket.id}`);
-        socket.emit('quiz_action_response', {
-            status: 'error',
-            message: 'Erreur : accès non autorisé.'
-        });
-        return;
-    }
-
-    logger.info(`Unlocking quiz ${quizId}`);
-    quizState[quizId].locked = false;
-    io.to(`dashboard_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
-
-    // Emit success message after unlocking the quiz
-    io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
-        status: 'success',
-        message: 'Quiz unlocked successfully.'
-    });
+try {
+    // First try to load the TypeScript file directly (for use with ts-node)
+    module.exports = require('./unlockHandler.ts').default;
+} catch (e) {
+    console.error('Failed to load TypeScript handler directly, falling back to legacy:', e.message);
+    // Fallback to legacy version if TypeScript loading fails
+    module.exports = require('./unlockHandler.legacy.js');
 }
-
-module.exports = handleUnlock;

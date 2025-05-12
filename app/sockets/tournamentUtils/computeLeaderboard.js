@@ -1,30 +1,33 @@
-const { scaleScoresForQuiz } = require('./scoreUtils');
-const logger = require('../../logger')('ComputeLeaderboard');
+const createLogger = require('@logger'); // Use path alias
+const logger = createLogger('ComputeLeaderboardBridge');
 
-// computeLeaderboard.js - Utility to compute the leaderboard from tournament participants
-// Returns an array of { id, pseudo, avatar, score }
-function computeLeaderboard(tState, questionStates, totalQuestions) {
-    if (!tState || !tState.participants) return [];
+let tsModuleExports = {}; // Default to empty object
 
-    // Log participants and scaling inputs for debugging
-    console.log(`[computeLeaderboard] Participants before scaling:`, tState.participants);
+try {
+    const loadedModule = require('./computeLeaderboard'); // Expects compiled .js from computeLeaderboard.ts
 
-    // Log the questionStates for debugging
-    if (questionStates) {
-        logger.debug(`[computeLeaderboard] Question states: ${JSON.stringify(questionStates)}`);
+    if (loadedModule && typeof loadedModule.computeLeaderboard === 'function') {
+        tsModuleExports = loadedModule;
+        logger.info('[Bridge] Successfully loaded TypeScript module for computeLeaderboard.');
+    } else {
+        const moduleType = typeof loadedModule;
+        const keys = loadedModule ? Object.keys(loadedModule).join(', ') : 'undefined/null';
+        logger.error(`[Bridge] Failed to load computeLeaderboard.ts correctly. Expected 'computeLeaderboard' function. Found type '${moduleType}' with keys: [${keys}]. Using stub implementation.`);
+        tsModuleExports = {
+            computeLeaderboard: (...args) => {
+                logger.error('[Bridge-Stub] computeLeaderboard called on empty/failed module.', { args });
+                return []; // Return an empty array as a default
+            }
+        };
     }
-
-    // Remove scaling logic entirely
-    logger.info(`[computeLeaderboard] Skipping scaling logic entirely.`);
-
-    return Object.values(tState.participants)
-        .map(p => ({
-            id: p.id,
-            pseudo: p.pseudo,
-            avatar: p.avatar ? (p.avatar.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`) : undefined,
-            score: p.score
-        }))
-        .sort((a, b) => b.score - a.score);
+} catch (error) {
+    logger.error('[Bridge] Error loading TypeScript module for computeLeaderboard. Using stub implementation:', error);
+    tsModuleExports = { // Fallback stub in case of error
+        computeLeaderboard: (...args) => {
+            logger.error('[Bridge-Stub] computeLeaderboard called on error-fallback module.', { args });
+            return [];
+        }
+    };
 }
 
-module.exports = { computeLeaderboard };
+module.exports = tsModuleExports;

@@ -37,7 +37,43 @@ export default function LobbyPage() {
     const socketRef = useRef<Socket | null>(null);
     const [participants, setParticipants] = useState<{ id: string; pseudo: string; avatar: string }[]>([]);
     const [creator, setCreator] = useState<{ pseudo: string; avatar: string } | null>(null);
-    const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);
+    const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);    // Function to check tournament status and redirect if needed
+    const checkTournamentStatus = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/tournament-status?code=${code}`);
+            if (!res.ok) return;
+            const status = await res.json();
+
+            if (status.statut === 'terminé') {
+                logger.info(`Tournament ${code} is finished, redirecting to leaderboard`);
+                router.replace(`/leaderboard/${code}`);
+            } else if (status.statut === 'en cours') {
+                logger.info(`Tournament ${code} is already in progress, redirecting`);
+                if (socketRef.current) {
+                    socketRef.current.emit("leave_lobby", { code });
+                }
+
+                // Check if this is a quiz-linked tournament
+                try {
+                    const quizRes = await fetch(`/api/quiz?tournament_code=${code}`);
+                    if (quizRes.ok) {
+                        const quizData = await quizRes.json();
+                        if (quizData && quizData.id) {
+                            logger.info(`Tournament ${code} is linked to quiz ${quizData.id}, forcing immediate redirect`);
+                            window.location.href = `/live/${code}`;
+                            return; // Skip router.replace after forcing navigation
+                        }
+                    }
+                } catch (quizErr) {
+                    logger.error(`Error checking if tournament is quiz-linked: ${quizErr}`);
+                }
+
+                router.replace(`/live/${code}`);
+            }
+        } catch (err) {
+            logger.error(`Error checking tournament status: ${err}`);
+        }
+    }, [code, router]);
 
     // Get correct pseudo/avatar for current session
     const getCurrentIdentity = useCallback(() => {
@@ -131,8 +167,38 @@ export default function LobbyPage() {
         const socket = io({
             path: "/api/socket/io",
             transports: ["websocket"],
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            timeout: 20000
         });
         socketRef.current = socket;
+
+        // Handle connection errors and reconnection
+        socket.on('connect_error', (err) => {
+            logger.error(`Socket connection error: ${err.message}`);
+        });
+
+        socket.on('disconnect', (reason) => {
+            logger.warn(`Socket disconnected: ${reason}`);
+            // Check tournament status on disconnect to ensure we don't miss redirection
+            setTimeout(checkTournamentStatus, 1000);
+        });
+
+        socket.on('reconnect', (attemptNumber) => {
+            logger.info(`Socket reconnected after ${attemptNumber} attempts`);
+            // Re-join room after reconnection
+            const identity = getCurrentIdentity();
+            if (identity) {
+                socket.emit("join_lobby", {
+                    code,
+                    pseudo: identity.pseudo,
+                    avatar: identity.avatar,
+                    cookie_id: localStorage.getItem('mathquest_cookie_id')
+                });
+                // Check tournament status after reconnect
+                checkTournamentStatus();
+            }
+        });
 
         // Join the lobby room with correct identity
         const identity = getCurrentIdentity();
@@ -175,27 +241,66 @@ export default function LobbyPage() {
             });
             logger.debug("Participant joined", { id: participant.id, pseudo: participant.pseudo });
         });
+
         socket.on("participant_left", (participant) => {
             setParticipants((prev) => prev.filter((p) => p.id !== participant.id));
             logger.debug("Participant left", { id: participant.id, pseudo: participant.pseudo });
         });
 
         // Listen for redirect_to_tournament event (immediate redirect for quiz-triggered tournaments)
-        socket.on("redirect_to_tournament", ({ code }) => {
-            logger.info("Received redirect_to_tournament event, redirecting immediately");
-            router.push(`/live/${code}`);
+        socket.on("redirect_to_tournament", ({ code: redirectCode }) => {
+            const targetCode = redirectCode || code;
+            logger.info(`Received redirect_to_tournament event, redirecting immediately to ${targetCode}`);
+
+            // Add direct console.log for visibility in browser console
+            console.log(`%c⚠️ REDIRECT EVENT RECEIVED! Redirecting to /live/${targetCode}`, 'background: #ff0000; color: white; font-size: 16px; padding: 5px;');
+
+            // Force-leave the lobby room before redirecting
+            socket.emit("leave_lobby", { code: targetCode });
+
+            // Use immediate window.location navigation instead of Next.js router to ensure redirection
+            console.log('Executing window.location navigation now...');
+            window.location.href = `/live/${targetCode}`;
+
+            // Also try the Next.js router as a fallback
+            try {
+                router.replace(`/live/${targetCode}`);
+            } catch (err) {
+                logger.error(`Router redirect error: ${err}`);
+            }
         });
 
+        // Additional check for tournament status on connection to catch cases where
+        // the tournament started but we missed the start event
+
+        // Check status initially
+        checkTournamentStatus();
+
         // Listen for tournament_started event from server (normal tournaments with countdown)
-        socket.on("tournament_started", () => {
-            logger.info("Tournament started, beginning countdown");
+        socket.on("tournament_started", (data) => {
+            const tournamentCode = data?.code || code; // Use provided code or current code
+            logger.info(`Tournament started (code: ${tournamentCode}), beginning countdown`);
             setCountdown(5);
             const interval = setInterval(() => {
                 setCountdown((prev) => {
                     if (prev === null) return null;
                     if (prev <= 1) {
                         clearInterval(interval);
-                        // Only update state here; navigation is handled in useEffect below
+                        logger.info(`Countdown complete, will redirect to /live/${tournamentCode}`);
+
+                        // Force-leave the lobby room before redirecting
+                        socket.emit("leave_lobby", { code: tournamentCode });
+
+                        // Use immediate window.location navigation for more reliable redirects
+                        window.location.href = `/live/${tournamentCode}`;
+
+                        // Also try router as fallback
+                        try {
+                            router.replace(`/live/${tournamentCode}`);
+                        } catch (err) {
+                            logger.error(`Router redirect error: ${err}`);
+                        }
+
                         return 0;
                     }
                     return prev - 1;
@@ -203,18 +308,35 @@ export default function LobbyPage() {
             }, 1000);
         });
 
-        // *** NEW: Listen for the event indicating the tournament already started ***
+        // Listen for the event indicating the tournament already started
         socket.on("tournament_already_started", ({ code: tournamentCode, status }) => {
             logger.info(`Received tournament_already_started event for code ${tournamentCode} with status ${status}. Redirecting...`);
+
             if (status === 'en cours') {
-                router.replace(`/live/${tournamentCode}`);
+                // Use immediate window.location navigation for more reliable redirects
+                logger.info(`Tournament ${tournamentCode} is in progress, forcing redirect to live page`);
+                window.location.href = `/live/${tournamentCode}`;
+
+                // Also try router as fallback
+                try {
+                    router.replace(`/live/${tournamentCode}`);
+                } catch (err) {
+                    logger.error(`Router redirect error: ${err}`);
+                }
             } else if (status === 'terminé') {
-                // Optional: Redirect to leaderboard if finished, or just the main tournament page
-                router.replace(`/leaderboard/${tournamentCode}`);
+                // Redirect to leaderboard if finished
+                logger.info(`Tournament ${tournamentCode} is finished, redirecting to leaderboard`);
+                window.location.href = `/leaderboard/${tournamentCode}`;
+
+                try {
+                    router.replace(`/leaderboard/${tournamentCode}`);
+                } catch (err) {
+                    logger.error(`Router redirect error: ${err}`);
+                }
             } else {
-                // Fallback or error handling, maybe redirect home?
+                // Fallback or error handling
                 logger.warn(`Unexpected status received in tournament_already_started: ${status}`);
-                router.replace('/');
+                window.location.href = '/';
             }
         });
 
@@ -224,11 +346,50 @@ export default function LobbyPage() {
             // TODO: Display this error to the user appropriately
             alert(`Erreur: ${message}`); // Simple alert for now
             router.replace('/'); // Redirect home on error
-        });
-
-        // Debug: log all socket events
+        });        // Debug: log all socket events
         socket.onAny((event, ...args) => {
             logger.debug(`Socket event: ${event}`, args);
+        });
+
+        // Add global notification handler to catch tournament notifications
+        socket.on("tournament_notification", (data) => {
+            logger.info(`Received tournament_notification: ${JSON.stringify(data)}`);
+
+            if (data.type === "redirect" && data.code === code) {
+                logger.info(`Global notification to redirect to tournament ${data.code}. isQuizMode=${data.isQuizMode}, immediate=${data.immediate}`);
+
+                // Skip countdown for quiz mode - force an immediate redirect
+                if (data.isQuizMode || data.immediate) {
+                    logger.info(`QUIZ MODE REDIRECT: Forcing immediate redirect to /live/${data.code}`);
+                    // Force-leave the lobby first
+                    socket.emit("leave_lobby", { code });
+
+                    // Force a hard navigation (most reliable)
+                    window.location.href = `/live/${data.code}`;
+
+                    try {
+                        router.replace(`/live/${data.code}`);
+                    } catch (err) {
+                        logger.error(`Router redirect error: ${err}`);
+                    }
+                } else {
+                    // For non-quiz tournaments, we might show countdown (handled by tournament_started event)
+                    logger.info(`Regular tournament redirect notification received for code ${data.code}`);
+                    window.location.href = `/live/${data.code}`;
+                }
+            }
+        });
+
+        // Add safeguards to explicitly ignore live tournament-specific events
+        // that should not be processed in the lobby context
+        socket.on("tournament_question", () => {
+            // Explicitly ignore - these events should be handled in the live tournament page
+            logger.warn("Received tournament_question event in lobby - ignoring");
+        });
+
+        socket.on("tournament_set_timer", () => {
+            // Explicitly ignore - these events should be handled in the live tournament page
+            logger.warn("Received tournament_set_timer event in lobby - ignoring");
         });
 
         // Clean up on unmount
@@ -241,7 +402,17 @@ export default function LobbyPage() {
     useEffect(() => {
         if (countdown === 0) {
             // Redirect to tournament page when countdown ends
-            router.push(`/live/${code}`);
+            logger.info(`Countdown reached zero, redirecting to live/${code}`);
+
+            // Force redirect with window.location for reliability
+            window.location.href = `/live/${code}`;
+
+            // Also try Next.js router as backup
+            try {
+                router.replace(`/live/${code}`);
+            } catch (err) {
+                logger.error(`Router redirect error: ${err}`);
+            }
         }
     }, [countdown, code, router]);
 
@@ -265,35 +436,22 @@ export default function LobbyPage() {
         };
     }, [router]);
 
-    // Add debug logging to see which events are received
+    // Add debug logging to see which events are received but don't add duplicate listeners
     useEffect(() => {
         if (!socketRef.current) return;
 
         const socket = socketRef.current;
 
+        // Only add logging for events, not handlers
         socket.onAny((event, ...args) => {
             console.log(`[Lobby] Socket event received: ${event}`, args);
         });
 
-        // Listen for classic tournament start
-        socket.on("tournament_started", (data) => {
-            console.log("[Lobby] Received tournament_started event", data);
-            // ... existing countdown code ...
-        });
-
-        // Make sure we're also listening for the direct redirect event for quiz-linked tournaments
-        socket.on("redirect_to_tournament", (data) => {
-            console.log("[Lobby] Received redirect_to_tournament event", data);
-            // Immediately redirect without countdown
-            router.push(`/live/${data.code}`);
-        });
-
         return () => {
-            socket.off("tournament_started");
-            socket.off("redirect_to_tournament");
-            // ... other cleanup ...
+            // Remove the debug listener on cleanup
+            socket.offAny();
         };
-    }, [socketRef, router, code]);
+    }, [socketRef]);
 
     // Handler for start button
     const handleStart = () => {

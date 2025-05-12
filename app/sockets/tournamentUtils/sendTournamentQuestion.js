@@ -1,44 +1,48 @@
 /**
- * sendTournamentQuestion.js - Centralized helper to emit filtered tournament questions to students
+ * sendTournamentQuestion.js - JavaScript bridge to TypeScript module
  *
- * This function ensures only the minimal, non-sensitive fields are sent to students:
- * - type: question type (e.g., 'choix_simple', 'choix_multiple')
- * - uid: question unique id
- * - question: question text
- * - answers: array of answer texts (no 'correct' field)
- *
- * Usage:
+ * This file serves as a bridge between JavaScript and TypeScript modules
+ * to ensure compatibility when TypeScript transpilation is not available.
+ * 
+ * Usage (legacy format):
  *   const { sendTournamentQuestion } = require('./tournamentUtils/sendTournamentQuestion');
  *   sendTournamentQuestion(socketOrIo, target, questionObj, index, total, remainingTime, questionState, isQuizMode);
- *
- * If 'target' is null, emits directly to the socket (for socket.emit). Otherwise, emits to a room (for io.to(...)).
  */
-const createLogger = require('../../logger');
-const logger = createLogger('SendTournamentQuestion');
 
-function sendTournamentQuestion(socketOrIo, target, questionObj, index, total, remainingTime, questionState, isQuizMode) {
-    const payload = {
-        type: questionObj.type,
-        uid: questionObj.uid,
-        question: questionObj.question,
-        answers: Array.isArray(questionObj.reponses)
-            ? questionObj.reponses.map(r => r.texte)
-            : [],
-        index,
-        total,
-        remainingTime,
-        questionState,
-        isQuizMode
-    };
+const createLogger = require('@logger'); // Use path alias
+const logger = createLogger('SendTQBridge');
 
-    // Add logging to verify the payload being sent to students
-    logger.info(`[sendTournamentQuestion] Emitting tournament_question to ${target} with payload:`, payload);
+let tsModuleExports = {}; // Default to empty object
 
-    if (target) {
-        socketOrIo.to(target).emit('tournament_question', payload);
+try {
+    const loadedModule = require('./sendTournamentQuestion'); // Expects compiled .js from sendTournamentQuestion.ts
+
+    if (loadedModule && typeof loadedModule.sendTournamentQuestion === 'function') {
+        tsModuleExports = loadedModule;
+        logger.info('[Bridge] Successfully loaded TypeScript module for sendTournamentQuestion.');
     } else {
-        socketOrIo.emit('tournament_question', payload);
+        const moduleType = typeof loadedModule;
+        const keys = loadedModule ? Object.keys(loadedModule).join(', ') : 'undefined/null';
+        logger.error(`[Bridge] Failed to load sendTournamentQuestion.ts correctly. Expected 'sendTournamentQuestion' function. Found type '${moduleType}' with keys: [${keys}]. Using stub implementations.`);
+        tsModuleExports = {
+            sendTournamentQuestion: (...args) => logger.error('[Bridge-Stub] sendTournamentQuestion called on empty/failed module.', { args }),
+            legacySendTournamentQuestion: (...args) => logger.error('[Bridge-Stub] legacySendTournamentQuestion called on empty/failed module.', { args }),
+            createFilteredQuestionData: (...args) => {
+                logger.error('[Bridge-Stub] createFilteredQuestionData called on empty/failed module.', { args });
+                return {}; // Return a default/empty object
+            }
+        };
     }
+} catch (error) {
+    logger.error('[Bridge] Error loading TypeScript module for sendTournamentQuestion. Using stub implementations:', error);
+    tsModuleExports = { // Fallback stubs in case of error
+        sendTournamentQuestion: (...args) => logger.error('[Bridge-Stub] sendTournamentQuestion called on error-fallback module.', { args }),
+        legacySendTournamentQuestion: (...args) => logger.error('[Bridge-Stub] legacySendTournamentQuestion called on error-fallback module.', { args }),
+        createFilteredQuestionData: (...args) => {
+            logger.error('[Bridge-Stub] createFilteredQuestionData called on error-fallback module.', { args });
+            return {};
+        }
+    };
 }
 
-module.exports = { sendTournamentQuestion };
+module.exports = tsModuleExports;

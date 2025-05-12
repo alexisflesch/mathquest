@@ -28,7 +28,7 @@
         "*"
       ],
       "@logger": [
-        "../logger.js"
+        "../logger.ts"
       ],
       "@components/*": [
         "components/*"

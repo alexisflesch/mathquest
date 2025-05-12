@@ -1,0 +1,24 @@
+[TypeScript] Successfully registered ts-node for TypeScript file handling
+Error importing tournamentTriggers.ts module: Error: Could not find trigger functions in module
+    at Object.<anonymous> (/home/aflesch/mathquest/app/sockets/tournamentUtils/tournamentTriggers.js:23:15)
+    at Module._compile (node:internal/modules/cjs/loader:1565:14)
+    at Module.m._compile (/home/aflesch/mathquest/app/node_modules/ts-node/src/index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1708:10
+    at Object.require.extensions.<computed> [as .js] (/home/aflesch/mathquest/app/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1318:32)
+    at Function._load (node:internal/modules/cjs/loader:1128:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:219:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1340:12)
+Could not find calculateScore function directly, trying delayed import
+ReferenceError: require is not defined
+    at file:///home/aflesch/mathquest/app/sockets/quizEventHandlers/setTimerHandler.ts:15:23
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:395:35)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:329:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1414:24)
+    at Module._compile (node:internal/modules/cjs/loader:1547:5)
+    at Module.m._compile (/home/aflesch/mathquest/app/node_modules/ts-node/src/index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1708:10
+    at Object.require.extensions.<computed> [as .ts] (/home/aflesch/mathquest/app/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1318:32)
+    at Function._load (node:internal/modules/cjs/loader:1128:12)

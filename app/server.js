@@ -12,6 +12,8 @@
  * which is managed by their respective handlers.
  */
 
+// require('./register-ts-handlers'); // Commented out as ts-node/register is now in the npm script
+
 const { createServer } = require("node:http");
 const next = require("next");
 const { Server } = require("socket.io");
@@ -27,7 +29,7 @@ const { registerQuizHandlers, quizState } = require('./sockets/quizHandler'); //
 // Server configuration
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
-const port = 3007;
+const port = process.env.PORT || 3000;
 
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();

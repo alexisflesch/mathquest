@@ -1,50 +1,59 @@
-const createLogger = require('../../logger');
-const logger = createLogger('DisconnectTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState');
-const { emitQuizConnectedCount } = require('../quizUtils');
-const prisma = require('../../db');
+// filepath: /home/aflesch/mathquest/app/sockets/tournamentEventHandlers/disconnectingHandler.js
+/**
+ * disconnectingHandler.js - JavaScript bridge to TypeScript handler
+ * 
+ * This file serves as a bridge between JavaScript and TypeScript modules
+ * to ensure compatibility when TypeScript transpilation is not available.
+ */
 
-async function handleDisconnecting(io, socket) {
-    logger.info(`disconnecting: socket.id=${socket.id}`);
-    // Find which tournament states this socket was part of
-    for (const stateKey in tournamentState) {
-        const state = tournamentState[stateKey];
-        if (state.socketToJoueur && state.socketToJoueur[socket.id]) {
-            const joueurId = state.socketToJoueur[socket.id];
-            logger.info(`Socket ${socket.id} (joueurId: ${joueurId}) disconnecting from tournament state ${stateKey}`);
-            // Remove the socket mapping. Participant data remains for scoring (in live) or potential rejoin (in differed).
-            delete state.socketToJoueur[socket.id];
+// Import the TypeScript module with fallback options
+let tsModule;
+try {
+    // Try direct import with delayed fallback for circular dependencies
+    try {
+        // Use direct require first
+        tsModule = require('./disconnectingHandler');
 
-            // --- Emit real-time participant update to tournament room ---
-            // Only emit for live tournaments (not differed)
-            if (!state.isDiffered && state.participants) {
-                const participantsList = Object.values(state.participants).map(p => ({
-                    id: p.id,
-                    pseudo: p.pseudo,
-                    avatar: p.avatar,
-                }));
-                io.to(`live_${stateKey}`).emit("tournament_participants_update", {
-                    participants: participantsList,
-                    playerCount: participantsList.length
-                });
-            }
-
-            // Appeler emitQuizConnectedCount après qu'un étudiant rejoint le live
-            await emitQuizConnectedCount(io, prisma, stateKey);
-
-            // If it's a differed state with no other sockets mapped to it, clean it up?
-            // Let's NOT clean up differed state here, allow rejoin or timeout/end logic to handle it.
-            // if (state.isDiffered && Object.keys(state.socketToJoueur).length === 0) {
-            //     logger.info(`Cleaning up differed state ${stateKey} as last socket disconnected.`);
-            //     if (state.timer) clearTimeout(state.timer);
-            //     // Maybe save progress?
-            //     // delete tournamentState[stateKey]; // Or keep for potential rejoin?
-            // }
-
-            // No need to emit participant_left for the tournament room itself usually.
-            // Lobby handler might handle participant list updates.
+        // Try both named exports and default exports patterns
+        if (typeof tsModule === 'function') {
+            // Function export pattern works, keep as is
+        } else if (tsModule.default && typeof tsModule.default === 'function') {
+            // Default export pattern works
+            tsModule = tsModule.default;
+        } else {
+            // Neither pattern worked initially
+            console.warn('Could not find disconnectingHandler function directly, trying delayed import');
+            // Give time for circular dependency resolution
+            setTimeout(() => {
+                try {
+                    const reloadedModule = require('./disconnectingHandler');
+                    if (typeof reloadedModule === 'function') {
+                        module.exports = reloadedModule;
+                    } else if (reloadedModule.default && typeof reloadedModule.default === 'function') {
+                        module.exports = reloadedModule.default;
+                    }
+                } catch (e) {
+                    console.error('Delayed import also failed:', e);
+                }
+            }, 100);
         }
+    } catch (error) {
+        console.error('Failed to load TypeScript handler directly, falling back to legacy:', error);
+
+        // Fallback implementation
+        tsModule = function (io, socket) {
+            console.error('Using fallback disconnectingHandler - TypeScript module could not be loaded');
+            // No response for disconnecting since the connection is already closing
+        };
     }
+} catch (error) {
+    console.error('Error setting up disconnectingHandler:', error);
+
+    // Final fallback
+    tsModule = function (io, socket) {
+        console.error('Using emergency fallback disconnectingHandler');
+    };
 }
 
-module.exports = handleDisconnecting;
+// Export the handler function
+module.exports = tsModule;

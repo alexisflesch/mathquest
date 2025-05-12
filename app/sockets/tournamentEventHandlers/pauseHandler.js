@@ -1,30 +1,66 @@
-const createLogger = require('../../logger');
-const logger = createLogger('PauseTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState');
+// filepath: /home/aflesch/mathquest/app/sockets/tournamentEventHandlers/pauseHandler.js
+/**
+ * pauseHandler.js - JavaScript bridge to TypeScript handler
+ * 
+ * This file serves as a bridge between JavaScript and TypeScript modules
+ * to ensure compatibility when TypeScript transpilation is not available.
+ */
 
-function handleTournamentPause(io, socket, { code }) {
-    const state = tournamentState[code]; // Only applicable to live tournaments
-    if (state && !state.isDiffered && !state.paused) {
-        // Calculate remaining time based on elapsed time since question start
-        const elapsed = (Date.now() - state.questionStart) / 1000;
-        // Use currentQuestionDuration if available, otherwise fallback
-        const timeAllowed = state.currentQuestionDuration || state.questions.find(q => q.uid === state.currentQuestionUid)?.temps || 20;
-        state.pausedRemainingTime = Math.max(0, timeAllowed - elapsed);
+// Import the TypeScript module with fallback options
+let tsModule;
+try {
+    // Try direct import with delayed fallback for circular dependencies
+    try {
+        // Use direct require first
+        tsModule = require('./pauseHandler');
 
-        // Set paused flag to true
-        state.paused = true;
-
-        // Clear the existing timer to prevent it from continuing to run in the background
-        if (state.timer) {
-            clearTimeout(state.timer);
-            state.timer = null;
+        // Try both named exports and default exports patterns
+        if (typeof tsModule === 'function') {
+            // Function export pattern works, keep as is
+        } else if (tsModule.default && typeof tsModule.default === 'function') {
+            // Default export pattern works
+            tsModule = tsModule.default;
+        } else {
+            // Neither pattern worked initially
+            console.warn('Could not find pauseHandler function directly, trying delayed import');
+            // Give time for circular dependency resolution
+            setTimeout(() => {
+                try {
+                    const reloadedModule = require('./pauseHandler');
+                    if (typeof reloadedModule === 'function') {
+                        module.exports = reloadedModule;
+                    } else if (reloadedModule.default && typeof reloadedModule.default === 'function') {
+                        module.exports = reloadedModule.default;
+                    }
+                } catch (e) {
+                    console.error('Delayed import also failed:', e);
+                }
+            }, 100);
         }
+    } catch (error) {
+        console.error('Failed to load TypeScript handler directly, falling back to legacy:', error);
 
-        logger.info(`Paused tournament ${code}. Remaining time: ${state.pausedRemainingTime.toFixed(1)}s`);
-        io.to(`live_${code}`).emit("tournament_question_state_update", { questionState: "paused", remainingTime: state.pausedRemainingTime });
-    } else {
-        logger.warn(`Received tournament_pause for ${code}, but state not found, is differed, or already paused.`);
+        // Fallback implementation
+        tsModule = function (io, socket, payload) {
+            console.error('Using fallback pauseHandler - TypeScript module could not be loaded');
+            socket.emit('tournament_action_response', {
+                status: 'error',
+                message: 'Internal server error: Tournament pause handler not available'
+            });
+        };
     }
+} catch (error) {
+    console.error('Error setting up pauseHandler:', error);
+
+    // Final fallback
+    tsModule = function (io, socket, payload) {
+        console.error('Using emergency fallback pauseHandler');
+        socket.emit('tournament_action_response', {
+            status: 'error',
+            message: 'Internal server error: Tournament pause handler not available'
+        });
+    };
 }
 
-module.exports = handleTournamentPause;
+// Export the handler function
+module.exports = tsModule;

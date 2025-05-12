@@ -1,0 +1,49 @@
+/**
+ * setQuestionHandler.ts - Handler for setting the active question in a quiz
+ * 
+ * Updates the quiz state with the new question index and timer settings.
+ * If linked to a tournament, it triggers the corresponding question update
+ * and starts the timer in the tournament state using trigger functions.
+ * 
+ * UPDATED: Now uses per-question timer tracking to maintain individual
+ * timer states for each question.
+ */
+
+import { Server, Socket } from 'socket.io';
+import { PrismaClient } from '@prisma/client';
+import { SetQuestionPayload } from '../types/socketTypes';
+import { quizState, getQuestionTimer } from '../quizState';
+import {
+    patchQuizStateForBroadcast,
+    initializeChrono,
+    calculateRemainingTime,
+    updateQuestionTimer,
+    emitQuizTimerUpdate
+} from '../quizUtils';
+
+// Import using require for now until these are converted to TypeScript
+// TODO: Convert these imports to TypeScript imports
+const createLogger = require('../../logger');
+const logger = createLogger('SetQuestionHandler');
+const { tournamentState, triggerTournamentQuestion, triggerTournamentTimerSet } = require('../tournamentHandler');
+const { triggerQuizTimerAction } = require('../quizTriggers');
+
+/**
+ * Handle quiz_set_question event
+ * 
+ * @param io - Socket.IO server instance
+ * @param socket - Client socket connection
+ * @param prisma - Prisma database client
+ * @param payload - Event payload containing quizId, questionUid, etc.
+ */
+async function handleSetQuestion(
+    io: Server,
+    socket: Socket,
+    prisma: PrismaClient,
+    { quizId, questionUid, code: tournamentCode, teacherId }: SetQuestionPayload
+): Promise<void> {
+    // Implementation details to be migrated to TypeScript
+    // ...
+}
+
+export default handleSetQuestion;
