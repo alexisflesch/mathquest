@@ -7,6 +7,7 @@
  * Each handler is in its own file for modularity and maintainability.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.registerTournamentEvents = registerTournamentEvents;
 // Import handlers - we're using dynamic require to allow for both TypeScript and JavaScript files
 // This helps during the migration process from JS to TS
 const handleStartTournament = require('./tournamentEventHandlers/startHandler');
@@ -55,5 +56,13 @@ function registerTournamentEvents(io, socket) {
 }
 // Define a named property for the function to make it easier to find in bridges
 registerTournamentEvents.displayName = "registerTournamentEvents";
-// DirectCommonJS export of the function
-module.exports = registerTournamentEvents;
+// Also provide CommonJS export for compatibility with bridge files
+// Create an object with the registerTournamentEvents function as a property
+const tournamentEventsExports = {
+    registerTournamentEvents
+};
+// This allows both 
+// import { registerTournamentEvents } from './tournamentEvents'
+// and 
+// const { registerTournamentEvents } = require('./tournamentEvents')
+module.exports = tournamentEventsExports;

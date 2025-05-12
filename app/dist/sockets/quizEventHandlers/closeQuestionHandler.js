@@ -8,20 +8,22 @@
  * - Fetches the leaderboard
  * - Sends results to students, teacher, and projection screens
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const quizState_js_1 = require("../quizState.js"); // MODIFIED
-// Import using require for modules not yet converted to TypeScript
-const createLogger = require('../../logger');
-const logger = createLogger('CloseQuestionHandler');
-// Import tournamentState directly from legacy file to avoid circular dependencies
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { computeLeaderboard } = require('../tournamentUtils/computeLeaderboard');
+const quizState_1 = require("../quizState");
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
+const computeLeaderboard_1 = require("../tournamentUtils/computeLeaderboard");
+// Import logger
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('CloseQuestionHandler');
 // Debugging tournament state import
-logger.debug(`[CloseQuestion] tournamentState imported: ${!!tournamentState}`);
-logger.debug(`[CloseQuestion] tournamentState is empty object: ${Object.keys(tournamentState).length === 0}`);
+logger.debug(`[CloseQuestion] tournamentState imported: ${!!tournamentState_1.tournamentState}`);
+logger.debug(`[CloseQuestion] tournamentState is empty object: ${Object.keys(tournamentState_1.tournamentState).length === 0}`);
 function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     logger.info(`[CloseQuestion] Received for quiz ${quizId}, question ${questionUid}`);
-    const state = quizState_js_1.quizState[quizId];
+    const state = quizState_1.quizState[quizId];
     if (!state) {
         logger.warn(`[CloseQuestion] No quiz state for ${quizId}`);
         socket.emit('quiz_action_response', {
@@ -62,16 +64,16 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     let leaderboard = [];
     let playerCount = 0; // Track number of players
     try {
-        const tState = tournamentState[tournamentCode];
+        const tState = tournamentState_1.tournamentState[tournamentCode];
         if (tState && tState.participants) {
             const askedQuestions = tState.askedQuestions || new Set();
             const totalQuestions = tState.questions.length;
-            leaderboard = computeLeaderboard(tState, askedQuestions, totalQuestions);
+            leaderboard = (0, computeLeaderboard_1.computeLeaderboard)(tState, askedQuestions, totalQuestions);
             playerCount = leaderboard.length;
         }
         else {
             logger.warn(`[CloseQuestion] No tournamentState or participants for code ${tournamentCode}, falling back to quizState leaderboard.`);
-            leaderboard = computeLeaderboard(state); // fallback: use quizState participants
+            leaderboard = (0, computeLeaderboard_1.computeLeaderboard)(state); // fallback: use quizState participants
             playerCount = leaderboard.length;
         }
     }

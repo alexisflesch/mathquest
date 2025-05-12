@@ -7,13 +7,12 @@
 import { Server, Socket } from 'socket.io';
 import { TournamentState, Participant } from '../types/tournamentTypes';
 import { ResumeTournamentPayload } from '../types/socketTypes';
+import { tournamentState } from '../tournamentUtils/tournamentState';
+import { sendQuestionWithState } from '../tournamentUtils/tournamentHelpers';
 
-// Import using require for now until these are converted to TypeScript
-// TODO: Convert these imports to TypeScript imports when available
-const createLogger = require('../../logger');
+// Import logger
+import createLogger from '../../logger';
 const logger = createLogger('ResumeTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { sendQuestionWithState } = require('../tournamentUtils/tournamentHelpers');
 
 /**
  * Handle tournament_resume event

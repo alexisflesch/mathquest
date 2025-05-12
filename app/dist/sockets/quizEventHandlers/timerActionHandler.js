@@ -8,15 +8,16 @@
  * UPDATED: Now uses per-question timer tracking to maintain individual
  * timer states for each question.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const quizState_js_1 = require("../quizState.js"); // MODIFIED
-// Import from the legacy file for consistency during transition
-const { updateQuestionTimer, emitQuizTimerUpdate, calculateQuestionRemainingTime } = require('../quizUtils.legacy.js');
-// Import using require for modules not yet converted to TypeScript
-const createLogger = require('../../logger');
-const logger = createLogger('TimerActionHandler');
-const { triggerTournamentTimerAction } = require('../tournamentHandler');
-const { triggerQuizTimerAction } = require('../quizTriggers');
+const quizState_1 = require("../quizState");
+const quizUtils_1 = require("../quizUtils");
+const quizTriggers_1 = require("../quizTriggers");
+// Import logger
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('TimerActionHandler');
 /**
  * Handle quiz_timer_action event
  *
@@ -27,36 +28,36 @@ const { triggerQuizTimerAction } = require('../quizTriggers');
  */
 async function handleTimerAction(io, socket, prisma, { status, questionId, timeLeft, quizId, tournamentCode }) {
     logger.info(`[TimerAction] Received: quizId=${quizId}, status=${status}, questionId=${questionId}, timeLeft=${timeLeft}`);
-    if (!quizState_js_1.quizState[quizId]) {
+    if (!quizState_1.quizState[quizId]) {
         logger.error(`[TimerAction] No quiz state found for quizId=${quizId}`);
         return;
     }
     // Update question-specific timer
-    updateQuestionTimer(quizId, questionId, status, timeLeft);
+    (0, quizUtils_1.updateQuestionTimer)(quizId, questionId, status, timeLeft);
     // Calculate precise time remaining
-    const preciseTimeLeft = calculateQuestionRemainingTime(quizId, questionId);
+    const preciseTimeLeft = (0, quizUtils_1.calculateQuestionRemainingTime)(quizId, questionId);
     logger.info(`[TimerAction] Calculated precise time left: ${preciseTimeLeft} for questionId=${questionId}`);
     // Update global quiz state with timer info
-    quizState_js_1.quizState[quizId].timerStatus = status;
-    quizState_js_1.quizState[quizId].timerQuestionId = questionId;
-    quizState_js_1.quizState[quizId].timerTimeLeft = preciseTimeLeft;
-    quizState_js_1.quizState[quizId].timerTimestamp = Date.now();
+    quizState_1.quizState[quizId].timerStatus = status;
+    quizState_1.quizState[quizId].timerQuestionId = questionId;
+    quizState_1.quizState[quizId].timerTimeLeft = preciseTimeLeft;
+    quizState_1.quizState[quizId].timerTimestamp = Date.now();
     // Emit timer update to all connected clients for this quiz
-    emitQuizTimerUpdate(io, quizId, status, questionId, preciseTimeLeft);
+    (0, quizUtils_1.emitQuizTimerUpdate)(io, quizId, status, questionId, preciseTimeLeft);
     logger.info(`[TimerAction] Emitted quiz_timer_update with status=${status}, timeLeft=${preciseTimeLeft}`);
     // Trigger tournament timer action if a tournament code is provided
+    // TODO: Implement tournament timer action handling
+    // Current implementation is removed as the triggerTournamentTimerAction function
+    // is not found in the codebase. This will need to be reimplemented.
     if (tournamentCode) {
-        logger.info(`[TimerAction] Triggering tournament timer action for code=${tournamentCode}, status=${status}`);
-        try {
-            triggerTournamentTimerAction(io, tournamentCode, status, preciseTimeLeft);
-        }
-        catch (e) {
-            logger.error(`[TimerAction] Error triggering tournament timer: ${e instanceof Error ? e.message : String(e)}`);
-        }
+        logger.info(`[TimerAction] Tournament timer action for code=${tournamentCode} is currently disabled`);
+        // Future implementation will go here
     }
     // Trigger any additional quiz timer actions
     try {
-        triggerQuizTimerAction(io, quizId, status, questionId, preciseTimeLeft);
+        // Convert string status to the expected type
+        const timerAction = status;
+        (0, quizTriggers_1.triggerQuizTimerAction)(io, quizId, questionId, timerAction, preciseTimeLeft);
     }
     catch (e) {
         logger.error(`[TimerAction] Error triggering quiz timer actions: ${e instanceof Error ? e.message : String(e)}`);

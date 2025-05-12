@@ -4,14 +4,16 @@
  *
  * This module handles the disconnecting event for tournament participants.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-// Import using require for now until these are converted to TypeScript
-// TODO: Convert these imports to TypeScript imports when available
-const createLogger = require('../../logger');
-const logger = createLogger('DisconnectTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { emitQuizConnectedCount } = require('../quizUtils.legacy.js');
-const prisma = require('../../db');
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
+const quizUtils_1 = require("../quizUtils");
+const db_1 = __importDefault(require("../../db"));
+// Import logger
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('DisconnectTournamentHandler');
 /**
  * Handle disconnecting event for tournament participants
  *
@@ -21,8 +23,8 @@ const prisma = require('../../db');
 async function handleDisconnecting(io, socket) {
     logger.info(`disconnecting: socket.id=${socket.id}`);
     // Find which tournament states this socket was part of
-    for (const stateKey in tournamentState) {
-        const state = tournamentState[stateKey];
+    for (const stateKey in tournamentState_1.tournamentState) {
+        const state = tournamentState_1.tournamentState[stateKey];
         if (state?.socketToJoueur && state.socketToJoueur[socket.id]) {
             const joueurId = state.socketToJoueur[socket.id];
             logger.info(`Socket ${socket.id} (joueurId: ${joueurId}) disconnecting from tournament state ${stateKey}`);
@@ -42,7 +44,7 @@ async function handleDisconnecting(io, socket) {
                 });
             }
             // Update connected count for any linked quiz
-            await emitQuizConnectedCount(io, prisma, stateKey);
+            await (0, quizUtils_1.emitQuizConnectedCount)(io, db_1.default, stateKey);
             // If it's a differed state with no other sockets mapped to it, clean it up?
             // Let's NOT clean up differed state here, allow rejoin or timeout/end logic to handle it.
             // if (state.isDiffered && Object.keys(state.socketToJoueur).length === 0) {

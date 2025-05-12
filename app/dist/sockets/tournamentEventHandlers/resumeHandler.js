@@ -4,13 +4,15 @@
  *
  * This module handles the tournament_resume event, resuming a paused tournament question.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-// Import using require for now until these are converted to TypeScript
-// TODO: Convert these imports to TypeScript imports when available
-const createLogger = require('../../logger');
-const logger = createLogger('ResumeTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { sendQuestionWithState } = require('../tournamentUtils/tournamentHelpers');
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
+const tournamentHelpers_1 = require("../tournamentUtils/tournamentHelpers");
+// Import logger
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('ResumeTournamentHandler');
 /**
  * Handle tournament_resume event
  *
@@ -19,7 +21,7 @@ const { sendQuestionWithState } = require('../tournamentUtils/tournamentHelpers'
  * @param payload - The resume payload from the client
  */
 function handleTournamentResume(io, socket, { code }) {
-    const state = tournamentState[code]; // Only applicable to live tournaments
+    const state = tournamentState_1.tournamentState[code]; // Only applicable to live tournaments
     if (state && !state.isDiffered && state.paused) {
         state.paused = false;
         // Find the current question using currentQuestionUid
@@ -87,7 +89,7 @@ function handleTournamentResume(io, socket, { code }) {
             const nextIndex = currentIndex + 1;
             const nextQuestion = nextIndex < state.questions.length ? state.questions[nextIndex] : undefined;
             if (nextQuestion) {
-                await sendQuestionWithState(io, code, nextQuestion.uid); // Use await
+                await (0, tournamentHelpers_1.sendQuestionWithState)(io, code, nextQuestion.uid); // Use await
             }
             else {
                 logger.info(`Ending tournament ${code} after resume timer`);
@@ -151,7 +153,7 @@ function handleTournamentResume(io, socket, { code }) {
                     logger.error(`Error saving scores/updating tournament ${code} after resume:`, err);
                 }
                 io.to(`live_${code}`).emit("tournament_finished_redirect", { code });
-                delete tournamentState[code];
+                delete tournamentState_1.tournamentState[code];
             }
             // --- End of duplicated logic ---
         }, remaining * 1000);

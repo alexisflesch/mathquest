@@ -20,8 +20,8 @@ import { TournamentStateContainer } from './types/tournamentTypes';
 // Import the new tournamentState module
 import { tournamentState } from './tournamentUtils/tournamentState';
 
-// Import tournament event registration - keeping as require for now
-const registerTournamentEvents = require('./tournamentEvents');
+// Import tournament event registration
+import { registerTournamentEvents } from './tournamentEvents';
 
 const prisma = require('../db');
 const createLogger = require('../logger');
@@ -63,5 +63,8 @@ tournamentHandlerExports.triggerTournamentQuestion = tournamentTriggers.triggerT
 tournamentHandlerExports.triggerTournamentTimerSet = tournamentTriggers.triggerTournamentTimerSet;
 tournamentHandlerExports.triggerTournamentAnswer = tournamentTriggers.triggerTournamentAnswer;
 
-// Use CommonJS export
+// Export in TypeScript style first
+export { registerTournamentHandlers, tournamentState }; // Ensure tournamentState is exported
+
+// Also provide CommonJS export for compatibility with bridge files
 module.exports = tournamentHandlerExports;

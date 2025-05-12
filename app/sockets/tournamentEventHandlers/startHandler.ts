@@ -9,14 +9,13 @@ import { TournamentState } from '../types/tournamentTypes';
 import { StartTournamentPayload } from '../types/socketTypes';
 import { Question } from '../types/quizTypes';
 import type { Tournoi } from '@prisma/client';
+import prisma from '../../db';
+import { tournamentState } from '../tournamentUtils/tournamentState';
+import { sendQuestionWithState } from '../tournamentUtils/tournamentHelpers';
 
-// Import using require for now until these are converted to TypeScript
-// TODO: Convert these imports to TypeScript imports when available
-const prisma = require('../../db');
-const createLogger = require('../../logger');
+// Import logger
+import createLogger from '../../logger';
 const logger = createLogger('StartTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { sendQuestionWithState } = require('../tournamentUtils/tournamentHelpers');
 
 /**
  * Handle start_tournament event

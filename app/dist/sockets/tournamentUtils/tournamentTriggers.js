@@ -9,6 +9,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.triggerTournamentQuestion = triggerTournamentQuestion;
+exports.triggerTournamentTimerSet = triggerTournamentTimerSet;
+exports.triggerTournamentAnswer = triggerTournamentAnswer;
 const _logger_1 = __importDefault(require("@logger")); // Use path alias
 const logger = (0, _logger_1.default)('TournamentTriggers');
 const tournamentState_1 = require("./tournamentState"); // Use TS import for tournamentState
@@ -302,10 +305,12 @@ function triggerTournamentAnswer(io, code, participantId, answer, questionUid) {
         timestamp: now
     });
 }
-// Export all the trigger functions for CommonJS compatibility
+// Export for CommonJS compatibility
 const tournamentTriggersExports = {
     triggerTournamentQuestion,
     triggerTournamentTimerSet,
     triggerTournamentAnswer
 };
+// This allows both import { triggerTournamentQuestion } from './tournamentTriggers'
+// and const { triggerTournamentQuestion } = require('./tournamentTriggers')
 module.exports = tournamentTriggersExports;

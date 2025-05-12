@@ -6,13 +6,15 @@
  * It removes the socket from connected sockets, updates counts, and
  * handles teacher disconnections.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const quizState_js_1 = require("../quizState.js"); // MODIFIED
-// Import from the legacy file for consistency during transition
-const { emitQuizConnectedCount } = require('../quizUtils.legacy.js');
-// Import logger using require until logger module is converted to TypeScript
-const createLogger = require('../../logger');
-const logger = createLogger('DisconnectQuizHandler');
+const quizState_1 = require("../quizState");
+const quizUtils_1 = require("../quizUtils");
+// Import logger
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('DisconnectQuizHandler');
 /**
  * Handle disconnecting event for quiz sockets
  *
@@ -23,15 +25,15 @@ const logger = createLogger('DisconnectQuizHandler');
 async function handleDisconnecting(io, socket, prisma) {
     logger.info(`disconnecting: socket.id=${socket.id}`);
     // Check all quizzes for this socket
-    for (const quizId in quizState_js_1.quizState) {
+    for (const quizId in quizState_1.quizState) {
         // Remove the socket from the connected set
-        if (quizState_js_1.quizState[quizId].connectedSockets && quizState_js_1.quizState[quizId].connectedSockets.has(socket.id)) {
-            quizState_js_1.quizState[quizId].connectedSockets.delete(socket.id);
-            logger.info(`[QUIZ_CONNECTED] Suppression socket ${socket.id} de quiz ${quizId}. Sockets restants:`, Array.from(quizState_js_1.quizState[quizId].connectedSockets));
+        if (quizState_1.quizState[quizId].connectedSockets && quizState_1.quizState[quizId].connectedSockets.has(socket.id)) {
+            quizState_1.quizState[quizId].connectedSockets.delete(socket.id);
+            logger.info(`[QUIZ_CONNECTED] Suppression socket ${socket.id} de quiz ${quizId}. Sockets restants:`, Array.from(quizState_1.quizState[quizId].connectedSockets));
             // Emit updated connected count
             let code = null;
-            if (quizState_js_1.quizState[quizId] && quizState_js_1.quizState[quizId].tournament_code) {
-                code = quizState_js_1.quizState[quizId].tournament_code;
+            if (quizState_1.quizState[quizId] && quizState_1.quizState[quizId].tournament_code) {
+                code = quizState_1.quizState[quizId].tournament_code;
             }
             else {
                 try {
@@ -44,11 +46,11 @@ async function handleDisconnecting(io, socket, prisma) {
                 }
             }
             if (code)
-                await emitQuizConnectedCount(io, prisma, code);
+                await (0, quizUtils_1.emitQuizConnectedCount)(io, prisma, code);
         }
         // Handle teacher disconnection
-        if (quizState_js_1.quizState[quizId].profSocketId === socket.id) {
-            quizState_js_1.quizState[quizId].profSocketId = null;
+        if (quizState_1.quizState[quizId].profSocketId === socket.id) {
+            quizState_1.quizState[quizId].profSocketId = null;
             logger.info(`Professor disconnected from quiz ${quizId}`);
             // Optionally emit an update to other clients in the quiz room
             // io.to(`dashboard_${quizId}`).emit("quiz_state", quizState[quizId]);
@@ -59,7 +61,7 @@ async function handleDisconnecting(io, socket, prisma) {
     const tournamentRoom = rooms.find((room) => room.startsWith('lobby_') || room.startsWith('tournament_'));
     if (tournamentRoom) {
         const cleanCode = tournamentRoom.replace(/^(lobby_|tournament_)/, '');
-        await emitQuizConnectedCount(io, prisma, cleanCode);
+        await (0, quizUtils_1.emitQuizConnectedCount)(io, prisma, cleanCode);
     }
 }
 exports.default = handleDisconnecting;

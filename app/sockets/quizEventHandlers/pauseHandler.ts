@@ -1,22 +1,19 @@
 import { Server, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import { PauseResumePayload } from '../types/socketTypes';
-import { quizState } from '../quizState.js'; // MODIFIED
-
-// Import tournamentState from legacy JS using require for consistency
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-
-// Import logger using require until logger module is converted to TypeScript
-const createLogger = require('../../logger');
-// Import from the legacy file for consistency during transition
-const {
+import { quizState } from '../quizState';
+import { tournamentState } from '../tournamentUtils/tournamentState';
+import {
     patchQuizStateForBroadcast,
     calculateRemainingTime,
     emitQuizTimerUpdate,
     synchronizeTimerValues
-} = require('../quizUtils.legacy.js');
-const { triggerTournamentTimerSet } = require('../tournamentUtils/tournamentTriggers.js'); // MODIFIED
+} from '../quizUtils';
+import { triggerTournamentTimerSet } from '../tournamentUtils/tournamentTriggers';
 import { triggerQuizTimerAction } from '../quizTriggers';
+
+// Import logger
+import createLogger from '../../logger';
 
 const logger = createLogger('PauseQuizHandler');
 

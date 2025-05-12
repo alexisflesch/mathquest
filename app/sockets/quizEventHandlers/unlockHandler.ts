@@ -8,12 +8,11 @@
 import { Server, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import { LockUnlockPayload } from '../types/socketTypes';
-import { quizState } from '../quizState.js'; // MODIFIED
-// Import from the legacy file for consistency during transition
-const { patchQuizStateForBroadcast } = require('../quizUtils.legacy.js');
+import { quizState } from '../quizState';
+import { patchQuizStateForBroadcast } from '../quizUtils';
 
 // Import logger
-const createLogger = require('../../logger');
+import createLogger from '../../logger';
 const logger = createLogger('UnlockQuizHandler');
 
 /**

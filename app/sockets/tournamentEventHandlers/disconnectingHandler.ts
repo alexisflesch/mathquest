@@ -6,14 +6,13 @@
 
 import { Server, Socket } from 'socket.io';
 import { TournamentState, Participant } from '../types/tournamentTypes';
+import { tournamentState } from '../tournamentUtils/tournamentState';
+import { emitQuizConnectedCount } from '../quizUtils';
+import prisma from '../../db';
 
-// Import using require for now until these are converted to TypeScript
-// TODO: Convert these imports to TypeScript imports when available
-const createLogger = require('../../logger');
+// Import logger
+import createLogger from '../../logger';
 const logger = createLogger('DisconnectTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { emitQuizConnectedCount } = require('../quizUtils.legacy.js');
-const prisma = require('../../db');
 
 /**
  * Handle disconnecting event for tournament participants

@@ -2,6 +2,7 @@
     "compilerOptions": {
         "target": "ES2020",
         "module": "CommonJS",
+        "moduleResolution": "node",
         "allowJs": true,
         "checkJs": false,
         "outDir": "./dist",
@@ -19,16 +20,15 @@
             "@sockets/*": [
                 "sockets/*"
             ],
-            "@db/*": [
-                "db/*"
+            "@db": [
+                "db/index.ts"
             ]
         }
     },
     "include": [
         "sockets/**/*.ts",
-        "sockets/**/*.js",
-        "server.js",
-        "db/**/*.js",
+        "server.ts",
+        "db/**/*.ts",
         "logger.ts"
     ],
     "exclude": [

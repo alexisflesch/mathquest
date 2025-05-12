@@ -37,11 +37,18 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "server.ts",
+    "db",
+    "sockets",
+    "dist",
+    "logger.ts",
+    "tsconfig.backend.json",
+    "**/*.js"
   ]
 }

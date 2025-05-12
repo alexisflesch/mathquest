@@ -10,15 +10,13 @@
 
 import { Server, Socket } from 'socket.io';
 import { CloseQuestionPayload } from '../types/socketTypes';
-import { quizState } from '../quizState.js'; // MODIFIED
+import { quizState } from '../quizState';
+import { tournamentState } from '../tournamentUtils/tournamentState';
+import { computeLeaderboard } from '../tournamentUtils/computeLeaderboard';
 
-// Import using require for modules not yet converted to TypeScript
-const createLogger = require('../../logger');
+// Import logger
+import createLogger from '../../logger';
 const logger = createLogger('CloseQuestionHandler');
-
-// Import tournamentState directly from legacy file to avoid circular dependencies
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { computeLeaderboard } = require('../tournamentUtils/computeLeaderboard');
 
 // Debugging tournament state import
 logger.debug(`[CloseQuestion] tournamentState imported: ${!!tournamentState}`);

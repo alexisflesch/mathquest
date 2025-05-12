@@ -15,10 +15,13 @@
  * - tournamentEvents.ts: Imports handlers from tournamentEventHandlers/ and registers them with socket.io.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.tournamentState = void 0;
+exports.registerTournamentHandlers = registerTournamentHandlers;
 // Import the new tournamentState module
 const tournamentState_1 = require("./tournamentUtils/tournamentState");
-// Import tournament event registration - keeping as require for now
-const registerTournamentEvents = require('./tournamentEvents');
+Object.defineProperty(exports, "tournamentState", { enumerable: true, get: function () { return tournamentState_1.tournamentState; } });
+// Import tournament event registration
+const tournamentEvents_1 = require("./tournamentEvents");
 const prisma = require('../db');
 const createLogger = require('../logger');
 const logger = createLogger('TournamentHandler');
@@ -30,7 +33,7 @@ const logger = createLogger('TournamentHandler');
  */
 function registerTournamentHandlers(io, socket) {
     logger.info(`[registerTournamentHandlers] Registering tournament event handlers for socket ${socket.id}`);
-    registerTournamentEvents(io, socket);
+    (0, tournamentEvents_1.registerTournamentEvents)(io, socket);
 }
 // Create the export object first (without trigger functions)
 const tournamentHandlerExports = {
@@ -44,5 +47,5 @@ const tournamentTriggers = require('./tournamentUtils/tournamentTriggers');
 tournamentHandlerExports.triggerTournamentQuestion = tournamentTriggers.triggerTournamentQuestion;
 tournamentHandlerExports.triggerTournamentTimerSet = tournamentTriggers.triggerTournamentTimerSet;
 tournamentHandlerExports.triggerTournamentAnswer = tournamentTriggers.triggerTournamentAnswer;
-// Use CommonJS export
+// Also provide CommonJS export for compatibility with bridge files
 module.exports = tournamentHandlerExports;

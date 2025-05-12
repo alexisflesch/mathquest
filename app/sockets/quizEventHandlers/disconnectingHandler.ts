@@ -8,13 +8,11 @@
 
 import { Server, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
-import { quizState } from '../quizState.js'; // MODIFIED
+import { quizState } from '../quizState';
+import { emitQuizConnectedCount } from '../quizUtils';
 
-// Import from the legacy file for consistency during transition
-const { emitQuizConnectedCount } = require('../quizUtils.legacy.js');
-
-// Import logger using require until logger module is converted to TypeScript
-const createLogger = require('../../logger');
+// Import logger
+import createLogger from '../../logger';
 const logger = createLogger('DisconnectQuizHandler');
 
 /**

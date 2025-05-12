@@ -372,11 +372,20 @@ function triggerTournamentAnswer(
     });
 }
 
-// Export all the trigger functions for CommonJS compatibility
+// Export functions in TypeScript style
+export {
+    triggerTournamentQuestion,
+    triggerTournamentTimerSet,
+    triggerTournamentAnswer
+};
+
+// Export for CommonJS compatibility
 const tournamentTriggersExports = {
     triggerTournamentQuestion,
     triggerTournamentTimerSet,
     triggerTournamentAnswer
 };
 
+// This allows both import { triggerTournamentQuestion } from './tournamentTriggers'
+// and const { triggerTournamentQuestion } = require('./tournamentTriggers')
 module.exports = tournamentTriggersExports;

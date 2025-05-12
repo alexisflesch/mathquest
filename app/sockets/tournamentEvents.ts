@@ -68,5 +68,17 @@ function registerTournamentEvents(io: Server, socket: Socket): void {
 // Define a named property for the function to make it easier to find in bridges
 registerTournamentEvents.displayName = "registerTournamentEvents";
 
-// DirectCommonJS export of the function
-module.exports = registerTournamentEvents;
+// Export in TypeScript style first
+export { registerTournamentEvents };
+
+// Also provide CommonJS export for compatibility with bridge files
+// Create an object with the registerTournamentEvents function as a property
+const tournamentEventsExports = {
+    registerTournamentEvents
+};
+
+// This allows both 
+// import { registerTournamentEvents } from './tournamentEvents'
+// and 
+// const { registerTournamentEvents } = require('./tournamentEvents')
+module.exports = tournamentEventsExports;

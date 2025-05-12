@@ -1,37 +1,19 @@
 "use strict";
 /**
- * answerHandler.ts - Tournament    // Check liv        // Check differed states
-        for (const key in tournamentState) {
-            if (key.startsWith(`${code}_`) &&
-                tournamentState[key]?.socketToJoueur &&
-                tournamentState[key].socketToJoueur[socket.id]) {
-                stateKey = key;
-                state = tournamentState[key];
-                if (state && state.socketToJoueur) {
-                    joueurId = state.socketToJoueur[socket.id];
-                }
-                break;
-            }
-        }st
-    if (tournamentState[code] &&
-        tournamentState[code].socketToJoueur &&
-        tournamentState[code].socketToJoueur[socket.id]) {
-        stateKey = code;
-        state = tournamentState[stateKey];
-        if (state && state.socketToJoueur) {
-            joueurId = state.socketToJoueur[socket.id];
-        } Handler
+ * answerHandler.ts - Tournament Answer Handler
  *
  * This module handles the tournament_answer event, which is emitted when a participant
  * submits an answer to a tournament question.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-// Import using require for now until these are converted to TypeScript
-// TODO: Convert these imports to TypeScript imports when available
-const createLogger = require('../../logger');
-const logger = createLogger('AnswerTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { calculateScore } = require('../tournamentUtils/tournamentHelpers');
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
+const scoreUtils_1 = require("../tournamentUtils/scoreUtils");
+// Import logger
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('AnswerTournamentHandler');
 /**
  * Handle tournament_answer event
  *
@@ -46,23 +28,23 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     let stateKey = null;
     let state = null;
     // Check live state first
-    if (tournamentState[code] &&
-        tournamentState[code].socketToJoueur &&
-        tournamentState[code].socketToJoueur[socket.id]) {
+    if (tournamentState_1.tournamentState[code] &&
+        tournamentState_1.tournamentState[code].socketToJoueur &&
+        tournamentState_1.tournamentState[code].socketToJoueur[socket.id]) {
         stateKey = code;
-        state = tournamentState[stateKey];
+        state = tournamentState_1.tournamentState[stateKey];
         if (state && state.socketToJoueur) {
             joueurId = state.socketToJoueur[socket.id];
         }
     }
     else {
         // Check differed states
-        for (const key in tournamentState) {
+        for (const key in tournamentState_1.tournamentState) {
             if (key.startsWith(`${code}_`) &&
-                tournamentState[key]?.socketToJoueur &&
-                tournamentState[key].socketToJoueur[socket.id]) {
+                tournamentState_1.tournamentState[key]?.socketToJoueur &&
+                tournamentState_1.tournamentState[key].socketToJoueur[socket.id]) {
                 stateKey = key;
-                state = tournamentState[key];
+                state = tournamentState_1.tournamentState[key];
                 if (state && state.socketToJoueur) {
                     joueurId = state.socketToJoueur[socket.id];
                 }
@@ -181,7 +163,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     }
     // Calculate the score for the current answer
     const totalQuestions = state.questions.length;
-    const { baseScore, rapidity, totalScore } = calculateScore(question, { answerIdx, clientTimestamp }, state.questionStart || Date.now(), totalQuestions);
+    const { baseScore, rapidity, totalScore } = (0, scoreUtils_1.calculateScore)(question, { answerIdx, clientTimestamp }, state.questionStart || Date.now(), totalQuestions);
     // Update the score for the current question
     const participantScored = participant.scoredQuestions;
     if (participantScored) {

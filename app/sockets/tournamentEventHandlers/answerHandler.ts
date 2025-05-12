@@ -1,25 +1,5 @@
 /**
- * answerHandler.ts - Tournament    // Check liv        // Check differed states
-        for (const key in tournamentState) {
-            if (key.startsWith(`${code}_`) && 
-                tournamentState[key]?.socketToJoueur && 
-                tournamentState[key].socketToJoueur[socket.id]) {
-                stateKey = key;
-                state = tournamentState[key];
-                if (state && state.socketToJoueur) {
-                    joueurId = state.socketToJoueur[socket.id];
-                }
-                break;
-            }
-        }st
-    if (tournamentState[code] && 
-        tournamentState[code].socketToJoueur && 
-        tournamentState[code].socketToJoueur[socket.id]) {
-        stateKey = code;
-        state = tournamentState[stateKey];
-        if (state && state.socketToJoueur) {
-            joueurId = state.socketToJoueur[socket.id];
-        } Handler
+ * answerHandler.ts - Tournament Answer Handler
  * 
  * This module handles the tournament_answer event, which is emitted when a participant
  * submits an answer to a tournament question.
@@ -28,13 +8,12 @@
 import { Server, Socket } from 'socket.io';
 import { TournamentAnswerPayload } from '../types/socketTypes';
 import { TournamentState } from '../types/tournamentTypes';
+import { tournamentState } from '../tournamentUtils/tournamentState';
+import { calculateScore } from '../tournamentUtils/scoreUtils';
 
-// Import using require for now until these are converted to TypeScript
-// TODO: Convert these imports to TypeScript imports when available
-const createLogger = require('../../logger');
+// Import logger
+import createLogger from '../../logger';
 const logger = createLogger('AnswerTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
-const { calculateScore } = require('../tournamentUtils/tournamentHelpers');
 
 /**
  * Handle tournament_answer event

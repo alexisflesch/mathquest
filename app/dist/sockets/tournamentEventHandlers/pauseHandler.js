@@ -4,12 +4,14 @@
  *
  * This module handles the tournament_pause event, pausing the current tournament question.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-// Import using require for now until these are converted to TypeScript
-// TODO: Convert these imports to TypeScript imports when available
-const createLogger = require('../../logger');
-const logger = createLogger('PauseTournamentHandler');
-const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.js');
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
+// Import logger
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('PauseTournamentHandler');
 /**
  * Handle tournament_pause event
  *
@@ -18,7 +20,7 @@ const { tournamentState } = require('../tournamentUtils/tournamentState.legacy.j
  * @param payload - The pause payload from the client
  */
 function handleTournamentPause(io, socket, { code }) {
-    const state = tournamentState[code]; // Only applicable to live tournaments
+    const state = tournamentState_1.tournamentState[code]; // Only applicable to live tournaments
     if (state && !state.isDiffered && !state.paused) {
         // Calculate remaining time based on elapsed time since question start
         const elapsed = state.questionStart ? (Date.now() - state.questionStart) / 1000 : 0;
