@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": "src",
+    "paths": {
+      "@/*": [
+        "*"
+      ],
+      "@logger": [
+        "../logger.ts"
+      ],
+      "@components/*": [
+        "components/*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "server.ts",
+    "db",
+    "sockets",
+    "dist",
+    "logger.ts",
+    "tsconfig.backend.json",
+    "**/*.js"
+  ]
+}

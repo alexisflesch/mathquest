@@ -1,0 +1,224 @@
+// filepath: /home/aflesch/mathquest/app/sockets/quizEventHandlers/setTimerHandler.ts
+/**
+ * setTimerHandler.ts - Handler for setting timer values in a quiz
+ * 
+ * Updates timer values for active or inactive questions.
+ * Handles different scenarios: inactive questions, paused timers, and active timers.
+ * Synchronizes timer values with linked tournament if applicable.
+ */
+
+import { Server, Socket } from 'socket.io';
+import { PrismaClient } from '@prisma/client';
+import { SetTimerPayload } from '../types/socketTypes';
+import { Question } from '../types/quizTypes';
+
+// CommonJS style imports for compatibility
+const { quizState } = require('../quizState');
+const { patchQuizStateForBroadcast, updateChrono } = require('../quizUtils.legacy.js');
+const createLogger = require('../../logger');
+const logger = createLogger('SetTimerHandler');
+const { tournamentState, triggerTournamentTimerSet } = require('../tournamentHandler');
+const { triggerQuizSetTimer } = require('../quizTriggers');
+
+/**
+ * Handle quiz_set_timer event
+ * 
+ * @param io - Socket.IO server instance
+ * @param socket - Client socket connection
+ * @param prisma - Prisma database client
+ * @param payload - Event payload containing quizId, timeLeft, etc.
+ */
+function handleSetTimer(
+    io: Server,
+    socket: Socket,
+    prisma: PrismaClient,
+    { quizId, timeLeft, teacherId, tournamentCode, questionUid }: SetTimerPayload
+): void {
+    // Defensive: refuse to operate if quizId is missing or invalid
+    if (!quizId || quizId === 'UNKNOWN_QUIZ_ID') {
+        logger.error(`[SetTimer] Refusing to operate: invalid quizId received: ${quizId}`);
+        socket.emit('quiz_action_response', {
+            status: 'error',
+            message: 'Erreur : quizId invalide.'
+        });
+        return;
+    }
+
+    // Minimal info log for received event
+    logger.info(`[SetTimer] Received quiz_set_timer for quiz ${quizId} with timeLeft=${timeLeft}s`);
+
+    if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
+        logger.warn(`[SetTimer] Unauthorized attempt for quiz ${quizId} from socket ${socket.id} (teacherId=${teacherId})`);
+        socket.emit('quiz_action_response', {
+            status: 'error',
+            message: 'Erreur : accès non autorisé.'
+        });
+        return;
+    }
+
+    // Update profSocketId to current socket
+    quizState[quizId].profSocketId = socket.id;
+
+    // Defensive: ensure quizState[quizId].id is always set for patchQuizStateForBroadcast
+    if (!quizState[quizId].id) {
+        quizState[quizId].id = quizId;
+    }
+
+    // Handle inactive questions
+    if (!quizState[quizId].chrono.running && questionUid) {
+        const inactiveTargetQuestion = quizState[quizId].questions.find((q: Question) => q.uid === questionUid);
+        if (inactiveTargetQuestion) {
+            inactiveTargetQuestion.temps = timeLeft;
+            // Also update per-question timer state if it exists
+            if (quizState[quizId].questionTimers && quizState[quizId].questionTimers[questionUid]) {
+                quizState[quizId].questionTimers[questionUid].initialTime = timeLeft;
+                quizState[quizId].questionTimers[questionUid].timeLeft = timeLeft;
+            }
+            // Set currentQuestionUid to the edited question if not set, to avoid UNKNOWN_QUIZ_ID warning
+            if (!quizState[quizId].currentQuestionUid) {
+                quizState[quizId].currentQuestionUid = questionUid;
+            }
+
+            // Emit updated quiz state so frontend can update UI
+            io.to(`dashboard_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
+            // Do NOT emit to projection or live for inactive question edits
+        } else {
+            logger.warn(`[SetTimer] Question UID ${questionUid} not found in quiz ${quizId}`);
+        }
+        return;
+    }
+
+    // Handle editing a paused timer: update value, emit pause, and return
+    if (quizState[quizId].chrono.running === false && quizState[quizId].chrono.status === 'pause') {
+        const pausedTargetQuestionId = questionUid || quizState[quizId].currentQuestionUid;
+        const pausedTargetQuestion = quizState[quizId].questions.find((q: Question) => q.uid === pausedTargetQuestionId);
+        if (pausedTargetQuestion) {
+            pausedTargetQuestion.temps = timeLeft;
+        } else {
+            logger.warn(`[SetTimer] Question UID ${pausedTargetQuestionId} not found in quiz ${quizId}`);
+        }
+
+        // Emit timer update with status 'pause'
+        const timerUpdatePayload = {
+            status: 'pause' as const,
+            questionId: pausedTargetQuestionId,
+            timeLeft: timeLeft,
+            timestamp: Date.now()
+        };
+
+        io.to(`dashboard_${quizId}`).emit("quiz_timer_update", timerUpdatePayload);
+        io.to(`projection_${quizId}`).emit("quiz_timer_update", timerUpdatePayload);
+
+        // Tournament sync if needed
+        const code = tournamentCode || Object.keys(tournamentState).find(c =>
+            tournamentState[c] && tournamentState[c].linkedQuizId === quizId
+        );
+
+        if (code && tournamentState[code] && tournamentState[code].currentQuestionUid === pausedTargetQuestionId) {
+            let questionState = 'paused';
+            if (tournamentState[code].stopped) questionState = 'stopped';
+
+            io.to(`live_${code}`).emit("tournament_set_timer", {
+                timeLeft: timeLeft,
+                questionState
+            });
+        }
+
+        io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
+            status: 'success',
+            message: 'Timer set successfully.'
+        });
+        return;
+    }
+
+    // --- Update Quiz State --- 
+    if (quizState[quizId]) { // Check if state exists
+        quizState[quizId] = updateChrono(
+            quizState[quizId],
+            timeLeft,
+            quizState[quizId].chrono?.running ? 'play' : 'pause'
+        );
+    } else {
+        logger.error(`[SetTimer] No quiz state found for quizId: ${quizId}`);
+        socket.emit('quiz_action_response', {
+            status: 'error',
+            message: 'Could not update timer: quiz state not found.'
+        });
+        return;
+    }
+
+    // Use questionUid from payload if provided, else fallback to current active question
+    const targetQuestionUid = questionUid || quizState[quizId].currentQuestionUid;
+
+    if (targetQuestionUid) {
+        // Find the specific question and update its timer value
+        const targetQuestion = quizState[quizId].questions.find((q: Question) => q.uid === targetQuestionUid);
+        if (targetQuestion) {
+            targetQuestion.temps = timeLeft;
+
+            // Also update question timer record
+            if (quizState[quizId].questionTimers && quizState[quizId].questionTimers[targetQuestionUid]) {
+                // Only update initial time, status should remain unchanged
+                const timer = quizState[quizId].questionTimers[targetQuestionUid];
+                timer.initialTime = timeLeft;
+                if (timer.status !== 'play') {
+                    timer.timeLeft = timeLeft;
+                    logger.info(`[SetTimer] Updated question timer timeLeft=${timeLeft} for questionId=${targetQuestionUid}, status=${timer.status}`);
+                }
+            }
+
+            // Log the timer change
+            logger.info(`[SetTimer] Updated timer value to ${timeLeft}s for question ${targetQuestionUid} in quiz ${quizId}`);
+
+            // Emit updated timer state to dashboard
+            const timerStatus = quizState[quizId].chrono.running ? 'play' : 'pause';
+            const timerUpdatePayload = {
+                status: timerStatus,
+                questionId: targetQuestionUid,
+                timeLeft: timeLeft
+            };
+
+            io.to(`dashboard_${quizId}`).emit("quiz_timer_update", timerUpdatePayload);
+
+            // Only emit to projection if actively running or for currently displayed question
+            if (quizState[quizId].chrono.running || quizState[quizId].currentQuestionUid === targetQuestionUid) {
+                io.to(`projection_${quizId}`).emit("quiz_timer_update", timerUpdatePayload);
+            }
+
+            // Trigger tournament timer update if linked
+            const code = tournamentCode || quizState[quizId].tournament_code;
+            if (code) {
+                logger.info(`[SetTimer] Triggering tournament timer set for code=${code}, timeLeft=${timeLeft}`);
+                try {
+                    triggerTournamentTimerSet(io, code, timeLeft);
+                } catch (e) {
+                    logger.error(`[SetTimer] Error triggering tournament timer: ${e instanceof Error ? e.message : String(e)}`);
+                }
+            }
+
+            // Trigger additional quiz actions
+            try {
+                triggerQuizSetTimer(io, quizId, timeLeft, targetQuestionUid);
+            } catch (e) {
+                logger.error(`[SetTimer] Error triggering quiz timer actions: ${e instanceof Error ? e.message : String(e)}`);
+            }
+        } else {
+            // Warning if no question found with given UID
+            logger.warn(`[SetTimer] No question found with UID ${targetQuestionUid} in quiz ${quizId}`);
+        }
+    } else {
+        // Log error if no target question UID available
+        logger.error(`[SetTimer] No target question UID available for quiz ${quizId}`);
+    }
+
+    // Send success response to client
+    socket.emit('quiz_action_response', {
+        status: 'success',
+        message: 'Timer set successfully.'
+    });
+}
+
+// Export the function for CommonJS compatibility
+module.exports = handleSetTimer;
+// For TypeScript import syntax
+export default handleSetTimer;

@@ -1,0 +1,31 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "composite": true,
+        "rootDir": ".",
+        "outDir": "../dist/backend",
+        "baseUrl": ".",
+        "paths": {
+            "@logger": [
+                "logger.ts"
+            ],
+            "@sockets/*": [
+                "sockets/*"
+            ],
+            "@db": [
+                "db/index.ts"
+            ]
+        }
+    },
+    "include": [
+        "sockets/**/*.ts",
+        "server.ts",
+        "db/**/*.ts",
+        "logger.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "src"
+    ]
+}

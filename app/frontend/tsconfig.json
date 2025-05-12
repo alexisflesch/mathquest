@@ -1,0 +1,57 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "composite": true,
+        "target": "ES2017",
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "esnext"
+        ],
+        "module": "esnext",
+        "moduleResolution": "node",
+        "allowJs": true,
+        "outDir": "../dist/frontend",
+        "jsx": "preserve",
+        "incremental": true,
+        "isolatedModules": true,
+        "plugins": [
+            {
+                "name": "next"
+            }
+        ],
+        "baseUrl": "./src",
+        "paths": {
+            "@/*": [
+                "*"
+            ],
+            "@components/*": [
+                "components/*"
+            ],
+            "@shared/*": [
+                "../../shared/*"
+            ],
+            "@logger": [
+                "../../shared/logger.ts"
+            ],
+            "@db": [
+                "../../backend/db/index.ts"
+            ],
+            "@prisma/client": [
+                "../../shared/prisma-client"
+            ]
+        },
+        "noEmit": true
+    },
+    "include": [
+        "next-env.d.ts",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        ".next/types/**/*.ts",
+        "../../shared/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

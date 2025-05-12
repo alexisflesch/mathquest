@@ -1,0 +1,12229 @@
+
+/**
+ * Client
+**/
+
+import * as runtime from './runtime/library.js';
+import $Types = runtime.Types // general types
+import $Public = runtime.Types.Public
+import $Utils = runtime.Types.Utils
+import $Extensions = runtime.Types.Extensions
+import $Result = runtime.Types.Result
+
+export type PrismaPromise<T> = $Public.PrismaPromise<T>
+
+
+/**
+ * Model Question
+ * 
+ */
+export type Question = $Result.DefaultSelection<Prisma.$QuestionPayload>
+/**
+ * Model Enseignant
+ * 
+ */
+export type Enseignant = $Result.DefaultSelection<Prisma.$EnseignantPayload>
+/**
+ * Model Joueur
+ * 
+ */
+export type Joueur = $Result.DefaultSelection<Prisma.$JoueurPayload>
+/**
+ * Model Tournoi
+ * 
+ */
+export type Tournoi = $Result.DefaultSelection<Prisma.$TournoiPayload>
+/**
+ * Model Score
+ * 
+ */
+export type Score = $Result.DefaultSelection<Prisma.$ScorePayload>
+/**
+ * Model Quiz
+ * 
+ */
+export type Quiz = $Result.DefaultSelection<Prisma.$QuizPayload>
+
+/**
+ * ##  Prisma Client ʲˢ
+ *
+ * Type-safe database client for TypeScript & Node.js
+ * @example
+ * ```
+ * const prisma = new PrismaClient()
+ * // Fetch zero or more Questions
+ * const questions = await prisma.question.findMany()
+ * ```
+ *
+ *
+ * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
+ */
+export class PrismaClient<
+  ClientOptions extends Prisma.PrismaClientOptions = Prisma.PrismaClientOptions,
+  U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
+  ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs
+> {
+  [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
+
+    /**
+   * ##  Prisma Client ʲˢ
+   *
+   * Type-safe database client for TypeScript & Node.js
+   * @example
+   * ```
+   * const prisma = new PrismaClient()
+   * // Fetch zero or more Questions
+   * const questions = await prisma.question.findMany()
+   * ```
+   *
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
+   */
+
+  constructor(optionsArg ?: Prisma.Subset<ClientOptions, Prisma.PrismaClientOptions>);
+  $on<V extends U>(eventType: V, callback: (event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent) => void): PrismaClient;
+
+  /**
+   * Connect with the database
+   */
+  $connect(): $Utils.JsPromise<void>;
+
+  /**
+   * Disconnect from the database
+   */
+  $disconnect(): $Utils.JsPromise<void>;
+
+  /**
+   * Add a middleware
+   * @deprecated since 4.16.0. For new code, prefer client extensions instead.
+   * @see https://pris.ly/d/extensions
+   */
+  $use(cb: Prisma.Middleware): void
+
+/**
+   * Executes a prepared raw query and returns the number of affected rows.
+   * @example
+   * ```
+   * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<number>;
+
+  /**
+   * Executes a raw query and returns the number of affected rows.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<number>;
+
+  /**
+   * Performs a prepared raw query and returns the `SELECT` data.
+   * @example
+   * ```
+   * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<T>;
+
+  /**
+   * Performs a raw query and returns the `SELECT` data.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<T>;
+
+
+  /**
+   * Allows the running of a sequence of read/write operations that are guaranteed to either succeed or fail as a whole.
+   * @example
+   * ```
+   * const [george, bob, alice] = await prisma.$transaction([
+   *   prisma.user.create({ data: { name: 'George' } }),
+   *   prisma.user.create({ data: { name: 'Bob' } }),
+   *   prisma.user.create({ data: { name: 'Alice' } }),
+   * ])
+   * ```
+   * 
+   * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
+   */
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+
+  $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<R>
+
+
+  $extends: $Extensions.ExtendsHook<"extends", Prisma.TypeMapCb<ClientOptions>, ExtArgs, $Utils.Call<Prisma.TypeMapCb<ClientOptions>, {
+    extArgs: ExtArgs
+  }>>
+
+      /**
+   * `prisma.question`: Exposes CRUD operations for the **Question** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Questions
+    * const questions = await prisma.question.findMany()
+    * ```
+    */
+  get question(): Prisma.QuestionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.enseignant`: Exposes CRUD operations for the **Enseignant** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Enseignants
+    * const enseignants = await prisma.enseignant.findMany()
+    * ```
+    */
+  get enseignant(): Prisma.EnseignantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.joueur`: Exposes CRUD operations for the **Joueur** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Joueurs
+    * const joueurs = await prisma.joueur.findMany()
+    * ```
+    */
+  get joueur(): Prisma.JoueurDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.tournoi`: Exposes CRUD operations for the **Tournoi** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Tournois
+    * const tournois = await prisma.tournoi.findMany()
+    * ```
+    */
+  get tournoi(): Prisma.TournoiDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.score`: Exposes CRUD operations for the **Score** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Scores
+    * const scores = await prisma.score.findMany()
+    * ```
+    */
+  get score(): Prisma.ScoreDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.quiz`: Exposes CRUD operations for the **Quiz** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Quizzes
+    * const quizzes = await prisma.quiz.findMany()
+    * ```
+    */
+  get quiz(): Prisma.QuizDelegate<ExtArgs, ClientOptions>;
+}
+
+export namespace Prisma {
+  export import DMMF = runtime.DMMF
+
+  export type PrismaPromise<T> = $Public.PrismaPromise<T>
+
+  /**
+   * Validator
+   */
+  export import validator = runtime.Public.validator
+
+  /**
+   * Prisma Errors
+   */
+  export import PrismaClientKnownRequestError = runtime.PrismaClientKnownRequestError
+  export import PrismaClientUnknownRequestError = runtime.PrismaClientUnknownRequestError
+  export import PrismaClientRustPanicError = runtime.PrismaClientRustPanicError
+  export import PrismaClientInitializationError = runtime.PrismaClientInitializationError
+  export import PrismaClientValidationError = runtime.PrismaClientValidationError
+
+  /**
+   * Re-export of sql-template-tag
+   */
+  export import sql = runtime.sqltag
+  export import empty = runtime.empty
+  export import join = runtime.join
+  export import raw = runtime.raw
+  export import Sql = runtime.Sql
+
+
+
+  /**
+   * Decimal.js
+   */
+  export import Decimal = runtime.Decimal
+
+  export type DecimalJsLike = runtime.DecimalJsLike
+
+  /**
+   * Metrics
+   */
+  export type Metrics = runtime.Metrics
+  export type Metric<T> = runtime.Metric<T>
+  export type MetricHistogram = runtime.MetricHistogram
+  export type MetricHistogramBucket = runtime.MetricHistogramBucket
+
+  /**
+  * Extensions
+  */
+  export import Extension = $Extensions.UserArgs
+  export import getExtensionContext = runtime.Extensions.getExtensionContext
+  export import Args = $Public.Args
+  export import Payload = $Public.Payload
+  export import Result = $Public.Result
+  export import Exact = $Public.Exact
+
+  /**
+   * Prisma Client JS version: 6.7.0
+   * Query Engine version: 3cff47a7f5d65c3ea74883f1d736e41d68ce91ed
+   */
+  export type PrismaVersion = {
+    client: string
+  }
+
+  export const prismaVersion: PrismaVersion
+
+  /**
+   * Utility Types
+   */
+
+
+  export import JsonObject = runtime.JsonObject
+  export import JsonArray = runtime.JsonArray
+  export import JsonValue = runtime.JsonValue
+  export import InputJsonObject = runtime.InputJsonObject
+  export import InputJsonArray = runtime.InputJsonArray
+  export import InputJsonValue = runtime.InputJsonValue
+
+  /**
+   * Types of the values used to represent different kinds of `null` values when working with JSON fields.
+   *
+   * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+   */
+  namespace NullTypes {
+    /**
+    * Type of `Prisma.DbNull`.
+    *
+    * You cannot use other instances of this class. Please use the `Prisma.DbNull` value.
+    *
+    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+    */
+    class DbNull {
+      private DbNull: never
+      private constructor()
+    }
+
+    /**
+    * Type of `Prisma.JsonNull`.
+    *
+    * You cannot use other instances of this class. Please use the `Prisma.JsonNull` value.
+    *
+    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+    */
+    class JsonNull {
+      private JsonNull: never
+      private constructor()
+    }
+
+    /**
+    * Type of `Prisma.AnyNull`.
+    *
+    * You cannot use other instances of this class. Please use the `Prisma.AnyNull` value.
+    *
+    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+    */
+    class AnyNull {
+      private AnyNull: never
+      private constructor()
+    }
+  }
+
+  /**
+   * Helper for filtering JSON entries that have `null` on the database (empty on the db)
+   *
+   * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+   */
+  export const DbNull: NullTypes.DbNull
+
+  /**
+   * Helper for filtering JSON entries that have JSON `null` values (not empty on the db)
+   *
+   * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+   */
+  export const JsonNull: NullTypes.JsonNull
+
+  /**
+   * Helper for filtering JSON entries that are `Prisma.DbNull` or `Prisma.JsonNull`
+   *
+   * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+   */
+  export const AnyNull: NullTypes.AnyNull
+
+  type SelectAndInclude = {
+    select: any
+    include: any
+  }
+
+  type SelectAndOmit = {
+    select: any
+    omit: any
+  }
+
+  /**
+   * Get the type of the value, that the Promise holds.
+   */
+  export type PromiseType<T extends PromiseLike<any>> = T extends PromiseLike<infer U> ? U : T;
+
+  /**
+   * Get the return type of a function which returns a Promise.
+   */
+  export type PromiseReturnType<T extends (...args: any) => $Utils.JsPromise<any>> = PromiseType<ReturnType<T>>
+
+  /**
+   * From T, pick a set of properties whose keys are in the union K
+   */
+  type Prisma__Pick<T, K extends keyof T> = {
+      [P in K]: T[P];
+  };
+
+
+  export type Enumerable<T> = T | Array<T>;
+
+  export type RequiredKeys<T> = {
+    [K in keyof T]-?: {} extends Prisma__Pick<T, K> ? never : K
+  }[keyof T]
+
+  export type TruthyKeys<T> = keyof {
+    [K in keyof T as T[K] extends false | undefined | null ? never : K]: K
+  }
+
+  export type TrueKeys<T> = TruthyKeys<Prisma__Pick<T, RequiredKeys<T>>>
+
+  /**
+   * Subset
+   * @desc From `T` pick properties that exist in `U`. Simple version of Intersection
+   */
+  export type Subset<T, U> = {
+    [key in keyof T]: key extends keyof U ? T[key] : never;
+  };
+
+  /**
+   * SelectSubset
+   * @desc From `T` pick properties that exist in `U`. Simple version of Intersection.
+   * Additionally, it validates, if both select and include are present. If the case, it errors.
+   */
+  export type SelectSubset<T, U> = {
+    [key in keyof T]: key extends keyof U ? T[key] : never
+  } &
+    (T extends SelectAndInclude
+      ? 'Please either choose `select` or `include`.'
+      : T extends SelectAndOmit
+        ? 'Please either choose `select` or `omit`.'
+        : {})
+
+  /**
+   * Subset + Intersection
+   * @desc From `T` pick properties that exist in `U` and intersect `K`
+   */
+  export type SubsetIntersection<T, U, K> = {
+    [key in keyof T]: key extends keyof U ? T[key] : never
+  } &
+    K
+
+  type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
+
+  /**
+   * XOR is needed to have a real mutually exclusive union type
+   * https://stackoverflow.com/questions/42123407/does-typescript-support-mutually-exclusive-types
+   */
+  type XOR<T, U> =
+    T extends object ?
+    U extends object ?
+      (Without<T, U> & U) | (Without<U, T> & T)
+    : U : T
+
+
+  /**
+   * Is T a Record?
+   */
+  type IsObject<T extends any> = T extends Array<any>
+  ? False
+  : T extends Date
+  ? False
+  : T extends Uint8Array
+  ? False
+  : T extends BigInt
+  ? False
+  : T extends object
+  ? True
+  : False
+
+
+  /**
+   * If it's T[], return T
+   */
+  export type UnEnumerate<T extends unknown> = T extends Array<infer U> ? U : T
+
+  /**
+   * From ts-toolbelt
+   */
+
+  type __Either<O extends object, K extends Key> = Omit<O, K> &
+    {
+      // Merge all but K
+      [P in K]: Prisma__Pick<O, P & keyof O> // With K possibilities
+    }[K]
+
+  type EitherStrict<O extends object, K extends Key> = Strict<__Either<O, K>>
+
+  type EitherLoose<O extends object, K extends Key> = ComputeRaw<__Either<O, K>>
+
+  type _Either<
+    O extends object,
+    K extends Key,
+    strict extends Boolean
+  > = {
+    1: EitherStrict<O, K>
+    0: EitherLoose<O, K>
+  }[strict]
+
+  type Either<
+    O extends object,
+    K extends Key,
+    strict extends Boolean = 1
+  > = O extends unknown ? _Either<O, K, strict> : never
+
+  export type Union = any
+
+  type PatchUndefined<O extends object, O1 extends object> = {
+    [K in keyof O]: O[K] extends undefined ? At<O1, K> : O[K]
+  } & {}
+
+  /** Helper Types for "Merge" **/
+  export type IntersectOf<U extends Union> = (
+    U extends unknown ? (k: U) => void : never
+  ) extends (k: infer I) => void
+    ? I
+    : never
+
+  export type Overwrite<O extends object, O1 extends object> = {
+      [K in keyof O]: K extends keyof O1 ? O1[K] : O[K];
+  } & {};
+
+  type _Merge<U extends object> = IntersectOf<Overwrite<U, {
+      [K in keyof U]-?: At<U, K>;
+  }>>;
+
+  type Key = string | number | symbol;
+  type AtBasic<O extends object, K extends Key> = K extends keyof O ? O[K] : never;
+  type AtStrict<O extends object, K extends Key> = O[K & keyof O];
+  type AtLoose<O extends object, K extends Key> = O extends unknown ? AtStrict<O, K> : never;
+  export type At<O extends object, K extends Key, strict extends Boolean = 1> = {
+      1: AtStrict<O, K>;
+      0: AtLoose<O, K>;
+  }[strict];
+
+  export type ComputeRaw<A extends any> = A extends Function ? A : {
+    [K in keyof A]: A[K];
+  } & {};
+
+  export type OptionalFlat<O> = {
+    [K in keyof O]?: O[K];
+  } & {};
+
+  type _Record<K extends keyof any, T> = {
+    [P in K]: T;
+  };
+
+  // cause typescript not to expand types and preserve names
+  type NoExpand<T> = T extends unknown ? T : never;
+
+  // this type assumes the passed object is entirely optional
+  type AtLeast<O extends object, K extends string> = NoExpand<
+    O extends unknown
+    ? | (K extends keyof O ? { [P in K]: O[P] } & O : O)
+      | {[P in keyof O as P extends K ? P : never]-?: O[P]} & O
+    : never>;
+
+  type _Strict<U, _U = U> = U extends unknown ? U & OptionalFlat<_Record<Exclude<Keys<_U>, keyof U>, never>> : never;
+
+  export type Strict<U extends object> = ComputeRaw<_Strict<U>>;
+  /** End Helper Types for "Merge" **/
+
+  export type Merge<U extends object> = ComputeRaw<_Merge<Strict<U>>>;
+
+  /**
+  A [[Boolean]]
+  */
+  export type Boolean = True | False
+
+  // /**
+  // 1
+  // */
+  export type True = 1
+
+  /**
+  0
+  */
+  export type False = 0
+
+  export type Not<B extends Boolean> = {
+    0: 1
+    1: 0
+  }[B]
+
+  export type Extends<A1 extends any, A2 extends any> = [A1] extends [never]
+    ? 0 // anything `never` is false
+    : A1 extends A2
+    ? 1
+    : 0
+
+  export type Has<U extends Union, U1 extends Union> = Not<
+    Extends<Exclude<U1, U>, U1>
+  >
+
+  export type Or<B1 extends Boolean, B2 extends Boolean> = {
+    0: {
+      0: 0
+      1: 1
+    }
+    1: {
+      0: 1
+      1: 1
+    }
+  }[B1][B2]
+
+  export type Keys<U extends Union> = U extends unknown ? keyof U : never
+
+  type Cast<A, B> = A extends B ? A : B;
+
+  export const type: unique symbol;
+
+
+
+  /**
+   * Used by group by
+   */
+
+  export type GetScalarType<T, O> = O extends object ? {
+    [P in keyof T]: P extends keyof O
+      ? O[P]
+      : never
+  } : never
+
+  type FieldPaths<
+    T,
+    U = Omit<T, '_avg' | '_sum' | '_count' | '_min' | '_max'>
+  > = IsObject<T> extends True ? U : T
+
+  type GetHavingFields<T> = {
+    [K in keyof T]: Or<
+      Or<Extends<'OR', K>, Extends<'AND', K>>,
+      Extends<'NOT', K>
+    > extends True
+      ? // infer is only needed to not hit TS limit
+        // based on the brilliant idea of Pierre-Antoine Mills
+        // https://github.com/microsoft/TypeScript/issues/30188#issuecomment-478938437
+        T[K] extends infer TK
+        ? GetHavingFields<UnEnumerate<TK> extends object ? Merge<UnEnumerate<TK>> : never>
+        : never
+      : {} extends FieldPaths<T[K]>
+      ? never
+      : K
+  }[keyof T]
+
+  /**
+   * Convert tuple to union
+   */
+  type _TupleToUnion<T> = T extends (infer E)[] ? E : never
+  type TupleToUnion<K extends readonly any[]> = _TupleToUnion<K>
+  type MaybeTupleToUnion<T> = T extends any[] ? TupleToUnion<T> : T
+
+  /**
+   * Like `Pick`, but additionally can also accept an array of keys
+   */
+  type PickEnumerable<T, K extends Enumerable<keyof T> | keyof T> = Prisma__Pick<T, MaybeTupleToUnion<K>>
+
+  /**
+   * Exclude all keys with underscores
+   */
+  type ExcludeUnderscoreKeys<T extends string> = T extends `_${string}` ? never : T
+
+
+  export type FieldRef<Model, FieldType> = runtime.FieldRef<Model, FieldType>
+
+  type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRef<Model, FieldType>
+
+
+  export const ModelName: {
+    Question: 'Question',
+    Enseignant: 'Enseignant',
+    Joueur: 'Joueur',
+    Tournoi: 'Tournoi',
+    Score: 'Score',
+    Quiz: 'Quiz'
+  };
+
+  export type ModelName = (typeof ModelName)[keyof typeof ModelName]
+
+
+  export type Datasources = {
+    db?: Datasource
+  }
+
+  interface TypeMapCb<ClientOptions = {}> extends $Utils.Fn<{extArgs: $Extensions.InternalArgs }, $Utils.Record<string, any>> {
+    returns: Prisma.TypeMap<this['params']['extArgs'], ClientOptions extends { omit: infer OmitOptions } ? OmitOptions : {}>
+  }
+
+  export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> = {
+    globalOmitOptions: {
+      omit: GlobalOmitOptions
+    }
+    meta: {
+      modelProps: "question" | "enseignant" | "joueur" | "tournoi" | "score" | "quiz"
+      txIsolationLevel: Prisma.TransactionIsolationLevel
+    }
+    model: {
+      Question: {
+        payload: Prisma.$QuestionPayload<ExtArgs>
+        fields: Prisma.QuestionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.QuestionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.QuestionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>
+          }
+          findFirst: {
+            args: Prisma.QuestionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.QuestionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>
+          }
+          findMany: {
+            args: Prisma.QuestionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>[]
+          }
+          create: {
+            args: Prisma.QuestionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>
+          }
+          createMany: {
+            args: Prisma.QuestionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.QuestionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>[]
+          }
+          delete: {
+            args: Prisma.QuestionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>
+          }
+          update: {
+            args: Prisma.QuestionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>
+          }
+          deleteMany: {
+            args: Prisma.QuestionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.QuestionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.QuestionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>[]
+          }
+          upsert: {
+            args: Prisma.QuestionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionPayload>
+          }
+          aggregate: {
+            args: Prisma.QuestionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateQuestion>
+          }
+          groupBy: {
+            args: Prisma.QuestionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<QuestionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.QuestionCountArgs<ExtArgs>
+            result: $Utils.Optional<QuestionCountAggregateOutputType> | number
+          }
+        }
+      }
+      Enseignant: {
+        payload: Prisma.$EnseignantPayload<ExtArgs>
+        fields: Prisma.EnseignantFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.EnseignantFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.EnseignantFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>
+          }
+          findFirst: {
+            args: Prisma.EnseignantFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.EnseignantFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>
+          }
+          findMany: {
+            args: Prisma.EnseignantFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>[]
+          }
+          create: {
+            args: Prisma.EnseignantCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>
+          }
+          createMany: {
+            args: Prisma.EnseignantCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.EnseignantCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>[]
+          }
+          delete: {
+            args: Prisma.EnseignantDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>
+          }
+          update: {
+            args: Prisma.EnseignantUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>
+          }
+          deleteMany: {
+            args: Prisma.EnseignantDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.EnseignantUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.EnseignantUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>[]
+          }
+          upsert: {
+            args: Prisma.EnseignantUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EnseignantPayload>
+          }
+          aggregate: {
+            args: Prisma.EnseignantAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateEnseignant>
+          }
+          groupBy: {
+            args: Prisma.EnseignantGroupByArgs<ExtArgs>
+            result: $Utils.Optional<EnseignantGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.EnseignantCountArgs<ExtArgs>
+            result: $Utils.Optional<EnseignantCountAggregateOutputType> | number
+          }
+        }
+      }
+      Joueur: {
+        payload: Prisma.$JoueurPayload<ExtArgs>
+        fields: Prisma.JoueurFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.JoueurFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.JoueurFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>
+          }
+          findFirst: {
+            args: Prisma.JoueurFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.JoueurFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>
+          }
+          findMany: {
+            args: Prisma.JoueurFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>[]
+          }
+          create: {
+            args: Prisma.JoueurCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>
+          }
+          createMany: {
+            args: Prisma.JoueurCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.JoueurCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>[]
+          }
+          delete: {
+            args: Prisma.JoueurDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>
+          }
+          update: {
+            args: Prisma.JoueurUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>
+          }
+          deleteMany: {
+            args: Prisma.JoueurDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.JoueurUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.JoueurUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>[]
+          }
+          upsert: {
+            args: Prisma.JoueurUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JoueurPayload>
+          }
+          aggregate: {
+            args: Prisma.JoueurAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateJoueur>
+          }
+          groupBy: {
+            args: Prisma.JoueurGroupByArgs<ExtArgs>
+            result: $Utils.Optional<JoueurGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.JoueurCountArgs<ExtArgs>
+            result: $Utils.Optional<JoueurCountAggregateOutputType> | number
+          }
+        }
+      }
+      Tournoi: {
+        payload: Prisma.$TournoiPayload<ExtArgs>
+        fields: Prisma.TournoiFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TournoiFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TournoiFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>
+          }
+          findFirst: {
+            args: Prisma.TournoiFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TournoiFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>
+          }
+          findMany: {
+            args: Prisma.TournoiFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>[]
+          }
+          create: {
+            args: Prisma.TournoiCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>
+          }
+          createMany: {
+            args: Prisma.TournoiCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TournoiCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>[]
+          }
+          delete: {
+            args: Prisma.TournoiDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>
+          }
+          update: {
+            args: Prisma.TournoiUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>
+          }
+          deleteMany: {
+            args: Prisma.TournoiDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TournoiUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TournoiUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>[]
+          }
+          upsert: {
+            args: Prisma.TournoiUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TournoiPayload>
+          }
+          aggregate: {
+            args: Prisma.TournoiAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTournoi>
+          }
+          groupBy: {
+            args: Prisma.TournoiGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TournoiGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TournoiCountArgs<ExtArgs>
+            result: $Utils.Optional<TournoiCountAggregateOutputType> | number
+          }
+        }
+      }
+      Score: {
+        payload: Prisma.$ScorePayload<ExtArgs>
+        fields: Prisma.ScoreFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ScoreFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ScoreFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>
+          }
+          findFirst: {
+            args: Prisma.ScoreFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ScoreFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>
+          }
+          findMany: {
+            args: Prisma.ScoreFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>[]
+          }
+          create: {
+            args: Prisma.ScoreCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>
+          }
+          createMany: {
+            args: Prisma.ScoreCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ScoreCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>[]
+          }
+          delete: {
+            args: Prisma.ScoreDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>
+          }
+          update: {
+            args: Prisma.ScoreUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>
+          }
+          deleteMany: {
+            args: Prisma.ScoreDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ScoreUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ScoreUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>[]
+          }
+          upsert: {
+            args: Prisma.ScoreUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScorePayload>
+          }
+          aggregate: {
+            args: Prisma.ScoreAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateScore>
+          }
+          groupBy: {
+            args: Prisma.ScoreGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ScoreGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ScoreCountArgs<ExtArgs>
+            result: $Utils.Optional<ScoreCountAggregateOutputType> | number
+          }
+        }
+      }
+      Quiz: {
+        payload: Prisma.$QuizPayload<ExtArgs>
+        fields: Prisma.QuizFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.QuizFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.QuizFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>
+          }
+          findFirst: {
+            args: Prisma.QuizFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.QuizFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>
+          }
+          findMany: {
+            args: Prisma.QuizFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>[]
+          }
+          create: {
+            args: Prisma.QuizCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>
+          }
+          createMany: {
+            args: Prisma.QuizCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.QuizCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>[]
+          }
+          delete: {
+            args: Prisma.QuizDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>
+          }
+          update: {
+            args: Prisma.QuizUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>
+          }
+          deleteMany: {
+            args: Prisma.QuizDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.QuizUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.QuizUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>[]
+          }
+          upsert: {
+            args: Prisma.QuizUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuizPayload>
+          }
+          aggregate: {
+            args: Prisma.QuizAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateQuiz>
+          }
+          groupBy: {
+            args: Prisma.QuizGroupByArgs<ExtArgs>
+            result: $Utils.Optional<QuizGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.QuizCountArgs<ExtArgs>
+            result: $Utils.Optional<QuizCountAggregateOutputType> | number
+          }
+        }
+      }
+    }
+  } & {
+    other: {
+      payload: any
+      operations: {
+        $executeRaw: {
+          args: [query: TemplateStringsArray | Prisma.Sql, ...values: any[]],
+          result: any
+        }
+        $executeRawUnsafe: {
+          args: [query: string, ...values: any[]],
+          result: any
+        }
+        $queryRaw: {
+          args: [query: TemplateStringsArray | Prisma.Sql, ...values: any[]],
+          result: any
+        }
+        $queryRawUnsafe: {
+          args: [query: string, ...values: any[]],
+          result: any
+        }
+      }
+    }
+  }
+  export const defineExtension: $Extensions.ExtendsHook<"define", Prisma.TypeMapCb, $Extensions.DefaultArgs>
+  export type DefaultPrismaClient = PrismaClient
+  export type ErrorFormat = 'pretty' | 'colorless' | 'minimal'
+  export interface PrismaClientOptions {
+    /**
+     * Overwrites the datasource url from your schema.prisma file
+     */
+    datasources?: Datasources
+    /**
+     * Overwrites the datasource url from your schema.prisma file
+     */
+    datasourceUrl?: string
+    /**
+     * @default "colorless"
+     */
+    errorFormat?: ErrorFormat
+    /**
+     * @example
+     * ```
+     * // Defaults to stdout
+     * log: ['query', 'info', 'warn', 'error']
+     * 
+     * // Emit as events
+     * log: [
+     *   { emit: 'stdout', level: 'query' },
+     *   { emit: 'stdout', level: 'info' },
+     *   { emit: 'stdout', level: 'warn' }
+     *   { emit: 'stdout', level: 'error' }
+     * ]
+     * ```
+     * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/logging#the-log-option).
+     */
+    log?: (LogLevel | LogDefinition)[]
+    /**
+     * The default values for transactionOptions
+     * maxWait ?= 2000
+     * timeout ?= 5000
+     */
+    transactionOptions?: {
+      maxWait?: number
+      timeout?: number
+      isolationLevel?: Prisma.TransactionIsolationLevel
+    }
+    /**
+     * Global configuration for omitting model fields by default.
+     * 
+     * @example
+     * ```
+     * const prisma = new PrismaClient({
+     *   omit: {
+     *     user: {
+     *       password: true
+     *     }
+     *   }
+     * })
+     * ```
+     */
+    omit?: Prisma.GlobalOmitConfig
+  }
+  export type GlobalOmitConfig = {
+    question?: QuestionOmit
+    enseignant?: EnseignantOmit
+    joueur?: JoueurOmit
+    tournoi?: TournoiOmit
+    score?: ScoreOmit
+    quiz?: QuizOmit
+  }
+
+  /* Types for Logging */
+  export type LogLevel = 'info' | 'query' | 'warn' | 'error'
+  export type LogDefinition = {
+    level: LogLevel
+    emit: 'stdout' | 'event'
+  }
+
+  export type GetLogType<T extends LogLevel | LogDefinition> = T extends LogDefinition ? T['emit'] extends 'event' ? T['level'] : never : never
+  export type GetEvents<T extends any> = T extends Array<LogLevel | LogDefinition> ?
+    GetLogType<T[0]> | GetLogType<T[1]> | GetLogType<T[2]> | GetLogType<T[3]>
+    : never
+
+  export type QueryEvent = {
+    timestamp: Date
+    query: string
+    params: string
+    duration: number
+    target: string
+  }
+
+  export type LogEvent = {
+    timestamp: Date
+    message: string
+    target: string
+  }
+  /* End Types for Logging */
+
+
+  export type PrismaAction =
+    | 'findUnique'
+    | 'findUniqueOrThrow'
+    | 'findMany'
+    | 'findFirst'
+    | 'findFirstOrThrow'
+    | 'create'
+    | 'createMany'
+    | 'createManyAndReturn'
+    | 'update'
+    | 'updateMany'
+    | 'updateManyAndReturn'
+    | 'upsert'
+    | 'delete'
+    | 'deleteMany'
+    | 'executeRaw'
+    | 'queryRaw'
+    | 'aggregate'
+    | 'count'
+    | 'runCommandRaw'
+    | 'findRaw'
+    | 'groupBy'
+
+  /**
+   * These options are being passed into the middleware as "params"
+   */
+  export type MiddlewareParams = {
+    model?: ModelName
+    action: PrismaAction
+    args: any
+    dataPath: string[]
+    runInTransaction: boolean
+  }
+
+  /**
+   * The `T` type makes sure, that the `return proceed` is not forgotten in the middleware implementation
+   */
+  export type Middleware<T = any> = (
+    params: MiddlewareParams,
+    next: (params: MiddlewareParams) => $Utils.JsPromise<T>,
+  ) => $Utils.JsPromise<T>
+
+  // tested in getLogLevel.test.ts
+  export function getLogLevel(log: Array<LogLevel | LogDefinition>): LogLevel | undefined;
+
+  /**
+   * `PrismaClient` proxy available in interactive transactions.
+   */
+  export type TransactionClient = Omit<Prisma.DefaultPrismaClient, runtime.ITXClientDenyList>
+
+  export type Datasource = {
+    url?: string
+  }
+
+  /**
+   * Count Types
+   */
+
+
+  /**
+   * Count Type EnseignantCountOutputType
+   */
+
+  export type EnseignantCountOutputType = {
+    tournois: number
+    tournoisCrees: number
+    quizSauvegardes: number
+  }
+
+  export type EnseignantCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tournois?: boolean | EnseignantCountOutputTypeCountTournoisArgs
+    tournoisCrees?: boolean | EnseignantCountOutputTypeCountTournoisCreesArgs
+    quizSauvegardes?: boolean | EnseignantCountOutputTypeCountQuizSauvegardesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * EnseignantCountOutputType without action
+   */
+  export type EnseignantCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EnseignantCountOutputType
+     */
+    select?: EnseignantCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * EnseignantCountOutputType without action
+   */
+  export type EnseignantCountOutputTypeCountTournoisArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TournoiWhereInput
+  }
+
+  /**
+   * EnseignantCountOutputType without action
+   */
+  export type EnseignantCountOutputTypeCountTournoisCreesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TournoiWhereInput
+  }
+
+  /**
+   * EnseignantCountOutputType without action
+   */
+  export type EnseignantCountOutputTypeCountQuizSauvegardesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuizWhereInput
+  }
+
+
+  /**
+   * Count Type JoueurCountOutputType
+   */
+
+  export type JoueurCountOutputType = {
+    scores: number
+    tournois: number
+  }
+
+  export type JoueurCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    scores?: boolean | JoueurCountOutputTypeCountScoresArgs
+    tournois?: boolean | JoueurCountOutputTypeCountTournoisArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * JoueurCountOutputType without action
+   */
+  export type JoueurCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JoueurCountOutputType
+     */
+    select?: JoueurCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * JoueurCountOutputType without action
+   */
+  export type JoueurCountOutputTypeCountScoresArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ScoreWhereInput
+  }
+
+  /**
+   * JoueurCountOutputType without action
+   */
+  export type JoueurCountOutputTypeCountTournoisArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TournoiWhereInput
+  }
+
+
+  /**
+   * Count Type TournoiCountOutputType
+   */
+
+  export type TournoiCountOutputType = {
+    scores: number
+  }
+
+  export type TournoiCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    scores?: boolean | TournoiCountOutputTypeCountScoresArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * TournoiCountOutputType without action
+   */
+  export type TournoiCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TournoiCountOutputType
+     */
+    select?: TournoiCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * TournoiCountOutputType without action
+   */
+  export type TournoiCountOutputTypeCountScoresArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ScoreWhereInput
+  }
+
+
+  /**
+   * Models
+   */
+
+  /**
+   * Model Question
+   */
+
+  export type AggregateQuestion = {
+    _count: QuestionCountAggregateOutputType | null
+    _avg: QuestionAvgAggregateOutputType | null
+    _sum: QuestionSumAggregateOutputType | null
+    _min: QuestionMinAggregateOutputType | null
+    _max: QuestionMaxAggregateOutputType | null
+  }
+
+  export type QuestionAvgAggregateOutputType = {
+    difficulte: number | null
+    temps: number | null
+  }
+
+  export type QuestionSumAggregateOutputType = {
+    difficulte: number | null
+    temps: number | null
+  }
+
+  export type QuestionMinAggregateOutputType = {
+    uid: string | null
+    question: string | null
+    type: string | null
+    discipline: string | null
+    theme: string | null
+    difficulte: number | null
+    niveau: string | null
+    auteur: string | null
+    explication: string | null
+    temps: number | null
+    titre: string | null
+    hidden: boolean | null
+  }
+
+  export type QuestionMaxAggregateOutputType = {
+    uid: string | null
+    question: string | null
+    type: string | null
+    discipline: string | null
+    theme: string | null
+    difficulte: number | null
+    niveau: string | null
+    auteur: string | null
+    explication: string | null
+    temps: number | null
+    titre: string | null
+    hidden: boolean | null
+  }
+
+  export type QuestionCountAggregateOutputType = {
+    uid: number
+    question: number
+    reponses: number
+    type: number
+    discipline: number
+    theme: number
+    difficulte: number
+    niveau: number
+    auteur: number
+    explication: number
+    tags: number
+    temps: number
+    titre: number
+    hidden: number
+    _all: number
+  }
+
+
+  export type QuestionAvgAggregateInputType = {
+    difficulte?: true
+    temps?: true
+  }
+
+  export type QuestionSumAggregateInputType = {
+    difficulte?: true
+    temps?: true
+  }
+
+  export type QuestionMinAggregateInputType = {
+    uid?: true
+    question?: true
+    type?: true
+    discipline?: true
+    theme?: true
+    difficulte?: true
+    niveau?: true
+    auteur?: true
+    explication?: true
+    temps?: true
+    titre?: true
+    hidden?: true
+  }
+
+  export type QuestionMaxAggregateInputType = {
+    uid?: true
+    question?: true
+    type?: true
+    discipline?: true
+    theme?: true
+    difficulte?: true
+    niveau?: true
+    auteur?: true
+    explication?: true
+    temps?: true
+    titre?: true
+    hidden?: true
+  }
+
+  export type QuestionCountAggregateInputType = {
+    uid?: true
+    question?: true
+    reponses?: true
+    type?: true
+    discipline?: true
+    theme?: true
+    difficulte?: true
+    niveau?: true
+    auteur?: true
+    explication?: true
+    tags?: true
+    temps?: true
+    titre?: true
+    hidden?: true
+    _all?: true
+  }
+
+  export type QuestionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Question to aggregate.
+     */
+    where?: QuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Questions to fetch.
+     */
+    orderBy?: QuestionOrderByWithRelationInput | QuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: QuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Questions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Questions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Questions
+    **/
+    _count?: true | QuestionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: QuestionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: QuestionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: QuestionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: QuestionMaxAggregateInputType
+  }
+
+  export type GetQuestionAggregateType<T extends QuestionAggregateArgs> = {
+        [P in keyof T & keyof AggregateQuestion]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateQuestion[P]>
+      : GetScalarType<T[P], AggregateQuestion[P]>
+  }
+
+
+
+
+  export type QuestionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuestionWhereInput
+    orderBy?: QuestionOrderByWithAggregationInput | QuestionOrderByWithAggregationInput[]
+    by: QuestionScalarFieldEnum[] | QuestionScalarFieldEnum
+    having?: QuestionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: QuestionCountAggregateInputType | true
+    _avg?: QuestionAvgAggregateInputType
+    _sum?: QuestionSumAggregateInputType
+    _min?: QuestionMinAggregateInputType
+    _max?: QuestionMaxAggregateInputType
+  }
+
+  export type QuestionGroupByOutputType = {
+    uid: string
+    question: string
+    reponses: JsonValue
+    type: string
+    discipline: string
+    theme: string
+    difficulte: number | null
+    niveau: string | null
+    auteur: string | null
+    explication: string | null
+    tags: string[]
+    temps: number | null
+    titre: string | null
+    hidden: boolean | null
+    _count: QuestionCountAggregateOutputType | null
+    _avg: QuestionAvgAggregateOutputType | null
+    _sum: QuestionSumAggregateOutputType | null
+    _min: QuestionMinAggregateOutputType | null
+    _max: QuestionMaxAggregateOutputType | null
+  }
+
+  type GetQuestionGroupByPayload<T extends QuestionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<QuestionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof QuestionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], QuestionGroupByOutputType[P]>
+            : GetScalarType<T[P], QuestionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type QuestionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    uid?: boolean
+    question?: boolean
+    reponses?: boolean
+    type?: boolean
+    discipline?: boolean
+    theme?: boolean
+    difficulte?: boolean
+    niveau?: boolean
+    auteur?: boolean
+    explication?: boolean
+    tags?: boolean
+    temps?: boolean
+    titre?: boolean
+    hidden?: boolean
+  }, ExtArgs["result"]["question"]>
+
+  export type QuestionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    uid?: boolean
+    question?: boolean
+    reponses?: boolean
+    type?: boolean
+    discipline?: boolean
+    theme?: boolean
+    difficulte?: boolean
+    niveau?: boolean
+    auteur?: boolean
+    explication?: boolean
+    tags?: boolean
+    temps?: boolean
+    titre?: boolean
+    hidden?: boolean
+  }, ExtArgs["result"]["question"]>
+
+  export type QuestionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    uid?: boolean
+    question?: boolean
+    reponses?: boolean
+    type?: boolean
+    discipline?: boolean
+    theme?: boolean
+    difficulte?: boolean
+    niveau?: boolean
+    auteur?: boolean
+    explication?: boolean
+    tags?: boolean
+    temps?: boolean
+    titre?: boolean
+    hidden?: boolean
+  }, ExtArgs["result"]["question"]>
+
+  export type QuestionSelectScalar = {
+    uid?: boolean
+    question?: boolean
+    reponses?: boolean
+    type?: boolean
+    discipline?: boolean
+    theme?: boolean
+    difficulte?: boolean
+    niveau?: boolean
+    auteur?: boolean
+    explication?: boolean
+    tags?: boolean
+    temps?: boolean
+    titre?: boolean
+    hidden?: boolean
+  }
+
+  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "question" | "reponses" | "type" | "discipline" | "theme" | "difficulte" | "niveau" | "auteur" | "explication" | "tags" | "temps" | "titre" | "hidden", ExtArgs["result"]["question"]>
+
+  export type $QuestionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Question"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      uid: string
+      question: string
+      reponses: Prisma.JsonValue
+      type: string
+      discipline: string
+      theme: string
+      difficulte: number | null
+      niveau: string | null
+      auteur: string | null
+      explication: string | null
+      tags: string[]
+      temps: number | null
+      titre: string | null
+      hidden: boolean | null
+    }, ExtArgs["result"]["question"]>
+    composites: {}
+  }
+
+  type QuestionGetPayload<S extends boolean | null | undefined | QuestionDefaultArgs> = $Result.GetResult<Prisma.$QuestionPayload, S>
+
+  type QuestionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<QuestionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: QuestionCountAggregateInputType | true
+    }
+
+  export interface QuestionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Question'], meta: { name: 'Question' } }
+    /**
+     * Find zero or one Question that matches the filter.
+     * @param {QuestionFindUniqueArgs} args - Arguments to find a Question
+     * @example
+     * // Get one Question
+     * const question = await prisma.question.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends QuestionFindUniqueArgs>(args: SelectSubset<T, QuestionFindUniqueArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Question that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {QuestionFindUniqueOrThrowArgs} args - Arguments to find a Question
+     * @example
+     * // Get one Question
+     * const question = await prisma.question.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends QuestionFindUniqueOrThrowArgs>(args: SelectSubset<T, QuestionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Question that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuestionFindFirstArgs} args - Arguments to find a Question
+     * @example
+     * // Get one Question
+     * const question = await prisma.question.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends QuestionFindFirstArgs>(args?: SelectSubset<T, QuestionFindFirstArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Question that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuestionFindFirstOrThrowArgs} args - Arguments to find a Question
+     * @example
+     * // Get one Question
+     * const question = await prisma.question.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends QuestionFindFirstOrThrowArgs>(args?: SelectSubset<T, QuestionFindFirstOrThrowArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Questions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuestionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Questions
+     * const questions = await prisma.question.findMany()
+     * 
+     * // Get first 10 Questions
+     * const questions = await prisma.question.findMany({ take: 10 })
+     * 
+     * // Only select the `uid`
+     * const questionWithUidOnly = await prisma.question.findMany({ select: { uid: true } })
+     * 
+     */
+    findMany<T extends QuestionFindManyArgs>(args?: SelectSubset<T, QuestionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Question.
+     * @param {QuestionCreateArgs} args - Arguments to create a Question.
+     * @example
+     * // Create one Question
+     * const Question = await prisma.question.create({
+     *   data: {
+     *     // ... data to create a Question
+     *   }
+     * })
+     * 
+     */
+    create<T extends QuestionCreateArgs>(args: SelectSubset<T, QuestionCreateArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Questions.
+     * @param {QuestionCreateManyArgs} args - Arguments to create many Questions.
+     * @example
+     * // Create many Questions
+     * const question = await prisma.question.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends QuestionCreateManyArgs>(args?: SelectSubset<T, QuestionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Questions and returns the data saved in the database.
+     * @param {QuestionCreateManyAndReturnArgs} args - Arguments to create many Questions.
+     * @example
+     * // Create many Questions
+     * const question = await prisma.question.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Questions and only return the `uid`
+     * const questionWithUidOnly = await prisma.question.createManyAndReturn({
+     *   select: { uid: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends QuestionCreateManyAndReturnArgs>(args?: SelectSubset<T, QuestionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Question.
+     * @param {QuestionDeleteArgs} args - Arguments to delete one Question.
+     * @example
+     * // Delete one Question
+     * const Question = await prisma.question.delete({
+     *   where: {
+     *     // ... filter to delete one Question
+     *   }
+     * })
+     * 
+     */
+    delete<T extends QuestionDeleteArgs>(args: SelectSubset<T, QuestionDeleteArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Question.
+     * @param {QuestionUpdateArgs} args - Arguments to update one Question.
+     * @example
+     * // Update one Question
+     * const question = await prisma.question.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends QuestionUpdateArgs>(args: SelectSubset<T, QuestionUpdateArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Questions.
+     * @param {QuestionDeleteManyArgs} args - Arguments to filter Questions to delete.
+     * @example
+     * // Delete a few Questions
+     * const { count } = await prisma.question.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends QuestionDeleteManyArgs>(args?: SelectSubset<T, QuestionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Questions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuestionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Questions
+     * const question = await prisma.question.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends QuestionUpdateManyArgs>(args: SelectSubset<T, QuestionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Questions and returns the data updated in the database.
+     * @param {QuestionUpdateManyAndReturnArgs} args - Arguments to update many Questions.
+     * @example
+     * // Update many Questions
+     * const question = await prisma.question.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Questions and only return the `uid`
+     * const questionWithUidOnly = await prisma.question.updateManyAndReturn({
+     *   select: { uid: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends QuestionUpdateManyAndReturnArgs>(args: SelectSubset<T, QuestionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Question.
+     * @param {QuestionUpsertArgs} args - Arguments to update or create a Question.
+     * @example
+     * // Update or create a Question
+     * const question = await prisma.question.upsert({
+     *   create: {
+     *     // ... data to create a Question
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Question we want to update
+     *   }
+     * })
+     */
+    upsert<T extends QuestionUpsertArgs>(args: SelectSubset<T, QuestionUpsertArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Questions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuestionCountArgs} args - Arguments to filter Questions to count.
+     * @example
+     * // Count the number of Questions
+     * const count = await prisma.question.count({
+     *   where: {
+     *     // ... the filter for the Questions we want to count
+     *   }
+     * })
+    **/
+    count<T extends QuestionCountArgs>(
+      args?: Subset<T, QuestionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], QuestionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Question.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuestionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends QuestionAggregateArgs>(args: Subset<T, QuestionAggregateArgs>): Prisma.PrismaPromise<GetQuestionAggregateType<T>>
+
+    /**
+     * Group by Question.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuestionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends QuestionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: QuestionGroupByArgs['orderBy'] }
+        : { orderBy?: QuestionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, QuestionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQuestionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Question model
+   */
+  readonly fields: QuestionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Question.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__QuestionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Question model
+   */
+  interface QuestionFieldRefs {
+    readonly uid: FieldRef<"Question", 'String'>
+    readonly question: FieldRef<"Question", 'String'>
+    readonly reponses: FieldRef<"Question", 'Json'>
+    readonly type: FieldRef<"Question", 'String'>
+    readonly discipline: FieldRef<"Question", 'String'>
+    readonly theme: FieldRef<"Question", 'String'>
+    readonly difficulte: FieldRef<"Question", 'Int'>
+    readonly niveau: FieldRef<"Question", 'String'>
+    readonly auteur: FieldRef<"Question", 'String'>
+    readonly explication: FieldRef<"Question", 'String'>
+    readonly tags: FieldRef<"Question", 'String[]'>
+    readonly temps: FieldRef<"Question", 'Int'>
+    readonly titre: FieldRef<"Question", 'String'>
+    readonly hidden: FieldRef<"Question", 'Boolean'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Question findUnique
+   */
+  export type QuestionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * Filter, which Question to fetch.
+     */
+    where: QuestionWhereUniqueInput
+  }
+
+  /**
+   * Question findUniqueOrThrow
+   */
+  export type QuestionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * Filter, which Question to fetch.
+     */
+    where: QuestionWhereUniqueInput
+  }
+
+  /**
+   * Question findFirst
+   */
+  export type QuestionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * Filter, which Question to fetch.
+     */
+    where?: QuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Questions to fetch.
+     */
+    orderBy?: QuestionOrderByWithRelationInput | QuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Questions.
+     */
+    cursor?: QuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Questions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Questions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Questions.
+     */
+    distinct?: QuestionScalarFieldEnum | QuestionScalarFieldEnum[]
+  }
+
+  /**
+   * Question findFirstOrThrow
+   */
+  export type QuestionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * Filter, which Question to fetch.
+     */
+    where?: QuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Questions to fetch.
+     */
+    orderBy?: QuestionOrderByWithRelationInput | QuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Questions.
+     */
+    cursor?: QuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Questions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Questions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Questions.
+     */
+    distinct?: QuestionScalarFieldEnum | QuestionScalarFieldEnum[]
+  }
+
+  /**
+   * Question findMany
+   */
+  export type QuestionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * Filter, which Questions to fetch.
+     */
+    where?: QuestionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Questions to fetch.
+     */
+    orderBy?: QuestionOrderByWithRelationInput | QuestionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Questions.
+     */
+    cursor?: QuestionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Questions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Questions.
+     */
+    skip?: number
+    distinct?: QuestionScalarFieldEnum | QuestionScalarFieldEnum[]
+  }
+
+  /**
+   * Question create
+   */
+  export type QuestionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * The data needed to create a Question.
+     */
+    data: XOR<QuestionCreateInput, QuestionUncheckedCreateInput>
+  }
+
+  /**
+   * Question createMany
+   */
+  export type QuestionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Questions.
+     */
+    data: QuestionCreateManyInput | QuestionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Question createManyAndReturn
+   */
+  export type QuestionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * The data used to create many Questions.
+     */
+    data: QuestionCreateManyInput | QuestionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Question update
+   */
+  export type QuestionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * The data needed to update a Question.
+     */
+    data: XOR<QuestionUpdateInput, QuestionUncheckedUpdateInput>
+    /**
+     * Choose, which Question to update.
+     */
+    where: QuestionWhereUniqueInput
+  }
+
+  /**
+   * Question updateMany
+   */
+  export type QuestionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Questions.
+     */
+    data: XOR<QuestionUpdateManyMutationInput, QuestionUncheckedUpdateManyInput>
+    /**
+     * Filter which Questions to update
+     */
+    where?: QuestionWhereInput
+    /**
+     * Limit how many Questions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Question updateManyAndReturn
+   */
+  export type QuestionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * The data used to update Questions.
+     */
+    data: XOR<QuestionUpdateManyMutationInput, QuestionUncheckedUpdateManyInput>
+    /**
+     * Filter which Questions to update
+     */
+    where?: QuestionWhereInput
+    /**
+     * Limit how many Questions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Question upsert
+   */
+  export type QuestionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * The filter to search for the Question to update in case it exists.
+     */
+    where: QuestionWhereUniqueInput
+    /**
+     * In case the Question found by the `where` argument doesn't exist, create a new Question with this data.
+     */
+    create: XOR<QuestionCreateInput, QuestionUncheckedCreateInput>
+    /**
+     * In case the Question was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<QuestionUpdateInput, QuestionUncheckedUpdateInput>
+  }
+
+  /**
+   * Question delete
+   */
+  export type QuestionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+    /**
+     * Filter which Question to delete.
+     */
+    where: QuestionWhereUniqueInput
+  }
+
+  /**
+   * Question deleteMany
+   */
+  export type QuestionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Questions to delete
+     */
+    where?: QuestionWhereInput
+    /**
+     * Limit how many Questions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Question without action
+   */
+  export type QuestionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Question
+     */
+    select?: QuestionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Question
+     */
+    omit?: QuestionOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Enseignant
+   */
+
+  export type AggregateEnseignant = {
+    _count: EnseignantCountAggregateOutputType | null
+    _min: EnseignantMinAggregateOutputType | null
+    _max: EnseignantMaxAggregateOutputType | null
+  }
+
+  export type EnseignantMinAggregateOutputType = {
+    id: string | null
+    pseudo: string | null
+    mot_de_passe: string | null
+    email: string | null
+    created_at: Date | null
+    avatar: string | null
+    reset_token: string | null
+    reset_token_expires: Date | null
+  }
+
+  export type EnseignantMaxAggregateOutputType = {
+    id: string | null
+    pseudo: string | null
+    mot_de_passe: string | null
+    email: string | null
+    created_at: Date | null
+    avatar: string | null
+    reset_token: string | null
+    reset_token_expires: Date | null
+  }
+
+  export type EnseignantCountAggregateOutputType = {
+    id: number
+    pseudo: number
+    mot_de_passe: number
+    email: number
+    created_at: number
+    avatar: number
+    reset_token: number
+    reset_token_expires: number
+    _all: number
+  }
+
+
+  export type EnseignantMinAggregateInputType = {
+    id?: true
+    pseudo?: true
+    mot_de_passe?: true
+    email?: true
+    created_at?: true
+    avatar?: true
+    reset_token?: true
+    reset_token_expires?: true
+  }
+
+  export type EnseignantMaxAggregateInputType = {
+    id?: true
+    pseudo?: true
+    mot_de_passe?: true
+    email?: true
+    created_at?: true
+    avatar?: true
+    reset_token?: true
+    reset_token_expires?: true
+  }
+
+  export type EnseignantCountAggregateInputType = {
+    id?: true
+    pseudo?: true
+    mot_de_passe?: true
+    email?: true
+    created_at?: true
+    avatar?: true
+    reset_token?: true
+    reset_token_expires?: true
+    _all?: true
+  }
+
+  export type EnseignantAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Enseignant to aggregate.
+     */
+    where?: EnseignantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Enseignants to fetch.
+     */
+    orderBy?: EnseignantOrderByWithRelationInput | EnseignantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: EnseignantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Enseignants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Enseignants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Enseignants
+    **/
+    _count?: true | EnseignantCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: EnseignantMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: EnseignantMaxAggregateInputType
+  }
+
+  export type GetEnseignantAggregateType<T extends EnseignantAggregateArgs> = {
+        [P in keyof T & keyof AggregateEnseignant]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateEnseignant[P]>
+      : GetScalarType<T[P], AggregateEnseignant[P]>
+  }
+
+
+
+
+  export type EnseignantGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EnseignantWhereInput
+    orderBy?: EnseignantOrderByWithAggregationInput | EnseignantOrderByWithAggregationInput[]
+    by: EnseignantScalarFieldEnum[] | EnseignantScalarFieldEnum
+    having?: EnseignantScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: EnseignantCountAggregateInputType | true
+    _min?: EnseignantMinAggregateInputType
+    _max?: EnseignantMaxAggregateInputType
+  }
+
+  export type EnseignantGroupByOutputType = {
+    id: string
+    pseudo: string
+    mot_de_passe: string
+    email: string | null
+    created_at: Date
+    avatar: string | null
+    reset_token: string | null
+    reset_token_expires: Date | null
+    _count: EnseignantCountAggregateOutputType | null
+    _min: EnseignantMinAggregateOutputType | null
+    _max: EnseignantMaxAggregateOutputType | null
+  }
+
+  type GetEnseignantGroupByPayload<T extends EnseignantGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<EnseignantGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof EnseignantGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], EnseignantGroupByOutputType[P]>
+            : GetScalarType<T[P], EnseignantGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type EnseignantSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pseudo?: boolean
+    mot_de_passe?: boolean
+    email?: boolean
+    created_at?: boolean
+    avatar?: boolean
+    reset_token?: boolean
+    reset_token_expires?: boolean
+    tournois?: boolean | Enseignant$tournoisArgs<ExtArgs>
+    tournoisCrees?: boolean | Enseignant$tournoisCreesArgs<ExtArgs>
+    quizSauvegardes?: boolean | Enseignant$quizSauvegardesArgs<ExtArgs>
+    _count?: boolean | EnseignantCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["enseignant"]>
+
+  export type EnseignantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pseudo?: boolean
+    mot_de_passe?: boolean
+    email?: boolean
+    created_at?: boolean
+    avatar?: boolean
+    reset_token?: boolean
+    reset_token_expires?: boolean
+  }, ExtArgs["result"]["enseignant"]>
+
+  export type EnseignantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pseudo?: boolean
+    mot_de_passe?: boolean
+    email?: boolean
+    created_at?: boolean
+    avatar?: boolean
+    reset_token?: boolean
+    reset_token_expires?: boolean
+  }, ExtArgs["result"]["enseignant"]>
+
+  export type EnseignantSelectScalar = {
+    id?: boolean
+    pseudo?: boolean
+    mot_de_passe?: boolean
+    email?: boolean
+    created_at?: boolean
+    avatar?: boolean
+    reset_token?: boolean
+    reset_token_expires?: boolean
+  }
+
+  export type EnseignantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pseudo" | "mot_de_passe" | "email" | "created_at" | "avatar" | "reset_token" | "reset_token_expires", ExtArgs["result"]["enseignant"]>
+  export type EnseignantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tournois?: boolean | Enseignant$tournoisArgs<ExtArgs>
+    tournoisCrees?: boolean | Enseignant$tournoisCreesArgs<ExtArgs>
+    quizSauvegardes?: boolean | Enseignant$quizSauvegardesArgs<ExtArgs>
+    _count?: boolean | EnseignantCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type EnseignantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type EnseignantIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $EnseignantPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Enseignant"
+    objects: {
+      tournois: Prisma.$TournoiPayload<ExtArgs>[]
+      tournoisCrees: Prisma.$TournoiPayload<ExtArgs>[]
+      quizSauvegardes: Prisma.$QuizPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      pseudo: string
+      mot_de_passe: string
+      email: string | null
+      created_at: Date
+      avatar: string | null
+      reset_token: string | null
+      reset_token_expires: Date | null
+    }, ExtArgs["result"]["enseignant"]>
+    composites: {}
+  }
+
+  type EnseignantGetPayload<S extends boolean | null | undefined | EnseignantDefaultArgs> = $Result.GetResult<Prisma.$EnseignantPayload, S>
+
+  type EnseignantCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<EnseignantFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: EnseignantCountAggregateInputType | true
+    }
+
+  export interface EnseignantDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Enseignant'], meta: { name: 'Enseignant' } }
+    /**
+     * Find zero or one Enseignant that matches the filter.
+     * @param {EnseignantFindUniqueArgs} args - Arguments to find a Enseignant
+     * @example
+     * // Get one Enseignant
+     * const enseignant = await prisma.enseignant.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends EnseignantFindUniqueArgs>(args: SelectSubset<T, EnseignantFindUniqueArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Enseignant that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {EnseignantFindUniqueOrThrowArgs} args - Arguments to find a Enseignant
+     * @example
+     * // Get one Enseignant
+     * const enseignant = await prisma.enseignant.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends EnseignantFindUniqueOrThrowArgs>(args: SelectSubset<T, EnseignantFindUniqueOrThrowArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Enseignant that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EnseignantFindFirstArgs} args - Arguments to find a Enseignant
+     * @example
+     * // Get one Enseignant
+     * const enseignant = await prisma.enseignant.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends EnseignantFindFirstArgs>(args?: SelectSubset<T, EnseignantFindFirstArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Enseignant that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EnseignantFindFirstOrThrowArgs} args - Arguments to find a Enseignant
+     * @example
+     * // Get one Enseignant
+     * const enseignant = await prisma.enseignant.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends EnseignantFindFirstOrThrowArgs>(args?: SelectSubset<T, EnseignantFindFirstOrThrowArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Enseignants that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EnseignantFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Enseignants
+     * const enseignants = await prisma.enseignant.findMany()
+     * 
+     * // Get first 10 Enseignants
+     * const enseignants = await prisma.enseignant.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const enseignantWithIdOnly = await prisma.enseignant.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends EnseignantFindManyArgs>(args?: SelectSubset<T, EnseignantFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Enseignant.
+     * @param {EnseignantCreateArgs} args - Arguments to create a Enseignant.
+     * @example
+     * // Create one Enseignant
+     * const Enseignant = await prisma.enseignant.create({
+     *   data: {
+     *     // ... data to create a Enseignant
+     *   }
+     * })
+     * 
+     */
+    create<T extends EnseignantCreateArgs>(args: SelectSubset<T, EnseignantCreateArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Enseignants.
+     * @param {EnseignantCreateManyArgs} args - Arguments to create many Enseignants.
+     * @example
+     * // Create many Enseignants
+     * const enseignant = await prisma.enseignant.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends EnseignantCreateManyArgs>(args?: SelectSubset<T, EnseignantCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Enseignants and returns the data saved in the database.
+     * @param {EnseignantCreateManyAndReturnArgs} args - Arguments to create many Enseignants.
+     * @example
+     * // Create many Enseignants
+     * const enseignant = await prisma.enseignant.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Enseignants and only return the `id`
+     * const enseignantWithIdOnly = await prisma.enseignant.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends EnseignantCreateManyAndReturnArgs>(args?: SelectSubset<T, EnseignantCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Enseignant.
+     * @param {EnseignantDeleteArgs} args - Arguments to delete one Enseignant.
+     * @example
+     * // Delete one Enseignant
+     * const Enseignant = await prisma.enseignant.delete({
+     *   where: {
+     *     // ... filter to delete one Enseignant
+     *   }
+     * })
+     * 
+     */
+    delete<T extends EnseignantDeleteArgs>(args: SelectSubset<T, EnseignantDeleteArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Enseignant.
+     * @param {EnseignantUpdateArgs} args - Arguments to update one Enseignant.
+     * @example
+     * // Update one Enseignant
+     * const enseignant = await prisma.enseignant.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends EnseignantUpdateArgs>(args: SelectSubset<T, EnseignantUpdateArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Enseignants.
+     * @param {EnseignantDeleteManyArgs} args - Arguments to filter Enseignants to delete.
+     * @example
+     * // Delete a few Enseignants
+     * const { count } = await prisma.enseignant.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends EnseignantDeleteManyArgs>(args?: SelectSubset<T, EnseignantDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Enseignants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EnseignantUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Enseignants
+     * const enseignant = await prisma.enseignant.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends EnseignantUpdateManyArgs>(args: SelectSubset<T, EnseignantUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Enseignants and returns the data updated in the database.
+     * @param {EnseignantUpdateManyAndReturnArgs} args - Arguments to update many Enseignants.
+     * @example
+     * // Update many Enseignants
+     * const enseignant = await prisma.enseignant.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Enseignants and only return the `id`
+     * const enseignantWithIdOnly = await prisma.enseignant.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends EnseignantUpdateManyAndReturnArgs>(args: SelectSubset<T, EnseignantUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Enseignant.
+     * @param {EnseignantUpsertArgs} args - Arguments to update or create a Enseignant.
+     * @example
+     * // Update or create a Enseignant
+     * const enseignant = await prisma.enseignant.upsert({
+     *   create: {
+     *     // ... data to create a Enseignant
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Enseignant we want to update
+     *   }
+     * })
+     */
+    upsert<T extends EnseignantUpsertArgs>(args: SelectSubset<T, EnseignantUpsertArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Enseignants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EnseignantCountArgs} args - Arguments to filter Enseignants to count.
+     * @example
+     * // Count the number of Enseignants
+     * const count = await prisma.enseignant.count({
+     *   where: {
+     *     // ... the filter for the Enseignants we want to count
+     *   }
+     * })
+    **/
+    count<T extends EnseignantCountArgs>(
+      args?: Subset<T, EnseignantCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], EnseignantCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Enseignant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EnseignantAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends EnseignantAggregateArgs>(args: Subset<T, EnseignantAggregateArgs>): Prisma.PrismaPromise<GetEnseignantAggregateType<T>>
+
+    /**
+     * Group by Enseignant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EnseignantGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends EnseignantGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: EnseignantGroupByArgs['orderBy'] }
+        : { orderBy?: EnseignantGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, EnseignantGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetEnseignantGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Enseignant model
+   */
+  readonly fields: EnseignantFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Enseignant.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__EnseignantClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    tournois<T extends Enseignant$tournoisArgs<ExtArgs> = {}>(args?: Subset<T, Enseignant$tournoisArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    tournoisCrees<T extends Enseignant$tournoisCreesArgs<ExtArgs> = {}>(args?: Subset<T, Enseignant$tournoisCreesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    quizSauvegardes<T extends Enseignant$quizSauvegardesArgs<ExtArgs> = {}>(args?: Subset<T, Enseignant$quizSauvegardesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Enseignant model
+   */
+  interface EnseignantFieldRefs {
+    readonly id: FieldRef<"Enseignant", 'String'>
+    readonly pseudo: FieldRef<"Enseignant", 'String'>
+    readonly mot_de_passe: FieldRef<"Enseignant", 'String'>
+    readonly email: FieldRef<"Enseignant", 'String'>
+    readonly created_at: FieldRef<"Enseignant", 'DateTime'>
+    readonly avatar: FieldRef<"Enseignant", 'String'>
+    readonly reset_token: FieldRef<"Enseignant", 'String'>
+    readonly reset_token_expires: FieldRef<"Enseignant", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Enseignant findUnique
+   */
+  export type EnseignantFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * Filter, which Enseignant to fetch.
+     */
+    where: EnseignantWhereUniqueInput
+  }
+
+  /**
+   * Enseignant findUniqueOrThrow
+   */
+  export type EnseignantFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * Filter, which Enseignant to fetch.
+     */
+    where: EnseignantWhereUniqueInput
+  }
+
+  /**
+   * Enseignant findFirst
+   */
+  export type EnseignantFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * Filter, which Enseignant to fetch.
+     */
+    where?: EnseignantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Enseignants to fetch.
+     */
+    orderBy?: EnseignantOrderByWithRelationInput | EnseignantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Enseignants.
+     */
+    cursor?: EnseignantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Enseignants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Enseignants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Enseignants.
+     */
+    distinct?: EnseignantScalarFieldEnum | EnseignantScalarFieldEnum[]
+  }
+
+  /**
+   * Enseignant findFirstOrThrow
+   */
+  export type EnseignantFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * Filter, which Enseignant to fetch.
+     */
+    where?: EnseignantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Enseignants to fetch.
+     */
+    orderBy?: EnseignantOrderByWithRelationInput | EnseignantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Enseignants.
+     */
+    cursor?: EnseignantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Enseignants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Enseignants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Enseignants.
+     */
+    distinct?: EnseignantScalarFieldEnum | EnseignantScalarFieldEnum[]
+  }
+
+  /**
+   * Enseignant findMany
+   */
+  export type EnseignantFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * Filter, which Enseignants to fetch.
+     */
+    where?: EnseignantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Enseignants to fetch.
+     */
+    orderBy?: EnseignantOrderByWithRelationInput | EnseignantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Enseignants.
+     */
+    cursor?: EnseignantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Enseignants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Enseignants.
+     */
+    skip?: number
+    distinct?: EnseignantScalarFieldEnum | EnseignantScalarFieldEnum[]
+  }
+
+  /**
+   * Enseignant create
+   */
+  export type EnseignantCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Enseignant.
+     */
+    data: XOR<EnseignantCreateInput, EnseignantUncheckedCreateInput>
+  }
+
+  /**
+   * Enseignant createMany
+   */
+  export type EnseignantCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Enseignants.
+     */
+    data: EnseignantCreateManyInput | EnseignantCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Enseignant createManyAndReturn
+   */
+  export type EnseignantCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * The data used to create many Enseignants.
+     */
+    data: EnseignantCreateManyInput | EnseignantCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Enseignant update
+   */
+  export type EnseignantUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Enseignant.
+     */
+    data: XOR<EnseignantUpdateInput, EnseignantUncheckedUpdateInput>
+    /**
+     * Choose, which Enseignant to update.
+     */
+    where: EnseignantWhereUniqueInput
+  }
+
+  /**
+   * Enseignant updateMany
+   */
+  export type EnseignantUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Enseignants.
+     */
+    data: XOR<EnseignantUpdateManyMutationInput, EnseignantUncheckedUpdateManyInput>
+    /**
+     * Filter which Enseignants to update
+     */
+    where?: EnseignantWhereInput
+    /**
+     * Limit how many Enseignants to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Enseignant updateManyAndReturn
+   */
+  export type EnseignantUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * The data used to update Enseignants.
+     */
+    data: XOR<EnseignantUpdateManyMutationInput, EnseignantUncheckedUpdateManyInput>
+    /**
+     * Filter which Enseignants to update
+     */
+    where?: EnseignantWhereInput
+    /**
+     * Limit how many Enseignants to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Enseignant upsert
+   */
+  export type EnseignantUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Enseignant to update in case it exists.
+     */
+    where: EnseignantWhereUniqueInput
+    /**
+     * In case the Enseignant found by the `where` argument doesn't exist, create a new Enseignant with this data.
+     */
+    create: XOR<EnseignantCreateInput, EnseignantUncheckedCreateInput>
+    /**
+     * In case the Enseignant was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<EnseignantUpdateInput, EnseignantUncheckedUpdateInput>
+  }
+
+  /**
+   * Enseignant delete
+   */
+  export type EnseignantDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    /**
+     * Filter which Enseignant to delete.
+     */
+    where: EnseignantWhereUniqueInput
+  }
+
+  /**
+   * Enseignant deleteMany
+   */
+  export type EnseignantDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Enseignants to delete
+     */
+    where?: EnseignantWhereInput
+    /**
+     * Limit how many Enseignants to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Enseignant.tournois
+   */
+  export type Enseignant$tournoisArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    where?: TournoiWhereInput
+    orderBy?: TournoiOrderByWithRelationInput | TournoiOrderByWithRelationInput[]
+    cursor?: TournoiWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TournoiScalarFieldEnum | TournoiScalarFieldEnum[]
+  }
+
+  /**
+   * Enseignant.tournoisCrees
+   */
+  export type Enseignant$tournoisCreesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    where?: TournoiWhereInput
+    orderBy?: TournoiOrderByWithRelationInput | TournoiOrderByWithRelationInput[]
+    cursor?: TournoiWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TournoiScalarFieldEnum | TournoiScalarFieldEnum[]
+  }
+
+  /**
+   * Enseignant.quizSauvegardes
+   */
+  export type Enseignant$quizSauvegardesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    where?: QuizWhereInput
+    orderBy?: QuizOrderByWithRelationInput | QuizOrderByWithRelationInput[]
+    cursor?: QuizWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: QuizScalarFieldEnum | QuizScalarFieldEnum[]
+  }
+
+  /**
+   * Enseignant without action
+   */
+  export type EnseignantDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Joueur
+   */
+
+  export type AggregateJoueur = {
+    _count: JoueurCountAggregateOutputType | null
+    _min: JoueurMinAggregateOutputType | null
+    _max: JoueurMaxAggregateOutputType | null
+  }
+
+  export type JoueurMinAggregateOutputType = {
+    id: string | null
+    pseudo: string | null
+    cookie_id: string | null
+    created_at: Date | null
+    avatar: string | null
+  }
+
+  export type JoueurMaxAggregateOutputType = {
+    id: string | null
+    pseudo: string | null
+    cookie_id: string | null
+    created_at: Date | null
+    avatar: string | null
+  }
+
+  export type JoueurCountAggregateOutputType = {
+    id: number
+    pseudo: number
+    cookie_id: number
+    created_at: number
+    avatar: number
+    _all: number
+  }
+
+
+  export type JoueurMinAggregateInputType = {
+    id?: true
+    pseudo?: true
+    cookie_id?: true
+    created_at?: true
+    avatar?: true
+  }
+
+  export type JoueurMaxAggregateInputType = {
+    id?: true
+    pseudo?: true
+    cookie_id?: true
+    created_at?: true
+    avatar?: true
+  }
+
+  export type JoueurCountAggregateInputType = {
+    id?: true
+    pseudo?: true
+    cookie_id?: true
+    created_at?: true
+    avatar?: true
+    _all?: true
+  }
+
+  export type JoueurAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Joueur to aggregate.
+     */
+    where?: JoueurWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Joueurs to fetch.
+     */
+    orderBy?: JoueurOrderByWithRelationInput | JoueurOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: JoueurWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Joueurs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Joueurs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Joueurs
+    **/
+    _count?: true | JoueurCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: JoueurMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: JoueurMaxAggregateInputType
+  }
+
+  export type GetJoueurAggregateType<T extends JoueurAggregateArgs> = {
+        [P in keyof T & keyof AggregateJoueur]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateJoueur[P]>
+      : GetScalarType<T[P], AggregateJoueur[P]>
+  }
+
+
+
+
+  export type JoueurGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: JoueurWhereInput
+    orderBy?: JoueurOrderByWithAggregationInput | JoueurOrderByWithAggregationInput[]
+    by: JoueurScalarFieldEnum[] | JoueurScalarFieldEnum
+    having?: JoueurScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: JoueurCountAggregateInputType | true
+    _min?: JoueurMinAggregateInputType
+    _max?: JoueurMaxAggregateInputType
+  }
+
+  export type JoueurGroupByOutputType = {
+    id: string
+    pseudo: string
+    cookie_id: string
+    created_at: Date
+    avatar: string | null
+    _count: JoueurCountAggregateOutputType | null
+    _min: JoueurMinAggregateOutputType | null
+    _max: JoueurMaxAggregateOutputType | null
+  }
+
+  type GetJoueurGroupByPayload<T extends JoueurGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<JoueurGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof JoueurGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], JoueurGroupByOutputType[P]>
+            : GetScalarType<T[P], JoueurGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type JoueurSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pseudo?: boolean
+    cookie_id?: boolean
+    created_at?: boolean
+    avatar?: boolean
+    scores?: boolean | Joueur$scoresArgs<ExtArgs>
+    tournois?: boolean | Joueur$tournoisArgs<ExtArgs>
+    _count?: boolean | JoueurCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["joueur"]>
+
+  export type JoueurSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pseudo?: boolean
+    cookie_id?: boolean
+    created_at?: boolean
+    avatar?: boolean
+  }, ExtArgs["result"]["joueur"]>
+
+  export type JoueurSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pseudo?: boolean
+    cookie_id?: boolean
+    created_at?: boolean
+    avatar?: boolean
+  }, ExtArgs["result"]["joueur"]>
+
+  export type JoueurSelectScalar = {
+    id?: boolean
+    pseudo?: boolean
+    cookie_id?: boolean
+    created_at?: boolean
+    avatar?: boolean
+  }
+
+  export type JoueurOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pseudo" | "cookie_id" | "created_at" | "avatar", ExtArgs["result"]["joueur"]>
+  export type JoueurInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    scores?: boolean | Joueur$scoresArgs<ExtArgs>
+    tournois?: boolean | Joueur$tournoisArgs<ExtArgs>
+    _count?: boolean | JoueurCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type JoueurIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type JoueurIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $JoueurPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Joueur"
+    objects: {
+      scores: Prisma.$ScorePayload<ExtArgs>[]
+      tournois: Prisma.$TournoiPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      pseudo: string
+      cookie_id: string
+      created_at: Date
+      avatar: string | null
+    }, ExtArgs["result"]["joueur"]>
+    composites: {}
+  }
+
+  type JoueurGetPayload<S extends boolean | null | undefined | JoueurDefaultArgs> = $Result.GetResult<Prisma.$JoueurPayload, S>
+
+  type JoueurCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<JoueurFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: JoueurCountAggregateInputType | true
+    }
+
+  export interface JoueurDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Joueur'], meta: { name: 'Joueur' } }
+    /**
+     * Find zero or one Joueur that matches the filter.
+     * @param {JoueurFindUniqueArgs} args - Arguments to find a Joueur
+     * @example
+     * // Get one Joueur
+     * const joueur = await prisma.joueur.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends JoueurFindUniqueArgs>(args: SelectSubset<T, JoueurFindUniqueArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Joueur that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {JoueurFindUniqueOrThrowArgs} args - Arguments to find a Joueur
+     * @example
+     * // Get one Joueur
+     * const joueur = await prisma.joueur.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends JoueurFindUniqueOrThrowArgs>(args: SelectSubset<T, JoueurFindUniqueOrThrowArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Joueur that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JoueurFindFirstArgs} args - Arguments to find a Joueur
+     * @example
+     * // Get one Joueur
+     * const joueur = await prisma.joueur.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends JoueurFindFirstArgs>(args?: SelectSubset<T, JoueurFindFirstArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Joueur that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JoueurFindFirstOrThrowArgs} args - Arguments to find a Joueur
+     * @example
+     * // Get one Joueur
+     * const joueur = await prisma.joueur.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends JoueurFindFirstOrThrowArgs>(args?: SelectSubset<T, JoueurFindFirstOrThrowArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Joueurs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JoueurFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Joueurs
+     * const joueurs = await prisma.joueur.findMany()
+     * 
+     * // Get first 10 Joueurs
+     * const joueurs = await prisma.joueur.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const joueurWithIdOnly = await prisma.joueur.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends JoueurFindManyArgs>(args?: SelectSubset<T, JoueurFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Joueur.
+     * @param {JoueurCreateArgs} args - Arguments to create a Joueur.
+     * @example
+     * // Create one Joueur
+     * const Joueur = await prisma.joueur.create({
+     *   data: {
+     *     // ... data to create a Joueur
+     *   }
+     * })
+     * 
+     */
+    create<T extends JoueurCreateArgs>(args: SelectSubset<T, JoueurCreateArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Joueurs.
+     * @param {JoueurCreateManyArgs} args - Arguments to create many Joueurs.
+     * @example
+     * // Create many Joueurs
+     * const joueur = await prisma.joueur.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends JoueurCreateManyArgs>(args?: SelectSubset<T, JoueurCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Joueurs and returns the data saved in the database.
+     * @param {JoueurCreateManyAndReturnArgs} args - Arguments to create many Joueurs.
+     * @example
+     * // Create many Joueurs
+     * const joueur = await prisma.joueur.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Joueurs and only return the `id`
+     * const joueurWithIdOnly = await prisma.joueur.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends JoueurCreateManyAndReturnArgs>(args?: SelectSubset<T, JoueurCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Joueur.
+     * @param {JoueurDeleteArgs} args - Arguments to delete one Joueur.
+     * @example
+     * // Delete one Joueur
+     * const Joueur = await prisma.joueur.delete({
+     *   where: {
+     *     // ... filter to delete one Joueur
+     *   }
+     * })
+     * 
+     */
+    delete<T extends JoueurDeleteArgs>(args: SelectSubset<T, JoueurDeleteArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Joueur.
+     * @param {JoueurUpdateArgs} args - Arguments to update one Joueur.
+     * @example
+     * // Update one Joueur
+     * const joueur = await prisma.joueur.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends JoueurUpdateArgs>(args: SelectSubset<T, JoueurUpdateArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Joueurs.
+     * @param {JoueurDeleteManyArgs} args - Arguments to filter Joueurs to delete.
+     * @example
+     * // Delete a few Joueurs
+     * const { count } = await prisma.joueur.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends JoueurDeleteManyArgs>(args?: SelectSubset<T, JoueurDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Joueurs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JoueurUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Joueurs
+     * const joueur = await prisma.joueur.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends JoueurUpdateManyArgs>(args: SelectSubset<T, JoueurUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Joueurs and returns the data updated in the database.
+     * @param {JoueurUpdateManyAndReturnArgs} args - Arguments to update many Joueurs.
+     * @example
+     * // Update many Joueurs
+     * const joueur = await prisma.joueur.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Joueurs and only return the `id`
+     * const joueurWithIdOnly = await prisma.joueur.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends JoueurUpdateManyAndReturnArgs>(args: SelectSubset<T, JoueurUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Joueur.
+     * @param {JoueurUpsertArgs} args - Arguments to update or create a Joueur.
+     * @example
+     * // Update or create a Joueur
+     * const joueur = await prisma.joueur.upsert({
+     *   create: {
+     *     // ... data to create a Joueur
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Joueur we want to update
+     *   }
+     * })
+     */
+    upsert<T extends JoueurUpsertArgs>(args: SelectSubset<T, JoueurUpsertArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Joueurs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JoueurCountArgs} args - Arguments to filter Joueurs to count.
+     * @example
+     * // Count the number of Joueurs
+     * const count = await prisma.joueur.count({
+     *   where: {
+     *     // ... the filter for the Joueurs we want to count
+     *   }
+     * })
+    **/
+    count<T extends JoueurCountArgs>(
+      args?: Subset<T, JoueurCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], JoueurCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Joueur.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JoueurAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends JoueurAggregateArgs>(args: Subset<T, JoueurAggregateArgs>): Prisma.PrismaPromise<GetJoueurAggregateType<T>>
+
+    /**
+     * Group by Joueur.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JoueurGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends JoueurGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: JoueurGroupByArgs['orderBy'] }
+        : { orderBy?: JoueurGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, JoueurGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetJoueurGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Joueur model
+   */
+  readonly fields: JoueurFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Joueur.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__JoueurClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    scores<T extends Joueur$scoresArgs<ExtArgs> = {}>(args?: Subset<T, Joueur$scoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    tournois<T extends Joueur$tournoisArgs<ExtArgs> = {}>(args?: Subset<T, Joueur$tournoisArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Joueur model
+   */
+  interface JoueurFieldRefs {
+    readonly id: FieldRef<"Joueur", 'String'>
+    readonly pseudo: FieldRef<"Joueur", 'String'>
+    readonly cookie_id: FieldRef<"Joueur", 'String'>
+    readonly created_at: FieldRef<"Joueur", 'DateTime'>
+    readonly avatar: FieldRef<"Joueur", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Joueur findUnique
+   */
+  export type JoueurFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * Filter, which Joueur to fetch.
+     */
+    where: JoueurWhereUniqueInput
+  }
+
+  /**
+   * Joueur findUniqueOrThrow
+   */
+  export type JoueurFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * Filter, which Joueur to fetch.
+     */
+    where: JoueurWhereUniqueInput
+  }
+
+  /**
+   * Joueur findFirst
+   */
+  export type JoueurFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * Filter, which Joueur to fetch.
+     */
+    where?: JoueurWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Joueurs to fetch.
+     */
+    orderBy?: JoueurOrderByWithRelationInput | JoueurOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Joueurs.
+     */
+    cursor?: JoueurWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Joueurs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Joueurs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Joueurs.
+     */
+    distinct?: JoueurScalarFieldEnum | JoueurScalarFieldEnum[]
+  }
+
+  /**
+   * Joueur findFirstOrThrow
+   */
+  export type JoueurFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * Filter, which Joueur to fetch.
+     */
+    where?: JoueurWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Joueurs to fetch.
+     */
+    orderBy?: JoueurOrderByWithRelationInput | JoueurOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Joueurs.
+     */
+    cursor?: JoueurWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Joueurs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Joueurs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Joueurs.
+     */
+    distinct?: JoueurScalarFieldEnum | JoueurScalarFieldEnum[]
+  }
+
+  /**
+   * Joueur findMany
+   */
+  export type JoueurFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * Filter, which Joueurs to fetch.
+     */
+    where?: JoueurWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Joueurs to fetch.
+     */
+    orderBy?: JoueurOrderByWithRelationInput | JoueurOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Joueurs.
+     */
+    cursor?: JoueurWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Joueurs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Joueurs.
+     */
+    skip?: number
+    distinct?: JoueurScalarFieldEnum | JoueurScalarFieldEnum[]
+  }
+
+  /**
+   * Joueur create
+   */
+  export type JoueurCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Joueur.
+     */
+    data: XOR<JoueurCreateInput, JoueurUncheckedCreateInput>
+  }
+
+  /**
+   * Joueur createMany
+   */
+  export type JoueurCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Joueurs.
+     */
+    data: JoueurCreateManyInput | JoueurCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Joueur createManyAndReturn
+   */
+  export type JoueurCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * The data used to create many Joueurs.
+     */
+    data: JoueurCreateManyInput | JoueurCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Joueur update
+   */
+  export type JoueurUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Joueur.
+     */
+    data: XOR<JoueurUpdateInput, JoueurUncheckedUpdateInput>
+    /**
+     * Choose, which Joueur to update.
+     */
+    where: JoueurWhereUniqueInput
+  }
+
+  /**
+   * Joueur updateMany
+   */
+  export type JoueurUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Joueurs.
+     */
+    data: XOR<JoueurUpdateManyMutationInput, JoueurUncheckedUpdateManyInput>
+    /**
+     * Filter which Joueurs to update
+     */
+    where?: JoueurWhereInput
+    /**
+     * Limit how many Joueurs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Joueur updateManyAndReturn
+   */
+  export type JoueurUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * The data used to update Joueurs.
+     */
+    data: XOR<JoueurUpdateManyMutationInput, JoueurUncheckedUpdateManyInput>
+    /**
+     * Filter which Joueurs to update
+     */
+    where?: JoueurWhereInput
+    /**
+     * Limit how many Joueurs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Joueur upsert
+   */
+  export type JoueurUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Joueur to update in case it exists.
+     */
+    where: JoueurWhereUniqueInput
+    /**
+     * In case the Joueur found by the `where` argument doesn't exist, create a new Joueur with this data.
+     */
+    create: XOR<JoueurCreateInput, JoueurUncheckedCreateInput>
+    /**
+     * In case the Joueur was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<JoueurUpdateInput, JoueurUncheckedUpdateInput>
+  }
+
+  /**
+   * Joueur delete
+   */
+  export type JoueurDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    /**
+     * Filter which Joueur to delete.
+     */
+    where: JoueurWhereUniqueInput
+  }
+
+  /**
+   * Joueur deleteMany
+   */
+  export type JoueurDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Joueurs to delete
+     */
+    where?: JoueurWhereInput
+    /**
+     * Limit how many Joueurs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Joueur.scores
+   */
+  export type Joueur$scoresArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    where?: ScoreWhereInput
+    orderBy?: ScoreOrderByWithRelationInput | ScoreOrderByWithRelationInput[]
+    cursor?: ScoreWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ScoreScalarFieldEnum | ScoreScalarFieldEnum[]
+  }
+
+  /**
+   * Joueur.tournois
+   */
+  export type Joueur$tournoisArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    where?: TournoiWhereInput
+    orderBy?: TournoiOrderByWithRelationInput | TournoiOrderByWithRelationInput[]
+    cursor?: TournoiWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TournoiScalarFieldEnum | TournoiScalarFieldEnum[]
+  }
+
+  /**
+   * Joueur without action
+   */
+  export type JoueurDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Tournoi
+   */
+
+  export type AggregateTournoi = {
+    _count: TournoiCountAggregateOutputType | null
+    _min: TournoiMinAggregateOutputType | null
+    _max: TournoiMaxAggregateOutputType | null
+  }
+
+  export type TournoiMinAggregateOutputType = {
+    id: string | null
+    nom: string | null
+    date_creation: Date | null
+    date_debut: Date | null
+    date_fin: Date | null
+    statut: string | null
+    enseignant_id: string | null
+    type: string | null
+    niveau: string | null
+    categorie: string | null
+    cree_par_joueur_id: string | null
+    cree_par_enseignant_id: string | null
+    questions_generées: boolean | null
+    code: string | null
+  }
+
+  export type TournoiMaxAggregateOutputType = {
+    id: string | null
+    nom: string | null
+    date_creation: Date | null
+    date_debut: Date | null
+    date_fin: Date | null
+    statut: string | null
+    enseignant_id: string | null
+    type: string | null
+    niveau: string | null
+    categorie: string | null
+    cree_par_joueur_id: string | null
+    cree_par_enseignant_id: string | null
+    questions_generées: boolean | null
+    code: string | null
+  }
+
+  export type TournoiCountAggregateOutputType = {
+    id: number
+    nom: number
+    date_creation: number
+    date_debut: number
+    date_fin: number
+    statut: number
+    enseignant_id: number
+    questions_ids: number
+    type: number
+    niveau: number
+    categorie: number
+    themes: number
+    cree_par_joueur_id: number
+    cree_par_enseignant_id: number
+    questions_generées: number
+    code: number
+    leaderboard: number
+    _all: number
+  }
+
+
+  export type TournoiMinAggregateInputType = {
+    id?: true
+    nom?: true
+    date_creation?: true
+    date_debut?: true
+    date_fin?: true
+    statut?: true
+    enseignant_id?: true
+    type?: true
+    niveau?: true
+    categorie?: true
+    cree_par_joueur_id?: true
+    cree_par_enseignant_id?: true
+    questions_generées?: true
+    code?: true
+  }
+
+  export type TournoiMaxAggregateInputType = {
+    id?: true
+    nom?: true
+    date_creation?: true
+    date_debut?: true
+    date_fin?: true
+    statut?: true
+    enseignant_id?: true
+    type?: true
+    niveau?: true
+    categorie?: true
+    cree_par_joueur_id?: true
+    cree_par_enseignant_id?: true
+    questions_generées?: true
+    code?: true
+  }
+
+  export type TournoiCountAggregateInputType = {
+    id?: true
+    nom?: true
+    date_creation?: true
+    date_debut?: true
+    date_fin?: true
+    statut?: true
+    enseignant_id?: true
+    questions_ids?: true
+    type?: true
+    niveau?: true
+    categorie?: true
+    themes?: true
+    cree_par_joueur_id?: true
+    cree_par_enseignant_id?: true
+    questions_generées?: true
+    code?: true
+    leaderboard?: true
+    _all?: true
+  }
+
+  export type TournoiAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Tournoi to aggregate.
+     */
+    where?: TournoiWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Tournois to fetch.
+     */
+    orderBy?: TournoiOrderByWithRelationInput | TournoiOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TournoiWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Tournois from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Tournois.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Tournois
+    **/
+    _count?: true | TournoiCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TournoiMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TournoiMaxAggregateInputType
+  }
+
+  export type GetTournoiAggregateType<T extends TournoiAggregateArgs> = {
+        [P in keyof T & keyof AggregateTournoi]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTournoi[P]>
+      : GetScalarType<T[P], AggregateTournoi[P]>
+  }
+
+
+
+
+  export type TournoiGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TournoiWhereInput
+    orderBy?: TournoiOrderByWithAggregationInput | TournoiOrderByWithAggregationInput[]
+    by: TournoiScalarFieldEnum[] | TournoiScalarFieldEnum
+    having?: TournoiScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TournoiCountAggregateInputType | true
+    _min?: TournoiMinAggregateInputType
+    _max?: TournoiMaxAggregateInputType
+  }
+
+  export type TournoiGroupByOutputType = {
+    id: string
+    nom: string
+    date_creation: Date
+    date_debut: Date | null
+    date_fin: Date | null
+    statut: string
+    enseignant_id: string | null
+    questions_ids: string[]
+    type: string
+    niveau: string | null
+    categorie: string | null
+    themes: string[]
+    cree_par_joueur_id: string | null
+    cree_par_enseignant_id: string | null
+    questions_generées: boolean
+    code: string | null
+    leaderboard: JsonValue | null
+    _count: TournoiCountAggregateOutputType | null
+    _min: TournoiMinAggregateOutputType | null
+    _max: TournoiMaxAggregateOutputType | null
+  }
+
+  type GetTournoiGroupByPayload<T extends TournoiGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TournoiGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TournoiGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TournoiGroupByOutputType[P]>
+            : GetScalarType<T[P], TournoiGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TournoiSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nom?: boolean
+    date_creation?: boolean
+    date_debut?: boolean
+    date_fin?: boolean
+    statut?: boolean
+    enseignant_id?: boolean
+    questions_ids?: boolean
+    type?: boolean
+    niveau?: boolean
+    categorie?: boolean
+    themes?: boolean
+    cree_par_joueur_id?: boolean
+    cree_par_enseignant_id?: boolean
+    questions_generées?: boolean
+    code?: boolean
+    leaderboard?: boolean
+    enseignant?: boolean | Tournoi$enseignantArgs<ExtArgs>
+    createur_joueur?: boolean | Tournoi$createur_joueurArgs<ExtArgs>
+    createur_enseignant?: boolean | Tournoi$createur_enseignantArgs<ExtArgs>
+    scores?: boolean | Tournoi$scoresArgs<ExtArgs>
+    _count?: boolean | TournoiCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["tournoi"]>
+
+  export type TournoiSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nom?: boolean
+    date_creation?: boolean
+    date_debut?: boolean
+    date_fin?: boolean
+    statut?: boolean
+    enseignant_id?: boolean
+    questions_ids?: boolean
+    type?: boolean
+    niveau?: boolean
+    categorie?: boolean
+    themes?: boolean
+    cree_par_joueur_id?: boolean
+    cree_par_enseignant_id?: boolean
+    questions_generées?: boolean
+    code?: boolean
+    leaderboard?: boolean
+    enseignant?: boolean | Tournoi$enseignantArgs<ExtArgs>
+    createur_joueur?: boolean | Tournoi$createur_joueurArgs<ExtArgs>
+    createur_enseignant?: boolean | Tournoi$createur_enseignantArgs<ExtArgs>
+  }, ExtArgs["result"]["tournoi"]>
+
+  export type TournoiSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nom?: boolean
+    date_creation?: boolean
+    date_debut?: boolean
+    date_fin?: boolean
+    statut?: boolean
+    enseignant_id?: boolean
+    questions_ids?: boolean
+    type?: boolean
+    niveau?: boolean
+    categorie?: boolean
+    themes?: boolean
+    cree_par_joueur_id?: boolean
+    cree_par_enseignant_id?: boolean
+    questions_generées?: boolean
+    code?: boolean
+    leaderboard?: boolean
+    enseignant?: boolean | Tournoi$enseignantArgs<ExtArgs>
+    createur_joueur?: boolean | Tournoi$createur_joueurArgs<ExtArgs>
+    createur_enseignant?: boolean | Tournoi$createur_enseignantArgs<ExtArgs>
+  }, ExtArgs["result"]["tournoi"]>
+
+  export type TournoiSelectScalar = {
+    id?: boolean
+    nom?: boolean
+    date_creation?: boolean
+    date_debut?: boolean
+    date_fin?: boolean
+    statut?: boolean
+    enseignant_id?: boolean
+    questions_ids?: boolean
+    type?: boolean
+    niveau?: boolean
+    categorie?: boolean
+    themes?: boolean
+    cree_par_joueur_id?: boolean
+    cree_par_enseignant_id?: boolean
+    questions_generées?: boolean
+    code?: boolean
+    leaderboard?: boolean
+  }
+
+  export type TournoiOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nom" | "date_creation" | "date_debut" | "date_fin" | "statut" | "enseignant_id" | "questions_ids" | "type" | "niveau" | "categorie" | "themes" | "cree_par_joueur_id" | "cree_par_enseignant_id" | "questions_generées" | "code" | "leaderboard", ExtArgs["result"]["tournoi"]>
+  export type TournoiInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    enseignant?: boolean | Tournoi$enseignantArgs<ExtArgs>
+    createur_joueur?: boolean | Tournoi$createur_joueurArgs<ExtArgs>
+    createur_enseignant?: boolean | Tournoi$createur_enseignantArgs<ExtArgs>
+    scores?: boolean | Tournoi$scoresArgs<ExtArgs>
+    _count?: boolean | TournoiCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type TournoiIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    enseignant?: boolean | Tournoi$enseignantArgs<ExtArgs>
+    createur_joueur?: boolean | Tournoi$createur_joueurArgs<ExtArgs>
+    createur_enseignant?: boolean | Tournoi$createur_enseignantArgs<ExtArgs>
+  }
+  export type TournoiIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    enseignant?: boolean | Tournoi$enseignantArgs<ExtArgs>
+    createur_joueur?: boolean | Tournoi$createur_joueurArgs<ExtArgs>
+    createur_enseignant?: boolean | Tournoi$createur_enseignantArgs<ExtArgs>
+  }
+
+  export type $TournoiPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Tournoi"
+    objects: {
+      enseignant: Prisma.$EnseignantPayload<ExtArgs> | null
+      createur_joueur: Prisma.$JoueurPayload<ExtArgs> | null
+      createur_enseignant: Prisma.$EnseignantPayload<ExtArgs> | null
+      scores: Prisma.$ScorePayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      nom: string
+      date_creation: Date
+      date_debut: Date | null
+      date_fin: Date | null
+      statut: string
+      enseignant_id: string | null
+      questions_ids: string[]
+      type: string
+      niveau: string | null
+      categorie: string | null
+      themes: string[]
+      cree_par_joueur_id: string | null
+      cree_par_enseignant_id: string | null
+      questions_generées: boolean
+      code: string | null
+      leaderboard: Prisma.JsonValue | null
+    }, ExtArgs["result"]["tournoi"]>
+    composites: {}
+  }
+
+  type TournoiGetPayload<S extends boolean | null | undefined | TournoiDefaultArgs> = $Result.GetResult<Prisma.$TournoiPayload, S>
+
+  type TournoiCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TournoiFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TournoiCountAggregateInputType | true
+    }
+
+  export interface TournoiDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Tournoi'], meta: { name: 'Tournoi' } }
+    /**
+     * Find zero or one Tournoi that matches the filter.
+     * @param {TournoiFindUniqueArgs} args - Arguments to find a Tournoi
+     * @example
+     * // Get one Tournoi
+     * const tournoi = await prisma.tournoi.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TournoiFindUniqueArgs>(args: SelectSubset<T, TournoiFindUniqueArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Tournoi that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TournoiFindUniqueOrThrowArgs} args - Arguments to find a Tournoi
+     * @example
+     * // Get one Tournoi
+     * const tournoi = await prisma.tournoi.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TournoiFindUniqueOrThrowArgs>(args: SelectSubset<T, TournoiFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Tournoi that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournoiFindFirstArgs} args - Arguments to find a Tournoi
+     * @example
+     * // Get one Tournoi
+     * const tournoi = await prisma.tournoi.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TournoiFindFirstArgs>(args?: SelectSubset<T, TournoiFindFirstArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Tournoi that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournoiFindFirstOrThrowArgs} args - Arguments to find a Tournoi
+     * @example
+     * // Get one Tournoi
+     * const tournoi = await prisma.tournoi.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TournoiFindFirstOrThrowArgs>(args?: SelectSubset<T, TournoiFindFirstOrThrowArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Tournois that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournoiFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Tournois
+     * const tournois = await prisma.tournoi.findMany()
+     * 
+     * // Get first 10 Tournois
+     * const tournois = await prisma.tournoi.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const tournoiWithIdOnly = await prisma.tournoi.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TournoiFindManyArgs>(args?: SelectSubset<T, TournoiFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Tournoi.
+     * @param {TournoiCreateArgs} args - Arguments to create a Tournoi.
+     * @example
+     * // Create one Tournoi
+     * const Tournoi = await prisma.tournoi.create({
+     *   data: {
+     *     // ... data to create a Tournoi
+     *   }
+     * })
+     * 
+     */
+    create<T extends TournoiCreateArgs>(args: SelectSubset<T, TournoiCreateArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Tournois.
+     * @param {TournoiCreateManyArgs} args - Arguments to create many Tournois.
+     * @example
+     * // Create many Tournois
+     * const tournoi = await prisma.tournoi.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TournoiCreateManyArgs>(args?: SelectSubset<T, TournoiCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Tournois and returns the data saved in the database.
+     * @param {TournoiCreateManyAndReturnArgs} args - Arguments to create many Tournois.
+     * @example
+     * // Create many Tournois
+     * const tournoi = await prisma.tournoi.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Tournois and only return the `id`
+     * const tournoiWithIdOnly = await prisma.tournoi.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TournoiCreateManyAndReturnArgs>(args?: SelectSubset<T, TournoiCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Tournoi.
+     * @param {TournoiDeleteArgs} args - Arguments to delete one Tournoi.
+     * @example
+     * // Delete one Tournoi
+     * const Tournoi = await prisma.tournoi.delete({
+     *   where: {
+     *     // ... filter to delete one Tournoi
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TournoiDeleteArgs>(args: SelectSubset<T, TournoiDeleteArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Tournoi.
+     * @param {TournoiUpdateArgs} args - Arguments to update one Tournoi.
+     * @example
+     * // Update one Tournoi
+     * const tournoi = await prisma.tournoi.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TournoiUpdateArgs>(args: SelectSubset<T, TournoiUpdateArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Tournois.
+     * @param {TournoiDeleteManyArgs} args - Arguments to filter Tournois to delete.
+     * @example
+     * // Delete a few Tournois
+     * const { count } = await prisma.tournoi.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TournoiDeleteManyArgs>(args?: SelectSubset<T, TournoiDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Tournois.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournoiUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Tournois
+     * const tournoi = await prisma.tournoi.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TournoiUpdateManyArgs>(args: SelectSubset<T, TournoiUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Tournois and returns the data updated in the database.
+     * @param {TournoiUpdateManyAndReturnArgs} args - Arguments to update many Tournois.
+     * @example
+     * // Update many Tournois
+     * const tournoi = await prisma.tournoi.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Tournois and only return the `id`
+     * const tournoiWithIdOnly = await prisma.tournoi.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TournoiUpdateManyAndReturnArgs>(args: SelectSubset<T, TournoiUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Tournoi.
+     * @param {TournoiUpsertArgs} args - Arguments to update or create a Tournoi.
+     * @example
+     * // Update or create a Tournoi
+     * const tournoi = await prisma.tournoi.upsert({
+     *   create: {
+     *     // ... data to create a Tournoi
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Tournoi we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TournoiUpsertArgs>(args: SelectSubset<T, TournoiUpsertArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Tournois.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournoiCountArgs} args - Arguments to filter Tournois to count.
+     * @example
+     * // Count the number of Tournois
+     * const count = await prisma.tournoi.count({
+     *   where: {
+     *     // ... the filter for the Tournois we want to count
+     *   }
+     * })
+    **/
+    count<T extends TournoiCountArgs>(
+      args?: Subset<T, TournoiCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TournoiCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Tournoi.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournoiAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TournoiAggregateArgs>(args: Subset<T, TournoiAggregateArgs>): Prisma.PrismaPromise<GetTournoiAggregateType<T>>
+
+    /**
+     * Group by Tournoi.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TournoiGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TournoiGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TournoiGroupByArgs['orderBy'] }
+        : { orderBy?: TournoiGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TournoiGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTournoiGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Tournoi model
+   */
+  readonly fields: TournoiFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Tournoi.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TournoiClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    enseignant<T extends Tournoi$enseignantArgs<ExtArgs> = {}>(args?: Subset<T, Tournoi$enseignantArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    createur_joueur<T extends Tournoi$createur_joueurArgs<ExtArgs> = {}>(args?: Subset<T, Tournoi$createur_joueurArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    createur_enseignant<T extends Tournoi$createur_enseignantArgs<ExtArgs> = {}>(args?: Subset<T, Tournoi$createur_enseignantArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    scores<T extends Tournoi$scoresArgs<ExtArgs> = {}>(args?: Subset<T, Tournoi$scoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Tournoi model
+   */
+  interface TournoiFieldRefs {
+    readonly id: FieldRef<"Tournoi", 'String'>
+    readonly nom: FieldRef<"Tournoi", 'String'>
+    readonly date_creation: FieldRef<"Tournoi", 'DateTime'>
+    readonly date_debut: FieldRef<"Tournoi", 'DateTime'>
+    readonly date_fin: FieldRef<"Tournoi", 'DateTime'>
+    readonly statut: FieldRef<"Tournoi", 'String'>
+    readonly enseignant_id: FieldRef<"Tournoi", 'String'>
+    readonly questions_ids: FieldRef<"Tournoi", 'String[]'>
+    readonly type: FieldRef<"Tournoi", 'String'>
+    readonly niveau: FieldRef<"Tournoi", 'String'>
+    readonly categorie: FieldRef<"Tournoi", 'String'>
+    readonly themes: FieldRef<"Tournoi", 'String[]'>
+    readonly cree_par_joueur_id: FieldRef<"Tournoi", 'String'>
+    readonly cree_par_enseignant_id: FieldRef<"Tournoi", 'String'>
+    readonly questions_generées: FieldRef<"Tournoi", 'Boolean'>
+    readonly code: FieldRef<"Tournoi", 'String'>
+    readonly leaderboard: FieldRef<"Tournoi", 'Json'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Tournoi findUnique
+   */
+  export type TournoiFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * Filter, which Tournoi to fetch.
+     */
+    where: TournoiWhereUniqueInput
+  }
+
+  /**
+   * Tournoi findUniqueOrThrow
+   */
+  export type TournoiFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * Filter, which Tournoi to fetch.
+     */
+    where: TournoiWhereUniqueInput
+  }
+
+  /**
+   * Tournoi findFirst
+   */
+  export type TournoiFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * Filter, which Tournoi to fetch.
+     */
+    where?: TournoiWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Tournois to fetch.
+     */
+    orderBy?: TournoiOrderByWithRelationInput | TournoiOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Tournois.
+     */
+    cursor?: TournoiWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Tournois from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Tournois.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Tournois.
+     */
+    distinct?: TournoiScalarFieldEnum | TournoiScalarFieldEnum[]
+  }
+
+  /**
+   * Tournoi findFirstOrThrow
+   */
+  export type TournoiFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * Filter, which Tournoi to fetch.
+     */
+    where?: TournoiWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Tournois to fetch.
+     */
+    orderBy?: TournoiOrderByWithRelationInput | TournoiOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Tournois.
+     */
+    cursor?: TournoiWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Tournois from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Tournois.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Tournois.
+     */
+    distinct?: TournoiScalarFieldEnum | TournoiScalarFieldEnum[]
+  }
+
+  /**
+   * Tournoi findMany
+   */
+  export type TournoiFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * Filter, which Tournois to fetch.
+     */
+    where?: TournoiWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Tournois to fetch.
+     */
+    orderBy?: TournoiOrderByWithRelationInput | TournoiOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Tournois.
+     */
+    cursor?: TournoiWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Tournois from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Tournois.
+     */
+    skip?: number
+    distinct?: TournoiScalarFieldEnum | TournoiScalarFieldEnum[]
+  }
+
+  /**
+   * Tournoi create
+   */
+  export type TournoiCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Tournoi.
+     */
+    data: XOR<TournoiCreateInput, TournoiUncheckedCreateInput>
+  }
+
+  /**
+   * Tournoi createMany
+   */
+  export type TournoiCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Tournois.
+     */
+    data: TournoiCreateManyInput | TournoiCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Tournoi createManyAndReturn
+   */
+  export type TournoiCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * The data used to create many Tournois.
+     */
+    data: TournoiCreateManyInput | TournoiCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Tournoi update
+   */
+  export type TournoiUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Tournoi.
+     */
+    data: XOR<TournoiUpdateInput, TournoiUncheckedUpdateInput>
+    /**
+     * Choose, which Tournoi to update.
+     */
+    where: TournoiWhereUniqueInput
+  }
+
+  /**
+   * Tournoi updateMany
+   */
+  export type TournoiUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Tournois.
+     */
+    data: XOR<TournoiUpdateManyMutationInput, TournoiUncheckedUpdateManyInput>
+    /**
+     * Filter which Tournois to update
+     */
+    where?: TournoiWhereInput
+    /**
+     * Limit how many Tournois to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Tournoi updateManyAndReturn
+   */
+  export type TournoiUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * The data used to update Tournois.
+     */
+    data: XOR<TournoiUpdateManyMutationInput, TournoiUncheckedUpdateManyInput>
+    /**
+     * Filter which Tournois to update
+     */
+    where?: TournoiWhereInput
+    /**
+     * Limit how many Tournois to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Tournoi upsert
+   */
+  export type TournoiUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Tournoi to update in case it exists.
+     */
+    where: TournoiWhereUniqueInput
+    /**
+     * In case the Tournoi found by the `where` argument doesn't exist, create a new Tournoi with this data.
+     */
+    create: XOR<TournoiCreateInput, TournoiUncheckedCreateInput>
+    /**
+     * In case the Tournoi was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TournoiUpdateInput, TournoiUncheckedUpdateInput>
+  }
+
+  /**
+   * Tournoi delete
+   */
+  export type TournoiDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+    /**
+     * Filter which Tournoi to delete.
+     */
+    where: TournoiWhereUniqueInput
+  }
+
+  /**
+   * Tournoi deleteMany
+   */
+  export type TournoiDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Tournois to delete
+     */
+    where?: TournoiWhereInput
+    /**
+     * Limit how many Tournois to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Tournoi.enseignant
+   */
+  export type Tournoi$enseignantArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    where?: EnseignantWhereInput
+  }
+
+  /**
+   * Tournoi.createur_joueur
+   */
+  export type Tournoi$createur_joueurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Joueur
+     */
+    select?: JoueurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Joueur
+     */
+    omit?: JoueurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JoueurInclude<ExtArgs> | null
+    where?: JoueurWhereInput
+  }
+
+  /**
+   * Tournoi.createur_enseignant
+   */
+  export type Tournoi$createur_enseignantArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Enseignant
+     */
+    select?: EnseignantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Enseignant
+     */
+    omit?: EnseignantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EnseignantInclude<ExtArgs> | null
+    where?: EnseignantWhereInput
+  }
+
+  /**
+   * Tournoi.scores
+   */
+  export type Tournoi$scoresArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    where?: ScoreWhereInput
+    orderBy?: ScoreOrderByWithRelationInput | ScoreOrderByWithRelationInput[]
+    cursor?: ScoreWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ScoreScalarFieldEnum | ScoreScalarFieldEnum[]
+  }
+
+  /**
+   * Tournoi without action
+   */
+  export type TournoiDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tournoi
+     */
+    select?: TournoiSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tournoi
+     */
+    omit?: TournoiOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TournoiInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Score
+   */
+
+  export type AggregateScore = {
+    _count: ScoreCountAggregateOutputType | null
+    _avg: ScoreAvgAggregateOutputType | null
+    _sum: ScoreSumAggregateOutputType | null
+    _min: ScoreMinAggregateOutputType | null
+    _max: ScoreMaxAggregateOutputType | null
+  }
+
+  export type ScoreAvgAggregateOutputType = {
+    score: number | null
+    temps: number | null
+    position: number | null
+  }
+
+  export type ScoreSumAggregateOutputType = {
+    score: number | null
+    temps: number | null
+    position: number | null
+  }
+
+  export type ScoreMinAggregateOutputType = {
+    id: string | null
+    tournoi_id: string | null
+    joueur_id: string | null
+    score: number | null
+    temps: number | null
+    position: number | null
+    date_score: Date | null
+  }
+
+  export type ScoreMaxAggregateOutputType = {
+    id: string | null
+    tournoi_id: string | null
+    joueur_id: string | null
+    score: number | null
+    temps: number | null
+    position: number | null
+    date_score: Date | null
+  }
+
+  export type ScoreCountAggregateOutputType = {
+    id: number
+    tournoi_id: number
+    joueur_id: number
+    score: number
+    temps: number
+    position: number
+    date_score: number
+    _all: number
+  }
+
+
+  export type ScoreAvgAggregateInputType = {
+    score?: true
+    temps?: true
+    position?: true
+  }
+
+  export type ScoreSumAggregateInputType = {
+    score?: true
+    temps?: true
+    position?: true
+  }
+
+  export type ScoreMinAggregateInputType = {
+    id?: true
+    tournoi_id?: true
+    joueur_id?: true
+    score?: true
+    temps?: true
+    position?: true
+    date_score?: true
+  }
+
+  export type ScoreMaxAggregateInputType = {
+    id?: true
+    tournoi_id?: true
+    joueur_id?: true
+    score?: true
+    temps?: true
+    position?: true
+    date_score?: true
+  }
+
+  export type ScoreCountAggregateInputType = {
+    id?: true
+    tournoi_id?: true
+    joueur_id?: true
+    score?: true
+    temps?: true
+    position?: true
+    date_score?: true
+    _all?: true
+  }
+
+  export type ScoreAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Score to aggregate.
+     */
+    where?: ScoreWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Scores to fetch.
+     */
+    orderBy?: ScoreOrderByWithRelationInput | ScoreOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ScoreWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Scores from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Scores.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Scores
+    **/
+    _count?: true | ScoreCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ScoreAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ScoreSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ScoreMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ScoreMaxAggregateInputType
+  }
+
+  export type GetScoreAggregateType<T extends ScoreAggregateArgs> = {
+        [P in keyof T & keyof AggregateScore]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateScore[P]>
+      : GetScalarType<T[P], AggregateScore[P]>
+  }
+
+
+
+
+  export type ScoreGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ScoreWhereInput
+    orderBy?: ScoreOrderByWithAggregationInput | ScoreOrderByWithAggregationInput[]
+    by: ScoreScalarFieldEnum[] | ScoreScalarFieldEnum
+    having?: ScoreScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ScoreCountAggregateInputType | true
+    _avg?: ScoreAvgAggregateInputType
+    _sum?: ScoreSumAggregateInputType
+    _min?: ScoreMinAggregateInputType
+    _max?: ScoreMaxAggregateInputType
+  }
+
+  export type ScoreGroupByOutputType = {
+    id: string
+    tournoi_id: string
+    joueur_id: string
+    score: number
+    temps: number | null
+    position: number | null
+    date_score: Date
+    _count: ScoreCountAggregateOutputType | null
+    _avg: ScoreAvgAggregateOutputType | null
+    _sum: ScoreSumAggregateOutputType | null
+    _min: ScoreMinAggregateOutputType | null
+    _max: ScoreMaxAggregateOutputType | null
+  }
+
+  type GetScoreGroupByPayload<T extends ScoreGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ScoreGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ScoreGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ScoreGroupByOutputType[P]>
+            : GetScalarType<T[P], ScoreGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ScoreSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tournoi_id?: boolean
+    joueur_id?: boolean
+    score?: boolean
+    temps?: boolean
+    position?: boolean
+    date_score?: boolean
+    tournoi?: boolean | TournoiDefaultArgs<ExtArgs>
+    joueur?: boolean | JoueurDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["score"]>
+
+  export type ScoreSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tournoi_id?: boolean
+    joueur_id?: boolean
+    score?: boolean
+    temps?: boolean
+    position?: boolean
+    date_score?: boolean
+    tournoi?: boolean | TournoiDefaultArgs<ExtArgs>
+    joueur?: boolean | JoueurDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["score"]>
+
+  export type ScoreSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    tournoi_id?: boolean
+    joueur_id?: boolean
+    score?: boolean
+    temps?: boolean
+    position?: boolean
+    date_score?: boolean
+    tournoi?: boolean | TournoiDefaultArgs<ExtArgs>
+    joueur?: boolean | JoueurDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["score"]>
+
+  export type ScoreSelectScalar = {
+    id?: boolean
+    tournoi_id?: boolean
+    joueur_id?: boolean
+    score?: boolean
+    temps?: boolean
+    position?: boolean
+    date_score?: boolean
+  }
+
+  export type ScoreOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tournoi_id" | "joueur_id" | "score" | "temps" | "position" | "date_score", ExtArgs["result"]["score"]>
+  export type ScoreInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tournoi?: boolean | TournoiDefaultArgs<ExtArgs>
+    joueur?: boolean | JoueurDefaultArgs<ExtArgs>
+  }
+  export type ScoreIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tournoi?: boolean | TournoiDefaultArgs<ExtArgs>
+    joueur?: boolean | JoueurDefaultArgs<ExtArgs>
+  }
+  export type ScoreIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tournoi?: boolean | TournoiDefaultArgs<ExtArgs>
+    joueur?: boolean | JoueurDefaultArgs<ExtArgs>
+  }
+
+  export type $ScorePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Score"
+    objects: {
+      tournoi: Prisma.$TournoiPayload<ExtArgs>
+      joueur: Prisma.$JoueurPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      tournoi_id: string
+      joueur_id: string
+      score: number
+      temps: number | null
+      position: number | null
+      date_score: Date
+    }, ExtArgs["result"]["score"]>
+    composites: {}
+  }
+
+  type ScoreGetPayload<S extends boolean | null | undefined | ScoreDefaultArgs> = $Result.GetResult<Prisma.$ScorePayload, S>
+
+  type ScoreCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ScoreFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ScoreCountAggregateInputType | true
+    }
+
+  export interface ScoreDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Score'], meta: { name: 'Score' } }
+    /**
+     * Find zero or one Score that matches the filter.
+     * @param {ScoreFindUniqueArgs} args - Arguments to find a Score
+     * @example
+     * // Get one Score
+     * const score = await prisma.score.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ScoreFindUniqueArgs>(args: SelectSubset<T, ScoreFindUniqueArgs<ExtArgs>>): Prisma__ScoreClient<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Score that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ScoreFindUniqueOrThrowArgs} args - Arguments to find a Score
+     * @example
+     * // Get one Score
+     * const score = await prisma.score.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ScoreFindUniqueOrThrowArgs>(args: SelectSubset<T, ScoreFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScoreClient<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Score that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScoreFindFirstArgs} args - Arguments to find a Score
+     * @example
+     * // Get one Score
+     * const score = await prisma.score.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ScoreFindFirstArgs>(args?: SelectSubset<T, ScoreFindFirstArgs<ExtArgs>>): Prisma__ScoreClient<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Score that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScoreFindFirstOrThrowArgs} args - Arguments to find a Score
+     * @example
+     * // Get one Score
+     * const score = await prisma.score.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ScoreFindFirstOrThrowArgs>(args?: SelectSubset<T, ScoreFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScoreClient<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Scores that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScoreFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Scores
+     * const scores = await prisma.score.findMany()
+     * 
+     * // Get first 10 Scores
+     * const scores = await prisma.score.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const scoreWithIdOnly = await prisma.score.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ScoreFindManyArgs>(args?: SelectSubset<T, ScoreFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Score.
+     * @param {ScoreCreateArgs} args - Arguments to create a Score.
+     * @example
+     * // Create one Score
+     * const Score = await prisma.score.create({
+     *   data: {
+     *     // ... data to create a Score
+     *   }
+     * })
+     * 
+     */
+    create<T extends ScoreCreateArgs>(args: SelectSubset<T, ScoreCreateArgs<ExtArgs>>): Prisma__ScoreClient<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Scores.
+     * @param {ScoreCreateManyArgs} args - Arguments to create many Scores.
+     * @example
+     * // Create many Scores
+     * const score = await prisma.score.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ScoreCreateManyArgs>(args?: SelectSubset<T, ScoreCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Scores and returns the data saved in the database.
+     * @param {ScoreCreateManyAndReturnArgs} args - Arguments to create many Scores.
+     * @example
+     * // Create many Scores
+     * const score = await prisma.score.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Scores and only return the `id`
+     * const scoreWithIdOnly = await prisma.score.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ScoreCreateManyAndReturnArgs>(args?: SelectSubset<T, ScoreCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Score.
+     * @param {ScoreDeleteArgs} args - Arguments to delete one Score.
+     * @example
+     * // Delete one Score
+     * const Score = await prisma.score.delete({
+     *   where: {
+     *     // ... filter to delete one Score
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ScoreDeleteArgs>(args: SelectSubset<T, ScoreDeleteArgs<ExtArgs>>): Prisma__ScoreClient<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Score.
+     * @param {ScoreUpdateArgs} args - Arguments to update one Score.
+     * @example
+     * // Update one Score
+     * const score = await prisma.score.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ScoreUpdateArgs>(args: SelectSubset<T, ScoreUpdateArgs<ExtArgs>>): Prisma__ScoreClient<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Scores.
+     * @param {ScoreDeleteManyArgs} args - Arguments to filter Scores to delete.
+     * @example
+     * // Delete a few Scores
+     * const { count } = await prisma.score.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ScoreDeleteManyArgs>(args?: SelectSubset<T, ScoreDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Scores.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScoreUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Scores
+     * const score = await prisma.score.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ScoreUpdateManyArgs>(args: SelectSubset<T, ScoreUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Scores and returns the data updated in the database.
+     * @param {ScoreUpdateManyAndReturnArgs} args - Arguments to update many Scores.
+     * @example
+     * // Update many Scores
+     * const score = await prisma.score.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Scores and only return the `id`
+     * const scoreWithIdOnly = await prisma.score.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ScoreUpdateManyAndReturnArgs>(args: SelectSubset<T, ScoreUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Score.
+     * @param {ScoreUpsertArgs} args - Arguments to update or create a Score.
+     * @example
+     * // Update or create a Score
+     * const score = await prisma.score.upsert({
+     *   create: {
+     *     // ... data to create a Score
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Score we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ScoreUpsertArgs>(args: SelectSubset<T, ScoreUpsertArgs<ExtArgs>>): Prisma__ScoreClient<$Result.GetResult<Prisma.$ScorePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Scores.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScoreCountArgs} args - Arguments to filter Scores to count.
+     * @example
+     * // Count the number of Scores
+     * const count = await prisma.score.count({
+     *   where: {
+     *     // ... the filter for the Scores we want to count
+     *   }
+     * })
+    **/
+    count<T extends ScoreCountArgs>(
+      args?: Subset<T, ScoreCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ScoreCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Score.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScoreAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ScoreAggregateArgs>(args: Subset<T, ScoreAggregateArgs>): Prisma.PrismaPromise<GetScoreAggregateType<T>>
+
+    /**
+     * Group by Score.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScoreGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ScoreGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ScoreGroupByArgs['orderBy'] }
+        : { orderBy?: ScoreGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ScoreGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScoreGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Score model
+   */
+  readonly fields: ScoreFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Score.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ScoreClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    tournoi<T extends TournoiDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TournoiDefaultArgs<ExtArgs>>): Prisma__TournoiClient<$Result.GetResult<Prisma.$TournoiPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    joueur<T extends JoueurDefaultArgs<ExtArgs> = {}>(args?: Subset<T, JoueurDefaultArgs<ExtArgs>>): Prisma__JoueurClient<$Result.GetResult<Prisma.$JoueurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Score model
+   */
+  interface ScoreFieldRefs {
+    readonly id: FieldRef<"Score", 'String'>
+    readonly tournoi_id: FieldRef<"Score", 'String'>
+    readonly joueur_id: FieldRef<"Score", 'String'>
+    readonly score: FieldRef<"Score", 'Int'>
+    readonly temps: FieldRef<"Score", 'Int'>
+    readonly position: FieldRef<"Score", 'Int'>
+    readonly date_score: FieldRef<"Score", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Score findUnique
+   */
+  export type ScoreFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * Filter, which Score to fetch.
+     */
+    where: ScoreWhereUniqueInput
+  }
+
+  /**
+   * Score findUniqueOrThrow
+   */
+  export type ScoreFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * Filter, which Score to fetch.
+     */
+    where: ScoreWhereUniqueInput
+  }
+
+  /**
+   * Score findFirst
+   */
+  export type ScoreFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * Filter, which Score to fetch.
+     */
+    where?: ScoreWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Scores to fetch.
+     */
+    orderBy?: ScoreOrderByWithRelationInput | ScoreOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Scores.
+     */
+    cursor?: ScoreWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Scores from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Scores.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Scores.
+     */
+    distinct?: ScoreScalarFieldEnum | ScoreScalarFieldEnum[]
+  }
+
+  /**
+   * Score findFirstOrThrow
+   */
+  export type ScoreFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * Filter, which Score to fetch.
+     */
+    where?: ScoreWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Scores to fetch.
+     */
+    orderBy?: ScoreOrderByWithRelationInput | ScoreOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Scores.
+     */
+    cursor?: ScoreWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Scores from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Scores.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Scores.
+     */
+    distinct?: ScoreScalarFieldEnum | ScoreScalarFieldEnum[]
+  }
+
+  /**
+   * Score findMany
+   */
+  export type ScoreFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * Filter, which Scores to fetch.
+     */
+    where?: ScoreWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Scores to fetch.
+     */
+    orderBy?: ScoreOrderByWithRelationInput | ScoreOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Scores.
+     */
+    cursor?: ScoreWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Scores from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Scores.
+     */
+    skip?: number
+    distinct?: ScoreScalarFieldEnum | ScoreScalarFieldEnum[]
+  }
+
+  /**
+   * Score create
+   */
+  export type ScoreCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Score.
+     */
+    data: XOR<ScoreCreateInput, ScoreUncheckedCreateInput>
+  }
+
+  /**
+   * Score createMany
+   */
+  export type ScoreCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Scores.
+     */
+    data: ScoreCreateManyInput | ScoreCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Score createManyAndReturn
+   */
+  export type ScoreCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * The data used to create many Scores.
+     */
+    data: ScoreCreateManyInput | ScoreCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Score update
+   */
+  export type ScoreUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Score.
+     */
+    data: XOR<ScoreUpdateInput, ScoreUncheckedUpdateInput>
+    /**
+     * Choose, which Score to update.
+     */
+    where: ScoreWhereUniqueInput
+  }
+
+  /**
+   * Score updateMany
+   */
+  export type ScoreUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Scores.
+     */
+    data: XOR<ScoreUpdateManyMutationInput, ScoreUncheckedUpdateManyInput>
+    /**
+     * Filter which Scores to update
+     */
+    where?: ScoreWhereInput
+    /**
+     * Limit how many Scores to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Score updateManyAndReturn
+   */
+  export type ScoreUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * The data used to update Scores.
+     */
+    data: XOR<ScoreUpdateManyMutationInput, ScoreUncheckedUpdateManyInput>
+    /**
+     * Filter which Scores to update
+     */
+    where?: ScoreWhereInput
+    /**
+     * Limit how many Scores to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Score upsert
+   */
+  export type ScoreUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Score to update in case it exists.
+     */
+    where: ScoreWhereUniqueInput
+    /**
+     * In case the Score found by the `where` argument doesn't exist, create a new Score with this data.
+     */
+    create: XOR<ScoreCreateInput, ScoreUncheckedCreateInput>
+    /**
+     * In case the Score was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ScoreUpdateInput, ScoreUncheckedUpdateInput>
+  }
+
+  /**
+   * Score delete
+   */
+  export type ScoreDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+    /**
+     * Filter which Score to delete.
+     */
+    where: ScoreWhereUniqueInput
+  }
+
+  /**
+   * Score deleteMany
+   */
+  export type ScoreDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Scores to delete
+     */
+    where?: ScoreWhereInput
+    /**
+     * Limit how many Scores to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Score without action
+   */
+  export type ScoreDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Score
+     */
+    select?: ScoreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Score
+     */
+    omit?: ScoreOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScoreInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Quiz
+   */
+
+  export type AggregateQuiz = {
+    _count: QuizCountAggregateOutputType | null
+    _min: QuizMinAggregateOutputType | null
+    _max: QuizMaxAggregateOutputType | null
+  }
+
+  export type QuizMinAggregateOutputType = {
+    id: string | null
+    nom: string | null
+    date_creation: Date | null
+    date_sauvegarde: Date | null
+    enseignant_id: string | null
+    type: string | null
+    tournament_code: string | null
+  }
+
+  export type QuizMaxAggregateOutputType = {
+    id: string | null
+    nom: string | null
+    date_creation: Date | null
+    date_sauvegarde: Date | null
+    enseignant_id: string | null
+    type: string | null
+    tournament_code: string | null
+  }
+
+  export type QuizCountAggregateOutputType = {
+    id: number
+    nom: number
+    date_creation: number
+    date_sauvegarde: number
+    enseignant_id: number
+    questions_ids: number
+    type: number
+    niveaux: number
+    categories: number
+    themes: number
+    tournament_code: number
+    _all: number
+  }
+
+
+  export type QuizMinAggregateInputType = {
+    id?: true
+    nom?: true
+    date_creation?: true
+    date_sauvegarde?: true
+    enseignant_id?: true
+    type?: true
+    tournament_code?: true
+  }
+
+  export type QuizMaxAggregateInputType = {
+    id?: true
+    nom?: true
+    date_creation?: true
+    date_sauvegarde?: true
+    enseignant_id?: true
+    type?: true
+    tournament_code?: true
+  }
+
+  export type QuizCountAggregateInputType = {
+    id?: true
+    nom?: true
+    date_creation?: true
+    date_sauvegarde?: true
+    enseignant_id?: true
+    questions_ids?: true
+    type?: true
+    niveaux?: true
+    categories?: true
+    themes?: true
+    tournament_code?: true
+    _all?: true
+  }
+
+  export type QuizAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Quiz to aggregate.
+     */
+    where?: QuizWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Quizzes to fetch.
+     */
+    orderBy?: QuizOrderByWithRelationInput | QuizOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: QuizWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Quizzes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Quizzes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Quizzes
+    **/
+    _count?: true | QuizCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: QuizMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: QuizMaxAggregateInputType
+  }
+
+  export type GetQuizAggregateType<T extends QuizAggregateArgs> = {
+        [P in keyof T & keyof AggregateQuiz]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateQuiz[P]>
+      : GetScalarType<T[P], AggregateQuiz[P]>
+  }
+
+
+
+
+  export type QuizGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuizWhereInput
+    orderBy?: QuizOrderByWithAggregationInput | QuizOrderByWithAggregationInput[]
+    by: QuizScalarFieldEnum[] | QuizScalarFieldEnum
+    having?: QuizScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: QuizCountAggregateInputType | true
+    _min?: QuizMinAggregateInputType
+    _max?: QuizMaxAggregateInputType
+  }
+
+  export type QuizGroupByOutputType = {
+    id: string
+    nom: string
+    date_creation: Date
+    date_sauvegarde: Date
+    enseignant_id: string
+    questions_ids: string[]
+    type: string
+    niveaux: string[]
+    categories: string[]
+    themes: string[]
+    tournament_code: string | null
+    _count: QuizCountAggregateOutputType | null
+    _min: QuizMinAggregateOutputType | null
+    _max: QuizMaxAggregateOutputType | null
+  }
+
+  type GetQuizGroupByPayload<T extends QuizGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<QuizGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof QuizGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], QuizGroupByOutputType[P]>
+            : GetScalarType<T[P], QuizGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type QuizSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nom?: boolean
+    date_creation?: boolean
+    date_sauvegarde?: boolean
+    enseignant_id?: boolean
+    questions_ids?: boolean
+    type?: boolean
+    niveaux?: boolean
+    categories?: boolean
+    themes?: boolean
+    tournament_code?: boolean
+    enseignant?: boolean | EnseignantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["quiz"]>
+
+  export type QuizSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nom?: boolean
+    date_creation?: boolean
+    date_sauvegarde?: boolean
+    enseignant_id?: boolean
+    questions_ids?: boolean
+    type?: boolean
+    niveaux?: boolean
+    categories?: boolean
+    themes?: boolean
+    tournament_code?: boolean
+    enseignant?: boolean | EnseignantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["quiz"]>
+
+  export type QuizSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nom?: boolean
+    date_creation?: boolean
+    date_sauvegarde?: boolean
+    enseignant_id?: boolean
+    questions_ids?: boolean
+    type?: boolean
+    niveaux?: boolean
+    categories?: boolean
+    themes?: boolean
+    tournament_code?: boolean
+    enseignant?: boolean | EnseignantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["quiz"]>
+
+  export type QuizSelectScalar = {
+    id?: boolean
+    nom?: boolean
+    date_creation?: boolean
+    date_sauvegarde?: boolean
+    enseignant_id?: boolean
+    questions_ids?: boolean
+    type?: boolean
+    niveaux?: boolean
+    categories?: boolean
+    themes?: boolean
+    tournament_code?: boolean
+  }
+
+  export type QuizOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nom" | "date_creation" | "date_sauvegarde" | "enseignant_id" | "questions_ids" | "type" | "niveaux" | "categories" | "themes" | "tournament_code", ExtArgs["result"]["quiz"]>
+  export type QuizInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    enseignant?: boolean | EnseignantDefaultArgs<ExtArgs>
+  }
+  export type QuizIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    enseignant?: boolean | EnseignantDefaultArgs<ExtArgs>
+  }
+  export type QuizIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    enseignant?: boolean | EnseignantDefaultArgs<ExtArgs>
+  }
+
+  export type $QuizPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Quiz"
+    objects: {
+      enseignant: Prisma.$EnseignantPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      nom: string
+      date_creation: Date
+      date_sauvegarde: Date
+      enseignant_id: string
+      questions_ids: string[]
+      type: string
+      niveaux: string[]
+      categories: string[]
+      themes: string[]
+      tournament_code: string | null
+    }, ExtArgs["result"]["quiz"]>
+    composites: {}
+  }
+
+  type QuizGetPayload<S extends boolean | null | undefined | QuizDefaultArgs> = $Result.GetResult<Prisma.$QuizPayload, S>
+
+  type QuizCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<QuizFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: QuizCountAggregateInputType | true
+    }
+
+  export interface QuizDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Quiz'], meta: { name: 'Quiz' } }
+    /**
+     * Find zero or one Quiz that matches the filter.
+     * @param {QuizFindUniqueArgs} args - Arguments to find a Quiz
+     * @example
+     * // Get one Quiz
+     * const quiz = await prisma.quiz.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends QuizFindUniqueArgs>(args: SelectSubset<T, QuizFindUniqueArgs<ExtArgs>>): Prisma__QuizClient<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Quiz that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {QuizFindUniqueOrThrowArgs} args - Arguments to find a Quiz
+     * @example
+     * // Get one Quiz
+     * const quiz = await prisma.quiz.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends QuizFindUniqueOrThrowArgs>(args: SelectSubset<T, QuizFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QuizClient<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Quiz that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuizFindFirstArgs} args - Arguments to find a Quiz
+     * @example
+     * // Get one Quiz
+     * const quiz = await prisma.quiz.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends QuizFindFirstArgs>(args?: SelectSubset<T, QuizFindFirstArgs<ExtArgs>>): Prisma__QuizClient<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Quiz that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuizFindFirstOrThrowArgs} args - Arguments to find a Quiz
+     * @example
+     * // Get one Quiz
+     * const quiz = await prisma.quiz.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends QuizFindFirstOrThrowArgs>(args?: SelectSubset<T, QuizFindFirstOrThrowArgs<ExtArgs>>): Prisma__QuizClient<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Quizzes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuizFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Quizzes
+     * const quizzes = await prisma.quiz.findMany()
+     * 
+     * // Get first 10 Quizzes
+     * const quizzes = await prisma.quiz.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const quizWithIdOnly = await prisma.quiz.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends QuizFindManyArgs>(args?: SelectSubset<T, QuizFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Quiz.
+     * @param {QuizCreateArgs} args - Arguments to create a Quiz.
+     * @example
+     * // Create one Quiz
+     * const Quiz = await prisma.quiz.create({
+     *   data: {
+     *     // ... data to create a Quiz
+     *   }
+     * })
+     * 
+     */
+    create<T extends QuizCreateArgs>(args: SelectSubset<T, QuizCreateArgs<ExtArgs>>): Prisma__QuizClient<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Quizzes.
+     * @param {QuizCreateManyArgs} args - Arguments to create many Quizzes.
+     * @example
+     * // Create many Quizzes
+     * const quiz = await prisma.quiz.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends QuizCreateManyArgs>(args?: SelectSubset<T, QuizCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Quizzes and returns the data saved in the database.
+     * @param {QuizCreateManyAndReturnArgs} args - Arguments to create many Quizzes.
+     * @example
+     * // Create many Quizzes
+     * const quiz = await prisma.quiz.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Quizzes and only return the `id`
+     * const quizWithIdOnly = await prisma.quiz.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends QuizCreateManyAndReturnArgs>(args?: SelectSubset<T, QuizCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Quiz.
+     * @param {QuizDeleteArgs} args - Arguments to delete one Quiz.
+     * @example
+     * // Delete one Quiz
+     * const Quiz = await prisma.quiz.delete({
+     *   where: {
+     *     // ... filter to delete one Quiz
+     *   }
+     * })
+     * 
+     */
+    delete<T extends QuizDeleteArgs>(args: SelectSubset<T, QuizDeleteArgs<ExtArgs>>): Prisma__QuizClient<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Quiz.
+     * @param {QuizUpdateArgs} args - Arguments to update one Quiz.
+     * @example
+     * // Update one Quiz
+     * const quiz = await prisma.quiz.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends QuizUpdateArgs>(args: SelectSubset<T, QuizUpdateArgs<ExtArgs>>): Prisma__QuizClient<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Quizzes.
+     * @param {QuizDeleteManyArgs} args - Arguments to filter Quizzes to delete.
+     * @example
+     * // Delete a few Quizzes
+     * const { count } = await prisma.quiz.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends QuizDeleteManyArgs>(args?: SelectSubset<T, QuizDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Quizzes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuizUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Quizzes
+     * const quiz = await prisma.quiz.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends QuizUpdateManyArgs>(args: SelectSubset<T, QuizUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Quizzes and returns the data updated in the database.
+     * @param {QuizUpdateManyAndReturnArgs} args - Arguments to update many Quizzes.
+     * @example
+     * // Update many Quizzes
+     * const quiz = await prisma.quiz.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Quizzes and only return the `id`
+     * const quizWithIdOnly = await prisma.quiz.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends QuizUpdateManyAndReturnArgs>(args: SelectSubset<T, QuizUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Quiz.
+     * @param {QuizUpsertArgs} args - Arguments to update or create a Quiz.
+     * @example
+     * // Update or create a Quiz
+     * const quiz = await prisma.quiz.upsert({
+     *   create: {
+     *     // ... data to create a Quiz
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Quiz we want to update
+     *   }
+     * })
+     */
+    upsert<T extends QuizUpsertArgs>(args: SelectSubset<T, QuizUpsertArgs<ExtArgs>>): Prisma__QuizClient<$Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Quizzes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuizCountArgs} args - Arguments to filter Quizzes to count.
+     * @example
+     * // Count the number of Quizzes
+     * const count = await prisma.quiz.count({
+     *   where: {
+     *     // ... the filter for the Quizzes we want to count
+     *   }
+     * })
+    **/
+    count<T extends QuizCountArgs>(
+      args?: Subset<T, QuizCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], QuizCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Quiz.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuizAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends QuizAggregateArgs>(args: Subset<T, QuizAggregateArgs>): Prisma.PrismaPromise<GetQuizAggregateType<T>>
+
+    /**
+     * Group by Quiz.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuizGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends QuizGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: QuizGroupByArgs['orderBy'] }
+        : { orderBy?: QuizGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, QuizGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQuizGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Quiz model
+   */
+  readonly fields: QuizFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Quiz.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__QuizClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    enseignant<T extends EnseignantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EnseignantDefaultArgs<ExtArgs>>): Prisma__EnseignantClient<$Result.GetResult<Prisma.$EnseignantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Quiz model
+   */
+  interface QuizFieldRefs {
+    readonly id: FieldRef<"Quiz", 'String'>
+    readonly nom: FieldRef<"Quiz", 'String'>
+    readonly date_creation: FieldRef<"Quiz", 'DateTime'>
+    readonly date_sauvegarde: FieldRef<"Quiz", 'DateTime'>
+    readonly enseignant_id: FieldRef<"Quiz", 'String'>
+    readonly questions_ids: FieldRef<"Quiz", 'String[]'>
+    readonly type: FieldRef<"Quiz", 'String'>
+    readonly niveaux: FieldRef<"Quiz", 'String[]'>
+    readonly categories: FieldRef<"Quiz", 'String[]'>
+    readonly themes: FieldRef<"Quiz", 'String[]'>
+    readonly tournament_code: FieldRef<"Quiz", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Quiz findUnique
+   */
+  export type QuizFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * Filter, which Quiz to fetch.
+     */
+    where: QuizWhereUniqueInput
+  }
+
+  /**
+   * Quiz findUniqueOrThrow
+   */
+  export type QuizFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * Filter, which Quiz to fetch.
+     */
+    where: QuizWhereUniqueInput
+  }
+
+  /**
+   * Quiz findFirst
+   */
+  export type QuizFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * Filter, which Quiz to fetch.
+     */
+    where?: QuizWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Quizzes to fetch.
+     */
+    orderBy?: QuizOrderByWithRelationInput | QuizOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Quizzes.
+     */
+    cursor?: QuizWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Quizzes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Quizzes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Quizzes.
+     */
+    distinct?: QuizScalarFieldEnum | QuizScalarFieldEnum[]
+  }
+
+  /**
+   * Quiz findFirstOrThrow
+   */
+  export type QuizFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * Filter, which Quiz to fetch.
+     */
+    where?: QuizWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Quizzes to fetch.
+     */
+    orderBy?: QuizOrderByWithRelationInput | QuizOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Quizzes.
+     */
+    cursor?: QuizWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Quizzes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Quizzes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Quizzes.
+     */
+    distinct?: QuizScalarFieldEnum | QuizScalarFieldEnum[]
+  }
+
+  /**
+   * Quiz findMany
+   */
+  export type QuizFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * Filter, which Quizzes to fetch.
+     */
+    where?: QuizWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Quizzes to fetch.
+     */
+    orderBy?: QuizOrderByWithRelationInput | QuizOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Quizzes.
+     */
+    cursor?: QuizWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Quizzes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Quizzes.
+     */
+    skip?: number
+    distinct?: QuizScalarFieldEnum | QuizScalarFieldEnum[]
+  }
+
+  /**
+   * Quiz create
+   */
+  export type QuizCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Quiz.
+     */
+    data: XOR<QuizCreateInput, QuizUncheckedCreateInput>
+  }
+
+  /**
+   * Quiz createMany
+   */
+  export type QuizCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Quizzes.
+     */
+    data: QuizCreateManyInput | QuizCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Quiz createManyAndReturn
+   */
+  export type QuizCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * The data used to create many Quizzes.
+     */
+    data: QuizCreateManyInput | QuizCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Quiz update
+   */
+  export type QuizUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Quiz.
+     */
+    data: XOR<QuizUpdateInput, QuizUncheckedUpdateInput>
+    /**
+     * Choose, which Quiz to update.
+     */
+    where: QuizWhereUniqueInput
+  }
+
+  /**
+   * Quiz updateMany
+   */
+  export type QuizUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Quizzes.
+     */
+    data: XOR<QuizUpdateManyMutationInput, QuizUncheckedUpdateManyInput>
+    /**
+     * Filter which Quizzes to update
+     */
+    where?: QuizWhereInput
+    /**
+     * Limit how many Quizzes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Quiz updateManyAndReturn
+   */
+  export type QuizUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * The data used to update Quizzes.
+     */
+    data: XOR<QuizUpdateManyMutationInput, QuizUncheckedUpdateManyInput>
+    /**
+     * Filter which Quizzes to update
+     */
+    where?: QuizWhereInput
+    /**
+     * Limit how many Quizzes to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Quiz upsert
+   */
+  export type QuizUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Quiz to update in case it exists.
+     */
+    where: QuizWhereUniqueInput
+    /**
+     * In case the Quiz found by the `where` argument doesn't exist, create a new Quiz with this data.
+     */
+    create: XOR<QuizCreateInput, QuizUncheckedCreateInput>
+    /**
+     * In case the Quiz was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<QuizUpdateInput, QuizUncheckedUpdateInput>
+  }
+
+  /**
+   * Quiz delete
+   */
+  export type QuizDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+    /**
+     * Filter which Quiz to delete.
+     */
+    where: QuizWhereUniqueInput
+  }
+
+  /**
+   * Quiz deleteMany
+   */
+  export type QuizDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Quizzes to delete
+     */
+    where?: QuizWhereInput
+    /**
+     * Limit how many Quizzes to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Quiz without action
+   */
+  export type QuizDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quiz
+     */
+    select?: QuizSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quiz
+     */
+    omit?: QuizOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuizInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Enums
+   */
+
+  export const TransactionIsolationLevel: {
+    ReadUncommitted: 'ReadUncommitted',
+    ReadCommitted: 'ReadCommitted',
+    RepeatableRead: 'RepeatableRead',
+    Serializable: 'Serializable'
+  };
+
+  export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+  export const QuestionScalarFieldEnum: {
+    uid: 'uid',
+    question: 'question',
+    reponses: 'reponses',
+    type: 'type',
+    discipline: 'discipline',
+    theme: 'theme',
+    difficulte: 'difficulte',
+    niveau: 'niveau',
+    auteur: 'auteur',
+    explication: 'explication',
+    tags: 'tags',
+    temps: 'temps',
+    titre: 'titre',
+    hidden: 'hidden'
+  };
+
+  export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+  export const EnseignantScalarFieldEnum: {
+    id: 'id',
+    pseudo: 'pseudo',
+    mot_de_passe: 'mot_de_passe',
+    email: 'email',
+    created_at: 'created_at',
+    avatar: 'avatar',
+    reset_token: 'reset_token',
+    reset_token_expires: 'reset_token_expires'
+  };
+
+  export type EnseignantScalarFieldEnum = (typeof EnseignantScalarFieldEnum)[keyof typeof EnseignantScalarFieldEnum]
+
+
+  export const JoueurScalarFieldEnum: {
+    id: 'id',
+    pseudo: 'pseudo',
+    cookie_id: 'cookie_id',
+    created_at: 'created_at',
+    avatar: 'avatar'
+  };
+
+  export type JoueurScalarFieldEnum = (typeof JoueurScalarFieldEnum)[keyof typeof JoueurScalarFieldEnum]
+
+
+  export const TournoiScalarFieldEnum: {
+    id: 'id',
+    nom: 'nom',
+    date_creation: 'date_creation',
+    date_debut: 'date_debut',
+    date_fin: 'date_fin',
+    statut: 'statut',
+    enseignant_id: 'enseignant_id',
+    questions_ids: 'questions_ids',
+    type: 'type',
+    niveau: 'niveau',
+    categorie: 'categorie',
+    themes: 'themes',
+    cree_par_joueur_id: 'cree_par_joueur_id',
+    cree_par_enseignant_id: 'cree_par_enseignant_id',
+    questions_generées: 'questions_generées',
+    code: 'code',
+    leaderboard: 'leaderboard'
+  };
+
+  export type TournoiScalarFieldEnum = (typeof TournoiScalarFieldEnum)[keyof typeof TournoiScalarFieldEnum]
+
+
+  export const ScoreScalarFieldEnum: {
+    id: 'id',
+    tournoi_id: 'tournoi_id',
+    joueur_id: 'joueur_id',
+    score: 'score',
+    temps: 'temps',
+    position: 'position',
+    date_score: 'date_score'
+  };
+
+  export type ScoreScalarFieldEnum = (typeof ScoreScalarFieldEnum)[keyof typeof ScoreScalarFieldEnum]
+
+
+  export const QuizScalarFieldEnum: {
+    id: 'id',
+    nom: 'nom',
+    date_creation: 'date_creation',
+    date_sauvegarde: 'date_sauvegarde',
+    enseignant_id: 'enseignant_id',
+    questions_ids: 'questions_ids',
+    type: 'type',
+    niveaux: 'niveaux',
+    categories: 'categories',
+    themes: 'themes',
+    tournament_code: 'tournament_code'
+  };
+
+  export type QuizScalarFieldEnum = (typeof QuizScalarFieldEnum)[keyof typeof QuizScalarFieldEnum]
+
+
+  export const SortOrder: {
+    asc: 'asc',
+    desc: 'desc'
+  };
+
+  export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+  export const QueryMode: {
+    default: 'default',
+    insensitive: 'insensitive'
+  };
+
+  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+  export const NullsOrder: {
+    first: 'first',
+    last: 'last'
+  };
+
+  export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  /**
+   * Field references
+   */
+
+
+  /**
+   * Reference to a field of type 'String'
+   */
+  export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
+    
+
+
+  /**
+   * Reference to a field of type 'String[]'
+   */
+  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
+   * Reference to a field of type 'DateTime'
+   */
+  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+  /**
+   * Reference to a field of type 'DateTime[]'
+   */
+  export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+  /**
+   * Deep Input Types
+   */
+
+
+  export type QuestionWhereInput = {
+    AND?: QuestionWhereInput | QuestionWhereInput[]
+    OR?: QuestionWhereInput[]
+    NOT?: QuestionWhereInput | QuestionWhereInput[]
+    uid?: StringFilter<"Question"> | string
+    question?: StringFilter<"Question"> | string
+    reponses?: JsonFilter<"Question">
+    type?: StringFilter<"Question"> | string
+    discipline?: StringFilter<"Question"> | string
+    theme?: StringFilter<"Question"> | string
+    difficulte?: IntNullableFilter<"Question"> | number | null
+    niveau?: StringNullableFilter<"Question"> | string | null
+    auteur?: StringNullableFilter<"Question"> | string | null
+    explication?: StringNullableFilter<"Question"> | string | null
+    tags?: StringNullableListFilter<"Question">
+    temps?: IntNullableFilter<"Question"> | number | null
+    titre?: StringNullableFilter<"Question"> | string | null
+    hidden?: BoolNullableFilter<"Question"> | boolean | null
+  }
+
+  export type QuestionOrderByWithRelationInput = {
+    uid?: SortOrder
+    question?: SortOrder
+    reponses?: SortOrder
+    type?: SortOrder
+    discipline?: SortOrder
+    theme?: SortOrder
+    difficulte?: SortOrderInput | SortOrder
+    niveau?: SortOrderInput | SortOrder
+    auteur?: SortOrderInput | SortOrder
+    explication?: SortOrderInput | SortOrder
+    tags?: SortOrder
+    temps?: SortOrderInput | SortOrder
+    titre?: SortOrderInput | SortOrder
+    hidden?: SortOrderInput | SortOrder
+  }
+
+  export type QuestionWhereUniqueInput = Prisma.AtLeast<{
+    uid?: string
+    AND?: QuestionWhereInput | QuestionWhereInput[]
+    OR?: QuestionWhereInput[]
+    NOT?: QuestionWhereInput | QuestionWhereInput[]
+    question?: StringFilter<"Question"> | string
+    reponses?: JsonFilter<"Question">
+    type?: StringFilter<"Question"> | string
+    discipline?: StringFilter<"Question"> | string
+    theme?: StringFilter<"Question"> | string
+    difficulte?: IntNullableFilter<"Question"> | number | null
+    niveau?: StringNullableFilter<"Question"> | string | null
+    auteur?: StringNullableFilter<"Question"> | string | null
+    explication?: StringNullableFilter<"Question"> | string | null
+    tags?: StringNullableListFilter<"Question">
+    temps?: IntNullableFilter<"Question"> | number | null
+    titre?: StringNullableFilter<"Question"> | string | null
+    hidden?: BoolNullableFilter<"Question"> | boolean | null
+  }, "uid">
+
+  export type QuestionOrderByWithAggregationInput = {
+    uid?: SortOrder
+    question?: SortOrder
+    reponses?: SortOrder
+    type?: SortOrder
+    discipline?: SortOrder
+    theme?: SortOrder
+    difficulte?: SortOrderInput | SortOrder
+    niveau?: SortOrderInput | SortOrder
+    auteur?: SortOrderInput | SortOrder
+    explication?: SortOrderInput | SortOrder
+    tags?: SortOrder
+    temps?: SortOrderInput | SortOrder
+    titre?: SortOrderInput | SortOrder
+    hidden?: SortOrderInput | SortOrder
+    _count?: QuestionCountOrderByAggregateInput
+    _avg?: QuestionAvgOrderByAggregateInput
+    _max?: QuestionMaxOrderByAggregateInput
+    _min?: QuestionMinOrderByAggregateInput
+    _sum?: QuestionSumOrderByAggregateInput
+  }
+
+  export type QuestionScalarWhereWithAggregatesInput = {
+    AND?: QuestionScalarWhereWithAggregatesInput | QuestionScalarWhereWithAggregatesInput[]
+    OR?: QuestionScalarWhereWithAggregatesInput[]
+    NOT?: QuestionScalarWhereWithAggregatesInput | QuestionScalarWhereWithAggregatesInput[]
+    uid?: StringWithAggregatesFilter<"Question"> | string
+    question?: StringWithAggregatesFilter<"Question"> | string
+    reponses?: JsonWithAggregatesFilter<"Question">
+    type?: StringWithAggregatesFilter<"Question"> | string
+    discipline?: StringWithAggregatesFilter<"Question"> | string
+    theme?: StringWithAggregatesFilter<"Question"> | string
+    difficulte?: IntNullableWithAggregatesFilter<"Question"> | number | null
+    niveau?: StringNullableWithAggregatesFilter<"Question"> | string | null
+    auteur?: StringNullableWithAggregatesFilter<"Question"> | string | null
+    explication?: StringNullableWithAggregatesFilter<"Question"> | string | null
+    tags?: StringNullableListFilter<"Question">
+    temps?: IntNullableWithAggregatesFilter<"Question"> | number | null
+    titre?: StringNullableWithAggregatesFilter<"Question"> | string | null
+    hidden?: BoolNullableWithAggregatesFilter<"Question"> | boolean | null
+  }
+
+  export type EnseignantWhereInput = {
+    AND?: EnseignantWhereInput | EnseignantWhereInput[]
+    OR?: EnseignantWhereInput[]
+    NOT?: EnseignantWhereInput | EnseignantWhereInput[]
+    id?: StringFilter<"Enseignant"> | string
+    pseudo?: StringFilter<"Enseignant"> | string
+    mot_de_passe?: StringFilter<"Enseignant"> | string
+    email?: StringNullableFilter<"Enseignant"> | string | null
+    created_at?: DateTimeFilter<"Enseignant"> | Date | string
+    avatar?: StringNullableFilter<"Enseignant"> | string | null
+    reset_token?: StringNullableFilter<"Enseignant"> | string | null
+    reset_token_expires?: DateTimeNullableFilter<"Enseignant"> | Date | string | null
+    tournois?: TournoiListRelationFilter
+    tournoisCrees?: TournoiListRelationFilter
+    quizSauvegardes?: QuizListRelationFilter
+  }
+
+  export type EnseignantOrderByWithRelationInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    mot_de_passe?: SortOrder
+    email?: SortOrderInput | SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrderInput | SortOrder
+    reset_token?: SortOrderInput | SortOrder
+    reset_token_expires?: SortOrderInput | SortOrder
+    tournois?: TournoiOrderByRelationAggregateInput
+    tournoisCrees?: TournoiOrderByRelationAggregateInput
+    quizSauvegardes?: QuizOrderByRelationAggregateInput
+  }
+
+  export type EnseignantWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    email?: string
+    AND?: EnseignantWhereInput | EnseignantWhereInput[]
+    OR?: EnseignantWhereInput[]
+    NOT?: EnseignantWhereInput | EnseignantWhereInput[]
+    pseudo?: StringFilter<"Enseignant"> | string
+    mot_de_passe?: StringFilter<"Enseignant"> | string
+    created_at?: DateTimeFilter<"Enseignant"> | Date | string
+    avatar?: StringNullableFilter<"Enseignant"> | string | null
+    reset_token?: StringNullableFilter<"Enseignant"> | string | null
+    reset_token_expires?: DateTimeNullableFilter<"Enseignant"> | Date | string | null
+    tournois?: TournoiListRelationFilter
+    tournoisCrees?: TournoiListRelationFilter
+    quizSauvegardes?: QuizListRelationFilter
+  }, "id" | "email">
+
+  export type EnseignantOrderByWithAggregationInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    mot_de_passe?: SortOrder
+    email?: SortOrderInput | SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrderInput | SortOrder
+    reset_token?: SortOrderInput | SortOrder
+    reset_token_expires?: SortOrderInput | SortOrder
+    _count?: EnseignantCountOrderByAggregateInput
+    _max?: EnseignantMaxOrderByAggregateInput
+    _min?: EnseignantMinOrderByAggregateInput
+  }
+
+  export type EnseignantScalarWhereWithAggregatesInput = {
+    AND?: EnseignantScalarWhereWithAggregatesInput | EnseignantScalarWhereWithAggregatesInput[]
+    OR?: EnseignantScalarWhereWithAggregatesInput[]
+    NOT?: EnseignantScalarWhereWithAggregatesInput | EnseignantScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Enseignant"> | string
+    pseudo?: StringWithAggregatesFilter<"Enseignant"> | string
+    mot_de_passe?: StringWithAggregatesFilter<"Enseignant"> | string
+    email?: StringNullableWithAggregatesFilter<"Enseignant"> | string | null
+    created_at?: DateTimeWithAggregatesFilter<"Enseignant"> | Date | string
+    avatar?: StringNullableWithAggregatesFilter<"Enseignant"> | string | null
+    reset_token?: StringNullableWithAggregatesFilter<"Enseignant"> | string | null
+    reset_token_expires?: DateTimeNullableWithAggregatesFilter<"Enseignant"> | Date | string | null
+  }
+
+  export type JoueurWhereInput = {
+    AND?: JoueurWhereInput | JoueurWhereInput[]
+    OR?: JoueurWhereInput[]
+    NOT?: JoueurWhereInput | JoueurWhereInput[]
+    id?: StringFilter<"Joueur"> | string
+    pseudo?: StringFilter<"Joueur"> | string
+    cookie_id?: StringFilter<"Joueur"> | string
+    created_at?: DateTimeFilter<"Joueur"> | Date | string
+    avatar?: StringNullableFilter<"Joueur"> | string | null
+    scores?: ScoreListRelationFilter
+    tournois?: TournoiListRelationFilter
+  }
+
+  export type JoueurOrderByWithRelationInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    cookie_id?: SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrderInput | SortOrder
+    scores?: ScoreOrderByRelationAggregateInput
+    tournois?: TournoiOrderByRelationAggregateInput
+  }
+
+  export type JoueurWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    cookie_id?: string
+    AND?: JoueurWhereInput | JoueurWhereInput[]
+    OR?: JoueurWhereInput[]
+    NOT?: JoueurWhereInput | JoueurWhereInput[]
+    pseudo?: StringFilter<"Joueur"> | string
+    created_at?: DateTimeFilter<"Joueur"> | Date | string
+    avatar?: StringNullableFilter<"Joueur"> | string | null
+    scores?: ScoreListRelationFilter
+    tournois?: TournoiListRelationFilter
+  }, "id" | "cookie_id">
+
+  export type JoueurOrderByWithAggregationInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    cookie_id?: SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrderInput | SortOrder
+    _count?: JoueurCountOrderByAggregateInput
+    _max?: JoueurMaxOrderByAggregateInput
+    _min?: JoueurMinOrderByAggregateInput
+  }
+
+  export type JoueurScalarWhereWithAggregatesInput = {
+    AND?: JoueurScalarWhereWithAggregatesInput | JoueurScalarWhereWithAggregatesInput[]
+    OR?: JoueurScalarWhereWithAggregatesInput[]
+    NOT?: JoueurScalarWhereWithAggregatesInput | JoueurScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Joueur"> | string
+    pseudo?: StringWithAggregatesFilter<"Joueur"> | string
+    cookie_id?: StringWithAggregatesFilter<"Joueur"> | string
+    created_at?: DateTimeWithAggregatesFilter<"Joueur"> | Date | string
+    avatar?: StringNullableWithAggregatesFilter<"Joueur"> | string | null
+  }
+
+  export type TournoiWhereInput = {
+    AND?: TournoiWhereInput | TournoiWhereInput[]
+    OR?: TournoiWhereInput[]
+    NOT?: TournoiWhereInput | TournoiWhereInput[]
+    id?: StringFilter<"Tournoi"> | string
+    nom?: StringFilter<"Tournoi"> | string
+    date_creation?: DateTimeFilter<"Tournoi"> | Date | string
+    date_debut?: DateTimeNullableFilter<"Tournoi"> | Date | string | null
+    date_fin?: DateTimeNullableFilter<"Tournoi"> | Date | string | null
+    statut?: StringFilter<"Tournoi"> | string
+    enseignant_id?: StringNullableFilter<"Tournoi"> | string | null
+    questions_ids?: StringNullableListFilter<"Tournoi">
+    type?: StringFilter<"Tournoi"> | string
+    niveau?: StringNullableFilter<"Tournoi"> | string | null
+    categorie?: StringNullableFilter<"Tournoi"> | string | null
+    themes?: StringNullableListFilter<"Tournoi">
+    cree_par_joueur_id?: StringNullableFilter<"Tournoi"> | string | null
+    cree_par_enseignant_id?: StringNullableFilter<"Tournoi"> | string | null
+    questions_generées?: BoolFilter<"Tournoi"> | boolean
+    code?: StringNullableFilter<"Tournoi"> | string | null
+    leaderboard?: JsonNullableFilter<"Tournoi">
+    enseignant?: XOR<EnseignantNullableScalarRelationFilter, EnseignantWhereInput> | null
+    createur_joueur?: XOR<JoueurNullableScalarRelationFilter, JoueurWhereInput> | null
+    createur_enseignant?: XOR<EnseignantNullableScalarRelationFilter, EnseignantWhereInput> | null
+    scores?: ScoreListRelationFilter
+  }
+
+  export type TournoiOrderByWithRelationInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_debut?: SortOrderInput | SortOrder
+    date_fin?: SortOrderInput | SortOrder
+    statut?: SortOrder
+    enseignant_id?: SortOrderInput | SortOrder
+    questions_ids?: SortOrder
+    type?: SortOrder
+    niveau?: SortOrderInput | SortOrder
+    categorie?: SortOrderInput | SortOrder
+    themes?: SortOrder
+    cree_par_joueur_id?: SortOrderInput | SortOrder
+    cree_par_enseignant_id?: SortOrderInput | SortOrder
+    questions_generées?: SortOrder
+    code?: SortOrderInput | SortOrder
+    leaderboard?: SortOrderInput | SortOrder
+    enseignant?: EnseignantOrderByWithRelationInput
+    createur_joueur?: JoueurOrderByWithRelationInput
+    createur_enseignant?: EnseignantOrderByWithRelationInput
+    scores?: ScoreOrderByRelationAggregateInput
+  }
+
+  export type TournoiWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    code?: string
+    AND?: TournoiWhereInput | TournoiWhereInput[]
+    OR?: TournoiWhereInput[]
+    NOT?: TournoiWhereInput | TournoiWhereInput[]
+    nom?: StringFilter<"Tournoi"> | string
+    date_creation?: DateTimeFilter<"Tournoi"> | Date | string
+    date_debut?: DateTimeNullableFilter<"Tournoi"> | Date | string | null
+    date_fin?: DateTimeNullableFilter<"Tournoi"> | Date | string | null
+    statut?: StringFilter<"Tournoi"> | string
+    enseignant_id?: StringNullableFilter<"Tournoi"> | string | null
+    questions_ids?: StringNullableListFilter<"Tournoi">
+    type?: StringFilter<"Tournoi"> | string
+    niveau?: StringNullableFilter<"Tournoi"> | string | null
+    categorie?: StringNullableFilter<"Tournoi"> | string | null
+    themes?: StringNullableListFilter<"Tournoi">
+    cree_par_joueur_id?: StringNullableFilter<"Tournoi"> | string | null
+    cree_par_enseignant_id?: StringNullableFilter<"Tournoi"> | string | null
+    questions_generées?: BoolFilter<"Tournoi"> | boolean
+    leaderboard?: JsonNullableFilter<"Tournoi">
+    enseignant?: XOR<EnseignantNullableScalarRelationFilter, EnseignantWhereInput> | null
+    createur_joueur?: XOR<JoueurNullableScalarRelationFilter, JoueurWhereInput> | null
+    createur_enseignant?: XOR<EnseignantNullableScalarRelationFilter, EnseignantWhereInput> | null
+    scores?: ScoreListRelationFilter
+  }, "id" | "code">
+
+  export type TournoiOrderByWithAggregationInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_debut?: SortOrderInput | SortOrder
+    date_fin?: SortOrderInput | SortOrder
+    statut?: SortOrder
+    enseignant_id?: SortOrderInput | SortOrder
+    questions_ids?: SortOrder
+    type?: SortOrder
+    niveau?: SortOrderInput | SortOrder
+    categorie?: SortOrderInput | SortOrder
+    themes?: SortOrder
+    cree_par_joueur_id?: SortOrderInput | SortOrder
+    cree_par_enseignant_id?: SortOrderInput | SortOrder
+    questions_generées?: SortOrder
+    code?: SortOrderInput | SortOrder
+    leaderboard?: SortOrderInput | SortOrder
+    _count?: TournoiCountOrderByAggregateInput
+    _max?: TournoiMaxOrderByAggregateInput
+    _min?: TournoiMinOrderByAggregateInput
+  }
+
+  export type TournoiScalarWhereWithAggregatesInput = {
+    AND?: TournoiScalarWhereWithAggregatesInput | TournoiScalarWhereWithAggregatesInput[]
+    OR?: TournoiScalarWhereWithAggregatesInput[]
+    NOT?: TournoiScalarWhereWithAggregatesInput | TournoiScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Tournoi"> | string
+    nom?: StringWithAggregatesFilter<"Tournoi"> | string
+    date_creation?: DateTimeWithAggregatesFilter<"Tournoi"> | Date | string
+    date_debut?: DateTimeNullableWithAggregatesFilter<"Tournoi"> | Date | string | null
+    date_fin?: DateTimeNullableWithAggregatesFilter<"Tournoi"> | Date | string | null
+    statut?: StringWithAggregatesFilter<"Tournoi"> | string
+    enseignant_id?: StringNullableWithAggregatesFilter<"Tournoi"> | string | null
+    questions_ids?: StringNullableListFilter<"Tournoi">
+    type?: StringWithAggregatesFilter<"Tournoi"> | string
+    niveau?: StringNullableWithAggregatesFilter<"Tournoi"> | string | null
+    categorie?: StringNullableWithAggregatesFilter<"Tournoi"> | string | null
+    themes?: StringNullableListFilter<"Tournoi">
+    cree_par_joueur_id?: StringNullableWithAggregatesFilter<"Tournoi"> | string | null
+    cree_par_enseignant_id?: StringNullableWithAggregatesFilter<"Tournoi"> | string | null
+    questions_generées?: BoolWithAggregatesFilter<"Tournoi"> | boolean
+    code?: StringNullableWithAggregatesFilter<"Tournoi"> | string | null
+    leaderboard?: JsonNullableWithAggregatesFilter<"Tournoi">
+  }
+
+  export type ScoreWhereInput = {
+    AND?: ScoreWhereInput | ScoreWhereInput[]
+    OR?: ScoreWhereInput[]
+    NOT?: ScoreWhereInput | ScoreWhereInput[]
+    id?: StringFilter<"Score"> | string
+    tournoi_id?: StringFilter<"Score"> | string
+    joueur_id?: StringFilter<"Score"> | string
+    score?: IntFilter<"Score"> | number
+    temps?: IntNullableFilter<"Score"> | number | null
+    position?: IntNullableFilter<"Score"> | number | null
+    date_score?: DateTimeFilter<"Score"> | Date | string
+    tournoi?: XOR<TournoiScalarRelationFilter, TournoiWhereInput>
+    joueur?: XOR<JoueurScalarRelationFilter, JoueurWhereInput>
+  }
+
+  export type ScoreOrderByWithRelationInput = {
+    id?: SortOrder
+    tournoi_id?: SortOrder
+    joueur_id?: SortOrder
+    score?: SortOrder
+    temps?: SortOrderInput | SortOrder
+    position?: SortOrderInput | SortOrder
+    date_score?: SortOrder
+    tournoi?: TournoiOrderByWithRelationInput
+    joueur?: JoueurOrderByWithRelationInput
+  }
+
+  export type ScoreWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    tournoi_id_joueur_id?: ScoreTournoi_idJoueur_idCompoundUniqueInput
+    AND?: ScoreWhereInput | ScoreWhereInput[]
+    OR?: ScoreWhereInput[]
+    NOT?: ScoreWhereInput | ScoreWhereInput[]
+    tournoi_id?: StringFilter<"Score"> | string
+    joueur_id?: StringFilter<"Score"> | string
+    score?: IntFilter<"Score"> | number
+    temps?: IntNullableFilter<"Score"> | number | null
+    position?: IntNullableFilter<"Score"> | number | null
+    date_score?: DateTimeFilter<"Score"> | Date | string
+    tournoi?: XOR<TournoiScalarRelationFilter, TournoiWhereInput>
+    joueur?: XOR<JoueurScalarRelationFilter, JoueurWhereInput>
+  }, "id" | "tournoi_id_joueur_id">
+
+  export type ScoreOrderByWithAggregationInput = {
+    id?: SortOrder
+    tournoi_id?: SortOrder
+    joueur_id?: SortOrder
+    score?: SortOrder
+    temps?: SortOrderInput | SortOrder
+    position?: SortOrderInput | SortOrder
+    date_score?: SortOrder
+    _count?: ScoreCountOrderByAggregateInput
+    _avg?: ScoreAvgOrderByAggregateInput
+    _max?: ScoreMaxOrderByAggregateInput
+    _min?: ScoreMinOrderByAggregateInput
+    _sum?: ScoreSumOrderByAggregateInput
+  }
+
+  export type ScoreScalarWhereWithAggregatesInput = {
+    AND?: ScoreScalarWhereWithAggregatesInput | ScoreScalarWhereWithAggregatesInput[]
+    OR?: ScoreScalarWhereWithAggregatesInput[]
+    NOT?: ScoreScalarWhereWithAggregatesInput | ScoreScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Score"> | string
+    tournoi_id?: StringWithAggregatesFilter<"Score"> | string
+    joueur_id?: StringWithAggregatesFilter<"Score"> | string
+    score?: IntWithAggregatesFilter<"Score"> | number
+    temps?: IntNullableWithAggregatesFilter<"Score"> | number | null
+    position?: IntNullableWithAggregatesFilter<"Score"> | number | null
+    date_score?: DateTimeWithAggregatesFilter<"Score"> | Date | string
+  }
+
+  export type QuizWhereInput = {
+    AND?: QuizWhereInput | QuizWhereInput[]
+    OR?: QuizWhereInput[]
+    NOT?: QuizWhereInput | QuizWhereInput[]
+    id?: StringFilter<"Quiz"> | string
+    nom?: StringFilter<"Quiz"> | string
+    date_creation?: DateTimeFilter<"Quiz"> | Date | string
+    date_sauvegarde?: DateTimeFilter<"Quiz"> | Date | string
+    enseignant_id?: StringFilter<"Quiz"> | string
+    questions_ids?: StringNullableListFilter<"Quiz">
+    type?: StringFilter<"Quiz"> | string
+    niveaux?: StringNullableListFilter<"Quiz">
+    categories?: StringNullableListFilter<"Quiz">
+    themes?: StringNullableListFilter<"Quiz">
+    tournament_code?: StringNullableFilter<"Quiz"> | string | null
+    enseignant?: XOR<EnseignantScalarRelationFilter, EnseignantWhereInput>
+  }
+
+  export type QuizOrderByWithRelationInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_sauvegarde?: SortOrder
+    enseignant_id?: SortOrder
+    questions_ids?: SortOrder
+    type?: SortOrder
+    niveaux?: SortOrder
+    categories?: SortOrder
+    themes?: SortOrder
+    tournament_code?: SortOrderInput | SortOrder
+    enseignant?: EnseignantOrderByWithRelationInput
+  }
+
+  export type QuizWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    tournament_code?: string
+    AND?: QuizWhereInput | QuizWhereInput[]
+    OR?: QuizWhereInput[]
+    NOT?: QuizWhereInput | QuizWhereInput[]
+    nom?: StringFilter<"Quiz"> | string
+    date_creation?: DateTimeFilter<"Quiz"> | Date | string
+    date_sauvegarde?: DateTimeFilter<"Quiz"> | Date | string
+    enseignant_id?: StringFilter<"Quiz"> | string
+    questions_ids?: StringNullableListFilter<"Quiz">
+    type?: StringFilter<"Quiz"> | string
+    niveaux?: StringNullableListFilter<"Quiz">
+    categories?: StringNullableListFilter<"Quiz">
+    themes?: StringNullableListFilter<"Quiz">
+    enseignant?: XOR<EnseignantScalarRelationFilter, EnseignantWhereInput>
+  }, "id" | "tournament_code">
+
+  export type QuizOrderByWithAggregationInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_sauvegarde?: SortOrder
+    enseignant_id?: SortOrder
+    questions_ids?: SortOrder
+    type?: SortOrder
+    niveaux?: SortOrder
+    categories?: SortOrder
+    themes?: SortOrder
+    tournament_code?: SortOrderInput | SortOrder
+    _count?: QuizCountOrderByAggregateInput
+    _max?: QuizMaxOrderByAggregateInput
+    _min?: QuizMinOrderByAggregateInput
+  }
+
+  export type QuizScalarWhereWithAggregatesInput = {
+    AND?: QuizScalarWhereWithAggregatesInput | QuizScalarWhereWithAggregatesInput[]
+    OR?: QuizScalarWhereWithAggregatesInput[]
+    NOT?: QuizScalarWhereWithAggregatesInput | QuizScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Quiz"> | string
+    nom?: StringWithAggregatesFilter<"Quiz"> | string
+    date_creation?: DateTimeWithAggregatesFilter<"Quiz"> | Date | string
+    date_sauvegarde?: DateTimeWithAggregatesFilter<"Quiz"> | Date | string
+    enseignant_id?: StringWithAggregatesFilter<"Quiz"> | string
+    questions_ids?: StringNullableListFilter<"Quiz">
+    type?: StringWithAggregatesFilter<"Quiz"> | string
+    niveaux?: StringNullableListFilter<"Quiz">
+    categories?: StringNullableListFilter<"Quiz">
+    themes?: StringNullableListFilter<"Quiz">
+    tournament_code?: StringNullableWithAggregatesFilter<"Quiz"> | string | null
+  }
+
+  export type QuestionCreateInput = {
+    uid?: string
+    question: string
+    reponses: JsonNullValueInput | InputJsonValue
+    type: string
+    discipline: string
+    theme: string
+    difficulte?: number | null
+    niveau?: string | null
+    auteur?: string | null
+    explication?: string | null
+    tags?: QuestionCreatetagsInput | string[]
+    temps?: number | null
+    titre?: string | null
+    hidden?: boolean | null
+  }
+
+  export type QuestionUncheckedCreateInput = {
+    uid?: string
+    question: string
+    reponses: JsonNullValueInput | InputJsonValue
+    type: string
+    discipline: string
+    theme: string
+    difficulte?: number | null
+    niveau?: string | null
+    auteur?: string | null
+    explication?: string | null
+    tags?: QuestionCreatetagsInput | string[]
+    temps?: number | null
+    titre?: string | null
+    hidden?: boolean | null
+  }
+
+  export type QuestionUpdateInput = {
+    uid?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    reponses?: JsonNullValueInput | InputJsonValue
+    type?: StringFieldUpdateOperationsInput | string
+    discipline?: StringFieldUpdateOperationsInput | string
+    theme?: StringFieldUpdateOperationsInput | string
+    difficulte?: NullableIntFieldUpdateOperationsInput | number | null
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    auteur?: NullableStringFieldUpdateOperationsInput | string | null
+    explication?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: QuestionUpdatetagsInput | string[]
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    titre?: NullableStringFieldUpdateOperationsInput | string | null
+    hidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+  }
+
+  export type QuestionUncheckedUpdateInput = {
+    uid?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    reponses?: JsonNullValueInput | InputJsonValue
+    type?: StringFieldUpdateOperationsInput | string
+    discipline?: StringFieldUpdateOperationsInput | string
+    theme?: StringFieldUpdateOperationsInput | string
+    difficulte?: NullableIntFieldUpdateOperationsInput | number | null
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    auteur?: NullableStringFieldUpdateOperationsInput | string | null
+    explication?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: QuestionUpdatetagsInput | string[]
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    titre?: NullableStringFieldUpdateOperationsInput | string | null
+    hidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+  }
+
+  export type QuestionCreateManyInput = {
+    uid?: string
+    question: string
+    reponses: JsonNullValueInput | InputJsonValue
+    type: string
+    discipline: string
+    theme: string
+    difficulte?: number | null
+    niveau?: string | null
+    auteur?: string | null
+    explication?: string | null
+    tags?: QuestionCreatetagsInput | string[]
+    temps?: number | null
+    titre?: string | null
+    hidden?: boolean | null
+  }
+
+  export type QuestionUpdateManyMutationInput = {
+    uid?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    reponses?: JsonNullValueInput | InputJsonValue
+    type?: StringFieldUpdateOperationsInput | string
+    discipline?: StringFieldUpdateOperationsInput | string
+    theme?: StringFieldUpdateOperationsInput | string
+    difficulte?: NullableIntFieldUpdateOperationsInput | number | null
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    auteur?: NullableStringFieldUpdateOperationsInput | string | null
+    explication?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: QuestionUpdatetagsInput | string[]
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    titre?: NullableStringFieldUpdateOperationsInput | string | null
+    hidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+  }
+
+  export type QuestionUncheckedUpdateManyInput = {
+    uid?: StringFieldUpdateOperationsInput | string
+    question?: StringFieldUpdateOperationsInput | string
+    reponses?: JsonNullValueInput | InputJsonValue
+    type?: StringFieldUpdateOperationsInput | string
+    discipline?: StringFieldUpdateOperationsInput | string
+    theme?: StringFieldUpdateOperationsInput | string
+    difficulte?: NullableIntFieldUpdateOperationsInput | number | null
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    auteur?: NullableStringFieldUpdateOperationsInput | string | null
+    explication?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: QuestionUpdatetagsInput | string[]
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    titre?: NullableStringFieldUpdateOperationsInput | string | null
+    hidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+  }
+
+  export type EnseignantCreateInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+    tournois?: TournoiCreateNestedManyWithoutEnseignantInput
+    tournoisCrees?: TournoiCreateNestedManyWithoutCreateur_enseignantInput
+    quizSauvegardes?: QuizCreateNestedManyWithoutEnseignantInput
+  }
+
+  export type EnseignantUncheckedCreateInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+    tournois?: TournoiUncheckedCreateNestedManyWithoutEnseignantInput
+    tournoisCrees?: TournoiUncheckedCreateNestedManyWithoutCreateur_enseignantInput
+    quizSauvegardes?: QuizUncheckedCreateNestedManyWithoutEnseignantInput
+  }
+
+  export type EnseignantUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tournois?: TournoiUpdateManyWithoutEnseignantNestedInput
+    tournoisCrees?: TournoiUpdateManyWithoutCreateur_enseignantNestedInput
+    quizSauvegardes?: QuizUpdateManyWithoutEnseignantNestedInput
+  }
+
+  export type EnseignantUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tournois?: TournoiUncheckedUpdateManyWithoutEnseignantNestedInput
+    tournoisCrees?: TournoiUncheckedUpdateManyWithoutCreateur_enseignantNestedInput
+    quizSauvegardes?: QuizUncheckedUpdateManyWithoutEnseignantNestedInput
+  }
+
+  export type EnseignantCreateManyInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+  }
+
+  export type EnseignantUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type EnseignantUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type JoueurCreateInput = {
+    id?: string
+    pseudo: string
+    cookie_id: string
+    created_at?: Date | string
+    avatar?: string | null
+    scores?: ScoreCreateNestedManyWithoutJoueurInput
+    tournois?: TournoiCreateNestedManyWithoutCreateur_joueurInput
+  }
+
+  export type JoueurUncheckedCreateInput = {
+    id?: string
+    pseudo: string
+    cookie_id: string
+    created_at?: Date | string
+    avatar?: string | null
+    scores?: ScoreUncheckedCreateNestedManyWithoutJoueurInput
+    tournois?: TournoiUncheckedCreateNestedManyWithoutCreateur_joueurInput
+  }
+
+  export type JoueurUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    cookie_id?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    scores?: ScoreUpdateManyWithoutJoueurNestedInput
+    tournois?: TournoiUpdateManyWithoutCreateur_joueurNestedInput
+  }
+
+  export type JoueurUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    cookie_id?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    scores?: ScoreUncheckedUpdateManyWithoutJoueurNestedInput
+    tournois?: TournoiUncheckedUpdateManyWithoutCreateur_joueurNestedInput
+  }
+
+  export type JoueurCreateManyInput = {
+    id?: string
+    pseudo: string
+    cookie_id: string
+    created_at?: Date | string
+    avatar?: string | null
+  }
+
+  export type JoueurUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    cookie_id?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type JoueurUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    cookie_id?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type TournoiCreateInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    enseignant?: EnseignantCreateNestedOneWithoutTournoisInput
+    createur_joueur?: JoueurCreateNestedOneWithoutTournoisInput
+    createur_enseignant?: EnseignantCreateNestedOneWithoutTournoisCreesInput
+    scores?: ScoreCreateNestedManyWithoutTournoiInput
+  }
+
+  export type TournoiUncheckedCreateInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    enseignant_id?: string | null
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_joueur_id?: string | null
+    cree_par_enseignant_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    scores?: ScoreUncheckedCreateNestedManyWithoutTournoiInput
+  }
+
+  export type TournoiUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    enseignant?: EnseignantUpdateOneWithoutTournoisNestedInput
+    createur_joueur?: JoueurUpdateOneWithoutTournoisNestedInput
+    createur_enseignant?: EnseignantUpdateOneWithoutTournoisCreesNestedInput
+    scores?: ScoreUpdateManyWithoutTournoiNestedInput
+  }
+
+  export type TournoiUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_joueur_id?: NullableStringFieldUpdateOperationsInput | string | null
+    cree_par_enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    scores?: ScoreUncheckedUpdateManyWithoutTournoiNestedInput
+  }
+
+  export type TournoiCreateManyInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    enseignant_id?: string | null
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_joueur_id?: string | null
+    cree_par_enseignant_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type TournoiUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type TournoiUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_joueur_id?: NullableStringFieldUpdateOperationsInput | string | null
+    cree_par_enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type ScoreCreateInput = {
+    id?: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+    tournoi: TournoiCreateNestedOneWithoutScoresInput
+    joueur: JoueurCreateNestedOneWithoutScoresInput
+  }
+
+  export type ScoreUncheckedCreateInput = {
+    id?: string
+    tournoi_id: string
+    joueur_id: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+  }
+
+  export type ScoreUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+    tournoi?: TournoiUpdateOneRequiredWithoutScoresNestedInput
+    joueur?: JoueurUpdateOneRequiredWithoutScoresNestedInput
+  }
+
+  export type ScoreUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tournoi_id?: StringFieldUpdateOperationsInput | string
+    joueur_id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScoreCreateManyInput = {
+    id?: string
+    tournoi_id: string
+    joueur_id: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+  }
+
+  export type ScoreUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScoreUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tournoi_id?: StringFieldUpdateOperationsInput | string
+    joueur_id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuizCreateInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_sauvegarde?: Date | string
+    questions_ids?: QuizCreatequestions_idsInput | string[]
+    type: string
+    niveaux?: QuizCreateniveauxInput | string[]
+    categories?: QuizCreatecategoriesInput | string[]
+    themes?: QuizCreatethemesInput | string[]
+    tournament_code?: string | null
+    enseignant: EnseignantCreateNestedOneWithoutQuizSauvegardesInput
+  }
+
+  export type QuizUncheckedCreateInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_sauvegarde?: Date | string
+    enseignant_id: string
+    questions_ids?: QuizCreatequestions_idsInput | string[]
+    type: string
+    niveaux?: QuizCreateniveauxInput | string[]
+    categories?: QuizCreatecategoriesInput | string[]
+    themes?: QuizCreatethemesInput | string[]
+    tournament_code?: string | null
+  }
+
+  export type QuizUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_sauvegarde?: DateTimeFieldUpdateOperationsInput | Date | string
+    questions_ids?: QuizUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveaux?: QuizUpdateniveauxInput | string[]
+    categories?: QuizUpdatecategoriesInput | string[]
+    themes?: QuizUpdatethemesInput | string[]
+    tournament_code?: NullableStringFieldUpdateOperationsInput | string | null
+    enseignant?: EnseignantUpdateOneRequiredWithoutQuizSauvegardesNestedInput
+  }
+
+  export type QuizUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_sauvegarde?: DateTimeFieldUpdateOperationsInput | Date | string
+    enseignant_id?: StringFieldUpdateOperationsInput | string
+    questions_ids?: QuizUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveaux?: QuizUpdateniveauxInput | string[]
+    categories?: QuizUpdatecategoriesInput | string[]
+    themes?: QuizUpdatethemesInput | string[]
+    tournament_code?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type QuizCreateManyInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_sauvegarde?: Date | string
+    enseignant_id: string
+    questions_ids?: QuizCreatequestions_idsInput | string[]
+    type: string
+    niveaux?: QuizCreateniveauxInput | string[]
+    categories?: QuizCreatecategoriesInput | string[]
+    themes?: QuizCreatethemesInput | string[]
+    tournament_code?: string | null
+  }
+
+  export type QuizUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_sauvegarde?: DateTimeFieldUpdateOperationsInput | Date | string
+    questions_ids?: QuizUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveaux?: QuizUpdateniveauxInput | string[]
+    categories?: QuizUpdatecategoriesInput | string[]
+    themes?: QuizUpdatethemesInput | string[]
+    tournament_code?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type QuizUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_sauvegarde?: DateTimeFieldUpdateOperationsInput | Date | string
+    enseignant_id?: StringFieldUpdateOperationsInput | string
+    questions_ids?: QuizUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveaux?: QuizUpdateniveauxInput | string[]
+    categories?: QuizUpdatecategoriesInput | string[]
+    themes?: QuizUpdatethemesInput | string[]
+    tournament_code?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type StringFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringFilter<$PrismaModel> | string
+  }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
+  }
+
+  export type QuestionCountOrderByAggregateInput = {
+    uid?: SortOrder
+    question?: SortOrder
+    reponses?: SortOrder
+    type?: SortOrder
+    discipline?: SortOrder
+    theme?: SortOrder
+    difficulte?: SortOrder
+    niveau?: SortOrder
+    auteur?: SortOrder
+    explication?: SortOrder
+    tags?: SortOrder
+    temps?: SortOrder
+    titre?: SortOrder
+    hidden?: SortOrder
+  }
+
+  export type QuestionAvgOrderByAggregateInput = {
+    difficulte?: SortOrder
+    temps?: SortOrder
+  }
+
+  export type QuestionMaxOrderByAggregateInput = {
+    uid?: SortOrder
+    question?: SortOrder
+    type?: SortOrder
+    discipline?: SortOrder
+    theme?: SortOrder
+    difficulte?: SortOrder
+    niveau?: SortOrder
+    auteur?: SortOrder
+    explication?: SortOrder
+    temps?: SortOrder
+    titre?: SortOrder
+    hidden?: SortOrder
+  }
+
+  export type QuestionMinOrderByAggregateInput = {
+    uid?: SortOrder
+    question?: SortOrder
+    type?: SortOrder
+    discipline?: SortOrder
+    theme?: SortOrder
+    difficulte?: SortOrder
+    niveau?: SortOrder
+    auteur?: SortOrder
+    explication?: SortOrder
+    temps?: SortOrder
+    titre?: SortOrder
+    hidden?: SortOrder
+  }
+
+  export type QuestionSumOrderByAggregateInput = {
+    difficulte?: SortOrder
+    temps?: SortOrder
+  }
+
+  export type StringWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type TournoiListRelationFilter = {
+    every?: TournoiWhereInput
+    some?: TournoiWhereInput
+    none?: TournoiWhereInput
+  }
+
+  export type QuizListRelationFilter = {
+    every?: QuizWhereInput
+    some?: QuizWhereInput
+    none?: QuizWhereInput
+  }
+
+  export type TournoiOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type QuizOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type EnseignantCountOrderByAggregateInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    mot_de_passe?: SortOrder
+    email?: SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrder
+    reset_token?: SortOrder
+    reset_token_expires?: SortOrder
+  }
+
+  export type EnseignantMaxOrderByAggregateInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    mot_de_passe?: SortOrder
+    email?: SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrder
+    reset_token?: SortOrder
+    reset_token_expires?: SortOrder
+  }
+
+  export type EnseignantMinOrderByAggregateInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    mot_de_passe?: SortOrder
+    email?: SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrder
+    reset_token?: SortOrder
+    reset_token_expires?: SortOrder
+  }
+
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type ScoreListRelationFilter = {
+    every?: ScoreWhereInput
+    some?: ScoreWhereInput
+    none?: ScoreWhereInput
+  }
+
+  export type ScoreOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type JoueurCountOrderByAggregateInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    cookie_id?: SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrder
+  }
+
+  export type JoueurMaxOrderByAggregateInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    cookie_id?: SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrder
+  }
+
+  export type JoueurMinOrderByAggregateInput = {
+    id?: SortOrder
+    pseudo?: SortOrder
+    cookie_id?: SortOrder
+    created_at?: SortOrder
+    avatar?: SortOrder
+  }
+
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type EnseignantNullableScalarRelationFilter = {
+    is?: EnseignantWhereInput | null
+    isNot?: EnseignantWhereInput | null
+  }
+
+  export type JoueurNullableScalarRelationFilter = {
+    is?: JoueurWhereInput | null
+    isNot?: JoueurWhereInput | null
+  }
+
+  export type TournoiCountOrderByAggregateInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_debut?: SortOrder
+    date_fin?: SortOrder
+    statut?: SortOrder
+    enseignant_id?: SortOrder
+    questions_ids?: SortOrder
+    type?: SortOrder
+    niveau?: SortOrder
+    categorie?: SortOrder
+    themes?: SortOrder
+    cree_par_joueur_id?: SortOrder
+    cree_par_enseignant_id?: SortOrder
+    questions_generées?: SortOrder
+    code?: SortOrder
+    leaderboard?: SortOrder
+  }
+
+  export type TournoiMaxOrderByAggregateInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_debut?: SortOrder
+    date_fin?: SortOrder
+    statut?: SortOrder
+    enseignant_id?: SortOrder
+    type?: SortOrder
+    niveau?: SortOrder
+    categorie?: SortOrder
+    cree_par_joueur_id?: SortOrder
+    cree_par_enseignant_id?: SortOrder
+    questions_generées?: SortOrder
+    code?: SortOrder
+  }
+
+  export type TournoiMinOrderByAggregateInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_debut?: SortOrder
+    date_fin?: SortOrder
+    statut?: SortOrder
+    enseignant_id?: SortOrder
+    type?: SortOrder
+    niveau?: SortOrder
+    categorie?: SortOrder
+    cree_par_joueur_id?: SortOrder
+    cree_par_enseignant_id?: SortOrder
+    questions_generées?: SortOrder
+    code?: SortOrder
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type TournoiScalarRelationFilter = {
+    is?: TournoiWhereInput
+    isNot?: TournoiWhereInput
+  }
+
+  export type JoueurScalarRelationFilter = {
+    is?: JoueurWhereInput
+    isNot?: JoueurWhereInput
+  }
+
+  export type ScoreTournoi_idJoueur_idCompoundUniqueInput = {
+    tournoi_id: string
+    joueur_id: string
+  }
+
+  export type ScoreCountOrderByAggregateInput = {
+    id?: SortOrder
+    tournoi_id?: SortOrder
+    joueur_id?: SortOrder
+    score?: SortOrder
+    temps?: SortOrder
+    position?: SortOrder
+    date_score?: SortOrder
+  }
+
+  export type ScoreAvgOrderByAggregateInput = {
+    score?: SortOrder
+    temps?: SortOrder
+    position?: SortOrder
+  }
+
+  export type ScoreMaxOrderByAggregateInput = {
+    id?: SortOrder
+    tournoi_id?: SortOrder
+    joueur_id?: SortOrder
+    score?: SortOrder
+    temps?: SortOrder
+    position?: SortOrder
+    date_score?: SortOrder
+  }
+
+  export type ScoreMinOrderByAggregateInput = {
+    id?: SortOrder
+    tournoi_id?: SortOrder
+    joueur_id?: SortOrder
+    score?: SortOrder
+    temps?: SortOrder
+    position?: SortOrder
+    date_score?: SortOrder
+  }
+
+  export type ScoreSumOrderByAggregateInput = {
+    score?: SortOrder
+    temps?: SortOrder
+    position?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type EnseignantScalarRelationFilter = {
+    is?: EnseignantWhereInput
+    isNot?: EnseignantWhereInput
+  }
+
+  export type QuizCountOrderByAggregateInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_sauvegarde?: SortOrder
+    enseignant_id?: SortOrder
+    questions_ids?: SortOrder
+    type?: SortOrder
+    niveaux?: SortOrder
+    categories?: SortOrder
+    themes?: SortOrder
+    tournament_code?: SortOrder
+  }
+
+  export type QuizMaxOrderByAggregateInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_sauvegarde?: SortOrder
+    enseignant_id?: SortOrder
+    type?: SortOrder
+    tournament_code?: SortOrder
+  }
+
+  export type QuizMinOrderByAggregateInput = {
+    id?: SortOrder
+    nom?: SortOrder
+    date_creation?: SortOrder
+    date_sauvegarde?: SortOrder
+    enseignant_id?: SortOrder
+    type?: SortOrder
+    tournament_code?: SortOrder
+  }
+
+  export type QuestionCreatetagsInput = {
+    set: string[]
+  }
+
+  export type StringFieldUpdateOperationsInput = {
+    set?: string
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+  }
+
+  export type QuestionUpdatetagsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
+  export type TournoiCreateNestedManyWithoutEnseignantInput = {
+    create?: XOR<TournoiCreateWithoutEnseignantInput, TournoiUncheckedCreateWithoutEnseignantInput> | TournoiCreateWithoutEnseignantInput[] | TournoiUncheckedCreateWithoutEnseignantInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutEnseignantInput | TournoiCreateOrConnectWithoutEnseignantInput[]
+    createMany?: TournoiCreateManyEnseignantInputEnvelope
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+  }
+
+  export type TournoiCreateNestedManyWithoutCreateur_enseignantInput = {
+    create?: XOR<TournoiCreateWithoutCreateur_enseignantInput, TournoiUncheckedCreateWithoutCreateur_enseignantInput> | TournoiCreateWithoutCreateur_enseignantInput[] | TournoiUncheckedCreateWithoutCreateur_enseignantInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutCreateur_enseignantInput | TournoiCreateOrConnectWithoutCreateur_enseignantInput[]
+    createMany?: TournoiCreateManyCreateur_enseignantInputEnvelope
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+  }
+
+  export type QuizCreateNestedManyWithoutEnseignantInput = {
+    create?: XOR<QuizCreateWithoutEnseignantInput, QuizUncheckedCreateWithoutEnseignantInput> | QuizCreateWithoutEnseignantInput[] | QuizUncheckedCreateWithoutEnseignantInput[]
+    connectOrCreate?: QuizCreateOrConnectWithoutEnseignantInput | QuizCreateOrConnectWithoutEnseignantInput[]
+    createMany?: QuizCreateManyEnseignantInputEnvelope
+    connect?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+  }
+
+  export type TournoiUncheckedCreateNestedManyWithoutEnseignantInput = {
+    create?: XOR<TournoiCreateWithoutEnseignantInput, TournoiUncheckedCreateWithoutEnseignantInput> | TournoiCreateWithoutEnseignantInput[] | TournoiUncheckedCreateWithoutEnseignantInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutEnseignantInput | TournoiCreateOrConnectWithoutEnseignantInput[]
+    createMany?: TournoiCreateManyEnseignantInputEnvelope
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+  }
+
+  export type TournoiUncheckedCreateNestedManyWithoutCreateur_enseignantInput = {
+    create?: XOR<TournoiCreateWithoutCreateur_enseignantInput, TournoiUncheckedCreateWithoutCreateur_enseignantInput> | TournoiCreateWithoutCreateur_enseignantInput[] | TournoiUncheckedCreateWithoutCreateur_enseignantInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutCreateur_enseignantInput | TournoiCreateOrConnectWithoutCreateur_enseignantInput[]
+    createMany?: TournoiCreateManyCreateur_enseignantInputEnvelope
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+  }
+
+  export type QuizUncheckedCreateNestedManyWithoutEnseignantInput = {
+    create?: XOR<QuizCreateWithoutEnseignantInput, QuizUncheckedCreateWithoutEnseignantInput> | QuizCreateWithoutEnseignantInput[] | QuizUncheckedCreateWithoutEnseignantInput[]
+    connectOrCreate?: QuizCreateOrConnectWithoutEnseignantInput | QuizCreateOrConnectWithoutEnseignantInput[]
+    createMany?: QuizCreateManyEnseignantInputEnvelope
+    connect?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+  }
+
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type TournoiUpdateManyWithoutEnseignantNestedInput = {
+    create?: XOR<TournoiCreateWithoutEnseignantInput, TournoiUncheckedCreateWithoutEnseignantInput> | TournoiCreateWithoutEnseignantInput[] | TournoiUncheckedCreateWithoutEnseignantInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutEnseignantInput | TournoiCreateOrConnectWithoutEnseignantInput[]
+    upsert?: TournoiUpsertWithWhereUniqueWithoutEnseignantInput | TournoiUpsertWithWhereUniqueWithoutEnseignantInput[]
+    createMany?: TournoiCreateManyEnseignantInputEnvelope
+    set?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    disconnect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    delete?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    update?: TournoiUpdateWithWhereUniqueWithoutEnseignantInput | TournoiUpdateWithWhereUniqueWithoutEnseignantInput[]
+    updateMany?: TournoiUpdateManyWithWhereWithoutEnseignantInput | TournoiUpdateManyWithWhereWithoutEnseignantInput[]
+    deleteMany?: TournoiScalarWhereInput | TournoiScalarWhereInput[]
+  }
+
+  export type TournoiUpdateManyWithoutCreateur_enseignantNestedInput = {
+    create?: XOR<TournoiCreateWithoutCreateur_enseignantInput, TournoiUncheckedCreateWithoutCreateur_enseignantInput> | TournoiCreateWithoutCreateur_enseignantInput[] | TournoiUncheckedCreateWithoutCreateur_enseignantInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutCreateur_enseignantInput | TournoiCreateOrConnectWithoutCreateur_enseignantInput[]
+    upsert?: TournoiUpsertWithWhereUniqueWithoutCreateur_enseignantInput | TournoiUpsertWithWhereUniqueWithoutCreateur_enseignantInput[]
+    createMany?: TournoiCreateManyCreateur_enseignantInputEnvelope
+    set?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    disconnect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    delete?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    update?: TournoiUpdateWithWhereUniqueWithoutCreateur_enseignantInput | TournoiUpdateWithWhereUniqueWithoutCreateur_enseignantInput[]
+    updateMany?: TournoiUpdateManyWithWhereWithoutCreateur_enseignantInput | TournoiUpdateManyWithWhereWithoutCreateur_enseignantInput[]
+    deleteMany?: TournoiScalarWhereInput | TournoiScalarWhereInput[]
+  }
+
+  export type QuizUpdateManyWithoutEnseignantNestedInput = {
+    create?: XOR<QuizCreateWithoutEnseignantInput, QuizUncheckedCreateWithoutEnseignantInput> | QuizCreateWithoutEnseignantInput[] | QuizUncheckedCreateWithoutEnseignantInput[]
+    connectOrCreate?: QuizCreateOrConnectWithoutEnseignantInput | QuizCreateOrConnectWithoutEnseignantInput[]
+    upsert?: QuizUpsertWithWhereUniqueWithoutEnseignantInput | QuizUpsertWithWhereUniqueWithoutEnseignantInput[]
+    createMany?: QuizCreateManyEnseignantInputEnvelope
+    set?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+    disconnect?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+    delete?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+    connect?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+    update?: QuizUpdateWithWhereUniqueWithoutEnseignantInput | QuizUpdateWithWhereUniqueWithoutEnseignantInput[]
+    updateMany?: QuizUpdateManyWithWhereWithoutEnseignantInput | QuizUpdateManyWithWhereWithoutEnseignantInput[]
+    deleteMany?: QuizScalarWhereInput | QuizScalarWhereInput[]
+  }
+
+  export type TournoiUncheckedUpdateManyWithoutEnseignantNestedInput = {
+    create?: XOR<TournoiCreateWithoutEnseignantInput, TournoiUncheckedCreateWithoutEnseignantInput> | TournoiCreateWithoutEnseignantInput[] | TournoiUncheckedCreateWithoutEnseignantInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutEnseignantInput | TournoiCreateOrConnectWithoutEnseignantInput[]
+    upsert?: TournoiUpsertWithWhereUniqueWithoutEnseignantInput | TournoiUpsertWithWhereUniqueWithoutEnseignantInput[]
+    createMany?: TournoiCreateManyEnseignantInputEnvelope
+    set?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    disconnect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    delete?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    update?: TournoiUpdateWithWhereUniqueWithoutEnseignantInput | TournoiUpdateWithWhereUniqueWithoutEnseignantInput[]
+    updateMany?: TournoiUpdateManyWithWhereWithoutEnseignantInput | TournoiUpdateManyWithWhereWithoutEnseignantInput[]
+    deleteMany?: TournoiScalarWhereInput | TournoiScalarWhereInput[]
+  }
+
+  export type TournoiUncheckedUpdateManyWithoutCreateur_enseignantNestedInput = {
+    create?: XOR<TournoiCreateWithoutCreateur_enseignantInput, TournoiUncheckedCreateWithoutCreateur_enseignantInput> | TournoiCreateWithoutCreateur_enseignantInput[] | TournoiUncheckedCreateWithoutCreateur_enseignantInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutCreateur_enseignantInput | TournoiCreateOrConnectWithoutCreateur_enseignantInput[]
+    upsert?: TournoiUpsertWithWhereUniqueWithoutCreateur_enseignantInput | TournoiUpsertWithWhereUniqueWithoutCreateur_enseignantInput[]
+    createMany?: TournoiCreateManyCreateur_enseignantInputEnvelope
+    set?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    disconnect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    delete?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    update?: TournoiUpdateWithWhereUniqueWithoutCreateur_enseignantInput | TournoiUpdateWithWhereUniqueWithoutCreateur_enseignantInput[]
+    updateMany?: TournoiUpdateManyWithWhereWithoutCreateur_enseignantInput | TournoiUpdateManyWithWhereWithoutCreateur_enseignantInput[]
+    deleteMany?: TournoiScalarWhereInput | TournoiScalarWhereInput[]
+  }
+
+  export type QuizUncheckedUpdateManyWithoutEnseignantNestedInput = {
+    create?: XOR<QuizCreateWithoutEnseignantInput, QuizUncheckedCreateWithoutEnseignantInput> | QuizCreateWithoutEnseignantInput[] | QuizUncheckedCreateWithoutEnseignantInput[]
+    connectOrCreate?: QuizCreateOrConnectWithoutEnseignantInput | QuizCreateOrConnectWithoutEnseignantInput[]
+    upsert?: QuizUpsertWithWhereUniqueWithoutEnseignantInput | QuizUpsertWithWhereUniqueWithoutEnseignantInput[]
+    createMany?: QuizCreateManyEnseignantInputEnvelope
+    set?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+    disconnect?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+    delete?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+    connect?: QuizWhereUniqueInput | QuizWhereUniqueInput[]
+    update?: QuizUpdateWithWhereUniqueWithoutEnseignantInput | QuizUpdateWithWhereUniqueWithoutEnseignantInput[]
+    updateMany?: QuizUpdateManyWithWhereWithoutEnseignantInput | QuizUpdateManyWithWhereWithoutEnseignantInput[]
+    deleteMany?: QuizScalarWhereInput | QuizScalarWhereInput[]
+  }
+
+  export type ScoreCreateNestedManyWithoutJoueurInput = {
+    create?: XOR<ScoreCreateWithoutJoueurInput, ScoreUncheckedCreateWithoutJoueurInput> | ScoreCreateWithoutJoueurInput[] | ScoreUncheckedCreateWithoutJoueurInput[]
+    connectOrCreate?: ScoreCreateOrConnectWithoutJoueurInput | ScoreCreateOrConnectWithoutJoueurInput[]
+    createMany?: ScoreCreateManyJoueurInputEnvelope
+    connect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+  }
+
+  export type TournoiCreateNestedManyWithoutCreateur_joueurInput = {
+    create?: XOR<TournoiCreateWithoutCreateur_joueurInput, TournoiUncheckedCreateWithoutCreateur_joueurInput> | TournoiCreateWithoutCreateur_joueurInput[] | TournoiUncheckedCreateWithoutCreateur_joueurInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutCreateur_joueurInput | TournoiCreateOrConnectWithoutCreateur_joueurInput[]
+    createMany?: TournoiCreateManyCreateur_joueurInputEnvelope
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+  }
+
+  export type ScoreUncheckedCreateNestedManyWithoutJoueurInput = {
+    create?: XOR<ScoreCreateWithoutJoueurInput, ScoreUncheckedCreateWithoutJoueurInput> | ScoreCreateWithoutJoueurInput[] | ScoreUncheckedCreateWithoutJoueurInput[]
+    connectOrCreate?: ScoreCreateOrConnectWithoutJoueurInput | ScoreCreateOrConnectWithoutJoueurInput[]
+    createMany?: ScoreCreateManyJoueurInputEnvelope
+    connect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+  }
+
+  export type TournoiUncheckedCreateNestedManyWithoutCreateur_joueurInput = {
+    create?: XOR<TournoiCreateWithoutCreateur_joueurInput, TournoiUncheckedCreateWithoutCreateur_joueurInput> | TournoiCreateWithoutCreateur_joueurInput[] | TournoiUncheckedCreateWithoutCreateur_joueurInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutCreateur_joueurInput | TournoiCreateOrConnectWithoutCreateur_joueurInput[]
+    createMany?: TournoiCreateManyCreateur_joueurInputEnvelope
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+  }
+
+  export type ScoreUpdateManyWithoutJoueurNestedInput = {
+    create?: XOR<ScoreCreateWithoutJoueurInput, ScoreUncheckedCreateWithoutJoueurInput> | ScoreCreateWithoutJoueurInput[] | ScoreUncheckedCreateWithoutJoueurInput[]
+    connectOrCreate?: ScoreCreateOrConnectWithoutJoueurInput | ScoreCreateOrConnectWithoutJoueurInput[]
+    upsert?: ScoreUpsertWithWhereUniqueWithoutJoueurInput | ScoreUpsertWithWhereUniqueWithoutJoueurInput[]
+    createMany?: ScoreCreateManyJoueurInputEnvelope
+    set?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    disconnect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    delete?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    connect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    update?: ScoreUpdateWithWhereUniqueWithoutJoueurInput | ScoreUpdateWithWhereUniqueWithoutJoueurInput[]
+    updateMany?: ScoreUpdateManyWithWhereWithoutJoueurInput | ScoreUpdateManyWithWhereWithoutJoueurInput[]
+    deleteMany?: ScoreScalarWhereInput | ScoreScalarWhereInput[]
+  }
+
+  export type TournoiUpdateManyWithoutCreateur_joueurNestedInput = {
+    create?: XOR<TournoiCreateWithoutCreateur_joueurInput, TournoiUncheckedCreateWithoutCreateur_joueurInput> | TournoiCreateWithoutCreateur_joueurInput[] | TournoiUncheckedCreateWithoutCreateur_joueurInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutCreateur_joueurInput | TournoiCreateOrConnectWithoutCreateur_joueurInput[]
+    upsert?: TournoiUpsertWithWhereUniqueWithoutCreateur_joueurInput | TournoiUpsertWithWhereUniqueWithoutCreateur_joueurInput[]
+    createMany?: TournoiCreateManyCreateur_joueurInputEnvelope
+    set?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    disconnect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    delete?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    update?: TournoiUpdateWithWhereUniqueWithoutCreateur_joueurInput | TournoiUpdateWithWhereUniqueWithoutCreateur_joueurInput[]
+    updateMany?: TournoiUpdateManyWithWhereWithoutCreateur_joueurInput | TournoiUpdateManyWithWhereWithoutCreateur_joueurInput[]
+    deleteMany?: TournoiScalarWhereInput | TournoiScalarWhereInput[]
+  }
+
+  export type ScoreUncheckedUpdateManyWithoutJoueurNestedInput = {
+    create?: XOR<ScoreCreateWithoutJoueurInput, ScoreUncheckedCreateWithoutJoueurInput> | ScoreCreateWithoutJoueurInput[] | ScoreUncheckedCreateWithoutJoueurInput[]
+    connectOrCreate?: ScoreCreateOrConnectWithoutJoueurInput | ScoreCreateOrConnectWithoutJoueurInput[]
+    upsert?: ScoreUpsertWithWhereUniqueWithoutJoueurInput | ScoreUpsertWithWhereUniqueWithoutJoueurInput[]
+    createMany?: ScoreCreateManyJoueurInputEnvelope
+    set?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    disconnect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    delete?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    connect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    update?: ScoreUpdateWithWhereUniqueWithoutJoueurInput | ScoreUpdateWithWhereUniqueWithoutJoueurInput[]
+    updateMany?: ScoreUpdateManyWithWhereWithoutJoueurInput | ScoreUpdateManyWithWhereWithoutJoueurInput[]
+    deleteMany?: ScoreScalarWhereInput | ScoreScalarWhereInput[]
+  }
+
+  export type TournoiUncheckedUpdateManyWithoutCreateur_joueurNestedInput = {
+    create?: XOR<TournoiCreateWithoutCreateur_joueurInput, TournoiUncheckedCreateWithoutCreateur_joueurInput> | TournoiCreateWithoutCreateur_joueurInput[] | TournoiUncheckedCreateWithoutCreateur_joueurInput[]
+    connectOrCreate?: TournoiCreateOrConnectWithoutCreateur_joueurInput | TournoiCreateOrConnectWithoutCreateur_joueurInput[]
+    upsert?: TournoiUpsertWithWhereUniqueWithoutCreateur_joueurInput | TournoiUpsertWithWhereUniqueWithoutCreateur_joueurInput[]
+    createMany?: TournoiCreateManyCreateur_joueurInputEnvelope
+    set?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    disconnect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    delete?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    connect?: TournoiWhereUniqueInput | TournoiWhereUniqueInput[]
+    update?: TournoiUpdateWithWhereUniqueWithoutCreateur_joueurInput | TournoiUpdateWithWhereUniqueWithoutCreateur_joueurInput[]
+    updateMany?: TournoiUpdateManyWithWhereWithoutCreateur_joueurInput | TournoiUpdateManyWithWhereWithoutCreateur_joueurInput[]
+    deleteMany?: TournoiScalarWhereInput | TournoiScalarWhereInput[]
+  }
+
+  export type TournoiCreatequestions_idsInput = {
+    set: string[]
+  }
+
+  export type TournoiCreatethemesInput = {
+    set: string[]
+  }
+
+  export type EnseignantCreateNestedOneWithoutTournoisInput = {
+    create?: XOR<EnseignantCreateWithoutTournoisInput, EnseignantUncheckedCreateWithoutTournoisInput>
+    connectOrCreate?: EnseignantCreateOrConnectWithoutTournoisInput
+    connect?: EnseignantWhereUniqueInput
+  }
+
+  export type JoueurCreateNestedOneWithoutTournoisInput = {
+    create?: XOR<JoueurCreateWithoutTournoisInput, JoueurUncheckedCreateWithoutTournoisInput>
+    connectOrCreate?: JoueurCreateOrConnectWithoutTournoisInput
+    connect?: JoueurWhereUniqueInput
+  }
+
+  export type EnseignantCreateNestedOneWithoutTournoisCreesInput = {
+    create?: XOR<EnseignantCreateWithoutTournoisCreesInput, EnseignantUncheckedCreateWithoutTournoisCreesInput>
+    connectOrCreate?: EnseignantCreateOrConnectWithoutTournoisCreesInput
+    connect?: EnseignantWhereUniqueInput
+  }
+
+  export type ScoreCreateNestedManyWithoutTournoiInput = {
+    create?: XOR<ScoreCreateWithoutTournoiInput, ScoreUncheckedCreateWithoutTournoiInput> | ScoreCreateWithoutTournoiInput[] | ScoreUncheckedCreateWithoutTournoiInput[]
+    connectOrCreate?: ScoreCreateOrConnectWithoutTournoiInput | ScoreCreateOrConnectWithoutTournoiInput[]
+    createMany?: ScoreCreateManyTournoiInputEnvelope
+    connect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+  }
+
+  export type ScoreUncheckedCreateNestedManyWithoutTournoiInput = {
+    create?: XOR<ScoreCreateWithoutTournoiInput, ScoreUncheckedCreateWithoutTournoiInput> | ScoreCreateWithoutTournoiInput[] | ScoreUncheckedCreateWithoutTournoiInput[]
+    connectOrCreate?: ScoreCreateOrConnectWithoutTournoiInput | ScoreCreateOrConnectWithoutTournoiInput[]
+    createMany?: ScoreCreateManyTournoiInputEnvelope
+    connect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+  }
+
+  export type TournoiUpdatequestions_idsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type TournoiUpdatethemesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
+  export type EnseignantUpdateOneWithoutTournoisNestedInput = {
+    create?: XOR<EnseignantCreateWithoutTournoisInput, EnseignantUncheckedCreateWithoutTournoisInput>
+    connectOrCreate?: EnseignantCreateOrConnectWithoutTournoisInput
+    upsert?: EnseignantUpsertWithoutTournoisInput
+    disconnect?: EnseignantWhereInput | boolean
+    delete?: EnseignantWhereInput | boolean
+    connect?: EnseignantWhereUniqueInput
+    update?: XOR<XOR<EnseignantUpdateToOneWithWhereWithoutTournoisInput, EnseignantUpdateWithoutTournoisInput>, EnseignantUncheckedUpdateWithoutTournoisInput>
+  }
+
+  export type JoueurUpdateOneWithoutTournoisNestedInput = {
+    create?: XOR<JoueurCreateWithoutTournoisInput, JoueurUncheckedCreateWithoutTournoisInput>
+    connectOrCreate?: JoueurCreateOrConnectWithoutTournoisInput
+    upsert?: JoueurUpsertWithoutTournoisInput
+    disconnect?: JoueurWhereInput | boolean
+    delete?: JoueurWhereInput | boolean
+    connect?: JoueurWhereUniqueInput
+    update?: XOR<XOR<JoueurUpdateToOneWithWhereWithoutTournoisInput, JoueurUpdateWithoutTournoisInput>, JoueurUncheckedUpdateWithoutTournoisInput>
+  }
+
+  export type EnseignantUpdateOneWithoutTournoisCreesNestedInput = {
+    create?: XOR<EnseignantCreateWithoutTournoisCreesInput, EnseignantUncheckedCreateWithoutTournoisCreesInput>
+    connectOrCreate?: EnseignantCreateOrConnectWithoutTournoisCreesInput
+    upsert?: EnseignantUpsertWithoutTournoisCreesInput
+    disconnect?: EnseignantWhereInput | boolean
+    delete?: EnseignantWhereInput | boolean
+    connect?: EnseignantWhereUniqueInput
+    update?: XOR<XOR<EnseignantUpdateToOneWithWhereWithoutTournoisCreesInput, EnseignantUpdateWithoutTournoisCreesInput>, EnseignantUncheckedUpdateWithoutTournoisCreesInput>
+  }
+
+  export type ScoreUpdateManyWithoutTournoiNestedInput = {
+    create?: XOR<ScoreCreateWithoutTournoiInput, ScoreUncheckedCreateWithoutTournoiInput> | ScoreCreateWithoutTournoiInput[] | ScoreUncheckedCreateWithoutTournoiInput[]
+    connectOrCreate?: ScoreCreateOrConnectWithoutTournoiInput | ScoreCreateOrConnectWithoutTournoiInput[]
+    upsert?: ScoreUpsertWithWhereUniqueWithoutTournoiInput | ScoreUpsertWithWhereUniqueWithoutTournoiInput[]
+    createMany?: ScoreCreateManyTournoiInputEnvelope
+    set?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    disconnect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    delete?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    connect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    update?: ScoreUpdateWithWhereUniqueWithoutTournoiInput | ScoreUpdateWithWhereUniqueWithoutTournoiInput[]
+    updateMany?: ScoreUpdateManyWithWhereWithoutTournoiInput | ScoreUpdateManyWithWhereWithoutTournoiInput[]
+    deleteMany?: ScoreScalarWhereInput | ScoreScalarWhereInput[]
+  }
+
+  export type ScoreUncheckedUpdateManyWithoutTournoiNestedInput = {
+    create?: XOR<ScoreCreateWithoutTournoiInput, ScoreUncheckedCreateWithoutTournoiInput> | ScoreCreateWithoutTournoiInput[] | ScoreUncheckedCreateWithoutTournoiInput[]
+    connectOrCreate?: ScoreCreateOrConnectWithoutTournoiInput | ScoreCreateOrConnectWithoutTournoiInput[]
+    upsert?: ScoreUpsertWithWhereUniqueWithoutTournoiInput | ScoreUpsertWithWhereUniqueWithoutTournoiInput[]
+    createMany?: ScoreCreateManyTournoiInputEnvelope
+    set?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    disconnect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    delete?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    connect?: ScoreWhereUniqueInput | ScoreWhereUniqueInput[]
+    update?: ScoreUpdateWithWhereUniqueWithoutTournoiInput | ScoreUpdateWithWhereUniqueWithoutTournoiInput[]
+    updateMany?: ScoreUpdateManyWithWhereWithoutTournoiInput | ScoreUpdateManyWithWhereWithoutTournoiInput[]
+    deleteMany?: ScoreScalarWhereInput | ScoreScalarWhereInput[]
+  }
+
+  export type TournoiCreateNestedOneWithoutScoresInput = {
+    create?: XOR<TournoiCreateWithoutScoresInput, TournoiUncheckedCreateWithoutScoresInput>
+    connectOrCreate?: TournoiCreateOrConnectWithoutScoresInput
+    connect?: TournoiWhereUniqueInput
+  }
+
+  export type JoueurCreateNestedOneWithoutScoresInput = {
+    create?: XOR<JoueurCreateWithoutScoresInput, JoueurUncheckedCreateWithoutScoresInput>
+    connectOrCreate?: JoueurCreateOrConnectWithoutScoresInput
+    connect?: JoueurWhereUniqueInput
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type TournoiUpdateOneRequiredWithoutScoresNestedInput = {
+    create?: XOR<TournoiCreateWithoutScoresInput, TournoiUncheckedCreateWithoutScoresInput>
+    connectOrCreate?: TournoiCreateOrConnectWithoutScoresInput
+    upsert?: TournoiUpsertWithoutScoresInput
+    connect?: TournoiWhereUniqueInput
+    update?: XOR<XOR<TournoiUpdateToOneWithWhereWithoutScoresInput, TournoiUpdateWithoutScoresInput>, TournoiUncheckedUpdateWithoutScoresInput>
+  }
+
+  export type JoueurUpdateOneRequiredWithoutScoresNestedInput = {
+    create?: XOR<JoueurCreateWithoutScoresInput, JoueurUncheckedCreateWithoutScoresInput>
+    connectOrCreate?: JoueurCreateOrConnectWithoutScoresInput
+    upsert?: JoueurUpsertWithoutScoresInput
+    connect?: JoueurWhereUniqueInput
+    update?: XOR<XOR<JoueurUpdateToOneWithWhereWithoutScoresInput, JoueurUpdateWithoutScoresInput>, JoueurUncheckedUpdateWithoutScoresInput>
+  }
+
+  export type QuizCreatequestions_idsInput = {
+    set: string[]
+  }
+
+  export type QuizCreateniveauxInput = {
+    set: string[]
+  }
+
+  export type QuizCreatecategoriesInput = {
+    set: string[]
+  }
+
+  export type QuizCreatethemesInput = {
+    set: string[]
+  }
+
+  export type EnseignantCreateNestedOneWithoutQuizSauvegardesInput = {
+    create?: XOR<EnseignantCreateWithoutQuizSauvegardesInput, EnseignantUncheckedCreateWithoutQuizSauvegardesInput>
+    connectOrCreate?: EnseignantCreateOrConnectWithoutQuizSauvegardesInput
+    connect?: EnseignantWhereUniqueInput
+  }
+
+  export type QuizUpdatequestions_idsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type QuizUpdateniveauxInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type QuizUpdatecategoriesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type QuizUpdatethemesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type EnseignantUpdateOneRequiredWithoutQuizSauvegardesNestedInput = {
+    create?: XOR<EnseignantCreateWithoutQuizSauvegardesInput, EnseignantUncheckedCreateWithoutQuizSauvegardesInput>
+    connectOrCreate?: EnseignantCreateOrConnectWithoutQuizSauvegardesInput
+    upsert?: EnseignantUpsertWithoutQuizSauvegardesInput
+    connect?: EnseignantWhereUniqueInput
+    update?: XOR<XOR<EnseignantUpdateToOneWithWhereWithoutQuizSauvegardesInput, EnseignantUpdateWithoutQuizSauvegardesInput>, EnseignantUncheckedUpdateWithoutQuizSauvegardesInput>
+  }
+
+  export type NestedStringFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringFilter<$PrismaModel> | string
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type TournoiCreateWithoutEnseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    createur_joueur?: JoueurCreateNestedOneWithoutTournoisInput
+    createur_enseignant?: EnseignantCreateNestedOneWithoutTournoisCreesInput
+    scores?: ScoreCreateNestedManyWithoutTournoiInput
+  }
+
+  export type TournoiUncheckedCreateWithoutEnseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_joueur_id?: string | null
+    cree_par_enseignant_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    scores?: ScoreUncheckedCreateNestedManyWithoutTournoiInput
+  }
+
+  export type TournoiCreateOrConnectWithoutEnseignantInput = {
+    where: TournoiWhereUniqueInput
+    create: XOR<TournoiCreateWithoutEnseignantInput, TournoiUncheckedCreateWithoutEnseignantInput>
+  }
+
+  export type TournoiCreateManyEnseignantInputEnvelope = {
+    data: TournoiCreateManyEnseignantInput | TournoiCreateManyEnseignantInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TournoiCreateWithoutCreateur_enseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    enseignant?: EnseignantCreateNestedOneWithoutTournoisInput
+    createur_joueur?: JoueurCreateNestedOneWithoutTournoisInput
+    scores?: ScoreCreateNestedManyWithoutTournoiInput
+  }
+
+  export type TournoiUncheckedCreateWithoutCreateur_enseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    enseignant_id?: string | null
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_joueur_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    scores?: ScoreUncheckedCreateNestedManyWithoutTournoiInput
+  }
+
+  export type TournoiCreateOrConnectWithoutCreateur_enseignantInput = {
+    where: TournoiWhereUniqueInput
+    create: XOR<TournoiCreateWithoutCreateur_enseignantInput, TournoiUncheckedCreateWithoutCreateur_enseignantInput>
+  }
+
+  export type TournoiCreateManyCreateur_enseignantInputEnvelope = {
+    data: TournoiCreateManyCreateur_enseignantInput | TournoiCreateManyCreateur_enseignantInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type QuizCreateWithoutEnseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_sauvegarde?: Date | string
+    questions_ids?: QuizCreatequestions_idsInput | string[]
+    type: string
+    niveaux?: QuizCreateniveauxInput | string[]
+    categories?: QuizCreatecategoriesInput | string[]
+    themes?: QuizCreatethemesInput | string[]
+    tournament_code?: string | null
+  }
+
+  export type QuizUncheckedCreateWithoutEnseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_sauvegarde?: Date | string
+    questions_ids?: QuizCreatequestions_idsInput | string[]
+    type: string
+    niveaux?: QuizCreateniveauxInput | string[]
+    categories?: QuizCreatecategoriesInput | string[]
+    themes?: QuizCreatethemesInput | string[]
+    tournament_code?: string | null
+  }
+
+  export type QuizCreateOrConnectWithoutEnseignantInput = {
+    where: QuizWhereUniqueInput
+    create: XOR<QuizCreateWithoutEnseignantInput, QuizUncheckedCreateWithoutEnseignantInput>
+  }
+
+  export type QuizCreateManyEnseignantInputEnvelope = {
+    data: QuizCreateManyEnseignantInput | QuizCreateManyEnseignantInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TournoiUpsertWithWhereUniqueWithoutEnseignantInput = {
+    where: TournoiWhereUniqueInput
+    update: XOR<TournoiUpdateWithoutEnseignantInput, TournoiUncheckedUpdateWithoutEnseignantInput>
+    create: XOR<TournoiCreateWithoutEnseignantInput, TournoiUncheckedCreateWithoutEnseignantInput>
+  }
+
+  export type TournoiUpdateWithWhereUniqueWithoutEnseignantInput = {
+    where: TournoiWhereUniqueInput
+    data: XOR<TournoiUpdateWithoutEnseignantInput, TournoiUncheckedUpdateWithoutEnseignantInput>
+  }
+
+  export type TournoiUpdateManyWithWhereWithoutEnseignantInput = {
+    where: TournoiScalarWhereInput
+    data: XOR<TournoiUpdateManyMutationInput, TournoiUncheckedUpdateManyWithoutEnseignantInput>
+  }
+
+  export type TournoiScalarWhereInput = {
+    AND?: TournoiScalarWhereInput | TournoiScalarWhereInput[]
+    OR?: TournoiScalarWhereInput[]
+    NOT?: TournoiScalarWhereInput | TournoiScalarWhereInput[]
+    id?: StringFilter<"Tournoi"> | string
+    nom?: StringFilter<"Tournoi"> | string
+    date_creation?: DateTimeFilter<"Tournoi"> | Date | string
+    date_debut?: DateTimeNullableFilter<"Tournoi"> | Date | string | null
+    date_fin?: DateTimeNullableFilter<"Tournoi"> | Date | string | null
+    statut?: StringFilter<"Tournoi"> | string
+    enseignant_id?: StringNullableFilter<"Tournoi"> | string | null
+    questions_ids?: StringNullableListFilter<"Tournoi">
+    type?: StringFilter<"Tournoi"> | string
+    niveau?: StringNullableFilter<"Tournoi"> | string | null
+    categorie?: StringNullableFilter<"Tournoi"> | string | null
+    themes?: StringNullableListFilter<"Tournoi">
+    cree_par_joueur_id?: StringNullableFilter<"Tournoi"> | string | null
+    cree_par_enseignant_id?: StringNullableFilter<"Tournoi"> | string | null
+    questions_generées?: BoolFilter<"Tournoi"> | boolean
+    code?: StringNullableFilter<"Tournoi"> | string | null
+    leaderboard?: JsonNullableFilter<"Tournoi">
+  }
+
+  export type TournoiUpsertWithWhereUniqueWithoutCreateur_enseignantInput = {
+    where: TournoiWhereUniqueInput
+    update: XOR<TournoiUpdateWithoutCreateur_enseignantInput, TournoiUncheckedUpdateWithoutCreateur_enseignantInput>
+    create: XOR<TournoiCreateWithoutCreateur_enseignantInput, TournoiUncheckedCreateWithoutCreateur_enseignantInput>
+  }
+
+  export type TournoiUpdateWithWhereUniqueWithoutCreateur_enseignantInput = {
+    where: TournoiWhereUniqueInput
+    data: XOR<TournoiUpdateWithoutCreateur_enseignantInput, TournoiUncheckedUpdateWithoutCreateur_enseignantInput>
+  }
+
+  export type TournoiUpdateManyWithWhereWithoutCreateur_enseignantInput = {
+    where: TournoiScalarWhereInput
+    data: XOR<TournoiUpdateManyMutationInput, TournoiUncheckedUpdateManyWithoutCreateur_enseignantInput>
+  }
+
+  export type QuizUpsertWithWhereUniqueWithoutEnseignantInput = {
+    where: QuizWhereUniqueInput
+    update: XOR<QuizUpdateWithoutEnseignantInput, QuizUncheckedUpdateWithoutEnseignantInput>
+    create: XOR<QuizCreateWithoutEnseignantInput, QuizUncheckedCreateWithoutEnseignantInput>
+  }
+
+  export type QuizUpdateWithWhereUniqueWithoutEnseignantInput = {
+    where: QuizWhereUniqueInput
+    data: XOR<QuizUpdateWithoutEnseignantInput, QuizUncheckedUpdateWithoutEnseignantInput>
+  }
+
+  export type QuizUpdateManyWithWhereWithoutEnseignantInput = {
+    where: QuizScalarWhereInput
+    data: XOR<QuizUpdateManyMutationInput, QuizUncheckedUpdateManyWithoutEnseignantInput>
+  }
+
+  export type QuizScalarWhereInput = {
+    AND?: QuizScalarWhereInput | QuizScalarWhereInput[]
+    OR?: QuizScalarWhereInput[]
+    NOT?: QuizScalarWhereInput | QuizScalarWhereInput[]
+    id?: StringFilter<"Quiz"> | string
+    nom?: StringFilter<"Quiz"> | string
+    date_creation?: DateTimeFilter<"Quiz"> | Date | string
+    date_sauvegarde?: DateTimeFilter<"Quiz"> | Date | string
+    enseignant_id?: StringFilter<"Quiz"> | string
+    questions_ids?: StringNullableListFilter<"Quiz">
+    type?: StringFilter<"Quiz"> | string
+    niveaux?: StringNullableListFilter<"Quiz">
+    categories?: StringNullableListFilter<"Quiz">
+    themes?: StringNullableListFilter<"Quiz">
+    tournament_code?: StringNullableFilter<"Quiz"> | string | null
+  }
+
+  export type ScoreCreateWithoutJoueurInput = {
+    id?: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+    tournoi: TournoiCreateNestedOneWithoutScoresInput
+  }
+
+  export type ScoreUncheckedCreateWithoutJoueurInput = {
+    id?: string
+    tournoi_id: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+  }
+
+  export type ScoreCreateOrConnectWithoutJoueurInput = {
+    where: ScoreWhereUniqueInput
+    create: XOR<ScoreCreateWithoutJoueurInput, ScoreUncheckedCreateWithoutJoueurInput>
+  }
+
+  export type ScoreCreateManyJoueurInputEnvelope = {
+    data: ScoreCreateManyJoueurInput | ScoreCreateManyJoueurInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TournoiCreateWithoutCreateur_joueurInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    enseignant?: EnseignantCreateNestedOneWithoutTournoisInput
+    createur_enseignant?: EnseignantCreateNestedOneWithoutTournoisCreesInput
+    scores?: ScoreCreateNestedManyWithoutTournoiInput
+  }
+
+  export type TournoiUncheckedCreateWithoutCreateur_joueurInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    enseignant_id?: string | null
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_enseignant_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    scores?: ScoreUncheckedCreateNestedManyWithoutTournoiInput
+  }
+
+  export type TournoiCreateOrConnectWithoutCreateur_joueurInput = {
+    where: TournoiWhereUniqueInput
+    create: XOR<TournoiCreateWithoutCreateur_joueurInput, TournoiUncheckedCreateWithoutCreateur_joueurInput>
+  }
+
+  export type TournoiCreateManyCreateur_joueurInputEnvelope = {
+    data: TournoiCreateManyCreateur_joueurInput | TournoiCreateManyCreateur_joueurInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ScoreUpsertWithWhereUniqueWithoutJoueurInput = {
+    where: ScoreWhereUniqueInput
+    update: XOR<ScoreUpdateWithoutJoueurInput, ScoreUncheckedUpdateWithoutJoueurInput>
+    create: XOR<ScoreCreateWithoutJoueurInput, ScoreUncheckedCreateWithoutJoueurInput>
+  }
+
+  export type ScoreUpdateWithWhereUniqueWithoutJoueurInput = {
+    where: ScoreWhereUniqueInput
+    data: XOR<ScoreUpdateWithoutJoueurInput, ScoreUncheckedUpdateWithoutJoueurInput>
+  }
+
+  export type ScoreUpdateManyWithWhereWithoutJoueurInput = {
+    where: ScoreScalarWhereInput
+    data: XOR<ScoreUpdateManyMutationInput, ScoreUncheckedUpdateManyWithoutJoueurInput>
+  }
+
+  export type ScoreScalarWhereInput = {
+    AND?: ScoreScalarWhereInput | ScoreScalarWhereInput[]
+    OR?: ScoreScalarWhereInput[]
+    NOT?: ScoreScalarWhereInput | ScoreScalarWhereInput[]
+    id?: StringFilter<"Score"> | string
+    tournoi_id?: StringFilter<"Score"> | string
+    joueur_id?: StringFilter<"Score"> | string
+    score?: IntFilter<"Score"> | number
+    temps?: IntNullableFilter<"Score"> | number | null
+    position?: IntNullableFilter<"Score"> | number | null
+    date_score?: DateTimeFilter<"Score"> | Date | string
+  }
+
+  export type TournoiUpsertWithWhereUniqueWithoutCreateur_joueurInput = {
+    where: TournoiWhereUniqueInput
+    update: XOR<TournoiUpdateWithoutCreateur_joueurInput, TournoiUncheckedUpdateWithoutCreateur_joueurInput>
+    create: XOR<TournoiCreateWithoutCreateur_joueurInput, TournoiUncheckedCreateWithoutCreateur_joueurInput>
+  }
+
+  export type TournoiUpdateWithWhereUniqueWithoutCreateur_joueurInput = {
+    where: TournoiWhereUniqueInput
+    data: XOR<TournoiUpdateWithoutCreateur_joueurInput, TournoiUncheckedUpdateWithoutCreateur_joueurInput>
+  }
+
+  export type TournoiUpdateManyWithWhereWithoutCreateur_joueurInput = {
+    where: TournoiScalarWhereInput
+    data: XOR<TournoiUpdateManyMutationInput, TournoiUncheckedUpdateManyWithoutCreateur_joueurInput>
+  }
+
+  export type EnseignantCreateWithoutTournoisInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+    tournoisCrees?: TournoiCreateNestedManyWithoutCreateur_enseignantInput
+    quizSauvegardes?: QuizCreateNestedManyWithoutEnseignantInput
+  }
+
+  export type EnseignantUncheckedCreateWithoutTournoisInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+    tournoisCrees?: TournoiUncheckedCreateNestedManyWithoutCreateur_enseignantInput
+    quizSauvegardes?: QuizUncheckedCreateNestedManyWithoutEnseignantInput
+  }
+
+  export type EnseignantCreateOrConnectWithoutTournoisInput = {
+    where: EnseignantWhereUniqueInput
+    create: XOR<EnseignantCreateWithoutTournoisInput, EnseignantUncheckedCreateWithoutTournoisInput>
+  }
+
+  export type JoueurCreateWithoutTournoisInput = {
+    id?: string
+    pseudo: string
+    cookie_id: string
+    created_at?: Date | string
+    avatar?: string | null
+    scores?: ScoreCreateNestedManyWithoutJoueurInput
+  }
+
+  export type JoueurUncheckedCreateWithoutTournoisInput = {
+    id?: string
+    pseudo: string
+    cookie_id: string
+    created_at?: Date | string
+    avatar?: string | null
+    scores?: ScoreUncheckedCreateNestedManyWithoutJoueurInput
+  }
+
+  export type JoueurCreateOrConnectWithoutTournoisInput = {
+    where: JoueurWhereUniqueInput
+    create: XOR<JoueurCreateWithoutTournoisInput, JoueurUncheckedCreateWithoutTournoisInput>
+  }
+
+  export type EnseignantCreateWithoutTournoisCreesInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+    tournois?: TournoiCreateNestedManyWithoutEnseignantInput
+    quizSauvegardes?: QuizCreateNestedManyWithoutEnseignantInput
+  }
+
+  export type EnseignantUncheckedCreateWithoutTournoisCreesInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+    tournois?: TournoiUncheckedCreateNestedManyWithoutEnseignantInput
+    quizSauvegardes?: QuizUncheckedCreateNestedManyWithoutEnseignantInput
+  }
+
+  export type EnseignantCreateOrConnectWithoutTournoisCreesInput = {
+    where: EnseignantWhereUniqueInput
+    create: XOR<EnseignantCreateWithoutTournoisCreesInput, EnseignantUncheckedCreateWithoutTournoisCreesInput>
+  }
+
+  export type ScoreCreateWithoutTournoiInput = {
+    id?: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+    joueur: JoueurCreateNestedOneWithoutScoresInput
+  }
+
+  export type ScoreUncheckedCreateWithoutTournoiInput = {
+    id?: string
+    joueur_id: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+  }
+
+  export type ScoreCreateOrConnectWithoutTournoiInput = {
+    where: ScoreWhereUniqueInput
+    create: XOR<ScoreCreateWithoutTournoiInput, ScoreUncheckedCreateWithoutTournoiInput>
+  }
+
+  export type ScoreCreateManyTournoiInputEnvelope = {
+    data: ScoreCreateManyTournoiInput | ScoreCreateManyTournoiInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type EnseignantUpsertWithoutTournoisInput = {
+    update: XOR<EnseignantUpdateWithoutTournoisInput, EnseignantUncheckedUpdateWithoutTournoisInput>
+    create: XOR<EnseignantCreateWithoutTournoisInput, EnseignantUncheckedCreateWithoutTournoisInput>
+    where?: EnseignantWhereInput
+  }
+
+  export type EnseignantUpdateToOneWithWhereWithoutTournoisInput = {
+    where?: EnseignantWhereInput
+    data: XOR<EnseignantUpdateWithoutTournoisInput, EnseignantUncheckedUpdateWithoutTournoisInput>
+  }
+
+  export type EnseignantUpdateWithoutTournoisInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tournoisCrees?: TournoiUpdateManyWithoutCreateur_enseignantNestedInput
+    quizSauvegardes?: QuizUpdateManyWithoutEnseignantNestedInput
+  }
+
+  export type EnseignantUncheckedUpdateWithoutTournoisInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tournoisCrees?: TournoiUncheckedUpdateManyWithoutCreateur_enseignantNestedInput
+    quizSauvegardes?: QuizUncheckedUpdateManyWithoutEnseignantNestedInput
+  }
+
+  export type JoueurUpsertWithoutTournoisInput = {
+    update: XOR<JoueurUpdateWithoutTournoisInput, JoueurUncheckedUpdateWithoutTournoisInput>
+    create: XOR<JoueurCreateWithoutTournoisInput, JoueurUncheckedCreateWithoutTournoisInput>
+    where?: JoueurWhereInput
+  }
+
+  export type JoueurUpdateToOneWithWhereWithoutTournoisInput = {
+    where?: JoueurWhereInput
+    data: XOR<JoueurUpdateWithoutTournoisInput, JoueurUncheckedUpdateWithoutTournoisInput>
+  }
+
+  export type JoueurUpdateWithoutTournoisInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    cookie_id?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    scores?: ScoreUpdateManyWithoutJoueurNestedInput
+  }
+
+  export type JoueurUncheckedUpdateWithoutTournoisInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    cookie_id?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    scores?: ScoreUncheckedUpdateManyWithoutJoueurNestedInput
+  }
+
+  export type EnseignantUpsertWithoutTournoisCreesInput = {
+    update: XOR<EnseignantUpdateWithoutTournoisCreesInput, EnseignantUncheckedUpdateWithoutTournoisCreesInput>
+    create: XOR<EnseignantCreateWithoutTournoisCreesInput, EnseignantUncheckedCreateWithoutTournoisCreesInput>
+    where?: EnseignantWhereInput
+  }
+
+  export type EnseignantUpdateToOneWithWhereWithoutTournoisCreesInput = {
+    where?: EnseignantWhereInput
+    data: XOR<EnseignantUpdateWithoutTournoisCreesInput, EnseignantUncheckedUpdateWithoutTournoisCreesInput>
+  }
+
+  export type EnseignantUpdateWithoutTournoisCreesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tournois?: TournoiUpdateManyWithoutEnseignantNestedInput
+    quizSauvegardes?: QuizUpdateManyWithoutEnseignantNestedInput
+  }
+
+  export type EnseignantUncheckedUpdateWithoutTournoisCreesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tournois?: TournoiUncheckedUpdateManyWithoutEnseignantNestedInput
+    quizSauvegardes?: QuizUncheckedUpdateManyWithoutEnseignantNestedInput
+  }
+
+  export type ScoreUpsertWithWhereUniqueWithoutTournoiInput = {
+    where: ScoreWhereUniqueInput
+    update: XOR<ScoreUpdateWithoutTournoiInput, ScoreUncheckedUpdateWithoutTournoiInput>
+    create: XOR<ScoreCreateWithoutTournoiInput, ScoreUncheckedCreateWithoutTournoiInput>
+  }
+
+  export type ScoreUpdateWithWhereUniqueWithoutTournoiInput = {
+    where: ScoreWhereUniqueInput
+    data: XOR<ScoreUpdateWithoutTournoiInput, ScoreUncheckedUpdateWithoutTournoiInput>
+  }
+
+  export type ScoreUpdateManyWithWhereWithoutTournoiInput = {
+    where: ScoreScalarWhereInput
+    data: XOR<ScoreUpdateManyMutationInput, ScoreUncheckedUpdateManyWithoutTournoiInput>
+  }
+
+  export type TournoiCreateWithoutScoresInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    enseignant?: EnseignantCreateNestedOneWithoutTournoisInput
+    createur_joueur?: JoueurCreateNestedOneWithoutTournoisInput
+    createur_enseignant?: EnseignantCreateNestedOneWithoutTournoisCreesInput
+  }
+
+  export type TournoiUncheckedCreateWithoutScoresInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    enseignant_id?: string | null
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_joueur_id?: string | null
+    cree_par_enseignant_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type TournoiCreateOrConnectWithoutScoresInput = {
+    where: TournoiWhereUniqueInput
+    create: XOR<TournoiCreateWithoutScoresInput, TournoiUncheckedCreateWithoutScoresInput>
+  }
+
+  export type JoueurCreateWithoutScoresInput = {
+    id?: string
+    pseudo: string
+    cookie_id: string
+    created_at?: Date | string
+    avatar?: string | null
+    tournois?: TournoiCreateNestedManyWithoutCreateur_joueurInput
+  }
+
+  export type JoueurUncheckedCreateWithoutScoresInput = {
+    id?: string
+    pseudo: string
+    cookie_id: string
+    created_at?: Date | string
+    avatar?: string | null
+    tournois?: TournoiUncheckedCreateNestedManyWithoutCreateur_joueurInput
+  }
+
+  export type JoueurCreateOrConnectWithoutScoresInput = {
+    where: JoueurWhereUniqueInput
+    create: XOR<JoueurCreateWithoutScoresInput, JoueurUncheckedCreateWithoutScoresInput>
+  }
+
+  export type TournoiUpsertWithoutScoresInput = {
+    update: XOR<TournoiUpdateWithoutScoresInput, TournoiUncheckedUpdateWithoutScoresInput>
+    create: XOR<TournoiCreateWithoutScoresInput, TournoiUncheckedCreateWithoutScoresInput>
+    where?: TournoiWhereInput
+  }
+
+  export type TournoiUpdateToOneWithWhereWithoutScoresInput = {
+    where?: TournoiWhereInput
+    data: XOR<TournoiUpdateWithoutScoresInput, TournoiUncheckedUpdateWithoutScoresInput>
+  }
+
+  export type TournoiUpdateWithoutScoresInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    enseignant?: EnseignantUpdateOneWithoutTournoisNestedInput
+    createur_joueur?: JoueurUpdateOneWithoutTournoisNestedInput
+    createur_enseignant?: EnseignantUpdateOneWithoutTournoisCreesNestedInput
+  }
+
+  export type TournoiUncheckedUpdateWithoutScoresInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_joueur_id?: NullableStringFieldUpdateOperationsInput | string | null
+    cree_par_enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type JoueurUpsertWithoutScoresInput = {
+    update: XOR<JoueurUpdateWithoutScoresInput, JoueurUncheckedUpdateWithoutScoresInput>
+    create: XOR<JoueurCreateWithoutScoresInput, JoueurUncheckedCreateWithoutScoresInput>
+    where?: JoueurWhereInput
+  }
+
+  export type JoueurUpdateToOneWithWhereWithoutScoresInput = {
+    where?: JoueurWhereInput
+    data: XOR<JoueurUpdateWithoutScoresInput, JoueurUncheckedUpdateWithoutScoresInput>
+  }
+
+  export type JoueurUpdateWithoutScoresInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    cookie_id?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    tournois?: TournoiUpdateManyWithoutCreateur_joueurNestedInput
+  }
+
+  export type JoueurUncheckedUpdateWithoutScoresInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    cookie_id?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    tournois?: TournoiUncheckedUpdateManyWithoutCreateur_joueurNestedInput
+  }
+
+  export type EnseignantCreateWithoutQuizSauvegardesInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+    tournois?: TournoiCreateNestedManyWithoutEnseignantInput
+    tournoisCrees?: TournoiCreateNestedManyWithoutCreateur_enseignantInput
+  }
+
+  export type EnseignantUncheckedCreateWithoutQuizSauvegardesInput = {
+    id?: string
+    pseudo: string
+    mot_de_passe: string
+    email?: string | null
+    created_at?: Date | string
+    avatar?: string | null
+    reset_token?: string | null
+    reset_token_expires?: Date | string | null
+    tournois?: TournoiUncheckedCreateNestedManyWithoutEnseignantInput
+    tournoisCrees?: TournoiUncheckedCreateNestedManyWithoutCreateur_enseignantInput
+  }
+
+  export type EnseignantCreateOrConnectWithoutQuizSauvegardesInput = {
+    where: EnseignantWhereUniqueInput
+    create: XOR<EnseignantCreateWithoutQuizSauvegardesInput, EnseignantUncheckedCreateWithoutQuizSauvegardesInput>
+  }
+
+  export type EnseignantUpsertWithoutQuizSauvegardesInput = {
+    update: XOR<EnseignantUpdateWithoutQuizSauvegardesInput, EnseignantUncheckedUpdateWithoutQuizSauvegardesInput>
+    create: XOR<EnseignantCreateWithoutQuizSauvegardesInput, EnseignantUncheckedCreateWithoutQuizSauvegardesInput>
+    where?: EnseignantWhereInput
+  }
+
+  export type EnseignantUpdateToOneWithWhereWithoutQuizSauvegardesInput = {
+    where?: EnseignantWhereInput
+    data: XOR<EnseignantUpdateWithoutQuizSauvegardesInput, EnseignantUncheckedUpdateWithoutQuizSauvegardesInput>
+  }
+
+  export type EnseignantUpdateWithoutQuizSauvegardesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tournois?: TournoiUpdateManyWithoutEnseignantNestedInput
+    tournoisCrees?: TournoiUpdateManyWithoutCreateur_enseignantNestedInput
+  }
+
+  export type EnseignantUncheckedUpdateWithoutQuizSauvegardesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pseudo?: StringFieldUpdateOperationsInput | string
+    mot_de_passe?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    avatar?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token?: NullableStringFieldUpdateOperationsInput | string | null
+    reset_token_expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    tournois?: TournoiUncheckedUpdateManyWithoutEnseignantNestedInput
+    tournoisCrees?: TournoiUncheckedUpdateManyWithoutCreateur_enseignantNestedInput
+  }
+
+  export type TournoiCreateManyEnseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_joueur_id?: string | null
+    cree_par_enseignant_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type TournoiCreateManyCreateur_enseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    enseignant_id?: string | null
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_joueur_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type QuizCreateManyEnseignantInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_sauvegarde?: Date | string
+    questions_ids?: QuizCreatequestions_idsInput | string[]
+    type: string
+    niveaux?: QuizCreateniveauxInput | string[]
+    categories?: QuizCreatecategoriesInput | string[]
+    themes?: QuizCreatethemesInput | string[]
+    tournament_code?: string | null
+  }
+
+  export type TournoiUpdateWithoutEnseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    createur_joueur?: JoueurUpdateOneWithoutTournoisNestedInput
+    createur_enseignant?: EnseignantUpdateOneWithoutTournoisCreesNestedInput
+    scores?: ScoreUpdateManyWithoutTournoiNestedInput
+  }
+
+  export type TournoiUncheckedUpdateWithoutEnseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_joueur_id?: NullableStringFieldUpdateOperationsInput | string | null
+    cree_par_enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    scores?: ScoreUncheckedUpdateManyWithoutTournoiNestedInput
+  }
+
+  export type TournoiUncheckedUpdateManyWithoutEnseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_joueur_id?: NullableStringFieldUpdateOperationsInput | string | null
+    cree_par_enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type TournoiUpdateWithoutCreateur_enseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    enseignant?: EnseignantUpdateOneWithoutTournoisNestedInput
+    createur_joueur?: JoueurUpdateOneWithoutTournoisNestedInput
+    scores?: ScoreUpdateManyWithoutTournoiNestedInput
+  }
+
+  export type TournoiUncheckedUpdateWithoutCreateur_enseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_joueur_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    scores?: ScoreUncheckedUpdateManyWithoutTournoiNestedInput
+  }
+
+  export type TournoiUncheckedUpdateManyWithoutCreateur_enseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_joueur_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type QuizUpdateWithoutEnseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_sauvegarde?: DateTimeFieldUpdateOperationsInput | Date | string
+    questions_ids?: QuizUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveaux?: QuizUpdateniveauxInput | string[]
+    categories?: QuizUpdatecategoriesInput | string[]
+    themes?: QuizUpdatethemesInput | string[]
+    tournament_code?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type QuizUncheckedUpdateWithoutEnseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_sauvegarde?: DateTimeFieldUpdateOperationsInput | Date | string
+    questions_ids?: QuizUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveaux?: QuizUpdateniveauxInput | string[]
+    categories?: QuizUpdatecategoriesInput | string[]
+    themes?: QuizUpdatethemesInput | string[]
+    tournament_code?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type QuizUncheckedUpdateManyWithoutEnseignantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_sauvegarde?: DateTimeFieldUpdateOperationsInput | Date | string
+    questions_ids?: QuizUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveaux?: QuizUpdateniveauxInput | string[]
+    categories?: QuizUpdatecategoriesInput | string[]
+    themes?: QuizUpdatethemesInput | string[]
+    tournament_code?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type ScoreCreateManyJoueurInput = {
+    id?: string
+    tournoi_id: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+  }
+
+  export type TournoiCreateManyCreateur_joueurInput = {
+    id?: string
+    nom: string
+    date_creation?: Date | string
+    date_debut?: Date | string | null
+    date_fin?: Date | string | null
+    statut: string
+    enseignant_id?: string | null
+    questions_ids?: TournoiCreatequestions_idsInput | string[]
+    type: string
+    niveau?: string | null
+    categorie?: string | null
+    themes?: TournoiCreatethemesInput | string[]
+    cree_par_enseignant_id?: string | null
+    questions_generées?: boolean
+    code?: string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type ScoreUpdateWithoutJoueurInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+    tournoi?: TournoiUpdateOneRequiredWithoutScoresNestedInput
+  }
+
+  export type ScoreUncheckedUpdateWithoutJoueurInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tournoi_id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScoreUncheckedUpdateManyWithoutJoueurInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tournoi_id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TournoiUpdateWithoutCreateur_joueurInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    enseignant?: EnseignantUpdateOneWithoutTournoisNestedInput
+    createur_enseignant?: EnseignantUpdateOneWithoutTournoisCreesNestedInput
+    scores?: ScoreUpdateManyWithoutTournoiNestedInput
+  }
+
+  export type TournoiUncheckedUpdateWithoutCreateur_joueurInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    scores?: ScoreUncheckedUpdateManyWithoutTournoiNestedInput
+  }
+
+  export type TournoiUncheckedUpdateManyWithoutCreateur_joueurInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nom?: StringFieldUpdateOperationsInput | string
+    date_creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    date_debut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    date_fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    statut?: StringFieldUpdateOperationsInput | string
+    enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_ids?: TournoiUpdatequestions_idsInput | string[]
+    type?: StringFieldUpdateOperationsInput | string
+    niveau?: NullableStringFieldUpdateOperationsInput | string | null
+    categorie?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: TournoiUpdatethemesInput | string[]
+    cree_par_enseignant_id?: NullableStringFieldUpdateOperationsInput | string | null
+    questions_generées?: BoolFieldUpdateOperationsInput | boolean
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type ScoreCreateManyTournoiInput = {
+    id?: string
+    joueur_id: string
+    score: number
+    temps?: number | null
+    position?: number | null
+    date_score?: Date | string
+  }
+
+  export type ScoreUpdateWithoutTournoiInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+    joueur?: JoueurUpdateOneRequiredWithoutScoresNestedInput
+  }
+
+  export type ScoreUncheckedUpdateWithoutTournoiInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    joueur_id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScoreUncheckedUpdateManyWithoutTournoiInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    joueur_id?: StringFieldUpdateOperationsInput | string
+    score?: IntFieldUpdateOperationsInput | number
+    temps?: NullableIntFieldUpdateOperationsInput | number | null
+    position?: NullableIntFieldUpdateOperationsInput | number | null
+    date_score?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+
+
+  /**
+   * Batch Payload for updateMany & deleteMany & createMany
+   */
+
+  export type BatchPayload = {
+    count: number
+  }
+
+  /**
+   * DMMF
+   */
+  export const dmmf: runtime.BaseDMMF
+}
