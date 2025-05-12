@@ -1,14 +1,19 @@
+"use strict";
 /**
  * lockHandler.ts - Handler for locking a quiz
  *
  * This locks a quiz to prevent further answers from students.
  * Only the teacher who owns the quiz can lock it.
  */
-import { quizState } from '../quizState.js'; // Changed to .js to use the bridge
-import { patchQuizStateForBroadcast } from '../quizUtils'; // Import from quizUtils (TS)
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const quizState_js_1 = require("../quizState.js"); // Changed to .js to use the bridge
+const quizUtils_1 = require("../quizUtils"); // Import from quizUtils (TS)
 // Import logger
-import createLogger from '../../logger'; // Use import for .ts file
-const logger = createLogger('LockQuizHandler');
+const logger_1 = __importDefault(require("../../logger")); // Use import for .ts file
+const logger = (0, logger_1.default)('LockQuizHandler');
 /**
  * Handle quiz_lock event
  *
@@ -19,7 +24,7 @@ const logger = createLogger('LockQuizHandler');
  */
 function handleLock(io, socket, prisma, { quizId, teacherId }) {
     // Authorization check
-    if (!quizState[quizId] || quizState[quizId].profSocketId !== socket.id) {
+    if (!quizState_js_1.quizState[quizId] || quizState_js_1.quizState[quizId].profSocketId !== socket.id) {
         logger.warn(`Unauthorized attempt to lock quiz ${quizId} from socket ${socket.id}`);
         socket.emit('quiz_action_response', {
             status: 'error',
@@ -29,13 +34,13 @@ function handleLock(io, socket, prisma, { quizId, teacherId }) {
     }
     logger.info(`Locking quiz ${quizId}`);
     // Update state
-    quizState[quizId].locked = true;
+    quizState_js_1.quizState[quizId].locked = true;
     // Broadcast updated state
-    io.to(`dashboard_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
+    io.to(`dashboard_${quizId}`).emit("quiz_state", (0, quizUtils_1.patchQuizStateForBroadcast)(quizState_js_1.quizState[quizId]));
     // Emit success message
     io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
         status: 'success',
         message: 'Quiz locked successfully.'
     });
 }
-export default handleLock;
+exports.default = handleLock;

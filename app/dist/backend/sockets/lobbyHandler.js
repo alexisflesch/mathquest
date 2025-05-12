@@ -1,3 +1,4 @@
+"use strict";
 /**
  * lobbyHandler.ts - Lobby Management Socket Handler
  *
@@ -13,14 +14,21 @@
  * When a tournament starts, participants are automatically moved from
  * the lobby to the active tournament.
  */
-import createLogger from '@logger';
-const logger = createLogger('LobbyHandler');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.lobbyParticipants = void 0;
+exports.registerLobbyHandlers = registerLobbyHandlers;
+const _logger_1 = __importDefault(require("@logger"));
+const logger = (0, _logger_1.default)('LobbyHandler');
 // Import database connection
-import prisma from '../db';
+const db_1 = __importDefault(require("../db"));
 // Import utilities
-import { emitQuizConnectedCount } from './quizUtils';
+const quizUtils_1 = require("./quizUtils");
 // In-memory store for lobby participants
 const lobbyParticipants = {};
+exports.lobbyParticipants = lobbyParticipants;
 /**
  * Register all lobby-related socket event handlers
  * @param io - Socket.IO server instance
@@ -33,7 +41,7 @@ function registerLobbyHandlers(io, socket) {
         try {
             // Fetch tournament status first
             logger.debug(`Fetching tournament status for code ${code}...`);
-            const tournoi = await prisma.tournoi.findUnique({
+            const tournoi = await db_1.default.tournoi.findUnique({
                 where: { code },
                 select: { statut: true }
             });
@@ -69,7 +77,7 @@ function registerLobbyHandlers(io, socket) {
             let isQuizLinked = false;
             let quizId = null;
             try {
-                const quiz = await prisma.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
+                const quiz = await db_1.default.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
                 if (quiz && quiz.id) {
                     isQuizLinked = true;
                     quizId = quiz.id;
@@ -78,7 +86,7 @@ function registerLobbyHandlers(io, socket) {
                     // This is a critical check for late joiners
                     if (tournoi.statut === 'en préparation') {
                         // Double-check the tournament status in the database
-                        const freshTournoi = await prisma.tournoi.findUnique({
+                        const freshTournoi = await db_1.default.tournoi.findUnique({
                             where: { code },
                             select: { statut: true }
                         });
@@ -86,7 +94,7 @@ function registerLobbyHandlers(io, socket) {
                             logger.info(`Quiz-linked tournament ${code} is actually active but marked as 'en préparation'. Forcing redirect.`);
                             socket.emit('redirect_to_tournament', { code });
                             // Also update the tournament status in database
-                            await prisma.tournoi.update({
+                            await db_1.default.tournoi.update({
                                 where: { code },
                                 data: { statut: 'en cours' }
                             });
@@ -113,7 +121,7 @@ function registerLobbyHandlers(io, socket) {
             io.to(`lobby_${code}`).emit("participant_joined", { pseudo, avatar, id: socket.id });
             io.to(`lobby_${code}`).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
             // Emit quiz connected count after a student joins the lobby
-            await emitQuizConnectedCount(io, prisma, code);
+            await (0, quizUtils_1.emitQuizConnectedCount)(io, db_1.default, code);
             // Periodically check tournament status for this lobby
             const checkInterval = setInterval(async () => {
                 try {
@@ -130,7 +138,7 @@ function registerLobbyHandlers(io, socket) {
                         logger.warn(`[STATUS CHECK] Socket ${socket.id} not in lobby_${code} room, rejoining...`);
                         socket.join(`lobby_${code}`);
                     }
-                    const updatedTournoi = await prisma.tournoi.findUnique({
+                    const updatedTournoi = await db_1.default.tournoi.findUnique({
                         where: { code },
                         select: { statut: true }
                     });
@@ -194,7 +202,7 @@ function registerLobbyHandlers(io, socket) {
             // Always emit participants_list as an object with isQuizLinked
             let isQuizLinked = false;
             try {
-                const quiz = await prisma.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
+                const quiz = await db_1.default.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
                 if (quiz && quiz.id)
                     isQuizLinked = true;
             }
@@ -210,7 +218,7 @@ function registerLobbyHandlers(io, socket) {
         // Check if this tournament is linked to a quiz
         let isQuizLinked = false;
         try {
-            const quiz = await prisma.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
+            const quiz = await db_1.default.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
             if (quiz && quiz.id)
                 isQuizLinked = true;
         }
@@ -237,7 +245,7 @@ function registerLobbyHandlers(io, socket) {
                     // Always emit participants_list as an object with isQuizLinked
                     let isQuizLinked = false;
                     try {
-                        const quiz = await prisma.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
+                        const quiz = await db_1.default.quiz.findUnique({ where: { tournament_code: code }, select: { id: true } });
                         if (quiz && quiz.id)
                             isQuizLinked = true;
                     }
@@ -255,7 +263,7 @@ function registerLobbyHandlers(io, socket) {
                 // Always emit participants_list as an object with isQuizLinked
                 let isQuizLinked = false;
                 try {
-                    const quiz = await prisma.quiz.findUnique({ where: { tournament_code: room }, select: { id: true } });
+                    const quiz = await db_1.default.quiz.findUnique({ where: { tournament_code: room }, select: { id: true } });
                     if (quiz && quiz.id)
                         isQuizLinked = true;
                 }
@@ -273,10 +281,6 @@ const lobbyHandlerExports = {
     lobbyParticipants
 };
 module.exports = lobbyHandlerExports;
-// This allows both TypeScript import and CommonJS require
-export { registerLobbyHandlers, lobbyParticipants,
-// ... other exports
- };
 // For CommonJS compatibility (bridge files)
 // Types are not typically exported for CommonJS consumers in this manner
 // JavaScript consumers will rely on the TypeScript declaration files (.d.ts)

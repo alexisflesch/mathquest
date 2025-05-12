@@ -1,8 +1,10 @@
+"use strict";
 /**
  * joinHandler.ts - Tournament Join Handler (Stub)
  *
  * This is a temporary stub implementation that will be completed later.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Handle join_tournament event
  *
@@ -15,4 +17,4 @@ async function handleJoinTournament(io, socket, payload) {
     const legacyHandler = require('./joinHandler.js');
     return legacyHandler(io, socket, payload);
 }
-export default handleJoinTournament;
+exports.default = handleJoinTournament;

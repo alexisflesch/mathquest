@@ -1,7 +1,12 @@
-// filepath: /home/aflesch/mathquest/app/sockets/tournamentUtils/scoreUtils.ts
 import { PrismaClient } from '@prisma/client';
 import { Question } from '../types/quizTypes';
 import { TournamentParticipant, TournamentAnswer } from '../types/tournamentTypes';
+// Define the ScoreCalculationResult interface directly here
+interface ScoreCalculationResult {
+    baseScore: number;
+    timePenalty: number;
+    totalScore: number;
+}
 import createLogger from '../../logger';
 
 const logger = createLogger('ScoreUtils');
@@ -12,11 +17,7 @@ const MAX_SCORE_PER_QUESTION = 1000;
 // Example: If TIME_PENALTY_SCALE_FACTOR is 0.5, half the question time incurs 50% of max penalty.
 const TIME_PENALTY_SCALE_FACTOR = 0.8; // How quickly penalty maxes out relative to question time.
 
-interface ScoreCalculationResult {
-    baseScore: number;
-    timePenalty: number;
-    totalScore: number;
-}
+// Using the exported ScoreCalculationResult type from scoreTypes.ts
 
 /**
  * Calculates the score for a given answer.

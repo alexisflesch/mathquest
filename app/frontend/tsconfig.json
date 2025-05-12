@@ -48,7 +48,9 @@
         "src/**/*.ts",
         "src/**/*.tsx",
         ".next/types/**/*.ts",
-        "../../shared/**/*.ts"
+        "../../shared/**/*.ts",
+        "next.config.ts",
+        ".eslintrc.json"
     ],
     "exclude": [
         "node_modules",

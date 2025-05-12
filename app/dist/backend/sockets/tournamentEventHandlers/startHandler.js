@@ -1,14 +1,19 @@
+"use strict";
 /**
  * startHandler.ts - Tournament Start Handler
  *
  * This module handles the start_tournament event, which initializes and starts a tournament.
  */
-import prisma from '../../db';
-import { tournamentState } from '../tournamentUtils/tournamentState';
-import { sendQuestionWithState } from '../tournamentUtils/tournamentHelpers';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const db_1 = __importDefault(require("../../db"));
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
+const tournamentHelpers_1 = require("../tournamentUtils/tournamentHelpers");
 // Import logger
-import createLogger from '../../logger';
-const logger = createLogger('StartTournamentHandler');
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('StartTournamentHandler');
 /**
  * Handle start_tournament event
  *
@@ -20,7 +25,7 @@ async function handleStartTournament(io, socket, { code }) {
     try {
         logger.info(`start_tournament: code=${code}, socket.id=${socket.id}`);
         // Fetch tournament first
-        const tournoi = await prisma.tournoi.findUnique({
+        const tournoi = await db_1.default.tournoi.findUnique({
             where: { code }
         });
         if (!tournoi) {
@@ -30,7 +35,7 @@ async function handleStartTournament(io, socket, { code }) {
             return;
         }
         // Then fetch questions separately using the IDs stored in the tournament
-        const dbQuestions = await prisma.question.findMany({
+        const dbQuestions = await db_1.default.question.findMany({
             where: {
                 uid: {
                     in: tournoi.questions_ids || []
@@ -70,7 +75,7 @@ async function handleStartTournament(io, socket, { code }) {
         logger.info(`Questions fetched for ${code}:`, questions.length, questions.map((q) => q.uid));
         if (!questions || questions.length === 0) {
             io.to(`lobby_${code}`).emit("tournament_end", { finalScore: 0, leaderboard: [] }); // End immediately if no questions
-            await prisma.tournoi.update({ where: { code }, data: { statut: 'terminé' } });
+            await db_1.default.tournoi.update({ where: { code }, data: { statut: 'terminé' } });
             return;
         }
         // Notify lobby clients to start countdown
@@ -80,7 +85,7 @@ async function handleStartTournament(io, socket, { code }) {
         // Check for linked quiz
         let linkedQuizId = null;
         try {
-            const quiz = await prisma.quiz.findFirst({ where: { tournament_code: code } });
+            const quiz = await db_1.default.quiz.findFirst({ where: { tournament_code: code } });
             linkedQuizId = quiz ? quiz.id : null;
             const tournamentHasLinkedQuiz = !!linkedQuizId;
             if (tournamentHasLinkedQuiz) {
@@ -92,12 +97,12 @@ async function handleStartTournament(io, socket, { code }) {
             logger.error(`[QUIZMODE DEBUG] Error looking up quiz for tournament code ${code}:`, err);
         }
         // Update tournament status in DB
-        await prisma.tournoi.update({
+        await db_1.default.tournoi.update({
             where: { code },
             data: { date_debut: new Date(), statut: 'en cours' }
         });
         // Initialize state
-        tournamentState[code] = {
+        tournamentState_1.tournamentState[code] = {
             participants: [], // Initialize as empty array, will be populated on join_tournament
             questions: questions.map(q => (Object.assign(Object.assign({}, q), { texte: q.question || q.texte || '' // Ensure texte field exists
              }))),
@@ -118,17 +123,17 @@ async function handleStartTournament(io, socket, { code }) {
             tournoiId: tournoi.id // Add the tournoi ID
         };
         // Ensure askedQuestions set is initialized in tournamentState
-        if (!tournamentState[code].askedQuestions) {
-            tournamentState[code].askedQuestions = new Set();
+        if (!tournamentState_1.tournamentState[code].askedQuestions) {
+            tournamentState_1.tournamentState[code].askedQuestions = new Set();
         }
         // Only wait 5 seconds before starting the first question if NOT linked to a quiz (classic mode)
-        if (!tournamentState[code].linkedQuizId) {
+        if (!tournamentState_1.tournamentState[code].linkedQuizId) {
             setTimeout(async () => {
-                if (tournamentState[code]) {
+                if (tournamentState_1.tournamentState[code]) {
                     // Use await here since sendQuestionWithState is now async
-                    await sendQuestionWithState(io, code, 0);
+                    await (0, tournamentHelpers_1.sendQuestionWithState)(io, code, 0);
                     // Start the timer for the first question (classic tournaments)
-                    const firstQ = tournamentState[code].questions[0];
+                    const firstQ = tournamentState_1.tournamentState[code].questions[0];
                     const firstTime = (firstQ === null || firstQ === void 0 ? void 0 : firstQ.temps) || 20;
                     const { triggerTournamentTimerSet } = require('../tournamentUtils/tournamentTriggers');
                     triggerTournamentTimerSet(io, code, firstTime, true);
@@ -136,12 +141,12 @@ async function handleStartTournament(io, socket, { code }) {
             }, 5000);
         }
         // Add the first question UID to the askedQuestions set
-        const firstQuestion = tournamentState[code].questions[0];
+        const firstQuestion = tournamentState_1.tournamentState[code].questions[0];
         if (firstQuestion && firstQuestion.uid) {
-            tournamentState[code].askedQuestions.add(firstQuestion.uid);
+            tournamentState_1.tournamentState[code].askedQuestions.add(firstQuestion.uid);
             logger.debug(`[startHandler] Added question UID ${firstQuestion.uid} to askedQuestions for tournament ${code}`);
             // Log the addition of the first question UID to the askedQuestions set
-            logger.info(`[startHandler] Adding first question UID ${firstQuestion.uid} to askedQuestions for tournament ${code}. Current set: ${Array.from(tournamentState[code].askedQuestions).join(', ')}`);
+            logger.info(`[startHandler] Adding first question UID ${firstQuestion.uid} to askedQuestions for tournament ${code}. Current set: ${Array.from(tournamentState_1.tournamentState[code].askedQuestions).join(', ')}`);
         }
         // In quiz mode (linkedQuizId set), the teacher will trigger the first question manually
     }
@@ -151,4 +156,4 @@ async function handleStartTournament(io, socket, { code }) {
         socket.emit("tournament_error", { message: "Erreur lors du démarrage du tournoi." });
     }
 }
-export default handleStartTournament;
+exports.default = handleStartTournament;

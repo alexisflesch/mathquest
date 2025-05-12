@@ -1,10 +1,19 @@
-import createLogger from '../../logger';
-const logger = createLogger('ScoreUtils');
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.calculateScore = calculateScore;
+exports.saveParticipantScore = saveParticipantScore;
+exports.scaleScoresForQuiz = scaleScoresForQuiz;
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('ScoreUtils');
 const MAX_SCORE_PER_QUESTION = 1000;
 // Adjusted TIME_PENALTY_FACTOR logic:
 // Points lost per unit of time relative to question's allowed time.
 // Example: If TIME_PENALTY_SCALE_FACTOR is 0.5, half the question time incurs 50% of max penalty.
 const TIME_PENALTY_SCALE_FACTOR = 0.8; // How quickly penalty maxes out relative to question time.
+// Using the exported ScoreCalculationResult type from scoreTypes.ts
 /**
  * Calculates the score for a given answer.
  * @param question The question object.
@@ -13,7 +22,7 @@ const TIME_PENALTY_SCALE_FACTOR = 0.8; // How quickly penalty maxes out relative
  * @param totalQuestions The total number of questions in the tournament (for scaling, if any).
  * @returns ScoreCalculationResult object.
  */
-export function calculateScore(question, answer, questionStartTime, totalQuestions) {
+function calculateScore(question, answer, questionStartTime, totalQuestions) {
     var _a;
     if (!question || !answer) {
         logger.warn('[calculateScore] Missing question or answer object.');
@@ -68,7 +77,7 @@ export function calculateScore(question, answer, questionStartTime, totalQuestio
  * @param tournoiId The ID of the tournament.
  * @param participant The participant object containing ID and new score.
  */
-export async function saveParticipantScore(prisma, tournoiId, participant) {
+async function saveParticipantScore(prisma, tournoiId, participant) {
     if (!tournoiId || !participant || !participant.id || typeof participant.score !== 'number') {
         logger.error('[saveParticipantScore] Invalid arguments provided.', { tournoiId, participantId: participant === null || participant === void 0 ? void 0 : participant.id, score: participant === null || participant === void 0 ? void 0 : participant.score });
         return;
@@ -119,7 +128,7 @@ export async function saveParticipantScore(prisma, tournoiId, participant) {
 /**
  * Placeholder for scaling scores in a quiz context, if needed.
  */
-export function scaleScoresForQuiz(quizId, io /* Server type from socket.io */) {
+function scaleScoresForQuiz(quizId, io /* Server type from socket.io */) {
     logger.info(`[scaleScoresForQuiz] Placeholder for quiz ${quizId}. Currently does nothing.`);
     // Future logic for scaling scores at the end of a quiz or specific intervals.
 }
@@ -129,4 +138,4 @@ const scoreUtils = {
     saveParticipantScore,
     scaleScoresForQuiz,
 };
-export default scoreUtils;
+exports.default = scoreUtils;

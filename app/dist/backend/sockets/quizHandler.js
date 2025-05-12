@@ -1,3 +1,4 @@
+"use strict";
 /**
  * quizHandler.ts - Quiz Handler Registration Module
  *
@@ -10,15 +11,23 @@
  * 2. Avoid circular dependencies
  * 3. Allow for easier testing and maintenance
  */
-import createLogger from '@logger';
-const logger = createLogger('QuizHandler');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.quizState = void 0;
+exports.registerQuizHandlers = registerQuizHandlers;
+exports.computeQuizModeScore = computeQuizModeScore;
+const _logger_1 = __importDefault(require("@logger"));
+const logger = (0, _logger_1.default)('QuizHandler');
 // Import tournament handler functions using require to avoid circular dependencies
 const tournamentHandler = require('./tournamentHandler');
 // Import quiz state and events
-import { quizState } from './quizState';
-import { registerQuizEvents } from './quizEvents';
-// Import score calculation utility
-import { calculateScore } from './tournamentUtils/scoreUtils';
+const quizState_1 = require("./quizState");
+Object.defineProperty(exports, "quizState", { enumerable: true, get: function () { return quizState_1.quizState; } });
+const quizEvents_1 = require("./quizEvents");
+// Import score calculation utility and its result type
+const scoreUtils_1 = require("./tournamentUtils/scoreUtils");
 /**
  * Compute scores for quiz mode, accounting for paused timers.
  * @param state - The quiz state object.
@@ -35,7 +44,7 @@ function computeQuizModeScore(state, question, answer, questionStart, totalQuest
     // Calculate the effective question start time by subtracting paused time
     const effectiveStartTime = questionStart + pausedTime;
     // Use the calculateScore utility, passing the effective start time
-    return calculateScore(question, answer, effectiveStartTime, totalQuestions);
+    return (0, scoreUtils_1.calculateScore)(question, answer, effectiveStartTime, totalQuestions);
 }
 /**
  * Register all quiz-related event handlers
@@ -45,7 +54,7 @@ function computeQuizModeScore(state, question, answer, questionStart, totalQuest
  */
 function registerQuizHandlers(io, socket, prisma) {
     logger.debug(`Registering quiz handlers for socket ${socket.id}`);
-    registerQuizEvents(io, socket, prisma);
+    (0, quizEvents_1.registerQuizEvents)(io, socket, prisma);
     // Check for quizId in socket data
     const quizId = socket.quizId; // Cast to any to access non-standard property
     if (quizId) {
@@ -59,9 +68,7 @@ function registerQuizHandlers(io, socket, prisma) {
 // Export the functions and state for CommonJS compatibility
 const quizHandlerExports = {
     registerQuizHandlers,
-    quizState,
+    quizState: quizState_1.quizState,
     computeQuizModeScore
 };
 module.exports = quizHandlerExports;
-// Add TypeScript exports for named imports
-export { registerQuizHandlers, quizState, computeQuizModeScore };

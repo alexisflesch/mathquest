@@ -13,7 +13,7 @@ import { Server, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import { SetQuestionPayload } from '../types/socketTypes';
 import { QuizState } from '../types/quizTypes';
-import { quizState, getQuestionTimer } from '../quizState.js';
+import { quizState, getQuestionTimer } from '../quizState';
 import {
     patchQuizStateForBroadcast,
     initializeChrono,

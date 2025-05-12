@@ -1,4 +1,5 @@
+"use strict";
 /**
  * TypeScript definitions for Quiz-related data structures
  */
-export {};
+Object.defineProperty(exports, "__esModule", { value: true });

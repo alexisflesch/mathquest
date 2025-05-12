@@ -9,5 +9,5 @@
  * to ensure connection pooling works correctly and to avoid connection limits.
  */
 import { PrismaClient } from '@prisma/client';
-declare const prisma: PrismaClient<import(".prisma/client").Prisma.PrismaClientOptions, never, import("@prisma/client/runtime/library").DefaultArgs>;
+declare const prisma: PrismaClient<import("@prisma/client").Prisma.PrismaClientOptions, never, import("../../shared/prisma-client/runtime/library").DefaultArgs>;
 export default prisma;

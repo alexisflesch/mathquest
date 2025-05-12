@@ -26,8 +26,14 @@ const tournamentHandler = require('./tournamentHandler');
 import { quizState } from './quizState';
 import { registerQuizEvents } from './quizEvents';
 
-// Import score calculation utility
+// Import score calculation utility and its result type
 import { calculateScore } from './tournamentUtils/scoreUtils';
+// Define the ScoreCalculationResult interface directly here
+interface ScoreCalculationResult {
+    baseScore: number;
+    timePenalty: number;
+    totalScore: number;
+}
 
 /**
  * Compute scores for quiz mode, accounting for paused timers.
@@ -44,7 +50,7 @@ function computeQuizModeScore(
     answer: TournamentAnswer,
     questionStart: number,
     totalQuestions: number
-) {
+): ScoreCalculationResult {
     // These properties might not be in the QuizState interface, so we access them safely
     const activeTime = (state as any).activeTime || 0; // Time the question was actively available
     const pausedTime = (state as any).pausedTime || 0; // Time the question was paused

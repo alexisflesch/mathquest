@@ -1,3 +1,4 @@
+"use strict";
 /**
  * tournamentHelpers.ts - Utility functions for tournament operations
  *
@@ -7,12 +8,19 @@
  * - Handling timer expiration
  * - Computing statistics
  */
-import createLogger from '../../logger';
-const logger = createLogger('TournamentHelpers');
-import { tournamentState } from './tournamentState';
-import { saveParticipantScore } from './scoreUtils';
-import { sendTournamentQuestion } from './sendTournamentQuestion';
-import prisma from '../../db';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getEmitTarget = getEmitTarget;
+exports.handleTimerExpiration = handleTimerExpiration;
+exports.sendQuestionWithState = sendQuestionWithState;
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('TournamentHelpers');
+const tournamentState_1 = require("./tournamentState");
+const scoreUtils_1 = require("./scoreUtils");
+const sendTournamentQuestion_1 = require("./sendTournamentQuestion");
+const db_1 = __importDefault(require("../../db"));
 /**
  * Gets the target to emit events to - handles live/differed mode
  *
@@ -36,7 +44,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
     var _a, _b, _c;
     logger.info(`[handleTimerExpiration] ENTERED for code=${code}`);
     logger.info(`[handleTimerExpiration] START for code=${code} at ${new Date().toISOString()}`);
-    const state = tournamentState[code];
+    const state = tournamentState_1.tournamentState[code];
     if (!state || state.paused || state.stopped) {
         logger.debug(`[handleTimerExpiration] Early return for code=${code}. paused=${state === null || state === void 0 ? void 0 : state.paused}, stopped=${state === null || state === void 0 ? void 0 : state.stopped}`);
         return; // Ignore if paused, stopped, or state doesn't exist
@@ -78,7 +86,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
         participant.score = totalScore;
         // Save score to database for persistent tournaments
         if (state.tournoiId && participant.id) {
-            saveParticipantScore(prisma, state.tournoiId, participant) // Added prisma
+            (0, scoreUtils_1.saveParticipantScore)(db_1.default, state.tournoiId, participant) // Added prisma
                 .catch((err) => logger.error(`[handleTimerExpiration] Error saving score: ${err.message}`));
         }
     }
@@ -155,7 +163,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
  */
 function sendQuestionWithState(io, code, questionIndex, questionUid = undefined, targetRoom = null, isDiffered = false) {
     var _a, _b, _c;
-    const state = tournamentState[code];
+    const state = tournamentState_1.tournamentState[code];
     if (!state || !state.questions || state.questions.length === 0) {
         logger.error(`[sendQuestionWithState] Invalid state for code ${code}`);
         return;
@@ -192,7 +200,7 @@ function sendQuestionWithState(io, code, questionIndex, questionUid = undefined,
     const target = getEmitTarget(io, code, targetRoom, isDiffered);
     // Send the question data to clients
     try {
-        sendTournamentQuestion(target, {
+        (0, sendTournamentQuestion_1.sendTournamentQuestion)(target, {
             code,
             question,
             timer,
@@ -210,7 +218,3 @@ function sendQuestionWithState(io, code, questionIndex, questionUid = undefined,
     const answeredCount = ((_c = state.participants) === null || _c === void 0 ? void 0 : _c.filter((p) => { var _a; return (_a = p.answers) === null || _a === void 0 ? void 0 : _a.some((a) => a.questionUid === questionId); }).length) || 0;
     logger.debug(`[sendQuestionWithState] Tournament ${code} has ${participantsCount} participants, ${answeredCount} have answered question ${questionId}`);
 }
-/**
- * Named exports for destructuring import
- */
-export { getEmitTarget, handleTimerExpiration, sendQuestionWithState, };

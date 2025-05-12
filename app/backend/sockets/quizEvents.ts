@@ -9,9 +9,10 @@ import { Server, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import { QuizState } from './types/quizTypes';
 import { patchQuizStateForBroadcast } from './quizUtils';
+import { quizState } from './quizState';
 
-// Import logger using require until logger module is converted to TypeScript
-const createLogger = require('../logger');
+// Import logger properly using ES import
+import createLogger from '../logger';
 const logger = createLogger('QuizEvents');
 
 // Import handlers
@@ -25,10 +26,9 @@ import handleEnd from './quizEventHandlers/endHandler';
 import handlePause from './quizEventHandlers/pauseHandler';
 import handleResume from './quizEventHandlers/resumeHandler';
 
-// Others are still imported as JS modules until they are converted
-// TODO: Convert these to TypeScript imports as the handlers are migrated
-const handleJoinQuiz = require('./quizEventHandlers/joinQuizHandler');
-const handleDisconnecting = require('./quizEventHandlers/disconnectingHandler');
+// All handlers are now properly imported as TypeScript modules
+import handleJoinQuiz from './quizEventHandlers/joinQuizHandler';
+import handleDisconnecting from './quizEventHandlers/disconnectingHandler';
 const handleCloseQuestion = require('./quizEventHandlers/closeQuestionHandler');
 
 /**
@@ -46,8 +46,7 @@ async function ensureQuizStateInitialized(
     role: string | null = null,
     teacherId: string | null = null
 ): Promise<QuizState> {
-    // Import quizState directly from the TS module now
-    const { quizState } = require('./quizState');
+    // Using the imported quizState from the module
 
     if (!quizState[quizId]) {
         quizState[quizId] = {
@@ -57,9 +56,9 @@ async function ensureQuizStateInitialized(
             locked: false,
             ended: false,
             stats: {},
-            profSocketId: (role === 'prof' || role === 'teacher') ? socket.id : null,
-            profTeacherId: (role === 'prof' || role === 'teacher') ? teacherId : null,
-            timerStatus: null,
+            profSocketId: (role === 'prof' || role === 'teacher') ? socket.id : undefined,
+            profTeacherId: (role === 'prof' || role === 'teacher') ? teacherId || '' : '',
+            timerStatus: undefined,
             timerQuestionId: null,
             timerTimeLeft: null,
             timerTimestamp: null,
@@ -124,9 +123,6 @@ function registerQuizEvents(io: Server, socket: Socket, prisma: PrismaClient): v
 
     socket.on("quiz_set_question", (payload) => {
         handleSetQuestion(io, socket, prisma, payload);
-
-        // Get quizState after handling the event
-        const { quizState } = require('./quizState');
         const { quizId } = payload;
 
         // Ensure askedQuestions set is initialized

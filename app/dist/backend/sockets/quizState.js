@@ -1,3 +1,4 @@
+"use strict";
 /**
  * quizState.ts - Quiz State Management
  *
@@ -18,7 +19,12 @@
  * UPDATED: Now includes per-question timer tracking to store individual
  * timer states for each question in a quiz.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.quizState = void 0;
+exports.createDefaultQuestionTimer = createDefaultQuestionTimer;
+exports.getQuestionTimer = getQuestionTimer;
 const quizState = {};
+exports.quizState = quizState;
 /**
  * Creates a default question timer state object
  * @param initialTime - Initial time for the timer in seconds
@@ -89,7 +95,6 @@ Object.defineProperty(quizState, 'wrapWithLogger', {
     value: wrapQuizStateWithCurrentQuestionUidLogger,
     enumerable: false
 });
-export { quizState, createDefaultQuestionTimer, getQuestionTimer };
 // For CommonJS compatibility
 const exportsObject = {
     quizState,

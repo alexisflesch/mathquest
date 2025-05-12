@@ -1,13 +1,18 @@
+"use strict";
 /**
  * unlockHandler.ts - Handler for unlocking a quiz
  *
  * This unlocks a quiz to allow answers from students.
  * Only the teacher who owns the quiz can unlock it.
  */
-import { quizState } from '@sockets/quizState';
-import { patchQuizStateForBroadcast } from '@sockets/quizUtils';
-import createLogger from '@logger';
-const logger = createLogger('UnlockQuizHandler');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const quizState_1 = require("@sockets/quizState");
+const quizUtils_1 = require("@sockets/quizUtils");
+const _logger_1 = __importDefault(require("@logger"));
+const logger = (0, _logger_1.default)('UnlockQuizHandler');
 /**
  * Handle quiz_unlock event
  *
@@ -18,7 +23,7 @@ const logger = createLogger('UnlockQuizHandler');
  */
 function handleUnlock(io, socket, prisma, { quizId, teacherId }) {
     // Authorization check
-    if (!quizState[quizId] || quizState[quizId].profSocketId !== socket.id) {
+    if (!quizState_1.quizState[quizId] || quizState_1.quizState[quizId].profSocketId !== socket.id) {
         logger.warn(`Unauthorized attempt to unlock quiz ${quizId} from socket ${socket.id}`);
         socket.emit('quiz_action_response', {
             status: 'error',
@@ -28,13 +33,13 @@ function handleUnlock(io, socket, prisma, { quizId, teacherId }) {
     }
     logger.info(`Unlocking quiz ${quizId}`);
     // Update state
-    quizState[quizId].locked = false;
+    quizState_1.quizState[quizId].locked = false;
     // Broadcast updated state
-    io.to(`dashboard_${quizId}`).emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
+    io.to(`dashboard_${quizId}`).emit("quiz_state", (0, quizUtils_1.patchQuizStateForBroadcast)(quizState_1.quizState[quizId]));
     // Emit success message
     io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
         status: 'success',
         message: 'Quiz unlocked successfully.'
     });
 }
-export default handleUnlock;
+exports.default = handleUnlock;

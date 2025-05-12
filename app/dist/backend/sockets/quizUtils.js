@@ -1,21 +1,35 @@
+"use strict";
 /**
  * quizUtils.ts - Quiz Utility Functions
  *
  * This module provides a set of utility functions for managing quiz state
  * and connected users.
  */
-import { quizState, getQuestionTimer } from './quizState';
-import { tournamentState } from './tournamentUtils/tournamentState'; // Updated import
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.emitQuizConnectedCount = emitQuizConnectedCount;
+exports.emitQuizTimerUpdate = emitQuizTimerUpdate;
+exports.patchQuizStateForBroadcast = patchQuizStateForBroadcast;
+exports.updateChrono = updateChrono;
+exports.initializeChrono = initializeChrono;
+exports.calculateRemainingTime = calculateRemainingTime;
+exports.updateQuestionTimer = updateQuestionTimer;
+exports.calculateQuestionRemainingTime = calculateQuestionRemainingTime;
+exports.synchronizeTimerValues = synchronizeTimerValues;
+const quizState_1 = require("./quizState");
+const tournamentState_1 = require("./tournamentUtils/tournamentState"); // Updated import
 // Import logger
-import createLogger from '../logger'; // Updated to import from logger.ts (via its bridge or direct .ts resolution)
-const logger = createLogger('QuizUtils');
+const logger_1 = __importDefault(require("../logger")); // Updated to import from logger.ts (via its bridge or direct .ts resolution)
+const logger = (0, logger_1.default)('QuizUtils');
 /**
  * Emits the connected user count for a tournament associated with a quiz
  * @param io - Socket.IO server instance
  * @param prisma - Prisma client
  * @param code - Tournament code
  */
-export async function emitQuizConnectedCount(io, prisma, code) {
+async function emitQuizConnectedCount(io, prisma, code) {
     var _a;
     if (!code)
         return;
@@ -46,7 +60,7 @@ export async function emitQuizConnectedCount(io, prisma, code) {
     const room = io.sockets.adapter.rooms.get(`dashboard_${quizId}`);
     console.info('[QUIZ_CONNECTED] quiz_connected_count room members:', room ? Array.from(room) : []);
     // Récupère le socketId du prof pour ce quiz
-    const profSocketId = (_a = quizState[quizId]) === null || _a === void 0 ? void 0 : _a.profSocketId;
+    const profSocketId = (_a = quizState_1.quizState[quizId]) === null || _a === void 0 ? void 0 : _a.profSocketId;
     // Exclut le prof du comptage
     let totalCount = 0;
     for (const socketId of allSocketIds) {
@@ -68,7 +82,7 @@ export async function emitQuizConnectedCount(io, prisma, code) {
  * @param questionId - Question ID
  * @param timeLeft - Time left in seconds
  */
-export function emitQuizTimerUpdate(io, quizId, status, questionId, timeLeft) {
+function emitQuizTimerUpdate(io, quizId, status, questionId, timeLeft) {
     io.to(quizId).emit('quiz_timer_update', { quizId, status, questionId, timeLeft });
     // Also emit to the dashboard room for this quiz
     io.to(`dashboard_${quizId}`).emit('quiz_timer_update', { quizId, status, questionId, timeLeft });
@@ -78,7 +92,7 @@ export function emitQuizTimerUpdate(io, quizId, status, questionId, timeLeft) {
  * @param state - The quiz state to patch
  * @returns The patched quiz state
  */
-export function patchQuizStateForBroadcast(state) {
+function patchQuizStateForBroadcast(state) {
     if (!state) {
         logger.warn('[patchQuizStateForBroadcast] Received null or undefined state.');
         return state;
@@ -124,7 +138,7 @@ export function patchQuizStateForBroadcast(state) {
     const now = Date.now();
     let patchedState = Object.assign(Object.assign({}, state), { currentQuestion: currentQuestionObject });
     if (state.timerQuestionId) {
-        const questionTimer = getQuestionTimer(quizIdForLog, state.timerQuestionId); // Use quizIdForLog
+        const questionTimer = (0, quizState_1.getQuestionTimer)(quizIdForLog, state.timerQuestionId); // Use quizIdForLog
         if (questionTimer && questionTimer.status === 'play' && questionTimer.timestamp) {
             const elapsed = (now - questionTimer.timestamp) / 1000;
             const original = questionTimer.initialTime;
@@ -144,7 +158,7 @@ export function patchQuizStateForBroadcast(state) {
  * @param status - Timer status
  * @returns Updated quiz state
  */
-export function updateChrono(state, timeLeft, status) {
+function updateChrono(state, timeLeft, status) {
     var _a;
     if (!state)
         return state;
@@ -159,7 +173,7 @@ export function updateChrono(state, timeLeft, status) {
  * @param initialTime - Initial time in seconds
  * @returns Initialized chrono object
  */
-export function initializeChrono(initialTime = 20) {
+function initializeChrono(initialTime = 20) {
     return {
         timeLeft: initialTime,
         running: false,
@@ -171,7 +185,7 @@ export function initializeChrono(initialTime = 20) {
  * @param timestamp - Timestamp when timer started
  * @returns Remaining time in seconds
  */
-export function calculateRemainingTime(chrono, timestamp) {
+function calculateRemainingTime(chrono, timestamp) {
     if (!chrono || !chrono.timeLeft || !timestamp || !chrono.running) {
         return (chrono === null || chrono === void 0 ? void 0 : chrono.timeLeft) || 0;
     }
@@ -185,9 +199,9 @@ export function calculateRemainingTime(chrono, timestamp) {
  * @param status - The timer status ('play', 'pause', or 'stop')
  * @param timeLeft - The remaining time in seconds
  */
-export function updateQuestionTimer(quizId, questionId, status, timeLeft) {
+function updateQuestionTimer(quizId, questionId, status, timeLeft) {
     console.debug(`[updateQuestionTimer] Debug: Called with quizId=${quizId}, questionId=${questionId}, action=${status}, timeLeft=${timeLeft}`);
-    const questionTimer = getQuestionTimer(quizId, questionId);
+    const questionTimer = (0, quizState_1.getQuestionTimer)(quizId, questionId);
     console.debug(`[updateQuestionTimer] Debug: Timer before update:`, JSON.stringify(questionTimer));
     if (!questionTimer) {
         console.error(`[updateQuestionTimer] Timer for question ${questionId} in quiz ${quizId} not found`);
@@ -196,8 +210,8 @@ export function updateQuestionTimer(quizId, questionId, status, timeLeft) {
     const prevStatus = questionTimer.status;
     console.info(`[updateQuestionTimer][BEFORE] quizId=${quizId}, questionId=${questionId}, status=${status}, prevStatus=${prevStatus}, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}`);
     // Log all timers for this quiz for debugging
-    if (quizState[quizId] && quizState[quizId].questionTimers) {
-        const timers = Object.entries(quizState[quizId].questionTimers || {}).map(([qid, t]) => `${qid}: status=${t.status}, timeLeft=${t.timeLeft}, ts=${t.timestamp}`).join(' | ');
+    if (quizState_1.quizState[quizId] && quizState_1.quizState[quizId].questionTimers) {
+        const timers = Object.entries(quizState_1.quizState[quizId].questionTimers || {}).map(([qid, t]) => `${qid}: status=${t.status}, timeLeft=${t.timeLeft}, ts=${t.timestamp}`).join(' | ');
         console.info(`[updateQuestionTimer][DEBUG] All timers for quizId=${quizId}: ${timers}`);
     }
     // Strict state transition guards for quiz timers
@@ -254,8 +268,8 @@ export function updateQuestionTimer(quizId, questionId, status, timeLeft) {
  * @param questionId - The question ID
  * @returns The remaining time in seconds
  */
-export function calculateQuestionRemainingTime(quizId, questionId) {
-    const questionTimer = getQuestionTimer(quizId, questionId);
+function calculateQuestionRemainingTime(quizId, questionId) {
+    const questionTimer = (0, quizState_1.getQuestionTimer)(quizId, questionId);
     if (!questionTimer) {
         console.error(`[calculateQuestionRemainingTime] Timer for question ${questionId} in quiz ${quizId} not found`);
         return 0;
@@ -275,26 +289,26 @@ export function calculateQuestionRemainingTime(quizId, questionId) {
  * @param tournamentCode - Tournament code
  * @param timeLeft - Time left in seconds
  */
-export function synchronizeTimerValues(quizId, tournamentCode, timeLeft) {
+function synchronizeTimerValues(quizId, tournamentCode, timeLeft) {
     // Get the tournament state from the imported module
     // Note: Using legacy JS file for compatibility until full migration
     // const { tournamentState } = require('./tournamentUtils/tournamentState.legacy.js'); // Removed legacy require
-    if (!tournamentState[tournamentCode]) {
+    if (!tournamentState_1.tournamentState[tournamentCode]) {
         console.error(`[synchronizeTimerValues] Tournament ${tournamentCode} not found`);
         return;
     }
-    if (!quizState[quizId]) {
+    if (!quizState_1.quizState[quizId]) {
         console.error(`[synchronizeTimerValues] Quiz ${quizId} not found`);
         return;
     }
     // Get the current question being timed
-    const questionId = quizState[quizId].timerQuestionId;
+    const questionId = quizState_1.quizState[quizId].timerQuestionId;
     if (!questionId) {
         console.warn(`[synchronizeTimerValues] No active question in quiz ${quizId}`);
         return;
     }
     // Update tournament state with the question ID and duration
-    tournamentState[tournamentCode].currentQuestionUid = questionId;
-    tournamentState[tournamentCode].currentQuestionDuration = timeLeft;
+    tournamentState_1.tournamentState[tournamentCode].currentQuestionUid = questionId;
+    tournamentState_1.tournamentState[tournamentCode].currentQuestionDuration = timeLeft;
     console.info(`[synchronizeTimerValues] Synchronized timer values between quiz ${quizId} and tournament ${tournamentCode}: questionId=${questionId}, timeLeft=${timeLeft}`);
 }

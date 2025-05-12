@@ -1,3 +1,4 @@
+"use strict";
 /**
  * setQuestionHandler.ts - Handler for setting the active question in a quiz
  *
@@ -8,8 +9,9 @@
  * UPDATED: Now uses per-question timer tracking to maintain individual
  * timer states for each question.
  */
-import { quizState, getQuestionTimer } from '../quizState.js';
-import { patchQuizStateForBroadcast, updateQuestionTimer } from '../quizUtils';
+Object.defineProperty(exports, "__esModule", { value: true });
+const quizState_js_1 = require("../quizState.js");
+const quizUtils_1 = require("../quizUtils");
 // Import using require for now until these are converted to TypeScript
 // TODO: Convert these imports to TypeScript imports when available
 const createLogger = require('../../logger');
@@ -26,9 +28,9 @@ const { triggerQuizTimerAction } = require('../quizTriggers');
  */
 async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, questionIdx, tournamentCode, teacherId }) {
     // Initialize quizState if it doesn't exist
-    if (!quizState[quizId]) {
+    if (!quizState_js_1.quizState[quizId]) {
         logger.info(`[SetQuestion] Creating new quizState for quizId=${quizId}`);
-        quizState[quizId] = {
+        quizState_js_1.quizState[quizId] = {
             currentQuestionUid: null,
             questions: [],
             chrono: { timeLeft: null, running: false },
@@ -48,9 +50,9 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
             });
             if (quiz) {
                 // Update the teacher ID and load questions
-                quizState[quizId].profTeacherId = quiz.enseignant_id;
+                quizState_js_1.quizState[quizId].profTeacherId = quiz.enseignant_id;
                 if (quiz.tournament_code) {
-                    quizState[quizId].tournament_code = quiz.tournament_code;
+                    quizState_js_1.quizState[quizId].tournament_code = quiz.tournament_code;
                 }
                 if (quiz.questions_ids && quiz.questions_ids.length > 0) {
                     // Fetch questions from database
@@ -65,7 +67,7 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
                             orderedQuestions.push(questionMap.get(uid));
                         }
                     });
-                    quizState[quizId].questions = orderedQuestions;
+                    quizState_js_1.quizState[quizId].questions = orderedQuestions;
                 }
             }
         }
@@ -73,7 +75,7 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
             logger.error(`[SetQuestion] Error loading quiz data for ${quizId}:`, err);
         }
     }
-    if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
+    if (!quizState_js_1.quizState[quizId] || quizState_js_1.quizState[quizId].profTeacherId !== teacherId) {
         // Fallback: check DB if teacherId matches quiz owner
         const quiz = await prisma.quiz.findUnique({
             where: { id: quizId },
@@ -84,8 +86,8 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
             return;
         }
         // Update in-memory state for future requests
-        if (quizState[quizId]) {
-            quizState[quizId].profTeacherId = teacherId;
+        if (quizState_js_1.quizState[quizId]) {
+            quizState_js_1.quizState[quizId].profTeacherId = teacherId;
         }
         else {
             logger.error(`[SetQuestion] quizState[${quizId}] is still undefined after initialization attempt`);
@@ -93,9 +95,9 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
         }
     }
     // Update profSocketId to current socket
-    quizState[quizId].profSocketId = socket.id;
+    quizState_js_1.quizState[quizId].profSocketId = socket.id;
     // Check if questions array is initialized
-    if (!quizState[quizId].questions || !Array.isArray(quizState[quizId].questions)) {
+    if (!quizState_js_1.quizState[quizId].questions || !Array.isArray(quizState_js_1.quizState[quizId].questions)) {
         logger.error(`[SetQuestion] Questions array not properly initialized for quiz ${quizId}`);
         socket.emit('quiz_action_response', {
             success: false,
@@ -104,7 +106,7 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
         return;
     }
     // Find question by UID
-    const questionIndex = quizState[quizId].questions.findIndex(q => q.uid === questionUid);
+    const questionIndex = quizState_js_1.quizState[quizId].questions.findIndex(q => q.uid === questionUid);
     if (questionIndex === -1) {
         logger.error(`[SetQuestion] Question with UID ${questionUid} not found in quiz ${quizId}`);
         socket.emit('quiz_action_response', {
@@ -117,26 +119,26 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
     const finalQuestionIdx = typeof questionIdx === 'number' ? questionIdx : questionIndex;
     // Update current question UID and index in quiz state
     logger.info(`[SetQuestion] Setting current question to UID=${questionUid}, idx=${finalQuestionIdx} for quiz ${quizId}`);
-    quizState[quizId].currentQuestionUid = questionUid;
-    quizState[quizId].currentQuestionIdx = finalQuestionIdx;
+    quizState_js_1.quizState[quizId].currentQuestionUid = questionUid;
+    quizState_js_1.quizState[quizId].currentQuestionIdx = finalQuestionIdx;
     // Reset lock state (questions start unlocked)
-    quizState[quizId].locked = false;
+    quizState_js_1.quizState[quizId].locked = false;
     // Start or reset timer for this question
-    updateQuestionTimer(quizId, questionUid, 'stop');
-    const questionTimer = getQuestionTimer(quizId, questionUid);
+    (0, quizUtils_1.updateQuestionTimer)(quizId, questionUid, 'stop');
+    const questionTimer = (0, quizState_js_1.getQuestionTimer)(quizId, questionUid);
     if (questionTimer) {
         // Update global timer fields to match question-specific timer
-        quizState[quizId].timerStatus = questionTimer.status;
-        quizState[quizId].timerQuestionId = questionUid;
-        quizState[quizId].timerTimeLeft = questionTimer.timeLeft;
-        quizState[quizId].timerTimestamp = questionTimer.timestamp;
+        quizState_js_1.quizState[quizId].timerStatus = questionTimer.status;
+        quizState_js_1.quizState[quizId].timerQuestionId = questionUid;
+        quizState_js_1.quizState[quizId].timerTimeLeft = questionTimer.timeLeft;
+        quizState_js_1.quizState[quizId].timerTimestamp = questionTimer.timestamp;
         logger.info(`[SetQuestion] Reset timer for question ${questionUid}: status=${questionTimer.status}, timeLeft=${questionTimer.timeLeft}`);
     }
     else {
         logger.warn(`[SetQuestion] Failed to get or create timer for question ${questionUid}`);
     }
     // Prepare dashboard state for broadcast (with current question object)
-    const dashboardState = patchQuizStateForBroadcast(quizState[quizId]);
+    const dashboardState = (0, quizUtils_1.patchQuizStateForBroadcast)(quizState_js_1.quizState[quizId]);
     // Broadcast updated state to dashboard room
     io.to(`dashboard_${quizId}`).emit('quiz_state_update', dashboardState);
     logger.info(`[SetQuestion] Emitted quiz_state_update to dashboard_${quizId}`);
@@ -164,4 +166,4 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
     // Notify admin of action
     logger.info(`[SetQuestion] Question ${questionUid} set for quiz ${quizId} by teacher ${teacherId}`);
 }
-export default handleSetQuestion;
+exports.default = handleSetQuestion;

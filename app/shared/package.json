@@ -7,8 +7,9 @@
         "lint": "eslint . --ext .ts"
     },
     "devDependencies": {
+        "@eslint/eslintrc": "^3.3.1",
         "@types/node": "^20",
-        "typescript": "^5.8.3",
-        "eslint": "^9"
+        "eslint": "^9",
+        "typescript": "^5.8.3"
     }
 }

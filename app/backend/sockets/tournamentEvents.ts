@@ -9,14 +9,13 @@
 import { Server, Socket } from 'socket.io';
 import { StartTournamentPayload, JoinTournamentPayload, TournamentAnswerPayload } from './types/socketTypes';
 
-// Import handlers - we're using dynamic require to allow for both TypeScript and JavaScript files
-// This helps during the migration process from JS to TS
-const handleStartTournament = require('./tournamentEventHandlers/startHandler');
-const handleJoinTournament = require('./tournamentEventHandlers/joinHandler');
-const handleTournamentAnswer = require('./tournamentEventHandlers/answerHandler');
-const handleTournamentPause = require('./tournamentEventHandlers/pauseHandler');
-const handleTournamentResume = require('./tournamentEventHandlers/resumeHandler');
-const handleDisconnecting = require('./tournamentEventHandlers/disconnectingHandler');
+// Import handlers - now using proper ESM imports for TypeScript files
+import handleStartTournament from './tournamentEventHandlers/startHandler';
+import handleJoinTournament from './tournamentEventHandlers/joinHandler';
+import handleTournamentAnswer from './tournamentEventHandlers/answerHandler';
+import handleTournamentPause from './tournamentEventHandlers/pauseHandler';
+import handleTournamentResume from './tournamentEventHandlers/resumeHandler';
+import handleDisconnecting from './tournamentEventHandlers/disconnectingHandler';
 
 // Create logger for this module
 const createLogger = require('../logger');

@@ -1,23 +1,30 @@
+"use strict";
 /**
  * quizEvents.ts - Quiz Socket Event Registration
  *
  * This module imports individual event handlers for quiz-related actions
  * and registers them with the Socket.IO socket instance.
  */
-import { patchQuizStateForBroadcast } from './quizUtils';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ensureQuizStateInitialized = ensureQuizStateInitialized;
+exports.registerQuizEvents = registerQuizEvents;
+const quizUtils_1 = require("./quizUtils");
 // Import logger using require until logger module is converted to TypeScript
 const createLogger = require('../logger');
 const logger = createLogger('QuizEvents');
 // Import handlers
 // Some are imported as TypeScript modules
-import handleSetQuestion from './quizEventHandlers/setQuestionHandler';
-import handleTimerAction from './quizEventHandlers/timerActionHandler';
-import { handleSetTimer } from './quizEventHandlers/setTimerHandler'; // Changed from default to named import
-import handleLock from './quizEventHandlers/lockHandler';
-import handleUnlock from './quizEventHandlers/unlockHandler';
-import handleEnd from './quizEventHandlers/endHandler';
-import handlePause from './quizEventHandlers/pauseHandler';
-import handleResume from './quizEventHandlers/resumeHandler';
+const setQuestionHandler_1 = __importDefault(require("./quizEventHandlers/setQuestionHandler"));
+const timerActionHandler_1 = __importDefault(require("./quizEventHandlers/timerActionHandler"));
+const setTimerHandler_1 = require("./quizEventHandlers/setTimerHandler"); // Changed from default to named import
+const lockHandler_1 = __importDefault(require("./quizEventHandlers/lockHandler"));
+const unlockHandler_1 = __importDefault(require("./quizEventHandlers/unlockHandler"));
+const endHandler_1 = __importDefault(require("./quizEventHandlers/endHandler"));
+const pauseHandler_1 = __importDefault(require("./quizEventHandlers/pauseHandler"));
+const resumeHandler_1 = __importDefault(require("./quizEventHandlers/resumeHandler"));
 // Others are still imported as JS modules until they are converted
 // TODO: Convert these to TypeScript imports as the handlers are migrated
 const handleJoinQuiz = require('./quizEventHandlers/joinQuizHandler');
@@ -99,7 +106,7 @@ function registerQuizEvents(io, socket, prisma) {
     // Register handlers
     socket.on("join_quiz", (payload) => handleJoinQuiz(io, socket, prisma, payload));
     socket.on("quiz_set_question", (payload) => {
-        handleSetQuestion(io, socket, prisma, payload);
+        (0, setQuestionHandler_1.default)(io, socket, prisma, payload);
         // Get quizState after handling the event
         const { quizState } = require('./quizState');
         const { quizId } = payload;
@@ -113,13 +120,13 @@ function registerQuizEvents(io, socket, prisma) {
             quizState[quizId].askedQuestions.add(currentQuestion.uid);
         }
     });
-    socket.on("quiz_timer_action", (payload) => handleTimerAction(io, socket, prisma, payload));
-    socket.on("quiz_set_timer", (payload) => handleSetTimer(io, socket, prisma, payload));
-    socket.on("quiz_lock", (payload) => handleLock(io, socket, prisma, payload));
-    socket.on("quiz_unlock", (payload) => handleUnlock(io, socket, prisma, payload));
-    socket.on("quiz_end", (payload) => handleEnd(io, socket, prisma, payload));
-    socket.on("quiz_pause", (payload) => handlePause(io, socket, prisma, payload));
-    socket.on("quiz_resume", (payload) => handleResume(io, socket, prisma, payload));
+    socket.on("quiz_timer_action", (payload) => (0, timerActionHandler_1.default)(io, socket, prisma, payload));
+    socket.on("quiz_set_timer", (payload) => (0, setTimerHandler_1.handleSetTimer)(io, socket, prisma, payload));
+    socket.on("quiz_lock", (payload) => (0, lockHandler_1.default)(io, socket, prisma, payload));
+    socket.on("quiz_unlock", (payload) => (0, unlockHandler_1.default)(io, socket, prisma, payload));
+    socket.on("quiz_end", (payload) => (0, endHandler_1.default)(io, socket, prisma, payload));
+    socket.on("quiz_pause", (payload) => (0, pauseHandler_1.default)(io, socket, prisma, payload));
+    socket.on("quiz_resume", (payload) => (0, resumeHandler_1.default)(io, socket, prisma, payload));
     socket.on("quiz_close_question", (payload) => handleCloseQuestion(io, socket, prisma, payload));
     // Handle disconnections
     socket.on("disconnecting", () => handleDisconnecting(io, socket, prisma));
@@ -135,8 +142,7 @@ function registerQuizEvents(io, socket, prisma) {
             return;
         }
         // Patch state with calculated fields before sending
-        const patchedState = patchQuizStateForBroadcast(quizState[quizId]);
+        const patchedState = (0, quizUtils_1.patchQuizStateForBroadcast)(quizState[quizId]);
         socket.emit("quiz_state", patchedState);
     });
 }
-export { ensureQuizStateInitialized, registerQuizEvents };

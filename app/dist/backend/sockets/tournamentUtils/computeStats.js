@@ -1,16 +1,19 @@
+"use strict";
 // filepath: /home/aflesch/mathquest/app/sockets/tournamentUtils/computeStats.ts
 /**
  * computeStats.ts - Utility to compute answer stats for a question in a tournament
  *
  * This module provides functions to analyze participant answers and generate statistics.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.computeAnswerStats = computeAnswerStats;
 /**
  * Computes statistics for answers to a specific tournament question.
  * @param tState The current state of a single tournament.
  * @param questionUid The UID of the question to compute stats for.
  * @returns AnswerStats object, or null if data is insufficient.
  */
-export function computeAnswerStats(tState, questionUid) {
+function computeAnswerStats(tState, questionUid) {
     var _a, _b;
     if (!tState) {
         console.warn('computeAnswerStats: Tournament state is null or undefined.');

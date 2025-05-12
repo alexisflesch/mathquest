@@ -1,20 +1,28 @@
+"use strict";
 /**
  * tournamentTriggers.ts - Trigger functions for tournament events
  *
  * This module contains functions that trigger various tournament events,
  * such as sending questions, starting/stopping timers, and handling answers.
  */
-import createLogger from '../../logger'; // Changed from alias to relative path
-const logger = createLogger('TournamentTriggers');
-import { tournamentState } from './tournamentState'; // Use TS import for tournamentState
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.triggerTournamentQuestion = triggerTournamentQuestion;
+exports.triggerTournamentTimerSet = triggerTournamentTimerSet;
+exports.triggerTournamentAnswer = triggerTournamentAnswer;
+const logger_1 = __importDefault(require("../../logger")); // Changed from alias to relative path
+const logger = (0, logger_1.default)('TournamentTriggers');
+const tournamentState_1 = require("./tournamentState"); // Use TS import for tournamentState
 // Import helpers at the top level now
 // Assuming tournamentHelpers will also be converted or has a bridge
 // Move handleTimerExpiration to be dynamically required to break circular dependency
 // Will import only when needed to avoid circular dependencies
-import { calculateScore, saveParticipantScore } from './scoreUtils'; // Corrected: .js or .ts extension is usually not needed for module imports
-import { quizState } from '../quizState'; // Assuming quizState.js is the bridge for quizState.ts
-import prisma from '../../db'; // Import prisma instance
-import { sendTournamentQuestion } from './sharedTournamentUtils';
+const scoreUtils_1 = require("./scoreUtils"); // Corrected: .js or .ts extension is usually not needed for module imports
+const quizState_1 = require("../quizState"); // Assuming quizState.js is the bridge for quizState.ts
+const db_1 = __importDefault(require("../../db")); // Import prisma instance
+const sharedTournamentUtils_1 = require("./sharedTournamentUtils");
 // --- Trigger Functions (Exported) ---
 /**
  * Sends a tournament question to participants
@@ -31,7 +39,7 @@ import { sendTournamentQuestion } from './sharedTournamentUtils';
  */
 function triggerTournamentQuestion(io, code, index, linkedQuizId = null, initialTime = null, targetQuestionUid = null) {
     var _a, _b, _c;
-    const state = tournamentState[code];
+    const state = tournamentState_1.tournamentState[code];
     if (!state || !state.questions) {
         logger.error(`[TriggerQuestion] Invalid state or missing questions for code ${code}`);
         return;
@@ -80,12 +88,12 @@ function triggerTournamentQuestion(io, code, index, linkedQuizId = null, initial
         questionId: questionUid
     };
     // Call sendTournamentQuestion with the constructed payload
-    sendTournamentQuestion(io.to(`live_${code}`), payload);
+    (0, sharedTournamentUtils_1.sendTournamentQuestion)(io.to(`live_${code}`), payload);
     // Update the timer display for linked quizzes if initialTime is provided
     if (linkedQuizId && initialTime !== null) {
         logger.info(`[TriggerQuestion] Setting initial time=${initialTime} for linked quiz ${linkedQuizId}`);
         // Find teacher socket ID from quizState
-        const teacherSocketId = (_c = quizState[linkedQuizId]) === null || _c === void 0 ? void 0 : _c.profSocketId;
+        const teacherSocketId = (_c = quizState_1.quizState[linkedQuizId]) === null || _c === void 0 ? void 0 : _c.profSocketId;
         if (teacherSocketId) {
             io.to(teacherSocketId).emit('quiz_timer_update', {
                 timeLeft: initialTime,
@@ -117,11 +125,11 @@ function triggerTournamentTimerSet(io, code, timeLeft, forceQuestionState = null
         timeLeft = 0; // Defensive: ensure non-negative timeLeft
     }
     // Check for tournament state
-    if (!tournamentState[code]) {
+    if (!tournamentState_1.tournamentState[code]) {
         logger.error(`[SetTimer] Tournament with code ${code} not found`);
         return;
     }
-    const state = tournamentState[code];
+    const state = tournamentState_1.tournamentState[code];
     const questionUid = state.currentQuestionUid;
     if (!questionUid) {
         logger.error(`[SetTimer] No current question set for tournament ${code}`);
@@ -188,11 +196,11 @@ function triggerTournamentTimerSet(io, code, timeLeft, forceQuestionState = null
  */
 function triggerTournamentAnswer(io, code, participantId, answer, questionUid) {
     var _a, _b;
-    if (!code || !tournamentState[code]) {
+    if (!code || !tournamentState_1.tournamentState[code]) {
         logger.error(`[TriggerAnswer] Invalid tournament code: ${code}`);
         return;
     }
-    const state = tournamentState[code];
+    const state = tournamentState_1.tournamentState[code];
     // Validate the question exists
     const questionIndex = state.questions.findIndex((q) => q.uid === questionUid);
     if (questionIndex === -1) {
@@ -251,7 +259,7 @@ function triggerTournamentAnswer(io, code, participantId, answer, questionUid) {
     };
     // Score the answer immediately
     try {
-        const { totalScore, baseScore, timePenalty } = calculateScore(question, answerObject, (timerState === null || timerState === void 0 ? void 0 : timerState.lastUpdateTime) || now - answerTimeMs, state.questions.length);
+        const { totalScore, baseScore, timePenalty } = (0, scoreUtils_1.calculateScore)(question, answerObject, (timerState === null || timerState === void 0 ? void 0 : timerState.lastUpdateTime) || now - answerTimeMs, state.questions.length);
         answerObject.isCorrect = baseScore > 0;
         answerObject.score = totalScore;
         answerObject.baseScore = baseScore;
@@ -284,7 +292,7 @@ function triggerTournamentAnswer(io, code, participantId, answer, questionUid) {
     participant.score = totalScore;
     // Save score to database for persistent tournaments
     if (state.tournoiId && participant.socketId) { // Defensive guard for participant.socketId was already added
-        saveParticipantScore(prisma, state.tournoiId, participant)
+        (0, scoreUtils_1.saveParticipantScore)(db_1.default, state.tournoiId, participant)
             .catch((err) => logger.error(`[TriggerAnswer] Error saving score: ${err.message}`));
     }
     // Acknowledge receipt to the participant
@@ -306,10 +314,8 @@ function triggerTournamentAnswer(io, code, participantId, answer, questionUid) {
         timestamp: now
     });
 }
-// Export functions in TypeScript style
-export { triggerTournamentQuestion, triggerTournamentTimerSet, triggerTournamentAnswer };
 // Export defaults for convenience
-export default {
+exports.default = {
     triggerTournamentQuestion,
     triggerTournamentTimerSet,
     triggerTournamentAnswer

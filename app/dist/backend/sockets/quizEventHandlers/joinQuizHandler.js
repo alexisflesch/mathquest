@@ -1,3 +1,4 @@
+"use strict";
 /**
  * joinQuizHandler.ts - Handler for joining a quiz
  *
@@ -5,11 +6,15 @@
  * It initializes the quiz state if needed, loads questions, and handles
  * teacher/student/projector connections.
  */
-import { quizState } from '../quizState';
-import { emitQuizConnectedCount, patchQuizStateForBroadcast } from '../quizUtils';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const quizState_1 = require("../quizState");
+const quizUtils_1 = require("../quizUtils");
 // Import logger
-import createLogger from '../../logger';
-const logger = createLogger('JoinQuizHandler');
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('JoinQuizHandler');
 /**
  * Handler for join_quiz event
  *
@@ -29,8 +34,8 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
         rooms: Array.from(socket.rooms),
     });
     // Initialize quiz state if it doesn't exist
-    if (!quizState[quizId]) {
-        quizState[quizId] = {
+    if (!quizState_1.quizState[quizId]) {
+        quizState_1.quizState[quizId] = {
             currentQuestionUid: null, // Required by QuizState interface
             currentQuestionIdx: null,
             questions: [],
@@ -78,12 +83,12 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
                         }
                     }
                 });
-                quizState[quizId].questions = orderedQuestions;
+                quizState_1.quizState[quizId].questions = orderedQuestions;
                 // Initialize questionTimers for all questions
-                quizState[quizId].questionTimers = {};
+                quizState_1.quizState[quizId].questionTimers = {};
                 orderedQuestions.forEach(q => {
                     if (q && q.uid) {
-                        quizState[quizId].questionTimers[q.uid] = {
+                        quizState_1.quizState[quizId].questionTimers[q.uid] = {
                             status: 'stop',
                             timeLeft: q.temps || 20,
                             initialTime: q.temps || 20,
@@ -93,12 +98,12 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
                 });
                 logger.info(`Loaded ${orderedQuestions.length} questions for quiz ${quizId}`);
                 // Set default currentQuestionUid and currentQuestionIdx if not set and questions exist
-                if (quizState[quizId].questions &&
-                    quizState[quizId].questions.length > 0 &&
-                    !quizState[quizId].currentQuestionUid) {
-                    quizState[quizId].currentQuestionUid = quizState[quizId].questions[0].uid;
-                    quizState[quizId].currentQuestionIdx = 0;
-                    logger.info(`[JoinQuiz] Set default currentQuestionUid to ${quizState[quizId].currentQuestionUid} for quiz ${quizId}`);
+                if (quizState_1.quizState[quizId].questions &&
+                    quizState_1.quizState[quizId].questions.length > 0 &&
+                    !quizState_1.quizState[quizId].currentQuestionUid) {
+                    quizState_1.quizState[quizId].currentQuestionUid = quizState_1.quizState[quizId].questions[0].uid;
+                    quizState_1.quizState[quizId].currentQuestionIdx = 0;
+                    logger.info(`[JoinQuiz] Set default currentQuestionUid to ${quizState_1.quizState[quizId].currentQuestionUid} for quiz ${quizId}`);
                 }
             }
         }
@@ -107,11 +112,11 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
         }
     }
     // PATCH: If timer edits exist in questionTimers, apply them to the question objects (only if not first init)
-    if (((_a = quizState[quizId]) === null || _a === void 0 ? void 0 : _a.questionTimers) && Object.keys(((_b = quizState[quizId]) === null || _b === void 0 ? void 0 : _b.questionTimers) || {}).length > 0) {
-        const orderedQuestions = quizState[quizId].questions;
+    if (((_a = quizState_1.quizState[quizId]) === null || _a === void 0 ? void 0 : _a.questionTimers) && Object.keys(((_b = quizState_1.quizState[quizId]) === null || _b === void 0 ? void 0 : _b.questionTimers) || {}).length > 0) {
+        const orderedQuestions = quizState_1.quizState[quizId].questions;
         orderedQuestions.forEach(q => {
             var _a, _b;
-            const timers = ((_a = quizState[quizId]) === null || _a === void 0 ? void 0 : _a.questionTimers) || {};
+            const timers = ((_a = quizState_1.quizState[quizId]) === null || _a === void 0 ? void 0 : _a.questionTimers) || {};
             if (q && q.uid &&
                 timers[q.uid] &&
                 typeof ((_b = timers[q.uid]) === null || _b === void 0 ? void 0 : _b.initialTime) === 'number') {
@@ -121,17 +126,17 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
     }
     // Always update profTeacherId and profSocketId when the teacher dashboard joins
     if (role === 'teacher') {
-        quizState[quizId].profSocketId = socket.id;
+        quizState_1.quizState[quizId].profSocketId = socket.id;
         if (teacherId)
-            quizState[quizId].profTeacherId = teacherId;
+            quizState_1.quizState[quizId].profTeacherId = teacherId;
         logger.info(`Updated professor socket ID and teacherId for quiz ${quizId}`);
     }
     // Always ensure tournament_code is set in quizState
-    if (!quizState[quizId].tournament_code) {
+    if (!quizState_1.quizState[quizId].tournament_code) {
         try {
             const quiz = await prisma.quiz.findUnique({ where: { id: quizId }, select: { tournament_code: true } });
             if (quiz && quiz.tournament_code) {
-                quizState[quizId].tournament_code = quiz.tournament_code;
+                quizState_1.quizState[quizId].tournament_code = quiz.tournament_code;
                 logger.info(`[JoinQuiz] Set tournament_code for quizId=${quizId}: ${quiz.tournament_code}`);
             }
             else {
@@ -143,15 +148,15 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
         }
     }
     // --- Add socket to the list of connected sockets ---
-    if (!quizState[quizId].connectedSockets)
-        quizState[quizId].connectedSockets = new Set();
-    quizState[quizId].connectedSockets.add(socket.id);
-    logger.info(`[QUIZ_CONNECTED] Ajout socket ${socket.id} à quiz ${quizId}. Sockets connectés:`, Array.from(quizState[quizId].connectedSockets));
+    if (!quizState_1.quizState[quizId].connectedSockets)
+        quizState_1.quizState[quizId].connectedSockets = new Set();
+    quizState_1.quizState[quizId].connectedSockets.add(socket.id);
+    logger.info(`[QUIZ_CONNECTED] Ajout socket ${socket.id} à quiz ${quizId}. Sockets connectés:`, Array.from(quizState_1.quizState[quizId].connectedSockets));
     // Emit the number of connected users
     // --- Calculate total connected (lobby + live) ---
     let code = null;
-    if (quizState[quizId] && quizState[quizId].tournament_code) {
-        code = quizState[quizId].tournament_code;
+    if (quizState_1.quizState[quizId] && quizState_1.quizState[quizId].tournament_code) {
+        code = quizState_1.quizState[quizId].tournament_code;
     }
     else {
         try {
@@ -164,12 +169,12 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
         }
     }
     if (code)
-        await emitQuizConnectedCount(io, prisma, code);
+        await (0, quizUtils_1.emitQuizConnectedCount)(io, prisma, code);
     else
         logger.warn(`[QUIZ_CONNECTED] Aucun code tournoi trouvé pour quizId=${quizId}`);
-    if (!quizState[quizId].id) {
-        quizState[quizId].id = quizId;
+    if (!quizState_1.quizState[quizId].id) {
+        quizState_1.quizState[quizId].id = quizId;
     }
-    socket.emit("quiz_state", patchQuizStateForBroadcast(quizState[quizId]));
+    socket.emit("quiz_state", (0, quizUtils_1.patchQuizStateForBroadcast)(quizState_1.quizState[quizId]));
 }
-export default handleJoinQuiz;
+exports.default = handleJoinQuiz;

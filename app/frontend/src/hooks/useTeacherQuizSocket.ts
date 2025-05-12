@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_CONFIG } from '@/config';
 
 const logger = createLogger('useTeacherQuizSocket');
 
@@ -88,8 +89,9 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
     useEffect(() => {
         if (!quizId) return;
 
-        logger.info(`Initializing socket connection for quiz: ${quizId}`);
-        const s = io({ path: "/api/socket/io", transports: ["websocket"] });
+        logger.info(`Initializing socket connection for quiz: ${quizId} to ${SOCKET_CONFIG.url}`);
+        // Connect to backend using complete centralized configuration
+        const s = io(SOCKET_CONFIG.url, SOCKET_CONFIG);
         setQuizSocket(s);
 
         // Always get both teacherId and cookie_id from localStorage

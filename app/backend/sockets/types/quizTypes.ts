@@ -79,6 +79,7 @@ export interface QuizState {
     lockedQuestions?: Record<string, boolean>; // Track which questions are locked
     socketToJoueur?: Record<string, string>; // Map socket IDs to student IDs
     participants?: Record<string, any>; // Participants in the quiz
+    askedQuestions?: Set<string>; // Track which questions have been asked
 }
 
 /**

@@ -1,3 +1,4 @@
+"use strict";
 /**
  * server.ts - Main Entry Point for MathQuest Application
  *
@@ -11,28 +12,32 @@
  * The server maintains in-memory state for active tournaments and quizzes,
  * which is managed by their respective handlers.
  */
-import { createServer } from 'node:http';
-import next from 'next';
-import { Server as SocketIOServer } from 'socket.io';
-import prisma from '@db';
-import createLogger from '@logger';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const node_http_1 = require("node:http");
+const next_1 = __importDefault(require("next"));
+const socket_io_1 = require("socket.io");
+const _db_1 = __importDefault(require("@db"));
+const _logger_1 = __importDefault(require("@logger"));
 // Import handlers and states using path aliases
-import { registerLobbyHandlers, lobbyParticipants } from '@sockets/lobbyHandler';
-import { registerTournamentHandlers } from '@sockets/tournamentHandler';
-import { registerQuizHandlers } from '@sockets/quizHandler';
-const logger = createLogger('Server');
+const lobbyHandler_1 = require("@sockets/lobbyHandler");
+const tournamentHandler_1 = require("@sockets/tournamentHandler");
+const quizHandler_1 = require("@sockets/quizHandler");
+const logger = (0, _logger_1.default)('Server');
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = Number(process.env.PORT) || 3000;
 // Initialize Next.js app
 // Explicitly type options for NextServer constructor
-const nextApp = next({ dev, hostname, port }); // Type inferred
+const nextApp = (0, next_1.default)({ dev, hostname, port }); // Type inferred
 const requestHandler = nextApp.getRequestHandler();
 nextApp
     .prepare()
     .then(() => {
-    const httpServer = createServer(requestHandler);
-    const io = new SocketIOServer(httpServer, {
+    const httpServer = (0, node_http_1.createServer)(requestHandler);
+    const io = new socket_io_1.Server(httpServer, {
         path: '/api/socket/io',
         cors: {
             origin: '*', // Configure as needed for production
@@ -41,9 +46,9 @@ nextApp
     });
     io.on('connection', (socket) => {
         logger.info(`New connection: socket.id=${socket.id}`);
-        registerLobbyHandlers(io, socket);
-        registerTournamentHandlers(io, socket); // Corrected: Removed prisma and quizState
-        registerQuizHandlers(io, socket, prisma);
+        (0, lobbyHandler_1.registerLobbyHandlers)(io, socket);
+        (0, tournamentHandler_1.registerTournamentHandlers)(io, socket); // Corrected: Removed prisma and quizState
+        (0, quizHandler_1.registerQuizHandlers)(io, socket, _db_1.default);
         socket.on('disconnect', () => {
             logger.debug(`Socket disconnected: socket.id=${socket.id}`);
         });
@@ -51,11 +56,11 @@ nextApp
             socket.rooms.forEach((room) => {
                 if (room !== socket.id) {
                     try {
-                        if (lobbyParticipants && lobbyParticipants[room]) {
-                            lobbyParticipants[room] = lobbyParticipants[room].filter((p) => p.id !== socket.id);
+                        if (lobbyHandler_1.lobbyParticipants && lobbyHandler_1.lobbyParticipants[room]) {
+                            lobbyHandler_1.lobbyParticipants[room] = lobbyHandler_1.lobbyParticipants[room].filter((p) => p.id !== socket.id);
                             io.to(room).emit('participant_left', { id: socket.id });
-                            io.to(room).emit('participants_list', lobbyParticipants[room]);
-                            logger.debug(`Removed ${socket.id} from lobby ${room}, new list length: ${lobbyParticipants[room].length}`);
+                            io.to(room).emit('participants_list', lobbyHandler_1.lobbyParticipants[room]);
+                            logger.debug(`Removed ${socket.id} from lobby ${room}, new list length: ${lobbyHandler_1.lobbyParticipants[room].length}`);
                         }
                     }
                     catch (e) {

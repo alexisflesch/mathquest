@@ -3,10 +3,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
     eslint: {
-        // ignoreDuringBuilds: true,
+        // Enforce strict linting
+        dirs: ['.'],
     },
-    // typescript: {
-    //   ignoreBuildErrors: true,
+    typescript: {
+        // Enforce strict type checking
+    },
+    // // Set default port to 3008
+    // devServer: {
+    //     port: 3008,
     // },
     webpack: (config) => {
         config.resolve.alias["@"] = path.resolve(__dirname, "src");

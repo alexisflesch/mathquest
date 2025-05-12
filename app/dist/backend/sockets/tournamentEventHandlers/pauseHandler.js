@@ -1,12 +1,17 @@
+"use strict";
 /**
  * pauseHandler.ts - Tournament Pause Handler
  *
  * This module handles the tournament_pause event, pausing the current tournament question.
  */
-import { tournamentState } from '../tournamentUtils/tournamentState';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
 // Import logger
-import createLogger from '../../logger';
-const logger = createLogger('PauseTournamentHandler');
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('PauseTournamentHandler');
 /**
  * Handle tournament_pause event
  *
@@ -15,7 +20,7 @@ const logger = createLogger('PauseTournamentHandler');
  * @param payload - The pause payload from the client
  */
 function handleTournamentPause(io, socket, { code }) {
-    const state = tournamentState[code]; // Only applicable to live tournaments
+    const state = tournamentState_1.tournamentState[code]; // Only applicable to live tournaments
     if (state && !state.isDiffered && !state.paused) {
         // Calculate remaining time based on elapsed time since question start
         const elapsed = state.questionStart ? (Date.now() - state.questionStart) / 1000 : 0;
@@ -40,4 +45,4 @@ function handleTournamentPause(io, socket, { code }) {
         logger.warn(`Received tournament_pause for ${code}, but state not found, is differed, or already paused.`);
     }
 }
-export default handleTournamentPause;
+exports.default = handleTournamentPause;

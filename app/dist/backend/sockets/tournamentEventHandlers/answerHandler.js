@@ -1,14 +1,19 @@
+"use strict";
 /**
  * answerHandler.ts - Tournament Answer Handler
  *
  * This module handles the tournament_answer event, which is emitted when a participant
  * submits an answer to a tournament question.
  */
-import { tournamentState } from '../tournamentUtils/tournamentState';
-import { calculateScore } from '../tournamentUtils/scoreUtils';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
+const scoreUtils_1 = require("../tournamentUtils/scoreUtils");
 // Import logger
-import createLogger from '../../logger';
-const logger = createLogger('AnswerTournamentHandler');
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('AnswerTournamentHandler');
 /**
  * Handle tournament_answer event
  *
@@ -24,23 +29,23 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     let stateKey = null;
     let state = null;
     // Check live state first
-    if (tournamentState[code] &&
-        tournamentState[code].socketToJoueur &&
-        tournamentState[code].socketToJoueur[socket.id]) {
+    if (tournamentState_1.tournamentState[code] &&
+        tournamentState_1.tournamentState[code].socketToJoueur &&
+        tournamentState_1.tournamentState[code].socketToJoueur[socket.id]) {
         stateKey = code;
-        state = tournamentState[stateKey];
+        state = tournamentState_1.tournamentState[stateKey];
         if (state && state.socketToJoueur) {
             joueurId = state.socketToJoueur[socket.id];
         }
     }
     else {
         // Check differed states
-        for (const key in tournamentState) {
+        for (const key in tournamentState_1.tournamentState) {
             if (key.startsWith(`${code}_`) &&
-                ((_a = tournamentState[key]) === null || _a === void 0 ? void 0 : _a.socketToJoueur) &&
-                tournamentState[key].socketToJoueur[socket.id]) {
+                ((_a = tournamentState_1.tournamentState[key]) === null || _a === void 0 ? void 0 : _a.socketToJoueur) &&
+                tournamentState_1.tournamentState[key].socketToJoueur[socket.id]) {
                 stateKey = key;
-                state = tournamentState[key];
+                state = tournamentState_1.tournamentState[key];
                 if (state && state.socketToJoueur) {
                     joueurId = state.socketToJoueur[socket.id];
                 }
@@ -159,7 +164,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     }
     // Calculate the score for the current answer
     const totalQuestions = state.questions.length;
-    const { baseScore, timePenalty, totalScore } = calculateScore(question, { answerIdx, clientTimestamp }, state.questionStart || Date.now(), totalQuestions);
+    const { baseScore, timePenalty, totalScore } = (0, scoreUtils_1.calculateScore)(question, { answerIdx, clientTimestamp }, state.questionStart || Date.now(), totalQuestions);
     // Update the score for the current question
     const participantScored = participant.scoredQuestions;
     if (participantScored) {
@@ -234,4 +239,4 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
         }
     }
 }
-export default handleTournamentAnswer;
+exports.default = handleTournamentAnswer;

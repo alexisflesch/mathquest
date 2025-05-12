@@ -1,10 +1,16 @@
+"use strict";
 /**
  * computeLeaderboard.ts - Utility to compute the leaderboard from tournament participants
  *
  * This module computes a sorted leaderboard based on participant scores in a tournament.
  */
-import createLogger from '../../logger';
-const logger = createLogger('ComputeLeaderboard');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.computeLeaderboard = computeLeaderboard;
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('ComputeLeaderboard');
 /**
  * Compute a sorted leaderboard from tournament participants
  *
@@ -34,10 +40,8 @@ function computeLeaderboard(tState, questionStates, totalQuestions) {
     }))
         .sort((a, b) => (b.score - a.score));
 }
-// Export for ESM imports
-export { computeLeaderboard };
 // Export default for default imports
-export default computeLeaderboard;
+exports.default = computeLeaderboard;
 // Direct CommonJS export - simpler and more reliable pattern
 if (typeof module !== 'undefined' && module.exports) {
     // Direct assignment to avoid issues with circular dependencies

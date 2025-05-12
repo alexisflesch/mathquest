@@ -1,3 +1,4 @@
+"use strict";
 /**
  * sendTournamentQuestion.ts - Centralized helper to emit filtered tournament questions to students
  *
@@ -11,8 +12,15 @@
  *   import { sendTournamentQuestion } from './tournamentUtils/sendTournamentQuestion';
  *   sendTournamentQuestion(targetEmitter, payload); // targetEmitter is io.to(room) or socket.to(room)
  */
-import createLogger from '../../logger'; // Changed to ES6 import
-const logger = createLogger('SendTournamentQuestion');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendTournamentQuestion = localSendTournamentQuestion;
+exports.legacySendTournamentQuestion = legacySendTournamentQuestion;
+exports.createFilteredQuestionData = createFilteredQuestionData;
+const logger_1 = __importDefault(require("../../logger")); // Changed to ES6 import
+const logger = (0, logger_1.default)('SendTournamentQuestion');
 /**
  * Creates filtered question data for sending to students. (Internal helper)
  *
@@ -76,10 +84,8 @@ questionObj, index, total, remainingTime, questionState, isQuizMode) {
     logger.info(`[legacySendTournamentQuestion] Emitting tournament_question (room derived by caller)`);
     targetEmitter.emit('tournament_question', filteredPayload);
 }
-// Update export to use the renamed function
-export { localSendTournamentQuestion as sendTournamentQuestion, legacySendTournamentQuestion, createFilteredQuestionData };
 // Export default for default imports
-export default localSendTournamentQuestion;
+exports.default = localSendTournamentQuestion;
 // Direct CommonJS export - simpler and more reliable pattern
 if (typeof module !== 'undefined' && module.exports) {
     // Directly assign to module.exports rather than using a separate object

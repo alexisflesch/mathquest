@@ -11,6 +11,17 @@ This document is intended for developers and agents contributing to the MathQues
 > - [`hook.md`](./hook.md): All custom React hooks and their APIs
 > - [`api.md`](./api.md): All API endpoints, request/response, and business logic
 >
+> **Core Technical Guides:**
+> - [`typescript-guide.md`](./typescript-guide.md): Comprehensive TypeScript integration and migration guide (includes ESLint configuration)
+> - [`socket-guide.md`](./socket-guide.md): Complete Socket.IO implementation and testing guide
+>
+> **Supporting Documentation:**
+> - [`javascript-cleanup-plan.md`](./javascript-cleanup-plan.md): Plan for cleaning JavaScript files after TypeScript migration
+> - [`timer-bugs.md`](./timer-bugs.md): Documentation on timer-related bugs and fixes
+>
+> **Archive:**
+> - Historical documentation and obsolete files have been moved to the [`archive/`](./archive/) directory
+>
 > **You MUST update these files whenever you modify or add backend, frontend, hook, or API code.**
 >
 > **DRY Principle:**
@@ -449,6 +460,39 @@ MathQuest uses Socket.IO rooms to organize real-time communication between diffe
 **Note:**
 - Always use the correct room for the intended audience to avoid leaking information (e.g., do not send the full leaderboard to all students).
 - When mapping between quiz and tournament, use the `tournament_code` field in the Quiz table and the `linkedQuizId` in the tournament state.
+
+## Socket.IO Testing and Troubleshooting
+
+MathQuest includes dedicated tools for testing and troubleshooting Socket.IO connections between frontend and backend.
+
+For a complete index of all socket-related documentation, see [socket-documentation-index.md](./socket-documentation-index.md).
+
+### Command Line Socket Test
+A Node.js-based command-line tool is available for testing basic socket connectivity:
+
+```bash
+# From project root
+cd /home/aflesch/mathquest/app
+node socket-test.js
+```
+
+This script tests:
+- Socket connection establishment
+- Two-way communication via ping-pong events
+- API health checks
+- Connection stability and parameters
+
+### Common Socket Connection Issues
+
+If you encounter socket connection issues, check these common causes:
+
+1. **CORS Configuration**: Ensure the CORS settings in `backend/server.ts` match your frontend origin
+2. **Socket Path**: Verify the socket path is consistent between frontend and backend (`/api/socket/io`)
+3. **Transport Settings**: Make sure both client and server support the same transports (`['websocket', 'polling']`)
+4. **Server Status**: Confirm the backend server is running and accessible at the expected URL/port
+5. **Environment Variables**: Check that `NEXT_PUBLIC_API_URL` is set correctly in the frontend
+
+For more detailed diagnostics and test results, see the [Socket.IO Integration and Testing Guide](./socket-guide.md).
 
 ## Answer Feedback Overlay & Explication Event
 

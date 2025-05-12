@@ -1,17 +1,23 @@
+"use strict";
 /**
  * sharedTournamentUtils.ts - Shared logic for tournament operations
  *
  * This module contains shared functions used by multiple tournament modules.
  */
-import createLogger from '../../logger';
-const logger = createLogger('SharedTournamentUtils');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendTournamentQuestion = sendTournamentQuestion;
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('SharedTournamentUtils');
 /**
  * Sends a filtered tournament question to students using a pre-configured emitter.
  *
  * @param targetEmitter - Socket.IO BroadcastOperator (e.g., io.to(room))
  * @param payload - Question payload with tournament data
  */
-export function sendTournamentQuestion(targetEmitter, payload) {
+function sendTournamentQuestion(targetEmitter, payload) {
     var _a;
     const { code, questionId } = payload;
     // Create filtered payload without sensitive data

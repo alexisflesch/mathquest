@@ -1,3 +1,4 @@
+"use strict";
 /**
  * logger.ts - Centralized Logging Utility for MathQuest
  *
@@ -16,6 +17,7 @@
  *   logger.error('Error condition', errorObject);
  */
 var _a;
+Object.defineProperty(exports, "__esModule", { value: true });
 // Log levels and their priorities
 var LogLevel;
 (function (LogLevel) {
@@ -105,4 +107,4 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = createLogger;
 }
 // Export for ES module environments (though primary use is CommonJS for backend)
-export default createLogger;
+exports.default = createLogger;

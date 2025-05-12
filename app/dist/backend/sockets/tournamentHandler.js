@@ -1,3 +1,4 @@
+"use strict";
 /**
  * tournamentHandler.ts - Tournament Handler Registration Module
  *
@@ -13,10 +14,14 @@
  * - tournamentEventHandlers/: Contains individual files for each socket event handler logic.
  * - tournamentEvents.ts: Imports handlers from tournamentEventHandlers/ and registers them with socket.io.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.tournamentState = void 0;
+exports.registerTournamentHandlers = registerTournamentHandlers;
 // Import the new tournamentState module
-import { tournamentState } from './tournamentUtils/tournamentState';
+const tournamentState_1 = require("./tournamentUtils/tournamentState");
+Object.defineProperty(exports, "tournamentState", { enumerable: true, get: function () { return tournamentState_1.tournamentState; } });
 // Import tournament event registration
-import { registerTournamentEvents } from './tournamentEvents';
+const tournamentEvents_1 = require("./tournamentEvents");
 const prisma = require('../db');
 const createLogger = require('../logger');
 const logger = createLogger('TournamentHandler');
@@ -28,12 +33,12 @@ const logger = createLogger('TournamentHandler');
  */
 function registerTournamentHandlers(io, socket) {
     logger.info(`[registerTournamentHandlers] Registering tournament event handlers for socket ${socket.id}`);
-    registerTournamentEvents(io, socket);
+    (0, tournamentEvents_1.registerTournamentEvents)(io, socket);
 }
 // Create the export object first (without trigger functions)
 const tournamentHandlerExports = {
     registerTournamentHandlers,
-    tournamentState, // Use the imported TypeScript state
+    tournamentState: tournamentState_1.tournamentState, // Use the imported TypeScript state
 };
 // IMPORTANT: Load tournamentTriggers after creating the exports object
 // This helps prevent circular dependencies
@@ -42,7 +47,5 @@ const tournamentTriggers = require('./tournamentUtils/tournamentTriggers');
 tournamentHandlerExports.triggerTournamentQuestion = tournamentTriggers.triggerTournamentQuestion;
 tournamentHandlerExports.triggerTournamentTimerSet = tournamentTriggers.triggerTournamentTimerSet;
 tournamentHandlerExports.triggerTournamentAnswer = tournamentTriggers.triggerTournamentAnswer;
-// Export in TypeScript style first
-export { registerTournamentHandlers, tournamentState }; // Ensure tournamentState is exported
 // Also provide CommonJS export for compatibility with bridge files
 module.exports = tournamentHandlerExports;

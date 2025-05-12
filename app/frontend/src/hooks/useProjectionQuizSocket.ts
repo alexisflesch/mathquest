@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import type { QuizState, Question } from './useTeacherQuizSocket';
+import { SOCKET_CONFIG } from '@/config';
 
 const logger = createLogger('useProjectionQuizSocket');
 
@@ -20,8 +21,9 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
 
     useEffect(() => {
         if (!quizId) return;
-        logger.info(`Initializing socket connection for projection: ${quizId}`);
-        const s = io({ path: "/api/socket/io", transports: ["websocket"] });
+        logger.info(`Initializing socket connection for projection: ${quizId} to ${SOCKET_CONFIG.url}`);
+        // Connect to backend using complete centralized configuration
+        const s = io(SOCKET_CONFIG.url, SOCKET_CONFIG);
         setQuizSocket(s);
         const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
         const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;

@@ -2,8 +2,22 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "build:frontend": "cd frontend && npm run build && cd ..",
+    "build:backend": "cd backend && npm run build && cd ..",
+    "build": "npm run build:backend && npm run build:frontend",
+    "dev:frontend": "cd frontend && npm run dev && cd ..",
+    "dev:backend": "cd backend && npm run dev:ts && cd ..",
+    "dev": "concurrently --names \"B,F\" --prefix-colors \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "server": "cd backend && npm run dev:ts",
+    "server:port": "cd backend && npm run dev:ts:port",
+    "server:prod": "cd backend && npm run start",
+    "start": "concurrently \"cd backend && npm run start && cd ..\" \"cd frontend && npm run start && cd ..\"",
+    "lint": "concurrently \"cd backend && npm run lint && cd ..\" \"cd frontend && npm run lint && cd ..\"",
+    "type-check": "concurrently \"cd backend && npm run type-check && cd ..\" \"cd frontend && npm run type-check && cd ..\""
+  },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1"
+    "@eslint/eslintrc": "^3.3.1",
+    "concurrently": "^8.2.2"
   }
 }

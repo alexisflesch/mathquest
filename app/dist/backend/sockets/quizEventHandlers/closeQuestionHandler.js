@@ -1,3 +1,4 @@
+"use strict";
 /**
  * closeQuestionHandler.ts - Handles closing a quiz question, sending results, and locking further answers
  *
@@ -7,18 +8,22 @@
  * - Fetches the leaderboard
  * - Sends results to students, teacher, and projection screens
  */
-import { quizState } from '../quizState';
-import { tournamentState } from '../tournamentUtils/tournamentState';
-import { computeLeaderboard } from '../tournamentUtils/computeLeaderboard';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const quizState_1 = require("../quizState");
+const tournamentState_1 = require("../tournamentUtils/tournamentState");
+const computeLeaderboard_1 = require("../tournamentUtils/computeLeaderboard");
 // Import logger
-import createLogger from '../../logger';
-const logger = createLogger('CloseQuestionHandler');
+const logger_1 = __importDefault(require("../../logger"));
+const logger = (0, logger_1.default)('CloseQuestionHandler');
 // Debugging tournament state import
-logger.debug(`[CloseQuestion] tournamentState imported: ${!!tournamentState}`);
-logger.debug(`[CloseQuestion] tournamentState is empty object: ${Object.keys(tournamentState).length === 0}`);
+logger.debug(`[CloseQuestion] tournamentState imported: ${!!tournamentState_1.tournamentState}`);
+logger.debug(`[CloseQuestion] tournamentState is empty object: ${Object.keys(tournamentState_1.tournamentState).length === 0}`);
 function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     logger.info(`[CloseQuestion] Received for quiz ${quizId}, question ${questionUid}`);
-    const state = quizState[quizId];
+    const state = quizState_1.quizState[quizId];
     if (!state) {
         logger.warn(`[CloseQuestion] No quiz state for ${quizId}`);
         socket.emit('quiz_action_response', {
@@ -59,7 +64,7 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     let leaderboard = [];
     let playerCount = 0; // Track number of players
     try {
-        const tState = tournamentState[tournamentCode];
+        const tState = tournamentState_1.tournamentState[tournamentCode];
         if (tState && tState.participants) {
             // Convert Set<string> to Record<string, QuestionState> as required by computeLeaderboard
             const askedQuestionsRecord = {};
@@ -83,7 +88,7 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
                 }
             });
             const totalQuestions = tState.questions.length;
-            leaderboard = computeLeaderboard(tState, askedQuestionsRecord, totalQuestions);
+            leaderboard = (0, computeLeaderboard_1.computeLeaderboard)(tState, askedQuestionsRecord, totalQuestions);
             playerCount = leaderboard.length;
         }
         else {
@@ -151,5 +156,5 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
     });
 }
 // Using both export syntaxes for compatibility
-export default handleCloseQuestion;
+exports.default = handleCloseQuestion;
 module.exports = handleCloseQuestion;

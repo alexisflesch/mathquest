@@ -8,7 +8,7 @@
 import { Server, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import { LockUnlockPayload } from '../types/socketTypes';
-import { quizState } from '../quizState.js'; // Changed to .js to use the bridge
+import { quizState } from '../quizState'; // Remove .js extension to use proper TypeScript import
 import { patchQuizStateForBroadcast } from '../quizUtils'; // Import from quizUtils (TS)
 
 // Import logger

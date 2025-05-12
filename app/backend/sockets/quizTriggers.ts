@@ -2,17 +2,14 @@ import { Server } from 'socket.io';
 import { updateQuestionTimer, emitQuizTimerUpdate, patchQuizStateForBroadcast } from '@sockets/quizUtils'; // Assuming quizUtils.ts provides these
 import { quizState, getQuestionTimer } from '@sockets/quizState'; // Assuming quizState.ts or its bridge provides these
 
-// const tournamentHandler = require('@sockets/tournamentHandler.js'); // Changed from import to require
-// const { tournamentState } = tournamentHandler; // Destructure tournamentState
-
-// Try importing the JS file directly and see if TS can infer types or if we need to cast
-import * as Thandler from '@sockets/tournamentHandler.js';
-const tournamentHandler: any = Thandler; // Use an alias and cast to any for now.
+// Import from TypeScript file without .js extension
+import * as tournamentHandler from '@sockets/tournamentHandler';
+const { tournamentState } = tournamentHandler; // Destructure tournamentState
 
 import createLogger from '@logger'; // Changed to import and alias
 import { sendTournamentQuestion } from '@sockets/tournamentUtils/sendTournamentQuestion'; // Bridge to sendTournamentQuestion.ts
 import type { TournamentQuestionPayload } from '@sockets/tournamentUtils/sendTournamentQuestion'; // Correct type-only import
-const { triggerTournamentQuestion } = require('@sockets/tournamentUtils/tournamentTriggers'); // Bridge to tournamentTriggers.ts
+import { triggerTournamentQuestion } from '@sockets/tournamentUtils/tournamentTriggers'; // Import from TypeScript file
 import { Question } from '@sockets/types/quizTypes'; // Assuming this type exists
 
 const logger = createLogger('QuizTriggers');
