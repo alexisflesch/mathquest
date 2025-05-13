@@ -3,10 +3,10 @@
  */
 import {
     BaseQuizState,
-    Question as BaseQuestion,
     Answer, // Keep this import as it's used for Response alias
     Logger as BaseLogger
 } from '@shared/types';
+import { BaseQuestion } from '@shared/types/question';
 
 // Re-export shared types
 export type { Answer } from '@shared/types'; // Ensured "export type" is used
@@ -16,9 +16,13 @@ export type Response = Answer;
 
 // Frontend-specific Question extensions
 export interface Question extends BaseQuestion {
-    // Ensure frontend expected properties are required
-    question: string;
-    reponses: Response[];
+    question: string; // Frontend-specific field for question text
+    reponses: Response[]; // Overrides BaseQuestion's reponses to use Response type
+    tags?: string[]; // Tags for categorization and filtering
+    theme?: string; // Theme of the question
+    niveau?: string; // Academic level 
+    discipline?: string; // Subject discipline
+    titre?: string; // Title of the question
 }
 
 // Frontend-specific QuizState extensions

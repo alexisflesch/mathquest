@@ -30,16 +30,37 @@ const port: number = Number(process.env.PORT) || 3007; // Default to port 3007 t
 
 // Create a basic HTTP server for Socket.IO
 const httpServer = createServer((req, res) => {
+    // Add CORS headers to all responses
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': process.env.FRONTEND_URL || 'http://localhost:3008',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Version, X-Client-Source',
+        'Access-Control-Allow-Credentials': 'false',
+    };
+
+    // Handle OPTIONS preflight requests
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204, corsHeaders);
+        res.end();
+        return;
+    }
+
     // Simple health check endpoint
     if (req.url === '/health') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.writeHead(200, {
+            'Content-Type': 'application/json',
+            ...corsHeaders
+        });
         res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }));
         return;
     }
 
     // API endpoint to get active tournaments/quizzes count
     if (req.url === '/api/stats') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.writeHead(200, {
+            'Content-Type': 'application/json',
+            ...corsHeaders
+        });
         res.end(JSON.stringify({
             activeTournaments: Object.keys(tournamentState).length,
             activeQuizzes: Object.keys(quizState).length,
@@ -48,7 +69,10 @@ const httpServer = createServer((req, res) => {
     }
 
     // Default response for other requests
-    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.writeHead(404, {
+        'Content-Type': 'application/json',
+        ...corsHeaders
+    });
     res.end(JSON.stringify({ error: 'Not found' }));
 });
 
@@ -56,7 +80,7 @@ const httpServer = createServer((req, res) => {
 const io = new SocketIOServer(httpServer, {
     path: '/api/socket/io',
     cors: {
-        origin: '*', // Configure as needed for production
+        origin: process.env.FRONTEND_URL || 'http://localhost:3008', // Specific origin instead of wildcard
         methods: ['GET', 'POST', 'OPTIONS'],
         credentials: false,
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Client-Version', 'X-Client-Source']

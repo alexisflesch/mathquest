@@ -1,20 +1,28 @@
 import { PrismaClient } from '@prisma/client';
 import { Question } from '../types/quizTypes';
-import { TournamentParticipant, TournamentAnswer } from '../types/tournamentTypes';
 interface ScoreCalculationResult {
-    baseScore: number;
+    scoreBeforePenalty: number;
     timePenalty: number;
-    totalScore: number;
+    normalizedQuestionScore: number;
+}
+export interface ProcessedAnswerForScoring {
+    answerIdx?: number | number[];
+    clientTimestamp: number;
+    serverReceiveTime?: number;
+    isCorrect: boolean;
+    value?: string | string[];
+    timeMs: number;
 }
 /**
- * Calculates the score for a given answer.
+ * Calculates the score for a given answer based on the new rules.
+ * Assumes the answer has been processed to determine correctness, value, and time taken.
  * @param question The question object.
- * @param answer The participant's answer object.
- * @param questionStartTime The timestamp when the question was presented (used for context, not direct calc here if answer.timeMs is duration).
- * @param totalQuestions The total number of questions in the tournament (for scaling, if any).
+ * @param answer The processed answer object.
+ * @param totalQuestionsInEvent Total number of questions in the quiz/tournament for normalization.
  * @returns ScoreCalculationResult object.
  */
-export declare function calculateScore(question: Question, answer: TournamentAnswer, questionStartTime: number, totalQuestions: number): ScoreCalculationResult;
+export declare function calculateScore(question: Question, answer: ProcessedAnswerForScoring, totalQuestionsInEvent: number): ScoreCalculationResult;
+import { TournamentParticipant } from '../types/tournamentTypes';
 /**
  * Saves a participant's score to the database.
  * @param prisma PrismaClient instance.

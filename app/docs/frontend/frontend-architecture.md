@@ -90,7 +90,7 @@
   - Visual indicators for active question and real-time sync with quiz state.
   - Uses dnd-kit for drag-and-drop and SortableQuestion for each item.
 
-### `TournamentQuestionCard.tsx`
+### `QuestionCard.tsx`
 - **Purpose:** Renders a tournament/quiz question and its answers.
 - **Features:**
   - Supports both single and multiple choice, readonly mode, correct answer highlighting, and answer stats.

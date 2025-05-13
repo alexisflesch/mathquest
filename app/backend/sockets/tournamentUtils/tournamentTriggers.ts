@@ -306,17 +306,29 @@ function triggerTournamentAnswer(
 
     // Score the answer immediately
     try {
-        const { totalScore, baseScore, timePenalty } = calculateScore(
+        // Create the processed answer object for the new calculateScore signature
+        const processedAnswerForScoring = {
+            answerIdx: answerObject.answerIdx,
+            clientTimestamp: answerObject.clientTimestamp || 0,
+            serverReceiveTime: answerObject.serverReceiveTime,
+            isCorrect: false, // Will be determined by scoring
+            timeMs: answerTimeMs,
+            value: answerObject.value
+        };
+
+        // Call calculateScore with the new signature (3 args instead of 4)
+        const scoreResult = calculateScore(
             question,
-            answerObject,
-            timerState?.lastUpdateTime || now - answerTimeMs,
+            processedAnswerForScoring,
             state.questions.length
         );
 
-        answerObject.isCorrect = baseScore > 0;
+        // Map the result to the expected properties
+        answerObject.isCorrect = scoreResult.scoreBeforePenalty > 0;
+        const totalScore = scoreResult.normalizedQuestionScore;
         answerObject.score = totalScore;
-        answerObject.baseScore = baseScore;
-        answerObject.timePenalty = timePenalty;
+        answerObject.baseScore = scoreResult.scoreBeforePenalty;
+        answerObject.timePenalty = scoreResult.timePenalty;
 
         logger.info(`[TriggerAnswer] Scored answer for ${participantId}: correct=${answerObject.isCorrect}, score=${totalScore}`);
     } catch (error) {

@@ -152,4 +152,4 @@ This work will be completed today and will serve as the foundation for further T
 The type cleanup and consolidation outlined in this plan have been successfully implemented. 
 For a summary of the work done, please see [Type Consolidation Summary](./type-consolidation-summary.md).
 For a detailed report on the implementation process, challenges, and outcomes, refer to the [Type Consolidation Implementation Report](./type-consolidation-implementation.md).
-The new shared types are documented in the [Shared Types Usage Guide](./shared-types-guide.md).
+The new shared types are documented in the [Shared Types Usage Guide](../types/shared-types-guide.md).

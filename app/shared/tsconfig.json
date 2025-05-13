@@ -4,7 +4,7 @@
         "composite": true,
         "rootDir": ".",
         "outDir": "../dist/shared",
-        "baseUrl": ".",
+        "baseUrl": "./",
         "paths": {
             "@shared/*": [
                 "./*"

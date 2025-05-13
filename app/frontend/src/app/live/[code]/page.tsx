@@ -12,33 +12,21 @@
  */
 
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
 import Snackbar from '@/components/Snackbar';
 import { createLogger } from '@/clientLogger';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
-import TournamentQuestionCard from '@/components/TournamentQuestionCard';
+import { SOCKET_CONFIG } from '@/config';
+import QuestionCard, { TournamentQuestion } from '@/components/QuestionCard';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
+import { Question } from '@shared/types/quiz/question';
+import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 
 // Create a logger for this component
 const logger = createLogger('TournamentLivePage');
-
-interface TournamentQuestion {
-    uid: string;
-    question: string;
-    reponses: { texte: string; correct?: boolean }[];
-    type: string;
-    discipline: string;
-    theme: string;
-    difficulte: number;
-    niveau: string;
-    auteur?: string;
-    explication?: string;
-    tags?: string[];
-    temps?: number;
-}
 
 export default function TournamentSessionPage() {
     const { code } = useParams();
@@ -96,6 +84,8 @@ export default function TournamentSessionPage() {
     const [showExplication, setShowExplication] = useState(false);
     const [explicationText, setExplicationText] = useState<string>("");
     const [explicationDuration, setExplicationDuration] = useState<number>(5);
+    const [currentCorrectAnswers, setCurrentCorrectAnswers] = useState<number[]>([]);
+    const [showQuestionResults, setShowQuestionResults] = useState(false);
 
     useEffect(() => { pausedRef.current = paused; }, [paused]);
 
@@ -140,36 +130,47 @@ export default function TournamentSessionPage() {
     useEffect(() => {
         if (devMode) {
             // Mock question for dev mode
-            const mockQuestion = devModeType === 'choix_multiple' ? {
+            const mockQuestionData = devModeType === 'choix_multiple' ? {
                 uid: 'mock2',
-                question: 'Quelles sont les couleurs primaires ?',
+                texte: 'Quelles sont les couleurs primaires ?', // Changed from question to texte
                 reponses: [
                     { texte: 'Rouge', correct: true },
                     { texte: 'Vert', correct: false },
                     { texte: 'Bleu', correct: true },
                     { texte: 'Jaune', correct: true },
                 ],
-                type: 'choix_multiple',
+                type: 'choix_multiple' as const, // Added as const for type safety
                 discipline: 'Arts',
                 theme: 'Couleurs',
                 difficulte: 1,
                 niveau: 'CE2',
             } : {
                 uid: 'mock1',
-                question: 'Combien font 7 + 5 ?',
+                texte: 'Combien font 7 + 5 ?', // Changed from question to texte
                 reponses: [
                     { texte: '10', correct: false },
                     { texte: '12', correct: true },
                     { texte: '13', correct: false },
                     { texte: '14', correct: false },
                 ],
-                type: 'choix_simple',
+                type: 'choix_simple' as const, // Added as const for type safety
                 discipline: 'Maths',
                 theme: 'Additions',
                 difficulte: 1,
                 niveau: 'CE2',
             };
-            setCurrentQuestion(mockQuestion);
+
+            const mockTournamentQuestion: TournamentQuestion = {
+                code: "DEV_MODE_CODE", // Added missing code property
+                question: mockQuestionData, // Assign the detailed object here
+                timer: 20,
+                questionIndex: 0,
+                totalQuestions: 1,
+                tournoiState: 'running',
+                questionState: 'active',
+            };
+
+            setCurrentQuestion(mockTournamentQuestion);
             setQuestionIndex(0);
             setTotalQuestions(1);
             setAnswered(false);
@@ -177,12 +178,28 @@ export default function TournamentSessionPage() {
             setWaiting(false);
             return;
         }
-        const s = io({
-            path: "/api/socket/io",
-            transports: ["websocket"],
+        logger.info('Creating socket connection with config:', {
+            url: SOCKET_CONFIG.url,
+            path: SOCKET_CONFIG.path,
+            transports: SOCKET_CONFIG.transports
+        });
+        // Use the centralized SOCKET_CONFIG without modifications
+        const s = io(SOCKET_CONFIG.url, {
+            ...SOCKET_CONFIG
         });
         setSocket(s);
         logger.info('Socket.IO client created and set in state', { socketInstance: !!s });
+
+        // Add debug event handlers for connection issues
+        s.on("connect_error", (error) => {
+            logger.error('Socket.IO connection error:', error);
+        });
+        s.on("connect_timeout", () => {
+            logger.error('Socket.IO connection timeout');
+        });
+        s.on("error", (error) => {
+            logger.error('Socket.IO error:', error);
+        });
 
         // Helper to emit join_tournament
         const emitJoinTournament = () => {
@@ -241,61 +258,64 @@ export default function TournamentSessionPage() {
         // Initial join
         emitJoinTournament();
 
-        // Join the tournament room
-        let cookie_id = null;
-        let pseudo = null;
-        let avatar = null;
-        if (typeof window !== 'undefined') {
-            cookie_id = localStorage.getItem('mathquest_cookie_id');
-            pseudo = localStorage.getItem('mathquest_pseudo');
-            avatar = localStorage.getItem('mathquest_avatar');
-            logger.debug('cookie_id before join_tournament:', cookie_id);
-            logger.debug('pseudo before join_tournament:', pseudo);
-            logger.debug('avatar before join_tournament:', avatar);
-        }
-        s.emit("join_tournament", { code, cookie_id, pseudo, avatar, isDiffered });
-
         // Receive a new question
-        s.on("tournament_question", (payload) => {
+        s.on("live_question", (payload: TournamentQuestion) => {
             // Round timer down to nearest second
             const roundedTime = payload.remainingTime != null ? Math.floor(payload.remainingTime) : 20;
-            logger.debug('tournament_question RECEIVED', payload);
+            logger.debug('live_question RECEIVED (full payload):', payload);
+            logger.debug('live_question RECEIVED (questionIndex):', payload.questionIndex); // Changed from payload.index
+            logger.debug('live_question RECEIVED (totalQuestions):', payload.totalQuestions); // Changed from payload.total
             setCurrentQuestion(payload); // Pass the full payload, not just payload.question
 
             if (!payload.question) {
                 logger.error('Received tournament_question event with no question data');
+                setWaiting(false); // Allow potential recovery or display of error
                 return;
             }
 
-            setQuestionIndex(payload.index);
-            setTotalQuestions(payload.total);
-            setAnswered(false);
-            setTimer(roundedTime);
-            setWaiting(false);
-            setPaused(payload.questionState === "paused");
-            pausedRef.current = payload.questionState === "paused";
-            setIsQuizMode(!!payload.isQuizMode); // <--- Store quiz mode
-            logger.info('UI setIsQuizMode', { isQuizMode: !!payload.isQuizMode }); // <--- Log what is set in state
+            // Set index and total, assuming they are always numbers from backend.
+            setQuestionIndex(typeof payload.questionIndex === 'number' ? payload.questionIndex : 0); // Changed from payload.index
+            setTotalQuestions(typeof payload.totalQuestions === 'number' ? payload.totalQuestions : 0); // Changed from payload.total
 
-            logger.debug('Updated state with question data', {
-                questionSet: !!payload.question,
+            // Reset states for the new question
+            setAnswered(false);
+            setSelectedAnswer(null); // Clear single choice selection
+            setSelectedAnswers([]);  // Clear multiple choice selections
+            setCurrentCorrectAnswers([]); // Reset correct answers display
+            setShowQuestionResults(false); // Hide results view for the new question
+            setWaiting(false); // Allow interaction with the new question
+            setPaused(payload.questionState === "paused"); // Set paused state based on incoming question
+
+            logger.debug('Updated state with new question data', {
+                questionSet: !!payload,
                 timer: roundedTime,
-                paused: payload.questionState === "paused"
+                paused: payload.questionState === "paused",
+                questionIndex: payload.questionIndex, // Changed from payload.index
+                totalQuestions: payload.totalQuestions // Changed from payload.total
             });
 
             if (timerRef.current) {
                 clearInterval(timerRef.current);
                 timerRef.current = null;
             }
-            if (payload.questionState === "paused") {
-                // Do not start timer interval if paused
-                logger.debug('Timer not started because question is paused');
+
+            setTimer(roundedTime); // Set timer state
+
+            if (payload.questionState === "paused" || roundedTime <= 0) {
+                logger.debug('Timer not started because question is paused or timer is zero');
+                if (roundedTime <= 0) {
+                    setWaiting(true); // If timer is already 0, user should be waiting
+                }
                 return;
             }
 
             logger.debug('Starting timer interval from', roundedTime);
             timerRef.current = setInterval(() => {
                 setTimer((prev) => {
+                    if (pausedRef.current) { // Check ref for most up-to-date paused state
+                        if (timerRef.current) clearInterval(timerRef.current); // Stop interval if paused during countdown
+                        return prev; // Keep current time if paused
+                    }
                     if (prev === null) return null;
                     if (prev <= 1) {
                         if (timerRef.current) clearInterval(timerRef.current);
@@ -422,8 +442,7 @@ export default function TournamentSessionPage() {
                     timerRef.current = null;
                 }
                 setPaused(true);
-                pausedRef.current = true;
-                setWaiting(true);
+                // setWaiting(true); // Paused does not necessarily mean waiting for next Q, but card is readonly
                 return;
             }
             // ...existing code for other states...
@@ -454,23 +473,39 @@ export default function TournamentSessionPage() {
         });
 
         // Receive answer result
-        s.on("tournament_answer_result", (payload) => {
+        s.on("tournament_answer_result", (payload: { rejected?: boolean; received?: boolean; message?: string }) => {
             logger.debug("RECEIVED tournament_answer_result", payload);
 
-            // Only show feedback about whether the answer was received or rejected
             if (payload.rejected) {
-                // Show error for rejected answers (e.g., too late)
                 setSnackbarType("error");
                 setSnackbarMessage(payload.message || "Réponse rejetée");
                 setSnackbarOpen(true);
+                // User might be able to try again if timer hasn't run out and not rejected for "too late"
+                // For now, we assume rejection means they can't answer again for this question.
+                setAnswered(true); // Mark as answered even if rejected to prevent resubmission
+                setWaiting(true);  // Wait for next server action (e.g. results or next question)
             } else if (payload.received) {
-                // Show simple confirmation that answer was received, without any correctness indication
                 setSnackbarType("success");
                 setSnackbarMessage("Réponse envoyée");
                 setSnackbarOpen(true);
+                setAnswered(true);
+                setWaiting(true);
             }
+        });
 
-            setAnswered(true);
+        // Receive question results (correct answers)
+        s.on("question_results", (payload: { questionUid: string; correctAnswers: number[] }) => {
+            logger.debug("RECEIVED question_results", payload);
+            // Ensure currentQuestion and its nested question object are not null
+            if (currentQuestion && typeof currentQuestion.question === 'object' && currentQuestion.question.uid === payload.questionUid) {
+                setCurrentCorrectAnswers(payload.correctAnswers);
+                setShowQuestionResults(true);
+                // setWaiting(true) should already be true from timer expiry or answer submission.
+                // The card becomes readonly via showQuestionResults prop.
+                logger.info('Displaying correct answers for question:', payload.questionUid);
+            } else {
+                logger.warn("Received question_results for a different or non-object question", { currentUid: currentQuestion?.question && typeof currentQuestion.question === 'object' ? currentQuestion.question.uid : 'N/A', receivedUid: payload.questionUid });
+            }
         });
 
         // Receive tournament end
@@ -496,26 +531,39 @@ export default function TournamentSessionPage() {
             if (oldCode === code) {
                 logger.info(`Our tournament code changed, joining new room: live_${newCode}`);
 
+                // Fetch user details from localStorage for the new join emission
+                let user_cookie_id = null;
+                let user_pseudo = null;
+                let user_avatar = null;
+                if (typeof window !== 'undefined') {
+                    user_cookie_id = localStorage.getItem('mathquest_cookie_id');
+                    user_pseudo = localStorage.getItem('mathquest_pseudo');
+                    user_avatar = localStorage.getItem('mathquest_avatar');
+                }
+
                 // Join the new tournament room
                 s.emit("join_tournament", {
                     code: newCode,
-                    cookie_id,
-                    pseudo,
-                    avatar,
+                    cookie_id: user_cookie_id, // Use fetched value
+                    pseudo: user_pseudo,       // Use fetched value
+                    avatar: user_avatar,       // Use fetched value
                     isDiffered
                 });
 
-                // Redirect to the new tournament URL to keep everything consistent
+                // Redirect after code change.
+                // Note: Currently redirects to the leaderboard of the *old* code.
+                // This might need to be /live/${newCode} or /leaderboard/${newCode} depending on desired UX.
                 router.replace(`/leaderboard/${code}`);
             }
         });
 
         return () => {
             s.off("connect", emitJoinTournament);
+            s.off("live_question"); // Make sure to turn off the listener
             s.disconnect();
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [code, devMode, devModeType, isDiffered]);
+    }, [code, devMode, devModeType, isDiffered, router]);
 
     // --- SOCKET EVENTS LOGGING ---
     useEffect(() => {
@@ -528,9 +576,9 @@ export default function TournamentSessionPage() {
         socket.onAny((event, ...args) => {
             logger.debug(`socket event: ${event}`, args);
         });
-        // Log tournament_question
-        socket.on("tournament_question", (payload) => {
-            logger.debug("RECEIVED tournament_question", payload);
+        // Log live_question
+        socket.on("live_question", (payload) => {
+            logger.debug("RECEIVED live_question", payload);
         });
         // Log answer result
         socket.on("tournament_answer_result", (payload) => {
@@ -550,7 +598,7 @@ export default function TournamentSessionPage() {
         });
         return () => {
             socket.offAny();
-            socket.off("tournament_question");
+            socket.off("live_question");
             socket.off("tournament_answer_result");
             socket.off("tournament_end");
             socket.off("tournament_error");
@@ -626,14 +674,31 @@ export default function TournamentSessionPage() {
     }, [socket, router, currentQuestion]);
 
     // Reset selected answers ONLY when the question UID changes
+    const currentQuestionUid = useMemo(() => {
+        if (currentQuestion && typeof currentQuestion.question === 'object' && currentQuestion.question !== null) {
+            return (currentQuestion.question as Question).uid;
+        }
+        return undefined;
+    }, [currentQuestion]);
+
     useEffect(() => {
         setSelectedAnswer(null);
         setSelectedAnswers([]);
         setSnackbarOpen(false);
-    }, [currentQuestion?.uid]);
+    }, [currentQuestionUid]);
 
     // Helper: is multiple choice
-    const isMultipleChoice = currentQuestion?.type === "choix_multiple";
+    const isMultipleChoice = useMemo(() => {
+        if (!currentQuestion) return false;
+
+        // Check if it's inside the question object
+        if (typeof currentQuestion.question === 'object' && currentQuestion.question !== null) {
+            const q = currentQuestion.question as FilteredQuestion | Question;
+            return q.type === "choix_multiple";
+        }
+
+        return false;
+    }, [currentQuestion]);
 
     // Handle single choice answer submission
     const handleSingleChoice = (idx: number) => {
@@ -646,16 +711,19 @@ export default function TournamentSessionPage() {
             return;
         }
         const clientTimestamp = Date.now();
+        const questionData = currentQuestion.question;
+        const questionUidForAnswer = (questionData && typeof questionData === 'object') ? (questionData as any).uid : undefined;
+
         logger.debug('Emitting tournament_answer', {
             code,
-            questionUid: currentQuestion.uid,
+            questionUid: currentQuestionUid, // Use derived UID
             answerIdx: idx,
             clientTimestamp,
             isDiffered,
         });
         socket.emit("tournament_answer", {
             code,
-            questionUid: currentQuestion.uid,
+            questionUid: currentQuestionUid, // Use derived UID
             answerIdx: idx,
             clientTimestamp,
             isDiffered,
@@ -667,34 +735,39 @@ export default function TournamentSessionPage() {
     const handleSubmitMultiple = () => {
         logger.debug('handleSubmitMultiple called', { selectedAnswers, waiting, socket: !!socket, currentQuestion });
         if (devMode) {
-            if (!currentQuestion || selectedAnswers.length === 0) return;
-            setSnackbarMessage("Réponse enregistrée");
+            if (!currentQuestion || selectedAnswers.length === 0)
+                setSnackbarMessage("Réponse enregistrée");
             setSnackbarOpen(true);
             return;
         }
 
         // Only validate that we have answers to send - server will handle timing validation
         if (!socket || !currentQuestion || selectedAnswers.length === 0) {
-            logger.warn('handleSubmitMultiple: missing requirements', {
-                socket: !!socket,
-                currentQuestion,
-                selectedAnswers
-            });
+            logger.warn('handleSubmitMultiple: socket, currentQuestion, or selectedAnswers missing/empty');
+            // Optionally, provide user feedback if answers are empty
+            if (selectedAnswers.length === 0) {
+                setSnackbarMessage("Veuillez sélectionner au moins une réponse.");
+                setSnackbarType("error");
+                setSnackbarOpen(true);
+            }
             return;
         }
 
         const clientTimestamp = Date.now();
+        const questionData = currentQuestion.question;
+        const questionUidForAnswer = (questionData && typeof questionData === 'object') ? (questionData as any).uid : undefined;
+
         logger.debug('Emitting tournament_answer', {
             code,
-            questionUid: currentQuestion.uid,
-            answerIdx: selectedAnswers, // Send array for multiple
+            questionUid: currentQuestionUid, // Use derived UID
+            answerIdx: selectedAnswers,
             clientTimestamp,
             isDiffered,
         });
         socket.emit("tournament_answer", {
             code,
-            questionUid: currentQuestion.uid,
-            answerIdx: selectedAnswers, // Send array for multiple
+            questionUid: currentQuestionUid, // Use derived UID
+            answerIdx: selectedAnswers,
             clientTimestamp,
             isDiffered,
         });
@@ -760,13 +833,13 @@ export default function TournamentSessionPage() {
 
     // Clear correctAnswers and readonly when question changes
     useEffect(() => {
-        if (!currentQuestion?.uid) return;
-        if (lastQuestionUidRef.current !== currentQuestion.uid) {
+        if (!currentQuestionUid) return;
+        if (lastQuestionUidRef.current !== currentQuestionUid) {
             setCorrectAnswers([]);
             setReadonly(false);
-            lastQuestionUidRef.current = currentQuestion.uid;
+            lastQuestionUidRef.current = currentQuestionUid;
         }
-    }, [currentQuestion?.uid]);
+    }, [currentQuestionUid]);
 
     // Unified: Listen for quiz_question_results, quiz_question_closed, and tournament_correct_answers
     useEffect(() => {
@@ -811,12 +884,12 @@ export default function TournamentSessionPage() {
         const closeExplication = () => setShowExplication(false);
         socket.on("tournament_question_state_update", closeExplication);
         socket.on("quiz_state", closeExplication);
-        socket.on("tournament_question", closeExplication);
+        socket.on("live_question", closeExplication);
         socket.on("tournament_end", closeExplication);
         return () => {
             socket.off("tournament_question_state_update", closeExplication);
             socket.off("quiz_state", closeExplication);
-            socket.off("tournament_question", closeExplication);
+            socket.off("live_question", closeExplication);
             socket.off("tournament_end", closeExplication);
         };
     }, [socket]);
@@ -824,7 +897,7 @@ export default function TournamentSessionPage() {
     // En mode dev, fermer l'overlay quand la question change
     useEffect(() => {
         if (devMode) setShowExplication(false);
-    }, [currentQuestion?.uid, devMode]);
+    }, [currentQuestionUid, devMode]);
 
     useEffect(() => {
         logger.debug('currentQuestion updated:', currentQuestion);
@@ -845,8 +918,8 @@ export default function TournamentSessionPage() {
                 <MathJaxWrapper>
                     {currentQuestion ? (
                         <>
-                            {logger.debug('Rendering TournamentQuestionCard', currentQuestion)}
-                            <TournamentQuestionCard
+                            {logger.debug('Rendering QuestionCard', currentQuestion)}
+                            <QuestionCard
                                 currentQuestion={currentQuestion}
                                 questionIndex={questionIndex}
                                 totalQuestions={totalQuestions}

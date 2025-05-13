@@ -4,12 +4,17 @@
     "private": true,
     "scripts": {
         "type-check": "tsc --project tsconfig.json --noEmit --pretty",
-        "lint": "eslint . --ext .ts"
+        "lint": "eslint . --ext .ts",
+        "check-shared-types": "node types/scripts/check-types.js"
+    },
+    "dependencies": {
+        "@prisma/client": "^5.14.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",
-        "@types/node": "^20",
+        "@types/node": "^20.17.46",
         "@types/socket.io": "^3.0.1",
+        "@types/react": "^18.3.3",
         "eslint": "^9",
         "typescript": "^5.8.3"
     }

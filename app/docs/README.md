@@ -2,25 +2,51 @@ This document is intended for developers and agents contributing to the MathQues
 
 # MathQuest - AGI Agent Guide
 
+## Documentation Structure
+
+The documentation is organized into logical categories to help you quickly find the information you need. For a visual map of the documentation structure, see the [Documentation Map](./documentation-map.md).
+
+### Core Documentation
+- [Overview](./overview/README.md): High-level overview of the MathQuest project
+- [Setup Guide](./setup/README.md): How to set up the development environment
+- [Architecture](./architecture/README.md): System architecture and design decisions
+
+### Technical Documentation
+- [Backend](./backend/README.md): Backend architecture and APIs
+- [Frontend](./frontend/README.md): Frontend architecture and components
+- [API](./api/README.md): API endpoints and specifications
+- [Socket Communication](./sockets/README.md): Socket.IO implementation and events
+- [Type System](./types/README.md): Shared types and type validation
+- [Project Management](./project/README.md): TODO lists, migration status, and priorities
+
+### Quick Links
+- [Project Overview](./overview/project-overview.md): What is MathQuest?
+- [TODO List](./project/TODO.md): Current development priorities
+- [TypeScript Guide](./types/typescript-guide.md): Guide to TypeScript usage
+- [Socket Guide](./sockets/socket-guide.md): Guide to Socket.IO implementation
+
+### Archive
+- Historical documentation and obsolete files have been moved to the [archive/](./archive/) directory
+
 ## VERY IMPORTANT: Documentation & Code DRYness
 
 > **MANDATORY: All changes to backend, frontend, hooks, or API logic must be reflected and documented in the corresponding technical reference files:**
 >
-> - [`backend.md`](./backend.md): Backend/server architecture, event flows, and state
-> - [`frontend.md`](./frontend.md): Frontend architecture, UI flows, and state
-> - [`hook.md`](./hook.md): All custom React hooks and their APIs
-> - [`api.md`](./api.md): All API endpoints, request/response, and business logic
+> - [Backend Documentation](./backend/backend-architecture.md): Backend/server architecture, event flows, and state
+> - [Frontend Documentation](./frontend/frontend-architecture.md): Frontend architecture, UI flows, and state
+> - [React Hooks](./frontend/hooks.md): All custom React hooks and their APIs
+> - [API Reference](./api/api-reference.md): All API endpoints, request/response, and business logic
 >
 > **Core Technical Guides:**
-> - [`typescript-guide.md`](./typescript-guide.md): Comprehensive TypeScript integration and migration guide (includes ESLint configuration)
-> - [`socket-guide.md`](./socket-guide.md): Complete Socket.IO implementation and testing guide
+> - [TypeScript Guide](./types/typescript-guide.md): Comprehensive TypeScript integration and migration guide (includes ESLint configuration)
+> - [Socket Guide](./sockets/socket-guide.md): Complete Socket.IO implementation and testing guide
+>
+> **Documentation Standards:**
+> - [Documentation Standards](./documentation-standards.md): Guidelines for creating and maintaining documentation
 >
 > **Supporting Documentation:**
-> - [`javascript-cleanup-plan.md`](./javascript-cleanup-plan.md): Plan for cleaning JavaScript files after TypeScript migration
-> - [`timer-bugs.md`](./timer-bugs.md): Documentation on timer-related bugs and fixes
->
-> **Archive:**
-> - Historical documentation and obsolete files have been moved to the [`archive/`](./archive/) directory
+> - [JavaScript Cleanup Plan](./project/javascript-cleanup-plan.md): Plan for cleaning JavaScript files after TypeScript migration
+> - [Timer Bugs](./backend/timer-bugs.md): Documentation on timer-related bugs and fixes
 >
 > **You MUST update these files whenever you modify or add backend, frontend, hook, or API code.**
 >
@@ -465,7 +491,7 @@ MathQuest uses Socket.IO rooms to organize real-time communication between diffe
 
 MathQuest includes dedicated tools for testing and troubleshooting Socket.IO connections between frontend and backend.
 
-For a complete index of all socket-related documentation, see [socket-documentation-index.md](./socket-documentation-index.md).
+For a complete index of all socket-related documentation, see [socket-documentation-index.md](./archive/socket-documentation-index.md).
 
 ### Command Line Socket Test
 A Node.js-based command-line tool is available for testing basic socket connectivity:
@@ -492,7 +518,7 @@ If you encounter socket connection issues, check these common causes:
 4. **Server Status**: Confirm the backend server is running and accessible at the expected URL/port
 5. **Environment Variables**: Check that `NEXT_PUBLIC_API_URL` is set correctly in the frontend
 
-For more detailed diagnostics and test results, see the [Socket.IO Integration and Testing Guide](./socket-guide.md).
+For more detailed diagnostics and test results, see the [Socket.IO Integration and Testing Guide](./sockets/socket-guide.md).
 
 ## Answer Feedback Overlay & Explication Event
 

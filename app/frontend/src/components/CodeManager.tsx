@@ -3,9 +3,9 @@ import { createLogger } from '@/clientLogger';
 import { Socket } from 'socket.io-client';
 import type { QuizState } from '@/hooks/useTeacherQuizSocket';
 
-const logger = createLogger('TournamentCodeManager');
+const logger = createLogger('CodeManager');
 
-interface TournamentCodeManagerProps {
+interface CodeManagerProps {
     quizId: string;
     quizSocket: Socket | null;
     quizState: QuizState | null;
@@ -16,11 +16,11 @@ interface TournamentCodeManagerProps {
 }
 
 // Define the interface for the imperative handle
-export interface TournamentCodeManagerRef {
+export interface CodeManagerRef {
     generateTournament: () => void;
 }
 
-const TournamentCodeManager = forwardRef<TournamentCodeManagerRef, TournamentCodeManagerProps>(({
+const CodeManager = forwardRef<CodeManagerRef, CodeManagerProps>(({
     quizId,
     quizSocket,
     quizState,
@@ -123,7 +123,7 @@ const TournamentCodeManager = forwardRef<TournamentCodeManagerRef, TournamentCod
         </div>
     );
 });
-TournamentCodeManager.displayName = 'TournamentCodeManager';
+CodeManager.displayName = 'CodeManager';
 
-export default TournamentCodeManager;
+export default CodeManager;
 

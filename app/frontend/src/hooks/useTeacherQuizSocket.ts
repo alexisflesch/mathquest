@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
+import { BaseQuestion } from '@shared/types/question';
 
 const logger = createLogger('useTeacherQuizSocket');
 
@@ -10,18 +11,16 @@ interface Response {
     texte: string;
     correct: boolean;
 }
-export interface Question {
-    uid: string;
-    question: string;
-    reponses: Response[];
-    temps?: number;
-    type?: string;
-    explication?: string;
+export interface Question extends BaseQuestion {
+    question: string; // Frontend-specific field for question text
+    reponses: Response[]; // Overrides BaseQuestion's reponses to use Response type
+    temps?: number; // Time limit for the question in seconds
+    explication?: string; // Explanation for the correct answer
 }
 export interface QuizState {
     currentQuestionIdx: number | null;
     questions: Question[];
-    chrono: { timeLeft: number | null; running: boolean };
+    chrono: { timeLeft: number | null; running: boolean }; // Added chrono property for compatibility
     locked: boolean;
     ended: boolean;
     stats: Record<string, unknown>;

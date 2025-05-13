@@ -12,6 +12,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const quizState_1 = require("../quizState");
 const quizUtils_1 = require("../quizUtils");
+const sendQuestion_1 = require("../sharedLiveLogic/sendQuestion"); // Added import
 // Import using require for now until these are converted to TypeScript
 // TODO: Convert these imports to TypeScript imports when available
 const createLogger = require('../../logger');
@@ -27,6 +28,7 @@ const { triggerQuizTimerAction } = require('../quizTriggers');
  * @param payload - Event payload containing quizId, questionUid, etc.
  */
 async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, questionIdx, tournamentCode, teacherId }) {
+    var _a, _b;
     // Initialize quizState if it doesn't exist
     if (!quizState_1.quizState[quizId]) {
         logger.info(`[SetQuestion] Creating new quizState for quizId=${quizId}`);
@@ -142,6 +144,21 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
     // Broadcast updated state to dashboard room
     io.to(`dashboard_${quizId}`).emit('quiz_state_update', dashboardState);
     logger.info(`[SetQuestion] Emitted quiz_state_update to dashboard_${quizId}`);
+    // Send standardized live_question to projector room for the quiz
+    const currentQuestionObject = quizState_1.quizState[quizId].questions[finalQuestionIdx];
+    if (currentQuestionObject) {
+        const timerDuration = (_b = (_a = questionTimer === null || questionTimer === void 0 ? void 0 : questionTimer.initialTime) !== null && _a !== void 0 ? _a : currentQuestionObject.temps) !== null && _b !== void 0 ? _b : undefined;
+        const modeSpecificData = {
+            quizId: quizId,
+            locked: quizState_1.quizState[quizId].locked,
+            // Add any other quiz-specific details the projector might need
+        };
+        (0, sendQuestion_1.sendQuestion)(io, `projection_${quizId}`, currentQuestionObject, timerDuration, finalQuestionIdx, quizState_1.quizState[quizId].questions.length, modeSpecificData);
+        logger.info(`[SetQuestion] Emitted live_question to projection_${quizId} for question ${questionUid}`);
+    }
+    else {
+        logger.warn(`[SetQuestion] Could not find currentQuestionObject for UID ${questionUid} in quiz ${quizId} to send to projector.`);
+    }
     // Trigger tournament question change if linked to a tournament
     if (tournamentCode) {
         logger.info(`[SetQuestion] Triggering tournament question update for code=${tournamentCode}, questionUid=${questionUid}`);

@@ -1,4 +1,4 @@
-# Trouver un nouvea nom !
+# Changement de nom de l'application
 ARQOS : Advanced Realtime Quiz(zing) Online System
 IRQOS : Interactive Real-time Quiz(zing) Online System
 ASTOR — Advanced System for Trivia, Open-source, and Real-time

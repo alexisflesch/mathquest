@@ -7,9 +7,7 @@
 import { TournamentState, TournamentParticipant, QuestionState, LeaderboardEntry } from '../types/tournamentTypes';
 
 // Update to ES6 imports
-import { scaleScoresForQuiz } from './scoreUtils';
 import createLogger from '../../logger';
-import { sendTournamentQuestion } from './sharedTournamentUtils';
 const logger = createLogger('ComputeLeaderboard');
 
 /**

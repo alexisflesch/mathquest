@@ -7,7 +7,7 @@
 import { Server, Socket } from 'socket.io';
 import { TournamentState } from '../types/tournamentTypes';
 import { StartTournamentPayload } from '../types/socketTypes';
-import { Question, Answer } from '../types/quizTypes';
+import { Question, QuestionOptionAnswer } from '../types/quizTypes';
 import type { Tournoi } from '@prisma/client';
 import prisma from '../../db';
 import { tournamentState } from '../tournamentUtils/tournamentState';

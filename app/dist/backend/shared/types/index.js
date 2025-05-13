@@ -23,6 +23,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // Re-export all shared types
+__exportStar(require("./question"), exports); // Added export from base question file
 __exportStar(require("./quiz/question"), exports);
 __exportStar(require("./quiz/state"), exports);
 __exportStar(require("./tournament/participant"), exports);

@@ -1,15 +1,9 @@
 /**
  * sendTournamentQuestion.ts - Centralized helper to emit filtered tournament questions to students
  *
- * This function ensures only the minimal, non-sensitive fields are sent to students:
- * - type: question type (e.g., 'choix_simple', 'choix_multiple')
- * - uid: question unique id
- * - question: question text
- * - answers: array of answer texts (no 'correct' field)
- *
- * Usage:
- *   import { sendTournamentQuestion } from './tournamentUtils/sendTournamentQuestion';
- *   sendTournamentQuestion(targetEmitter, payload); // targetEmitter is io.to(room) or socket.to(room)
+ * THIS FILE IS NOW DEPRECATED.
+ * The shared logic has been moved to /sharedLiveLogic/sendQuestion.ts
+ * This file is kept temporarily for reference during transition and will be removed.
  */
 import { BroadcastOperator } from 'socket.io';
 import type { Question } from '../types/quizTypes';
@@ -22,6 +16,7 @@ export interface TournamentQuestionPayload {
     timer: number;
     tournoiState: 'running' | 'paused' | 'stopped';
     questionIndex: number;
+    totalQuestions?: number;
     questionId: string;
 }
 /**

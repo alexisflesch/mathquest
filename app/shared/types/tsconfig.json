@@ -7,9 +7,11 @@
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "jsx": "react-jsx" // Added jsx option
     },
     "include": [
-        "./**/*.ts"
+        "./**/*.ts",
+        "./**/*.tsx" // Added .tsx files to include
     ]
 }

@@ -5,6 +5,7 @@
  */
 // Using type imports to avoid runtime dependencies
 import type { Server, Socket } from 'socket.io';
+import { QUIZ_EVENTS, TOURNAMENT_EVENTS, LOBBY_EVENTS } from './events';
 
 /**
  * Payload for quiz_set_question event
@@ -128,19 +129,21 @@ export interface ResumeTournamentPayload {
     code: string;
 }
 
+import type { PrismaClient } from '@prisma/client';
+
 /**
  * Socket event handler function types
  */
 export type QuizEventHandler = (
     io: Server,
     socket: Socket,
-    prisma: any,
-    payload: any
+    prisma: PrismaClient,
+    payload: Record<string, unknown>
 ) => void | Promise<void>;
 
 export type TournamentEventHandler = (
     io: Server,
     socket: Socket,
-    prisma: any,
-    payload: any
+    prisma: PrismaClient,
+    payload: Record<string, unknown>
 ) => void | Promise<void>;

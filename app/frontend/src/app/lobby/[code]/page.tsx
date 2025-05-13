@@ -24,6 +24,7 @@ import { useAuth } from '@/components/AuthProvider';
 import Image from 'next/image';
 import { Share2 } from "lucide-react";
 import { createLogger } from '@/clientLogger';
+import { SOCKET_CONFIG } from '@/config';
 
 // Create a logger for this component
 const logger = createLogger('Lobby');
@@ -164,12 +165,10 @@ export default function LobbyPage() {
 
     useEffect(() => {
         // Connect to socket.io server
-        const socket = io({
-            path: "/api/socket/io",
-            transports: ["websocket"],
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-            timeout: 20000
+        logger.info('Creating socket connection with config:', SOCKET_CONFIG);
+        // Use the centralized SOCKET_CONFIG without local overrides for transports and timeout
+        const socket = io(SOCKET_CONFIG.url, {
+            ...SOCKET_CONFIG,
         });
         socketRef.current = socket;
 

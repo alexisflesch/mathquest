@@ -9,6 +9,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.computeLeaderboard = computeLeaderboard;
+// Update to ES6 imports
 const logger_1 = __importDefault(require("../../logger"));
 const logger = (0, logger_1.default)('ComputeLeaderboard');
 /**

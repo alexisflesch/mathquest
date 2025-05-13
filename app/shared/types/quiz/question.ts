@@ -1,38 +1,27 @@
+import { BaseQuestion, Answer } from '../question';
+
 /**
  * Shared Question Types
  * 
  * These types represent the core question structure used across both frontend and backend.
  */
 
-/**
- * Answer type for questions
- */
-export interface Answer {
-    texte: string;
-    correct: boolean; // Changed from correct?: boolean to make it mandatory
-}
+// Re-export Answer to make it available to importers of this file
+export type { Answer } from '../question';
 
 /**
  * Question structure with common fields across frontend and backend
  */
-export interface Question {
-    uid: string;
-    texte?: string;      // Backend primarily uses this
-    question?: string;   // Frontend primarily uses this
-    type?: string;
-    temps?: number;      // Time in seconds
-    reponses?: Answer[]; // Backend primarily uses this
-    answers?: Answer[];  // Alternative field name sometimes used
-    correct?: boolean | number[];
-    theme?: string;
-    difficulte?: number;
-    niveau?: string | string[];
-    discipline?: string;
-    explication?: string;
-    image_url?: string;
-    hidden?: boolean;
-    title?: string;      // Frontend sometimes uses titre instead
-    titre?: string;      // Optional title
-    tags?: string[];
-    auteur?: string;
+export interface Question extends BaseQuestion {
+    correct?: boolean | number[]; // Indicates the correct answer(s)
+    theme?: string; // Theme of the question
+    difficulte?: number; // Difficulty level
+    niveau?: string | string[]; // Educational level(s)
+    discipline?: string; // Subject or discipline
+
+    // Additional fields needed by the backend
+    question?: string;  // Alternative field for question text
+    answers?: Answer[]; // Alternative field for answers array
+    hidden?: boolean;   // Whether the question is hidden
+    title?: string;     // Alternative title for the question
 }

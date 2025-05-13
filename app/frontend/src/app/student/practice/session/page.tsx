@@ -16,7 +16,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
-import TournamentQuestionCard from '@/components/TournamentQuestionCard';
+import QuestionCard from '@/components/QuestionCard';
 
 interface CurrentQuestion {
     uid: string;
@@ -77,7 +77,7 @@ export default function PracticeSessionPage() {
             });
     }, []);
 
-    // Handlers for TournamentQuestionCard
+    // Handlers for QuestionCard
     const isMultipleChoice = practiceQuestions[practiceIndex]?.type === 'choix_multiple';
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
@@ -129,7 +129,7 @@ export default function PracticeSessionPage() {
                 {/* Timer visuel supprimé */}
                 <MathJaxWrapper>
                     {!practiceDone && practiceQuestions.length > 0 && (
-                        <TournamentQuestionCard
+                        <QuestionCard
                             currentQuestion={{
                                 uid: practiceQuestions[practiceIndex].uid,
                                 question: practiceQuestions[practiceIndex].question,

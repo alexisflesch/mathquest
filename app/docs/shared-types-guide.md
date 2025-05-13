@@ -1,8 +1,8 @@
 # Shared Types Usage Guide
 
-*Date: May 13, 2025*
+*Updated: May 13, 2025*
 
-This guide provides instructions for using the shared types across the MathQuest application.
+This guide provides instructions for using the shared types across the MathQuest application. The shared types system has been improved to ensure better consistency between frontend and backend.
 
 ## Available Shared Types
 

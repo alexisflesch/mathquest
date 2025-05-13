@@ -59,31 +59,39 @@ function handleTournamentResume(io, socket, { code }) {
             const { calculateScore } = require('../tournamentUtils/tournamentHelpers'); // Import calculateScore
             // --- SCORING ---
             const participantScores = {};
-            Object.entries(state.participants).forEach(([joueurId, participant]) => {
-                var _a, _b, _c;
-                const answer = (_b = (_a = state.answers) === null || _a === void 0 ? void 0 : _a[joueurId]) === null || _b === void 0 ? void 0 : _b[currentQuestion.uid || ''];
-                const { baseScore, rapidity, totalScore } = calculateScore(currentQuestion, answer, state.questionStart || Date.now());
-                if (participant) {
-                    participant.score = (participant.score || 0) + totalScore;
-                    participantScores[joueurId] = {
-                        baseScore,
-                        rapidity,
-                        totalScore,
-                        currentTotal: participant.score
-                    };
-                    const socketId = (_c = Object.entries(state.socketToJoueur || {}).find(([sid, jid]) => jid === joueurId)) === null || _c === void 0 ? void 0 : _c[0];
-                    if (socketId) {
-                        io.to(socketId).emit("tournament_answer_result", {
-                            correct: baseScore > 0,
-                            score: participant.score,
-                            explanation: (currentQuestion === null || currentQuestion === void 0 ? void 0 : currentQuestion.explication) || null,
+            if (state.participants && Array.isArray(state.participants)) {
+                // Convert array to object with IDs as keys
+                const participantsObj = state.participants.reduce((obj, p) => {
+                    if (p.id)
+                        obj[p.id] = p;
+                    return obj;
+                }, {});
+                Object.entries(participantsObj).forEach(([joueurId, participant]) => {
+                    var _a, _b, _c;
+                    const answer = (_b = (_a = state.answers) === null || _a === void 0 ? void 0 : _a[joueurId]) === null || _b === void 0 ? void 0 : _b[currentQuestion.uid || ''];
+                    const { baseScore, rapidity, totalScore } = calculateScore(currentQuestion, answer, state.questionStart || Date.now());
+                    if (participant) {
+                        participant.score = (participant.score || 0) + totalScore;
+                        participantScores[joueurId] = {
                             baseScore,
-                            rapidity: Math.round(rapidity * 100) / 100,
+                            rapidity,
                             totalScore,
-                        });
+                            currentTotal: participant.score
+                        };
+                        const socketId = (_c = Object.entries(state.socketToJoueur || {}).find(([sid, jid]) => jid === joueurId)) === null || _c === void 0 ? void 0 : _c[0];
+                        if (socketId) {
+                            io.to(socketId).emit("tournament_answer_result", {
+                                correct: baseScore > 0,
+                                score: participant.score,
+                                explanation: (currentQuestion === null || currentQuestion === void 0 ? void 0 : currentQuestion.explication) || null,
+                                baseScore,
+                                rapidity: Math.round(rapidity * 100) / 100,
+                                totalScore,
+                            });
+                        }
                     }
-                }
-            });
+                });
+            }
             // --- Move to next question or end ---
             // Find the next question (based on current index)
             const currentIndex = state.questions.findIndex(q => q.uid === state.currentQuestionUid);
@@ -94,20 +102,20 @@ function handleTournamentResume(io, socket, { code }) {
             }
             else {
                 logger.info(`Ending tournament ${code} after resume timer`);
-                const leaderboard = Object.values(state.participants)
-                    .map(p => ({
-                    id: p.id,
-                    pseudo: p.pseudo,
-                    avatar: p.avatar,
-                    score: p.score,
-                    isDiffered: !!p.isDiffered
-                }))
-                    .sort((a, b) => (b.score || 0) - (a.score || 0));
+                const leaderboard = state.participants && Array.isArray(state.participants)
+                    ? state.participants.map(p => ({
+                        id: p.id,
+                        pseudo: p.pseudo,
+                        avatar: p.avatar,
+                        score: p.score,
+                        isDiffered: !!p.isDiffered
+                    })).sort((a, b) => (b.score || 0) - (a.score || 0))
+                    : [];
                 io.to(`live_${code}`).emit("tournament_end", { leaderboard });
                 try {
                     const tournoi = await prisma.tournoi.findUnique({ where: { code } });
-                    if (tournoi) {
-                        for (const participant of Object.values(state.participants)) {
+                    if (tournoi && state.participants && Array.isArray(state.participants)) {
+                        for (const participant of state.participants) {
                             if (!participant.isDiffered) {
                                 const joueurId = participant.id;
                                 const scoreValue = participant.score || 0;

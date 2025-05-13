@@ -96,4 +96,4 @@ For socket connections:
 
 Once all files are converted, we'll run a full system test to ensure everything works together correctly.
 
-See [Socket.IO Integration and Testing Guide](./socket-guide.md) for detailed socket testing results.
+See [Socket.IO Integration and Testing Guide](../sockets/socket-guide.md) for detailed socket testing results.

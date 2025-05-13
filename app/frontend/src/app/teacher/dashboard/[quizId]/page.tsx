@@ -1,7 +1,7 @@
 /**
  * Teacher Dashboard Page Component - Refactored
  *
- * Uses useTeacherQuizSocket hook for real-time logic and TournamentCodeManager
+ * Uses useTeacherQuizSocket hook for real-time logic and CodeManager
  * component for code handling.
  */
 
@@ -12,7 +12,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
-import TournamentCodeManager from '@/components/TournamentCodeManager'; // Import new component
+import CodeManager from '@/components/CodeManager'; // Import new component
 import { useTeacherQuizSocket, Question } from '@/hooks/useTeacherQuizSocket'; // Remove unused QuizState
 import { UsersRound } from "lucide-react";
 import { log } from "console";
@@ -284,12 +284,12 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         quizSocket?.emit('quiz_close_question', { quizId, tournamentCode: currentTournamentCode, questionUid: uid });
     }, [emitTimerAction, quizSocket, quizId, currentTournamentCode]);
 
-    // Callback from TournamentCodeManager when a new code is generated
+    // Callback from CodeManager when a new code is generated
     const handleCodeGenerated = useCallback((newCode: string | null) => {
         setCurrentTournamentCode(newCode); // Update the code used by the hook
     }, []);
 
-    // Callback from TournamentCodeManager when it emits update_tournament_code
+    // Callback from CodeManager when it emits update_tournament_code
     const handleCodeUpdateEmitted = useCallback((newCode: string) => {
         // Use the hook's emitter function
         emitUpdateTournamentCode(newCode);
@@ -334,7 +334,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
     // --- Confirmation Dialog for Tournament Code Generation ---
     const [showGenerateCodeConfirm, setShowGenerateCodeConfirm] = useState(false);
-    const tournamentCodeManagerRef = React.useRef<TournamentCodeManagerRef | null>(null);
+    const CodeManagerRef = React.useRef<CodeManagerRef | null>(null);
 
     const handleRequestGenerateCode = () => {
         setShowGenerateCodeConfirm(true);
@@ -342,8 +342,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     const confirmGenerateCode = () => {
         setShowGenerateCodeConfirm(false);
         // Appelle la méthode de génération du code du composant enfant
-        if (tournamentCodeManagerRef.current && tournamentCodeManagerRef.current.generateTournament) {
-            tournamentCodeManagerRef.current.generateTournament();
+        if (CodeManagerRef.current && CodeManagerRef.current.generateTournament) {
+            CodeManagerRef.current.generateTournament();
         }
     };
     const cancelGenerateCode = () => {
@@ -375,8 +375,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                         </div>
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                             <div>
-                                <TournamentCodeManager
-                                    ref={tournamentCodeManagerRef}
+                                <CodeManager
+                                    ref={CodeManagerRef}
                                     quizId={quizId}
                                     quizSocket={quizSocket}
                                     quizState={quizState}
@@ -483,7 +483,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     );
 }
 
-interface TournamentCodeManagerRef {
+interface CodeManagerRef {
     generateTournament: () => void;
 }
 

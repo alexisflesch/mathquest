@@ -10,7 +10,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const tournamentState_1 = require("../tournamentUtils/tournamentState");
-const scoreUtils_1 = require("../tournamentUtils/scoreUtils");
 // Import logger
 const logger_1 = __importDefault(require("../../logger"));
 const logger = (0, logger_1.default)('AnswerTournamentHandler');
@@ -22,8 +21,9 @@ const logger = (0, logger_1.default)('AnswerTournamentHandler');
  * @param payload - The answer payload from the client
  */
 function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clientTimestamp, isDiffered }) {
-    var _a;
-    logger.info(`tournament_answer received`);
+    var _a, _b;
+    logger.info(`tournament_answer received for Q_UID: ${questionUid} from socket ${socket.id}`);
+    const serverReceiveTime = Date.now(); // Capture server receive time
     // Determine the correct state (live or differed)
     let joueurId = null;
     let stateKey = null;
@@ -55,13 +55,16 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     }
     if (!state || !joueurId) {
         logger.warn(`tournament_answer: State or joueurId not found for socket ${socket.id} and code ${code}. Ignoring.`);
+        // Emit a rejection to the client
+        socket.emit("tournament_answer_result", {
+            questionUid,
+            rejected: true,
+            reason: "state_error",
+            message: "Erreur de session, impossible de traiter la réponse."
+        });
         return;
     }
-    if (!state) {
-        logger.error(`[AnswerHandler] Tournament state not found for code ${code}.`);
-        return;
-    }
-    // Replace currentIndex with currentQuestionUid for fetching the active question
+    // No need to check for `!state` again, it's covered above.
     const question = state.questions.find(q => q.uid === state.currentQuestionUid);
     if (!question) {
         logger.error(`[AnswerHandler] Question UID ${state.currentQuestionUid} not found in tournament state.`);
@@ -71,22 +74,38 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     const qIdx = state.questions.indexOf(question);
     if (qIdx < 0 || !state.questions || qIdx >= state.questions.length) {
         logger.warn(`tournament_answer: Invalid question index (${qIdx}) or missing questions for state ${stateKey}. Ignoring.`);
+        socket.emit("tournament_answer_result", {
+            questionUid,
+            rejected: true,
+            reason: "invalid_question_index",
+            message: "Question non valide ou non trouvée."
+        });
         return;
     }
     // Check if the answer is for the *current* question
     if (question.uid !== questionUid) {
         logger.warn(`tournament_answer: Answer received for wrong question (expected ${question.uid}, got ${questionUid}) for state ${stateKey}. Ignoring.`);
+        socket.emit("tournament_answer_result", {
+            questionUid,
+            rejected: true,
+            reason: "wrong_question",
+            message: "Réponse à une question incorrecte."
+        });
         return;
     }
-    // *** Use currentQuestionDuration from state if available ***
     const timeAllowed = state.currentQuestionDuration || question.temps || 20;
     const questionStart = state.questionStart;
     if (!questionStart) {
         logger.warn(`tournament_answer: questionStart missing for state ${stateKey}. Ignoring.`);
-        return; // Question hasn't properly started
+        socket.emit("tournament_answer_result", {
+            questionUid,
+            rejected: true,
+            reason: "question_not_started",
+            message: "La question n'a pas encore démarré."
+        });
+        return;
     }
     // Enhanced logging about quiz/tournament state
-    const serverReceiveTime = Date.now();
     const isPaused = state.paused;
     const isStopped = state.stopped;
     const isQuizMode = !!state.linkedQuizId;
@@ -97,9 +116,10 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     if (state.stopped) {
         logger.warn(`tournament_answer: Answer rejected because question is stopped for state ${stateKey}`);
         socket.emit("tournament_answer_result", {
+            questionUid,
             rejected: true,
             reason: "stopped",
-            message: "Trop tard !"
+            message: "Trop tard, la question est terminée !"
         });
         return;
     }
@@ -107,28 +127,26 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     if (!state.paused) {
         // Only check timing if the question is NOT paused
         // Check timing using server receive time with grace period
-        // *** Use the potentially updated timeAllowed ***
         if ((serverReceiveTime - questionStart) > timeAllowed * 1000 + 500) { // Add 500ms grace period
             logger.warn(`tournament_answer: Answer too late (server time, ${timeAllowed}s allowed) for state ${stateKey}. Ignoring.`);
             // Send rejection response back to client
             socket.emit("tournament_answer_result", {
-                correct: false,
+                questionUid,
                 rejected: true,
-                reason: "late",
-                message: "Trop tard !"
+                reason: "late_server",
+                message: "Trop tard ! (heure serveur)"
             });
             return;
         }
         // Also check client timestamp relative to question start
-        // *** Use the potentially updated timeAllowed ***
         if ((clientTimestamp - questionStart) > timeAllowed * 1000) {
             logger.warn(`tournament_answer: Answer too late (client time, ${timeAllowed}s allowed) for state ${stateKey}. Ignoring.`);
             // Send rejection response back to client
             socket.emit("tournament_answer_result", {
-                correct: false,
+                questionUid,
                 rejected: true,
-                reason: "late",
-                message: "Trop tard !"
+                reason: "late_client",
+                message: "Trop tard ! (heure client)"
             });
             return;
         }
@@ -147,96 +165,32 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
         logger.warn(`tournament_answer: Initializing state.answers[${joueurId}] for stateKey=${stateKey}`);
         state.answers[joueurId] = {};
     }
-    logger.debug(`tournament_answer: Storing answer for joueurId=${joueurId}, questionUid=${questionUid}, answerIdx=${answerIdx}, clientTimestamp=${clientTimestamp}`);
-    logger.debug(`tournament_answer: Current state.answers=${JSON.stringify(state.answers)}`);
-    state.answers[joueurId][questionUid] = { answerIdx, clientTimestamp };
-    logger.debug(`Stored answer for joueur ${joueurId} on question ${questionUid} in state ${stateKey}`);
-    // --- SCORE IMMEDIATELY IF NOT ALREADY SCORED ---
-    // Ensure joueurId is valid
-    const participant = state.participants.find(p => p.id === joueurId);
+    logger.debug(`tournament_answer: Storing answer for joueurId=${joueurId}, questionUid=${questionUid}, answerIdx=${answerIdx}, clientTimestamp=${clientTimestamp}, serverReceiveTime=${serverReceiveTime}`);
+    state.answers[joueurId][questionUid] = { answerIdx, clientTimestamp, serverReceiveTime }; // Store serverReceiveTime
+    logger.debug(`Stored answer for joueur ${joueurId} on question ${questionUid} in state ${stateKey}. Already answered: ${alreadyAnswered}`);
+    // --- SCORE CALCULATION, LEADERBOARD, AND DB SAVE REMOVED FROM HERE ---
+    // This logic will now be handled in handleTimerExpiration (tournaments) 
+    // or closeQuestionHandler (quizzes linked to tournaments).
+    // Send confirmation of answer registration
+    socket.emit("tournament_answer_result", {
+        questionUid,
+        registered: true,
+        message: alreadyAnswered ? "Réponse mise à jour." : "Réponse enregistrée.",
+        updated: alreadyAnswered
+    });
+    logger.info(`tournament_answer: Answer registered for joueur ${joueurId}, question ${questionUid}, state ${stateKey}.`);
+    // Ensure participant exists, primarily for logging or if needed for other non-scoring logic
+    const participant = (_b = state.participants) === null || _b === void 0 ? void 0 : _b.find(p => p.id === joueurId);
     if (!joueurId || !participant) {
-        logger.error(`[AnswerHandler] Invalid joueurId ${joueurId} or participant not found for tournament ${code}.`);
+        logger.error(`[AnswerHandler] Invalid joueurId ${joueurId} or participant not found for tournament ${code} after answer registration.`);
+        // This should ideally not happen if initial checks passed.
         return;
     }
-    // Ensure scoredQuestions is initialized for the participant
-    if (!participant.scoredQuestions) {
-        participant.scoredQuestions = {};
-    }
-    // Calculate the score for the current answer
-    const totalQuestions = state.questions.length;
-    const { baseScore, timePenalty, totalScore } = (0, scoreUtils_1.calculateScore)(question, { answerIdx, clientTimestamp }, state.questionStart || Date.now(), totalQuestions);
-    // Update the score for the current question
-    const participantScored = participant.scoredQuestions;
-    if (participantScored) {
-        participantScored[questionUid] = totalScore;
-        // Recalculate the total score for the participant
-        participant.score = Object.values(participantScored)
-            .reduce((sum, score) => sum + (Number(score) || 0), 0);
-    }
-    if (joueurId) {
-        logger.info(`Updated score for joueur ${joueurId} on question ${questionUid}: +${totalScore} (base=${baseScore}, timePenalty=${timePenalty})`);
-    }
-    // Always send feedback to the client for accepted answers (quiz or tournament mode)
-    socket.emit("tournament_answer_result", {
-        message: "Réponse enregistrée",
-        received: true
-    });
-    if (joueurId) {
-        logger.debug(`Sent receipt confirmation to joueur ${joueurId} for answer on question ${questionUid}`);
-    }
-    // Note: For regular tournaments (live or differed without quiz link), scoring happens when the timer ends or next question starts.
-    // --- QUIZ MODE: Compute and emit answer stats ---
-    if (isQuizMode && state.linkedQuizId) {
-        try {
-            // Aggregate all answers for this question
-            const answerCounts = Array.isArray(question.reponses) ? new Array(question.reponses.length).fill(0) : [];
-            let total = 0;
-            for (const jId in state.answers) {
-                const ans = state.answers[jId][questionUid];
-                if (!ans)
-                    continue;
-                // Support both single and multiple answers (choix_multiple)
-                if (Array.isArray(ans.answerIdx)) {
-                    ans.answerIdx.forEach(idx => {
-                        if (typeof idx === 'number' && answerCounts[idx] !== undefined) {
-                            answerCounts[idx]++;
-                        }
-                    });
-                    total++;
-                }
-                else if (typeof ans.answerIdx === 'number' && answerCounts[ans.answerIdx] !== undefined) {
-                    answerCounts[ans.answerIdx]++;
-                    total++;
-                }
-            }
-            // Compute percentages
-            const stats = answerCounts.map(count => total > 0 ? Math.round((count / total) * 100) : 0);
-            // Emit to both quiz and projection rooms
-            const quizId = state.linkedQuizId;
-            io.to(`dashboard_${quizId}`).emit("quiz_answer_stats_update", {
-                questionUid,
-                stats, // Array of percentages per answer index
-                totalAnswers: total
-            });
-            io.to(`projection_${quizId}`).emit("quiz_answer_stats_update", {
-                questionUid,
-                stats,
-                totalAnswers: total
-            });
-            logger.info(`[QUIZ_STATS] Emitted quiz_answer_stats_update for dashboard_${quizId} (question ${questionUid}):`, stats);
-        }
-        catch (err) {
-            logger.error(`[QUIZ_STATS] Failed to compute or emit stats for quiz mode:`, err);
-        }
-    }
-    // After storing the answer and sending receipt, log timer info for debugging
-    if (isDiffered) {
-        if (state.timer) {
-            logger.info(`[DIFF-TIMER][ANSWER] Timer is set for stateKey=${stateKey}, will fire at ${state.questionStart ? new Date(state.questionStart + (state.currentQuestionDuration || 0) * 1000).toISOString() : 'unknown'}`);
-        }
-        else {
-            logger.warn(`[DIFF-TIMER][ANSWER] No timer set for stateKey=${stateKey} after answer!`);
-        }
-    }
+    // If participant.scoredQuestions was used for something else other than immediate scoring,
+    // that logic would need to be re-evaluated. For now, it's assumed it was only for immediate scoring.
+    // if (!participant.scoredQuestions) {
+    //     participant.scoredQuestions = {};
+    // }
+    // No longer setting participant.scoredQuestions[questionUid] here.
 }
 exports.default = handleTournamentAnswer;

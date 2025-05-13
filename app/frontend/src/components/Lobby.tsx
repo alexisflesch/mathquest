@@ -20,7 +20,7 @@ import React from 'react';
 import Image from 'next/image';
 
 // TODO: Replace with real tournament lobby logic and props
-export default function TournamentLobby({ players = [], code = '', onStart }: { players?: { pseudo: string; avatar?: string }[]; code?: string; onStart?: () => void }) {
+export default function Lobby({ players = [], code = '', onStart }: { players?: { pseudo: string; avatar?: string }[]; code?: string; onStart?: () => void }) {
     return (
         <div className="bg-white rounded shadow p-4">
             <h2 className="text-xl font-bold mb-2">Lobby du Tournoi</h2>

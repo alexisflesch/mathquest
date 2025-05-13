@@ -20,13 +20,13 @@ import "@/app/globals.css";
 import { createLogger } from '@/clientLogger';
 import { useProjectionQuizSocket } from '@/hooks/useProjectionQuizSocket';
 import { useRouter } from 'next/navigation';
-import TournamentQuestionCard from '@/components/TournamentQuestionCard';
+import QuestionCard from '@/components/QuestionCard';
 import { Timer } from 'lucide-react'; // Suppression de MoveDiagonal2 et ZoomIn/ZoomOut car géré par ZoomControls
 import QRCode from 'react-qr-code';
 import ClassementPodium from '@/components/ClassementPodium';
 import ZoomControls from '@/components/ZoomControls'; // Import du nouveau composant
 import { Question } from '@/types'; // Remove unused QuizState import
-import type { TournamentQuestion } from '@/components/TournamentQuestionCard';
+import type { TournamentQuestion } from '@/components/QuestionCard';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const logger = createLogger('ProjectionPage');
@@ -201,7 +201,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     const [podiumKey, setPodiumKey] = useState(0);
     const [questionKey, setQuestionKey] = useState(0); // Ajout d'une clé pour la question
 
-    // State vars for TournamentQuestionCard - won't be used for interaction but needed for props
+    // State vars for QuestionCard - won't be used for interaction but needed for props
     // const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     // const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
 
@@ -317,7 +317,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     if (!layout || layout.length === 0) return <div className="p-8 text-orange-600">Aucun layout défini pour la projection.</div>;
 
     const currentQuestion = getCurrentQuestion();
-    // Map to TournamentQuestionCard's expected format
+    // Map to QuestionCard's expected format
     const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
         ? {
             uid: currentQuestion.uid,
@@ -424,7 +424,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                                             justifyContent: 'center',
                                         }}
                                     >
-                                        <TournamentQuestionCard
+                                        <QuestionCard
                                             key={questionKey}
                                             currentQuestion={currentTournamentQuestion}
                                             questionIndex={quizState?.questions.findIndex(q => q.uid === currentTournamentQuestion?.uid) ?? 0}

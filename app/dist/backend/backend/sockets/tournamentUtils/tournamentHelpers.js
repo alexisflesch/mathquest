@@ -18,9 +18,26 @@ exports.sendQuestionWithState = sendQuestionWithState;
 const logger_1 = __importDefault(require("../../logger"));
 const logger = (0, logger_1.default)('TournamentHelpers');
 const tournamentState_1 = require("./tournamentState");
+const tournamentState = tournamentState_1.tournamentState;
 const scoreUtils_1 = require("./scoreUtils");
-const sendTournamentQuestion_1 = require("./sendTournamentQuestion");
+const emitQuestionResults_1 = require("../sharedLiveLogic/emitQuestionResults");
+const sendQuestion_1 = require("../sharedLiveLogic/sendQuestion");
+const emitParticipantScoreUpdate_1 = require("../sharedLiveLogic/emitParticipantScoreUpdate");
 const db_1 = __importDefault(require("../../db"));
+// import { updateLeaderboardAndEmit } from './leaderboardUtils'; // To be re-evaluated
+// Placeholder for rank calculation - replace with actual implementation
+function calculateRanks(participants) {
+    const sortedParticipants = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
+    const ranks = new Map();
+    let currentRank = 1;
+    for (let i = 0; i < sortedParticipants.length; i++) {
+        if (i > 0 && (sortedParticipants[i].score || 0) < (sortedParticipants[i - 1].score || 0)) {
+            currentRank = i + 1;
+        }
+        ranks.set(sortedParticipants[i].id, currentRank);
+    }
+    return ranks;
+}
 /**
  * Gets the target to emit events to - handles live/differed mode
  *
@@ -41,59 +58,172 @@ function getEmitTarget(io, code, targetRoom = null, isDiffered = false) {
  * @param targetRoom - Optional specific room to target
  */
 async function handleTimerExpiration(io, code, targetRoom = null) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e;
     logger.info(`[handleTimerExpiration] ENTERED for code=${code}`);
-    logger.info(`[handleTimerExpiration] START for code=${code} at ${new Date().toISOString()}`);
-    const state = tournamentState_1.tournamentState[code];
+    const state = tournamentState[code]; // state is of type TournamentState
     if (!state || state.paused || state.stopped) {
         logger.debug(`[handleTimerExpiration] Early return for code=${code}. paused=${state === null || state === void 0 ? void 0 : state.paused}, stopped=${state === null || state === void 0 ? void 0 : state.stopped}`);
-        return; // Ignore if paused, stopped, or state doesn't exist
-    }
-    const question = state.questions.find((q) => q.uid === state.currentQuestionUid);
-    if (!question) {
-        logger.error(`[handleTimerExpiration] Question UID ${state.currentQuestionUid} not found in tournament state.`);
         return;
     }
-    logger.info(`Timer expired for question ${state.currentQuestionUid} (uid: ${question === null || question === void 0 ? void 0 : question.uid}) in tournament ${code}`);
-    // --- SCORING ---
-    // Set default score for participants who didn't answer
-    for (const participant of state.participants || []) {
-        if (!participant.answers) {
-            participant.answers = [];
+    const currentQuestionUid = state.currentQuestionUid;
+    if (!currentQuestionUid) {
+        logger.error(`[handleTimerExpiration] currentQuestionUid is not set for tournament ${code}. Cannot process scores.`);
+        return;
+    }
+    const question = state.questions.find((q) => q.uid === currentQuestionUid);
+    if (!question) {
+        logger.error(`[handleTimerExpiration] Question UID ${currentQuestionUid} not found in tournament state.`);
+        return;
+    }
+    logger.info(`Timer expired for question ${currentQuestionUid} (type: ${question.type}) in tournament ${code}`);
+    // --- SCORE PROCESSING & INDIVIDUAL UPDATES ---
+    const totalQuestionsInEvent = state.questions.length;
+    const questionStartTime = state.questionStart || Date.now(); // Fallback for questionStart
+    for (const participant of state.participants || []) { // participant is of type TournamentParticipant
+        let participantAnswerStore = (_a = state.answers) === null || _a === void 0 ? void 0 : _a[participant.id];
+        let rawAnswer = participantAnswerStore === null || participantAnswerStore === void 0 ? void 0 : participantAnswerStore[currentQuestionUid]; // rawAnswer is of type TournamentAnswer
+        let scoreForThisQuestion = 0;
+        // let processedAnswerForScoring: ProcessedAnswerForScoring; // Declared inside if block
+        if (rawAnswer && question.reponses) {
+            const clientTs = typeof rawAnswer.clientTimestamp === 'number' ? rawAnswer.clientTimestamp : questionStartTime;
+            const timeMs = Math.max(0, clientTs - questionStartTime);
+            let isCorrectOverall = false;
+            let submittedValue = undefined;
+            let answerIndices = rawAnswer.answerIdx;
+            if (question.type === 'QCU' || (question.type === 'QCM' && question.reponses.filter(r => r.correct).length === 1)) {
+                const correctOptionIndex = question.reponses.findIndex(r => r.correct);
+                if (rawAnswer.answerIdx === correctOptionIndex) {
+                    isCorrectOverall = true;
+                }
+                if (typeof rawAnswer.answerIdx === 'number' && question.reponses[rawAnswer.answerIdx]) {
+                    submittedValue = question.reponses[rawAnswer.answerIdx].texte;
+                }
+            }
+            else if (question.type === 'QCM') {
+                if (Array.isArray(rawAnswer.answerIdx)) {
+                    submittedValue = rawAnswer.answerIdx.map(idx => { var _a, _b; return (_b = (_a = question.reponses) === null || _a === void 0 ? void 0 : _a[idx]) === null || _b === void 0 ? void 0 : _b.texte; }).filter(t => !!t);
+                }
+                else if (typeof rawAnswer.answerIdx === 'number' && ((_b = question.reponses) === null || _b === void 0 ? void 0 : _b[rawAnswer.answerIdx])) {
+                    submittedValue = question.reponses[rawAnswer.answerIdx].texte;
+                }
+            }
+            const processedAnswerForScoring = {
+                answerIdx: answerIndices,
+                clientTimestamp: clientTs,
+                serverReceiveTime: rawAnswer.serverReceiveTime,
+                isCorrect: isCorrectOverall,
+                value: submittedValue,
+                timeMs: timeMs,
+            };
+            const scoreResult = (0, scoreUtils_1.calculateScore)(question, processedAnswerForScoring, totalQuestionsInEvent);
+            scoreForThisQuestion = scoreResult.normalizedQuestionScore;
+            if (question.type === 'QCM') {
+                // For QCM, isCorrect should reflect if any points were scored before penalty
+                processedAnswerForScoring.isCorrect = scoreResult.scoreBeforePenalty > 0;
+            }
+            rawAnswer.score = scoreResult.normalizedQuestionScore;
+            rawAnswer.baseScore = scoreResult.scoreBeforePenalty;
+            rawAnswer.timePenalty = scoreResult.timePenalty;
+            rawAnswer.isCorrect = processedAnswerForScoring.isCorrect;
+            rawAnswer.value = processedAnswerForScoring.value;
+            rawAnswer.timeMs = processedAnswerForScoring.timeMs;
         }
-        // Check if the participant has already answered this question
-        const existingAnswer = participant.answers.find((a) => a.questionUid === state.currentQuestionUid);
-        if (!existingAnswer) {
-            // Create a default "no answer" submission
-            const defaultAnswer = {
-                questionUid: state.currentQuestionUid,
-                value: null,
-                timeMs: 0,
-                timestamp: Date.now(),
+        else {
+            logger.debug(`[handleTimerExpiration] No answer for participant ${participant.id} on Q ${currentQuestionUid}, or Q has no responses. Score: 0`);
+            const noAnswerEntry = {
+                questionUid: currentQuestionUid,
+                answerIdx: undefined,
+                clientTimestamp: questionStartTime,
+                serverReceiveTime: Date.now(), // This property must be recognized by TournamentAnswer type
                 isCorrect: false,
+                value: "Pas de réponse",
+                timeMs: (question.temps || 0) * 1000,
                 score: 0,
                 baseScore: 0,
-                timePenalty: 0
+                timePenalty: (question.temps || 0) > 0 ? 500 : 0
             };
-            participant.answers.push(defaultAnswer);
-            logger.debug(`[handleTimerExpiration] Added default "no answer" for participant ${participant.id}`);
+            if (!state.answers) {
+                state.answers = {};
+            }
+            if (!state.answers[participant.id]) {
+                state.answers[participant.id] = {};
+            }
+            state.answers[participant.id][currentQuestionUid] = noAnswerEntry;
+            rawAnswer = noAnswerEntry; // So that scoreForThisQuestion (0) is correctly assigned below
+            scoreForThisQuestion = 0; // Explicitly set, though noAnswerEntry.score is 0
         }
-        // Recalculate total score across all answers
-        let totalScore = 0;
-        if (participant.answers && participant.answers.length > 0) {
-            totalScore = participant.answers.reduce((sum, ans) => sum + (ans.score || 0), 0);
+        // Update participant's total score by summing `score` from all their answers
+        let newTotalScore = 0;
+        if (state.answers && state.answers[participant.id]) {
+            newTotalScore = Object.values(state.answers[participant.id]).reduce((sum, ans) => sum + (ans.score || 0), 0);
         }
-        participant.score = totalScore;
-        // Save score to database for persistent tournaments
-        if (state.tournoiId && participant.id) {
-            (0, scoreUtils_1.saveParticipantScore)(db_1.default, state.tournoiId, participant) // Added prisma
-                .catch((err) => logger.error(`[handleTimerExpiration] Error saving score: ${err.message}`));
+        participant.score = newTotalScore;
+        // Optional: Store this question's score in participant.scoredQuestions if used elsewhere
+        if (!participant.scoredQuestions) {
+            participant.scoredQuestions = {};
+        }
+        participant.scoredQuestions[currentQuestionUid] = scoreForThisQuestion;
+        // Save score to DB
+        if (state.tournoiId && participant.id && !participant.id.startsWith('socket_')) {
+            (0, scoreUtils_1.saveParticipantScore)(db_1.default, state.tournoiId, { id: participant.id, score: participant.score })
+                .catch((err) => logger.error(`[handleTimerExpiration] DB Score Save Error for ${participant.id}: ${err.message}`));
         }
     }
-    // --- STOPPING CONDITION ---
-    // Check if we've reached the end of the questions
-    if (((_a = state.settings) === null || _a === void 0 ? void 0 : _a.autoProgress) && state.askedQuestions.size >= state.questions.length) {
-        logger.info(`[handleTimerExpiration] Tournament ${code} has shown all questions. autoProgress=${(_b = state.settings) === null || _b === void 0 ? void 0 : _b.autoProgress}, asked=${state.askedQuestions.size}, total=${state.questions.length}`);
+    // --- CALCULATE RANKS & EMIT INDIVIDUAL SCORE UPDATES ---
+    const ranks = calculateRanks(state.participants || []);
+    for (const participant of state.participants || []) {
+        const participantSocketId = Object.keys(state.socketToJoueur || {}).find(socketId => { var _a; return ((_a = state.socketToJoueur) === null || _a === void 0 ? void 0 : _a[socketId]) === participant.id; });
+        if (participantSocketId) {
+            const targetSocket = io.sockets.sockets.get(participantSocketId);
+            if (targetSocket) {
+                const rank = ranks.get(participant.id) || 0;
+                (0, emitParticipantScoreUpdate_1.emitParticipantScoreUpdate)(targetSocket, {
+                    newTotalScore: participant.score || 0,
+                    currentRank: rank
+                });
+            }
+            else {
+                logger.warn(`[handleTimerExpiration] Socket instance NOT FOUND for socket ID ${participantSocketId}`);
+            }
+        }
+        else {
+            logger.warn(`[handleTimerExpiration] Socket ID NOT FOUND for participant ${participant.id} to emit score update.`);
+        }
+    }
+    // --- EMIT QUESTION RESULTS (Correct Answers) ---
+    if (question.reponses && currentQuestionUid) {
+        // Get the correct answer texts (preferred for display)
+        const correctAnswersText = question.reponses
+            .filter(ans => ans.correct)
+            .map(ans => ans.texte);
+        // Create leaderboard data
+        const leaderboardData = (state.participants || []).map(p => ({
+            id: p.id,
+            name: p.pseudo || 'Anonymous',
+            score: p.score || 0,
+            rank: ranks.get(p.id) || 0
+        })).sort((a, b) => a.rank - b.rank);
+        // Prepare the results parameters
+        const resultsParams = {
+            questionUid: currentQuestionUid,
+            correctAnswers: correctAnswersText,
+            leaderboard: leaderboardData
+        };
+        // Convert the room target to the appropriate type
+        const roomTarget = targetRoom ?
+            (targetRoom.startsWith('live_') ? targetRoom : targetRoom) :
+            `live_${code}`;
+        // Emit the results using the updated signature
+        (0, emitQuestionResults_1.emitQuestionResults)(io, roomTarget, resultsParams);
+    }
+    else {
+        logger.warn(`[handleTimerExpiration] Could not find question responses for UID: ${currentQuestionUid} to emit correct answers.`);
+    }
+    // --- LEADERBOARD UPDATE (If applicable) ---
+    // updateLeaderboardAndEmit(io, code, state); // Re-evaluate if leaderboardUtils.ts is restored/used
+    // --- STOPPING CONDITION & AUTO PROGRESSION (largely unchanged) ---
+    if (((_c = state.settings) === null || _c === void 0 ? void 0 : _c.autoProgress) && state.askedQuestions.size >= state.questions.length) {
+        logger.info(`[handleTimerExpiration] Tournament ${code} has shown all questions. autoProgress=${(_d = state.settings) === null || _d === void 0 ? void 0 : _d.autoProgress}, asked=${state.askedQuestions.size}, total=${state.questions.length}`);
         // In auto-progress mode, stop the tournament when all questions have been shown
         state.stopped = true;
         // Emit a special event to mark the end of the tournament
@@ -109,7 +239,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
     }
     // --- AUTO PROGRESSION ---
     // Find the next question index
-    if (!((_c = state.settings) === null || _c === void 0 ? void 0 : _c.autoProgress)) {
+    if (!((_e = state.settings) === null || _e === void 0 ? void 0 : _e.autoProgress)) {
         logger.info(`[handleTimerExpiration] Tournament ${code} is not set to auto-progress. Waiting for manual advancement.`);
         return;
     }
@@ -119,7 +249,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
     }
     // Auto-progress logic (non-linked tournaments only)
     let nextIndex = -1;
-    const currentIndex = state.questions.findIndex((q) => q.uid === state.currentQuestionUid);
+    const currentIndex = state.questions.findIndex((q) => q.uid === currentQuestionUid);
     if (currentIndex !== -1) {
         // Simple progression: move to the next question in the array
         nextIndex = currentIndex + 1;
@@ -163,7 +293,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
  */
 function sendQuestionWithState(io, code, questionIndex, questionUid = undefined, targetRoom = null, isDiffered = false) {
     var _a, _b, _c;
-    const state = tournamentState_1.tournamentState[code];
+    const state = tournamentState[code];
     if (!state || !state.questions || state.questions.length === 0) {
         logger.error(`[sendQuestionWithState] Invalid state for code ${code}`);
         return;
@@ -183,9 +313,11 @@ function sendQuestionWithState(io, code, questionIndex, questionUid = undefined,
     }
     const questionId = question.uid;
     state.currentQuestionUid = questionId;
-    state.currentQuestionIndex = questionIndex;
+    state.currentIndex = questionIndex; // Ensure current index is set
+    state.currentQuestionIndex = questionIndex; // For backward compatibility
+    state.questionStart = Date.now(); // Set the question start time
     const timer = ((_a = state.settings) === null || _a === void 0 ? void 0 : _a.timer) || 60;
-    logger.info(`[sendQuestionWithState] Sending question ${questionId} to tournament ${code} with timer=${timer}s`);
+    logger.info(`[sendQuestionWithState] Preparing to send question ${questionId} to tournament ${code} with timer=${timer}s`);
     // Initialize or update the question timer with the full time
     if (!state.questionTimers) {
         state.questionTimers = {};
@@ -196,23 +328,23 @@ function sendQuestionWithState(io, code, questionIndex, questionUid = undefined,
         lastUpdateTime: Date.now(),
         status: (state.paused || state.stopped) ? 'pause' : 'play'
     };
-    // Get the target for emitting events (either specific room or based on mode)
-    const target = getEmitTarget(io, code, targetRoom, isDiffered);
-    // Send the question data to clients
+    // Determine the room name for the shared sendQuestion function
+    const roomName = targetRoom !== null && targetRoom !== void 0 ? targetRoom : (isDiffered ? `differed_${code}` : `live_${code}`);
+    // Prepare mode-specific data
+    const modeSpecificData = {
+        tournoiState: state.paused ? 'paused' : state.stopped ? 'stopped' : 'running',
+        // questionId: questionId, // questionId is part of FilteredQuestion in shared sendQuestion
+        code: code // Include tournament code if needed by client for this event
+    };
+    // Send the question data to clients using the shared function
     try {
-        (0, sendTournamentQuestion_1.sendTournamentQuestion)(target, {
-            code,
-            question,
-            timer,
-            tournoiState: state.paused ? 'paused' : state.stopped ? 'stopped' : 'running',
-            questionIndex,
-            questionId
-        });
+        (0, sendQuestion_1.sendQuestion)(io, roomName, question, // The full question object
+        timer, questionIndex, state.questions.length, modeSpecificData);
     }
     catch (err) {
-        logger.error(`[sendQuestionWithState] Error sending question: ${err instanceof Error ? err.message : String(err)}`);
+        logger.error(`[sendQuestionWithState] Error sending question via shared function: ${err instanceof Error ? err.message : String(err)}`);
     }
-    logger.info(`[sendQuestionWithState] Successfully sent question ${questionId} to tournament ${code}`);
+    logger.info(`[sendQuestionWithState] Successfully initiated sending question ${questionId} to room ${roomName} for tournament ${code}`);
     // For logging and debugging
     const participantsCount = ((_b = state.participants) === null || _b === void 0 ? void 0 : _b.length) || 0;
     const answeredCount = ((_c = state.participants) === null || _c === void 0 ? void 0 : _c.filter((p) => { var _a; return (_a = p.answers) === null || _a === void 0 ? void 0 : _a.some((a) => a.questionUid === questionId); }).length) || 0;

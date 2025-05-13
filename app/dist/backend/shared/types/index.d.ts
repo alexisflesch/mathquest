@@ -6,6 +6,7 @@
  * Import this file using:
  * import { Question, Answer, ... } from '@shared/types';
  */
+export * from './question';
 export * from './quiz/question';
 export * from './quiz/state';
 export * from './tournament/participant';

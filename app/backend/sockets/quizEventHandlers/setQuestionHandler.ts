@@ -21,6 +21,7 @@ import {
     updateQuestionTimer,
     emitQuizTimerUpdate
 } from '../quizUtils';
+import { sendQuestion as sendSharedQuestion } from '../sharedLiveLogic/sendQuestion'; // Added import
 
 // Import using require for now until these are converted to TypeScript
 // TODO: Convert these imports to TypeScript imports when available
@@ -175,6 +176,29 @@ async function handleSetQuestion(
     // Broadcast updated state to dashboard room
     io.to(`dashboard_${quizId}`).emit('quiz_state_update', dashboardState);
     logger.info(`[SetQuestion] Emitted quiz_state_update to dashboard_${quizId}`);
+
+    // Send standardized live_question to projector room for the quiz
+    const currentQuestionObject = quizState[quizId].questions[finalQuestionIdx];
+    if (currentQuestionObject) {
+        const timerDuration = questionTimer?.initialTime ?? currentQuestionObject.temps ?? undefined;
+        const modeSpecificData = {
+            quizId: quizId,
+            locked: quizState[quizId].locked,
+            // Add any other quiz-specific details the projector might need
+        };
+        sendSharedQuestion(
+            io,
+            `projection_${quizId}`,
+            currentQuestionObject,
+            timerDuration,
+            finalQuestionIdx,
+            quizState[quizId].questions.length,
+            modeSpecificData
+        );
+        logger.info(`[SetQuestion] Emitted live_question to projection_${quizId} for question ${questionUid}`);
+    } else {
+        logger.warn(`[SetQuestion] Could not find currentQuestionObject for UID ${questionUid} in quiz ${quizId} to send to projector.`);
+    }
 
     // Trigger tournament question change if linked to a tournament
     if (tournamentCode) {

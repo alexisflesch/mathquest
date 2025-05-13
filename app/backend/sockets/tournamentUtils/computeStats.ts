@@ -6,7 +6,7 @@
  */
 
 import { TournamentState, TournamentAnswer as PlayerSubmittedAnswer } from '../types/tournamentTypes';
-import { Question, Answer as QuestionAnswerOption } from '../types/quizTypes';
+import { Question, QuestionOptionAnswer as QuestionAnswerOption } from '../types/quizTypes';
 
 interface AnswerStat {
     answer: string; // The text of the answer option

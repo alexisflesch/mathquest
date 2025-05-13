@@ -58,8 +58,25 @@ function computeQuizModeScore(
     // Calculate the effective question start time by subtracting paused time
     const effectiveStartTime = questionStart + pausedTime;
 
-    // Use the calculateScore utility, passing the effective start time
-    return calculateScore(question, answer, effectiveStartTime, totalQuestions);
+    // Create a processed answer object compatible with the new calculateScore signature
+    const processedAnswer = {
+        answerIdx: answer.answerIdx,
+        clientTimestamp: answer.clientTimestamp || 0,
+        serverReceiveTime: answer.serverReceiveTime,
+        isCorrect: false, // We'll let calculateScore determine this
+        timeMs: answer.clientTimestamp ? answer.clientTimestamp - effectiveStartTime : 0, // Calculate time taken
+        value: undefined // We don't have access to the actual text values here
+    };
+
+    // Use the calculateScore utility with the new signature
+    const result = calculateScore(question, processedAnswer, totalQuestions);
+
+    // Map the result properties to the expected interface
+    return {
+        baseScore: result.scoreBeforePenalty || 0,
+        timePenalty: result.timePenalty || 0,
+        totalScore: result.normalizedQuestionScore || 0
+    };
 }
 
 /**

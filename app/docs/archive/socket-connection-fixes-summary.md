@@ -1,6 +1,6 @@
 # Socket.IO Connection Fixes Summary
 
-*Last updated: May 12, 2025*
+*Last updated: May 13, 2025*
 
 ## Overview
 
@@ -28,6 +28,20 @@ This document summarizes the recent fixes and improvements made to the Socket.IO
    - Created proper type definitions for socket events
    - Updated socket hooks to use TypeScript interfaces
    - Documented best practices in `typescript-socket-integration.md`
+
+5. **Fixed Direct Socket Connections in Components (May 13, 2025)**
+   - Updated `/frontend/src/app/lobby/[code]/page.tsx` to use `SOCKET_CONFIG` instead of hardcoded Socket.IO options
+   - Updated `/frontend/src/app/live/[code]/page.tsx` to use `SOCKET_CONFIG` instead of hardcoded Socket.IO options
+   - Verified that hooks (`useTeacherQuizSocket` and `useProjectionQuizSocket`) were already correctly using `SOCKET_CONFIG`
+   - Added proper imports for `SOCKET_CONFIG` from `@/config` in affected files
+   - Fixed port mismatches (connecting to frontend 3008 instead of backend 3007)
+
+6. **Fixed CORS and WebSocket Connection Issues (May 13, 2025)**
+   - Added proper CORS headers to all HTTP responses in the backend server
+   - Updated Socket.IO CORS configuration to use specific frontend origin instead of wildcard
+   - Fixed WebSocket connection failures by ensuring consistent transport options
+   - Added environment variable support for frontend URL
+   - See detailed information in [cors-fixes.md](cors-fixes.md)
 
 5. **Environment Variables**
    - Fixed loading of environment variables with dotenv
@@ -105,6 +119,34 @@ The socket connections now work reliably with:
 - Proper event propagation in both directions
 - Reconnection working if connection is temporarily lost
 - Appropriate error handling and logging
+
+## Recent Fixes (May 13, 2025)
+
+### Socket Connection Code Before Fix
+
+```typescript
+// Example from lobby page (frontend/src/app/lobby/[code]/page.tsx)
+const socket = io({
+    path: "/api/socket/io",
+    transports: ["websocket"],
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 20000
+});
+```
+
+### Socket Connection Code After Fix
+
+```typescript
+// Example from lobby page (frontend/src/app/lobby/[code]/page.tsx)
+import { SOCKET_CONFIG } from '@/config';
+
+const socket = io(SOCKET_CONFIG.url, {
+    ...SOCKET_CONFIG
+});
+```
+
+This critical fix ensures that all socket connections properly use the backend URL from environment variables instead of defaulting to the current host (which was causing connections to the frontend port 3008 instead of the backend port 3007).
 
 See [socket-connection-test-report.md](./socket-connection-test-report.md) for detailed testing results.
 

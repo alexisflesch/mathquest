@@ -83,8 +83,8 @@ async function handleJoinQuiz(
                                 discipline: dbQuestion.discipline,
                                 explication: dbQuestion.explication || undefined,
                                 hidden: dbQuestion.hidden || undefined,
-                                // Map reponses to answers if needed
-                                answers: Array.isArray(dbQuestion.reponses) ?
+                                // Use reponses as the primary field (recommended)
+                                reponses: Array.isArray(dbQuestion.reponses) ?
                                     dbQuestion.reponses.map((r: any) => ({ texte: r.texte, correct: r.correct })) :
                                     []
                             };
