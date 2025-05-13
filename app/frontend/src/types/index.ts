@@ -1,47 +1,36 @@
-// Shared response type for quiz questions
-export interface Response {
-    texte: string;
-    correct: boolean;
-}
+/**
+ * Frontend type definitions - now using shared types where possible
+ */
+import {
+    BaseQuizState,
+    Question as BaseQuestion,
+    Answer, // Keep this import as it's used for Response alias
+    Logger as BaseLogger
+} from '@shared/types';
 
-// Base question type (extend as needed in specific files)
-export interface Question {
-    uid: string;
+// Re-export shared types
+export type { Answer } from '@shared/types'; // Ensured "export type" is used
+
+// Frontend-specific Response type (alias for Answer for backward compatibility)
+export type Response = Answer;
+
+// Frontend-specific Question extensions
+export interface Question extends BaseQuestion {
+    // Ensure frontend expected properties are required
     question: string;
     reponses: Response[];
-    temps?: number;
-    type?: string;
-    explication?: string;
-    difficulte?: number;
-    niveau?: string;
-    auteur?: string;
-    titre?: string;      // Optional title
-    hidden?: boolean;    // Optional hidden flag
-    tags?: string[];
-    discipline?: string;
-    theme?: string;
 }
 
-// Shared quiz state type
-export interface QuizState {
+// Frontend-specific QuizState extensions
+export interface QuizState extends BaseQuizState {
+    // Ensure frontend expected properties are defined
     currentQuestionIdx: number | null;
-    questions: Question[];
-    chrono: { timeLeft: number | null; running: boolean };
-    locked: boolean;
-    ended: boolean;
     stats: Record<string, unknown>;
+    // Frontend uses a slightly different chrono structure
+    chrono: { timeLeft: number | null; running: boolean };
 }
 
 /**
- * Shared Logger interface for server-side logging
- * 
- * This interface is used to provide consistent typing for the logger
- * created by the createLogger function from @logger.
- * Use this interface when importing the logger in API routes.
+ * Re-export the shared Logger interface
  */
-export interface Logger {
-    debug: (message: string, context?: unknown) => void;
-    info: (message: string, context?: unknown) => void;
-    warn: (message: string, context?: unknown) => void;
-    error: (message: string, context?: unknown) => void;
-}
+export type Logger = BaseLogger;

@@ -3,7 +3,15 @@
     "compilerOptions": {
         "composite": true,
         "rootDir": ".",
-        "outDir": "../dist/shared"
+        "outDir": "../dist/shared",
+        "baseUrl": ".",
+        "paths": {
+            "@shared/*": [
+                "./*"
+            ]
+        },
+        "declaration": true,
+        "esModuleInterop": true
     },
     "include": [
         "**/*.ts"

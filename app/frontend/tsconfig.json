@@ -9,9 +9,10 @@
             "esnext"
         ],
         "module": "esnext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "allowJs": true,
         "outDir": "../dist/frontend",
+        "rootDir": "..",
         "jsx": "preserve",
         "incremental": true,
         "isolatedModules": true,
@@ -20,25 +21,25 @@
                 "name": "next"
             }
         ],
-        "baseUrl": "./src",
+        "baseUrl": ".",
         "paths": {
             "@/*": [
-                "*"
+                "src/*"
             ],
             "@components/*": [
-                "components/*"
+                "src/components/*"
             ],
             "@shared/*": [
-                "../../shared/*"
+                "../shared/*"
             ],
             "@logger": [
-                "../../shared/logger.ts"
+                "../shared/logger.ts"
             ],
             "@db": [
-                "../../backend/db/index.ts"
+                "../backend/db/index.ts"
             ],
             "@prisma/client": [
-                "../../shared/prisma-client"
+                "../shared/prisma-client"
             ]
         },
         "noEmit": true
@@ -48,12 +49,14 @@
         "src/**/*.ts",
         "src/**/*.tsx",
         ".next/types/**/*.ts",
-        "../../shared/**/*.ts",
-        "next.config.ts",
-        ".eslintrc.json"
+        "../shared/types/**/*.ts",
+        "../shared/logger.ts",
+        "../backend/db/index.ts",
+        "next.config.ts"
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "../dist"
     ]
 }

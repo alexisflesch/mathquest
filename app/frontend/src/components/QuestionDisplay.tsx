@@ -11,7 +11,7 @@ export interface QuestionDisplayProps {
         question: string; // Renommé depuis 'enonce' pour correspondre à SortableQuestion
         reponses: { texte: string; correct: boolean }[];
         niveaux?: string[]; // Ajouté pour correspondre
-        niveau?: string;
+        niveau?: string | string[]; // Changed to allow string[]
         categories?: string[]; // Ajouté pour correspondre
         discipline?: string;
         themes?: string[]; // Ajouté pour correspondre
