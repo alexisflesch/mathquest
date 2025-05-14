@@ -70,7 +70,7 @@ export function sendQuestionToTournament(io: Server, quizId: string, questionId:
 
     try {
         const timer = getQuestionTimer(quizId, questionId);
-        const timeLeft = timer ? timer.timeLeft : (question.temps || 20);
+        const timeLeft = timer ? timer.timeLeft : (question.time || 20);
         const questionStateStatus = timer ? (timer.status === 'play' ? 'active' : timer.status) : 'stopped';
 
         // Use triggerTournamentQuestion from tournamentUtils to ensure proper state update

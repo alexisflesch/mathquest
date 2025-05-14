@@ -9,10 +9,10 @@
  */
 export interface Participant {
     id: string;
-    pseudo: string;
+    nickname: string; // Renamed from pseudo
     avatar: string;
     score: number;
-    isDiffered?: boolean;
+    isDeferred?: boolean; // Renamed from isDiffered
     socketId?: string;
     scoredQuestions?: Record<string, number>;
 }
@@ -45,7 +45,7 @@ export interface TournamentParticipant extends Participant {
  */
 export interface LeaderboardEntry {
     id: string;
-    pseudo: string;
+    nickname: string; // Renamed from pseudo
     avatar?: string;
     score: number;
 }

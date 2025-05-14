@@ -2,21 +2,34 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
-import { BaseQuestion } from '@shared/types/question';
+import { BaseQuestion, Answer } from '@shared/types/question'; // MODIFIED: Added Answer import
 
 const logger = createLogger('useTeacherQuizSocket');
 
 // --- Types (Consider moving to a shared types file if used elsewhere) ---
-interface Response {
-    texte: string;
-    correct: boolean;
-}
+// REMOVED local Response interface
+// interface Response {
+//     texte: string;
+//     correct: boolean;
+// }
+
 export interface Question extends BaseQuestion {
-    question: string; // Frontend-specific field for question text
-    reponses: Response[]; // Overrides BaseQuestion's reponses to use Response type
-    temps?: number; // Time limit for the question in seconds
-    explication?: string; // Explanation for the correct answer
+    // These fields are now aligned with BaseQuestion.
+    // If they were intended to be different, this might need adjustment.
+    // question: string; // Now using text from BaseQuestion
+    // reponses: Response[]; // Now using responses from BaseQuestion
+    // temps?: number; // Now using time from BaseQuestion
+    // explication?: string; // Now using explanation from BaseQuestion
+
+    // If Question interface here needs to ensure certain BaseQuestion fields are non-optional,
+    // or add truly new fields, they would be listed here.
+    // For now, assuming it aligns with BaseQuestion for common properties.
+    // Example: if 'text' needed to be enforced as always present (if BaseQuestion made it optional)
+    // text: string; 
+    // Example: if 'responses' needed to be enforced
+    // responses: Answer[];
 }
+
 export interface QuizState {
     currentQuestionIdx: number | null;
     questions: Question[];
@@ -193,7 +206,7 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
                     // Determine the initial time to preserve - try multiple sources
                     const initialTime = existingTimer?.initialTime ||  // Use existing stored initial time if available
                         (existingTimer?.status === 'play' || existingTimer?.status === 'pause' ? existingTimer.timeLeft : 0) || // Or use current timeLeft if running/paused
-                        question?.temps || 0; // Or fall back to question default time
+                        question?.time || 0; // Or fall back to question default time // MODIFIED: temps -> time
 
                     // Store the initial time in the timer state (for future reference),
                     // but set timeLeft to 0 for visual display purposes
@@ -224,7 +237,7 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
                 else if (data.timeLeft > 0) {
                     const question = quizState?.questions?.find(q => q.uid === data.questionId);
                     // Determine initial time to preserve (either from existing timer state or question default)
-                    const initialTime = existingTimer?.initialTime || question?.temps || data.timeLeft;
+                    const initialTime = existingTimer?.initialTime || question?.time || data.timeLeft; // MODIFIED: temps -> time
 
                     logger.debug(`[UI TIMER FIX] Using backend time value (${data.timeLeft}s) for ${data.questionId}`);
                     newTimerState = {
@@ -240,10 +253,10 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
                     const question = quizState?.questions?.find(q => q.uid === data.questionId);
                     const fallbackTimeLeft = (existingTimer?.timeLeft > 0)
                         ? existingTimer.timeLeft
-                        : (question?.temps || 0);
+                        : (question?.time || 0); // MODIFIED: temps -> time
 
                     // Determine initial time to preserve
-                    const initialTime = existingTimer?.initialTime || question?.temps || fallbackTimeLeft;
+                    const initialTime = existingTimer?.initialTime || question?.time || fallbackTimeLeft; // MODIFIED: temps -> time
 
                     logger.debug(`[UI TIMER FIX] Using fallback time (${fallbackTimeLeft}s) for ${data.questionId}`);
                     newTimerState = {
@@ -321,12 +334,12 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             const prevQuestion = quizState.questions.find(q => q.uid === prevId);
 
             if (prevQuestion && (!prevTimer || prevTimer.status === 'stop')) {
-                logger.debug(`[UI TIMER FIX] Previous question ${prevId} not paused, safe to reset timer to initial value (${prevQuestion.temps ?? 0})`);
+                logger.debug(`[UI TIMER FIX] Previous question ${prevId} not paused, safe to reset timer to initial value (${prevQuestion.time ?? 0})`); // MODIFIED: temps -> time
                 setQuestionTimers(prev => ({
                     ...prev,
                     [prevId]: {
                         status: 'stop',
-                        timeLeft: prevQuestion.temps ?? 0,
+                        timeLeft: prevQuestion.time ?? 0, // MODIFIED: temps -> time
                         timestamp: null
                     }
                 }));
@@ -347,13 +360,13 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
                     logger.debug(`[UI TIMER FIX] Using existing timer state for question ${timerQuestionId}: ${JSON.stringify(prev[timerQuestionId])}`);
                     return prev;
                 }
-                logger.debug(`[UI TIMER FIX] Setting initial timer for new question ${timerQuestionId} to ${question.temps ?? 0}`);
+                logger.debug(`[UI TIMER FIX] Setting initial timer for new question ${timerQuestionId} to ${question.time ?? 0}`); // MODIFIED: temps -> time
                 return {
                     ...prev,
                     [timerQuestionId]: {
                         status: 'stop',
-                        timeLeft: question.temps ?? 0,
-                        initialTime: question.temps ?? 0, // Store initial time
+                        timeLeft: question.time ?? 0, // MODIFIED: temps -> time
+                        initialTime: question.time ?? 0, // Store initial time // MODIFIED: temps -> time
                         timestamp: null
                     }
                 };
@@ -361,8 +374,8 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
 
             // Only set localTimeLeft if not already set for this question
             if (localTimeLeftRef.current === null || timerQuestionId !== prevId) {
-                setLocalTimeLeft(question.temps ?? 0);
-                localTimeLeftRef.current = question.temps ?? 0;
+                setLocalTimeLeft(question.time ?? 0); // MODIFIED: temps -> time
+                localTimeLeftRef.current = question.time ?? 0; // MODIFIED: temps -> time
             }
         } else {
             // Case 2: Timer state exists, check if we need to restore from a stopped state
@@ -424,7 +437,7 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             // If timer is stopped, use the stored initial value or revert to question's default
             else if (questionTimer.status === 'stop') {
                 // Use the stored initialTime if available, otherwise fall back to question's default
-                const initialTime = questionTimer.initialTime !== undefined ? questionTimer.initialTime : (question.temps || 0);
+                const initialTime = questionTimer.initialTime !== undefined ? questionTimer.initialTime : (question.time || 0); // MODIFIED: temps -> time
 
                 // CRITICAL FIX: When displaying a stopped question, check if it's showing 0 (just stopped) or if we're switching back to it
                 if (questionTimer.timeLeft === 0) {
@@ -458,7 +471,7 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             }
         } else {
             // No timer state exists yet, use the question's default
-            const defaultTime = question.temps || 0;
+            const defaultTime = question.time || 0; // MODIFIED: temps -> time
             logger.info(`[UI TIMER FIX] No existing timer for question ${timerQuestionId}, using default ${defaultTime}s`);
             setTimeLeft(defaultTime);
             setLocalTimeLeft(defaultTime);
@@ -607,9 +620,9 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             // Use question default time
             if (quizState && quizState.questions) {
                 const question = quizState.questions.find(q => q.uid === questionUid);
-                if (question && question.temps !== undefined) {
-                    setTimeLeft(question.temps);
-                    setLocalTimeLeft(question.temps);
+                if (question && question.time !== undefined) {
+                    setTimeLeft(question.time);
+                    setLocalTimeLeft(question.time);
                 }
             }
         }
@@ -675,7 +688,7 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             const question = quizState?.questions?.find(q => q.uid === action.questionId);
 
             // Get the initial time to preserve for later
-            const initialTime = question?.temps ||
+            const initialTime = question?.time ||
                 (questionTimer?.initialTime ||
                     (questionTimer?.timeLeft > 0 ? questionTimer.timeLeft : 0));
 

@@ -21,7 +21,6 @@ export interface Question extends BaseQuestion {
 
     // Additional fields needed by the backend
     question?: string;  // Alternative field for question text
-    answers?: Answer[]; // Alternative field for answers array
     hidden?: boolean;   // Whether the question is hidden
     title?: string;     // Alternative title for the question
 }

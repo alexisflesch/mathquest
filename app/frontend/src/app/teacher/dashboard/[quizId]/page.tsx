@@ -130,7 +130,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 // Initialize local question state, ensuring 'temps' exists
                 const initialQuestions = (questionsData.questions || []).map((q: Question) => ({
                     ...q,
-                    temps: q.temps ?? 60 // Default to 60s if undefined
+                    temps: q.time ?? 60 // Default to 60s if undefined
                 }));
                 if (isMounted) setQuestions(initialQuestions);
 
@@ -306,7 +306,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             }
             if (questionToPlay) {
                 setQuestionActiveUid(questionToPlay.uid);
-                emitSetQuestion(questionToPlay.uid, questionToPlay.temps);
+                emitSetQuestion(questionToPlay.uid, questionToPlay.time);
             }
             setPendingPlayIdx(null);
         }

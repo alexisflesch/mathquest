@@ -25,8 +25,8 @@ function sendTournamentQuestion(targetEmitter, payload) {
         type: payload.question.type,
         uid: payload.question.uid,
         question: (_a = payload.question.question) !== null && _a !== void 0 ? _a : '',
-        answers: Array.isArray(payload.question.reponses)
-            ? payload.question.reponses.map(r => r.texte)
+        answers: Array.isArray(payload.question.answers)
+            ? payload.question.answers.map(r => r.text)
             : [],
         index: payload.questionIndex,
         tournoiState: payload.tournoiState,

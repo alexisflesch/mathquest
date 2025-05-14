@@ -2,7 +2,7 @@
  * Answer type for questions
  */
 export interface Answer {
-    texte: string;
+    text: string;
     correct: boolean;
 }
 /**
@@ -10,9 +10,10 @@ export interface Answer {
  */
 export interface BaseQuestion {
     uid: string;
-    texte: string;
+    text: string;
     type: string;
-    reponses?: Answer[];
-    temps?: number;
-    explication?: string;
+    answers: Answer[];
+    time?: number;
+    explanation?: string;
+    tags?: string[];
 }

@@ -22,7 +22,7 @@ function computeAnswerStats(tState, questionUid) {
     const question = (_a = tState.questions) === null || _a === void 0 ? void 0 : _a.find(q => q.uid === questionUid);
     // Ensure question and its answer options are defined
     // Prefer 'answers' field, fallback to 'reponses' if 'answers' is not present
-    const questionOptions = (question === null || question === void 0 ? void 0 : question.answers) || (question === null || question === void 0 ? void 0 : question.reponses);
+    const questionOptions = (question === null || question === void 0 ? void 0 : question.answers) || (question === null || question === void 0 ? void 0 : question.answers);
     if (!question || !questionOptions || questionOptions.length === 0) {
         console.warn(`computeAnswerStats: Question with UID ${questionUid} not found or has no answer options.`);
         return { stats: [], totalAnswers: 0 };
@@ -31,8 +31,8 @@ function computeAnswerStats(tState, questionUid) {
     let totalSubmittedAnswers = 0;
     // Initialize counts for all predefined answer options
     questionOptions.forEach(opt => {
-        if (opt.texte !== undefined) { // Ensure texte property exists
-            answerCounts[opt.texte] = { count: 0, correct: !!opt.correct };
+        if (opt.text !== undefined) { // Ensure texte property exists
+            answerCounts[opt.text] = { count: 0, correct: !!opt.correct };
         }
     });
     const playerAnswersForQuestion = (_b = tState.answers) === null || _b === void 0 ? void 0 : _b[questionUid];

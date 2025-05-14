@@ -25,7 +25,7 @@ import { createLogger } from '@/clientLogger';
 const logger = createLogger('StudentDashboard');
 
 export default function StudentDashboard() {
-    const [pseudo, setPseudo] = useState<string>('');
+    const [nickname, setNickname] = useState<string>('');
     const { isStudent, isLoading } = useAuth();
     const router = useRouter();
 
@@ -36,11 +36,11 @@ export default function StudentDashboard() {
             return;
         }
         try {
-            const storedPseudo = localStorage.getItem('mathquest_pseudo') || '';
-            setPseudo(storedPseudo);
-            logger.info('Pseudo loaded from localStorage', storedPseudo);
+            const storedNickname = localStorage.getItem('mathquest_nickname') || '';
+            setNickname(storedNickname);
+            logger.info('Nickname loaded from localStorage', storedNickname);
         } catch (e) {
-            logger.warn('Could not access localStorage for pseudo', e);
+            logger.warn('Could not access localStorage for nickname', e);
         }
     }, [isStudent, isLoading, router]);
 
@@ -55,7 +55,7 @@ export default function StudentDashboard() {
                     <div className="flex flex-col gap-8">
                         <div className="flex items-center justify-center gap-4 mb-5">
                             <Image src="/favicon.svg" alt="MathQuest logo" width={64} height={64} priority />
-                            <h1 className="text-2xl text-center font-bold text-base-content">Bienvenue{pseudo ? `, ${pseudo}` : ''} !</h1>
+                            <h1 className="text-2xl text-center font-bold text-base-content">Bienvenue{nickname ? `, ${nickname}` : ''} !</h1>
                         </div>
                         <ul className="list-disc list-inside text-base text-base-content mb-2 max-w-md">
                             <li>Rejoignez un tournoi en direct ou en différé grâce à un code fourni par votre enseignant ou vos amis.</li>

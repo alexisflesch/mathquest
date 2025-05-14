@@ -7,17 +7,18 @@ import MathJaxWrapper from '@/components/MathJaxWrapper'; // Assure-toi que ce c
 export interface QuestionDisplayProps {
     question: {
         uid: string;
-        titre?: string;
-        question: string; // Renommé depuis 'enonce' pour correspondre à SortableQuestion
-        reponses: { texte: string; correct: boolean }[];
-        niveaux?: string[]; // Ajouté pour correspondre
-        niveau?: string | string[]; // Changed to allow string[]
-        categories?: string[]; // Ajouté pour correspondre
+        title?: string; // Renommé depuis 'titre'
+        text: string; // Changed from question to text
+        answers: { text: string; correct: boolean }[]; // Renommé depuis 'reponses' et 'texte'
+        levels?: string[]; // Renommé depuis 'niveaux'
+        level?: string | string[]; // Renommé depuis 'niveau'
+        categories?: string[]; // Gardé, à vérifier si cela doit être mappé sur tags
         discipline?: string;
-        themes?: string[]; // Ajouté pour correspondre
+        themes?: string[]; // Gardé, à vérifier si cela doit être mappé sur tags
         theme?: string;
-        justification?: string; // Ajouté pour correspondre
-        temps?: number;
+        explanation?: string; // Renommé depuis 'justification'
+        time?: number; // Renommé depuis 'temps'
+        tags?: string[]; // Ajouté pour correspondre à BaseQuestion
     };
     // Props pour le contrôle externe
     isOpen?: boolean;
@@ -48,7 +49,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     isOpen = false,
     onToggleOpen,
     timerStatus = "stop",
-    timeLeft = question.temps ?? 0,
+    timeLeft = question.time ?? 0, // Modifié: question.temps -> question.time
     onPlay,
     onPause,
     onStop,
@@ -108,12 +109,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                 }
             });
         } else if (!isOpen && contentRef.current) {
-            setMaxHeight(contentRef.current.scrollHeight + 'px');
+            setMaxHeight(contentRef.current.scrollHeight + 'px'); // Keep current height before collapsing
             requestAnimationFrame(() => {
                 setMaxHeight('0px');
             });
         }
-    }, [isOpen, question]);
+    }, [isOpen, question, question.answers]); // Added question.answers to dependencies for dynamic content height
 
     // Base font sizes (adjust based on actual Tailwind classes used)
     const baseTitleFontSize = '1rem'; // Assuming default size for title/cropped question
@@ -149,7 +150,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     );
 
     const metaString = [
-        question.niveau || (question.niveaux && question.niveaux.join(', ')),
+        question.level || (question.levels && question.levels.join(', ')), // Modifié: niveau -> level, niveaux -> levels
         question.discipline || (question.categories && question.categories.join(', ')),
         question.theme || (question.themes && question.themes.join(', '))
     ].filter(Boolean).join(' · ');
@@ -189,9 +190,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                     <div className={`flex items-center justify-between gap-3 question-header ${isOpen ? 'no-bottom-border no-bottom-radius' : ''}`} style={{ paddingTop: 0, paddingBottom: 0 }}>
                         <div className="font-medium fade-right-bottom-crop relative" style={{ minHeight: '1.8em', marginLeft: 0, flexGrow: 0, paddingLeft: 0 }}>
                             {/* Animated cropped question for no-title case */}
-                            {question.titre ? (
+                            {question.title ? ( // Modifié: question.titre -> question.title
                                 <div style={{ fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})` }}>
-                                    <MathJaxWrapper>{question.titre}</MathJaxWrapper>
+                                    <MathJaxWrapper>{question.title}</MathJaxWrapper> {/* Modifié: question.titre -> question.title */}
                                 </div>
                             ) : (
                                 <span
@@ -207,7 +208,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
                                     }}
                                 >
-                                    <MathJaxWrapper>{question.question}</MathJaxWrapper>
+                                    <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
                                 </span>
                             )}
                         </div>
@@ -276,7 +277,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                             style={{ maxHeight, zIndex: 1, position: 'relative' }}
                             aria-hidden={!isOpen && 'true'}
                         >
-                            {question.titre ? (
+                            {question.title ? ( // Modifié: question.titre -> question.title
                                 <ul
                                     className={[
                                         "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",
@@ -288,10 +289,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         className="mb-2 font-medium text-base text-couleur-global-neutral-700"
                                         style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
                                     >
-                                        <MathJaxWrapper>{question.question}</MathJaxWrapper>
+                                        <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
                                     </li>
-                                    {Array.isArray(question.reponses) && question.reponses.length > 0
-                                        ? question.reponses.map((r, idx) => (
+                                    {Array.isArray(question.answers) && question.answers.length > 0 // Modifié: question.reponses -> question.answers
+                                        ? question.answers.map((r, idx) => ( // Modifié: question.reponses -> question.answers
                                             <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                 <div className="flex gap-2 items-center relative z-10 w-full">
                                                     {/* Percentage before icon, rounded to nearest integer */}
@@ -324,19 +325,19 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                     )}
                                                     <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
                                                         <MathJaxWrapper>
-                                                            <span className="answer-text">{r.texte}</span>
+                                                            <span className="answer-text">{r.text}</span> {/* Modifié: r.texte -> r.text */}
                                                         </MathJaxWrapper>
                                                     </div>
                                                 </div>
                                             </li>
                                         ))
                                         : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
-                                    {question.justification && (
+                                    {question.explanation && ( // Modifié: question.justification -> question.explanation
                                         <div
                                             className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
                                             style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
                                         >
-                                            <span className="font-semibold">Justification :</span> {question.justification}
+                                            <span className="font-semibold">Justification :</span> {question.explanation}
                                         </div>
                                     )}
                                 </ul>
@@ -346,7 +347,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                         className="mb-2 font-medium text-base text-couleur-global-neutral-700 pt-2"
                                         style={{ fontSize: `calc(${baseQuestionFontSize} * ${zoomFactor})` }}
                                     >
-                                        <MathJaxWrapper>{question.question}</MathJaxWrapper>
+                                        <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
                                     </div>
                                     <ul
                                         className={[
@@ -355,8 +356,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                             isOpen ? "no-top-border" : ""
                                         ].join(" ")}
                                     >
-                                        {Array.isArray(question.reponses) && question.reponses.length > 0
-                                            ? question.reponses.map((r, idx) => (
+                                        {Array.isArray(question.answers) && question.answers.length > 0 // Modifié: question.reponses -> question.answers
+                                            ? question.answers.map((r, idx) => ( // Modifié: question.reponses -> question.answers
                                                 <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                     <div className="flex gap-2 items-center relative z-10 w-full">
                                                         {/* Percentage before icon, rounded to nearest integer */}
@@ -389,19 +390,19 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                         )}
                                                         <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
                                                             <MathJaxWrapper>
-                                                                <span className="answer-text">{r.texte}</span>
+                                                                <span className="answer-text">{r.text}</span> {/* Modifié: r.texte -> r.text */}
                                                             </MathJaxWrapper>
                                                         </div>
                                                     </div>
                                                 </li>
                                             ))
                                             : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
-                                        {question.justification && (
+                                        {question.explanation && ( // Modifié: question.justification -> question.explanation
                                             <div
                                                 className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70"
                                                 style={{ fontSize: `calc(${baseJustificationFontSize} * ${zoomFactor})` }}
                                             >
-                                                <span className="font-semibold">Justification :</span> {question.justification}
+                                                <span className="font-semibold">Justification :</span> {question.explanation}
                                             </div>
                                         )}
                                     </ul>

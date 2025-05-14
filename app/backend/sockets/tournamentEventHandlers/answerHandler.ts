@@ -24,7 +24,7 @@ const logger = createLogger('AnswerTournamentHandler');
 function handleTournamentAnswer(
     io: Server,
     socket: Socket,
-    { code, questionUid, answerIdx, clientTimestamp, isDiffered }: TournamentAnswerPayload
+    { code, questionUid, answerIdx, clientTimestamp, isDeferred }: TournamentAnswerPayload
 ): void {
     logger.info(`tournament_answer received for Q_UID: ${questionUid} from socket ${socket.id}`);
     const serverReceiveTime = Date.now(); // Capture server receive time
@@ -36,23 +36,23 @@ function handleTournamentAnswer(
 
     // Check live state first
     if (tournamentState[code] &&
-        tournamentState[code].socketToJoueur &&
-        tournamentState[code].socketToJoueur[socket.id]) {
+        tournamentState[code].socketToPlayerId &&
+        tournamentState[code].socketToPlayerId[socket.id]) {
         stateKey = code;
         state = tournamentState[stateKey];
-        if (state && state.socketToJoueur) {
-            joueurId = state.socketToJoueur[socket.id];
+        if (state && state.socketToPlayerId) {
+            joueurId = state.socketToPlayerId[socket.id];
         }
     } else {
         // Check differed states
         for (const key in tournamentState) {
             if (key.startsWith(`${code}_`) &&
-                tournamentState[key]?.socketToJoueur &&
-                tournamentState[key].socketToJoueur[socket.id]) {
+                tournamentState[key]?.socketToPlayerId &&
+                tournamentState[key].socketToPlayerId[socket.id]) {
                 stateKey = key;
                 state = tournamentState[key];
-                if (state && state.socketToJoueur) {
-                    joueurId = state.socketToJoueur[socket.id];
+                if (state && state.socketToPlayerId) {
+                    joueurId = state.socketToPlayerId[socket.id];
                 }
                 break;
             }
@@ -105,7 +105,7 @@ function handleTournamentAnswer(
         return;
     }
 
-    const timeAllowed = state.currentQuestionDuration || question.temps || 20;
+    const timeAllowed = state.currentQuestionDuration || question.time || 20;
     const questionStart = state.questionStart;
 
     if (!questionStart) {

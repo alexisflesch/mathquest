@@ -1,26 +1,42 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import QuestionDisplay from '@/components/QuestionDisplay';
-import type { Question } from '@/types';
+import type { BaseQuestion as SharedQuestion, Answer as SharedAnswer } from '@shared/types/question'; // Import shared types
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 
+// Local interface for questions on this page, compatible with QuestionDisplayProps
+interface QuestionForCreatePage {
+    uid: string;
+    title?: string;
+    text: string; // Changed from question: string to text: string
+    answers: Array<{ text: string; correct: boolean }>; // Must match QuestionDisplay
+    levels?: string[];
+    level?: string | string[];
+    categories?: string[];
+    discipline?: string;
+    themes?: string[];
+    theme?: string;
+    explanation?: string;
+    time?: number;
+    tags?: string[];
+}
+
 export default function CreateQuizPage() {
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
-    const [quizMeta, setQuizMeta] = useState<{ niveaux: string[]; categories: string[]; themes: string[] }>({ niveaux: [], categories: [], themes: [] });
+    const [quizMeta, setQuizMeta] = useState<{ levels: string[]; categories: string[]; themes: string[] }>({ levels: [], categories: [], themes: [] }); // Renamed niveaux to levels
     const [quizName, setQuizName] = useState('');
     const [savingQuiz, setSavingQuiz] = useState(false);
     const [quizSaveSuccess, setQuizSaveSuccess] = useState<string | null>(null);
     const [quizSaveError, setQuizSaveError] = useState<string | null>(null);
     const { teacherId } = useAuth();
-    const [filters, setFilters] = useState({ niveaux: [], disciplines: [], themes: [] });
-    const [selectedNiveau, setSelectedNiveau] = useState('');
+    const [filters, setFilters] = useState<{ levels: string[]; disciplines: string[]; themes: string[] }>({ levels: [], disciplines: [], themes: [] }); // Renamed niveaux to levels
+    const [selectedLevel, setSelectedLevel] = useState(''); // Renamed selectedNiveau to selectedLevel
     const [selectedDiscipline, setSelectedDiscipline] = useState('');
-    const [selectedTheme, setSelectedTheme] = useState('');
-    const [selectedThemes, setSelectedThemes] = useState<string[]>([]); // Pour MultiSelectDropdown
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
+    const [questions, setQuestions] = useState<QuestionForCreatePage[]>([]); // Use new local type
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [openUid, setOpenUid] = useState<string | null>(null);
     const BATCH_SIZE = 20;
@@ -28,62 +44,99 @@ export default function CreateQuizPage() {
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const listRef = useRef<HTMLDivElement>(null);
-    const [tagSearch, setTagSearch] = useState(''); // New state for tag search
+    const [tagSearch, setTagSearch] = useState('');
 
     useEffect(() => {
         fetch('/api/questions/filters')
             .then(res => res.json())
-            .then(setFilters);
+            .then(data => {
+                setFilters({
+                    levels: data.levels || data.niveaux || [], // Prefer 'levels', fallback to 'niveaux'
+                    disciplines: data.disciplines || [],
+                    themes: data.themes || []
+                });
+            });
     }, []);
 
-    // Fetch questions with pagination
     const fetchQuestions = useCallback(async (reset = false) => {
-        if (loadingQuestions || loadingMore) return; // Prevent double fetch
+        if (loadingQuestions || loadingMore) return;
         setLoadingQuestions(true);
+        if (reset) {
+            setOffset(0); // Reset offset for new filter/initial load
+        }
+
         let url = '/api/questions?';
         const params = [];
-        if (selectedNiveau) params.push(`niveau=${encodeURIComponent(selectedNiveau)}`);
+        if (selectedLevel) params.push(`level=${encodeURIComponent(selectedLevel)}`); // Use selectedLevel
         if (selectedDiscipline) params.push(`discipline=${encodeURIComponent(selectedDiscipline)}`);
         if (selectedThemes.length > 0) params.push(`theme=${selectedThemes.map(encodeURIComponent).join(',')}`);
         params.push(`limit=${BATCH_SIZE}`);
         params.push(`offset=${reset ? 0 : offset}`);
-        params.push('shuffle=false'); // Always disable shuffling for quiz creation
+        params.push('shuffle=false');
         if (params.length > 0) url += params.join('&');
+
         const res = await fetch(url);
         const data = await res.json();
-        const newQuestions = Array.isArray(data) ? data : data.questions || [];
-        if (reset) {
-            setQuestions(newQuestions);
-            setOffset(BATCH_SIZE);
-        } else {
-            setQuestions((prev: Question[]) => {
-                const existingUids = new Set(prev.map((q: Question) => q.uid));
-                const filtered = newQuestions.filter((q: Question) => !existingUids.has(q.uid));
-                return [...prev, ...filtered];
+
+        const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as SharedQuestion[];
+
+        const transformedQuestions: QuestionForCreatePage[] = newQuestionsFromApi
+            .filter((q: SharedQuestion) => // q is BaseQuestion
+                typeof q.text === 'string' && q.text.trim() !== '' && // Use q.text from BaseQuestion
+                Array.isArray(q.answers) // Use q.answers from BaseQuestion
+            )
+            .map((q: SharedQuestion) => { // q is BaseQuestion
+                const apiQuestion = q as any; // Cast to any to access fields potentially not in BaseQuestion but from API
+                return {
+                    uid: q.uid, // From BaseQuestion
+                    title: apiQuestion.title || apiQuestion.titre, // From API, fallback to French
+                    text: q.text as string, // Changed from question: q.text to text: q.text
+                    answers: q.answers!.map((a: SharedAnswer) => ({ // a is Answer from BaseQuestion
+                        text: a.text || '',
+                        correct: a.correct || false // Use a.correct from Answer
+                    })),
+                    levels: apiQuestion.levels || apiQuestion.niveaux, // From API, fallback to French
+                    level: apiQuestion.level || apiQuestion.niveau, // From API, fallback to French
+                    categories: apiQuestion.categories, // From API
+                    discipline: apiQuestion.discipline || apiQuestion.category || apiQuestion.subject, // From API, with fallbacks
+                    themes: apiQuestion.themes, // From API
+                    theme: apiQuestion.theme, // From API
+                    explanation: q.explanation, // From BaseQuestion
+                    time: q.time, // From BaseQuestion
+                    tags: q.tags, // From BaseQuestion
+                };
             });
-            setOffset(prev => prev + BATCH_SIZE);
+
+        if (reset) {
+            setQuestions(transformedQuestions);
+            setOffset(transformedQuestions.length); // Next offset starts after these questions
+        } else {
+            setQuestions(prev => {
+                const existingUids = new Set(prev.map(pq => pq.uid));
+                const filteredNew = transformedQuestions.filter(nq => !existingUids.has(nq.uid));
+                return [...prev, ...filteredNew];
+            });
+            setOffset(prevOffset => prevOffset + transformedQuestions.length); // Increment offset by number of new questions fetched
         }
-        setHasMore(newQuestions.length === BATCH_SIZE);
+        setHasMore(transformedQuestions.length === BATCH_SIZE);
         setLoadingQuestions(false);
         setLoadingMore(false);
-    }, [selectedNiveau, selectedDiscipline, selectedThemes, offset, loadingQuestions, loadingMore]);
+    }, [selectedLevel, selectedDiscipline, selectedThemes, offset, loadingQuestions, loadingMore]); // Added offset to dependencies
 
-    // Initial and filter change fetch
     useEffect(() => {
-        setOffset(0);
-        setHasMore(true);
-        fetchQuestions(true);
+        setOffset(0); // Reset offset
+        setHasMore(true); // Assume there's more data
+        fetchQuestions(true); // Fetch with reset
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedNiveau, selectedDiscipline, selectedThemes]);
+    }, [selectedLevel, selectedDiscipline, selectedThemes]); // Dependencies that trigger a full reset
 
-    // Infinite scroll handler
     useEffect(() => {
         const handleScroll = () => {
             const el = listRef.current;
             if (!el || loadingQuestions || loadingMore || !hasMore) return;
             if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) {
                 setLoadingMore(true);
-                fetchQuestions();
+                fetchQuestions(false); // Fetch more, don't reset
             }
         };
         const el = listRef.current;
@@ -106,7 +159,7 @@ export default function CreateQuizPage() {
                 setSavingQuiz(false);
                 return;
             }
-            if (quizMeta.niveaux.length === 0 || quizMeta.categories.length === 0) {
+            if (quizMeta.levels.length === 0 || quizMeta.categories.length === 0) { // Use levels
                 setQuizSaveError('Veuillez sélectionner au moins une question pour déterminer le niveau et la discipline.');
                 setSavingQuiz(false);
                 return;
@@ -118,7 +171,7 @@ export default function CreateQuizPage() {
                     nom: quizName,
                     questions_ids: selectedQuestions,
                     enseignant_id: teacherId,
-                    niveaux: quizMeta.niveaux,
+                    levels: quizMeta.levels, // Use levels
                     categories: quizMeta.categories,
                     themes: quizMeta.themes,
                     type: 'direct',
@@ -129,7 +182,7 @@ export default function CreateQuizPage() {
             setQuizSaveSuccess('Quiz sauvegardé avec succès !');
             setQuizName('');
             setSelectedQuestions([]);
-            setQuizMeta({ niveaux: [], categories: [], themes: [] });
+            setQuizMeta({ levels: [], categories: [], themes: [] }); // Use levels
         } catch (err: unknown) {
             setQuizSaveError((err as Error).message || 'Erreur inconnue.');
         } finally {
@@ -146,12 +199,11 @@ export default function CreateQuizPage() {
                         Sélectionnez des questions pour créer un quiz. Aidez-vous des filtres ci-dessous au besoin, puis nommez votre quiz et sauvegardez-le.
                     </div>
                     <div className="flex flex-col gap-6 w-full mb-0">
-                        {/* Filtres groupés avec composants custom */}
                         <div className="flex flex-col gap-4 w-full -mb-1">
                             <CustomDropdown
-                                options={filters.niveaux || []}
-                                value={selectedNiveau}
-                                onChange={setSelectedNiveau}
+                                options={filters.levels || []} // Use levels
+                                value={selectedLevel} // Use selectedLevel
+                                onChange={setSelectedLevel} // Use setSelectedLevel
                                 placeholder="Niveau"
                             />
                             <CustomDropdown
@@ -167,7 +219,6 @@ export default function CreateQuizPage() {
                                 placeholder="Thèmes"
                             />
                         </div>
-                        {/* Tag search input */}
                         <input
                             className="input input-bordered w-full mb-2"
                             type="text"
@@ -175,7 +226,6 @@ export default function CreateQuizPage() {
                             value={tagSearch}
                             onChange={e => setTagSearch(e.target.value)}
                         />
-                        {/* Questions list using QuestionDisplay */}
                         <div className="quiz-create-question-list flex flex-col w-full" ref={listRef} style={{ maxHeight: '60vh', overflowY: 'auto' }}>
                             {loadingQuestions && questions.length === 0 ? (
                                 <div className="text-center text-muted">Chargement des questions…</div>
@@ -183,23 +233,22 @@ export default function CreateQuizPage() {
                                 <div className="text-center text-muted">Aucune question trouvée pour ces filtres.</div>
                             ) : (
                                 <>
-                                    {questions
-                                        .filter((q: Question) => {
+                                    {questions // Type is QuestionForCreatePage[]
+                                        .filter((q) => { // q is QuestionForCreatePage
                                             if (!tagSearch.trim()) return true;
                                             const search = tagSearch.trim().toLowerCase();
-                                            // Check for tags, theme, niveau, discipline, titre, question
                                             const tags = [
                                                 ...(q.tags || []),
                                                 q.theme,
-                                                q.niveau,
+                                                q.level, // Use level
                                                 q.discipline,
-                                                q.titre,
-                                                q.question
+                                                q.title, // Use title
+                                                q.text // Changed from q.question to q.text
                                             ].filter(Boolean).map(String).map(s => s.toLowerCase());
                                             return tags.some(t => t.includes(search));
                                         })
-                                        .map(q => (
-                                            <div key={q.uid} className="flex flex-row items-start gap-2"> {/* Changed items-center to items-start */}
+                                        .map(q => ( // q is QuestionForCreatePage
+                                            <div key={q.uid} className="flex flex-row items-start gap-2">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedQuestions.includes(q.uid)}
@@ -211,24 +260,21 @@ export default function CreateQuizPage() {
                                                             } else {
                                                                 next = prev.filter(id => id !== q.uid);
                                                             }
-                                                            // Update quizMeta in real time
-                                                            setQuizMeta(meta => {
-                                                                // Gather all selected questions
-                                                                const selectedQs = questions.filter((qq: Question) => next.includes(qq.uid));
-                                                                // Unique niveaux, categories, themes from selected questions
-                                                                const niveaux = Array.from(new Set(selectedQs.map(qq => qq.niveau).filter((v): v is string => Boolean(v))));
+                                                            setQuizMeta(() => { // Removed 'meta' param to avoid shadowing
+                                                                const selectedQs = questions.filter(qq => next.includes(qq.uid));
+                                                                const levels = Array.from(new Set(selectedQs.map(qq => qq.level).filter((v): v is string => Boolean(v)))); // Use levels and qq.level
                                                                 const categories = Array.from(new Set(selectedQs.map(qq => qq.discipline).filter((v): v is string => Boolean(v))));
                                                                 const themes = Array.from(new Set(selectedQs.map(qq => qq.theme).filter((v): v is string => Boolean(v))));
-                                                                return { niveaux, categories, themes };
+                                                                return { levels, categories, themes }; // Use levels
                                                             });
                                                             return next;
                                                         });
                                                     }}
-                                                    className="align-top mt-3" // Added mt-2 to move checkbox down
+                                                    className="align-top mt-3"
                                                 />
                                                 <div className="flex-1 min-w-0">
                                                     <QuestionDisplay
-                                                        question={q}
+                                                        question={q} // q is QuestionForCreatePage, compatible with QuestionDisplayProps.question
                                                         isActive={selectedQuestions.includes(q.uid)}
                                                         isOpen={openUid === q.uid}
                                                         onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
@@ -253,9 +299,9 @@ export default function CreateQuizPage() {
                             value={quizName}
                             onChange={e => setQuizName(e.target.value)}
                         />
-                        {(quizMeta.niveaux.length > 0 || quizMeta.categories.length > 0 || quizMeta.themes.length > 0) && (
+                        {(quizMeta.levels.length > 0 || quizMeta.categories.length > 0 || quizMeta.themes.length > 0) && ( // Use levels
                             <div className="flex flex-row flex-wrap items-center gap-2 my-2">
-                                {quizMeta.niveaux.map(n => (
+                                {quizMeta.levels.map(n => ( // Use levels
                                     <span key={n} className="badge badge-primary rounded-lg px-4 py-2">{n}</span>
                                 ))}
                                 {quizMeta.categories.map(c => (

@@ -17,8 +17,8 @@ export function isAnswer(value: unknown): value is Answer {
     return (
         !!value &&
         typeof value === 'object' &&
-        'texte' in value &&
-        typeof (value as Answer).texte === 'string' &&
+        'text' in value &&
+        typeof (value as Answer).text === 'string' &&
         'correct' in value &&
         typeof (value as Answer).correct === 'boolean'
     );
@@ -33,8 +33,8 @@ export function isBaseQuestion(value: unknown): value is BaseQuestion {
         typeof value === 'object' &&
         'uid' in value &&
         typeof (value as BaseQuestion).uid === 'string' &&
-        'texte' in value &&
-        typeof (value as BaseQuestion).texte === 'string' &&
+        'text' in value &&
+        typeof (value as BaseQuestion).text === 'string' &&
         'type' in value &&
         typeof (value as BaseQuestion).type === 'string'
     );
@@ -61,18 +61,18 @@ export function getQuestionText(question: BaseQuestion | Question): string {
     if ('question' in question && typeof question.question === 'string') {
         return question.question;
     }
-    return question.texte;
+    return (question as BaseQuestion).text;
 }
 
 /**
  * Safely get the answers from a question object (handles different property names)
  */
 export function getQuestionAnswers(question: Question): Answer[] {
-    if ('reponses' in question && Array.isArray(question.reponses)) {
-        return question.reponses;
+    if ('responses' in question && Array.isArray((question as BaseQuestion).answers)) {
+        return (question as BaseQuestion).answers!;
     }
-    if ('answers' in question && Array.isArray(question.answers)) {
-        return question.answers;
+    if ('answers' in question && Array.isArray((question as any).answers)) { // Keep 'answers' for QuestionLike compatibility
+        return (question as any).answers;
     }
     return [];
 }

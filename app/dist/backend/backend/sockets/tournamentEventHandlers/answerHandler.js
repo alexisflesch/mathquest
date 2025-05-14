@@ -20,7 +20,7 @@ const logger = (0, logger_1.default)('AnswerTournamentHandler');
  * @param socket - Client socket connection
  * @param payload - The answer payload from the client
  */
-function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clientTimestamp, isDiffered }) {
+function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clientTimestamp, isDeferred }) {
     var _a, _b;
     logger.info(`tournament_answer received for Q_UID: ${questionUid} from socket ${socket.id}`);
     const serverReceiveTime = Date.now(); // Capture server receive time
@@ -30,24 +30,24 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     let state = null;
     // Check live state first
     if (tournamentState_1.tournamentState[code] &&
-        tournamentState_1.tournamentState[code].socketToJoueur &&
-        tournamentState_1.tournamentState[code].socketToJoueur[socket.id]) {
+        tournamentState_1.tournamentState[code].socketToPlayerId &&
+        tournamentState_1.tournamentState[code].socketToPlayerId[socket.id]) {
         stateKey = code;
         state = tournamentState_1.tournamentState[stateKey];
-        if (state && state.socketToJoueur) {
-            joueurId = state.socketToJoueur[socket.id];
+        if (state && state.socketToPlayerId) {
+            joueurId = state.socketToPlayerId[socket.id];
         }
     }
     else {
         // Check differed states
         for (const key in tournamentState_1.tournamentState) {
             if (key.startsWith(`${code}_`) &&
-                ((_a = tournamentState_1.tournamentState[key]) === null || _a === void 0 ? void 0 : _a.socketToJoueur) &&
-                tournamentState_1.tournamentState[key].socketToJoueur[socket.id]) {
+                ((_a = tournamentState_1.tournamentState[key]) === null || _a === void 0 ? void 0 : _a.socketToPlayerId) &&
+                tournamentState_1.tournamentState[key].socketToPlayerId[socket.id]) {
                 stateKey = key;
                 state = tournamentState_1.tournamentState[key];
-                if (state && state.socketToJoueur) {
-                    joueurId = state.socketToJoueur[socket.id];
+                if (state && state.socketToPlayerId) {
+                    joueurId = state.socketToPlayerId[socket.id];
                 }
                 break;
             }
@@ -93,7 +93,7 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
         });
         return;
     }
-    const timeAllowed = state.currentQuestionDuration || question.temps || 20;
+    const timeAllowed = state.currentQuestionDuration || question.time || 20;
     const questionStart = state.questionStart;
     if (!questionStart) {
         logger.warn(`tournament_answer: questionStart missing for state ${stateKey}. Ignoring.`);

@@ -20,7 +20,7 @@ import AvatarSelector from '@/components/AvatarSelector';
 import { useAuth } from '@/components/AuthProvider';
 
 function StudentPageInner() {
-    const [pseudo, setPseudo] = useState('');
+    const [nickname, setNickname] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('');
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
@@ -29,9 +29,9 @@ function StudentPageInner() {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const storedPseudo = localStorage.getItem('mathquest_pseudo');
+            const storedNickname = localStorage.getItem('mathquest_nickname');
             const storedAvatar = localStorage.getItem('mathquest_avatar');
-            if (storedPseudo && storedAvatar) {
+            if (storedNickname && storedAvatar) {
                 const redirect = searchParams?.get('redirect');
                 if (redirect) {
                     router.replace(redirect);
@@ -45,7 +45,7 @@ function StudentPageInner() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (!pseudo || !selectedAvatar) {
+        if (!nickname || !selectedAvatar) {
             setError('Veuillez choisir un pseudo et un avatar.');
             return;
         }
@@ -59,14 +59,14 @@ function StudentPageInner() {
             const res = await fetch('/api/student', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'join', pseudo, avatar: selectedAvatar, cookie_id }),
+                body: JSON.stringify({ action: 'join', nickname, avatar: selectedAvatar, cookie_id }),
             });
             const result = await res.json();
             if (!res.ok) {
                 setError(result.message || 'Erreur lors de la validation du pseudo.');
                 return;
             }
-            localStorage.setItem('mathquest_pseudo', pseudo);
+            localStorage.setItem('mathquest_nickname', nickname);
             localStorage.setItem('mathquest_avatar', selectedAvatar);
             if (refreshAuth) refreshAuth();
             const redirect = searchParams?.get('redirect');
@@ -86,17 +86,17 @@ function StudentPageInner() {
                 <h1 className="text-4xl font-bold text-center mb-6 shrink-0">Espace Élève</h1>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6 flex-1 min-h-0">
                     <div className="shrink-0">
-                        <label className="block text-lg font-bold mb-2" htmlFor="pseudo">
+                        <label className="block text-lg font-bold mb-2" htmlFor="nickname">
                             Pseudo
                         </label>
                         <input
                             className="input input-bordered input-lg w-full"
-                            id="pseudo"
+                            id="nickname"
                             type="text"
                             maxLength={15}
                             placeholder="Votre pseudo"
-                            value={pseudo}
-                            onChange={e => setPseudo(e.target.value)}
+                            value={nickname}
+                            onChange={e => setNickname(e.target.value)}
                             autoComplete="off"
                         />
                         {error && <div className="alert alert-error justify-center shrink-0 mt-2">{error}</div>}

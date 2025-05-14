@@ -95,7 +95,7 @@ function sendQuestionToTournament(io, quizId, questionId) {
     logger.info('[sendQuestionToTournament] Sending question ' + questionId + ' to live_' + code + '. Index: ' + index + ', Total: ' + total);
     try {
         const timer = (0, quizState_1.getQuestionTimer)(quizId, questionId);
-        const timeLeft = timer ? timer.timeLeft : (question.temps || 20);
+        const timeLeft = timer ? timer.timeLeft : (question.time || 20);
         const questionStateStatus = timer ? (timer.status === 'play' ? 'active' : timer.status) : 'stopped';
         // Use triggerTournamentQuestion from tournamentUtils to ensure proper state update
         (0, tournamentTriggers_1.triggerTournamentQuestion)(io, code, index, quizId, timeLeft, questionId); // Pass index, it might be used or ignored if questionId is primary

@@ -321,10 +321,10 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
         ? {
             uid: currentQuestion.uid,
-            question: currentQuestion.question,
+            question: currentQuestion.text, // MODIFIED: Use currentQuestion.text (string) instead of currentQuestion.question (string | undefined)
             type: currentQuestion.type,
-            answers: Array.isArray(currentQuestion.reponses)
-                ? currentQuestion.reponses.map(r => r.texte)
+            answers: currentQuestion.answers // MODIFIED: Use currentQuestion.answers and map .text
+                ? currentQuestion.answers.map(r => r.text)
                 : [],
         }
         : null;

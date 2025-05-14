@@ -365,8 +365,8 @@ function triggerTournamentAnswer(
     participant.score = totalScore;
 
     // Save score to database for persistent tournaments
-    if (state.tournoiId && participant.socketId) { // Defensive guard for participant.socketId was already added
-        saveParticipantScore(prisma, state.tournoiId, participant)
+    if (state.tournamentId && participant.socketId) { // Defensive guard for participant.socketId was already added
+        saveParticipantScore(prisma, state.tournamentId, participant)
             .catch((err: Error) => logger.error(`[TriggerAnswer] Error saving score: ${err.message}`));
     }
 

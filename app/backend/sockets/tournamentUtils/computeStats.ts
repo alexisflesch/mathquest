@@ -38,7 +38,7 @@ export function computeAnswerStats(
 
     // Ensure question and its answer options are defined
     // Prefer 'answers' field, fallback to 'reponses' if 'answers' is not present
-    const questionOptions: QuestionAnswerOption[] | undefined = question?.answers || question?.reponses;
+    const questionOptions: QuestionAnswerOption[] | undefined = question?.answers || question?.answers;
 
     if (!question || !questionOptions || questionOptions.length === 0) {
         console.warn(`computeAnswerStats: Question with UID ${questionUid} not found or has no answer options.`);
@@ -50,8 +50,8 @@ export function computeAnswerStats(
 
     // Initialize counts for all predefined answer options
     questionOptions.forEach(opt => {
-        if (opt.texte !== undefined) { // Ensure texte property exists
-            answerCounts[opt.texte] = { count: 0, correct: !!opt.correct };
+        if (opt.text !== undefined) { // Ensure texte property exists
+            answerCounts[opt.text] = { count: 0, correct: !!opt.correct };
         }
     });
 

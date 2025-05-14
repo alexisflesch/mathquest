@@ -2,7 +2,7 @@ import React from "react";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import GoodAnswer from '@/components/GoodAnswer';
 import WrongAnswer from '@/components/WrongAnswer';
-import type { Question } from '@shared/types/quiz/question';
+import type { Question, Answer } from '@shared/types/quiz/question'; // Corrected import
 import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import { createLogger } from '@/clientLogger';
 
@@ -20,7 +20,7 @@ export interface TournamentQuestion extends Omit<LiveQuestionPayload, 'question'
     tournoiState?: 'pending' | 'running' | 'paused' | 'stopped' | 'finished';
     uid?: string; // Added uid property for compatibility
     type?: string; // Added type property for compatibility
-    answers?: string[]; // Added answers property for compatibility
+    answers?: string[]; // Array of answer texts, used if 'question' is a string or as a fallback
 }
 
 interface StatsData {
@@ -42,7 +42,7 @@ interface QuestionCardProps {
     answered: boolean;
     isQuizMode?: boolean; // Whether to show question numbers
     readonly?: boolean;   // New prop to make the component display-only
-    zoomFactor?: number;  // Conservé pour compatibilité mais n'est plus utilisé
+    zoomFactor?: number;  // Kept for compatibility but no longer used // MODIFIED: Translated comment
     correctAnswers?: number[]; // Add this prop
     stats?: StatsData; // Optional stats prop for question statistics
     showStats?: boolean; // Whether to display the stats
@@ -50,42 +50,68 @@ interface QuestionCardProps {
 
 const getQuestionTextToRender = (payload: TournamentQuestion | null): string => {
     if (!payload) return "Question non disponible";
-
     if (!payload.question) return "Question non disponible";
 
     if (typeof payload.question === 'string') {
         return payload.question;
     }
 
-    // Check if it's a FilteredQuestion with texte field
-    if ('texte' in payload.question && payload.question.texte) {
-        return payload.question.texte;
+    // payload.question is FilteredQuestion | Question
+    // Both should have 'text: string'. // MODIFIED: texte -> text
+    if (payload.question.text && typeof payload.question.text === 'string' && payload.question.text.trim() !== '') { // MODIFIED: texte -> text
+        return payload.question.text; // MODIFIED: texte -> text
     }
 
-    // If it's another object shape, try to extract the text
-    if (typeof payload.question === 'object') {
-        // Cast to any to handle various object shapes
-        const q = payload.question as any;
-        if (q.texte) return q.texte;
-        if (q.question) return q.question;
+    // Fallback for Question type's optional 'question' field if 'text' was empty or not present.
+    // This handles cases where the object might be a Question type but missing 'text'.
+    if ('question' in payload.question) {
+        const qObject = payload.question as Question; // Assert Question type to access 'question'
+        if (qObject.question && typeof qObject.question === 'string' && qObject.question.trim() !== '') {
+            return qObject.question;
+        }
     }
 
-    logger.warn('[QuestionCard] Could not extract question text. payload.question:', payload.question);
-    return "Question mal formatée";
+    logger.warn('[QuestionCard] Could not extract question text from object. payload.question:', payload.question);
+    return "Question mal formatée"; // Fallback
 };
 
 const getAnswersToRender = (payload: TournamentQuestion | null): string[] => {
     if (!payload) return [];
-    if (!payload.question) return [];
 
-    // If question is a FilteredQuestion with reponses field
-    if (typeof payload.question === 'object') {
-        // Handle reponses as array of Answer objects or strings
-        if (Array.isArray(payload.question.reponses)) {
-            return payload.question.reponses.map((r: any) => typeof r === 'string' ? r : r.texte);
+    // Case 1: payload.question is an object (FilteredQuestion or Question)
+    if (typeof payload.question === 'object' && payload.question !== null) {
+        // The 'answers' property is now mandatory on BaseQuestion, and thus on FilteredQuestion and Question
+        if (payload.question.answers && Array.isArray(payload.question.answers)) {
+            if (payload.question.answers.length === 0) return [];
+
+            const firstAnswer = payload.question.answers[0];
+            if (typeof firstAnswer === 'string') {
+                // This means payload.question.answers is string[] (likely from FilteredQuestion)
+                return payload.question.answers as string[];
+            } else if (typeof firstAnswer === 'object' && firstAnswer !== null && 'text' in firstAnswer) {
+                // This means payload.question.answers is Answer[] (likely from Question)
+                return (payload.question.answers as Answer[]).map(ans => ans.text);
+            }
         }
+        logger.warn('[QuestionCard] payload.question is object, but its answers are missing or malformed:', payload.question);
+        // Fall through to check top-level payload.answers as a last resort if question object's answers are unusable
+    }
+    // Case 2: payload.question is a string, or payload.question object's answers were not usable
+    else if (typeof payload.question === 'string') {
+        if (payload.answers && Array.isArray(payload.answers)) {
+            return payload.answers; // Use top-level answers
+        }
+        logger.warn('[QuestionCard] payload.question is string, but top-level payload.answers is missing or not an array:', payload);
+        return [];
     }
 
+    // Fallback: If payload.question was an object but its answers were bad, try the top-level payload.answers.
+    if (payload.answers && Array.isArray(payload.answers)) {
+        logger.debug('[QuestionCard] getAnswersToRender: Using top-level payload.answers as fallback.');
+        return payload.answers;
+    }
+
+    logger.warn('[QuestionCard] Could not determine how to extract answers from payload:', payload);
     return [];
 };
 
@@ -103,7 +129,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     answered,
     isQuizMode = true,
     readonly = false,  // Default to interactive mode
-    zoomFactor = 1,    // Conservé mais n'est plus utilisé
+    zoomFactor = 1,    // Kept but no longer used // MODIFIED: Translated comment
     correctAnswers = [], // Add default value
     stats, // Destructure stats
     showStats = false, // Destructure showStats

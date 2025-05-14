@@ -10,9 +10,9 @@ import { Question } from './question';
  */
 export interface FilteredQuestion {
     uid: string;
-    texte: string;
+    text: string;
     type: string;
-    reponses: string[];
+    answers: string[];
 }
 /**
  * Standardized question payload for live events (sent to students/projector)

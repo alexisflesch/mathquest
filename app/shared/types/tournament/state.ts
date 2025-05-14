@@ -44,13 +44,13 @@ export interface TournamentState {
     stopped: boolean;
     linkedQuizId?: string | null;
     currentQuestionDuration: number;
-    socketToJoueur: Record<string, string>;
-    isDiffered?: boolean;
-    statut?: 'en préparation' | 'en cours' | 'terminé';
+    socketToPlayerId: Record<string, string>; // Renamed from socketToJoueur
+    isDeferred?: boolean; // Renamed from isDiffered
+    status?: 'preparing' | 'in progress' | 'finished'; // Renamed from statut and translated values
     intervalTimer?: Timeout | null; // Using our custom Timeout type for better compatibility
     previousQuestionUid?: string | null;
     code?: string;
-    tournoiId?: string;
+    tournamentId?: string; // Renamed from tournoiId
     settings?: {
         timer?: number;
         autoProgress?: boolean;

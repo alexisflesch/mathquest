@@ -115,7 +115,7 @@ function patchQuizStateForBroadcast(state) {
         if (state.currentQuestionUid) {
             currentQuestionObject = state.questions.find(q => q.uid === state.currentQuestionUid) || null;
             if (currentQuestionObject) {
-                logger.info(`[patchQuizStateForBroadcast] Found question by UID ${state.currentQuestionUid} for quiz ${quizIdForLog}. Question title: ${currentQuestionObject.texte ? currentQuestionObject.texte.substring(0, 30) : 'N/A'}`);
+                logger.info(`[patchQuizStateForBroadcast] Found question by UID ${state.currentQuestionUid} for quiz ${quizIdForLog}. Question title: ${currentQuestionObject.text ? currentQuestionObject.text.substring(0, 30) : 'N/A'}`);
             }
             else {
                 logger.warn(`[patchQuizStateForBroadcast] Question UID ${state.currentQuestionUid} NOT FOUND in questions array for quiz ${quizIdForLog}. Questions available: ${state.questions.map(q => q.uid).join(', ')}`);
@@ -123,7 +123,7 @@ function patchQuizStateForBroadcast(state) {
         }
         else if (typeof state.currentQuestionIdx === 'number' && state.currentQuestionIdx >= 0 && state.currentQuestionIdx < state.questions.length) {
             currentQuestionObject = state.questions[state.currentQuestionIdx];
-            logger.info(`[patchQuizStateForBroadcast] Found question by Idx ${state.currentQuestionIdx} for quiz ${quizIdForLog}. UID: ${currentQuestionObject === null || currentQuestionObject === void 0 ? void 0 : currentQuestionObject.uid}. Question title: ${(currentQuestionObject === null || currentQuestionObject === void 0 ? void 0 : currentQuestionObject.texte) ? currentQuestionObject.texte.substring(0, 30) : 'N/A'}`);
+            logger.info(`[patchQuizStateForBroadcast] Found question by Idx ${state.currentQuestionIdx} for quiz ${quizIdForLog}. UID: ${currentQuestionObject === null || currentQuestionObject === void 0 ? void 0 : currentQuestionObject.uid}. Question title: ${(currentQuestionObject === null || currentQuestionObject === void 0 ? void 0 : currentQuestionObject.text) ? currentQuestionObject.text.substring(0, 30) : 'N/A'}`);
             if (currentQuestionObject && state.currentQuestionUid && currentQuestionObject.uid !== state.currentQuestionUid) {
                 logger.warn(`[patchQuizStateForBroadcast] Mismatch! currentQuestionUid is ${state.currentQuestionUid} but question from Idx ${state.currentQuestionIdx} is ${currentQuestionObject.uid} for quiz ${quizIdForLog}`);
             }

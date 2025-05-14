@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Check student status from localStorage (client-side only)
         if (typeof window !== 'undefined') {
-            studentLoggedIn = !!localStorage.getItem('mathquest_pseudo');
+            studentLoggedIn = !!localStorage.getItem('mathquest_nickname'); // MODIFIED: mathquest_pseudo -> mathquest_nickname
         }
 
         // Check teacher status by calling the API route

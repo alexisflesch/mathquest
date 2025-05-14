@@ -13,5 +13,5 @@ import { TournamentAnswerPayload } from '../types/socketTypes';
  * @param socket - Client socket connection
  * @param payload - The answer payload from the client
  */
-declare function handleTournamentAnswer(io: Server, socket: Socket, { code, questionUid, answerIdx, clientTimestamp, isDiffered }: TournamentAnswerPayload): void;
+declare function handleTournamentAnswer(io: Server, socket: Socket, { code, questionUid, answerIdx, clientTimestamp, isDeferred }: TournamentAnswerPayload): void;
 export default handleTournamentAnswer;

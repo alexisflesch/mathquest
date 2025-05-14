@@ -57,9 +57,9 @@ function createFilteredQuestionData(payload: TournamentQuestionPayload): Filtere
     return {
         type: question.type, // No change needed here as FilteredQuestionData now allows undefined
         uid: question.uid,
-        question: question.question ?? '', // Handle potentially undefined question text
-        answers: Array.isArray(question.reponses)
-            ? question.reponses.map(r => r.texte)
+        question: question.text, // Changed from question.question
+        answers: Array.isArray(question.answers)
+            ? question.answers.map(r => r.text)
             : [],
         index: questionIndex,
         tournoiState,
@@ -105,9 +105,9 @@ function legacySendTournamentQuestion(
     const filteredPayload: FilteredQuestionData = {
         type: questionObj.type, // No change needed here
         uid: questionObj.uid,
-        question: questionObj.question ?? '', // Handle potentially undefined question text
-        answers: Array.isArray(questionObj.reponses)
-            ? questionObj.reponses.map(r => r.texte)
+        question: questionObj.text, // Changed from questionObj.question
+        answers: Array.isArray(questionObj.answers)
+            ? questionObj.answers.map(r => r.text)
             : [],
         index,
         total,

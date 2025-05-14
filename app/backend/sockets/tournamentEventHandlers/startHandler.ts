@@ -63,23 +63,23 @@ async function handleStartTournament(
             const questionObj: Question = {
                 uid: q.uid,
                 type: q.type,
-                texte: q.question || '',
-                temps: q.temps || 20,
+                text: q.question || '',
+                time: q.temps || 20,
                 answers: [], // Initialize with empty array
                 niveau: q.niveau || '',
                 theme: q.theme || '',
                 discipline: q.discipline || '',
                 difficulte: q.difficulte || 0,  // Convert null to 0
-                explication: q.explication || '',
+                explanation: q.explication || '',
                 title: q.titre || '',
                 hidden: q.hidden || false,  // Convert null to false
             };
 
             // Handle reponses conversion
             if (Array.isArray(q.reponses)) {
-                questionObj.reponses = q.reponses as any;
+                questionObj.answers = q.question as any;
             } else {
-                questionObj.reponses = [];
+                questionObj.answers = [];
             }
 
             return questionObj;
@@ -124,23 +124,23 @@ async function handleStartTournament(
             participants: [], // Initialize as empty array, will be populated on join_tournament
             questions: questions.map(q => ({
                 ...q,
-                texte: q.question || q.texte || '' // Ensure texte field exists
+                texte: q.question || q.text || '' // Ensure texte field exists
             })),
             currentIndex: -1, // Start at -1, will be set to 0 by sendQuestionWithState
             currentQuestionUid: undefined, // Use undefined instead of null
             answers: {}, // { joueurId: { questionUid: { answerIdx, clientTimestamp } } }
             timer: null as unknown as NodeJS.Timeout | null, // Type assertion for compatibility
             questionStart: null,
-            socketToJoueur: {}, // { socketId: joueurId }
+            socketToPlayerId: {}, // { socketId: joueurId }
             paused: false,
             pausedRemainingTime: undefined, // Use undefined instead of null
             linkedQuizId, // Use the linkedQuizId we just fetched
             currentQuestionDuration: 20, // Default to 20 seconds
             stopped: false, // Initialize stopped state
-            statut: 'en cours' as 'en cours',
+            status: 'preparing' as 'preparing',
             askedQuestions: new Set<string>(), // Initialize with empty set
             code, // Add the code
-            tournoiId: tournoi.id // Add the tournoi ID
+            tournamentId: tournoi.id // Add the tournoi ID
         };
 
         // Ensure askedQuestions set is initialized in tournamentState
@@ -156,7 +156,7 @@ async function handleStartTournament(
                     await sendQuestionWithState(io, code, 0);
                     // Start the timer for the first question (classic tournaments)
                     const firstQ = tournamentState[code].questions[0];
-                    const firstTime = firstQ?.temps || 20;
+                    const firstTime = firstQ?.time || 20;
                     const { triggerTournamentTimerSet } = require('../tournamentUtils/tournamentTriggers');
                     triggerTournamentTimerSet(io, code, firstTime, true);
                 }

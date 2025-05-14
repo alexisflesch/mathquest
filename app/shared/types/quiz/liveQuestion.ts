@@ -12,9 +12,9 @@ import { Question } from './question';
  */
 export interface FilteredQuestion {
     uid: string;
-    texte: string;        // The question text
+    text: string;        // The question text
     type: string;         // Question type (choix_simple, choix_multiple, etc.)
-    reponses: string[];   // Only answer texts, no correct info
+    answers: string[];   // Renamed from responses: Only answer texts, no correct info
 }
 
 /**
@@ -47,10 +47,9 @@ export function filterQuestionForClient(questionObject: Question): FilteredQuest
     return {
         uid: questionObject.uid,
         type: questionObject.type,
-        texte: questionObject.texte || questionObject.question || 'Question text not available',
-        reponses: (Array.isArray(questionObject.reponses)
-            ? questionObject.reponses
-            : (Array.isArray(questionObject.answers) ? questionObject.answers : [])
-        ).map(r => r.texte)
+        text: questionObject.text || questionObject.question || 'Question text not available',
+        answers: (Array.isArray(questionObject.answers)
+            ? questionObject.answers.map(ans => typeof ans === 'string' ? ans : ans.text)
+            : []),
     };
 }

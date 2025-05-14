@@ -34,9 +34,9 @@ export default function TournamentSessionPage() {
     // --- LOGIN CHECK AND REDIRECT ---
     React.useEffect(() => {
         if (typeof window === 'undefined') return;
-        const pseudo = localStorage.getItem('mathquest_pseudo');
+        const nickname = localStorage.getItem('mathquest_nickname');
         const avatar = localStorage.getItem('mathquest_avatar');
-        if (!pseudo || !avatar) {
+        if (!nickname || !avatar) {
             // Redirect to /student with redirect param
             router.replace(`/student?redirect=/live/${code}`);
         }
@@ -48,10 +48,10 @@ export default function TournamentSessionPage() {
                 if (!res.ok) return;
                 const status = await res.json();
 
-                if (status.statut === 'terminé') {
+                if (status.status === 'finished') {
                     logger.info(`Tournament ${code} is finished but we're on live page, redirecting to leaderboard`);
                     router.replace(`/leaderboard/${code}`);
-                } else if (status.statut === 'en préparation') {
+                } else if (status.status === 'preparing') {
                     logger.info(`Tournament ${code} is still in preparation, redirecting to lobby`);
                     router.replace(`/lobby/${code}`);
                 }
@@ -132,37 +132,40 @@ export default function TournamentSessionPage() {
             // Mock question for dev mode
             const mockQuestionData = devModeType === 'choix_multiple' ? {
                 uid: 'mock2',
-                texte: 'Quelles sont les couleurs primaires ?', // Changed from question to texte
-                reponses: [
-                    { texte: 'Rouge', correct: true },
-                    { texte: 'Vert', correct: false },
-                    { texte: 'Bleu', correct: true },
-                    { texte: 'Jaune', correct: true },
+                text: 'Quelles sont les couleurs primaires ?',
+                responses: [
+                    { text: 'Rouge', correct: true },
+                    { text: 'Vert', correct: false },
+                    { text: 'Bleu', correct: true },
+                    { text: 'Jaune', correct: true },
                 ],
-                type: 'choix_multiple' as const, // Added as const for type safety
-                discipline: 'Arts',
+                type: 'choix_multiple' as const,
+                subject: 'Arts',
                 theme: 'Couleurs',
-                difficulte: 1,
-                niveau: 'CE2',
+                difficulty: 1,
+                level: 'CE2',
             } : {
                 uid: 'mock1',
-                texte: 'Combien font 7 + 5 ?', // Changed from question to texte
-                reponses: [
-                    { texte: '10', correct: false },
-                    { texte: '12', correct: true },
-                    { texte: '13', correct: false },
-                    { texte: '14', correct: false },
+                text: 'Combien font 7 + 5 ?',
+                responses: [
+                    { text: '10', correct: false },
+                    { text: '12', correct: true },
+                    { text: '13', correct: false },
+                    { text: '14', correct: false },
                 ],
-                type: 'choix_simple' as const, // Added as const for type safety
-                discipline: 'Maths',
+                type: 'choix_simple' as const,
+                subject: 'Maths',
                 theme: 'Additions',
-                difficulte: 1,
-                niveau: 'CE2',
+                difficulty: 1,
+                level: 'CE2',
             };
 
             const mockTournamentQuestion: TournamentQuestion = {
-                code: "DEV_MODE_CODE", // Added missing code property
-                question: mockQuestionData, // Assign the detailed object here
+                code: "DEV_MODE_CODE",
+                question: {
+                    ...mockQuestionData,
+                    answers: mockQuestionData.responses.map(response => response.text),
+                },
                 timer: 20,
                 questionIndex: 0,
                 totalQuestions: 1,
@@ -204,15 +207,15 @@ export default function TournamentSessionPage() {
         // Helper to emit join_tournament
         const emitJoinTournament = () => {
             let cookie_id = null;
-            let pseudo = null;
+            let nickname = null;
             let avatar = null;
             if (typeof window !== 'undefined') {
                 cookie_id = localStorage.getItem('mathquest_cookie_id');
-                pseudo = localStorage.getItem('mathquest_pseudo');
+                nickname = localStorage.getItem('mathquest_nickname');
                 avatar = localStorage.getItem('mathquest_avatar');
             }
-            logger.info(`Joining tournament ${code}`, { cookie_id, pseudo, avatar, isDiffered });
-            s.emit("join_tournament", { code, cookie_id, pseudo, avatar, isDiffered });
+            logger.info(`Joining tournament ${code}`, { cookie_id, nickname, avatar, isDiffered });
+            s.emit("join_tournament", { code, cookie_id, nickname, avatar, isDiffered });
 
             // Also verify tournament status when joining to ensure we have the latest state
             // This helps with cases where we missed earlier events
@@ -221,7 +224,7 @@ export default function TournamentSessionPage() {
                 .then(status => {
                     logger.info(`Tournament ${code} status check on join:`, status);
                     // If tournament is finished but we're still on the live page, redirect to leaderboard
-                    if (status.statut === 'terminé') {
+                    if (status.status === 'finished') {
                         logger.info(`Tournament ${code} is finished, redirecting to leaderboard`);
                         window.location.href = `/leaderboard/${code}`;
                     }
@@ -516,7 +519,7 @@ export default function TournamentSessionPage() {
             // Optionally: show leaderboard
         });
 
-        // Get pseudo/avatar from localStorage for highlighting
+        // Get nickname/avatar from localStorage for highlighting
         if (typeof window !== 'undefined') {
             // if (isStudent) {
             // } else if (isTeacher) {
@@ -533,11 +536,11 @@ export default function TournamentSessionPage() {
 
                 // Fetch user details from localStorage for the new join emission
                 let user_cookie_id = null;
-                let user_pseudo = null;
+                let user_nickname = null;
                 let user_avatar = null;
                 if (typeof window !== 'undefined') {
                     user_cookie_id = localStorage.getItem('mathquest_cookie_id');
-                    user_pseudo = localStorage.getItem('mathquest_pseudo');
+                    user_nickname = localStorage.getItem('mathquest_nickname');
                     user_avatar = localStorage.getItem('mathquest_avatar');
                 }
 
@@ -545,7 +548,7 @@ export default function TournamentSessionPage() {
                 s.emit("join_tournament", {
                     code: newCode,
                     cookie_id: user_cookie_id, // Use fetched value
-                    pseudo: user_pseudo,       // Use fetched value
+                    nickname: user_nickname,       // Use fetched value
                     avatar: user_avatar,       // Use fetched value
                     isDiffered
                 });
@@ -676,7 +679,10 @@ export default function TournamentSessionPage() {
     // Reset selected answers ONLY when the question UID changes
     const currentQuestionUid = useMemo(() => {
         if (currentQuestion && typeof currentQuestion.question === 'object' && currentQuestion.question !== null) {
-            return (currentQuestion.question as Question).uid;
+            // Check if uid exists on the object, covering both FilteredQuestion and Question types
+            if ('uid' in currentQuestion.question) {
+                return currentQuestion.question.uid;
+            }
         }
         return undefined;
     }, [currentQuestion]);
@@ -711,8 +717,8 @@ export default function TournamentSessionPage() {
             return;
         }
         const clientTimestamp = Date.now();
-        const questionData = currentQuestion.question;
-        const questionUidForAnswer = (questionData && typeof questionData === 'object') ? (questionData as any).uid : undefined;
+        // const questionData = currentQuestion.question; // Not needed due to currentQuestionUid
+        // const questionUidForAnswer = (questionData && typeof questionData === 'object') ? (questionData as any).uid : undefined; // Replaced by currentQuestionUid
 
         logger.debug('Emitting tournament_answer', {
             code,
@@ -754,8 +760,8 @@ export default function TournamentSessionPage() {
         }
 
         const clientTimestamp = Date.now();
-        const questionData = currentQuestion.question;
-        const questionUidForAnswer = (questionData && typeof questionData === 'object') ? (questionData as any).uid : undefined;
+        // const questionData = currentQuestion.question; // Not needed due to currentQuestionUid
+        // const questionUidForAnswer = (questionData && typeof questionData === 'object') ? (questionData as any).uid : undefined; // Replaced by currentQuestionUid
 
         logger.debug('Emitting tournament_answer', {
             code,

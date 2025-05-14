@@ -54,7 +54,7 @@ export function calculateScore(
     let timePenalty = 0;
     // TODO: For quizzes, question.temps might not be the definitive "availableTimeSeconds".
     // This needs a more robust way to determine how long the question was available for answering in a quiz context.
-    const availableTimeSeconds = question.temps || 20; // Default to 20s if not set
+    const availableTimeSeconds = question.time || 20; // Default to 20s if not set
 
     if (answer.timeMs >= 0 && availableTimeSeconds > 0) {
         const proportionOfTimeTaken = Math.min(answer.timeMs / (availableTimeSeconds * 1000), 1);
@@ -64,10 +64,10 @@ export function calculateScore(
 
     // 2. Calculate Score Before Penalty (Base Score)
     let scoreBeforePenalty = 0;
-    const correctResponses = question.reponses?.filter(r => r.correct) || [];
+    const correctResponses = question.answers?.filter(r => r.correct) || [];
     const numCorrectOptions = correctResponses.length;
 
-    if (!question.reponses || numCorrectOptions === 0) {
+    if (!question.answers || numCorrectOptions === 0) {
         logger.warn(`[calculateScore] Question ${question.uid} has no responses or no correct responses defined.`);
         // scoreBeforePenalty remains 0
     } else if (question.type === 'QCU' || (question.type === 'QCM' && numCorrectOptions === 1)) {
@@ -82,7 +82,7 @@ export function calculateScore(
         let currentScoreForQCM = 0;
         const selectedIndices = Array.isArray(answer.answerIdx) ? answer.answerIdx : (typeof answer.answerIdx === 'number' ? [answer.answerIdx] : []);
 
-        question.reponses.forEach((response, index) => {
+        question.answers.forEach((response, index) => {
             const isSelected = selectedIndices.includes(index);
             if (isSelected) {
                 if (response.correct) {

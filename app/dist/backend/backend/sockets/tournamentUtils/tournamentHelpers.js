@@ -84,27 +84,27 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
         let rawAnswer = participantAnswerStore === null || participantAnswerStore === void 0 ? void 0 : participantAnswerStore[currentQuestionUid]; // rawAnswer is of type TournamentAnswer
         let scoreForThisQuestion = 0;
         // let processedAnswerForScoring: ProcessedAnswerForScoring; // Declared inside if block
-        if (rawAnswer && question.reponses) {
+        if (rawAnswer && question.answers) {
             const clientTs = typeof rawAnswer.clientTimestamp === 'number' ? rawAnswer.clientTimestamp : questionStartTime;
             const timeMs = Math.max(0, clientTs - questionStartTime);
             let isCorrectOverall = false;
             let submittedValue = undefined;
             let answerIndices = rawAnswer.answerIdx;
-            if (question.type === 'QCU' || (question.type === 'QCM' && question.reponses.filter(r => r.correct).length === 1)) {
-                const correctOptionIndex = question.reponses.findIndex(r => r.correct);
+            if (question.type === 'QCU' || (question.type === 'QCM' && question.answers.filter(r => r.correct).length === 1)) {
+                const correctOptionIndex = question.answers.findIndex(r => r.correct);
                 if (rawAnswer.answerIdx === correctOptionIndex) {
                     isCorrectOverall = true;
                 }
-                if (typeof rawAnswer.answerIdx === 'number' && question.reponses[rawAnswer.answerIdx]) {
-                    submittedValue = question.reponses[rawAnswer.answerIdx].texte;
+                if (typeof rawAnswer.answerIdx === 'number' && question.answers[rawAnswer.answerIdx]) {
+                    submittedValue = question.answers[rawAnswer.answerIdx].text;
                 }
             }
             else if (question.type === 'QCM') {
                 if (Array.isArray(rawAnswer.answerIdx)) {
-                    submittedValue = rawAnswer.answerIdx.map(idx => { var _a, _b; return (_b = (_a = question.reponses) === null || _a === void 0 ? void 0 : _a[idx]) === null || _b === void 0 ? void 0 : _b.texte; }).filter(t => !!t);
+                    submittedValue = rawAnswer.answerIdx.map(idx => { var _a, _b; return (_b = (_a = question.answers) === null || _a === void 0 ? void 0 : _a[idx]) === null || _b === void 0 ? void 0 : _b.text; }).filter(t => !!t);
                 }
-                else if (typeof rawAnswer.answerIdx === 'number' && ((_b = question.reponses) === null || _b === void 0 ? void 0 : _b[rawAnswer.answerIdx])) {
-                    submittedValue = question.reponses[rawAnswer.answerIdx].texte;
+                else if (typeof rawAnswer.answerIdx === 'number' && ((_b = question.answers) === null || _b === void 0 ? void 0 : _b[rawAnswer.answerIdx])) {
+                    submittedValue = question.answers[rawAnswer.answerIdx].text;
                 }
             }
             const processedAnswerForScoring = {
@@ -137,10 +137,10 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
                 serverReceiveTime: Date.now(), // This property must be recognized by TournamentAnswer type
                 isCorrect: false,
                 value: "Pas de réponse",
-                timeMs: (question.temps || 0) * 1000,
+                timeMs: (question.time || 0) * 1000,
                 score: 0,
                 baseScore: 0,
-                timePenalty: (question.temps || 0) > 0 ? 500 : 0
+                timePenalty: (question.time || 0) > 0 ? 500 : 0
             };
             if (!state.answers) {
                 state.answers = {};
@@ -164,15 +164,15 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
         }
         participant.scoredQuestions[currentQuestionUid] = scoreForThisQuestion;
         // Save score to DB
-        if (state.tournoiId && participant.id && !participant.id.startsWith('socket_')) {
-            (0, scoreUtils_1.saveParticipantScore)(db_1.default, state.tournoiId, { id: participant.id, score: participant.score })
+        if (state.tournamentId && participant.id && !participant.id.startsWith('socket_')) {
+            (0, scoreUtils_1.saveParticipantScore)(db_1.default, state.tournamentId, { id: participant.id, score: participant.score })
                 .catch((err) => logger.error(`[handleTimerExpiration] DB Score Save Error for ${participant.id}: ${err.message}`));
         }
     }
     // --- CALCULATE RANKS & EMIT INDIVIDUAL SCORE UPDATES ---
     const ranks = calculateRanks(state.participants || []);
     for (const participant of state.participants || []) {
-        const participantSocketId = Object.keys(state.socketToJoueur || {}).find(socketId => { var _a; return ((_a = state.socketToJoueur) === null || _a === void 0 ? void 0 : _a[socketId]) === participant.id; });
+        const participantSocketId = Object.keys(state.socketToPlayerId || {}).find(socketId => { var _a; return ((_a = state.socketToPlayerId) === null || _a === void 0 ? void 0 : _a[socketId]) === participant.id; });
         if (participantSocketId) {
             const targetSocket = io.sockets.sockets.get(participantSocketId);
             if (targetSocket) {
@@ -191,15 +191,15 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
         }
     }
     // --- EMIT QUESTION RESULTS (Correct Answers) ---
-    if (question.reponses && currentQuestionUid) {
+    if (question.answers && currentQuestionUid) {
         // Get the correct answer texts (preferred for display)
-        const correctAnswersText = question.reponses
+        const correctAnswersText = question.answers
             .filter(ans => ans.correct)
-            .map(ans => ans.texte);
+            .map(ans => ans.text);
         // Create leaderboard data
         const leaderboardData = (state.participants || []).map(p => ({
             id: p.id,
-            name: p.pseudo || 'Anonymous',
+            name: p.nickname || 'Anonymous',
             score: p.score || 0,
             rank: ranks.get(p.id) || 0
         })).sort((a, b) => a.rank - b.rank);

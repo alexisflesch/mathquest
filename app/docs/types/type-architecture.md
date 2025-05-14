@@ -115,8 +115,8 @@ import { BaseQuestion } from '@shared/types/question';
 ### Handling Question Text Fields
 
 ```typescript
-// Handle question text which might be in different fields
-const questionText = question.texte || question.question || '';
+// Example of accessing question text safely, preferring the standardized 'text' field:
+const questionText = question.text || ''; // Standardized
 ```
 
 ### Working with Answer Options

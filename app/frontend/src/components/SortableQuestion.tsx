@@ -122,11 +122,11 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         // When a question gets stopped, store its original time for later restoration
         if (isActive && liveStatus === 'stop') {
             // When a question is stopped, remember its original time
-            const originalTime = liveTimeLeft && liveTimeLeft > 0 ? liveTimeLeft : q.temps;
+            const originalTime = liveTimeLeft && liveTimeLeft > 0 ? liveTimeLeft : q.time;
             logger.debug(`[Timer Display] Question ${q.uid} was stopped. Original time ${originalTime}s is preserved for future restoration`);
             // The initialTime storage is handled in useTeacherQuizSocket.ts
         }
-    }, [isActive, liveStatus, liveTimeLeft, q.temps, q.uid]);
+    }, [isActive, liveStatus, liveTimeLeft, q.time, q.uid]);
 
     // Optimize displayedTimeLeft logic
     let displayedTimeLeft: number;
@@ -136,18 +136,18 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     }
     if (isActive) {
         if (liveStatus === 'stop') {
-            displayedTimeLeft = liveTimeLeft ?? q.temps ?? 0;
+            displayedTimeLeft = liveTimeLeft ?? q.time ?? 0;
         } else if (liveStatus === 'pause' || liveStatus === 'play') {
-            displayedTimeLeft = liveTimeLeft ?? q.temps ?? 0;
+            displayedTimeLeft = liveTimeLeft ?? q.time ?? 0;
         } else {
-            displayedTimeLeft = q.temps ?? 0;
+            displayedTimeLeft = q.time ?? 0;
         }
     } else {
-        displayedTimeLeft = q.temps ?? 0;
+        displayedTimeLeft = q.time ?? 0;
     }
 
     // --- Effets (conservés ici pour la synchro et l'édition) ---
-    // Effet pour synchroniser localTimeLeft avec liveTimeLeft (si active) ou q.temps
+    // Effet pour synchroniser localTimeLeft avec liveTimeLeft (si active) ou q.time
     useEffect(() => {
         // Ne pas synchroniser pendant l'édition du timer pour éviter de réinitialiser
         // la valeur que l'utilisateur est en train de modifier
@@ -158,13 +158,13 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         if (isActive && typeof liveTimeLeft === 'number') {
             logger.debug(`Syncing active question timer ${q.uid}: localTimeLeft <- liveTimeLeft (${liveTimeLeft})`);
             setEditTimerValue(String(liveTimeLeft));
-        } else if (!isActive && q.temps !== undefined && editTimerValue !== String(q.temps)) {
-            logger.debug(`Syncing inactive question timer ${q.uid}: localTimeLeft <- q.temps (${q.temps})`);
-            setEditTimerValue(String(q.temps));
+        } else if (!isActive && q.time !== undefined && editTimerValue !== String(q.time)) {
+            logger.debug(`Syncing inactive question timer ${q.uid}: localTimeLeft <- q.time (${q.time})`);
+            setEditTimerValue(String(q.time));
         }
         // Assurons-nous que toutes les dépendances sont explicitement listées
         // et que chaque valeur est de type stable (convertir les nombres en string si nécessaire)
-    }, [isActive, liveTimeLeft, q.temps, editTimerValue, q.uid, editingTimer]);
+    }, [isActive, liveTimeLeft, q.time, editTimerValue, q.uid, editingTimer]);
 
     // Ajouter un logging explicite pour déboguer le problème de sélection
     useEffect(() => {
@@ -195,10 +195,10 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     useEffect(() => {
         if (editingTimer) {
             // Utilise la valeur du timer serveur pour initialiser l'édition
-            setEditTimerValue(liveTimeLeft !== undefined && liveTimeLeft !== null ? String(liveTimeLeft) : String(q.temps ?? 0));
+            setEditTimerValue(liveTimeLeft !== undefined && liveTimeLeft !== null ? String(liveTimeLeft) : String(q.time ?? 0));
             setTimeout(() => timerInputRef.current?.focus(), 0);
         }
-    }, [editingTimer, liveTimeLeft, q.temps]); // Added q.temps as fallback
+    }, [editingTimer, liveTimeLeft, q.time]); // Added q.time as fallback
 
     // Effet pour réinitialiser la valeur en attente une fois que liveTimeLeft correspond
     useEffect(() => {
@@ -346,19 +346,19 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 <li className="mb-2 font-medium text-base text-couleur-global-neutral-700">
                     <MathJaxWrapper>{q.question}</MathJaxWrapper>
                 </li>
-                {Array.isArray(q.reponses) && q.reponses.length > 0
-                    ? q.reponses.map((r, idx) => (
+                {Array.isArray(q.answers) && q.answers.length > 0
+                    ? q.answers.map((r, idx) => (
                         <li key={idx} className="flex gap-2 ml-4 mb-1" style={{ listStyle: 'none', alignItems: 'flex-start' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'flex-start', height: '18px', minWidth: '18px' }}>
                                 {r.correct ? <Check size={18} strokeWidth={3} className="text-primary mt-1" style={{ display: 'block' }} /> : <X size={18} strokeWidth={3} className="text-secondary mt-1" style={{ display: 'block' }} />}
                             </span>
-                            <MathJaxWrapper><span style={{ lineHeight: '1.5' }}>{r.texte}</span></MathJaxWrapper>
+                            <MathJaxWrapper><span style={{ lineHeight: '1.5' }}>{r.text}</span></MathJaxWrapper>
                         </li>
                     ))
                     : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
-                {q.explication && (
+                {q.explanation && (
                     <div className="mt-4 pt-2 border-t border-base-300 text-sm text-base-content/70">
-                        <span className="font-semibold">Explication :</span> {q.explication}
+                        <span className="font-semibold">Explication :</span> {q.explanation}
                     </div>
                 )}
             </ul>

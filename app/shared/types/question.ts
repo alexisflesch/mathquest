@@ -1,9 +1,8 @@
-
 /**
  * Answer type for questions
  */
 export interface Answer {
-    texte: string;
+    text: string; // Renamed from texte
     correct: boolean;
 }
 
@@ -12,9 +11,10 @@ export interface Answer {
  */
 export interface BaseQuestion {
     uid: string; // Unique identifier for the question
-    texte: string; // Primary field for question text
+    text: string; // Renamed from texte - Primary field for question text
     type: string; // Question type (e.g., choix_simple, choix_multiple)
-    reponses?: Answer[]; // Array of possible answers
-    temps?: number; // Time limit for the question in seconds
-    explication?: string; // Explanation for the correct answer
+    answers: Answer[]; // CHANGED: Array of possible answers, now mandatory
+    time?: number; // Renamed from temps - Time limit for the question in seconds
+    explanation?: string; // Renamed from explication - Explanation for the correct answer
+    tags?: string[]; // ADDED: Tags for categorizing the question
 }

@@ -24,14 +24,13 @@ logger.warn("DEPRECATION WARNING: sendTournamentQuestion.ts is deprecated and wi
  * @returns Filtered question data
  */
 function createFilteredQuestionData(payload) {
-    var _a;
     const { question, timer, tournoiState, questionIndex } = payload;
     return {
         type: question.type, // No change needed here as FilteredQuestionData now allows undefined
         uid: question.uid,
-        question: (_a = question.question) !== null && _a !== void 0 ? _a : '', // Handle potentially undefined question text
-        answers: Array.isArray(question.reponses)
-            ? question.reponses.map(r => r.texte)
+        question: question.text, // Changed from question.question
+        answers: Array.isArray(question.answers)
+            ? question.answers.map(r => r.text)
             : [],
         index: questionIndex,
         tournoiState,
@@ -63,13 +62,12 @@ payload) {
  */
 function legacySendTournamentQuestion(targetEmitter, // Changed type to BroadcastOperator
 questionObj, index, total, remainingTime, questionState, isQuizMode) {
-    var _a;
     const filteredPayload = {
         type: questionObj.type, // No change needed here
         uid: questionObj.uid,
-        question: (_a = questionObj.question) !== null && _a !== void 0 ? _a : '', // Handle potentially undefined question text
-        answers: Array.isArray(questionObj.reponses)
-            ? questionObj.reponses.map(r => r.texte)
+        question: questionObj.text, // Changed from questionObj.question
+        answers: Array.isArray(questionObj.answers)
+            ? questionObj.answers.map(r => r.text)
             : [],
         index,
         total,

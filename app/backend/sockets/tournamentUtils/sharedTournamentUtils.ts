@@ -34,8 +34,8 @@ export function sendTournamentQuestion(
         type: payload.question.type,
         uid: payload.question.uid,
         question: payload.question.question ?? '',
-        answers: Array.isArray(payload.question.reponses)
-            ? payload.question.reponses.map(r => r.texte)
+        answers: Array.isArray(payload.question.answers)
+            ? payload.question.answers.map(r => r.text)
             : [],
         index: payload.questionIndex,
         tournoiState: payload.tournoiState,

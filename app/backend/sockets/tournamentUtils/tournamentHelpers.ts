@@ -95,26 +95,26 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
         let scoreForThisQuestion = 0;
         // let processedAnswerForScoring: ProcessedAnswerForScoring; // Declared inside if block
 
-        if (rawAnswer && question.reponses) {
+        if (rawAnswer && question.answers) {
             const clientTs = typeof rawAnswer.clientTimestamp === 'number' ? rawAnswer.clientTimestamp : questionStartTime;
             const timeMs = Math.max(0, clientTs - questionStartTime);
             let isCorrectOverall = false;
             let submittedValue: string | string[] | undefined = undefined;
             let answerIndices: number | number[] | undefined = rawAnswer.answerIdx;
 
-            if (question.type === 'QCU' || (question.type === 'QCM' && question.reponses.filter(r => r.correct).length === 1)) {
-                const correctOptionIndex = question.reponses.findIndex(r => r.correct);
+            if (question.type === 'QCU' || (question.type === 'QCM' && question.answers.filter(r => r.correct).length === 1)) {
+                const correctOptionIndex = question.answers.findIndex(r => r.correct);
                 if (rawAnswer.answerIdx === correctOptionIndex) {
                     isCorrectOverall = true;
                 }
-                if (typeof rawAnswer.answerIdx === 'number' && question.reponses[rawAnswer.answerIdx]) {
-                    submittedValue = question.reponses[rawAnswer.answerIdx].texte;
+                if (typeof rawAnswer.answerIdx === 'number' && question.answers[rawAnswer.answerIdx]) {
+                    submittedValue = question.answers[rawAnswer.answerIdx].text;
                 }
             } else if (question.type === 'QCM') {
                 if (Array.isArray(rawAnswer.answerIdx)) {
-                    submittedValue = rawAnswer.answerIdx.map(idx => question.reponses?.[idx]?.texte).filter(t => !!t) as string[];
-                } else if (typeof rawAnswer.answerIdx === 'number' && question.reponses?.[rawAnswer.answerIdx]) {
-                    submittedValue = question.reponses[rawAnswer.answerIdx].texte;
+                    submittedValue = rawAnswer.answerIdx.map(idx => question.answers?.[idx]?.text).filter(t => !!t) as string[];
+                } else if (typeof rawAnswer.answerIdx === 'number' && question.answers?.[rawAnswer.answerIdx]) {
+                    submittedValue = question.answers[rawAnswer.answerIdx].text;
                 }
             }
 
@@ -152,10 +152,10 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
                 serverReceiveTime: Date.now(), // This property must be recognized by TournamentAnswer type
                 isCorrect: false,
                 value: "Pas de réponse",
-                timeMs: (question.temps || 0) * 1000,
+                timeMs: (question.time || 0) * 1000,
                 score: 0,
                 baseScore: 0,
-                timePenalty: (question.temps || 0) > 0 ? 500 : 0
+                timePenalty: (question.time || 0) > 0 ? 500 : 0
             };
 
             if (!state.answers) {
@@ -185,8 +185,8 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
         participant.scoredQuestions[currentQuestionUid] = scoreForThisQuestion;
 
         // Save score to DB
-        if (state.tournoiId && participant.id && !participant.id.startsWith('socket_')) {
-            saveParticipantScore(prisma, state.tournoiId, { id: participant.id, score: participant.score })
+        if (state.tournamentId && participant.id && !participant.id.startsWith('socket_')) {
+            saveParticipantScore(prisma, state.tournamentId, { id: participant.id, score: participant.score })
                 .catch((err: Error) => logger.error(`[handleTimerExpiration] DB Score Save Error for ${participant.id}: ${err.message}`));
         }
     }
@@ -194,8 +194,8 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
     // --- CALCULATE RANKS & EMIT INDIVIDUAL SCORE UPDATES ---
     const ranks = calculateRanks(state.participants || []);
     for (const participant of state.participants || []) {
-        const participantSocketId = Object.keys(state.socketToJoueur || {}).find(
-            socketId => state.socketToJoueur?.[socketId] === participant.id
+        const participantSocketId = Object.keys(state.socketToPlayerId || {}).find(
+            socketId => state.socketToPlayerId?.[socketId] === participant.id
         );
         if (participantSocketId) {
             const targetSocket = io.sockets.sockets.get(participantSocketId);
@@ -214,16 +214,16 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
     }
 
     // --- EMIT QUESTION RESULTS (Correct Answers) ---
-    if (question.reponses && currentQuestionUid) {
+    if (question.answers && currentQuestionUid) {
         // Get the correct answer texts (preferred for display)
-        const correctAnswersText = question.reponses
+        const correctAnswersText = question.answers
             .filter(ans => ans.correct)
-            .map(ans => ans.texte);
+            .map(ans => ans.text);
 
         // Create leaderboard data
         const leaderboardData = (state.participants || []).map(p => ({
             id: p.id,
-            name: p.pseudo || 'Anonymous',
+            name: p.nickname || 'Anonymous',
             score: p.score || 0,
             rank: ranks.get(p.id) || 0
         })).sort((a, b) => a.rank - b.rank);

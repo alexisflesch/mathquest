@@ -180,7 +180,7 @@ async function handleSetQuestion(
     // Send standardized live_question to projector room for the quiz
     const currentQuestionObject = quizState[quizId].questions[finalQuestionIdx];
     if (currentQuestionObject) {
-        const timerDuration = questionTimer?.initialTime ?? currentQuestionObject.temps ?? undefined;
+        const timerDuration = questionTimer?.initialTime ?? currentQuestionObject.time ?? undefined;
         const modeSpecificData = {
             quizId: quizId,
             locked: quizState[quizId].locked,

@@ -100,12 +100,12 @@ export interface PauseResumePayload {
  */
 export interface JoinTournamentPayload {
     code: string;
-    pseudo?: string;
+    nickname?: string; // Renamed from pseudo
     avatar?: string;
-    isDiffered?: boolean;
-    joueurId?: string;
+    isDeferred?: boolean; // Renamed from isDiffered
+    playerId?: string; // Renamed from joueurId
     classId?: string;
-    cookie_id?: string;
+    cookieId?: string; // Renamed from cookie_id
 }
 
 export interface TournamentAnswerPayload {
@@ -113,12 +113,12 @@ export interface TournamentAnswerPayload {
     questionUid: string;
     answerIdx: number | number[];
     clientTimestamp: number;
-    isDiffered?: boolean;
+    isDeferred?: boolean; // Renamed from isDiffered
 }
 
 export interface StartTournamentPayload {
     code: string;
-    enseignantId: string;
+    teacherId: string; // Renamed from enseignantId
 }
 
 export interface PauseTournamentPayload {

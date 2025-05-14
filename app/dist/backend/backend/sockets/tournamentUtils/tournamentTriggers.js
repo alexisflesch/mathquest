@@ -303,8 +303,8 @@ function triggerTournamentAnswer(io, code, participantId, answer, questionUid) {
     }
     participant.score = totalScore;
     // Save score to database for persistent tournaments
-    if (state.tournoiId && participant.socketId) { // Defensive guard for participant.socketId was already added
-        (0, scoreUtils_1.saveParticipantScore)(db_1.default, state.tournoiId, participant)
+    if (state.tournamentId && participant.socketId) { // Defensive guard for participant.socketId was already added
+        (0, scoreUtils_1.saveParticipantScore)(db_1.default, state.tournamentId, participant)
             .catch((err) => logger.error(`[TriggerAnswer] Error saving score: ${err.message}`));
     }
     // Acknowledge receipt to the participant

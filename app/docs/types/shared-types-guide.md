@@ -74,7 +74,9 @@ export function QuestionDisplay({ question }: { question: EnhancedQuestion }) {
   // Use the shared types in your component
   return (
     <div>
-      <h2>{question.texte || question.question}</h2>
+      <MathJaxWrapper>
+        <h2>{question.text}</h2>
+      </MathJaxWrapper>
       <ul>
         {(question.reponses || question.answers || []).map((answer, index) => (
           <li key={index} onClick={() => setSelectedAnswer(answer)}>
@@ -156,6 +158,14 @@ export function handleSetQuestion(
      texte: item.text,
      // other mappings...
    }));
+   ```
+
+6. **Good practice**: Create utility functions for common operations
+   ```typescript
+   function getQuestionText(question: BaseQuestion): string {
+      const text = question.text || '';
+      return text;
+   }
    ```
 
 ## Troubleshooting

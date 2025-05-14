@@ -25,7 +25,7 @@ export const baseQuestionSchema = {
         type: 'string' as SchemaFieldType,
         required: true
     },
-    texte: {
+    text: { // Renamed from texte
         type: 'string' as SchemaFieldType,
         required: true
     },
@@ -33,16 +33,16 @@ export const baseQuestionSchema = {
         type: 'string' as SchemaFieldType,
         required: true
     },
-    reponses: {
+    responses: { // Renamed from reponses
         type: 'array' as SchemaFieldType,
         required: false,
         arrayOf: answerSchema
     },
-    temps: {
+    time: { // Renamed from temps
         type: 'number' as SchemaFieldType,
         required: false
     },
-    explication: {
+    explanation: { // Renamed from explication
         type: 'string' as SchemaFieldType,
         required: false
     }
@@ -50,13 +50,13 @@ export const baseQuestionSchema = {
 
 // Custom validators for complex fields
 const isCorrectField = (value: unknown): boolean => {
-    return typeof value === 'boolean' || 
-           (Array.isArray(value) && value.every(item => typeof item === 'number'));
+    return typeof value === 'boolean' ||
+        (Array.isArray(value) && value.every(item => typeof item === 'number'));
 };
 
-const isNiveauField = (value: unknown): boolean => {
-    return typeof value === 'string' || 
-           (Array.isArray(value) && value.every(item => typeof item === 'string'));
+const isLevelField = (value: unknown): boolean => { // Renamed from isNiveauField
+    return typeof value === 'string' ||
+        (Array.isArray(value) && value.every(item => typeof item === 'string'));
 };
 
 // Question schema (extends BaseQuestion)
@@ -71,13 +71,13 @@ export const questionSchema = {
         type: 'string' as SchemaFieldType,
         required: false
     },
-    difficulte: {
+    difficulty: { // Renamed from difficulte
         type: 'number' as SchemaFieldType,
         required: false
     },
-    niveau: {
+    level: { // Renamed from niveau
         type: 'custom' as SchemaFieldType,
-        validator: isNiveauField,
+        validator: isLevelField, // Renamed from isNiveauField
         required: false
     },
     discipline: {
@@ -97,14 +97,11 @@ export const questionSchema = {
         type: 'boolean' as SchemaFieldType,
         required: false
     },
-    title: {
-        type: 'string' as SchemaFieldType,
-        required: false
-    },
-    titre: {
+    title: { // Standardized to 'title', removing 'titre'
         type: 'string' as SchemaFieldType,
         required: false
     }
+    // Removed 'titre' field as it's covered by 'title'
 };
 
 // Create validators for common types

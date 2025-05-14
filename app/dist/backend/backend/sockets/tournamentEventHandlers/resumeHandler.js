@@ -22,7 +22,7 @@ const logger = (0, logger_1.default)('ResumeTournamentHandler');
  */
 function handleTournamentResume(io, socket, { code }) {
     const state = tournamentState_1.tournamentState[code]; // Only applicable to live tournaments
-    if (state && !state.isDiffered && state.paused) {
+    if (state && !state.isDeferred && state.paused) {
         state.paused = false;
         // Find the current question using currentQuestionUid
         const question = state.questions.find(q => q.uid === state.currentQuestionUid);
@@ -31,7 +31,7 @@ function handleTournamentResume(io, socket, { code }) {
             return;
         }
         // Update all references to question properties
-        const timeAllowed = question.temps || 20;
+        const timeAllowed = question.time || 20;
         state.questionStart = Date.now() - (timeAllowed - (state.pausedRemainingTime || 0)) * 1000; // Adjust start time
         const remaining = state.pausedRemainingTime || 0;
         state.pausedRemainingTime = undefined; // Use undefined instead of null
@@ -78,12 +78,12 @@ function handleTournamentResume(io, socket, { code }) {
                             totalScore,
                             currentTotal: participant.score
                         };
-                        const socketId = (_c = Object.entries(state.socketToJoueur || {}).find(([sid, jid]) => jid === joueurId)) === null || _c === void 0 ? void 0 : _c[0];
+                        const socketId = (_c = Object.entries(state.socketToPlayerId || {}).find(([sid, jid]) => jid === joueurId)) === null || _c === void 0 ? void 0 : _c[0];
                         if (socketId) {
                             io.to(socketId).emit("tournament_answer_result", {
                                 correct: baseScore > 0,
                                 score: participant.score,
-                                explanation: (currentQuestion === null || currentQuestion === void 0 ? void 0 : currentQuestion.explication) || null,
+                                explanation: (currentQuestion === null || currentQuestion === void 0 ? void 0 : currentQuestion.explanation) || null,
                                 baseScore,
                                 rapidity: Math.round(rapidity * 100) / 100,
                                 totalScore,
@@ -105,10 +105,10 @@ function handleTournamentResume(io, socket, { code }) {
                 const leaderboard = state.participants && Array.isArray(state.participants)
                     ? state.participants.map(p => ({
                         id: p.id,
-                        pseudo: p.pseudo,
+                        pseudo: p.nickname,
                         avatar: p.avatar,
                         score: p.score,
-                        isDiffered: !!p.isDiffered
+                        isDiffered: !!p.isDeferred
                     })).sort((a, b) => (b.score || 0) - (a.score || 0))
                     : [];
                 io.to(`live_${code}`).emit("tournament_end", { leaderboard });
@@ -116,7 +116,7 @@ function handleTournamentResume(io, socket, { code }) {
                     const tournoi = await prisma.tournoi.findUnique({ where: { code } });
                     if (tournoi && state.participants && Array.isArray(state.participants)) {
                         for (const participant of state.participants) {
-                            if (!participant.isDiffered) {
+                            if (!participant.isDeferred) {
                                 const joueurId = participant.id;
                                 const scoreValue = participant.score || 0;
                                 if (!joueurId.startsWith('socket_')) {

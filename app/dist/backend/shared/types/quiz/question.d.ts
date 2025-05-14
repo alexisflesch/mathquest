@@ -1,4 +1,4 @@
-import { BaseQuestion, Answer } from '../question';
+import { BaseQuestion } from '../question';
 /**
  * Shared Question Types
  *
@@ -15,7 +15,6 @@ export interface Question extends BaseQuestion {
     niveau?: string | string[];
     discipline?: string;
     question?: string;
-    answers?: Answer[];
     hidden?: boolean;
     title?: string;
 }

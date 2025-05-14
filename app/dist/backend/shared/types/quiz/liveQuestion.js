@@ -20,9 +20,9 @@ function filterQuestionForClient(questionObject) {
     return {
         uid: questionObject.uid,
         type: questionObject.type,
-        texte: questionObject.texte || questionObject.question || 'Question text not available',
-        reponses: (Array.isArray(questionObject.reponses)
-            ? questionObject.reponses
-            : (Array.isArray(questionObject.answers) ? questionObject.answers : [])).map(r => r.texte)
+        text: questionObject.text || questionObject.question || 'Question text not available',
+        answers: (Array.isArray(questionObject.answers)
+            ? questionObject.answers.map(ans => typeof ans === 'string' ? ans : ans.text)
+            : []),
     };
 }

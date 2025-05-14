@@ -60,8 +60,8 @@ function getQuestionTimer(quizId: string, questionId: string): QuestionTimer | n
 
         if (quizState[quizId].questions) {
             const question = quizState[quizId].questions.find(q => q.uid === questionId);
-            if (question && typeof question.temps === 'number') {
-                initialTime = question.temps;
+            if (question && typeof question.time === 'number') {
+                initialTime = question.time;
             }
         }
 

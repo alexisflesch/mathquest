@@ -54,17 +54,20 @@ const getQuestionTextToRender = (payload: TournamentQuestion | null): string => 
         return payload.question;
     }
 
-    // Check if it's a FilteredQuestion with texte field
-    if ('texte' in payload.question && payload.question.texte) {
-        return payload.question.texte;
+    // payload.question is FilteredQuestion | Question
+    // Both should have 'text: string'.
+    if (payload.question.text && typeof payload.question.text === 'string' && payload.question.text.trim() !== '') {
+        return payload.question.text;
     }
 
-    // If it's another object shape, try to extract the text
-    if (typeof payload.question === 'object') {
-        // Cast to any to handle various object shapes
-        const q = payload.question as any;
-        if (q.texte) return q.texte;
-        if (q.question) return q.question;
+    // Fallback for Question type's optional legacy 'question' field if 'text' was empty or not present.
+    if ('question' in payload.question) {
+        const qObject = payload.question as Question; // Assert Question type
+        if (qObject.question && typeof qObject.question === 'string' && qObject.question.trim() !== '') {
+            // This case should ideally not be hit if 'text' is always populated.
+            logger.warn('[TournamentQuestionCard] Using legacy qObject.question as fallback for text. payload.question:', payload.question);
+            return qObject.question;
+        }
     }
 
     logger.warn('[TournamentQuestionCard] Could not extract question text. payload.question:', payload.question);
@@ -73,26 +76,31 @@ const getQuestionTextToRender = (payload: TournamentQuestion | null): string => 
 
 const getAnswersToRender = (payload: TournamentQuestion | null): string[] => {
     if (!payload) return [];
-    if (!payload.question) return [];
 
-    // If question is a FilteredQuestion with reponses field
-    if (typeof payload.question === 'object') {
-        // FilteredQuestion has reponses as array of strings
-        if ('reponses' in payload.question && Array.isArray(payload.question.reponses)) {
-            return payload.question.reponses.map((r: any) => typeof r === 'string' ? r : r.texte || '');
+    // Case 1: payload.question is an object (FilteredQuestion or Question)
+    if (typeof payload.question === 'object' && payload.question !== null) {
+        // The 'answers' property is now mandatory on BaseQuestion,
+        // and FilteredQuestion also has 'answers: string[]'.
+        if (payload.question.answers && Array.isArray(payload.question.answers)) {
+            if (payload.question.answers.length === 0) return [];
+
+            const firstAnswer = payload.question.answers[0];
+            if (typeof firstAnswer === 'string') {
+                // This means payload.question.answers is string[] (from FilteredQuestion)
+                return payload.question.answers as string[];
+            } else if (typeof firstAnswer === 'object' && firstAnswer !== null && 'text' in firstAnswer) {
+                // This means payload.question.answers is Answer[] (from Question)
+                return (payload.question.answers as { text: string }[]).map(ans => ans.text);
+            }
         }
-
-        // Handle Question type with Answer objects
-        const q = payload.question as any;
-
-        // Ensure all answers are strings
-        if (Array.isArray(q.reponses)) {
-            return q.reponses.map((r: any) => typeof r === 'string' ? r : r.texte || '');
-        }
-
-        if (Array.isArray(q.answers)) {
-            return q.answers.map((a: any) => typeof a === 'string' ? a : a.texte || '');
-        }
+        logger.warn('[TournamentQuestionCard] payload.question is object, but its answers are missing or malformed:', payload.question);
+    }
+    // Case 2: payload.question is a string - this case implies answers should be at top level if available
+    else if (typeof payload.question === 'string') {
+        // This component's TournamentQuestion interface doesn't define top-level 'answers'
+        // This path likely means no answers can be rendered if question is just a string.
+        logger.warn('[TournamentQuestionCard] payload.question is string, cannot derive answers from it directly. payload:', payload);
+        return [];
     }
 
     logger.warn('[TournamentQuestionCard] No valid answers found in payload:', payload);

@@ -35,7 +35,7 @@ function computeLeaderboard(tState, questionStates, totalQuestions) {
     return Object.values(tState.participants)
         .map((p) => ({
         id: p.id,
-        pseudo: p.pseudo,
+        nickname: p.nickname,
         avatar: p.avatar ? (p.avatar.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`) : undefined,
         score: p.score || 0
     }))

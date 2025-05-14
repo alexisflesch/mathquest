@@ -88,23 +88,23 @@ export interface PauseResumePayload {
  */
 export interface JoinTournamentPayload {
     code: string;
-    pseudo?: string;
+    nickname?: string;
     avatar?: string;
-    isDiffered?: boolean;
-    joueurId?: string;
+    isDeferred?: boolean;
+    playerId?: string;
     classId?: string;
-    cookie_id?: string;
+    cookieId?: string;
 }
 export interface TournamentAnswerPayload {
     code: string;
     questionUid: string;
     answerIdx: number | number[];
     clientTimestamp: number;
-    isDiffered?: boolean;
+    isDeferred?: boolean;
 }
 export interface StartTournamentPayload {
     code: string;
-    enseignantId: string;
+    teacherId: string;
 }
 export interface PauseTournamentPayload {
     code: string;
@@ -112,8 +112,9 @@ export interface PauseTournamentPayload {
 export interface ResumeTournamentPayload {
     code: string;
 }
+import type { PrismaClient } from '@prisma/client';
 /**
  * Socket event handler function types
  */
-export type QuizEventHandler = (io: Server, socket: Socket, prisma: any, payload: any) => void | Promise<void>;
-export type TournamentEventHandler = (io: Server, socket: Socket, prisma: any, payload: any) => void | Promise<void>;
+export type QuizEventHandler = (io: Server, socket: Socket, prisma: PrismaClient, payload: Record<string, unknown>) => void | Promise<void>;
+export type TournamentEventHandler = (io: Server, socket: Socket, prisma: PrismaClient, payload: Record<string, unknown>) => void | Promise<void>;

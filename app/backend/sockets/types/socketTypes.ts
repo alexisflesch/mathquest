@@ -22,6 +22,7 @@ import {
     PauseTournamentPayload as SharedPauseTournamentPayload,
     ResumeTournamentPayload as SharedResumeTournamentPayload
 } from '@shared/types/socket/payloads';
+import type { PrismaClient } from '@prisma/client'; // Added import
 
 // Re-export all the shared payload types
 export type SetQuestionPayload = SharedSetQuestionPayload;
@@ -50,13 +51,13 @@ export type ResumeTournamentPayload = SharedResumeTournamentPayload;
 export type QuizEventHandler = (
     io: Server,
     socket: Socket,
-    prisma: any,
-    payload: any
+    prisma: PrismaClient, // Changed from any
+    payload: Record<string, unknown> // Changed from any
 ) => void | Promise<void>;
 
 export type TournamentEventHandler = (
     io: Server,
     socket: Socket,
-    prisma: any,
-    payload: any
+    prisma: PrismaClient, // Changed from any
+    payload: Record<string, unknown> // Changed from any
 ) => void | Promise<void>;

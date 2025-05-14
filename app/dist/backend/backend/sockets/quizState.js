@@ -59,8 +59,8 @@ function getQuestionTimer(quizId, questionId) {
         let initialTime = 20; // Default
         if (quizState[quizId].questions) {
             const question = quizState[quizId].questions.find(q => q.uid === questionId);
-            if (question && typeof question.temps === 'number') {
-                initialTime = question.temps;
+            if (question && typeof question.time === 'number') {
+                initialTime = question.time;
             }
         }
         quizState[quizId].questionTimers[questionId] = createDefaultQuestionTimer(initialTime);

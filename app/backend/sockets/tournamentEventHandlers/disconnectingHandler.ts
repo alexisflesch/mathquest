@@ -28,18 +28,18 @@ async function handleDisconnecting(
     // Find which tournament states this socket was part of
     for (const stateKey in tournamentState) {
         const state: TournamentState | undefined = tournamentState[stateKey];
-        if (state?.socketToJoueur && state.socketToJoueur[socket.id]) {
-            const joueurId = state.socketToJoueur[socket.id];
+        if (state?.socketToPlayerId && state.socketToPlayerId[socket.id]) {
+            const joueurId = state.socketToPlayerId[socket.id];
             logger.info(`Socket ${socket.id} (joueurId: ${joueurId}) disconnecting from tournament state ${stateKey}`);
             // Remove the socket mapping. Participant data remains for scoring (in live) or potential rejoin (in differed).
-            delete state.socketToJoueur[socket.id];
+            delete state.socketToPlayerId[socket.id];
 
             // --- Emit real-time participant update to tournament room ---
             // Only emit for live tournaments (not differed)
-            if (!state.isDiffered && state.participants) {
+            if (!state.isDeferred && state.participants) {
                 const participantsList = Object.values(state.participants).map(p => ({
                     id: p.id,
-                    pseudo: p.pseudo,
+                    pseudo: p.nickname,
                     avatar: p.avatar,
                 }));
                 io.to(`live_${stateKey}`).emit("tournament_participants_update", {

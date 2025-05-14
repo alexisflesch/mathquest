@@ -21,12 +21,12 @@ const logger = (0, logger_1.default)('PauseTournamentHandler');
  */
 function handleTournamentPause(io, socket, { code }) {
     const state = tournamentState_1.tournamentState[code]; // Only applicable to live tournaments
-    if (state && !state.isDiffered && !state.paused) {
+    if (state && !state.isDeferred && !state.paused) {
         // Calculate remaining time based on elapsed time since question start
         const elapsed = state.questionStart ? (Date.now() - state.questionStart) / 1000 : 0;
         // Use currentQuestionDuration if available, otherwise fallback
         const currentQuestion = state.questions.find(q => q.uid === state.currentQuestionUid);
-        const timeAllowed = state.currentQuestionDuration || ((currentQuestion === null || currentQuestion === void 0 ? void 0 : currentQuestion.temps) || 20);
+        const timeAllowed = state.currentQuestionDuration || ((currentQuestion === null || currentQuestion === void 0 ? void 0 : currentQuestion.time) || 20);
         state.pausedRemainingTime = Math.max(0, timeAllowed - elapsed);
         // Set paused flag to true
         state.paused = true;

@@ -73,20 +73,30 @@ async function handleJoinQuiz(
                         const dbQuestion = questionMap.get(uid);
                         if (dbQuestion) {
                             const question: Question = {
+                                // BaseQuestion fields
                                 uid: dbQuestion.uid,
-                                texte: dbQuestion.question || '', // Map question to texte field
+                                text: dbQuestion.question || '', // dbQuestion.question from Prisma is the main text content
                                 type: dbQuestion.type,
-                                temps: dbQuestion.temps || undefined,
-                                theme: dbQuestion.theme,
-                                difficulte: dbQuestion.difficulte || undefined,
-                                niveau: dbQuestion.niveau || undefined,
-                                discipline: dbQuestion.discipline,
-                                explication: dbQuestion.explication || undefined,
-                                hidden: dbQuestion.hidden || undefined,
-                                // Use reponses as the primary field (recommended)
-                                reponses: Array.isArray(dbQuestion.reponses) ?
-                                    dbQuestion.reponses.map((r: any) => ({ texte: r.texte, correct: r.correct })) :
-                                    []
+                                answers: Array.isArray(dbQuestion.reponses) ?
+                                    dbQuestion.reponses.map((r: any) => ({
+                                        text: r.texte || '',      // Map from r.texte
+                                        correct: typeof r.correct === 'boolean' ? r.correct : false // Ensure boolean, map from r.correct
+                                    })) :
+                                    [],
+                                time: dbQuestion.temps || undefined, // Map from dbQuestion.temps
+                                explanation: dbQuestion.explication || undefined, // Map from dbQuestion.explication
+                                tags: (dbQuestion.tags as string[] | undefined) || [], // Map from dbQuestion.tags, ensure array
+
+                                // Extended Question fields from @shared/types/quiz/question.ts
+                                theme: dbQuestion.theme || undefined,
+                                difficulte: dbQuestion.difficulte || undefined, // Handles null from DB
+                                niveau: dbQuestion.niveau || undefined, // Handles null from DB, maps to string | string[] | undefined
+                                discipline: dbQuestion.discipline || undefined, // Handles null from DB
+                                question: dbQuestion.question || undefined, // Optional: if shared type needs this as well (BaseQuestion.text is primary)
+                                hidden: dbQuestion.hidden || undefined, // Handles null from DB
+                                title: dbQuestion.titre || undefined, // Map from dbQuestion.titre
+                                // 'correct' field on Question is optional and not directly on dbQuestion.
+                                // The 'correct' information is within each answer object.
                             };
                             orderedQuestions.push(question);
                         }
@@ -101,8 +111,8 @@ async function handleJoinQuiz(
                     if (q && q.uid) {
                         quizState[quizId].questionTimers![q.uid] = {
                             status: 'stop',
-                            timeLeft: q.temps || 20,
-                            initialTime: q.temps || 20,
+                            timeLeft: q.time || 20,
+                            initialTime: q.time || 20,
                             timestamp: null
                         };
                     }
@@ -136,7 +146,7 @@ async function handleJoinQuiz(
                 timers[q.uid] &&
                 typeof timers[q.uid]?.initialTime === 'number'
             ) {
-                q.temps = timers[q.uid].initialTime;
+                q.time = timers[q.uid].initialTime;
             }
         });
     }
@@ -166,7 +176,8 @@ async function handleJoinQuiz(
     // --- Add socket to the list of connected sockets ---
     if (!quizState[quizId].connectedSockets) quizState[quizId].connectedSockets = new Set();
     quizState[quizId].connectedSockets.add(socket.id);
-    logger.info(`[QUIZ_CONNECTED] Ajout socket ${socket.id} à quiz ${quizId}. Sockets connectés:`, Array.from(quizState[quizId].connectedSockets));
+    // Corrected logger line: ensure template literal placeholders are correctly closed.
+    logger.info(`[QUIZ_CONNECTED] Ajout socket ${socket.id} à quiz ${quizId}. Sockets connectés:`, Array.from(quizState[quizId].connectedSockets || []));
 
     // Emit the number of connected users
     // --- Calculate total connected (lobby + live) ---

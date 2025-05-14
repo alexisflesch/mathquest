@@ -29,4 +29,10 @@ __exportStar(require("./quiz/state"), exports);
 __exportStar(require("./tournament/participant"), exports);
 __exportStar(require("./tournament/state"), exports);
 __exportStar(require("./socket/payloads"), exports);
+__exportStar(require("./socket/events"), exports); // Export socket event constants
 __exportStar(require("./util/logger"), exports);
+__exportStar(require("./util/typeGuards"), exports); // Export type guards for runtime validation
+__exportStar(require("./util/typeErrors"), exports); // Export type error helpers
+__exportStar(require("./util/typeMapping"), exports); // Export type mapping utilities
+__exportStar(require("./util/schemaValidation"), exports); // Export schema validation utilities
+__exportStar(require("./util/schemaDefinitions"), exports); // Export schema definitions

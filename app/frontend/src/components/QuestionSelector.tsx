@@ -275,7 +275,7 @@ export default function QuestionSelector({
                                 >
                                     <div className="font-medium mb-1 couleur-global-neutral-700">Réponses&nbsp;:</div>
                                     <ul className="pl-0">
-                                        {q.reponses.map((rep, idx) => (
+                                        {q.answers.map((rep, idx) => (
                                             <li key={idx} className="flex gap-2 mb-1" style={{ listStyle: 'none', alignItems: 'flex-start' }}>
                                                 <span style={{ display: 'inline-flex', alignItems: 'flex-start', height: '18px', minWidth: '18px' }}>
                                                     {rep.correct ? (
@@ -285,15 +285,15 @@ export default function QuestionSelector({
                                                     )}
                                                 </span>
                                                 <span style={{ lineHeight: '1.5' }}>
-                                                    <MathJaxWrapper>{rep.texte}</MathJaxWrapper>
+                                                    <MathJaxWrapper>{rep.text}</MathJaxWrapper>
                                                 </span>
                                             </li>
                                         ))}
                                     </ul>
-                                    {q.explication && <div className="mt-2 text-sm couleur-global-neutral-600">
+                                    {q.explanation && <div className="mt-2 text-sm couleur-global-neutral-600">
                                         <MathJaxWrapper>
                                             <span className="font-semibold">Justification&nbsp;:</span>
-                                            {q.explication}
+                                            {q.explanation}
                                         </MathJaxWrapper>
                                     </div>}
                                 </div>

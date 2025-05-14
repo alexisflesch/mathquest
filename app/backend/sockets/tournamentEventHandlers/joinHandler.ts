@@ -21,12 +21,12 @@ async function handleJoinTournament(
     socket: Socket,
     payload: JoinTournamentPayload
 ): Promise<void> {
-    const { code, cookie_id, pseudo, avatar, isDiffered } = payload;
+    const { code, cookieId, nickname, avatar, isDeferred } = payload;
 
     // Create a logger
     const logger = createLogger('JoinHandler');
 
-    logger.info(`Player ${pseudo || 'unknown'} (${socket.id}) joined tournament ${code}`);
+    logger.info(`Player ${nickname || 'unknown'} (${socket.id}) joined tournament ${code}`);
 
     try {
         // Join the room for this tournament
@@ -45,23 +45,23 @@ async function handleJoinTournament(
                 paused: false,
                 stopped: false,
                 currentQuestionDuration: 0, // Default or from settings
-                socketToJoueur: {},
+                socketToPlayerId: {},
                 askedQuestions: new Set<string>(),
-                statut: 'en préparation' // Corrected from status to statut
+                status: 'preparing' // Corrected from status to statut
             };
         }
 
         // Check if participant already exists (by cookie_id, which maps to participant.id)
         const participantExists = tournamentState[code]?.participants?.some(
-            (p) => p.id === cookie_id
+            (p) => p.id === cookieId
         );
 
-        if (!participantExists && cookie_id && pseudo && tournamentState[code]?.participants) {
+        if (!participantExists && cookieId && nickname && tournamentState[code]?.participants) {
             // Add participant to tournament state
             tournamentState[code].participants.push({
-                id: cookie_id, // Use id as per TournamentParticipant type
+                id: cookieId, // Use id as per TournamentParticipant type
                 socketId: socket.id,
-                pseudo,
+                nickname: nickname || '', // Ensure nickname is a string
                 avatar: avatar || '', // Ensure avatar is a string
                 answers: [],
                 score: 0 // Initialize score
@@ -69,11 +69,11 @@ async function handleJoinTournament(
         }
 
         // Map socket.id to joueurId (cookie_id) for easy lookup
-        if (cookie_id) {
-            tournamentState[code].socketToJoueur[socket.id] = cookie_id;
-            logger.debug(`Mapped socket ${socket.id} to joueurId ${cookie_id} for tournament ${code}`);
+        if (cookieId) {
+            tournamentState[code].socketToPlayerId[socket.id] = cookieId;
+            logger.debug(`Mapped socket ${socket.id} to joueurId ${cookieId} for tournament ${code}`);
         } else {
-            logger.warn(`No cookie_id provided for socket ${socket.id} in tournament ${code}, cannot map socket to joueur.`);
+            logger.warn(`No cookieId provided for socket ${socket.id} in tournament ${code}, cannot map socket to joueur.`);
         }
 
         // Confirm to the client that they've joined

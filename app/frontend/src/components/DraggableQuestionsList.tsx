@@ -360,7 +360,8 @@ export default function DraggableQuestionsList({
         if (questionActiveUid) {
             const question = questions.find(q => q.uid === questionActiveUid);
             if (question) {
-                logger.debug(`Question active found: ${question.question.substring(0, 20)}...`);
+                // Use question.text as per the shared BaseQuestion type
+                logger.debug(`Question active found: ${question.text.substring(0, 20)}...`);
             } else {
                 logger.warn(`Question active ${questionActiveUid} NOT found in questions array!`);
             }

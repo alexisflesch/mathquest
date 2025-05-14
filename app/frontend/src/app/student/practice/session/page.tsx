@@ -20,17 +20,17 @@ import QuestionCard from '@/components/QuestionCard';
 
 interface CurrentQuestion {
     uid: string;
-    question: string;
-    reponses: { texte: string; correct: boolean }[];
+    text: string; // Renamed from question
+    answers: { text: string; correct: boolean }[]; // Renamed from reponses and made mandatory
     type: string;
     discipline: string;
     theme: string;
-    difficulte: number;
-    niveau: string;
-    auteur?: string;
-    explication?: string;
+    difficulty: number; // Renamed from difficulte
+    level: string; // Renamed from niveau
+    author?: string; // Renamed from auteur
+    explanation?: string; // Renamed from explication
     tags?: string[];
-    temps?: number;
+    time?: number; // Renamed from temps
 }
 
 export default function PracticeSessionPage() {
@@ -50,7 +50,7 @@ export default function PracticeSessionPage() {
     }, []);
     useEffect(() => {
         if (!practiceDone && practiceQuestions.length > 0) {
-            const t = practiceQuestions[practiceIndex]?.temps;
+            const t = practiceQuestions[practiceIndex]?.time; // Changed from temps
             if (typeof t === 'number') setTimer(t);
             else setTimer(null);
         }
@@ -59,13 +59,13 @@ export default function PracticeSessionPage() {
     useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
         const discipline = searchParams.get("discipline") || "";
-        const niveau = searchParams.get("niveau") || "";
+        const level = searchParams.get("level") || ""; // Renamed from niveau
         const themesParam = searchParams.get("themes") || "";
         const limit = searchParams.get("limit") || "10";
 
         const params = new URLSearchParams();
         if (discipline) params.append("discipline", discipline);
-        if (niveau) params.append("niveau", niveau);
+        if (level) params.append("level", level); // Renamed from niveau
         if (themesParam) params.append("themes", themesParam);
         params.append("limit", limit);
 
@@ -87,14 +87,14 @@ export default function PracticeSessionPage() {
     }, [practiceIndex]);
     const handleSingleChoice = (idx: number) => {
         setSelectedAnswer(idx === selectedAnswer ? null : idx);
-        const rep = practiceQuestions[practiceIndex].reponses[idx];
+        const rep = practiceQuestions[practiceIndex].answers[idx]; // Changed from reponses
         handlePracticeAnswer(rep.correct);
     };
     const handleSubmitMultiple = () => {
         // At least one answer selected
         if (selectedAnswers.length === 0) return;
         // All selected must be correct, and all correct must be selected
-        const reps = practiceQuestions[practiceIndex].reponses;
+        const reps = practiceQuestions[practiceIndex].answers; // Changed from reponses
         const correctIndexes = reps.map((r, i) => r.correct ? i : null).filter(i => i !== null);
         const isCorrect =
             selectedAnswers.length === correctIndexes.length &&
@@ -123,6 +123,8 @@ export default function PracticeSessionPage() {
         );
     }
 
+    const currentPracticeQuestion = practiceQuestions.length > 0 ? practiceQuestions[practiceIndex] : null;
+
     return (
         <div className="main-content">
             <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
@@ -131,10 +133,24 @@ export default function PracticeSessionPage() {
                     {!practiceDone && practiceQuestions.length > 0 && (
                         <QuestionCard
                             currentQuestion={{
+                                // uid is an optional top-level property in TournamentQuestion
                                 uid: practiceQuestions[practiceIndex].uid,
-                                question: practiceQuestions[practiceIndex].question,
-                                type: practiceQuestions[practiceIndex].type,
-                                answers: Array.isArray(practiceQuestions[practiceIndex].reponses) ? practiceQuestions[practiceIndex].reponses.map(r => r.texte) : []
+                                // The 'question' object should conform to FilteredQuestion or Question (BaseQuestion)
+                                question: {
+                                    uid: practiceQuestions[practiceIndex].uid,
+                                    text: practiceQuestions[practiceIndex].text,
+                                    type: practiceQuestions[practiceIndex].type,
+                                    answers: practiceQuestions[practiceIndex].answers, // Pass as Answer[]
+                                    explanation: practiceQuestions[practiceIndex].explanation,
+                                    time: practiceQuestions[practiceIndex].time,
+                                    tags: practiceQuestions[practiceIndex].tags,
+                                    // Fields like discipline, theme, difficulty, level, author from CurrentQuestion
+                                    // are not part of BaseQuestion, so they are omitted here to ensure
+                                    // the 'question' object strictly conforms to the expected shared types.
+                                }
+                                // Other LiveQuestionPayload fields (timer, questionIndex, etc.) or
+                                // other TournamentQuestion top-level fields (code, remainingTime, etc.)
+                                // can be added here if/when needed by this specific use case.
                             }}
                             questionIndex={practiceIndex}
                             totalQuestions={practiceQuestions.length}

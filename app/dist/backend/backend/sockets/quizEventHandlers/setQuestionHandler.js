@@ -147,7 +147,7 @@ async function handleSetQuestion(io, socket, prisma, { quizId, questionUid, ques
     // Send standardized live_question to projector room for the quiz
     const currentQuestionObject = quizState_1.quizState[quizId].questions[finalQuestionIdx];
     if (currentQuestionObject) {
-        const timerDuration = (_b = (_a = questionTimer === null || questionTimer === void 0 ? void 0 : questionTimer.initialTime) !== null && _a !== void 0 ? _a : currentQuestionObject.temps) !== null && _b !== void 0 ? _b : undefined;
+        const timerDuration = (_b = (_a = questionTimer === null || questionTimer === void 0 ? void 0 : questionTimer.initialTime) !== null && _a !== void 0 ? _a : currentQuestionObject.time) !== null && _b !== void 0 ? _b : undefined;
         const modeSpecificData = {
             quizId: quizId,
             locked: quizState_1.quizState[quizId].locked,

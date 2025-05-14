@@ -49,14 +49,14 @@ function ExampleQuestionComponent(props: { question: Question }) {
     const questionText = getQuestionText(question);
 
     // Get answers safely using nullish coalescing
-    const answers = question.reponses || question.answers || [];
+    const answers = question.answers || []; // MODIFIED: Removed question.responses
 
     return (
         <div>
             <h2>{questionText}</h2>
             <ul>
                 {answers.map((answer, index) => (
-                    <li key={index}>{answer.texte}</li>
+                    <li key={index}>{answer.text}</li>
                 ))}
             </ul>
         </div>
