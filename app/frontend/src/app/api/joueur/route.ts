@@ -3,7 +3,7 @@
  * 
  * This API route retrieves basic information about a specific student/player:
  * - Accepts a player ID as a query parameter
- * - Returns the player's pseudo (display name) and avatar information
+ * - Returns the player's username (display name) and avatar information
  * 
  * This route is primarily used to retrieve player information for displaying
  * in tournaments, lobbies, and leaderboards, particularly when showing
@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: 'ID manquant.' }, { status: 400 });
     }
     const joueur = await prisma.joueur.findUnique({ where: { id } });
-    logger.debug('Found joueur:', { id: joueur?.id, pseudo: joueur?.pseudo });
+    logger.debug('Found joueur:', { id: joueur?.id, username: joueur?.username });
     if (!joueur) {
         return NextResponse.json({ message: 'Joueur introuvable.' }, { status: 404 });
     }
-    return NextResponse.json({ pseudo: joueur.pseudo, avatar: joueur.avatar });
+    return NextResponse.json({ username: joueur.username, avatar: joueur.avatar });
 }

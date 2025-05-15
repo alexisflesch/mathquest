@@ -3,7 +3,7 @@
  * 
  * This API route retrieves basic information about a specific teacher:
  * - Accepts a teacher ID as a query parameter
- * - Returns the teacher's pseudo (display name) and avatar information
+ * - Returns the teacher's username (display name) and avatar information
  * 
  * This route is primarily used to retrieve teacher information for displaying
  * in tournaments and lobbies, particularly for tournaments created by teachers.
@@ -26,5 +26,5 @@ export async function GET(request: NextRequest) {
     if (!enseignant) {
         return NextResponse.json({ message: 'Enseignant introuvable.' }, { status: 404 });
     }
-    return NextResponse.json({ pseudo: enseignant.pseudo, avatar: enseignant.avatar });
+    return NextResponse.json({ username: enseignant.username, avatar: enseignant.avatar });
 }

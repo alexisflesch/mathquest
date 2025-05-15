@@ -100,7 +100,7 @@ export interface PauseResumePayload {
  */
 export interface JoinTournamentPayload {
     code: string;
-    nickname?: string; // Renamed from pseudo
+    username?: string; // Renamed from username
     avatar?: string;
     isDeferred?: boolean; // Renamed from isDiffered
     playerId?: string; // Renamed from joueurId

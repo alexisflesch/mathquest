@@ -58,7 +58,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     });
 
     // --- Listen for leaderboard/correct answer updates ---
-    const [leaderboard, setLeaderboard] = useState<{ pseudo: string; avatar: string; score: number }[]>([]); // Specify type
+    const [leaderboard, setLeaderboard] = useState<{ username: string; avatar: string; score: number }[]>([]); // Specify type
     const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
 
     // --- Stats state ---
@@ -85,7 +85,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
 
     useEffect(() => {
         if (!quizSocket) return;
-        const handleResults = (data: { leaderboard: { pseudo: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
+        const handleResults = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
             logger.info('[Projection] Received quiz_question_results', data);
             setLeaderboard(data.leaderboard || []);
             debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_results');
@@ -99,7 +99,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
 
     useEffect(() => {
         if (!quizSocket) return;
-        const handleClosed = (data: { leaderboard: { pseudo: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
+        const handleClosed = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
             logger.info('[Projection] Received quiz_question_closed', data);
             setLeaderboard(data.leaderboard || []);
             debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_closed');
@@ -517,12 +517,12 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                                 <ClassementPodium
                                     key={podiumKey}
                                     top3={leaderboard.slice(0, 3).map((entry) => ({
-                                        name: entry.pseudo,
+                                        name: entry.username,
                                         avatarUrl: entry.avatar,
                                         score: entry.score,
                                     }))}
                                     others={leaderboard.slice(3).map((entry) => ({
-                                        name: entry.pseudo,
+                                        name: entry.username,
                                         score: entry.score,
                                     }))}
                                     correctAnswers={correctAnswers}

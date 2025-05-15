@@ -16,7 +16,7 @@
 import { Server, Socket } from 'socket.io';
 interface LobbyParticipant {
     id: string;
-    pseudo: string;
+    username: string;
     avatar: string;
     cookie_id?: string;
 }

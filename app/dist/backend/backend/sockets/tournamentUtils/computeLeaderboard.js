@@ -34,11 +34,11 @@ function computeLeaderboard(tState, questionStates, totalQuestions) {
     // Convert participants to leaderboard entries and sort by score
     return Object.values(tState.participants)
         .map((p) => ({
-        id: p.id,
-        nickname: p.nickname,
-        avatar: p.avatar ? (p.avatar.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`) : undefined,
-        score: p.score || 0
-    }))
+            id: p.id,
+            username: p.username,
+            avatar: p.avatar ? (p.avatar.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`) : undefined,
+            score: p.score || 0
+        }))
         .sort((a, b) => (b.score - a.score));
 }
 // Export default for default imports

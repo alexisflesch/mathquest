@@ -1,0 +1,3 @@
+{
+    "socket-test": "FORCE_EXIT=true jest tests/integration/socketConnection.test.ts --verbose --testTimeout=10000 --forceExit"
+}

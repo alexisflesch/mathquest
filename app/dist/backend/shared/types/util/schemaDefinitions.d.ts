@@ -57,17 +57,17 @@ export declare const questionSchema: {
         validator: (value: unknown) => boolean;
         required: boolean;
     };
-    theme: {
+    themes: {
         type: SchemaFieldType;
         required: boolean;
+        arrayOf: SchemaFieldType;
     };
     difficulty: {
         type: SchemaFieldType;
         required: boolean;
     };
-    level: {
+    gradeLevel: {
         type: SchemaFieldType;
-        validator: (value: unknown) => boolean;
         required: boolean;
     };
     discipline: {

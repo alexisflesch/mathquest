@@ -14,23 +14,32 @@ export async function GET() {
             where: { discipline: { not: '' } },
             orderBy: { discipline: 'asc' },
         });
-        const niveaux = await prisma.question.groupBy({
-            by: ['niveau'],
-            where: { niveau: { not: '' } },
-            orderBy: { niveau: 'asc' },
+        const gradeLevels = await prisma.question.groupBy({
+            by: ['gradeLevel'],
+            where: { gradeLevel: { not: '' } },
+            orderBy: { gradeLevel: 'asc' },
         });
-        const themes = await prisma.question.groupBy({
-            by: ['theme'],
-            where: { theme: { not: '' } },
-            orderBy: { theme: 'asc' },
+
+        const allQuestions = await prisma.question.findMany({
+            select: { themes: true }
         });
+        const uniqueThemes = new Set<string>();
+        allQuestions.forEach(q => {
+            if (q.themes && Array.isArray(q.themes)) {
+                q.themes.forEach(theme => {
+                    if (theme) uniqueThemes.add(theme);
+                });
+            }
+        });
+        const sortedThemes = Array.from(uniqueThemes).sort();
+
         return NextResponse.json({
             disciplines: disciplines.map((d: { discipline: string }) => d.discipline).filter(Boolean),
-            niveaux: niveaux.map((n: { niveau: string | null }) => n.niveau).filter(Boolean),
-            themes: themes.map((t: { theme: string }) => t.theme).filter(Boolean),
+            levels: gradeLevels.map((n: { gradeLevel: string | null }) => n.gradeLevel).filter(Boolean),
+            themes: sortedThemes,
         });
     } catch (e) {
         logger.error('API /api/questions/filters error', e);
-        return NextResponse.json({ disciplines: [], niveaux: [], themes: [] });
+        return NextResponse.json({ disciplines: [], levels: [], themes: [] }, { status: 500 });
     }
 }

@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         const { action, ...data } = body;
 
         if (action === 'create') {
-            const { nom, questions_ids, enseignant_id, type, niveau, categorie, themes, cree_par_id, pseudo, avatar, teacherCreatorId } = data;
+            const { nom, questions_ids, enseignant_id, type, niveau, categorie, themes, cree_par_id, username, avatar, teacherCreatorId } = data;
             if (!nom || !questions_ids || !type) {
                 return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
             }
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
                 if (!joueur) {
                     joueur = await prisma.joueur.create({
                         data: {
-                            pseudo: pseudo || 'Élève',
+                            username: username || 'Élève',
                             cookie_id: cree_par_id,
                             avatar: avatar || null,
                         },

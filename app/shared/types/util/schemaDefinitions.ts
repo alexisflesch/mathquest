@@ -67,17 +67,24 @@ export const questionSchema = {
         validator: isCorrectField,
         required: false
     },
-    theme: {
-        type: 'string' as SchemaFieldType,
-        required: false
+    themes: { // Changed from singular theme
+        type: 'array' as SchemaFieldType,
+        required: false,
+        arrayOf: 'string' as SchemaFieldType // Corrected: cast to SchemaFieldType
     },
     difficulty: { // Renamed from difficulte
         type: 'number' as SchemaFieldType,
         required: false
     },
+    /* // Old level field using custom validator
     level: { // Renamed from niveau
         type: 'custom' as SchemaFieldType,
         validator: isLevelField, // Renamed from isNiveauField
+        required: false
+    },
+    */
+    gradeLevel: { // New gradeLevel field
+        type: 'string' as SchemaFieldType,
         required: false
     },
     discipline: {

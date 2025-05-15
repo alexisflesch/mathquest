@@ -13,5 +13,5 @@ export async function GET(request: NextRequest) {
     if (!enseignant) {
         return NextResponse.json({ message: 'Enseignant non trouvé.' }, { status: 404 });
     }
-    return NextResponse.json({ pseudo: enseignant.pseudo, avatar: enseignant.avatar });
+    return NextResponse.json({ username: enseignant.username, avatar: enseignant.avatar });
 }

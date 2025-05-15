@@ -19,10 +19,10 @@ const logger_1 = __importDefault(require("../../logger"));
  */
 async function handleJoinTournament(io, socket, payload) {
     var _a, _b, _c, _d, _e;
-    const { code, cookieId, nickname, avatar, isDeferred } = payload;
+    const { code, cookieId, username, avatar, isDeferred } = payload;
     // Create a logger
     const logger = (0, logger_1.default)('JoinHandler');
-    logger.info(`Player ${nickname || 'unknown'} (${socket.id}) joined tournament ${code}`);
+    logger.info(`Player ${username || 'unknown'} (${socket.id}) joined tournament ${code}`);
     try {
         // Join the room for this tournament
         const roomName = `live_${code}`;
@@ -46,12 +46,12 @@ async function handleJoinTournament(io, socket, payload) {
         }
         // Check if participant already exists (by cookie_id, which maps to participant.id)
         const participantExists = (_b = (_a = tournamentState_1.tournamentState[code]) === null || _a === void 0 ? void 0 : _a.participants) === null || _b === void 0 ? void 0 : _b.some((p) => p.id === cookieId);
-        if (!participantExists && cookieId && nickname && ((_c = tournamentState_1.tournamentState[code]) === null || _c === void 0 ? void 0 : _c.participants)) {
+        if (!participantExists && cookieId && username && ((_c = tournamentState_1.tournamentState[code]) === null || _c === void 0 ? void 0 : _c.participants)) {
             // Add participant to tournament state
             tournamentState_1.tournamentState[code].participants.push({
                 id: cookieId, // Use id as per TournamentParticipant type
                 socketId: socket.id,
-                nickname: nickname || '', // Ensure nickname is a string
+                username: username || '', // Ensure username is a string
                 avatar: avatar || '', // Ensure avatar is a string
                 answers: [],
                 score: 0 // Initialize score

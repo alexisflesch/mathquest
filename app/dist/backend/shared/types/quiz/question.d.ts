@@ -10,9 +10,9 @@ export type { Answer } from '../question';
  */
 export interface Question extends BaseQuestion {
     correct?: boolean | number[];
-    theme?: string;
-    difficulte?: number;
-    niveau?: string | string[];
+    themes?: string[];
+    difficulty?: number;
+    gradeLevel?: string;
     discipline?: string;
     question?: string;
     hidden?: boolean;

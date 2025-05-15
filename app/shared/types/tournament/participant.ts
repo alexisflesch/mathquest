@@ -9,7 +9,7 @@
  */
 export interface Participant {
     id: string;
-    nickname: string; // Renamed from pseudo
+    username: string; // Using consistent naming with Prisma schema
     avatar: string;
     score: number;
     isDeferred?: boolean; // Renamed from isDiffered
@@ -45,7 +45,7 @@ export interface TournamentParticipant extends Participant {
  */
 export interface LeaderboardEntry {
     id: string;
-    nickname: string; // Renamed from pseudo
+    username: string; // Using consistent naming with Prisma schema
     avatar?: string;
     score: number;
 }

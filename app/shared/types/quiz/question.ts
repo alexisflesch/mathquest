@@ -14,9 +14,9 @@ export type { Answer } from '../question';
  */
 export interface Question extends BaseQuestion {
     correct?: boolean | number[]; // Indicates the correct answer(s)
-    theme?: string; // Theme of the question
-    difficulte?: number; // Difficulty level
-    niveau?: string | string[]; // Educational level(s)
+    themes?: string[]; // Themes of the question (plural)
+    difficulty?: number; // Difficulty level
+    gradeLevel?: string; // Educational level (singular string)
     discipline?: string; // Subject or discipline
 
     // Additional fields needed by the backend

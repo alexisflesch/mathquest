@@ -12,8 +12,9 @@ MathQuest est une application inspirée de Kahoot, destinée aux enseignants. So
 
 ## Installation et démarrage
 
-### 1. Installer PostgreSQL
+### 1. Installer PostgreSQL et Redis
 
+#### PostgreSQL
 - **Linux (Debian/Ubuntu)** :
   ```bash
   sudo apt update
@@ -27,7 +28,7 @@ MathQuest est une application inspirée de Kahoot, destinée aux enseignants. So
 - **Windows** :
   Télécharger et installer depuis https://www.postgresql.org/download/
 
-Créez une base de données et un utilisateur si besoin :
+Créez une base de données et un utilisateur si besoin :
 ```bash
 sudo -u postgres psql
 CREATE DATABASE mathquest;
@@ -36,14 +37,37 @@ GRANT ALL PRIVILEGES ON DATABASE mathquest TO postgre;
 \q
 ```
 
+#### Redis
+Redis est nécessaire pour la gestion des sessions et la communication temps réel via Socket.IO.
+
+- **Linux (Debian/Ubuntu)** :
+  ```bash
+  sudo apt update
+  sudo apt install redis-server
+  sudo systemctl enable redis-server
+  ```
+- **macOS (Homebrew)** :
+  ```bash
+  brew install redis
+  brew services start redis
+  ```
+- **Windows** :
+  Télécharger et installer Redis Stack depuis https://redis.io/download
+  
+Vérifiez que Redis fonctionne :
+```bash
+redis-cli ping
+```
+La réponse devrait être `PONG`.
+
 ### 2. Configurer les variables d'environnement
 
-- Copiez `example.env` à la racine du projet en `.env` et éditez-le avec vos informations PostgreSQL :
+- Copiez `example.env` à la racine du projet en `.env` et éditez-le avec vos informations PostgreSQL et Redis :
   ```bash
   cp example.env .env
   nano .env
   ```
-- Faites de même dans le dossier `script/` :
+- Faites de même dans le dossier `script/` :
   ```bash
   cp script/example.env script/.env
   nano script/.env
@@ -57,18 +81,18 @@ npm install
 
 ### 4. Initialiser la base de données avec Prisma
 
-- Appliquez les migrations :
+- Appliquez les migrations :
   ```bash
   npx prisma migrate deploy
   ```
-- Générez le client Prisma :
+- Générez le client Prisma :
   ```bash
   npx prisma generate
   ```
 
 ### 5. Importer les questions (optionnel)
 
-- Utilisez le script Python pour importer les questions YAML :
+- Utilisez le script Python pour importer les questions YAML :
   ```bash
   cd script
   python3 import_questions.py

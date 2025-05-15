@@ -179,19 +179,19 @@ function StudentCreateTournamentPageInner() {
             }
             const questions_ids = questions.map(q => q.uid);
             const avatar = localStorage.getItem('mathquest_avatar') || '';
-            const pseudo = localStorage.getItem('mathquest_pseudo') || 'Élève';
+            const username = localStorage.getItem('mathquest_username') || 'Élève';
             let cookie_id = localStorage.getItem('mathquest_cookie_id');
             if (!cookie_id) {
                 cookie_id = Math.random().toString(36).substring(2) + Date.now();
                 localStorage.setItem('mathquest_cookie_id', cookie_id);
             }
             const cree_par_id = cookie_id;
-            const nom = `${pseudo}`;
+            const nom = `${username}`;
             const requestBody = {
                 action: 'create', nom, questions_ids,
                 type: 'direct',
                 niveau, categorie: discipline, themes, cree_par_id,
-                ...(pseudo && { pseudo }), ...(avatar && { avatar }),
+                ...(username && { username }), ...(avatar && { avatar }),
             };
             logger.debug("Tournament request body", requestBody);
             const tRes = await fetch('/api/tournament', {

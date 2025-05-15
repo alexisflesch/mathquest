@@ -20,7 +20,7 @@ import React from 'react';
 import Image from 'next/image';
 
 // TODO: Replace with real tournament lobby logic and props
-export default function Lobby({ players = [], code = '', onStart }: { players?: { pseudo: string; avatar?: string }[]; code?: string; onStart?: () => void }) {
+export default function Lobby({ players = [], code = '', onStart }: { players?: { username: string; avatar?: string }[]; code?: string; onStart?: () => void }) {
     return (
         <div className="bg-white rounded shadow p-4">
             <h2 className="text-xl font-bold mb-2">Lobby du Tournoi</h2>
@@ -29,9 +29,9 @@ export default function Lobby({ players = [], code = '', onStart }: { players?: 
             <ul className="flex flex-wrap gap-4 mb-4">
                 {players.length === 0 && <li className="text-gray-500">Aucun joueur pour l&apos;instant.</li>}
                 {players.map((p) => (
-                    <li key={p.pseudo} className="flex flex-col items-center">
+                    <li key={p.username} className="flex flex-col items-center">
                         {p.avatar && <Image src={`/avatars/${p.avatar}`} alt={p.avatar} width={32} height={32} className="w-8 h-8 rounded-full" />}
-                        <span>{p.pseudo}</span>
+                        <span>{p.username}</span>
                     </li>
                 ))}
             </ul>

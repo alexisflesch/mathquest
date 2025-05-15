@@ -42,8 +42,8 @@ async function handleStartTournament(io, socket, { code }) {
                 }
             },
             orderBy: [
-                { niveau: 'asc' },
-                { theme: 'asc' },
+                { gradeLevel: 'asc' }, // Corrected: was niveau
+                { discipline: 'asc' }
             ]
         });
         // Map database questions to Question type with required fields
@@ -55,10 +55,10 @@ async function handleStartTournament(io, socket, { code }) {
                 text: q.question || '',
                 time: q.temps || 20,
                 answers: [], // Initialize with empty array
-                niveau: q.niveau || '',
-                theme: q.theme || '',
+                gradeLevel: q.gradeLevel || '', // Corrected: was q.niveau
+                themes: q.themes || [], // Corrected: use themes array from Prisma model
                 discipline: q.discipline || '',
-                difficulte: q.difficulte || 0, // Convert null to 0
+                difficulty: q.difficulte || 0, // Convert null to 0
                 explanation: q.explication || '',
                 title: q.titre || '',
                 hidden: q.hidden || false, // Convert null to false

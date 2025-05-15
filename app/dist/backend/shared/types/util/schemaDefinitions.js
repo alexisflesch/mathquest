@@ -61,15 +61,23 @@ exports.questionSchema = Object.assign(Object.assign({}, exports.baseQuestionSch
         type: 'custom',
         validator: isCorrectField,
         required: false
-    }, theme: {
-        type: 'string',
-        required: false
+    }, themes: {
+        type: 'array',
+        required: false,
+        arrayOf: 'string' // Corrected: cast to SchemaFieldType
     }, difficulty: {
         type: 'number',
         required: false
-    }, level: {
-        type: 'custom',
+    }, 
+    /* // Old level field using custom validator
+    level: { // Renamed from niveau
+        type: 'custom' as SchemaFieldType,
         validator: isLevelField, // Renamed from isNiveauField
+        required: false
+    },
+    */
+    gradeLevel: {
+        type: 'string',
         required: false
     }, discipline: {
         type: 'string',

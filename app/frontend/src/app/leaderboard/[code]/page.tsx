@@ -18,7 +18,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Share2 } from "lucide-react";
 
-type LeaderboardEntry = { id: string; pseudo: string; avatar: string; score: number; isDiffered?: boolean };
+type LeaderboardEntry = { id: string; username: string; avatar: string; score: number; isDiffered?: boolean };
 
 export default function TournamentLeaderboardPage() {
     const { code } = useParams();
@@ -27,11 +27,11 @@ export default function TournamentLeaderboardPage() {
     const [error, setError] = useState<string | null>(null);
     const [canPlayDiffered, setCanPlayDiffered] = useState(false);
 
-    // Get current player pseudo and avatar from localStorage
-    let currentPseudo: string | null = null;
+    // Get current player username and avatar from localStorage
+    let currentusername: string | null = null;
     let currentAvatar: string | null = null;
     if (typeof window !== "undefined") {
-        currentPseudo = localStorage.getItem("mathquest_pseudo");
+        currentusername = localStorage.getItem("mathquest_username");
         currentAvatar = localStorage.getItem("mathquest_avatar");
         if (currentAvatar && !currentAvatar.startsWith("/")) {
             currentAvatar = `/avatars/${currentAvatar}`;
@@ -135,11 +135,11 @@ export default function TournamentLeaderboardPage() {
                             <span><span role="img" aria-label="differed">🕒</span> = Différé</span>
                         </div>
                         {leaderboard.map((p, idx) => {
-                            // Highlight if current player (pseudo and avatar match)
+                            // Highlight if current player (username and avatar match)
                             const isCurrent =
-                                currentPseudo &&
+                                currentusername &&
                                 currentAvatar &&
-                                p.pseudo === currentPseudo &&
+                                p.username === currentusername &&
                                 (p.avatar === currentAvatar ||
                                     p.avatar === currentAvatar.replace("/avatars/", ""));
                             return (
@@ -170,7 +170,7 @@ export default function TournamentLeaderboardPage() {
                                         ) : (
                                             <span title="Live" role="img" aria-label="live">⚡</span>
                                         )}
-                                        {p.pseudo || 'Joueur'}
+                                        {p.username || 'Joueur'}
                                     </span>
                                     <span className="font-mono text-lg">{p.score}</span>
                                 </li>

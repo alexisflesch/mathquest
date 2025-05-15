@@ -120,84 +120,94 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.TeacherScalarFieldEnum = {
+  id: 'id',
+  username: 'username',
+  passwordHash: 'passwordHash',
+  email: 'email',
+  createdAt: 'createdAt',
+  avatarUrl: 'avatarUrl',
+  resetToken: 'resetToken',
+  resetTokenExpiresAt: 'resetTokenExpiresAt'
+};
+
+exports.Prisma.PlayerScalarFieldEnum = {
+  id: 'id',
+  username: 'username',
+  cookieId: 'cookieId',
+  email: 'email',
+  passwordHash: 'passwordHash',
+  createdAt: 'createdAt',
+  avatarUrl: 'avatarUrl'
+};
+
 exports.Prisma.QuestionScalarFieldEnum = {
   uid: 'uid',
-  question: 'question',
-  reponses: 'reponses',
-  type: 'type',
+  title: 'title',
+  text: 'text',
+  responses: 'responses',
+  questionType: 'questionType',
   discipline: 'discipline',
-  theme: 'theme',
-  difficulte: 'difficulte',
-  niveau: 'niveau',
-  auteur: 'auteur',
-  explication: 'explication',
+  themes: 'themes',
+  difficulty: 'difficulty',
+  gradeLevel: 'gradeLevel',
+  author: 'author',
+  explanation: 'explanation',
   tags: 'tags',
-  temps: 'temps',
-  titre: 'titre',
-  hidden: 'hidden'
+  timeLimit: 'timeLimit',
+  isHidden: 'isHidden',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
-exports.Prisma.EnseignantScalarFieldEnum = {
+exports.Prisma.QuizTemplateScalarFieldEnum = {
   id: 'id',
-  pseudo: 'pseudo',
-  mot_de_passe: 'mot_de_passe',
-  email: 'email',
-  created_at: 'created_at',
-  avatar: 'avatar',
-  reset_token: 'reset_token',
-  reset_token_expires: 'reset_token_expires'
-};
-
-exports.Prisma.JoueurScalarFieldEnum = {
-  id: 'id',
-  pseudo: 'pseudo',
-  cookie_id: 'cookie_id',
-  created_at: 'created_at',
-  avatar: 'avatar'
-};
-
-exports.Prisma.TournoiScalarFieldEnum = {
-  id: 'id',
-  nom: 'nom',
-  date_creation: 'date_creation',
-  date_debut: 'date_debut',
-  date_fin: 'date_fin',
-  statut: 'statut',
-  enseignant_id: 'enseignant_id',
-  questions_ids: 'questions_ids',
-  type: 'type',
-  niveau: 'niveau',
-  categorie: 'categorie',
+  name: 'name',
+  creatorTeacherId: 'creatorTeacherId',
+  gradeLevel: 'gradeLevel',
   themes: 'themes',
-  cree_par_joueur_id: 'cree_par_joueur_id',
-  cree_par_enseignant_id: 'cree_par_enseignant_id',
-  questions_generées: 'questions_generées',
-  code: 'code',
-  leaderboard: 'leaderboard'
+  discipline: 'discipline',
+  description: 'description',
+  defaultMode: 'defaultMode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
-exports.Prisma.ScoreScalarFieldEnum = {
+exports.Prisma.QuestionsInQuizTemplateScalarFieldEnum = {
+  quizTemplateId: 'quizTemplateId',
+  questionUid: 'questionUid',
+  sequence: 'sequence',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.GameInstanceScalarFieldEnum = {
   id: 'id',
-  tournoi_id: 'tournoi_id',
-  joueur_id: 'joueur_id',
+  name: 'name',
+  quizTemplateId: 'quizTemplateId',
+  initiatorTeacherId: 'initiatorTeacherId',
+  accessCode: 'accessCode',
+  status: 'status',
+  playMode: 'playMode',
+  leaderboard: 'leaderboard',
+  currentQuestionIndex: 'currentQuestionIndex',
+  settings: 'settings',
+  createdAt: 'createdAt',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt'
+};
+
+exports.Prisma.GameParticipantScalarFieldEnum = {
+  id: 'id',
+  gameInstanceId: 'gameInstanceId',
+  playerId: 'playerId',
   score: 'score',
-  temps: 'temps',
-  position: 'position',
-  date_score: 'date_score'
-};
-
-exports.Prisma.QuizScalarFieldEnum = {
-  id: 'id',
-  nom: 'nom',
-  date_creation: 'date_creation',
-  date_sauvegarde: 'date_sauvegarde',
-  enseignant_id: 'enseignant_id',
-  questions_ids: 'questions_ids',
-  type: 'type',
-  niveaux: 'niveaux',
-  categories: 'categories',
-  themes: 'themes',
-  tournament_code: 'tournament_code'
+  rank: 'rank',
+  timeTakenMs: 'timeTakenMs',
+  joinedAt: 'joinedAt',
+  completedAt: 'completedAt',
+  answers: 'answers',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -219,25 +229,30 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
-exports.Prisma.JsonNullValueFilter = {
-  DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull,
-  AnyNull: Prisma.AnyNull
-};
-
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
 
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+exports.PlayMode = exports.$Enums.PlayMode = {
+  class: 'class',
+  tournament: 'tournament',
+  practice: 'practice'
+};
 
 exports.Prisma.ModelName = {
+  Teacher: 'Teacher',
+  Player: 'Player',
   Question: 'Question',
-  Enseignant: 'Enseignant',
-  Joueur: 'Joueur',
-  Tournoi: 'Tournoi',
-  Score: 'Score',
-  Quiz: 'Quiz'
+  QuizTemplate: 'QuizTemplate',
+  QuestionsInQuizTemplate: 'QuestionsInQuizTemplate',
+  GameInstance: 'GameInstance',
+  GameParticipant: 'GameParticipant'
 };
 
 /**

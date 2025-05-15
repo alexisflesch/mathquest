@@ -2,7 +2,7 @@
  * Student Registration Page
  * 
  * This page provides the initial registration interface for students:
- * - Username (pseudo) selection
+ * - Username (username) selection
  * - Avatar selection from a visual grid
  * - Local storage persistence of student identity
  * - Automatic redirection for returning students
@@ -20,7 +20,7 @@ import AvatarSelector from '@/components/AvatarSelector';
 import { useAuth } from '@/components/AuthProvider';
 
 function StudentPageInner() {
-    const [nickname, setNickname] = useState('');
+    const [username, setusername] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('');
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
@@ -29,9 +29,9 @@ function StudentPageInner() {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const storedNickname = localStorage.getItem('mathquest_nickname');
+            const storedusername = localStorage.getItem('mathquest_username');
             const storedAvatar = localStorage.getItem('mathquest_avatar');
-            if (storedNickname && storedAvatar) {
+            if (storedusername && storedAvatar) {
                 const redirect = searchParams?.get('redirect');
                 if (redirect) {
                     router.replace(redirect);
@@ -45,11 +45,11 @@ function StudentPageInner() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (!nickname || !selectedAvatar) {
-            setError('Veuillez choisir un pseudo et un avatar.');
+        if (!username || !selectedAvatar) {
+            setError('Veuillez choisir un username et un avatar.');
             return;
         }
-        // Appel API pour valider le pseudo côté serveur
+        // Appel API pour valider le username côté serveur
         let cookie_id = localStorage.getItem('mathquest_cookie_id');
         if (!cookie_id) {
             cookie_id = Math.random().toString(36).substring(2) + Date.now();
@@ -59,14 +59,14 @@ function StudentPageInner() {
             const res = await fetch('/api/student', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'join', nickname, avatar: selectedAvatar, cookie_id }),
+                body: JSON.stringify({ action: 'join', username, avatar: selectedAvatar, cookie_id }),
             });
             const result = await res.json();
             if (!res.ok) {
-                setError(result.message || 'Erreur lors de la validation du pseudo.');
+                setError(result.message || 'Erreur lors de la validation du username.');
                 return;
             }
-            localStorage.setItem('mathquest_nickname', nickname);
+            localStorage.setItem('mathquest_username', username);
             localStorage.setItem('mathquest_avatar', selectedAvatar);
             if (refreshAuth) refreshAuth();
             const redirect = searchParams?.get('redirect');
@@ -86,17 +86,17 @@ function StudentPageInner() {
                 <h1 className="text-4xl font-bold text-center mb-6 shrink-0">Espace Élève</h1>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6 flex-1 min-h-0">
                     <div className="shrink-0">
-                        <label className="block text-lg font-bold mb-2" htmlFor="nickname">
-                            Pseudo
+                        <label className="block text-lg font-bold mb-2" htmlFor="username">
+                            username
                         </label>
                         <input
                             className="input input-bordered input-lg w-full"
-                            id="nickname"
+                            id="username"
                             type="text"
                             maxLength={15}
-                            placeholder="Votre pseudo"
-                            value={nickname}
-                            onChange={e => setNickname(e.target.value)}
+                            placeholder="Votre username"
+                            value={username}
+                            onChange={e => setusername(e.target.value)}
                             autoComplete="off"
                         />
                         {error && <div className="alert alert-error justify-center shrink-0 mt-2">{error}</div>}

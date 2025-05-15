@@ -35,7 +35,7 @@ async function handleDisconnecting(io, socket) {
             if (!state.isDiffered && state.participants) {
                 const participantsList = Object.values(state.participants).map(p => ({
                     id: p.id,
-                    pseudo: p.pseudo,
+                    username: p.username,
                     avatar: p.avatar,
                 }));
                 io.to(`live_${stateKey}`).emit("tournament_participants_update", {

@@ -1,6 +1,8 @@
 # Backend Documentation
 
-This directory contains documentation for MathQuest's backend server.
+This directory contains documentation for MathQuest's new backend server implementation.
+
+> **Note**: The previous backend implementation has been archived. Its documentation can be found in `/docs/archive/legacy-backend/`.
 
 ## Backend Architecture
 

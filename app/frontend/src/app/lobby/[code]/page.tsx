@@ -36,8 +36,8 @@ export default function LobbyPage() {
     const [isCreator, setIsCreator] = useState(true); // TODO: Replace with real logic
     const [countdown, setCountdown] = useState<number | null>(null);
     const socketRef = useRef<Socket | null>(null);
-    const [participants, setParticipants] = useState<{ id: string; pseudo: string; avatar: string }[]>([]);
-    const [creator, setCreator] = useState<{ pseudo: string; avatar: string } | null>(null);
+    const [participants, setParticipants] = useState<{ id: string; username: string; avatar: string }[]>([]);
+    const [creator, setCreator] = useState<{ username: string; avatar: string } | null>(null);
     const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);    // Function to check tournament status and redirect if needed
     const checkTournamentStatus = useCallback(async () => {
         try {
@@ -76,7 +76,7 @@ export default function LobbyPage() {
         }
     }, [code, router]);
 
-    // Get correct pseudo/avatar for current session
+    // Get correct username/avatar for current session
     const getCurrentIdentity = useCallback(() => {
         if (typeof window === 'undefined') {
             logger.debug('Not running in browser, window is undefined');
@@ -84,15 +84,15 @@ export default function LobbyPage() {
         }
         logger.debug('Identity check', { isTeacher, isStudent });
         if (isTeacher) {
-            const pseudo = localStorage.getItem('mathquest_pseudo');
+            const username = localStorage.getItem('mathquest_username');
             const avatar = localStorage.getItem('mathquest_avatar');
-            logger.debug('Teacher identity', { pseudo, avatar });
-            if (pseudo && avatar) return { pseudo, avatar: `/avatars/${avatar}` };
+            logger.debug('Teacher identity', { username, avatar });
+            if (username && avatar) return { username, avatar: `/avatars/${avatar}` };
         } else if (isStudent) {
-            const pseudo = localStorage.getItem('mathquest_pseudo');
+            const username = localStorage.getItem('mathquest_username');
             const avatar = localStorage.getItem('mathquest_avatar');
-            logger.debug('Student identity', { pseudo, avatar });
-            if (pseudo && avatar) return { pseudo, avatar: `/avatars/${avatar}` };
+            logger.debug('Student identity', { username, avatar });
+            if (username && avatar) return { username, avatar: `/avatars/${avatar}` };
         }
         logger.warn('No valid identity found');
         return null;
@@ -129,8 +129,8 @@ export default function LobbyPage() {
                 logger.debug("Joueur fetch status", { status: resJ.status });
                 if (resJ.ok) {
                     const joueur = await resJ.json();
-                    logger.debug("Joueur fetched", { id: joueur.id, pseudo: joueur.pseudo });
-                    creatorData = { pseudo: joueur.pseudo, avatar: `/avatars/${joueur.avatar || "cat-face.svg"}` };
+                    logger.debug("Joueur fetched", { id: joueur.id, username: joueur.username });
+                    creatorData = { username: joueur.username, avatar: `/avatars/${joueur.avatar || "cat-face.svg"}` };
                 }
             } else if (tournoi.cree_par_enseignant_id) {
                 // Fetch teacher creator
@@ -139,13 +139,13 @@ export default function LobbyPage() {
                 logger.debug("Enseignant fetch status", { status: resE.status });
                 if (resE.ok) {
                     const enseignant = await resE.json();
-                    logger.debug("Enseignant fetched", { id: enseignant.id, pseudo: enseignant.pseudo });
-                    creatorData = { pseudo: enseignant.pseudo, avatar: `/avatars/${enseignant.avatar || "cat-face.svg"}` };
+                    logger.debug("Enseignant fetched", { id: enseignant.id, username: enseignant.username });
+                    creatorData = { username: enseignant.username, avatar: `/avatars/${enseignant.avatar || "cat-face.svg"}` };
                 }
             } else {
                 // No creator found
                 logger.warn("No creator found in tournament");
-                creatorData = { pseudo: "Inconnu", avatar: "/avatars/cat-face.svg" };
+                creatorData = { username: "Inconnu", avatar: "/avatars/cat-face.svg" };
             }
             if (creatorData) setCreator(creatorData);
         }
@@ -158,7 +158,7 @@ export default function LobbyPage() {
         const identity = getCurrentIdentity();
         setIsCreator(
             !!identity &&
-            identity.pseudo === creator.pseudo &&
+            identity.username === creator.username &&
             identity.avatar === creator.avatar
         );
     }, [creator, isTeacher, isStudent, getCurrentIdentity]);
@@ -190,7 +190,7 @@ export default function LobbyPage() {
             if (identity) {
                 socket.emit("join_lobby", {
                     code,
-                    pseudo: identity.pseudo,
+                    username: identity.username,
                     avatar: identity.avatar,
                     cookie_id: localStorage.getItem('mathquest_cookie_id')
                 });
@@ -210,7 +210,7 @@ export default function LobbyPage() {
         }
         socket.emit("join_lobby", {
             code,
-            pseudo: identity.pseudo,
+            username: identity.username,
             avatar: identity.avatar,
             cookie_id,
         });
@@ -238,12 +238,12 @@ export default function LobbyPage() {
                 if (prev.some((p) => p.id === participant.id)) return prev;
                 return [...prev, participant];
             });
-            logger.debug("Participant joined", { id: participant.id, pseudo: participant.pseudo });
+            logger.debug("Participant joined", { id: participant.id, username: participant.username });
         });
 
         socket.on("participant_left", (participant) => {
             setParticipants((prev) => prev.filter((p) => p.id !== participant.id));
-            logger.debug("Participant left", { id: participant.id, pseudo: participant.pseudo });
+            logger.debug("Participant left", { id: participant.id, username: participant.username });
         });
 
         // Listen for redirect_to_tournament event (immediate redirect for quiz-triggered tournaments)
@@ -478,9 +478,9 @@ export default function LobbyPage() {
     // --- LOGIN CHECK AND REDIRECT ---
     React.useEffect(() => {
         if (typeof window === 'undefined') return;
-        const pseudo = localStorage.getItem('mathquest_pseudo');
+        const username = localStorage.getItem('mathquest_username');
         const avatar = localStorage.getItem('mathquest_avatar');
-        if (!pseudo || !avatar) {
+        if (!username || !avatar) {
             router.replace(`/student?redirect=/lobby/${code}`);
         }
     }, [code, router]);
@@ -489,14 +489,14 @@ export default function LobbyPage() {
         <div className="main-content">
             <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
                 <div className="flex flex-col gap-8 w-full">
-                    {/* First row: Avatar/pseudo | Code | Share button */}
+                    {/* First row: Avatar/username | Code | Share button */}
                     <div className="flex flex-row items-center justify-between w-full gap-4">
-                        {/* Avatar + pseudo */}
+                        {/* Avatar + username */}
                         <div className="flex items-center gap-3 min-w-0">
                             {creator ? (
                                 <>
                                     <Image src={creator.avatar} alt="avatar" width={44} height={44} className="w-[50px] h-[50px] rounded-full border-2" style={{ borderColor: "var(--secondary)" }} />
-                                    <span className="font-bold text-lg truncate">{creator.pseudo}</span>
+                                    <span className="font-bold text-lg truncate">{creator.username}</span>
                                 </>
                             ) : (
                                 <span>Chargement...</span>
@@ -533,7 +533,7 @@ export default function LobbyPage() {
                                         className="w-[49px] h-[49px] rounded-full border-2"
                                         style={{ borderColor: "var(--primary)" }}
                                     />
-                                    <span className="text-sm mt-0 truncate max-w-[70px]">{p.pseudo}</span>
+                                    <span className="text-sm mt-0 truncate max-w-[70px]">{p.username}</span>
                                 </div>
                             ))}
                         </div>

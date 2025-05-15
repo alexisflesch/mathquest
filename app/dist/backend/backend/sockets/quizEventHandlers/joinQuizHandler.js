@@ -78,9 +78,9 @@ async function handleJoinQuiz(io, socket, prisma, { quizId, role, teacherId }) {
                                 explanation: dbQuestion.explication || undefined, // Map from dbQuestion.explication
                                 tags: dbQuestion.tags || [], // Map from dbQuestion.tags, ensure array
                                 // Extended Question fields from @shared/types/quiz/question.ts
-                                theme: dbQuestion.theme || undefined,
-                                difficulte: dbQuestion.difficulte || undefined, // Handles null from DB
-                                niveau: dbQuestion.niveau || undefined, // Handles null from DB, maps to string | string[] | undefined
+                                themes: dbQuestion.themes || [], // Use themes array from Prisma model
+                                difficulty: dbQuestion.difficulte || undefined, // Handles null from DB
+                                gradeLevel: dbQuestion.gradeLevel || undefined, // Corrected: was dbQuestion.niveau
                                 discipline: dbQuestion.discipline || undefined, // Handles null from DB
                                 question: dbQuestion.question || undefined, // Optional: if shared type needs this as well (BaseQuestion.text is primary)
                                 hidden: dbQuestion.hidden || undefined, // Handles null from DB

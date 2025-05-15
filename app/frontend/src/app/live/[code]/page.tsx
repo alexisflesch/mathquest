@@ -34,9 +34,9 @@ export default function TournamentSessionPage() {
     // --- LOGIN CHECK AND REDIRECT ---
     React.useEffect(() => {
         if (typeof window === 'undefined') return;
-        const nickname = localStorage.getItem('mathquest_nickname');
+        const username = localStorage.getItem('mathquest_username');
         const avatar = localStorage.getItem('mathquest_avatar');
-        if (!nickname || !avatar) {
+        if (!username || !avatar) {
             // Redirect to /student with redirect param
             router.replace(`/student?redirect=/live/${code}`);
         }
@@ -141,9 +141,9 @@ export default function TournamentSessionPage() {
                 ],
                 type: 'choix_multiple' as const,
                 subject: 'Arts',
-                theme: 'Couleurs',
+                themes: ['Couleurs'], // Changed from theme: 'Couleurs'
                 difficulty: 1,
-                level: 'CE2',
+                gradeLevel: 'CE2', // Changed from level: 'CE2'
             } : {
                 uid: 'mock1',
                 text: 'Combien font 7 + 5 ?',
@@ -155,9 +155,9 @@ export default function TournamentSessionPage() {
                 ],
                 type: 'choix_simple' as const,
                 subject: 'Maths',
-                theme: 'Additions',
+                themes: ['Additions'], // Changed from theme: 'Additions'
                 difficulty: 1,
-                level: 'CE2',
+                gradeLevel: 'CE2', // Changed from level: 'CE2'
             };
 
             const mockTournamentQuestion: TournamentQuestion = {
@@ -207,15 +207,15 @@ export default function TournamentSessionPage() {
         // Helper to emit join_tournament
         const emitJoinTournament = () => {
             let cookie_id = null;
-            let nickname = null;
+            let username = null;
             let avatar = null;
             if (typeof window !== 'undefined') {
                 cookie_id = localStorage.getItem('mathquest_cookie_id');
-                nickname = localStorage.getItem('mathquest_nickname');
+                username = localStorage.getItem('mathquest_username');
                 avatar = localStorage.getItem('mathquest_avatar');
             }
-            logger.info(`Joining tournament ${code}`, { cookie_id, nickname, avatar, isDiffered });
-            s.emit("join_tournament", { code, cookie_id, nickname, avatar, isDiffered });
+            logger.info(`Joining tournament ${code}`, { cookie_id, username, avatar, isDiffered });
+            s.emit("join_tournament", { code, cookie_id, username, avatar, isDiffered });
 
             // Also verify tournament status when joining to ensure we have the latest state
             // This helps with cases where we missed earlier events
@@ -519,7 +519,7 @@ export default function TournamentSessionPage() {
             // Optionally: show leaderboard
         });
 
-        // Get nickname/avatar from localStorage for highlighting
+        // Get username/avatar from localStorage for highlighting
         if (typeof window !== 'undefined') {
             // if (isStudent) {
             // } else if (isTeacher) {
@@ -536,11 +536,11 @@ export default function TournamentSessionPage() {
 
                 // Fetch user details from localStorage for the new join emission
                 let user_cookie_id = null;
-                let user_nickname = null;
+                let user_username = null;
                 let user_avatar = null;
                 if (typeof window !== 'undefined') {
                     user_cookie_id = localStorage.getItem('mathquest_cookie_id');
-                    user_nickname = localStorage.getItem('mathquest_nickname');
+                    user_username = localStorage.getItem('mathquest_username');
                     user_avatar = localStorage.getItem('mathquest_avatar');
                 }
 
@@ -548,7 +548,7 @@ export default function TournamentSessionPage() {
                 s.emit("join_tournament", {
                     code: newCode,
                     cookie_id: user_cookie_id, // Use fetched value
-                    nickname: user_nickname,       // Use fetched value
+                    username: user_username,       // Use fetched value
                     avatar: user_avatar,       // Use fetched value
                     isDiffered
                 });

@@ -44,7 +44,7 @@ A **hook** is a special function in React (introduced in React 16.8) that lets y
 ### `useAuth`
 - **Purpose:** Provides authentication and identity context for teachers and students.
 - **Responsibilities:**
-  - Reads/writes identity from localStorage (`mathquest_pseudo`, `mathquest_avatar`, `mathquest_cookie_id`, `mathquest_teacher_id`)
+  - Reads/writes identity from localStorage (`mathquest_username`, `mathquest_avatar`, `mathquest_cookie_id`, `mathquest_teacher_id`)
   - Exposes `isTeacher`, `isStudent`, `teacherId`, and login/logout helpers
   - Used by AuthProvider to wrap the app and provide context
 

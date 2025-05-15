@@ -20,17 +20,17 @@ const allBadWords = [
 const data = { id: 'custom', words: allBadWords, lookalike: {} };
 const filter = new Filter({ data });
 
-// Fonction utilitaire pour vérifier un pseudo
-export function checkPseudoWithSubstrings(pseudo: string, useSubstrings = false): boolean {
+// Fonction utilitaire pour vérifier un username
+export function checkusernameWithSubstrings(username: string, useSubstrings = false): boolean {
     if (!useSubstrings) {
-        return filter.check(pseudo);
+        return filter.check(username);
     }
     // Vérifie toutes les sous-chaînes de longueur >= 3
     const minLen = 3;
-    const maxLen = pseudo.length;
+    const maxLen = username.length;
     for (let i = 0; i < maxLen; i++) {
         for (let j = i + minLen; j <= maxLen; j++) {
-            const sub = pseudo.slice(i, j);
+            const sub = username.slice(i, j);
             if (filter.check(sub)) {
                 return true;
             }

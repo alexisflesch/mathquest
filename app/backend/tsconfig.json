@@ -1,39 +1,26 @@
 {
-    "extends": "../tsconfig.base.json",
     "compilerOptions": {
-        "composite": true,
-        "rootDir": "..",
-        "outDir": "../dist/backend",
-        "baseUrl": ".",
+        "target": "ES2020",
         "module": "commonjs",
+        "rootDir": ".",
+        "outDir": "./dist",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "baseUrl": ".",
         "paths": {
-            "@logger": [
-                "logger.ts"
-            ],
-            "@sockets/*": [
-                "sockets/*"
-            ],
-            "@db": [
-                "db/index.ts"
-            ],
-            "@prisma/client": [
-                "../shared/prisma-client"
-            ],
-            "@shared/*": [
-                "../shared/*"
+            "@/*": [
+                "src/*"
             ]
         }
     },
     "include": [
-        "sockets/**/*.ts",
-        "server.ts",
-        "db/**/*.ts",
-        "logger.ts",
-        "../shared/types/**/*.ts"
+        "src/**/*",
+        "tests/**/*"
     ],
     "exclude": [
-        "node_modules",
-        "dist",
-        "src"
+        "node_modules"
     ]
 }

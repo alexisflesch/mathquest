@@ -24,7 +24,7 @@ import { Logger } from '@/types';
 import Filter from 'bad-words-next';
 import fs from 'fs';
 import path from 'path';
-import { checkPseudoWithSubstrings } from '@/app/utils/pseudoFilter';
+import { checkusernameWithSubstrings } from '@/app/utils/usernameFilter';
 import frenchBadwordsList from 'french-badwords-list';
 
 const zacangerWords = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'dictionaries', 'words.json'), 'utf-8'));
@@ -56,29 +56,29 @@ export async function POST(request: NextRequest) {
         const { action, ...data } = body;
 
         if (action === 'join') {
-            const { pseudo, code, avatar, cookie_id } = data;
-            if (!pseudo || !cookie_id) {
-                logger.warn('Missing fields in join action', { pseudo, code, cookie_id });
+            const { username, code, avatar, cookie_id } = data;
+            if (!username || !cookie_id) {
+                logger.warn('Missing fields in join action', { username, code, cookie_id });
                 return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
             }
-            // --- PSEUDO VALIDATION ---
-            if (typeof pseudo !== 'string' || pseudo.length > 15) {
-                return NextResponse.json({ message: 'Le pseudo doit faire 15 caractères maximum.' }, { status: 400 });
+            // --- username VALIDATION ---
+            if (typeof username !== 'string' || username.length > 15) {
+                return NextResponse.json({ message: 'Le username doit faire 15 caractères maximum.' }, { status: 400 });
             }
             // Active/désactive la détection par sous-chaînes ici :
             const useSubstrings = true;
-            if (checkPseudoWithSubstrings(pseudo, useSubstrings)) {
-                return NextResponse.json({ message: 'Le pseudo contient un mot inapproprié.' }, { status: 400 });
+            if (checkusernameWithSubstrings(username, useSubstrings)) {
+                return NextResponse.json({ message: 'Le username contient un mot inapproprié.' }, { status: 400 });
             }
             // --- END VALIDATION ---
             let joueur = await prisma.joueur.findUnique({ where: { cookie_id } });
             if (!joueur) {
                 joueur = await prisma.joueur.create({
-                    data: { pseudo, cookie_id, avatar },
+                    data: { username, cookie_id, avatar },
                 });
-                logger.info('Created new Player', { id: joueur.id, pseudo, cookie_id });
+                logger.info('Created new Player', { id: joueur.id, username, cookie_id });
             } else {
-                logger.debug('Found existing Player', { id: joueur.id, pseudo: joueur.pseudo });
+                logger.debug('Found existing Player', { id: joueur.id, username: joueur.username });
             }
             // Si un code tournoi est fourni, vérifier et retourner l'id du tournoi
             let tournoiId = undefined;
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
             // Update in-memory tournament state for SSE
             // Fetch all scores for this tournament
             const allScores = await prisma.score.findMany({ where: { tournoi_id }, include: { joueur: true } });
-            const scores: { pseudo: string; score: number; avatar: string | null }[] = allScores.map((s: { score: number; joueur: { pseudo: string; avatar: string | null } }) => ({ pseudo: s.joueur.pseudo, score: s.score, avatar: s.joueur.avatar }));
+            const scores: { username: string; score: number; avatar: string | null }[] = allScores.map((s: { score: number; joueur: { username: string; avatar: string | null } }) => ({ username: s.joueur.username, score: s.score, avatar: s.joueur.avatar }));
             // Update the SSE state
             await fetch('http://localhost:3000/api/tournament/stream', {
                 method: 'POST',

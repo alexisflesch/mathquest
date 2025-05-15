@@ -88,7 +88,7 @@ export interface PauseResumePayload {
  */
 export interface JoinTournamentPayload {
     code: string;
-    pseudo?: string;
+    username?: string;
     avatar?: string;
     isDiffered?: boolean;
     joueurId?: string;

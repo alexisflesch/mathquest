@@ -97,7 +97,7 @@ function handleCloseQuestion(io, socket, { quizId, questionUid }) {
             if (state.participants) {
                 leaderboard = Object.values(state.participants).map(p => ({
                     id: p.id,
-                    pseudo: p.name || p.id,
+                    username: p.name || p.id,
                     score: p.score || 0
                 }));
                 playerCount = leaderboard.length;

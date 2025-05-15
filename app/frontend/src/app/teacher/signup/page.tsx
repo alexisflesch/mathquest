@@ -13,7 +13,7 @@ export default function TeacherSignupPage() {
         adminPassword: '', // The fixed admin password
         password: '',
         confirmPassword: '',
-        pseudo: '',
+        username: '',
         avatar: '',
     });
     const [error, setError] = useState<string | null>(null);
@@ -38,8 +38,8 @@ export default function TeacherSignupPage() {
             setError('Le mot de passe administrateur est requis.');
             return;
         }
-        if (!formData.pseudo) {
-            setError('Le pseudo est obligatoire.');
+        if (!formData.username) {
+            setError('Le username est obligatoire.');
             return;
         }
         if (!formData.avatar) {
@@ -58,7 +58,7 @@ export default function TeacherSignupPage() {
                     email: formData.email,
                     adminPassword: formData.adminPassword,
                     password: formData.password,
-                    pseudo: formData.pseudo,
+                    username: formData.username,
                     avatar: formData.avatar,
                 }),
             });
@@ -190,18 +190,18 @@ export default function TeacherSignupPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-lg font-bold mb-2" htmlFor="pseudo">
-                                    Pseudo
+                                <label className="block text-lg font-bold mb-2" htmlFor="username">
+                                    username
                                 </label>
                                 <input
                                     className="input input-bordered input-lg w-full"
-                                    id="pseudo"
+                                    id="username"
                                     type="text"
-                                    name="pseudo"
-                                    value={formData.pseudo}
+                                    name="username"
+                                    value={formData.username}
                                     onChange={handleChange}
                                     required
-                                    placeholder="Votre pseudo"
+                                    placeholder="Votre username"
                                     autoComplete="off"
                                 />
                             </div>

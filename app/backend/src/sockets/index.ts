@@ -1,0 +1,88 @@
+import { Server as SocketIOServer } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import http from 'http';
+import { redisClient } from '@/config/redis';
+import createLogger from '@/utils/logger';
+import { socketAuthMiddleware } from './middleware/socketAuth';
+import { registerConnectionHandlers } from './handlers/connectionHandlers';
+
+// Create a socket-specific logger
+const logger = createLogger('SocketIO');
+
+let io: SocketIOServer | null = null;
+
+/**
+ * Initialize Socket.IO server with Redis adapter
+ * @param server HTTP server instance to attach Socket.IO to
+ */
+export function initializeSocketIO(server: http.Server): SocketIOServer {
+    if (io) {
+        logger.warn('Socket.IO server already initialized');
+        return io;
+    }
+
+    // Create a duplicate Redis client for subscription
+    const subClient = redisClient.duplicate();
+
+    // Create Socket.IO server with CORS configuration
+    io = new SocketIOServer(server, {
+        cors: {
+            // Allow connections from frontend in dev and prod
+            origin: process.env.NODE_ENV === 'production'
+                ? process.env.FRONTEND_URL || 'https://mathquest.example.com'
+                : ['http://localhost:3000', 'http://localhost:3001'],
+            methods: ['GET', 'POST'],
+            credentials: true
+        },
+        // Set path if needed (defaults to /socket.io)
+        path: '/api/socket.io',
+        // Socket.IO server configuration
+        transports: ['websocket', 'polling'],
+        // Ping timeout configuration
+        pingTimeout: 30000,
+        pingInterval: 25000
+    });
+
+    // Set up Redis adapter for horizontal scaling
+    io.adapter(createAdapter(redisClient, subClient));
+
+    // Add authentication middleware
+    io.use(socketAuthMiddleware);
+
+    // Register connection handlers
+    registerConnectionHandlers(io);
+
+    logger.info('Socket.IO server initialized with Redis adapter');
+
+    return io;
+}
+
+/**
+ * Get the Socket.IO server instance
+ * @returns The Socket.IO server instance or null if not initialized
+ */
+export function getIO(): SocketIOServer | null {
+    return io;
+}
+
+/**
+ * Configure a Socket.IO server instance
+ * This is used for testing to configure a server that's created outside the normal startup flow
+ * @param socketServer The Socket.IO server to configure
+ */
+export function configureSocketServer(socketServer: SocketIOServer): void {
+    // If we're already tracking an instance, log a warning
+    if (io && io !== socketServer) {
+        logger.warn('Configuring a new Socket.IO server while another one exists');
+    }
+
+    io = socketServer;
+}
+
+/**
+ * Register all socket event handlers
+ * @param socketServer The Socket.IO server to register handlers on
+ */
+export function registerHandlers(socketServer: SocketIOServer): void {
+    registerConnectionHandlers(socketServer);
+}

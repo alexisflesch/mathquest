@@ -24,7 +24,7 @@ interface CurrentQuestion {
     answers: { text: string; correct: boolean }[]; // Renamed from reponses and made mandatory
     type: string;
     discipline: string;
-    theme: string;
+    themes: string[]; // Changed from theme: string
     difficulty: number; // Renamed from difficulte
     level: string; // Renamed from niveau
     author?: string; // Renamed from auteur

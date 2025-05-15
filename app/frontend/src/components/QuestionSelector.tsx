@@ -25,9 +25,9 @@ import { Check, X } from 'lucide-react';
 // Extend the shared Question interface with additional fields for this component
 interface Question extends BaseQuestion {
     discipline: string;
-    theme: string;
-    difficulte: number;
-    niveau: string;
+    themes: string[]; // New plural themes
+    difficulty: number;
+    gradeLevel: string;
     auteur?: string;
     tags?: string[];
 }
@@ -45,7 +45,7 @@ interface QuestionSelectorProps extends TimerProps {
     externalFilter?: {
         discipline?: string;
         niveau?: string;
-        theme?: string | string[]; // Accepter string ou string[]
+        themes?: string[]; // New themes array
     };
 }
 
@@ -56,7 +56,7 @@ export default function QuestionSelector({
 }: QuestionSelectorProps) {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [filters, setFilters] = useState({ disciplines: [], niveaux: [], themes: [] });
-    const [filter, setFilter] = useState({ discipline: '', niveau: '', theme: '', tag: '' });
+    const [filter, setFilter] = useState({ discipline: '', niveau: '', themes: [] as string[], tag: '' }); // New filter state with themes array
     const [selectedQuestionsMap, setSelectedQuestionsMap] = useState<{ [uid: string]: Question }>({});
     const [expanded, setExpanded] = useState<{ [uid: string]: boolean }>({});
 
@@ -78,16 +78,10 @@ export default function QuestionSelector({
         if (effectiveFilter.niveau) params.push(`niveau=${encodeURIComponent(effectiveFilter.niveau)}`);
 
         // Gestion du filtrage OU pour les thèmes
-        if (effectiveFilter.theme) {
-            if (Array.isArray(effectiveFilter.theme) && effectiveFilter.theme.length > 0) {
-                // Utiliser le paramètre 'themes' (pluriel) comme dans create-tournament/page.tsx
-                const themeString = effectiveFilter.theme.filter(t => t).join(',');
-                if (themeString) {
-                    params.push(`themes=${encodeURIComponent(themeString)}`);
-                }
-            } else if (typeof effectiveFilter.theme === 'string' && effectiveFilter.theme) {
-                // Pour la rétrocompatibilité, on garde 'theme' (singulier) pour une chaîne unique
-                params.push(`theme=${encodeURIComponent(effectiveFilter.theme)}`);
+        if (effectiveFilter.themes && effectiveFilter.themes.length > 0) { // New themes logic
+            const themeString = effectiveFilter.themes.filter(t => t).join(',');
+            if (themeString) {
+                params.push(`themes=${encodeURIComponent(themeString)}`);
             }
         }
 
@@ -100,7 +94,7 @@ export default function QuestionSelector({
             .then(setQuestions);
     }, [effectiveFilter.discipline, effectiveFilter.niveau,
     // Use JSON.stringify for array comparison to ensure changes are detected
-    Array.isArray(effectiveFilter.theme) ? JSON.stringify(effectiveFilter.theme) : effectiveFilter.theme
+    JSON.stringify(effectiveFilter.themes) // New themes dependency
     ]);
 
     useEffect(() => {
@@ -145,9 +139,9 @@ export default function QuestionSelector({
         setSelectedQuestionsMap(updatedMap);
         // Compute meta arrays from all selected questions
         const selectedQuestionsMeta = Object.values(updatedMap);
-        const niveaux = Array.from(new Set(selectedQuestionsMeta.map(q => q.niveau)));
+        const niveaux = Array.from(new Set(selectedQuestionsMeta.map(q => q.gradeLevel)));
         const categories = Array.from(new Set(selectedQuestionsMeta.map(q => q.discipline)));
-        const themes = Array.from(new Set(selectedQuestionsMeta.map(q => q.theme)));
+        const themes = Array.from(new Set(selectedQuestionsMeta.flatMap(q => q.themes || []))); // New themes calculation, ensuring to handle undefined/empty themes
         onSelect(next, { niveaux, categories, themes });
     };
 
@@ -164,21 +158,15 @@ export default function QuestionSelector({
                 return false;
             }
             // Vérification du niveau
-            if (externalFilter?.niveau && q.niveau !== externalFilter.niveau) {
+            if (externalFilter?.niveau && q.gradeLevel !== externalFilter.niveau) {
                 return false;
             }
             // Vérification du thème (accepte string ou string[])
-            if (externalFilter?.theme) {
-                if (Array.isArray(externalFilter.theme)) {
-                    // Si c'est un tableau et non vide, vérifie si le thème de la question est inclus
-                    if (externalFilter.theme.length > 0 && !externalFilter.theme.includes(q.theme)) {
-                        return false;
-                    }
-                } else {
-                    // Si c'est une chaîne et non vide, vérifie l'égalité exacte
-                    if (externalFilter.theme && q.theme !== externalFilter.theme) {
-                        return false;
-                    }
+            if (externalFilter?.themes && externalFilter.themes.length > 0) { // New themes filter logic
+                if (!q.themes || q.themes.length === 0) return false; // Question has no themes, so it can't match
+                const questionHasMatchingTheme = externalFilter.themes.some(efTheme => q.themes.includes(efTheme));
+                if (!questionHasMatchingTheme) {
+                    return false;
                 }
             }
             return true;
@@ -208,8 +196,8 @@ export default function QuestionSelector({
                     </select>
                     <select
                         className="select select-bordered select-lg w-full"
-                        value={filter.theme}
-                        onChange={e => setFilter(f => ({ ...f, theme: e.target.value }))}
+                        value={filter.themes[0] || ''}
+                        onChange={e => setFilter(f => ({ ...f, themes: [e.target.value] }))} // Sets themes as an array with the selected value
                     >
                         <option value="">Thème</option>
                         {filters.themes.map((t: string) => <option key={t} value={t}>{t}</option>)}
@@ -254,7 +242,7 @@ export default function QuestionSelector({
                                 <span className="flex-1 select-none ml-1 mr-1">
                                     <MathJaxWrapper>{q.question}</MathJaxWrapper>
                                 </span>
-                                <span className="text-xs text-muted mt-1.5">[{q.discipline} - {q.niveau} - {q.theme}]</span>
+                                <span className="text-xs text-muted mt-1.5">[{q.discipline} - {q.gradeLevel} - {(q.themes || []).join(', ')}]</span>
                                 <span className={`ml-2 mt-1 transition-transform couleur-global-neutral-400 ${expanded[q.uid] ? 'rotate-90' : ''}`}>▼</span>
                             </div>
                             {expanded[q.uid] && (

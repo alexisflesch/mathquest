@@ -105,7 +105,7 @@ function handleTournamentResume(io, socket, { code }) {
                 const leaderboard = state.participants && Array.isArray(state.participants)
                     ? state.participants.map(p => ({
                         id: p.id,
-                        pseudo: p.nickname,
+                        username: p.username,
                         avatar: p.avatar,
                         score: p.score,
                         isDiffered: !!p.isDeferred

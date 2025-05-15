@@ -8,7 +8,7 @@
  */
 export interface Participant {
     id: string;
-    pseudo: string;
+    username: string;
     avatar: string;
     score: number;
     isDiffered?: boolean;
@@ -41,7 +41,7 @@ export interface TournamentParticipant extends Participant {
  */
 export interface LeaderboardEntry {
     id: string;
-    pseudo: string;
+    username: string;
     avatar?: string;
     score: number;
 }

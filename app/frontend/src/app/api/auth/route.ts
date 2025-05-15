@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
         const { action, ...data } = body;
 
         if (action === 'teacher_signup') {
-            const { nom, prenom, email, adminPassword, password, pseudo, avatar } = data;
-            if (!nom || !prenom || !email || !adminPassword || !password || !pseudo || !avatar) {
+            const { nom, prenom, email, adminPassword, password, username, avatar } = data;
+            if (!nom || !prenom || !email || !adminPassword || !password || !username || !avatar) {
                 return NextResponse.json({ message: 'Champs manquants.' }, { status: 400 });
             }
             if (adminPassword !== ADMIN_PASSWORD) {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
             const hash = await bcrypt.hash(password, 10);
             const enseignant = await prisma.enseignant.create({
                 data: {
-                    pseudo,
+                    username,
                     mot_de_passe: hash,
                     email,
                     avatar,
@@ -60,14 +60,14 @@ export async function POST(request: NextRequest) {
             const teacherCookieId = `teacher_${enseignant.id}`;
             await prisma.joueur.upsert({
                 where: { cookie_id: teacherCookieId },
-                update: { pseudo: enseignant.pseudo, avatar: enseignant.avatar },
-                create: { pseudo: enseignant.pseudo, avatar: enseignant.avatar, cookie_id: teacherCookieId },
+                update: { username: enseignant.username, avatar: enseignant.avatar },
+                create: { username: enseignant.username, avatar: enseignant.avatar, cookie_id: teacherCookieId },
             });
             // Set session/cookie here if needed
             const response = NextResponse.json({
                 message: 'Connexion réussie.',
                 enseignantId: enseignant.id,
-                pseudo: enseignant.pseudo,
+                username: enseignant.username,
                 avatar: enseignant.avatar,
                 cookie_id: teacherCookieId
             }, { status: 200 });

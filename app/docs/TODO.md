@@ -12,7 +12,7 @@ FIRST OF ALL READ THE README.md FILE FOR BEST PRACTICES AND GUIDELINES
 - [X] Fix immediate TypeScript build errors
 - [X] Establish central shared types repository between frontend and backend: in doubt, ask for help
 - [X] Create proper interfaces for all socket event payloads
-- [X] Ensure consistent naming conventions in type definitions (English, standardized terms like `text`, `answers`, `time`, `explanation`, `level`, `title`, `nickname`, `isDeferred`, `playerId`, `teacherId`, `socketToPlayerId`, `status`, `tournamentId`, `difficulty`)
+- [X] Ensure consistent naming conventions in type definitions (English, standardized terms like `text`, `answers`, `time`, `explanation`, `level`, `title`, `username`, `isDeferred`, `playerId`, `teacherId`, `socketToPlayerId`, `status`, `tournamentId`, `difficulty`)
 - [ ] Add runtime type validation utilities
 - [X] Create type mapping utilities (e.g., `filterQuestionForClient`)
 - [ ] Add schema validation for runtime type checking
@@ -20,6 +20,7 @@ FIRST OF ALL READ THE README.md FILE FOR BEST PRACTICES AND GUIDELINES
 - [X] Eliminate `any` types throughout the codebase (Initial pass completed, ongoing review needed)
 - [X] Standardize `question.text` for question content and `question.answers` for answers.
 - [X] Ensure `answers` is a mandatory field in `BaseQuestion` and related types.
+- [ ] Add deferred mode for students (self-paced, not real-time, can be completed later)
 
 ### Next Session Starting Point (May 13, 2025)
 

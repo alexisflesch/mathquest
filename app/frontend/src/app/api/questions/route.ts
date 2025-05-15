@@ -26,33 +26,35 @@ type QuestionWhereInput = Prisma.QuestionWhereInput;
 // GET: List all questions for quiz creation
 export async function GET(request: NextRequest) {
     try {
-        // Optionally, add filters (discipline, niveau, etc.) via query params
+        // Optionally, add filters (discipline, gradeLevel, etc.) via query params
         const { searchParams } = new URL(request.url);
         const discipline = searchParams.get('discipline');
-        const niveau = searchParams.get('niveau');
-        const theme = searchParams.get('theme');
-        const themesParam = searchParams.get('themes');
+        // Allow for gradeLevel, level, or an older niveau param for compatibility during transition
+        const gradeLevelParam = searchParams.get('gradeLevel') || searchParams.get('level') || searchParams.get('niveau');
+        const themeParam = searchParams.get('theme'); // Singular theme param
+        const themesParam = searchParams.get('themes'); // Plural themes (comma-separated) param
         const limit = parseInt(searchParams.get('limit') || '20', 10);
         const offset = parseInt(searchParams.get('offset') || '0', 10);
         const shuffle = searchParams.get('shuffle') !== 'false'; // default true, but allow ?shuffle=false
 
         const where: QuestionWhereInput = {};
         if (discipline) where.discipline = discipline;
-        if (niveau) where.niveau = niveau;
+        if (gradeLevelParam) where.gradeLevel = gradeLevelParam; // Changed from where.niveau
 
         // Handle both single theme and multiple themes
         if (themesParam) {
-            const themes = themesParam.split(',').map(t => t.trim()).filter(Boolean);
-            if (themes.length > 0) {
-                where.theme = { in: themes };
+            const themesArray = themesParam.split(',').map(t => t.trim()).filter(Boolean);
+            if (themesArray.length > 0) {
+                where.themes = { hasSome: themesArray }; // Changed from where.theme = { in: themes }
             }
-        } else if (theme) {
-            where.theme = theme;
+        } else if (themeParam) { // if only a single 'theme' is provided
+            where.themes = { has: themeParam }; // Changed from where.theme = themeParam
         }
 
         logger.debug('Question filtering criteria:', where);
-        logger.debug('themesParam:', themesParam);
-        logger.debug('theme:', theme);
+        logger.debug('themesParam (plural):', themesParam);
+        logger.debug('themeParam (singular):', themeParam);
+        logger.debug('gradeLevelParam:', gradeLevelParam);
         // Get all matching questions
         let all;
         if (shuffle) {

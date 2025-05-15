@@ -15,15 +15,15 @@ import MathJaxWrapper from '@/components/MathJaxWrapper';
 const logger = createLogger('TeacherDashboard');
 
 export default function TeacherDashboard() {
-    const [pseudo, setPseudo] = useState<string>('');
+    const [username, setusername] = useState<string>('');
 
     useEffect(() => {
         try {
-            const storedPseudo = localStorage.getItem('mathquest_pseudo') || '';
-            setPseudo(storedPseudo);
-            logger.info('Pseudo loaded from localStorage', storedPseudo);
+            const storedusername = localStorage.getItem('mathquest_username') || '';
+            setusername(storedusername);
+            logger.info('username loaded from localStorage', storedusername);
         } catch (e) {
-            logger.warn('Could not access localStorage for pseudo', e);
+            logger.warn('Could not access localStorage for username', e);
         }
     }, []);
 
@@ -34,7 +34,7 @@ export default function TeacherDashboard() {
                     <div className="flex flex-col gap-8">
                         <div className="flex items-center justify-center gap-4 mb-5">
                             <Image src="/favicon.svg" alt="MathQuest logo" width={64} height={64} priority />
-                            <h1 className="text-2xl text-center font-bold text-base-content">Bienvenue{pseudo ? `, ${pseudo}` : ''} !</h1>
+                            <h1 className="text-2xl text-center font-bold text-base-content">Bienvenue{username ? `, ${username}` : ''} !</h1>
                         </div>
                         <ul className="list-disc list-inside text-base text-base-content mb-2 max-w-md">
                             <li>Créez des quiz personnalisés pour vos élèves selon la discipline, le niveau et les thèmes souhaités.</li>

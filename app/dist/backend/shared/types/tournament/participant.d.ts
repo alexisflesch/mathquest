@@ -8,7 +8,7 @@
  */
 export interface Participant {
     id: string;
-    nickname: string;
+    username: string;
     avatar: string;
     score: number;
     isDeferred?: boolean;
@@ -41,7 +41,7 @@ export interface TournamentParticipant extends Participant {
  */
 export interface LeaderboardEntry {
     id: string;
-    nickname: string;
+    username: string;
     avatar?: string;
     score: number;
 }

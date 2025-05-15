@@ -3,19 +3,30 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// GET /api/questions/themes?niveau=CE2&discipline=maths
+// GET /api/questions/themes?gradeLevel=CE2&discipline=maths
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-    const niveau = searchParams.get('niveau');
+    const gradeLevel = searchParams.get('gradeLevel') || searchParams.get('niveau'); // Allow fallback for niveau
     const discipline = searchParams.get('discipline');
-    if (!niveau || !discipline) {
-        return NextResponse.json({ error: 'Missing niveau or discipline parameter' }, { status: 400 });
+    if (!gradeLevel || !discipline) {
+        return NextResponse.json({ error: 'Missing gradeLevel or discipline parameter' }, { status: 400 });
     }
-    const themes = await prisma.question.findMany({
-        where: { niveau, discipline },
-        select: { theme: true },
-        distinct: ['theme'],
+    // Fetch questions matching the gradeLevel and discipline
+    const questions = await prisma.question.findMany({
+        where: { gradeLevel, discipline },
+        select: { themes: true }, // Select the themes array
     });
-    const themeList = themes.map((t: { theme: string }) => t.theme).filter(Boolean);
-    return NextResponse.json({ themes: themeList });
+
+    // Extract unique themes from the themes arrays of the fetched questions
+    const uniqueThemes = new Set<string>();
+    questions.forEach(question => {
+        if (question.themes && Array.isArray(question.themes)) {
+            question.themes.forEach(theme => {
+                if (theme) uniqueThemes.add(theme);
+            });
+        }
+    });
+    const sortedThemes = Array.from(uniqueThemes).sort();
+
+    return NextResponse.json({ themes: sortedThemes });
 }

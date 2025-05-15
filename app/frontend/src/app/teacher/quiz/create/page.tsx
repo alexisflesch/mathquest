@@ -13,12 +13,9 @@ interface QuestionForCreatePage {
     title?: string;
     text: string; // Changed from question: string to text: string
     answers: Array<{ text: string; correct: boolean }>; // Must match QuestionDisplay
-    levels?: string[];
-    level?: string | string[];
-    categories?: string[];
+    level?: string | string[]; // This will be populated from shared type's gradeLevel or API's level/niveaux
     discipline?: string;
-    themes?: string[];
-    theme?: string;
+    themes?: string[]; // Plural, to align with shared type
     explanation?: string;
     time?: number;
     tags?: string[];
@@ -26,7 +23,7 @@ interface QuestionForCreatePage {
 
 export default function CreateQuizPage() {
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
-    const [quizMeta, setQuizMeta] = useState<{ levels: string[]; categories: string[]; themes: string[] }>({ levels: [], categories: [], themes: [] }); // Renamed niveaux to levels
+    const [quizMeta, setQuizMeta] = useState<{ levels: string[]; themes: string[] }>({ levels: [], themes: [] }); // Removed categories
     const [quizName, setQuizName] = useState('');
     const [savingQuiz, setSavingQuiz] = useState(false);
     const [quizSaveSuccess, setQuizSaveSuccess] = useState<string | null>(null);
@@ -95,12 +92,9 @@ export default function CreateQuizPage() {
                         text: a.text || '',
                         correct: a.correct || false // Use a.correct from Answer
                     })),
-                    levels: apiQuestion.levels || apiQuestion.niveaux, // From API, fallback to French
-                    level: apiQuestion.level || apiQuestion.niveau, // From API, fallback to French
-                    categories: apiQuestion.categories, // From API
+                    level: apiQuestion.gradeLevel || apiQuestion.level || apiQuestion.niveaux, // Prioritize gradeLevel from shared, then API's level/niveaux
                     discipline: apiQuestion.discipline || apiQuestion.category || apiQuestion.subject, // From API, with fallbacks
-                    themes: apiQuestion.themes, // From API
-                    theme: apiQuestion.theme, // From API
+                    themes: apiQuestion.themes, // From API (should be plural)
                     explanation: q.explanation, // From BaseQuestion
                     time: q.time, // From BaseQuestion
                     tags: q.tags, // From BaseQuestion
@@ -159,8 +153,8 @@ export default function CreateQuizPage() {
                 setSavingQuiz(false);
                 return;
             }
-            if (quizMeta.levels.length === 0 || quizMeta.categories.length === 0) { // Use levels
-                setQuizSaveError('Veuillez sélectionner au moins une question pour déterminer le niveau et la discipline.');
+            if (quizMeta.levels.length === 0) { // Removed categories from validation
+                setQuizSaveError('Veuillez sélectionner au moins une question pour déterminer le niveau.'); // Adjusted error message
                 setSavingQuiz(false);
                 return;
             }
@@ -172,7 +166,6 @@ export default function CreateQuizPage() {
                     questions_ids: selectedQuestions,
                     enseignant_id: teacherId,
                     levels: quizMeta.levels, // Use levels
-                    categories: quizMeta.categories,
                     themes: quizMeta.themes,
                     type: 'direct',
                 }),
@@ -182,7 +175,7 @@ export default function CreateQuizPage() {
             setQuizSaveSuccess('Quiz sauvegardé avec succès !');
             setQuizName('');
             setSelectedQuestions([]);
-            setQuizMeta({ levels: [], categories: [], themes: [] }); // Use levels
+            setQuizMeta({ levels: [], themes: [] }); // Removed categories
         } catch (err: unknown) {
             setQuizSaveError((err as Error).message || 'Erreur inconnue.');
         } finally {
@@ -239,7 +232,7 @@ export default function CreateQuizPage() {
                                             const search = tagSearch.trim().toLowerCase();
                                             const tags = [
                                                 ...(q.tags || []),
-                                                q.theme,
+                                                q.themes,
                                                 q.level, // Use level
                                                 q.discipline,
                                                 q.title, // Use title
@@ -263,9 +256,9 @@ export default function CreateQuizPage() {
                                                             setQuizMeta(() => { // Removed 'meta' param to avoid shadowing
                                                                 const selectedQs = questions.filter(qq => next.includes(qq.uid));
                                                                 const levels = Array.from(new Set(selectedQs.map(qq => qq.level).filter((v): v is string => Boolean(v)))); // Use levels and qq.level
-                                                                const categories = Array.from(new Set(selectedQs.map(qq => qq.discipline).filter((v): v is string => Boolean(v))));
-                                                                const themes = Array.from(new Set(selectedQs.map(qq => qq.theme).filter((v): v is string => Boolean(v))));
-                                                                return { levels, categories, themes }; // Use levels
+                                                                // Updated to use only qq.themes as qq.theme is removed
+                                                                const themes = Array.from(new Set(selectedQs.flatMap(qq => qq.themes || []).filter((v): v is string => Boolean(v))));
+                                                                return { levels, themes }; // Removed categories
                                                             });
                                                             return next;
                                                         });
@@ -299,13 +292,10 @@ export default function CreateQuizPage() {
                             value={quizName}
                             onChange={e => setQuizName(e.target.value)}
                         />
-                        {(quizMeta.levels.length > 0 || quizMeta.categories.length > 0 || quizMeta.themes.length > 0) && ( // Use levels
+                        {(quizMeta.levels.length > 0 || quizMeta.themes.length > 0) && ( // Removed categories check
                             <div className="flex flex-row flex-wrap items-center gap-2 my-2">
                                 {quizMeta.levels.map(n => ( // Use levels
                                     <span key={n} className="badge badge-primary rounded-lg px-4 py-2">{n}</span>
-                                ))}
-                                {quizMeta.categories.map(c => (
-                                    <span key={c} className="badge badge-secondary rounded-lg px-4 py-2">{c}</span>
                                 ))}
                                 {quizMeta.themes.map(t => (
                                     <span key={t} className="badge badge-accent rounded-lg px-4 py-2">{t}</span>

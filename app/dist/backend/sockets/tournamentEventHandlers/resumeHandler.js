@@ -96,12 +96,12 @@ function handleTournamentResume(io, socket, { code }) {
                 logger.info(`Ending tournament ${code} after resume timer`);
                 const leaderboard = Object.values(state.participants)
                     .map(p => ({
-                    id: p.id,
-                    pseudo: p.pseudo,
-                    avatar: p.avatar,
-                    score: p.score,
-                    isDiffered: !!p.isDiffered
-                }))
+                        id: p.id,
+                        username: p.username,
+                        avatar: p.avatar,
+                        score: p.score,
+                        isDiffered: !!p.isDiffered
+                    }))
                     .sort((a, b) => (b.score || 0) - (a.score || 0));
                 io.to(`live_${code}`).emit("tournament_end", { leaderboard });
                 try {

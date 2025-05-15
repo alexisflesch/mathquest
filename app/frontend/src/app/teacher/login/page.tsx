@@ -70,10 +70,10 @@ export default function TeacherLoginPage() {
                         logger.debug('Using existing mathquest_cookie_id', { cookie_id });
                     }
                 }
-                // Set pseudo and avatar for gameplay/leaderboard
-                if (result.pseudo) {
-                    localStorage.setItem('mathquest_pseudo', result.pseudo);
-                    logger.debug('Set mathquest_pseudo', { pseudo: result.pseudo });
+                // Set username and avatar for gameplay/leaderboard
+                if (result.username) {
+                    localStorage.setItem('mathquest_username', result.username);
+                    logger.debug('Set mathquest_username', { username: result.username });
                 }
                 if (result.avatar) {
                     localStorage.setItem('mathquest_avatar', result.avatar);
@@ -82,7 +82,7 @@ export default function TeacherLoginPage() {
                 // Log all values after setting
                 logger.info('Teacher login successful', {
                     cookie_id: localStorage.getItem('mathquest_cookie_id'),
-                    pseudo: localStorage.getItem('mathquest_pseudo'),
+                    username: localStorage.getItem('mathquest_username'),
                     avatar: localStorage.getItem('mathquest_avatar'),
                 });
             }

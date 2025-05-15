@@ -35,9 +35,9 @@ exports.lobbyParticipants = lobbyParticipants;
  * @param socket - Socket connection
  */
 function registerLobbyHandlers(io, socket) {
-    socket.on("join_lobby", async ({ code, pseudo, avatar, cookie_id }) => {
-        logger.info(`join_lobby received: code=${code}, pseudo=${pseudo}, cookie_id=${cookie_id || 'none'}, socket.id=${socket.id}`);
-        logger.debug(`Avatar for ${pseudo}: ${avatar}`);
+    socket.on("join_lobby", async ({ code, username, avatar, cookie_id }) => {
+        logger.info(`join_lobby received: code=${code}, username=${username}, cookie_id=${cookie_id || 'none'}, socket.id=${socket.id}`);
+        logger.debug(`Avatar for ${username}: ${avatar}`);
         try {
             // Fetch tournament status first
             logger.debug(`Fetching tournament status for code ${code}...`);
@@ -115,10 +115,10 @@ function registerLobbyHandlers(io, socket) {
                 lobbyParticipants[code] = [];
             lobbyParticipants[code] = [
                 ...lobbyParticipants[code].filter((p) => p.id !== socket.id),
-                { id: socket.id, pseudo, avatar, cookie_id },
+                { id: socket.id, username, avatar, cookie_id },
             ];
             logger.debug(`lobbyParticipants[${code}]:`, lobbyParticipants[code]);
-            io.to(`lobby_${code}`).emit("participant_joined", { pseudo, avatar, id: socket.id });
+            io.to(`lobby_${code}`).emit("participant_joined", { username, avatar, id: socket.id });
             io.to(`lobby_${code}`).emit("participants_list", { participants: lobbyParticipants[code], isQuizLinked });
             // Emit quiz connected count after a student joins the lobby
             await (0, quizUtils_1.emitQuizConnectedCount)(io, db_1.default, code);

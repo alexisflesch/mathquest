@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/db/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Make sure to set this in your .env file
+}
+
+model Teacher {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  email        String?  @unique
+  createdAt    DateTime @default(now()) @map("created_at")
+  avatarUrl    String?  @map("avatar_url")
+
+  resetToken          String?   @map("reset_token")
+  resetTokenExpiresAt DateTime? @map("reset_token_expires_at")
+
+  quizTemplates QuizTemplate[] @relation("CreatedQuizTemplates")
+  gameInstances GameInstance[] @relation("InitiatedGameInstances")
+
+  @@map("teachers") // Explicitly map table name
+}
+
+model Player {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  cookieId     String   @unique @map("cookie_id")
+  email        String?  @unique // Optional: for registered players
+  passwordHash String? // Optional: for registered players
+  createdAt    DateTime @default(now()) @map("created_at")
+  avatarUrl    String?  @map("avatar_url")
+
+  gameParticipations GameParticipant[]
+
+  @@map("players") // Explicitly map table name
+}
+
+model Question {
+  uid          String   @id @default(uuid())
+  title        String? // Optional title for the question
+  text         String   @map("question_text")
+  responses    Json
+  questionType String   @map("question_type") // e.g., 'multiple_choice_single_answer', 'multiple_choice_multiple_answers', 'short_answer'
+  discipline   String
+  themes       String[]
+  difficulty   Int?
+  gradeLevel   String?  @map("grade_level")
+  author       String?
+  explanation  String?
+  tags         String[]
+  timeLimit    Int?     @map("time_limit_seconds") // Time in seconds
+  isHidden     Boolean? @default(false) @map("is_hidden") // Optional boolean to hide the question to students
+
+  quizTemplates QuestionsInQuizTemplate[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("questions") // Explicitly map table name
+}
+
+enum PlayMode {
+  class
+  tournament
+  practice
+}
+
+model QuizTemplate {
+  id               String    @id @default(uuid())
+  name             String
+  creatorTeacherId String    @map("creator_teacher_id")
+  gradeLevel       String?   @map("grade_level")
+  themes           String[]
+  discipline       String?
+  description      String?
+  defaultMode      PlayMode? @map("default_mode") // e.g., class, tournament, practice
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  creatorTeacher Teacher                   @relation("CreatedQuizTemplates", fields: [creatorTeacherId], references: [id])
+  questions      QuestionsInQuizTemplate[]
+  gameInstances  GameInstance[]
+
+  @@map("quiz_templates") // Explicitly map table name
+}
+
+// Explicit join table for ordered questions in a QuizTemplate
+model QuestionsInQuizTemplate {
+  quizTemplateId String @map("quiz_template_id")
+  questionUid    String @map("question_uid")
+  sequence       Int // Order of the question in the quiz template
+
+  quizTemplate QuizTemplate @relation(fields: [quizTemplateId], references: [id], onDelete: Cascade)
+  question     Question     @relation(fields: [questionUid], references: [uid], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([quizTemplateId, sequence]) // Ensures sequence is unique per template
+  @@unique([quizTemplateId, questionUid]) // Ensures a question appears only once per template
+  @@map("questions_in_quiz_templates") // Explicitly map table name
+}
+
+model GameInstance {
+  id                   String    @id @default(uuid())
+  name                 String // e.g., "Algebra Quiz - Morning Class - May 14"
+  quizTemplateId       String    @map("quiz_template_id")
+  initiatorTeacherId   String?   @map("initiator_teacher_id") // Can be null if system-generated or for other scenarios
+  accessCode           String    @unique @map("access_code") // Unique for joining this specific instance
+  status               String // "pending", "active", "paused", "completed", "archived"
+  playMode             PlayMode  @map("play_mode") // "class", "tournament", or "practice"
+  leaderboard          Json? // Specific to this instance
+  currentQuestionIndex Int?      @map("current_question_index") // For live games, to track progress
+  settings             Json? // Game-specific settings (e.g., show leaderboard after each question, timer multiplier)
+  createdAt            DateTime  @default(now()) @map("created_at")
+  startedAt            DateTime? @map("started_at")
+  endedAt              DateTime? @map("ended_at")
+
+  quizTemplate     QuizTemplate      @relation(fields: [quizTemplateId], references: [id])
+  initiatorTeacher Teacher?          @relation("InitiatedGameInstances", fields: [initiatorTeacherId], references: [id])
+  participants     GameParticipant[]
+
+  @@index([accessCode])
+  @@map("game_instances") // Explicitly map table name
+}
+
+model GameParticipant {
+  id             String    @id @default(uuid())
+  gameInstanceId String    @map("game_instance_id")
+  playerId       String    @map("player_id")
+  score          Int       @default(0)
+  rank           Int? // Calculated rank on the leaderboard
+  timeTakenMs    Int?      @map("time_taken_ms") // Total time taken for all questions
+  joinedAt       DateTime  @default(now()) @map("joined_at")
+  completedAt    DateTime? @map("completed_at")
+  answers        Json? // Detailed answers: [{ questionUid: String, answer: any, isCorrect: Boolean, timeTakenMs: Int, score: Int }]
+
+  gameInstance GameInstance @relation(fields: [gameInstanceId], references: [id], onDelete: Cascade)
+  player       Player       @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([gameInstanceId, playerId])
+  @@map("game_participants") // Explicitly map table name
+}

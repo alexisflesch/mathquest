@@ -185,61 +185,77 @@ When deploying to production, set `NEXT_PUBLIC_CLIENT_LOG_LEVEL=NONE` or `NEXT_P
 
 ## Core Concepts
 
-### Quiz vs Tournament
+MathQuest is an educational platform for creating and participating in math games. Teachers can design reusable quiz structures, and students can join specific game sessions to answer questions in real-time or in a self-paced practice mode.
 
-1. **Quiz**: A collection of questions created by a teacher. It's stored in the `Quiz` table and includes:
-   - Set of questions (questions_ids)
-   - Configuration (type, niveaux, categories, themes)
-   - Has an optional `tournament_code` field that references the code of a tournament
+### Key Entities
 
-2. **Tournament**: The actual "game session" that uses questions. Stored in the `Tournoi` table:
-   - Has its own `code` field which is a unique string used for joining
-   - Can be "direct" (real-time) or "differé" (asynchronous)
-   - Tracks participation status via the `statut` field
-   - Keeps track of scores and leaderboard data
+1.  **`QuizTemplate`**: This represents the blueprint of a quiz. It's created by a `Teacher` and contains:
+    *   A defined set of `Question`s, including their specific order.
+    *   Default settings like `PlayMode` (e.g., `class`, `tournament`, `practice`), `gradeLevel`, and `themes`.
+    *   This is a reusable template that can be used to launch multiple game sessions.
 
-The relationship works as follows:
-- A quiz has a `tournament_code` field that references a tournament's `code`
-- A tournament has its own `questions_ids` field with the questions to be asked
+2.  **`GameInstance`**: This represents an actual "game session" or a specific playthrough of a `QuizTemplate`. It has:
+    *   A unique `accessCode` for `Player`s to join.
+    *   Its own `PlayMode`, which can override the default from the `QuizTemplate`.
+    *   A list of `GameParticipant`s (players who have joined this specific session).
+    *   A dedicated leaderboard for this session.
+    *   Tracks the game's `status` (e.g., `pending`, `active`, `finished`).
+
+3.  **`Question`**: An individual math question with its text, answer choices, correct answer, `gradeLevel`, `themes`, `difficulty`, and an optional `explanation`.
+
+4.  **`Teacher`**: An educator who can create `QuizTemplate`s and launch `GameInstance`s.
+
+5.  **`Player`**: A participant in a `GameInstance`. Can be anonymous or eventually linked to an account.
+
+### Play Modes
+
+*   **`class`**: Typically teacher-led, questions are presented one by one to the whole group.
+*   **`tournament`**: Competitive mode, often timed, with a focus on leaderboards.
+*   **`practice`**: Self-paced mode for individual students.
 
 ## Database Schema
 
-Located at `/prisma/schema.prisma`:
+Located at `/prisma/schema.prisma`. The schema has been refactored to improve clarity and support new features.
 
-### Main Tables
+### Main Models
 
-1. **Question**
-   - Primary key: `uid`
-   - Contains question text, possible answers, type, difficulty, etc.
-   - Answer format: JSON array of `{texte: string, correct: boolean}`
-   - Question types: "choix_simple", "choix_multiple"
+1.  **`Question`**
+    *   Primary key: `id` (UUID)
+    *   Fields: `text`, `responses` (JSON, array of `{text: string, correct: boolean}`), `type` (e.g., `single_choice`, `multiple_choice`), `difficulty`, `gradeLevel`, `themes` (array of strings), `explanation` (optional string), `teacherId` (links to `Teacher`).
 
-2. **Quiz**
-   - Primary key: `id`
-   - Stores: name, creation date, questions_ids, type, niveaux, categories, themes
-   - Related to Enseignant (teacher) via `enseignant_id`
-   - Has optional `tournament_code` field which references an active tournament's code
+2.  **`QuizTemplate`**
+    *   Primary key: `id` (UUID)
+    *   Fields: `title`, `description` (optional), `defaultPlayMode` (`PlayMode` enum), `gradeLevel`, `themes`, `teacherId` (links to `Teacher`).
+    *   Relation: `questions` (many-to-many with `Question` via `QuestionsInQuizTemplate` to define order).
 
-3. **Tournoi**
-   - Primary key: `id`
-   - Has its own unique `code` field for joining (null when not yet active)
-   - Stores: name, dates, status, questions_ids, type, niveau, categorie
-   - Status values: "en préparation", "en cours", "terminé"
-   - Can be created by teacher or student (polymorphic creator relation)
-   - Contains leaderboard data as JSON
+3.  **`QuestionsInQuizTemplate`** (Join Table)
+    *   Primary keys: `quizTemplateId`, `questionId`
+    *   Field: `order` (integer, for question sequencing).
+    *   Relations: `quizTemplate` (links to `QuizTemplate`), `question` (links to `Question`).
 
-4. **Score**
-   - Relates tournaments to players with their scores
-   - Unique constraint on [tournoi_id, joueur_id]
+4.  **`GameInstance`**
+    *   Primary key: `id` (UUID)
+    *   Fields: `accessCode` (unique string for joining), `status` (e.g., `pending`, `active`, `finished`), `playMode` (`PlayMode` enum), `quizTemplateId` (links to `QuizTemplate`), `teacherId` (links to `Teacher`).
+    *   Relations: `participants` (one-to-many with `GameParticipant`), `quizTemplate` (links to `QuizTemplate`).
 
-5. **Enseignant** (Teacher)
-   - Primary key: `id`
-   - Stores auth info (password hash), personal data
+5.  **`GameParticipant`**
+    *   Primary key: `id` (UUID)
+    *   Fields: `score` (integer), `gameInstanceId` (links to `GameInstance`), `playerId` (links to `Player`).
+    *   Relations: `gameInstance`, `player`.
 
-6. **Joueur** (Player)
-   - Primary key: `id` 
-   - Identified by `cookie_id` for anonymous participation
-   - Stores pseudo, avatar, etc.
+6.  **`Teacher`**
+    *   Primary key: `id` (UUID)
+    *   Fields: `username`, `email` (unique), `passwordHash`.
+    *   Relations: `questionsCreated` (one-to-many with `Question`), `quizTemplatesCreated` (one-to-many with `QuizTemplate`), `gameInstancesHosted` (one-to-many with `GameInstance`).
+
+7.  **`Player`**
+    *   Primary key: `id` (UUID)
+    *   Fields: `username` (unique), `avatar` (optional string), `cookieId` (optional, for anonymous tracking), `email` (optional, unique), `passwordHash` (optional).
+    *   Relation: `gameParticipations` (one-to-many with `GameParticipant`).
+
+### Enums
+
+*   **`PlayMode`**: `class`, `tournament`, `practice`.
 
 ## Application Architecture
 
@@ -301,13 +317,14 @@ The application uses in-memory state objects for real-time functionality:
 
 ## Key Workflows
 
-### Tournament Creation Flow
-1. Teacher creates a quiz (saved in `Quiz` table)
-2. A tournament is created in the `Tournoi` table with a unique `code`
-3. The quiz is updated with the `tournament_code` to link it to this tournament
-4. Students join using the tournament's `code` through the lobby
+### Game Creation and Participation Flow
+1.  A `Teacher` creates a `QuizTemplate`, defining its questions, their order, and default settings (e.g., `defaultPlayMode`). This is saved to the database.
+2.  To start a game, the `Teacher` launches a `GameInstance` based on a `QuizTemplate`. This `GameInstance` gets a unique `accessCode`.
+3.  `Player`s join the `GameInstance` using this `accessCode`. Their participation is recorded in the `GameParticipant` table, linked to the specific `GameInstance`.
+4.  The game proceeds according to the `playMode` of the `GameInstance`. Scores are tracked per `GameParticipant`.
+5.  Each `GameInstance` has its own distinct leaderboard.
 
-### Tournament Operation Flow
+### Tournament Operation Flow (Example for `tournament` PlayMode)
 1. Teacher dashboard sends `quiz_timer_action` or `quiz_set_question`
 2. Server updates both `quizState` and `tournamentState`
 3. Server broadcasts `quiz_update` to tournament clients
@@ -437,13 +454,13 @@ The application uses a combined server (Next.js + Socket.IO) and must be deploye
 
 MathQuest uses browser localStorage to persist user identity and settings across sessions:
 
-- `mathquest_pseudo`: Stores the pseudo (username) for both students and teachers.
+- `mathquest_username`: Stores the username (username) for both students and teachers.
 - `mathquest_avatar`: Stores the avatar filename for both students and teachers.
 - `mathquest_cookie_id`: Unique identifier for gameplay and leaderboard tracking (set for both roles).
 - `mathquest_teacher_id`: The teacher's database ID (set only for teachers).
 - `CLIENT_LOG_LEVEL`: Controls the client logger verbosity at runtime.
 
-All components and routes now use only `mathquest_pseudo` and `mathquest_avatar` for identity, regardless of user role. This simplifies logic and avoids ambiguity. On logout, all these keys are removed.
+All components and routes now use only `mathquest_username` and `mathquest_avatar` for identity, regardless of user role. This simplifies logic and avoids ambiguity. On logout, all these keys are removed.
 
 ## Real-Time Lobby and Tournament Redirection
 

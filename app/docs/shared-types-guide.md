@@ -8,6 +8,15 @@ This guide provides instructions for using the shared types across the MathQuest
 
 ### Quiz Types
 
+**Core Question Classification:**
+Questions are primarily classified using the following fields in the `Question` interface (which extends `BaseQuestion`):
+*   `gradeLevel?: string;` - The educational level for the question.
+*   `discipline?: string;` - The subject or discipline (e.g., "Mathematics", "History").
+*   `themes?: string[];` - An array of themes specific to the discipline (e.g., ["Algebra", "Geometry"] for Mathematics).
+*   `tags?: string[];` - (Inherited from `BaseQuestion`) General-purpose tags for finer-grained searching and categorization.
+
+It's important to rely on these fields for categorizing and filtering questions. Avoid introducing redundant or overlapping fields. For instance, a previously used "categories" field has been removed in favor of a clear distinction between "discipline" and "themes".
+
 ```typescript
 // Importing quiz types
 import { 

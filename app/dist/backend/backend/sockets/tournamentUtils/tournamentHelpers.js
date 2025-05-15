@@ -199,7 +199,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
         // Create leaderboard data
         const leaderboardData = (state.participants || []).map(p => ({
             id: p.id,
-            name: p.nickname || 'Anonymous',
+            name: p.username || 'Anonymous',
             score: p.score || 0,
             rank: ranks.get(p.id) || 0
         })).sort((a, b) => a.rank - b.rank);
@@ -339,7 +339,7 @@ function sendQuestionWithState(io, code, questionIndex, questionUid = undefined,
     // Send the question data to clients using the shared function
     try {
         (0, sendQuestion_1.sendQuestion)(io, roomName, question, // The full question object
-        timer, questionIndex, state.questions.length, modeSpecificData);
+            timer, questionIndex, state.questions.length, modeSpecificData);
     }
     catch (err) {
         logger.error(`[sendQuestionWithState] Error sending question via shared function: ${err instanceof Error ? err.message : String(err)}`);

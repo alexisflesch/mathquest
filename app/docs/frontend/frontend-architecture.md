@@ -21,7 +21,7 @@
 - **Purpose:** Displays the leaderboard for a completed tournament.
 - **Features:**
   - Fetches leaderboard and tournament info from API.
-  - Highlights current user (pseudo/avatar from localStorage).
+  - Highlights current user (username/avatar from localStorage).
   - Shows live/differed icons, sharing button, and link to play in differed mode if allowed.
 - **Data:** Uses localStorage for identity, fetches leaderboard and canPlayDiffered from API.
 
@@ -137,7 +137,7 @@
 ---
 
 ## Identity, Auth, and LocalStorage
-- **Identity:** All pages/components use `mathquest_pseudo`, `mathquest_avatar`, and `mathquest_cookie_id` from localStorage for user identity.
+- **Identity:** All pages/components use `mathquest_username`, `mathquest_avatar`, and `mathquest_cookie_id` from localStorage for user identity.
 - **Auth:** Teachers use AuthProvider and `mathquest_teacher_id` for authentication.
 - **Logout:** Removes all identity keys from localStorage.
 

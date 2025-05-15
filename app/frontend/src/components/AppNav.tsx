@@ -43,7 +43,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
     const { /* refreshAuth, */ isAuthenticated, isStudent, isTeacher } = useAuth();
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
-    const [pseudo, setPseudo] = useState<string | null>(null);
+    const [username, setusername] = useState<string | null>(null);
     const [avatar, setAvatar] = useState<string | null>(null);
 
     // Theme toggle state
@@ -85,13 +85,13 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                 const res = await fetch(`/api/teacher/profile?id=${teacherId}`);
                 if (res.ok) {
                     const data = await res.json();
-                    setPseudo(data.pseudo || null);
+                    setusername(data.username || null);
                     setAvatar(data.avatar || null);
-                    localStorage.setItem('mathquest_pseudo', data.pseudo || '');
+                    localStorage.setItem('mathquest_username', data.username || '');
                     localStorage.setItem('mathquest_avatar', data.avatar || '');
                 }
             } catch (e) {
-                setPseudo(null);
+                setusername(null);
                 setAvatar(null);
                 console.error('Error fetching teacher profile:', e);
             }
@@ -107,14 +107,14 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
             if (teacherId) {
                 fetchTeacherProfile(teacherId);
             } else {
-                setPseudo(null);
+                setusername(null);
                 setAvatar(null);
             }
         } else if (isStudent && typeof window !== 'undefined') {
-            setPseudo(localStorage.getItem('mathquest_pseudo'));
+            setusername(localStorage.getItem('mathquest_username'));
             setAvatar(localStorage.getItem('mathquest_avatar'));
         } else {
-            setPseudo(null);
+            setusername(null);
             setAvatar(null);
         }
     }, [isStudent, isTeacher]); // Re-run when isStudent or isTeacher changes
@@ -122,7 +122,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
     // Add handleDisconnect function for menu actions
     const handleDisconnect = async () => {
         // Remove localStorage/session data if needed
-        localStorage.removeItem('mathquest_pseudo');
+        localStorage.removeItem('mathquest_username');
         localStorage.removeItem('mathquest_avatar');
         localStorage.removeItem('mathquest_teacher_id');
         localStorage.removeItem('mathquest_cookie_id');
@@ -195,7 +195,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         <>
             {/* Sidebar for large screens */}
             <aside className={`hidden md:flex md:flex-col md:h-screen md:fixed md:left-0 md:top-0 bg-[color:var(--navbar)] text-white z-40 overflow-y-auto transition-all duration-200 ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'}`}>
-                {/* Header with burger and avatar/pseudo side by side */}
+                {/* Header with burger and avatar/username side by side */}
                 <div className="relative w-full h-20 flex items-center">
                     <button
                         className="ml-2 flex items-center justify-center h-12 w-12 border-b border-white/10 hover:bg-gray-800 focus:outline-none z-10"
@@ -212,8 +212,8 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                         ) : (
                             <div className="w-20 h-20 rounded-full mb-2 bg-gray-700" />
                         )}
-                        {pseudo ? (
-                            <span className="text-lg font-semibold text-white drop-shadow">{pseudo}</span>
+                        {username ? (
+                            <span className="text-lg font-semibold text-white drop-shadow">{username}</span>
                         ) : (
                             <span className="text-lg font-semibold text-gray-500">{isTeacher ? 'Enseignant' : 'Loading...'}</span>
                         )}
@@ -309,17 +309,17 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    {/* Avatar/Pseudo on the right */}
+                    {/* Avatar/username on the right */}
                     <div className="flex items-center gap-2">
                         {isTeacher ? (
                             <>
                                 {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
-                                {pseudo && <span className="font-bold text-base">{pseudo}</span>}
+                                {username && <span className="font-bold text-base">{username}</span>}
                             </>
                         ) : isStudent && (
                             <>
                                 {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
-                                {pseudo && <span className="font-bold text-base">{pseudo}</span>}
+                                {username && <span className="font-bold text-base">{username}</span>}
                             </>
                         )}
                     </div>
