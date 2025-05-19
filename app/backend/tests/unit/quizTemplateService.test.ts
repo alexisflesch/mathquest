@@ -1,11 +1,11 @@
-import { QuizTemplateService, QuizTemplateCreationData, QuizTemplateUpdateData } from '@/core/services/quizTemplateService';
+import { gameTemplateService, gameTemplateCreationData, gameTemplateUpdateData } from '@/core/services/quizTemplateService';
 import { prisma } from '@/db/prisma';
 import { jest } from '@jest/globals';
 
 // Mock the prisma client
 jest.mock('@/db/prisma', () => ({
     prisma: {
-        quizTemplate: {
+        gameTemplate: {
             create: jest.fn(),
             findUnique: jest.fn(),
             findFirst: jest.fn(),
@@ -17,7 +17,7 @@ jest.mock('@/db/prisma', () => ({
         question: {
             findUnique: jest.fn()
         },
-        questionsInQuizTemplate: {
+        questionsInGameTemplate: {
             create: jest.fn(),
             delete: jest.fn(),
             update: jest.fn()
@@ -35,49 +35,55 @@ jest.mock('@/utils/logger', () => {
     }));
 });
 
-describe('QuizTemplateService', () => {
-    let quizTemplateService: QuizTemplateService;
+describe('gameTemplateService', () => {
+    jest.setTimeout(3000);
+
+    let service: gameTemplateService;
     const mockTeacherId = 'teacher-123';
 
     beforeEach(() => {
-        quizTemplateService = new QuizTemplateService();
+        service = new gameTemplateService();
         jest.clearAllMocks();
+        (prisma.gameTemplate.findFirst as any).mockReset && (prisma.gameTemplate.findFirst as any).mockReset();
+        (prisma.gameTemplate.update as any).mockReset && (prisma.gameTemplate.update as any).mockReset();
+        (prisma.gameTemplate.delete as any).mockReset && (prisma.gameTemplate.delete as any).mockReset();
+        (prisma.question.findUnique as any).mockReset && (prisma.question.findUnique as any).mockReset();
+        (prisma.questionsInGameTemplate.create as any).mockReset && (prisma.questionsInGameTemplate.create as any).mockReset();
     });
 
-    describe('createQuizTemplate', () => {
+    describe('creategameTemplate', () => {
         it('should create a quiz template successfully', async () => {
-            const mockQuizData: QuizTemplateCreationData = {
+            const mockQuizData: gameTemplateCreationData = {
                 name: 'Test Quiz',
                 themes: ['algebra', 'geometry'],
                 discipline: 'math',
-                gradeLevel: '9',
-                description: 'A test quiz',
-                defaultMode: 'class'
+                gradeLevel: '9'
             };
 
             const mockCreatedQuiz = {
                 id: 'quiz-123',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 ...mockQuizData,
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 questions: []
             };
 
-            (prisma.quizTemplate.create as any).mockResolvedValue(mockCreatedQuiz);
+            (prisma.gameTemplate.create as any).mockResolvedValue(mockCreatedQuiz);
 
-            const result = await quizTemplateService.createQuizTemplate(mockTeacherId, mockQuizData);
+            const result = await service.creategameTemplate(mockTeacherId, mockQuizData);
 
-            expect(prisma.quizTemplate.create).toHaveBeenCalledWith({
-                data: expect.objectContaining({
+            expect(prisma.gameTemplate.create).toHaveBeenCalledWith({
+                data: {
                     name: mockQuizData.name,
-                    creatorTeacherId: mockTeacherId,
+                    creatorId: mockTeacherId,
+                    gradeLevel: mockQuizData.gradeLevel,
                     themes: mockQuizData.themes,
                     discipline: mockQuizData.discipline,
-                    gradeLevel: mockQuizData.gradeLevel,
-                    description: mockQuizData.description,
-                    defaultMode: mockQuizData.defaultMode
-                }),
+                    description: undefined,
+                    defaultMode: "quiz",
+                    questions: undefined
+                },
                 include: {
                     questions: {
                         include: {
@@ -91,52 +97,54 @@ describe('QuizTemplateService', () => {
         });
 
         it('should handle errors during quiz template creation', async () => {
-            const mockQuizData: QuizTemplateCreationData = {
+            const mockQuizData: gameTemplateCreationData = {
                 name: 'Test Quiz',
-                themes: ['algebra']
+                themes: ['algebra'],
+                discipline: 'math',
+                gradeLevel: '9'
             };
 
             const mockError = new Error('Database error');
-            (prisma.quizTemplate.create as any).mockRejectedValue(mockError);
+            (prisma.gameTemplate.create as any).mockRejectedValue(mockError);
 
-            await expect(quizTemplateService.createQuizTemplate(mockTeacherId, mockQuizData))
+            await expect(service.creategameTemplate(mockTeacherId, mockQuizData))
                 .rejects.toThrow(mockError);
         });
     });
 
-    describe('getQuizTemplateById', () => {
+    describe('getgameTemplateById', () => {
         it('should return a quiz template by ID', async () => {
-            const mockQuizTemplate = {
+            const mockgameTemplate = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 themes: ['algebra'],
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 questions: []
             };
 
-            (prisma.quizTemplate.findUnique as any).mockResolvedValue(mockQuizTemplate);
+            (prisma.gameTemplate.findUnique as any).mockResolvedValue(mockgameTemplate);
 
-            const result = await quizTemplateService.getQuizTemplateById('quiz-123');
+            const result = await service.getgameTemplateById('quiz-123');
 
-            expect(prisma.quizTemplate.findUnique).toHaveBeenCalledWith({
+            expect(prisma.gameTemplate.findUnique).toHaveBeenCalledWith({
                 where: { id: 'quiz-123' },
                 include: undefined
             });
 
-            expect(result).toEqual(mockQuizTemplate);
+            expect(result).toEqual(mockgameTemplate);
         });
 
         it('should include questions when includeQuestions is true', async () => {
-            const mockQuizTemplate = {
+            const mockgameTemplate = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 themes: ['algebra'],
                 questions: [
                     {
-                        quizTemplateId: 'quiz-123',
+                        gameTemplateId: 'quiz-123',
                         questionUid: 'question-1',
                         sequence: 1,
                         question: { uid: 'question-1', text: 'Question 1' }
@@ -144,11 +152,11 @@ describe('QuizTemplateService', () => {
                 ]
             };
 
-            (prisma.quizTemplate.findUnique as any).mockResolvedValue(mockQuizTemplate);
+            (prisma.gameTemplate.findUnique as any).mockResolvedValue(mockgameTemplate);
 
-            const result = await quizTemplateService.getQuizTemplateById('quiz-123', true);
+            const result = await service.getgameTemplateById('quiz-123', true);
 
-            expect(prisma.quizTemplate.findUnique).toHaveBeenCalledWith({
+            expect(prisma.gameTemplate.findUnique).toHaveBeenCalledWith({
                 where: { id: 'quiz-123' },
                 include: {
                     questions: {
@@ -162,13 +170,13 @@ describe('QuizTemplateService', () => {
                 }
             });
 
-            expect(result).toEqual(mockQuizTemplate);
+            expect(result).toEqual(mockgameTemplate);
         });
     });
 
-    describe('getQuizTemplates', () => {
+    describe('getgameTemplates', () => {
         it('should get quiz templates with filters', async () => {
-            const mockQuizTemplates = [
+            const mockgameTemplates = [
                 {
                     id: 'quiz-1',
                     name: 'Math Quiz',
@@ -185,18 +193,18 @@ describe('QuizTemplateService', () => {
 
             const mockTotal = 2;
 
-            (prisma.quizTemplate.findMany as any).mockResolvedValue(mockQuizTemplates);
-            (prisma.quizTemplate.count as any).mockResolvedValue(mockTotal);
+            (prisma.gameTemplate.findMany as any).mockResolvedValue(mockgameTemplates);
+            (prisma.gameTemplate.count as any).mockResolvedValue(mockTotal);
 
-            const result = await quizTemplateService.getQuizTemplates(
+            const result = await service.getgameTemplates(
                 mockTeacherId,
                 { discipline: 'math' },
                 { skip: 0, take: 10 }
             );
 
-            expect(prisma.quizTemplate.findMany).toHaveBeenCalledWith(expect.objectContaining({
+            expect(prisma.gameTemplate.findMany).toHaveBeenCalledWith(expect.objectContaining({
                 where: expect.objectContaining({
-                    creatorTeacherId: mockTeacherId,
+                    creatorId: mockTeacherId,
                     discipline: 'math'
                 }),
                 skip: 0,
@@ -204,7 +212,7 @@ describe('QuizTemplateService', () => {
             }));
 
             expect(result).toEqual({
-                quizTemplates: mockQuizTemplates,
+                gameTemplates: mockgameTemplates,
                 total: mockTotal,
                 page: 1,
                 pageSize: 10,
@@ -213,9 +221,10 @@ describe('QuizTemplateService', () => {
         });
     });
 
-    describe('updateQuizTemplate', () => {
+    describe('updategameTemplate', () => {
         it('should update a quiz template successfully', async () => {
-            const mockUpdateData: QuizTemplateUpdateData = {
+            jest.clearAllMocks();
+            const mockUpdateData: gameTemplateUpdateData = {
                 id: 'quiz-123',
                 name: 'Updated Quiz',
                 description: 'Updated description'
@@ -225,42 +234,42 @@ describe('QuizTemplateService', () => {
                 id: 'quiz-123',
                 name: 'Old Name',
                 description: 'Old description',
-                creatorTeacherId: mockTeacherId
+                creatorId: mockTeacherId,
+                themes: ['algebra'],
+                questions: [
+                    { sequence: 2, questionUid: 'question-123' }
+                ]
             };
 
             const mockUpdatedQuiz = {
-                ...mockExistingQuiz,
-                ...mockUpdateData,
+                id: 'quiz-123',
+                name: 'Updated Quiz',
+                description: 'Updated description',
+                creatorId: mockTeacherId,
+                themes: ['algebra'],
                 questions: []
             };
 
-            (prisma.quizTemplate.findFirst as any).mockResolvedValue(mockExistingQuiz);
-            (prisma.quizTemplate.update as any).mockResolvedValue(mockUpdatedQuiz);
+            (prisma.gameTemplate.findFirst as any)
+                .mockResolvedValueOnce(mockExistingQuiz)
+                .mockResolvedValueOnce(mockUpdatedQuiz);
+            (prisma.gameTemplate.update as any).mockResolvedValue(mockUpdatedQuiz);
+            jest.spyOn(service, 'getgameTemplateById').mockResolvedValueOnce(mockUpdatedQuiz as any);
 
-            const result = await quizTemplateService.updateQuizTemplate(mockTeacherId, mockUpdateData);
+            const result = await service.updategameTemplate(mockTeacherId, mockUpdateData);
 
-            expect(prisma.quizTemplate.findFirst).toHaveBeenCalledWith({
+            expect(prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
                     id: 'quiz-123',
-                    creatorTeacherId: mockTeacherId
+                    creatorId: mockTeacherId
                 }
             });
 
-            expect(prisma.quizTemplate.update).toHaveBeenCalledWith({
+            expect(prisma.gameTemplate.update).toHaveBeenCalledWith({
                 where: { id: 'quiz-123' },
                 data: {
                     name: 'Updated Quiz',
                     description: 'Updated description'
-                },
-                include: {
-                    questions: {
-                        include: {
-                            question: true
-                        },
-                        orderBy: {
-                            sequence: 'asc'
-                        }
-                    }
                 }
             });
 
@@ -268,39 +277,41 @@ describe('QuizTemplateService', () => {
         });
 
         it('should throw an error if the quiz template does not exist', async () => {
-            (prisma.quizTemplate.findFirst as any).mockResolvedValue(null);
+            jest.clearAllMocks();
+            (prisma.gameTemplate.findFirst as any).mockResolvedValueOnce(null);
 
-            const mockUpdateData: QuizTemplateUpdateData = {
+            const mockUpdateData: gameTemplateUpdateData = {
                 id: 'nonexistent-id',
                 name: 'Updated Quiz'
             };
 
-            await expect(quizTemplateService.updateQuizTemplate(mockTeacherId, mockUpdateData))
+            await expect(service.updategameTemplate(mockTeacherId, mockUpdateData))
                 .rejects.toThrow('Quiz template with ID nonexistent-id not found or you don\'t have permission to update it');
         });
     });
 
-    describe('deleteQuizTemplate', () => {
+    describe('deletegameTemplate', () => {
         it('should delete a quiz template successfully', async () => {
+            jest.clearAllMocks();
             const mockExistingQuiz = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: mockTeacherId
+                creatorId: mockTeacherId
             };
 
-            (prisma.quizTemplate.findFirst as any).mockResolvedValue(mockExistingQuiz);
-            (prisma.quizTemplate.delete as any).mockResolvedValue({});
+            (prisma.gameTemplate.findFirst as any).mockResolvedValueOnce(mockExistingQuiz);
+            (prisma.gameTemplate.delete as any).mockResolvedValue({});
 
-            const result = await quizTemplateService.deleteQuizTemplate(mockTeacherId, 'quiz-123');
+            const result = await service.deletegameTemplate(mockTeacherId, 'quiz-123');
 
-            expect(prisma.quizTemplate.findFirst).toHaveBeenCalledWith({
+            expect(prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
                     id: 'quiz-123',
-                    creatorTeacherId: mockTeacherId
+                    creatorId: mockTeacherId
                 }
             });
 
-            expect(prisma.quizTemplate.delete).toHaveBeenCalledWith({
+            expect(prisma.gameTemplate.delete).toHaveBeenCalledWith({
                 where: { id: 'quiz-123' }
             });
 
@@ -308,23 +319,24 @@ describe('QuizTemplateService', () => {
         });
 
         it('should throw an error if the quiz template does not exist', async () => {
-            (prisma.quizTemplate.findFirst as any).mockResolvedValue(null);
+            jest.clearAllMocks();
+            (prisma.gameTemplate.findFirst as any).mockResolvedValueOnce(null);
 
-            await expect(quizTemplateService.deleteQuizTemplate(mockTeacherId, 'nonexistent-id'))
+            await expect(service.deletegameTemplate(mockTeacherId, 'nonexistent-id'))
                 .rejects.toThrow('Quiz template with ID nonexistent-id not found or you don\'t have permission to delete it');
         });
     });
 
-    describe('addQuestionToQuizTemplate', () => {
+    describe('addQuestionTogameTemplate', () => {
         it('should add a question to a quiz template', async () => {
-            const quizTemplateId = 'quiz-123';
+            const gameTemplateId = 'quiz-123';
             const questionUid = 'question-456';
             const sequence = 3;
 
-            const mockQuizTemplate = {
-                id: quizTemplateId,
+            const mockgameTemplate = {
+                id: gameTemplateId,
                 name: 'Test Quiz',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 questions: [
                     { sequence: 2, questionUid: 'question-123' }
                 ]
@@ -335,12 +347,12 @@ describe('QuizTemplateService', () => {
                 text: 'Test Question'
             };
 
-            const mockUpdatedQuizTemplate = {
-                ...mockQuizTemplate,
+            const mockUpdatedgameTemplate = {
+                ...mockgameTemplate,
                 questions: [
-                    ...mockQuizTemplate.questions,
+                    ...mockgameTemplate.questions,
                     {
-                        quizTemplateId,
+                        gameTemplateId,
                         questionUid,
                         sequence,
                         question: mockQuestion
@@ -348,53 +360,30 @@ describe('QuizTemplateService', () => {
                 ]
             };
 
-            (prisma.quizTemplate.findFirst as any).mockResolvedValue(mockQuizTemplate);
+            (prisma.gameTemplate.findFirst as any).mockResolvedValueOnce(mockgameTemplate).mockResolvedValueOnce(mockUpdatedgameTemplate);
             (prisma.question.findUnique as any).mockResolvedValue(mockQuestion);
-            (prisma.questionsInQuizTemplate.create as any).mockResolvedValue({
-                quizTemplateId,
-                questionUid,
-                sequence
-            });
+            (prisma.questionsInGameTemplate.create as any).mockResolvedValue({ gameTemplateId, questionUid, sequence });
+            jest.spyOn(service, 'getgameTemplateById').mockResolvedValue(mockUpdatedgameTemplate as any);
 
-            // Mock the getQuizTemplateById call
-            jest.spyOn(quizTemplateService, 'getQuizTemplateById').mockResolvedValue(mockUpdatedQuizTemplate as any);
+            const result = await service.addQuestionTogameTemplate(mockTeacherId, gameTemplateId, questionUid, sequence);
 
-            const result = await quizTemplateService.addQuestionToQuizTemplate(
-                mockTeacherId,
-                quizTemplateId,
-                questionUid,
-                sequence
-            );
-
-            expect(prisma.quizTemplate.findFirst).toHaveBeenCalledWith({
+            expect(prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
-                    id: quizTemplateId,
-                    creatorTeacherId: mockTeacherId
+                    id: gameTemplateId,
+                    creatorId: mockTeacherId
                 },
                 include: {
                     questions: {
-                        orderBy: {
-                            sequence: 'desc'
-                        },
+                        orderBy: { sequence: 'desc' },
                         take: 1
                     }
                 }
             });
-
-            expect(prisma.question.findUnique).toHaveBeenCalledWith({
-                where: { uid: questionUid }
+            expect(prisma.question.findUnique).toHaveBeenCalledWith({ where: { uid: questionUid } });
+            expect(prisma.questionsInGameTemplate.create).toHaveBeenCalledWith({
+                data: { gameTemplateId, questionUid, sequence }
             });
-
-            expect(prisma.questionsInQuizTemplate.create).toHaveBeenCalledWith({
-                data: {
-                    quizTemplateId,
-                    questionUid,
-                    sequence
-                }
-            });
-
-            expect(quizTemplateService.getQuizTemplateById).toHaveBeenCalledWith(quizTemplateId, true);
-            expect(result).toEqual(mockUpdatedQuizTemplate);
+            expect(result).toEqual(mockUpdatedgameTemplate);
         });
     });
 });

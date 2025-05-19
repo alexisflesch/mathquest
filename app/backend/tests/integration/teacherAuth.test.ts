@@ -1,35 +1,31 @@
 import request from 'supertest';
 import { app } from '@/server';
-import { TeacherService } from '@/core/services/teacherService';
-import { createMockTeacherService } from '../helpers/serviceMocks';
-import { __setTeacherServiceForTesting } from '@/api/v1/teachers';
+import { UserService } from '@/core/services/userService';
+import { createMockUserService } from '../helpers/serviceMocks';
+import { __setUserServiceForTesting } from '@/api/v1/teachers';
 
 describe('Teacher Authentication API', () => {
-    let mockTeacherService: jest.Mocked<TeacherService>;
+    jest.setTimeout(3000);
+
+    let mockUserService: jest.Mocked<UserService>;
 
     beforeEach(() => {
-        // Clear all mocks
         jest.clearAllMocks();
-
-        // Setup TeacherService mock
-        mockTeacherService = createMockTeacherService();
-
-        // Use the testing injection mechanism to set our mock
-        __setTeacherServiceForTesting(mockTeacherService);
+        mockUserService = createMockUserService();
+        __setUserServiceForTesting(mockUserService);
     });
 
     describe('POST /api/v1/teachers/register', () => {
         it('should register a new teacher and return a token', async () => {
-            // Setup mock to return a new teacher with token
-            mockTeacherService.registerTeacher.mockResolvedValueOnce({
-                teacher: {
+            mockUserService.registerUser.mockResolvedValueOnce({
+                user: {
                     id: 'teacher-uuid',
                     username: 'testteacher',
-                    email: 'test@example.com'
+                    email: 'test@example.com',
+                    role: 'TEACHER'
                 },
                 token: 'mock-jwt-token'
             });
-
             const res = await request(app)
                 .post('/api/v1/teachers/register')
                 .send({
@@ -37,48 +33,43 @@ describe('Teacher Authentication API', () => {
                     email: 'test@example.com',
                     password: 'Password123!'
                 });
-
             expect(res.statusCode).toEqual(201);
             expect(res.body).toHaveProperty('token');
             expect(res.body.token).toBe('mock-jwt-token');
-            expect(res.body).toHaveProperty('teacher');
-            expect(res.body.teacher.username).toBe('testteacher');
-
-            // Verify service was called with correct parameters
-            expect(mockTeacherService.registerTeacher).toHaveBeenCalledWith({
+            expect(res.body).toHaveProperty('user');
+            expect(res.body.user.username).toBe('testteacher');
+            expect(mockUserService.registerUser).toHaveBeenCalledWith({
                 username: 'testteacher',
                 email: 'test@example.com',
-                password: 'Password123!'
+                password: 'Password123!',
+                role: 'TEACHER'
             });
         });
     });
 
     describe('POST /api/v1/teachers/login', () => {
         it('should login a teacher and return a token', async () => {
-            // Setup mock to return a teacher with token
-            mockTeacherService.loginTeacher.mockResolvedValueOnce({
-                teacher: {
+            mockUserService.loginUser.mockResolvedValueOnce({
+                user: {
                     id: 'teacher-uuid',
                     username: 'testteacher',
-                    email: 'test@example.com'
+                    email: 'test@example.com',
+                    role: 'TEACHER'
                 },
                 token: 'mock-jwt-token'
             });
-
             const res = await request(app)
                 .post('/api/v1/teachers/login')
                 .send({
                     email: 'test@example.com',
                     password: 'Password123!'
                 });
-
             expect(res.statusCode).toEqual(200);
             expect(res.body).toHaveProperty('token');
             expect(res.body.token).toBe('mock-jwt-token');
-            expect(res.body).toHaveProperty('teacher');
-
-            // Verify service was called with correct parameters
-            expect(mockTeacherService.loginTeacher).toHaveBeenCalledWith({
+            expect(res.body).toHaveProperty('user');
+            expect(res.body.user.username).toBe('testteacher');
+            expect(mockUserService.loginUser).toHaveBeenCalledWith({
                 email: 'test@example.com',
                 password: 'Password123!'
             });

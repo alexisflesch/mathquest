@@ -7,12 +7,14 @@ exports.initializeSocketIO = initializeSocketIO;
 exports.getIO = getIO;
 exports.configureSocketServer = configureSocketServer;
 exports.registerHandlers = registerHandlers;
+exports.setupSocketHandlers = setupSocketHandlers;
 const socket_io_1 = require("socket.io");
 const redis_adapter_1 = require("@socket.io/redis-adapter");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const socketAuth_1 = require("./middleware/socketAuth");
 const connectionHandlers_1 = require("./handlers/connectionHandlers");
+const projectorHandler_1 = require("./handlers/projectorHandler");
 // Create a socket-specific logger
 const logger = (0, logger_1.default)('SocketIO');
 let io = null;
@@ -79,4 +81,9 @@ function configureSocketServer(socketServer) {
  */
 function registerHandlers(socketServer) {
     (0, connectionHandlers_1.registerConnectionHandlers)(socketServer);
+}
+function setupSocketHandlers(io) {
+    io.on('connection', (socket) => {
+        (0, projectorHandler_1.projectorHandler)(io, socket);
+    });
 }

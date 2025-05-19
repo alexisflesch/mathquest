@@ -17,6 +17,7 @@
             "@shared/*": [
                 "shared/*"
             ]
-        }
+        },
+        "jsx": "react" // Enable JSX support
     }
 }

@@ -22,6 +22,8 @@ jest.mock('@/utils/logger', () => {
 });
 
 describe('Access Code Generation', () => {
+    jest.setTimeout(3000);
+
     let gameInstanceService: GameInstanceService;
 
     beforeEach(() => {

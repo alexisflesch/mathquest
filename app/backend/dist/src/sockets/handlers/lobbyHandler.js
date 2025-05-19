@@ -30,7 +30,7 @@ function registerLobbyHandlers(io, socket) {
                     id: true,
                     status: true,
                     name: true,
-                    quizTemplateId: true
+                    gameTemplateId: true
                 }
             });
             if (!gameInstance) {
@@ -172,7 +172,7 @@ function registerLobbyHandlers(io, socket) {
             // Store the socket ID before disconnection
             const socketId = socket.id;
             // Check if socket is in any lobby rooms
-            for (const room of socket.rooms) {
+            for (const room of Array.from(socket.rooms)) {
                 if (room.startsWith('lobby_')) {
                     const accessCode = room.replace('lobby_', '');
                     logger.info({ accessCode, socketId }, 'Socket disconnecting from lobby');

@@ -78,7 +78,7 @@ function handleTournamentResume(io, socket, { code }) {
                             totalScore,
                             currentTotal: participant.score
                         };
-                        const socketId = (_c = Object.entries(state.socketToPlayerId || {}).find(([sid, jid]) => jid === joueurId)) === null || _c === void 0 ? void 0 : _c[0];
+                        const socketId = (_c = Object.entries(state.socketTouserId || {}).find(([sid, jid]) => jid === joueurId)) === null || _c === void 0 ? void 0 : _c[0];
                         if (socketId) {
                             io.to(socketId).emit("tournament_answer_result", {
                                 correct: baseScore > 0,

@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerConnectionHandlers = registerConnectionHandlers;
 const logger_1 = __importDefault(require("@/utils/logger"));
 const lobbyHandler_1 = require("./lobbyHandler");
-const gameHandler_1 = require("./gameHandler");
-const teacherControlHandler_1 = require("./teacherControlHandler");
+const gameHandler_1 = __importDefault(require("./gameHandler"));
+const teacherControlHandler_1 = __importDefault(require("./teacherControlHandler"));
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('ConnectionHandlers');
 /**
@@ -20,8 +20,8 @@ function registerConnectionHandlers(io) {
         handleDisconnection(socket);
         // Register feature-specific handlers
         (0, lobbyHandler_1.registerLobbyHandlers)(io, socket);
-        (0, gameHandler_1.registerGameHandlers)(io, socket);
-        (0, teacherControlHandler_1.registerTeacherControlHandlers)(io, socket);
+        (0, gameHandler_1.default)(io, socket);
+        (0, teacherControlHandler_1.default)(io, socket);
     });
 }
 /**

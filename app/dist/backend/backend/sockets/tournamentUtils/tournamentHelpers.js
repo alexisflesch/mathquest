@@ -172,7 +172,7 @@ async function handleTimerExpiration(io, code, targetRoom = null) {
     // --- CALCULATE RANKS & EMIT INDIVIDUAL SCORE UPDATES ---
     const ranks = calculateRanks(state.participants || []);
     for (const participant of state.participants || []) {
-        const participantSocketId = Object.keys(state.socketToPlayerId || {}).find(socketId => { var _a; return ((_a = state.socketToPlayerId) === null || _a === void 0 ? void 0 : _a[socketId]) === participant.id; });
+        const participantSocketId = Object.keys(state.socketTouserId || {}).find(socketId => { var _a; return ((_a = state.socketTouserId) === null || _a === void 0 ? void 0 : _a[socketId]) === participant.id; });
         if (participantSocketId) {
             const targetSocket = io.sockets.sockets.get(participantSocketId);
             if (targetSocket) {

@@ -32,7 +32,7 @@ router.get('/:accessCode', auth_1.teacherAuth, async (req, res) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance. !== req.user.teacherId) {
             res.status(403).json({ error: 'You do not have permission to access this game' });
             return;
         }
@@ -74,7 +74,7 @@ router.post('/:accessCode/question', auth_1.teacherAuth, async (req, res) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance. !== req.user.teacherId) {
             res.status(403).json({ error: 'You do not have permission to control this game' });
             return;
         }
@@ -132,7 +132,7 @@ router.post('/:accessCode/end-question', auth_1.teacherAuth, async (req, res) =>
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance. !== req.user.teacherId) {
             res.status(403).json({ error: 'You do not have permission to control this game' });
             return;
         }
@@ -200,7 +200,7 @@ router.post('/:accessCode/end-game', auth_1.teacherAuth, async (req, res) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance. !== req.user.teacherId) {
             res.status(403).json({ error: 'You do not have permission to control this game' });
             return;
         }

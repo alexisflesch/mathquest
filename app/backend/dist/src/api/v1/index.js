@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const teachers_1 = __importDefault(require("./teachers"));
 const players_1 = __importDefault(require("./players"));
 const questions_1 = __importDefault(require("./questions"));
-const quizTemplates_1 = __importDefault(require("./quizTemplates"));
+const gameTemplates_1 = __importDefault(require("./gameTemplates"));
 const games_1 = __importDefault(require("./games"));
 const gameControl_1 = __importDefault(require("./gameControl"));
 const router = express_1.default.Router();
@@ -18,7 +18,7 @@ router.use('/players', players_1.default);
 // Mount the questions router
 router.use('/questions', questions_1.default);
 // Mount the quiz templates router
-router.use('/quiz-templates', quizTemplates_1.default);
+router.use('/game-templates', gameTemplates_1.default);
 // Mount the games router
 router.use('/games', games_1.default);
 // Mount the game control router

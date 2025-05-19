@@ -80,7 +80,7 @@ test('Player can join a game', async () => {
     // Trigger the join_game event with our payload
     await socket.triggerEvent('join_game', {
         accessCode: TEST_ACCESS_CODE,
-        playerId: 'player-1',
+        userId: 'player-1',
         username: 'Player One',
         avatarUrl: 'avatar1.jpg'
     });

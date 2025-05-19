@@ -47,7 +47,7 @@ export async function initializeGameState(gameInstanceId: string): Promise<GameS
         const gameInstance = await prisma.gameInstance.findUnique({
             where: { id: gameInstanceId },
             include: {
-                quizTemplate: {
+                gameTemplate: {
                     include: {
                         questions: {
                             include: {
@@ -68,7 +68,7 @@ export async function initializeGameState(gameInstanceId: string): Promise<GameS
         }
 
         // Extract question UIDs in order
-        const questionIds = gameInstance.quizTemplate?.questions?.map(q => q.question.uid) || [];
+        const questionIds = gameInstance.gameTemplate?.questions?.map(q => q.question.uid) || [];
 
         if (questionIds.length === 0) {
             logger.warn({ gameInstanceId }, 'No questions found in quiz template');
@@ -160,31 +160,21 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
         gameState.currentQuestionIndex = questionIndex;
 
         // Create a sanitized question data object for the client
-        // Remove correct answers to prevent cheating
-        // Parse responses from JSON if needed
-        let responses = [];
-        if (typeof question.responses === 'string') {
-            try {
-                responses = JSON.parse(question.responses);
-            } catch (e) {
-                logger.error({ questionId, error: e }, 'Failed to parse question responses');
-                responses = [];
-            }
-        } else {
-            responses = question.responses as any[] || [];
-        }
+        // Use the new schema fields but don't expose correct answers to players
+
+        // Create options from answerOptions
+        const options = question.answerOptions.map((content, index) => ({
+            id: index.toString(), // Use index as ID
+            content
+        }));
 
         const questionData = {
-            id: question.uid,
-            content: question.text,
-            type: question.questionType,
-            options: Array.isArray(responses)
-                ? responses.map((opt: any) => ({
-                    id: opt.id,
-                    content: opt.content
-                    // Note: we omit isCorrect field here
-                }))
-                : [],
+            uid: question.uid,
+            title: question.title || undefined,
+            text: question.text,
+            answerOptions: question.answerOptions,
+            correctAnswers: new Array(question.answerOptions.length).fill(false), // Hide correct answers
+            questionType: question.questionType,
             timeLimit: (question.timeLimit || 30) * (gameState.settings.timeMultiplier || 1)
         };
 
@@ -268,14 +258,14 @@ export async function getFullGameState(accessCode: string): Promise<{
 
         const leaderboard = [];
         for (let i = 0; i < leaderboardRaw.length; i += 2) {
-            const playerId = leaderboardRaw[i];
+            const userId = leaderboardRaw[i];
             const score = parseInt(leaderboardRaw[i + 1], 10);
 
             // Find player info from participants
-            const player = participants.find(p => p.playerId === playerId);
+            const player = participants.find(p => p.userId === userId);
             if (player) {
                 leaderboard.push({
-                    playerId,
+                    userId,
                     username: player.username,
                     avatarUrl: player.avatarUrl,
                     score
@@ -368,41 +358,32 @@ export async function calculateScores(accessCode: string, questionId: string): P
         }
 
         // Determine correct answers based on question type
-        let correctAnswers: any[] = [];
-        try {
-            // Parse question responses
-            let responses: any[] = [];
-            if (typeof question.responses === 'string') {
-                responses = JSON.parse(question.responses);
-            } else {
-                responses = question.responses as any[];
-            }
+        let correctAnswerValues: any[] = [];
 
-            if (question.questionType === 'multiple_choice_single_answer' ||
-                question.questionType === 'multiple_choice_multiple_answers') {
-                correctAnswers = responses
-                    .filter(opt => opt.isCorrect)
-                    .map(opt => opt.id);
-            } else if (question.questionType === 'number') {
-                // For number questions, find the correct answer value
-                const correctResponse = responses.find(r => r.isCorrect);
-                correctAnswers = correctResponse ? [correctResponse.value] : [];
-            } else {
-                // For other question types, extract correct answer from responses
-                // This is a fallback for any other question types
-                correctAnswers = responses
-                    .filter(r => r.isCorrect)
-                    .map(r => r.value || r.id);
-
-                // If no correct answers found in the responses, use an empty array
-                if (correctAnswers.length === 0) {
-                    logger.warn({ accessCode, questionId, questionType: question.questionType },
-                        'No correct answers found in responses');
-                }
+        // Process the new answerOptions and correctAnswers fields
+        if (question.questionType === 'multiple_choice_single_answer' ||
+            question.questionType === 'multiple_choice_multiple_answers') {
+            // For multiple choice, get the indices of correct answers
+            correctAnswerValues = question.answerOptions.filter((_, index) =>
+                question.correctAnswers[index]
+            );
+        } else if (question.questionType === 'number') {
+            // For number questions, there should be only one correct answer
+            // Find the index of the correct answer
+            const correctIndex = question.correctAnswers.findIndex(isCorrect => isCorrect);
+            if (correctIndex >= 0) {
+                correctAnswerValues = [question.answerOptions[correctIndex]];
             }
-        } catch (error) {
-            logger.error({ accessCode, questionId, error }, 'Error parsing correct answers');
-            return false;
+        } else {
+            // For other question types, use all marked as correct
+            correctAnswerValues = question.answerOptions.filter((_, index) =>
+                question.correctAnswers[index]
+            );
+        }
+
+        if (correctAnswerValues.length === 0) {
+            logger.warn({ accessCode, questionId, questionType: question.questionType },
+                'No correct answers found');
         }
 
         // Calculate and update scores for each answer
@@ -421,12 +402,12 @@ export async function calculateScores(accessCode: string, questionId: string): P
                 let scoreForAnswer = 0;
 
                 if (question.questionType === 'multiple_choice_single_answer' || question.questionType === 'multiple_choice_multiple_answers') {
-                    isCorrect = correctAnswers.includes(answerData.answer);
+                    isCorrect = correctAnswerValues.includes(answerData.answer);
                 } else if (question.questionType === 'number') {
-                    isCorrect = parseFloat(answerData.answer) === parseFloat(correctAnswers[0]);
+                    isCorrect = parseFloat(answerData.answer) === parseFloat(correctAnswerValues[0]);
                 } else {
                     // For other question types (e.g., text)
-                    isCorrect = correctAnswers.includes(answerData.answer);
+                    isCorrect = correctAnswerValues.includes(answerData.answer);
                 }
 
                 // Calculate score based on time spent and correctness
@@ -456,7 +437,7 @@ export async function calculateScores(accessCode: string, questionId: string): P
                 await redisClient.zadd(
                     `${GAME_LEADERBOARD_PREFIX}${accessCode}`,
                     participant.score,
-                    participant.playerId
+                    participant.userId
                 );
 
                 // Update answer with correctness and score
@@ -471,7 +452,7 @@ export async function calculateScores(accessCode: string, questionId: string): P
                 logger.debug({
                     accessCode,
                     questionId,
-                    playerId: participant.playerId,
+                    userId: participant.userId,
                     isCorrect,
                     score: scoreForAnswer
                 }, 'Score calculated for player answer');
@@ -488,10 +469,36 @@ export async function calculateScores(accessCode: string, questionId: string): P
     }
 }
 
+/**
+ * Updates the game state in Redis
+ * 
+ * @param accessCode Access code of the game
+ * @param gameState Updated game state object
+ * @returns The updated game state object
+ */
+export async function updateGameState(accessCode: string, gameState: GameState): Promise<GameState> {
+    try {
+        // Store in Redis with expiration (24 hours)
+        await redisClient.set(
+            `${GAME_KEY_PREFIX}${accessCode}`,
+            JSON.stringify(gameState),
+            'EX',
+            86400 // 24 hours in seconds
+        );
+
+        logger.info({ accessCode }, 'Game state updated');
+        return gameState;
+    } catch (error) {
+        logger.error({ accessCode, error }, 'Failed to update game state');
+        throw new Error(`Failed to update game state: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 export default {
     initializeGameState,
     setCurrentQuestion,
     getFullGameState,
     endCurrentQuestion,
-    calculateScores
+    calculateScores,
+    updateGameState
 };

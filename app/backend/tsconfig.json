@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "ES2020",
         "module": "commonjs",
-        "rootDir": ".",
+        "rootDir": "../",
         "outDir": "./dist",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
@@ -13,14 +13,27 @@
         "paths": {
             "@/*": [
                 "src/*"
+            ],
+            "@shared/*": [
+                "../shared/*"
             ]
-        }
+        },
+        "moduleResolution": "node",
+        "downlevelIteration": true,
+        "jsx": "react-jsx" // Enable JSX support for TSX files in shared examples
     },
     "include": [
         "src/**/*",
-        "tests/**/*"
+        "tests/**/*",
+        "../shared/**/*.ts" // Only include shared TypeScript files, exclude .tsx examples
     ],
     "exclude": [
-        "node_modules"
-    ]
+        "node_modules",
+        "../shared/types/examples" // Exclude shared TSX examples directory
+    ],
+    "ts-node": {
+        "require": [
+            "tsconfig-paths/register"
+        ]
+    }
 }

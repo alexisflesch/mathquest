@@ -24,7 +24,7 @@ Lobby events handle player joining, leaving, and waiting in game lobbies before 
   ```typescript
   {
     accessCode: string;     // The unique code for the game/lobby
-    playerId: string;       // Unique identifier for the player
+    userId: string;       // Unique identifier for the player
     username: string;       // Display name for the player
     avatarUrl?: string;     // Optional URL to player's avatar image
   }
@@ -52,7 +52,7 @@ Lobby events handle player joining, leaving, and waiting in game lobbies before 
     participants: Array<{
       id: string;           // Socket ID of participant
       username: string;     // Display name
-      playerId: string;     // Unique identifier
+      userId: string;     // Unique identifier
       avatarUrl?: string;   // Optional avatar URL
     }>;
     gameName: string;       // Name of the game
@@ -64,7 +64,7 @@ Lobby events handle player joining, leaving, and waiting in game lobbies before 
   {
     id: string;             // Socket ID of new participant
     username: string;       // Display name of new participant
-    playerId: string;       // Unique ID of new participant
+    userId: string;       // Unique ID of new participant
     avatarUrl?: string;     // Optional avatar URL
   }
   ```
@@ -101,7 +101,7 @@ Game events handle player interactions during active gameplay, including joining
   ```typescript
   {
     accessCode: string;     // The unique code for the game
-    playerId: string;       // Unique identifier for the player
+    userId: string;       // Unique identifier for the player
     username: string;       // Display name for the player
     avatarUrl?: string;     // Optional URL to player's avatar image
   }
@@ -141,7 +141,7 @@ Game events handle player interactions during active gameplay, including joining
   {
     id: string;             // Socket ID of new participant
     username: string;       // Display name of new participant
-    playerId: string;       // Unique ID of new participant
+    userId: string;       // Unique ID of new participant
     avatarUrl?: string;     // Optional avatar URL
   }
   ```
@@ -160,7 +160,7 @@ Game events handle player interactions during active gameplay, including joining
     participants: Array<{
       id: string;           // Socket ID of participant
       username: string;     // Display name
-      playerId: string;     // Unique identifier
+      userId: string;     // Unique identifier
       avatarUrl?: string;   // Optional avatar URL
     }>;
   }
@@ -199,7 +199,7 @@ Game events handle player interactions during active gameplay, including joining
     questionId: string;     // ID of the question
     correctAnswers: string[]; // List of correct answer IDs
     playerStats: {          // Stats for each player
-      [playerId: string]: {
+      [userId: string]: {
         answer: string | string[]; // Player's submitted answer(s)
         isCorrect: boolean;  // Whether the answer was correct
         timeSpent: number;   // Time spent answering
@@ -264,7 +264,7 @@ const socket = io('http://localhost:3000/api/socket.io', {
 // Join a lobby
 socket.emit('join_lobby', {
   accessCode: 'ABC123',
-  playerId: 'player-123',
+  userId: 'player-123',
   username: 'Test Player'
 });
 

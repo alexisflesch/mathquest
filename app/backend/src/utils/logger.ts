@@ -26,11 +26,14 @@ enum LogLevel {
 }
 
 // Set minimum log level based on environment (can be overridden via env var)
-// Default level is DEBUG in development, INFO in production
+// Default level is DEBUG in development, INFO in production, and DEBUG in test
 const DEFAULT_LOG_LEVEL: LogLevel = process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
-const MIN_LOG_LEVEL: LogLevel = process.env.LOG_LEVEL
-    ? (LogLevel[process.env.LOG_LEVEL.toUpperCase() as keyof typeof LogLevel] ?? DEFAULT_LOG_LEVEL)
-    : DEFAULT_LOG_LEVEL;
+const MIN_LOG_LEVEL: LogLevel =
+    process.env.NODE_ENV === 'test'
+        ? LogLevel.DEBUG // Always print debug logs in test
+        : (process.env.LOG_LEVEL
+            ? (LogLevel[process.env.LOG_LEVEL.toUpperCase() as keyof typeof LogLevel] ?? DEFAULT_LOG_LEVEL)
+            : DEFAULT_LOG_LEVEL);
 
 // ANSI color codes for different log levels
 const COLORS = {

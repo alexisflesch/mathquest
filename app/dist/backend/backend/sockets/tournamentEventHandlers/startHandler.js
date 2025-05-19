@@ -104,14 +104,15 @@ async function handleStartTournament(io, socket, { code }) {
         // Initialize state
         tournamentState_1.tournamentState[code] = {
             participants: [], // Initialize as empty array, will be populated on join_tournament
-            questions: questions.map(q => (Object.assign(Object.assign({}, q), { texte: q.question || q.text || '' // Ensure texte field exists
-             }))),
+            questions: questions.map(q => (Object.assign(Object.assign({}, q), {
+                texte: q.question || q.text || '' // Ensure texte field exists
+            }))),
             currentIndex: -1, // Start at -1, will be set to 0 by sendQuestionWithState
             currentQuestionUid: undefined, // Use undefined instead of null
             answers: {}, // { joueurId: { questionUid: { answerIdx, clientTimestamp } } }
             timer: null, // Type assertion for compatibility
             questionStart: null,
-            socketToPlayerId: {}, // { socketId: joueurId }
+            socketTouserId: {}, // { socketId: joueurId }
             paused: false,
             pausedRemainingTime: undefined, // Use undefined instead of null
             linkedQuizId, // Use the linkedQuizId we just fetched

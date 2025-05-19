@@ -48,17 +48,17 @@ router.post('/', auth_1.teacherAuth, async (req, res) => {
             res.status(401).json({ error: 'Teacher authentication required' });
             return;
         }
-        const { name, quizTemplateId, playMode, settings } = req.body;
+        const { name, gameTemplateId, playMode, settings } = req.body;
         // Basic validation
-        if (!name || !quizTemplateId || !playMode) {
+        if (!name || !gameTemplateId || !playMode) {
             res.status(400).json({
                 error: 'Required fields missing',
-                required: ['name', 'quizTemplateId', 'playMode']
+                required: ['name', 'gameTemplateId', 'playMode']
             });
             return;
         }
         // Valid playMode values
-        const validPlayModes = ['class', 'tournament', 'practice'];
+        const validPlayModes = ['quiz', 'tournament', 'practice'];
         if (!validPlayModes.includes(playMode)) {
             res.status(400).json({
                 error: 'Invalid playMode value',
@@ -68,7 +68,7 @@ router.post('/', auth_1.teacherAuth, async (req, res) => {
         }
         const gameInstance = await getGameInstanceService().createGameInstance(req.user.teacherId, {
             name,
-            quizTemplateId,
+            gameTemplateId,
             playMode,
             settings
         });
@@ -166,7 +166,7 @@ router.put('/:id/status', auth_1.teacherAuth, async (req, res) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance. !== req.user.teacherId) {
             res.status(403).json({ error: 'You do not have permission to update this game' });
             return;
         }
@@ -203,7 +203,7 @@ router.patch('/:id/status', auth_1.teacherAuth, async (req, res) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance. !== req.user.teacherId) {
             res.status(403).json({ error: 'You do not have permission to update this game' });
             return;
         }
@@ -225,6 +225,62 @@ router.patch('/:id/status', auth_1.teacherAuth, async (req, res) => {
     catch (error) {
         logger.error({ error }, 'Error updating game status');
         res.status(500).json({ error: 'An error occurred while updating the game status' });
+    }
+});
+/**
+ * Update differed mode and window (teacher only)
+ * PATCH /api/v1/games/:id/differed
+ * Requires teacher authentication
+ */
+router.patch('/:id/differed', auth_1.teacherAuth, async (req, res) => {
+    try {
+        if (!req.user?.teacherId) {
+            res.status(401).json({ error: 'Teacher authentication required' });
+            return;
+        }
+        const { id } = req.params;
+        const { isDiffered, differedAvailableFrom, differedAvailableTo } = req.body;
+        if (typeof isDiffered !== 'boolean') {
+            res.status(400).json({ error: 'isDiffered (boolean) is required' });
+            return;
+        }
+        // Optional: Validate date formats
+        let fromDate = undefined;
+        let toDate = undefined;
+        if (differedAvailableFrom) {
+            fromDate = new Date(differedAvailableFrom);
+            if (isNaN(fromDate.getTime())) {
+                res.status(400).json({ error: 'Invalid differedAvailableFrom date' });
+                return;
+            }
+        }
+        if (differedAvailableTo) {
+            toDate = new Date(differedAvailableTo);
+            if (isNaN(toDate.getTime())) {
+                res.status(400).json({ error: 'Invalid differedAvailableTo date' });
+                return;
+            }
+        }
+        // Verify the game belongs to this teacher
+        const gameInstance = await getGameInstanceService().getGameInstanceById(id);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        if (gameInstance. !== req.user.teacherId) {
+            res.status(403).json({ error: 'You do not have permission to update this game' });
+            return;
+        }
+        const updatedGame = await getGameInstanceService().updateDifferedMode(id, {
+            isDiffered,
+            differedAvailableFrom: fromDate,
+            differedAvailableTo: toDate
+        });
+        res.status(200).json({ gameInstance: updatedGame });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error updating differed mode');
+        res.status(500).json({ error: 'An error occurred while updating differed mode' });
     }
 });
 /**

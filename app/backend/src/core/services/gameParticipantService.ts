@@ -23,17 +23,25 @@ export interface SubmitAnswerData {
 export class GameParticipantService {
     /**
      * Join a game using access code
-     * @param playerId The ID of the player joining the game
+     * @param userId The ID of the user joining the game
      * @param accessCode The access code of the game to join
+     * @param username Optional username to use for the user
+     * @param avatarUrl Optional avatar URL to use for the user
      * @returns Result of the join attempt
      */
-    async joinGame(playerId: string, accessCode: string): Promise<JoinGameResult> {
+    async joinGame(userId: string, accessCode: string, username?: string, avatarUrl?: string): Promise<JoinGameResult> {
         try {
             // Find the game instance
             const gameInstance = await prisma.gameInstance.findUnique({
                 where: { accessCode },
-                include: {
-                    quizTemplate: {
+                select: {
+                    id: true,
+                    name: true,
+                    status: true,
+                    isDiffered: true,
+                    differedAvailableFrom: true,
+                    differedAvailableTo: true,
+                    gameTemplate: {
                         select: {
                             name: true
                         }
@@ -41,7 +49,6 @@ export class GameParticipantService {
                 }
             });
 
-            // Game not found or invalid access code
             if (!gameInstance) {
                 return {
                     success: false,
@@ -49,41 +56,130 @@ export class GameParticipantService {
                 };
             }
 
-            // Check if game is in a joinable state
-            if (gameInstance.status !== 'pending' && gameInstance.status !== 'active') {
-                return {
-                    success: false,
-                    error: `Cannot join game in '${gameInstance.status}' status`
-                };
+            // If completed, only block if not deferred or not in window
+            if (gameInstance.status === 'completed') {
+                const isDiffered = !!gameInstance.isDiffered;
+                const now = new Date();
+                const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
+                const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
+                if (!isDiffered || (from && (now < from)) || (to && (now > to))) {
+                    logger.info({ userId, accessCode }, 'Attempt to join a completed game (not allowed)');
+                    return {
+                        success: false,
+                        error: 'Game is already completed'
+                    };
+                }
             }
 
-            // Check if player is already in this game
+            const now = new Date();
+            const isDiffered = !!gameInstance.isDiffered;
+            const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
+            const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
+
+            if (isDiffered && from) {
+                if (now < from) {
+                    return {
+                        success: false,
+                        error: 'Game not available yet'
+                    };
+                }
+                if (to && now > to) {
+                    return {
+                        success: false,
+                        error: 'Game no longer available'
+                    };
+                }
+            }
+
+            // Check if user has already played this differed game
+            if (isDiffered) {
+                const existingParticipation = await prisma.gameParticipant.findFirst({
+                    where: {
+                        gameInstanceId: gameInstance.id,
+                        userId: userId
+                    }
+                });
+                if (existingParticipation && existingParticipation.completedAt) {
+                    return {
+                        success: false,
+                        error: 'Already played',
+                        gameInstance,
+                        participant: existingParticipation
+                    };
+                }
+            }
+
+            // Check for existing participant or create new one
+            let participant;
             const existingParticipant = await prisma.gameParticipant.findFirst({
                 where: {
                     gameInstanceId: gameInstance.id,
-                    playerId
+                    userId: userId
+                },
+                include: {
+                    user: true
                 }
             });
 
-            if (existingParticipant) {
-                // Player is already in the game, just return success
-                return {
-                    success: true,
-                    gameInstance,
-                    participant: existingParticipant
-                };
-            }
+            if (!existingParticipant) {
+                // Create new user if they don't exist, or connect if they do.
+                await prisma.user.upsert({
+                    where: { id: userId },
+                    update: {
+                        username: username || `guest-${userId.substring(0, 8)}`,
+                        avatarUrl: avatarUrl || null,
+                    },
+                    create: {
+                        id: userId,
+                        username: username || `guest-${userId.substring(0, 8)}`,
+                        role: 'STUDENT',
+                        avatarUrl: avatarUrl || null,
+                        studentProfile: { create: { cookieId: `cookie-${userId}` } }
+                    }
+                });
 
-            // Create new participant
-            const participant = await this.createParticipant(gameInstance.id, playerId);
+                // Create new participant, linking to the user via userId
+                const newParticipant = await prisma.gameParticipant.create({
+                    data: {
+                        gameInstanceId: gameInstance.id,
+                        userId: userId, // Map userId to userId
+                        joinedAt: new Date(),
+                        score: 0,
+                        answers: [],
+                    }
+                });
+                participant = await prisma.gameParticipant.findUnique({
+                    where: { id: newParticipant.id },
+                    include: { user: true }
+                });
+                if (!participant) {
+                    logger.error('Failed to fetch participant immediately after creation');
+                    return { success: false, error: 'Failed to create or find participant' };
+                }
+            } else {
+                participant = await prisma.gameParticipant.update({
+                    where: {
+                        id: existingParticipant.id
+                    },
+                    data: {
+                        joinedAt: new Date()
+                    },
+                    include: {
+                        user: true
+                    }
+                });
+            }
 
             return {
                 success: true,
                 gameInstance,
-                participant
+                participant: {
+                    ...participant,
+                    userId // Attach userId for downstream use
+                }
             };
         } catch (error) {
-            logger.error({ error, playerId, accessCode }, 'Error joining game');
+            logger.error({ error, userId, accessCode }, 'Error joining game');
             return {
                 success: false,
                 error: 'An error occurred while joining the game'
@@ -94,176 +190,147 @@ export class GameParticipantService {
     /**
      * Create a new game participant
      * @param gameInstanceId The ID of the game instance
-     * @param playerId The ID of the player
+     * @param userId The ID of the user
+     * @param username Optional username for the participant
+     * @param avatarUrl Optional avatar URL for the participant
      * @returns The created participant
      */
-    async createParticipant(gameInstanceId: string, playerId: string) {
+    async createParticipant(gameInstanceId: string, userId: string, username?: string, avatarUrl?: string) {
         try {
-            // Create the participant record
             const participant = await prisma.gameParticipant.create({
                 data: {
-                    gameInstanceId,
-                    playerId,
                     score: 0,
-                    answers: []
-                },
-                include: {
-                    player: {
-                        select: {
-                            username: true,
-                            avatarUrl: true
-                        }
-                    }
-                }
-            });
-
-            return participant;
-        } catch (error) {
-            logger.error({ error, gameInstanceId, playerId }, 'Error creating game participant');
-            throw error;
-        }
-    }
-
-    /**
-     * Submit an answer for a question in a game
-     * @param participantId The ID of the participant
-     * @param data The answer submission data
-     * @returns The updated participant with score
-     */
-    async submitAnswer(participantId: string, data: SubmitAnswerData) {
-        try {
-            // Get the current participant and their answers
-            const participant = await prisma.gameParticipant.findUnique({
-                where: { id: participantId },
-                include: {
-                    gameInstance: true
-                }
-            });
-
-            if (!participant) {
-                throw new Error('Participant not found');
-            }
-
-            // Calculate score for this answer (simplified version)
-            // In a real implementation, this would check against correct answers
-            // For now, we're just using a placeholder scoring system
-            const isCorrect = true; // Placeholder - would be determined by comparing to correct answer
-            const scoreForQuestion = isCorrect ? 100 : 0; // Basic scoring
-
-            // Get current answers array or initialize empty if null
-            const answersArray = Array.isArray(participant.answers) ? [...participant.answers] : [];
-
-            // Create a new answer object
-            const newAnswer = {
-                questionUid: data.questionUid,
-                answer: data.answer,
-                isCorrect,
-                timeTakenMs: data.timeTakenMs,
-                score: scoreForQuestion
-            };
-
-            // Add new answer to the array
-            answersArray.push(newAnswer);
-
-            // Calculate total score safely
-            let totalScore = 0;
-            for (const ans of answersArray) {
-                if (ans && typeof ans === 'object' && 'score' in ans) {
-                    totalScore += (typeof ans.score === 'number') ? ans.score : 0;
-                }
-            }
-
-            // Calculate total time taken safely
-            let totalTimeTakenMs = 0;
-            for (const ans of answersArray) {
-                if (ans && typeof ans === 'object' && 'timeTakenMs' in ans) {
-                    totalTimeTakenMs += (typeof ans.timeTakenMs === 'number') ? ans.timeTakenMs : 0;
-                }
-            }
-
-            // Update the participant record
-            const updatedParticipant = await prisma.gameParticipant.update({
-                where: { id: participantId },
-                data: {
-                    // Use explicit number type
-                    score: totalScore as number,
-                    timeTakenMs: totalTimeTakenMs as number,
-                    // Prisma accepts JSON array for the answers field
-                    answers: answersArray
-                }
-            });
-
-            // Update rankings for participants in this game
-            await this.updateRankings(participant.gameInstanceId);
-
-            return updatedParticipant;
-        } catch (error) {
-            logger.error({ error, participantId }, 'Error submitting answer');
-            throw error;
-        }
-    }
-
-    /**
-     * Update rankings for all participants in a game
-     * @param gameInstanceId The ID of the game instance
-     */
-    private async updateRankings(gameInstanceId: string): Promise<void> {
-        try {
-            // Get all participants sorted by score (desc) and time (asc)
-            const participants = await prisma.gameParticipant.findMany({
-                where: { gameInstanceId },
-                orderBy: [
-                    { score: 'desc' },
-                    { timeTakenMs: 'asc' }
-                ]
-            });
-
-            // Update ranks
-            for (let i = 0; i < participants.length; i++) {
-                const rank = i + 1; // Ranks start at 1
-                await prisma.gameParticipant.update({
-                    where: { id: participants[i].id },
-                    data: { rank }
-                });
-            }
-        } catch (error) {
-            logger.error({ error, gameInstanceId }, 'Error updating rankings');
-            // Don't throw, just log - this is a background operation
-        }
-    }
-
-    /**
-     * Get a participant by ID
-     * @param participantId The ID of the participant
-     * @returns The participant with game and player info
-     */
-    async getParticipantById(participantId: string) {
-        try {
-            return await prisma.gameParticipant.findUnique({
-                where: { id: participantId },
-                include: {
-                    player: {
-                        select: {
-                            username: true,
-                            avatarUrl: true
-                        }
-                    },
-                    gameInstance: {
-                        select: {
-                            id: true,
-                            name: true,
-                            status: true,
-                            playMode: true,
-                            currentQuestionIndex: true,
-                            quizTemplate: {
-                                select: {
-                                    name: true
+                    answers: [],
+                    gameInstance: { connect: { id: gameInstanceId } },
+                    user: {
+                        connectOrCreate: {
+                            where: { id: userId },
+                            create: {
+                                username: username || `guest-${userId}`,
+                                avatarUrl: avatarUrl || null,
+                                role: 'STUDENT',
+                                studentProfile: {
+                                    create: {
+                                        cookieId: `cookie-${userId}`
+                                    }
                                 }
                             }
                         }
                     }
                 }
             });
+            return {
+                success: true,
+                participant: {
+                    ...participant,
+                    userId // Attach userId for downstream use
+                }
+            };
+        } catch (error) {
+            logger.error({ error, gameInstanceId, userId }, 'Error creating game participant');
+            return {
+                success: false,
+                error: 'An error occurred while creating the participant'
+            };
+        }
+    }
+
+    /**
+     * Submit an answer for a player in a game
+     * @param gameInstanceId The ID of the game instance
+     * @param userId The ID of the player
+     * @param data The answer data
+     * @returns The updated participant
+     */
+    async submitAnswer(gameInstanceId: string, userId: string, data: SubmitAnswerData) {
+        try {
+            // Find the participant
+            const participant = await prisma.gameParticipant.findFirst({
+                where: {
+                    gameInstanceId,
+                    userId
+                }
+            });
+
+            if (!participant) {
+                return {
+                    success: false,
+                    error: 'Participant not found'
+                };
+            }
+
+            // Parse answers as an array if it's a JSON object
+            const currentAnswers = Array.isArray(participant.answers) ? participant.answers : [];
+
+            // Update the answers
+            const answers = [...currentAnswers, {
+                questionUid: data.questionUid,
+                answer: data.answer,
+                timeTakenMs: data.timeTakenMs,
+                timestamp: new Date().toISOString()
+            }];
+
+            // Update the participant
+            const updatedParticipant = await prisma.gameParticipant.update({
+                where: {
+                    id: participant.id
+                },
+                data: {
+                    answers
+                }
+            });
+
+            // --- Write answer to Redis for scoring ---
+            // Find the game instance to get the access code
+            const gameInstance = await prisma.gameInstance.findUnique({ where: { id: gameInstanceId } });
+            if (gameInstance) {
+                // Use the same structure as scoring expects
+                const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${data.questionUid}`;
+                // Use userId as the field (or socketId if available, but userId is unique per participant)
+                await import('@/config/redis').then(({ redisClient }) =>
+                    redisClient.hset(
+                        redisKey,
+                        userId,
+                        JSON.stringify({
+                            userId,
+                            answer: data.answer,
+                            timeSpent: data.timeTakenMs,
+                            submittedAt: Date.now()
+                        })
+                    )
+                );
+            }
+
+            return {
+                success: true,
+                participant: updatedParticipant
+            };
+        } catch (error) {
+            logger.error({ error, gameInstanceId, userId, data }, 'Error submitting answer');
+            return {
+                success: false,
+                error: 'An error occurred while submitting answer'
+            };
+        }
+    }
+
+    /**
+     * Get a participant by ID
+     * @param participantId The ID of the participant
+     * @returns The participant or null if not found
+     */
+    async getParticipantById(participantId: string) {
+        try {
+            const participant = await prisma.gameParticipant.findUnique({
+                where: {
+                    id: participantId
+                },
+                include: {
+                    user: true
+                }
+            });
+
+            return participant;
         } catch (error) {
             logger.error({ error, participantId }, 'Error getting participant');
             throw error;

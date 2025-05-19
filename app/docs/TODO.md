@@ -12,7 +12,7 @@ FIRST OF ALL READ THE README.md FILE FOR BEST PRACTICES AND GUIDELINES
 - [X] Fix immediate TypeScript build errors
 - [X] Establish central shared types repository between frontend and backend: in doubt, ask for help
 - [X] Create proper interfaces for all socket event payloads
-- [X] Ensure consistent naming conventions in type definitions (English, standardized terms like `text`, `answers`, `time`, `explanation`, `level`, `title`, `username`, `isDeferred`, `playerId`, `teacherId`, `socketToPlayerId`, `status`, `tournamentId`, `difficulty`)
+- [X] Ensure consistent naming conventions in type definitions (English, standardized terms like `text`, `answers`, `time`, `explanation`, `level`, `title`, `username`, `isDeferred`, `userId`, `teacherId`, `socketTouserId`, `status`, `tournamentId`, `difficulty`)
 - [ ] Add runtime type validation utilities
 - [X] Create type mapping utilities (e.g., `filterQuestionForClient`)
 - [ ] Add schema validation for runtime type checking

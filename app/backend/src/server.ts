@@ -36,7 +36,8 @@ app.use('/api', apiRouter);
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     logger.error({ err, req: { method: req.method, url: req.url } }, 'Unhandled error');
-    res.status(500).send('Something broke!');
+    // Always return JSON for errors, and set content-type explicitly
+    res.status(500).type('application/json').json({ error: 'Internal server error' });
 });
 
 const server = http.createServer(app);

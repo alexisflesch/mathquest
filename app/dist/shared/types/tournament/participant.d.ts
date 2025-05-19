@@ -11,7 +11,7 @@ export interface Participant {
     username: string;
     avatar: string;
     score: number;
-    isDiffered?: boolean;
+    isDeferred?: boolean;
     socketId?: string;
     scoredQuestions?: Record<string, number>;
 }

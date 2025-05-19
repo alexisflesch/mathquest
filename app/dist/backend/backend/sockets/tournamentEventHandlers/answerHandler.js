@@ -30,24 +30,24 @@ function handleTournamentAnswer(io, socket, { code, questionUid, answerIdx, clie
     let state = null;
     // Check live state first
     if (tournamentState_1.tournamentState[code] &&
-        tournamentState_1.tournamentState[code].socketToPlayerId &&
-        tournamentState_1.tournamentState[code].socketToPlayerId[socket.id]) {
+        tournamentState_1.tournamentState[code].socketTouserId &&
+        tournamentState_1.tournamentState[code].socketTouserId[socket.id]) {
         stateKey = code;
         state = tournamentState_1.tournamentState[stateKey];
-        if (state && state.socketToPlayerId) {
-            joueurId = state.socketToPlayerId[socket.id];
+        if (state && state.socketTouserId) {
+            joueurId = state.socketTouserId[socket.id];
         }
     }
     else {
         // Check differed states
         for (const key in tournamentState_1.tournamentState) {
             if (key.startsWith(`${code}_`) &&
-                ((_a = tournamentState_1.tournamentState[key]) === null || _a === void 0 ? void 0 : _a.socketToPlayerId) &&
-                tournamentState_1.tournamentState[key].socketToPlayerId[socket.id]) {
+                ((_a = tournamentState_1.tournamentState[key]) === null || _a === void 0 ? void 0 : _a.socketTouserId) &&
+                tournamentState_1.tournamentState[key].socketTouserId[socket.id]) {
                 stateKey = key;
                 state = tournamentState_1.tournamentState[key];
-                if (state && state.socketToPlayerId) {
-                    joueurId = state.socketToPlayerId[socket.id];
+                if (state && state.socketTouserId) {
+                    joueurId = state.socketTouserId[socket.id];
                 }
                 break;
             }

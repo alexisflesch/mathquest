@@ -11,14 +11,24 @@ import { jest } from '@jest/globals';
 jest.mock('@/middleware/auth', () => ({
     teacherAuth: (req: any, res: any, next: any) => {
         req.user = {
-            teacherId: 'teacher-123',
-            username: 'testteacher'
+            userId: 'teacher-123',
+            username: 'testteacher',
+            role: 'TEACHER'
+        };
+        next();
+    },
+    optionalAuth: (req: any, res: any, next: any) => {
+        req.user = {
+            userId: 'teacher-123',
+            username: 'testteacher',
+            role: 'TEACHER'
         };
         next();
     }
 }));
 
 describe('Games API Integration Tests', () => {
+    jest.setTimeout(3000);
     let server: http.Server;
     let mockGameInstanceService: jest.Mocked<GameInstanceService>;
     let mockGameParticipantService: jest.Mocked<GameParticipantService>;
@@ -27,6 +37,7 @@ describe('Games API Integration Tests', () => {
         server = setupServer(4001); // Use test port 4001
 
         mockGameInstanceService = {
+            createGameInstanceUnified: jest.fn(),
             createGameInstance: jest.fn(),
             getGameInstanceByAccessCode: jest.fn(),
             getGameInstanceById: jest.fn(),
@@ -58,27 +69,18 @@ describe('Games API Integration Tests', () => {
         it('should create a game instance successfully', async () => {
             const gameData = {
                 name: 'Test Game',
-                quizTemplateId: 'quiz-123',
-                playMode: 'class',
-                settings: {
-                    timeLimit: 30
-                }
+                gameTemplateId: 'quiz-123',
+                playMode: 'quiz', // valid playMode
             };
-
             const createdGame = {
                 id: 'game-123',
-                initiatorTeacherId: 'teacher-123',
-                accessCode: 'ABC123',
-                status: 'pending',
                 ...gameData,
-                createdAt: new Date().toISOString(),
-                quizTemplate: {
-                    name: 'Test Quiz',
-                    themes: ['algebra']
-                }
+                status: 'pending',
+                accessCode: 'ABC123',
+                participants: []
             };
 
-            mockGameInstanceService.createGameInstance.mockResolvedValue(createdGame as any);
+            mockGameInstanceService.createGameInstanceUnified.mockResolvedValue(createdGame as any);
 
             const response = await request(app)
                 .post('/api/v1/games')
@@ -86,9 +88,13 @@ describe('Games API Integration Tests', () => {
                 .expect('Content-Type', /json/)
                 .expect(201);
 
-            expect(mockGameInstanceService.createGameInstance).toHaveBeenCalledWith(
-                'teacher-123',
-                expect.objectContaining(gameData)
+            expect(mockGameInstanceService.createGameInstanceUnified).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    name: 'Test Game',
+                    gameTemplateId: 'quiz-123',
+                    playMode: 'quiz',
+                    initiatorUserId: 'teacher-123' // was 
+                })
             );
 
             expect(response.body).toEqual({ gameInstance: createdGame });
@@ -96,8 +102,8 @@ describe('Games API Integration Tests', () => {
 
         it('should return 400 if required fields are missing', async () => {
             const incompleteData = {
-                name: 'Missing Fields'
-                // Missing quizTemplateId and playMode
+                name: 'Missing Fields',
+                playMode: 'quiz' // add playMode so we test missing gameTemplateId
             };
 
             const response = await request(app)
@@ -113,7 +119,7 @@ describe('Games API Integration Tests', () => {
         it('should return 400 if playMode is invalid', async () => {
             const invalidData = {
                 name: 'Test Game',
-                quizTemplateId: 'quiz-123',
+                gameTemplateId: 'quiz-123',
                 playMode: 'invalid-mode' // Invalid mode
             };
 
@@ -123,7 +129,7 @@ describe('Games API Integration Tests', () => {
                 .expect('Content-Type', /json/)
                 .expect(400);
 
-            expect(response.body.error).toBe('Invalid playMode value');
+            expect(response.body.error).toBe('Invalid or missing playMode value');
             expect(mockGameInstanceService.createGameInstance).not.toHaveBeenCalled();
         });
     });
@@ -157,7 +163,7 @@ describe('Games API Integration Tests', () => {
                 accessCode,
                 status: 'active',
                 participants: [
-                    { id: 'participant-1', playerId: 'player-1', score: 200 }
+                    { id: 'participant-1', userId: 'player-1', score: 200 }
                 ]
             };
 
@@ -199,23 +205,23 @@ describe('Games API Integration Tests', () => {
     describe('POST /api/v1/games/:accessCode/join', () => {
         it('should allow player to join a game', async () => {
             const accessCode = 'ABC123';
-            const playerId = 'player-123';
+            const userId = 'player-123';
 
             const mockJoinResult = {
                 success: true,
                 gameInstance: { id: 'game-123', name: 'Test Game' },
-                participant: { id: 'participant-123', playerId }
+                participant: { id: 'participant-123', userId }
             };
 
             mockGameParticipantService.joinGame.mockResolvedValue(mockJoinResult);
 
             const response = await request(app)
                 .post(`/api/v1/games/${accessCode}/join`)
-                .send({ playerId })
+                .send({ userId })
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(mockGameParticipantService.joinGame).toHaveBeenCalledWith(playerId, accessCode);
+            expect(mockGameParticipantService.joinGame).toHaveBeenCalledWith(userId, accessCode);
             expect(response.body).toEqual(mockJoinResult);
         });
 
@@ -224,7 +230,7 @@ describe('Games API Integration Tests', () => {
 
             const response = await request(app)
                 .post(`/api/v1/games/${accessCode}/join`)
-                .send({}) // No playerId
+                .send({}) // No userId
                 .expect('Content-Type', /json/)
                 .expect(400);
 
@@ -234,7 +240,7 @@ describe('Games API Integration Tests', () => {
 
         it('should return error if joining fails', async () => {
             const accessCode = 'ABC123';
-            const playerId = 'player-123';
+            const userId = 'player-123';
 
             const mockFailureResult = {
                 success: false,
@@ -245,7 +251,7 @@ describe('Games API Integration Tests', () => {
 
             const response = await request(app)
                 .post(`/api/v1/games/${accessCode}/join`)
-                .send({ playerId })
+                .send({ userId })
                 .expect('Content-Type', /json/)
                 .expect(400);
 
@@ -263,7 +269,7 @@ describe('Games API Integration Tests', () => {
 
             const mockGame = {
                 id: gameId,
-                initiatorTeacherId: 'teacher-123' // Same as auth mock
+                initiatorUserId: 'teacher-123' // Same as auth mock
             };
 
             const updatedGame = {
@@ -332,7 +338,7 @@ describe('Games API Integration Tests', () => {
 
             const mockGame = {
                 id: gameId,
-                initiatorTeacherId: 'different-teacher' // Different teacher
+                initiatorUserId: 'different-teacher' // Different teacher
             };
 
             mockGameInstanceService.getGameInstanceById.mockResolvedValue(mockGame as any);
@@ -358,10 +364,13 @@ describe('Games API Integration Tests', () => {
             mockGameInstanceService.getTeacherActiveGames.mockResolvedValue(mockGames as any);
 
             const response = await request(app)
-                .get('/api/v1/games/teacher/active')
-                .expect('Content-Type', /json/)
-                .expect(200);
+                .get('/api/v1/games/teacher/active');
+            // Debug output for troubleshooting
+            // eslint-disable-next-line no-console
+            console.log('DEBUG response:', response.status, response.headers['content-type'], response.text);
 
+            expect(response.headers['content-type']).toMatch(/json/);
+            expect(response.status).toBe(200);
             expect(mockGameInstanceService.getTeacherActiveGames).toHaveBeenCalledWith('teacher-123');
             expect(response.body).toEqual({ games: mockGames });
         });

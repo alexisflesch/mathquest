@@ -6,9 +6,9 @@ import { io } from "socket.io-client";
  * Create a connection to the MathQuest Socket.IO server
  * @param baseUrl - The base URL of the server (e.g., "http://localhost:3000")
  * @param token - Authentication token (for teachers) or null for player-only auth
- * @param playerId - Player ID (required for player connections)
+ * @param userId - Player ID (required for player connections)
  */
-export function createMathQuestSocketConnection(baseUrl, token = null, playerId = null) {
+export function createMathQuestSocketConnection(baseUrl, token = null, userId = null) {
     const socket = io(`${baseUrl}`, {
         path: "/api/socket.io",
         autoConnect: false,
@@ -16,7 +16,7 @@ export function createMathQuestSocketConnection(baseUrl, token = null, playerId 
         // Set auth data for authentication middleware
         auth: {
             token,
-            playerId
+            userId
         }
     });
 
@@ -44,11 +44,11 @@ export function createMathQuestSocketConnection(baseUrl, token = null, playerId 
  * Join a game lobby
  * @param socket - Socket.IO connection
  * @param accessCode - Game access code
- * @param playerId - Player ID
+ * @param userId - Player ID
  * @param username - Player display name
  * @param avatarUrl - URL to player's avatar image (optional)
  */
-export function joinGameLobby(socket, accessCode, playerId, username, avatarUrl = null) {
+export function joinGameLobby(socket, accessCode, userId, username, avatarUrl = null) {
     return new Promise((resolve, reject) => {
         // Set a timeout to reject the promise if no response within 5 seconds
         const timeout = setTimeout(() => {
@@ -76,7 +76,7 @@ export function joinGameLobby(socket, accessCode, playerId, username, avatarUrl 
         // Emit join lobby event
         socket.emit("join_lobby", {
             accessCode,
-            playerId,
+            userId,
             username,
             avatarUrl
         });

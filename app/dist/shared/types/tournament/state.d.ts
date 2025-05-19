@@ -40,13 +40,13 @@ export interface TournamentState {
     stopped: boolean;
     linkedQuizId?: string | null;
     currentQuestionDuration: number;
-    socketToJoueur: Record<string, string>;
-    isDiffered?: boolean;
-    statut?: 'en préparation' | 'en cours' | 'terminé';
+    socketTouserId: Record<string, string>;
+    isDeferred?: boolean;
+    status?: 'preparing' | 'in progress' | 'finished';
     intervalTimer?: Timeout | null;
     previousQuestionUid?: string | null;
     code?: string;
-    tournoiId?: string;
+    tournamentId?: string;
     settings?: {
         timer?: number;
         autoProgress?: boolean;
@@ -62,4 +62,4 @@ export interface TournamentState {
 export interface TournamentStateContainer {
     [tournamentCode: string]: TournamentState;
 }
-export {};
+export { };

@@ -42,7 +42,7 @@ describe('GameParticipantService', () => {
                 id: 'game-123',
                 accessCode,
                 status: 'pending',
-                quizTemplate: { name: 'Test Quiz' }
+                gameTemplate: { name: 'Test Quiz' }
             };
             prisma_1.prisma.gameInstance.findUnique.mockResolvedValue(mockGameInstance);
             // Player is not yet in the game
@@ -78,7 +78,7 @@ describe('GameParticipantService', () => {
                 id: 'game-123',
                 accessCode,
                 status: 'pending',
-                quizTemplate: { name: 'Test Quiz' }
+                gameTemplate: { name: 'Test Quiz' }
             };
             prisma_1.prisma.gameInstance.findUnique.mockResolvedValue(mockGameInstance);
             // Player is already in the game
@@ -116,7 +116,7 @@ describe('GameParticipantService', () => {
                 id: 'game-123',
                 accessCode,
                 status: 'completed',
-                quizTemplate: { name: 'Test Quiz' }
+                gameTemplate: { name: 'Test Quiz' }
             };
             prisma_1.prisma.gameInstance.findUnique.mockResolvedValue(mockCompletedGame);
             const result = await gameParticipantService.joinGame(playerId, accessCode);
@@ -291,8 +291,8 @@ describe('GameParticipantService', () => {
                     id: 'game-123',
                     name: 'Test Game',
                     status: 'active',
-                    playMode: 'class',
-                    quizTemplate: { name: 'Test Quiz' }
+                    playMode: 'quiz',
+                    gameTemplate: { name: 'Test Quiz' }
                 }
             };
             prisma_1.prisma.gameParticipant.findUnique.mockResolvedValue(mockParticipant);

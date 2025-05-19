@@ -37,6 +37,8 @@ const waitForEvent = (socket: ClientSocket, event: string): Promise<any> => {
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 describe('Lobby Handler', () => {
+    jest.setTimeout(3000);
+
     beforeAll(async () => {
         // Start test server and get Socket.IO instance
         const setup = await startTestServer();
@@ -50,20 +52,22 @@ describe('Lobby Handler', () => {
         });
 
         // Create a quiz template first (required for the game instance)
-        const testTeacher = await prisma.teacher.upsert({
+        const testTeacher = await prisma.user.upsert({
             where: { email: 'test@example.com' },
             update: {},
             create: {
                 username: 'testteacher',
                 passwordHash: 'hash-not-important-for-test',
-                email: 'test@example.com'
+                email: 'test@example.com',
+                role: 'TEACHER',
+                teacherProfile: { create: {} }
             }
         });
 
-        const testTemplate = await prisma.quizTemplate.create({
+        const testTemplate = await prisma.gameTemplate.create({
             data: {
                 name: 'Test Quiz Template',
-                creatorTeacherId: testTeacher.id,
+                creatorId: testTeacher.id, // was creatorTeacherId
                 themes: ['math']
             }
         });
@@ -74,10 +78,10 @@ describe('Lobby Handler', () => {
                 accessCode: TEST_ACCESS_CODE,
                 name: 'Test Game',
                 status: 'pending',
-                playMode: 'class',
+                playMode: 'quiz',
                 settings: {},
-                quizTemplateId: testTemplate.id,
-                initiatorTeacherId: testTeacher.id
+                gameTemplateId: testTemplate.id,
+                initiatorUserId: testTeacher.id // was 
             }
         });
 
@@ -106,17 +110,31 @@ describe('Lobby Handler', () => {
     afterAll(async () => {
         // Clean up server and databases
         await serverCleanup();
-
         // Clean up test game instance and related data
-        await prisma.gameInstance.deleteMany({
-            where: { accessCode: TEST_ACCESS_CODE }
+        // 1. Delete GameParticipant for all test gameInstances
+        const testGameInstances = await prisma.gameInstance.findMany({
+            where: { gameTemplate: { name: 'Test Quiz Template' } }
         });
-
-        // Clean up the quiz template we created
-        await prisma.quizTemplate.deleteMany({
+        for (const gi of testGameInstances) {
+            await prisma.gameParticipant.deleteMany({ where: { gameInstanceId: gi.id } });
+        }
+        // 2. Delete GameInstance for test quiz templates
+        await prisma.gameInstance.deleteMany({
+            where: { gameTemplate: { name: 'Test Quiz Template' } }
+        });
+        // 3. Delete questionsInGameTemplate for this quiz template (to avoid FK errors)
+        const gameTemplates = await prisma.gameTemplate.findMany({
             where: { name: 'Test Quiz Template' }
         });
-
+        for (const qt of gameTemplates) {
+            await prisma.questionsInGameTemplate.deleteMany({
+                where: { gameTemplateId: qt.id }
+            });
+        }
+        // 4. Clean up the quiz template we created (must be after gameInstance)
+        await prisma.gameTemplate.deleteMany({
+            where: { name: 'Test Quiz Template' }
+        });
         // We'll leave the test teacher in the database as it might be used by other tests
     });
 
@@ -136,7 +154,7 @@ describe('Lobby Handler', () => {
         const joinPromise = waitForEvent(socket, 'participants_list');
         socket.emit('join_lobby', {
             accessCode: TEST_ACCESS_CODE,
-            playerId: 'player-123',
+            userId: 'player-123',
             username: 'Test Player',
             avatarUrl: 'avatar.jpg'
         });
@@ -190,7 +208,7 @@ describe('Lobby Handler', () => {
         const joinPromise1 = waitForEvent(socket1, 'participants_list');
         socket1.emit('join_lobby', {
             accessCode: TEST_ACCESS_CODE,
-            playerId: 'player-1',
+            userId: 'player-1',
             username: 'Player 1',
             avatarUrl: 'avatar1.jpg'
         });
@@ -206,7 +224,7 @@ describe('Lobby Handler', () => {
 
         socket2.emit('join_lobby', {
             accessCode: TEST_ACCESS_CODE,
-            playerId: 'player-2',
+            userId: 'player-2',
             username: 'Player 2',
             avatarUrl: 'avatar2.jpg'
         });
@@ -223,7 +241,7 @@ describe('Lobby Handler', () => {
         // Player 3 joins
         socket3.emit('join_lobby', {
             accessCode: TEST_ACCESS_CODE,
-            playerId: 'player-3',
+            userId: 'player-3',
             username: 'Player 3',
             avatarUrl: 'avatar3.jpg'
         });
@@ -265,7 +283,7 @@ describe('Lobby Handler', () => {
         // Join the lobby
         socket.emit('join_lobby', {
             accessCode: TEST_ACCESS_CODE,
-            playerId: 'player-redirect-test',
+            userId: 'player-redirect-test',
             username: 'Redirect Test',
             avatarUrl: 'avatar.jpg'
         });
@@ -316,14 +334,14 @@ describe('Lobby Handler', () => {
         // Both join the lobby
         socket1.emit('join_lobby', {
             accessCode: TEST_ACCESS_CODE,
-            playerId: 'player-d1',
+            userId: 'player-d1',
             username: 'Disconnect Test 1',
             avatarUrl: 'avatar.jpg'
         });
 
         socket2.emit('join_lobby', {
             accessCode: TEST_ACCESS_CODE,
-            playerId: 'player-d2',
+            userId: 'player-d2',
             username: 'Disconnect Test 2',
             avatarUrl: 'avatar.jpg'
         });

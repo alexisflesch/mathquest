@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { PlayerService } from '@/core/services/playerService';
+import { UserService } from '@/core/services/userService';
 import createLogger from '@/utils/logger';
 
 // Create a route-specific logger
@@ -8,22 +8,22 @@ const logger = createLogger('PlayersAPI');
 const router = express.Router();
 
 // Create a singleton instance or allow injection for testing
-let playerServiceInstance: PlayerService | null = null;
+let userServiceInstance: UserService | null = null;
 
-const getPlayerService = (): PlayerService => {
-    if (!playerServiceInstance) {
-        playerServiceInstance = new PlayerService();
+const getUserService = (): UserService => {
+    if (!userServiceInstance) {
+        userServiceInstance = new UserService();
     }
-    return playerServiceInstance;
+    return userServiceInstance;
 };
 
 // For testing purposes only - allows tests to inject a mock service
-export const __setPlayerServiceForTesting = (mockService: PlayerService): void => {
-    playerServiceInstance = mockService;
+export const __setUserServiceForTesting = (mockService: UserService): void => {
+    userServiceInstance = mockService;
 };
 
 /**
- * Register a new player (anonymous or with account)
+ * Register a new student (anonymous or with account)
  * POST /api/v1/players/register
  */
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
@@ -42,16 +42,17 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Register the player
-        const player = await getPlayerService().registerPlayer({
+        // Register the user as a STUDENT
+        const result = await getUserService().registerUser({
             username,
             email,
             password,
+            role: 'STUDENT', // Use string literal instead of UserRole enum
         });
 
-        res.status(201).json({ player });
+        res.status(201).json(result);
     } catch (error) {
-        logger.error({ error }, 'Error in player registration');
+        logger.error({ error }, 'Error in student registration');
 
         // Handle specific errors
         if (error instanceof Error && error.message.includes('already exists')) {
@@ -64,7 +65,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 });
 
 /**
- * Get player by cookieId
+ * Get student by cookieId
  * GET /api/v1/players/cookie/:cookieId
  */
 router.get('/cookie/:cookieId', async (req: Request, res: Response): Promise<void> => {
@@ -76,17 +77,17 @@ router.get('/cookie/:cookieId', async (req: Request, res: Response): Promise<voi
             return;
         }
 
-        const player = await getPlayerService().getPlayerByCookieId(cookieId);
+        const user = await getUserService().getUserByCookieId(cookieId);
 
-        if (!player) {
-            res.status(404).json({ error: 'Player not found' });
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
             return;
         }
 
-        res.status(200).json({ player });
+        res.status(200).json({ user });
     } catch (error) {
-        logger.error({ error }, 'Error fetching player by cookieId');
-        res.status(500).json({ error: 'An error occurred fetching the player' });
+        logger.error({ error }, 'Error fetching user by cookieId');
+        res.status(500).json({ error: 'An error occurred fetching the user' });
     }
 });
 

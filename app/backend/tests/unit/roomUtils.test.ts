@@ -24,6 +24,8 @@ jest.mock('@/utils/logger', () => {
 });
 
 describe('Room Utils', () => {
+    jest.setTimeout(3000);
+
     let mockSocket: any;
     let mockIO: any;
 
@@ -35,7 +37,7 @@ describe('Room Utils', () => {
             id: 'socket-123',
             data: {
                 user: {
-                    playerId: 'player-123',
+                    userId: 'player-123',
                     role: 'player'
                 }
             },

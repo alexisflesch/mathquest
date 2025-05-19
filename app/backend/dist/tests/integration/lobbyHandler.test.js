@@ -55,7 +55,7 @@ describe('Lobby Handler', () => {
                 email: 'test@example.com'
             }
         });
-        const testTemplate = await prisma.quizTemplate.create({
+        const testTemplate = await prisma.gameTemplate.create({
             data: {
                 name: 'Test Quiz Template',
                 creatorTeacherId: testTeacher.id,
@@ -68,10 +68,10 @@ describe('Lobby Handler', () => {
                 accessCode: TEST_ACCESS_CODE,
                 name: 'Test Game',
                 status: 'pending',
-                playMode: 'class',
+                playMode: 'quiz',
                 settings: {},
-                quizTemplateId: testTemplate.id,
-                initiatorTeacherId: testTeacher.id
+                gameTemplateId: testTemplate.id,
+                : testTeacher.id
             }
         });
         // Clear any existing lobby data in Redis
@@ -96,11 +96,28 @@ describe('Lobby Handler', () => {
         // Clean up server and databases
         await serverCleanup();
         // Clean up test game instance and related data
-        await prisma.gameInstance.deleteMany({
-            where: { accessCode: TEST_ACCESS_CODE }
+        // 1. Delete GameParticipant for all test gameInstances
+        const testGameInstances = await prisma.gameInstance.findMany({
+            where: { gameTemplate: { name: 'Test Quiz Template' } }
         });
-        // Clean up the quiz template we created
-        await prisma.quizTemplate.deleteMany({
+        for (const gi of testGameInstances) {
+            await prisma.gameParticipant.deleteMany({ where: { gameInstanceId: gi.id } });
+        }
+        // 2. Delete GameInstance for test quiz templates
+        await prisma.gameInstance.deleteMany({
+            where: { gameTemplate: { name: 'Test Quiz Template' } }
+        });
+        // 3. Delete questionsInGameTemplate for this quiz template (to avoid FK errors)
+        const gameTemplates = await prisma.gameTemplate.findMany({
+            where: { name: 'Test Quiz Template' }
+        });
+        for (const qt of gameTemplates) {
+            await prisma.questionsInGameTemplate.deleteMany({
+                where: { gameTemplateId: qt.id }
+            });
+        }
+        // 4. Clean up the quiz template we created (must be after gameInstance)
+        await prisma.gameTemplate.deleteMany({
             where: { name: 'Test Quiz Template' }
         });
         // We'll leave the test teacher in the database as it might be used by other tests

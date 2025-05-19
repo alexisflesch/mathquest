@@ -5,9 +5,11 @@
 import { prisma } from '../../src/db/prisma';
 
 describe('Basic Database Test', () => {
+    jest.setTimeout(3000);
+
     test('Should connect to database', async () => {
         // Simple query to test connection
-        const teachers = await prisma.teacher.count();
+        const teachers = await prisma.user.count({ where: { role: 'TEACHER' } });
         expect(typeof teachers).toBe('number');
     });
 });

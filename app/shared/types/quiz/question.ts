@@ -23,4 +23,8 @@ export interface Question extends BaseQuestion {
     question?: string;  // Alternative field for question text
     hidden?: boolean;   // Whether the question is hidden
     title?: string;     // Alternative title for the question
+
+    // New fields for answer options and correct answers
+    answerOptions?: string[]; // List of possible answers
+    correctAnswers?: boolean[]; // List of booleans indicating correct answers
 }

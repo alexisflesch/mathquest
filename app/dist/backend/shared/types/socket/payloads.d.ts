@@ -91,7 +91,7 @@ export interface JoinTournamentPayload {
     username?: string;
     avatar?: string;
     isDeferred?: boolean;
-    playerId?: string;
+    userId?: string;
     classId?: string;
     cookieId?: string;
 }

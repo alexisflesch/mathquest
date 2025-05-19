@@ -1,3 +1,18 @@
+// Mock authentication middleware
+jest.mock('@/middleware/auth', () => ({
+    teacherAuth: (req: any, res: any, next: any) => {
+        req.user = {
+            userId: 'teacher-123',
+            username: 'testteacher',
+            role: 'TEACHER'
+        };
+        next();
+    },
+    optionalAuth: (req: any, res: any, next: any) => {
+        next();
+    }
+}));
+
 import request from 'supertest';
 import express, { Express } from 'express';
 import http from 'http';
@@ -6,18 +21,9 @@ import { QuestionService } from '@/core/services/questionService';
 import { __setQuestionServiceForTesting } from '@/api/v1/questions';
 import { jest } from '@jest/globals';
 
-// Mock authentication middleware
-jest.mock('@/middleware/auth', () => ({
-    teacherAuth: (req: any, res: any, next: any) => {
-        req.user = {
-            teacherId: 'teacher-123',
-            username: 'testteacher'
-        };
-        next();
-    }
-}));
-
 describe('Question API Integration Tests', () => {
+    jest.setTimeout(3000);
+
     let server: http.Server;
     let mockQuestionService: jest.Mocked<QuestionService>;
 
@@ -49,7 +55,8 @@ describe('Question API Integration Tests', () => {
             const questionData = {
                 title: 'Test Question',
                 text: 'What is 2+2?',
-                responses: { options: [{ id: 1, text: '4', correct: true }] },
+                answerOptions: ['4'],
+                correctAnswers: [true],
                 questionType: 'multiple_choice_single_answer',
                 discipline: 'math',
                 themes: ['arithmetic']
@@ -115,7 +122,8 @@ describe('Question API Integration Tests', () => {
                 uid: 'question-123',
                 title: 'Test Question',
                 text: 'What is 2+2?',
-                responses: { options: [] },
+                answerOptions: [],
+                correctAnswers: [],
                 questionType: 'multiple_choice_single_answer',
                 discipline: 'math',
                 themes: ['arithmetic'],
@@ -168,7 +176,8 @@ describe('Question API Integration Tests', () => {
                 updatedAt: new Date(),
                 title: 'Hidden Question',
                 text: 'This is a hidden question',
-                responses: { options: [] },
+                answerOptions: [],
+                correctAnswers: [],
                 questionType: 'multiple_choice_single_answer',
                 discipline: 'math',
                 themes: ['arithmetic'],
@@ -189,7 +198,7 @@ describe('Question API Integration Tests', () => {
             jest.mock('@/middleware/auth', () => ({
                 teacherAuth: (req: any, res: any, next: any) => {
                     // No teacherId in req.user
-                    req.user = { playerId: 'player-123' };
+                    req.user = { userId: 'player-123' };
                     next();
                 }
             }));
@@ -211,7 +220,8 @@ describe('Question API Integration Tests', () => {
                         createdAt: new Date(),
                         updatedAt: new Date(),
                         text: 'What is 1+1?',
-                        responses: { options: [] },
+                        answerOptions: [],
+                        correctAnswers: [],
                         questionType: 'multiple_choice_single_answer',
                         discipline: 'math',
                         themes: ['arithmetic'],
@@ -232,7 +242,8 @@ describe('Question API Integration Tests', () => {
                         createdAt: new Date(),
                         updatedAt: new Date(),
                         text: 'What is 2+2?',
-                        responses: { options: [] },
+                        answerOptions: [],
+                        correctAnswers: [],
                         questionType: 'multiple_choice_single_answer',
                         discipline: 'math',
                         themes: ['arithmetic'],
@@ -295,7 +306,8 @@ describe('Question API Integration Tests', () => {
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 text: 'What is 2+2?',
-                responses: { options: [] },
+                answerOptions: [],
+                correctAnswers: [],
                 questionType: 'multiple_choice_single_answer',
                 discipline: 'math',
                 themes: ['arithmetic'],

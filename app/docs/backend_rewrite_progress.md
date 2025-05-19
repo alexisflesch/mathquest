@@ -251,35 +251,80 @@ This document tracks the progress of rewriting the MathQuest backend from scratc
 
 ## Phase 8: Teacher Dashboard & Game Control (Socket.IO)
 
-*   [ ] **Teacher Control Handler (`src/sockets/handlers/teacherControlHandler.ts`):
-    *   [ ] Manage teacher dashboard interactions for controlling a game.
-    *   [ ] Socket events: `join_teacher_control`, `set_question`, `timer_action`, `lock_answers`.
-    *   [ ] Server to Client: `game_control_state`, `timer_update_control`.
-    *   [ ] Use `teacher_control_${gameId}` room. (Note: `gameId` here is the DB ID of the GameInstance).
-*   [ ] **Game Control Logic:**
-    *   [ ] Advancing questions.
-    *   [ ] Starting/pausing/stopping timers.
-    *   [ ] Locking/unlocking answer submissions.
-    *   [ ] Synchronizing state with `gameState` in Redis and broadcasting updates to `game_${accessCode}` room.
-*   [ ] **State Management (`gameControlState` in Redis):**
-    *   [ ] Store teacher dashboard specific state in Redis.
-*   [ ] **Testing:**
-    *   [ ] Integration tests for teacher actions and their effect on game state and player views, with Redis state.
+*   [x] **Teacher Control Handler (`src/sockets/handlers/teacherControlHandler.ts`):
+    *   [x] Manage teacher dashboard interactions for controlling a game.
+    *   [x] Socket events: `join_teacher_control`, `set_question`, `timer_action`, `lock_answers`.
+    *   [x] Server to Client: `game_control_state`, `timer_update_control`.
+    *   [x] Use `teacher_control_${gameId}` room. (Note: `gameId` here is the DB ID of the GameInstance).
+*   [x] **Game Control Logic:**
+    *   [x] Advancing questions.
+    *   [x] Starting/pausing/stopping timers.
+    *   [x] Locking/unlocking answer submissions.
+    *   [x] Synchronizing state with `gameState` in Redis and broadcasting updates to `game_${accessCode}` room.
+*   [x] **State Management (`gameControlState` in Redis):**
+    *   [x] Store teacher dashboard specific state in Redis.
+*   [x] **Testing:**
+    *   [x] Integration tests for teacher actions and their effect on game state and player views, with Redis state.
 
 ---
 
 ## Phase 9: Special Modes & Additional Features
 
-*   [ ] **Projector Mode:**
-    *   [ ] Socket handler and logic for `projector_${gameId}` room.
-    *   [ ] Serve relevant game state for classroom display (read from Redis).
-*   [ ] **Differed (Asynchronous) Mode:**
-    *   [ ] Adapt game logic and API endpoints to support self-paced games.
+*   [x] **Projector Mode:**
+    *   [x] Socket handler and logic for `projector_${gameId}` room.
+    *   [x] Serve relevant game state for classroom display (read from Redis).
+    *   [x] Integration tests and build passing for Projector Mode.
+*   [ ] **Game Modes (Live, Differed, Self-paced):**
+    *   [ ] **Live Mode:** Synchronous, real-time play. All players start and progress together, with timers and scoring.
+    *   [ ] **Differed (Asynchronous) Mode:** Same as live in terms of question order, timer, and scoring, but players can join and start after the scheduled time within a defined participation window. Each player's timer starts when they begin. Requires adapting game logic, API endpoints, and database models (set `isDiffered`, `differedAvailableFrom`, `differedAvailableTo`).
+    *   [ ] **Self-paced Mode:** Same questions as live/differed, but there is no timer and no score. Players can complete at their own pace, and results are not ranked. Requires adapting game logic, API endpoints, and database models (set `isSelfPaced`).
+    *   [ ] Update participation and leaderboard logic for differed and self-paced play (per-user timing, no score for self-paced).
+    *   [ ] Implement and test the full differed and self-paced mode flows (timing, participation window, per-user timing, no score for self-paced).
+    *   [ ] Add/expand tests for differed and self-paced mode functionality.
 *   [ ] **API Endpoints Review:**
-    *   [ ] Ensure all necessary API endpoints from `docs/README.md` are implemented.
+    *   [ ] Ensure all necessary API endpoints from `docs/README.md` and `docs/backend.md` are implemented and documented, including for all game modes.
 *   [ ] **Testing:**
-    *   [ ] Tests for projector mode updates.
-    *   [ ] Tests for differed mode functionality.
+    *   [x] Tests for projector mode updates.
+    *   [ ] Tests for differed and self-paced mode functionality.
+
+---
+
+## Phase 9: Tournament Creation and Real-Time Orchestration (Student Perspective)
+
+### Current State and Gaps
+
+1. **Student Tournament Creation**
+   - The backend now allows a student to create a game instance with `playMode: "tournament"` via `POST /api/v1/games`.
+   - However, the endpoint requires a `quizTemplateId`. There is no backend logic to generate a quiz template on-the-fly from gradeLevel, discipline, themes, and number of questions. This must be implemented for a true student-driven flow.
+
+2. **Starting a Tournament as a Student**
+   - There is no explicit endpoint for a student to start their tournament (change status to "active").
+   - Existing status update endpoints are teacher-protected. Logic must be added to allow the student-creator to start their own tournament.
+
+3. **Real-Time Tournament Orchestration (Socket.IO)**
+   - The backend currently implements real-time events (lobby, live, timer, feedback, leaderboard, etc.) for teacher/classroom games only.
+   - For student-created tournaments, none of the following are implemented:
+     - Sending payloads to a lobby room when a tournament starts
+     - Sending questions to a live room for a tournament
+     - Sending timer events (start, stop) to a live room for a tournament
+     - Sending correct answers and feedback at the end of each question for a tournament
+     - Closing the tournament and sending a final event to the live room
+     - Computing scores and leaderboard for a tournament
+   - All of these must be implemented for full student tournament support.
+
+4. **Authorization**
+   - The backend must ensure that only the student who created the tournament can start and control it.
+
+### Next Steps (for implementation and testing)
+- Implement quiz template generation for students (from gradeLevel, discipline, themes, nb of questions).
+- Add/adjust endpoint to allow student-initiated tournament start (status change, event emission).
+- Implement/extend Socket.IO logic for tournaments (lobby, live, timer, feedback, leaderboard, etc.).
+- Add/adjust authorization logic for student tournament control.
+- Write and run tests for all new endpoints and real-time flows.
+
+---
+
+**This phase is required for full support of student-driven tournaments and real-time orchestration.**
 
 ---
 

@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
-import { QuestionService } from '@/core/services/questionService';
+import { QuestionService, QuestionCreationData, QuestionUpdateData } from '@/core/services/questionService';
 import { teacherAuth } from '@/middleware/auth';
 import createLogger from '@/utils/logger';
+import { questionSchema, questionCreationSchema } from '../../../../shared/types/quiz/question.zod';
 
 // Create a route-specific logger
 const logger = createLogger('QuestionsAPI');
@@ -30,58 +31,24 @@ export const __setQuestionServiceForTesting = (mockService: QuestionService): vo
  */
 router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
             return;
         }
 
-        const {
-            title,
-            text,
-            responses,
-            questionType,
-            discipline,
-            themes,
-            difficulty,
-            gradeLevel,
-            author,
-            explanation,
-            tags,
-            timeLimit,
-            isHidden
-        } = req.body;
-
-        // Basic validation
-        if (!text || !questionType || !discipline || !responses || !themes) {
-            res.status(400).json({
-                error: 'Required fields missing',
-                required: ['text', 'questionType', 'discipline', 'responses', 'themes']
-            });
+        // Zod validation for question creation using questionCreationSchema
+        const parseResult = questionCreationSchema.safeParse(req.body);
+        if (!parseResult.success) {
+            res.status(400).json({ error: 'Required fields missing', details: parseResult.error.errors });
             return;
         }
+        // Ensure `themes` defaults to an empty array if undefined
+        const questionData: QuestionCreationData = {
+            ...parseResult.data,
+            themes: parseResult.data.themes || []
+        };
 
-        // Validate responses based on questionType (simplified validation)
-        if (typeof responses !== 'object') {
-            res.status(400).json({ error: 'Responses must be an object' });
-            return;
-        }
-
-        const question = await getQuestionService().createQuestion(req.user.teacherId, {
-            title,
-            text,
-            responses,
-            questionType,
-            discipline,
-            themes,
-            difficulty,
-            gradeLevel,
-            author,
-            explanation,
-            tags,
-            timeLimit,
-            isHidden
-        });
-
+        const question = await getQuestionService().createQuestion(req.user.userId, questionData);
         res.status(201).json({ question });
     } catch (error) {
         logger.error({ error }, 'Error creating question');
@@ -105,7 +72,7 @@ router.get('/:uid', async (req: Request, res: Response): Promise<void> => {
         }
 
         // If the question is hidden and the user is not a teacher, don't show it
-        if (question.isHidden && !req.user?.teacherId) {
+        if (question.isHidden && (!req.user?.userId || req.user?.role !== 'TEACHER')) {
             res.status(404).json({ error: 'Question not found' });
             return;
         }
@@ -158,7 +125,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         if (questionType) filters.questionType = questionType as string;
 
         // Only teachers can see hidden questions
-        filters.includeHidden = req.user?.teacherId && includeHidden === 'true';
+        filters.includeHidden = req.user?.userId && req.user?.role === 'TEACHER' && includeHidden === 'true';
 
         const pagination = {
             skip: (Number(page) - 1) * Number(pageSize),
@@ -181,28 +148,34 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
  */
 router.put('/:uid', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
             return;
         }
 
-        const { uid } = req.params;
-        const updateData = {
-            uid,
-            ...req.body
+        // Zod validation for question update (partial allowed, using questionSchema.partial())
+        // It's important that the input to updateQuestion matches QuestionUpdateData
+        const updateParseResult = questionSchema.partial().safeParse(req.body);
+        if (!updateParseResult.success) {
+            res.status(400).json({ error: 'Validation failed', details: updateParseResult.error.errors });
+            return;
+        }
+
+        // Construct the updateData object carefully to match QuestionUpdateData
+        const { uid: bodyUid, ...restOfBody } = updateParseResult.data;
+        const updateData: QuestionUpdateData = {
+            uid: req.params.uid,
+            ...restOfBody,
         };
 
         const updatedQuestion = await getQuestionService().updateQuestion(updateData);
-
         res.status(200).json({ question: updatedQuestion });
     } catch (error) {
         logger.error({ error }, 'Error updating question');
-
         if (error instanceof Error && error.message.includes('not found')) {
             res.status(404).json({ error: error.message });
             return;
         }
-
         res.status(500).json({ error: 'An error occurred while updating the question' });
     }
 });
@@ -214,7 +187,7 @@ router.put('/:uid', teacherAuth, async (req: Request, res: Response): Promise<vo
  */
 router.delete('/:uid', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
             return;
         }
@@ -226,12 +199,10 @@ router.delete('/:uid', teacherAuth, async (req: Request, res: Response): Promise
         res.status(200).json({ success: true });
     } catch (error) {
         logger.error({ error }, 'Error deleting question');
-
         if (error instanceof Error && error.message.includes('not found')) {
             res.status(404).json({ error: error.message });
             return;
         }
-
         res.status(500).json({ error: 'An error occurred while deleting the question' });
     }
 });

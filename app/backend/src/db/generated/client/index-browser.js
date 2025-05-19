@@ -120,32 +120,31 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.TeacherScalarFieldEnum = {
+exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   username: 'username',
-  passwordHash: 'passwordHash',
   email: 'email',
-  createdAt: 'createdAt',
+  passwordHash: 'passwordHash',
   avatarUrl: 'avatarUrl',
-  resetToken: 'resetToken',
-  resetTokenExpiresAt: 'resetTokenExpiresAt'
+  createdAt: 'createdAt',
+  role: 'role'
 };
 
-exports.Prisma.PlayerScalarFieldEnum = {
+exports.Prisma.TeacherProfileScalarFieldEnum = {
+  id: 'id'
+};
+
+exports.Prisma.StudentProfileScalarFieldEnum = {
   id: 'id',
-  username: 'username',
-  cookieId: 'cookieId',
-  email: 'email',
-  passwordHash: 'passwordHash',
-  createdAt: 'createdAt',
-  avatarUrl: 'avatarUrl'
+  cookieId: 'cookieId'
 };
 
 exports.Prisma.QuestionScalarFieldEnum = {
   uid: 'uid',
   title: 'title',
   text: 'text',
-  responses: 'responses',
+  answerOptions: 'answerOptions',
+  correctAnswers: 'correctAnswers',
   questionType: 'questionType',
   discipline: 'discipline',
   themes: 'themes',
@@ -156,14 +155,15 @@ exports.Prisma.QuestionScalarFieldEnum = {
   tags: 'tags',
   timeLimit: 'timeLimit',
   isHidden: 'isHidden',
+  feedbackWaitTime: 'feedbackWaitTime',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.QuizTemplateScalarFieldEnum = {
+exports.Prisma.GameTemplateScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  creatorTeacherId: 'creatorTeacherId',
+  creatorId: 'creatorId',
   gradeLevel: 'gradeLevel',
   themes: 'themes',
   discipline: 'discipline',
@@ -173,8 +173,8 @@ exports.Prisma.QuizTemplateScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.QuestionsInQuizTemplateScalarFieldEnum = {
-  quizTemplateId: 'quizTemplateId',
+exports.Prisma.QuestionsInGameTemplateScalarFieldEnum = {
+  gameTemplateId: 'gameTemplateId',
   questionUid: 'questionUid',
   sequence: 'sequence',
   createdAt: 'createdAt'
@@ -183,8 +183,8 @@ exports.Prisma.QuestionsInQuizTemplateScalarFieldEnum = {
 exports.Prisma.GameInstanceScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  quizTemplateId: 'quizTemplateId',
-  initiatorTeacherId: 'initiatorTeacherId',
+  gameTemplateId: 'gameTemplateId',
+  initiatorUserId: 'initiatorUserId',
   accessCode: 'accessCode',
   status: 'status',
   playMode: 'playMode',
@@ -193,13 +193,16 @@ exports.Prisma.GameInstanceScalarFieldEnum = {
   settings: 'settings',
   createdAt: 'createdAt',
   startedAt: 'startedAt',
-  endedAt: 'endedAt'
+  endedAt: 'endedAt',
+  isDiffered: 'isDiffered',
+  differedAvailableFrom: 'differedAvailableFrom',
+  differedAvailableTo: 'differedAvailableTo'
 };
 
 exports.Prisma.GameParticipantScalarFieldEnum = {
   id: 'id',
   gameInstanceId: 'gameInstanceId',
-  playerId: 'playerId',
+  userId: 'userId',
   score: 'score',
   rank: 'rank',
   timeTakenMs: 'timeTakenMs',
@@ -213,10 +216,6 @@ exports.Prisma.GameParticipantScalarFieldEnum = {
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
-};
-
-exports.Prisma.JsonNullValueInput = {
-  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.NullableJsonNullValueInput = {
@@ -239,18 +238,25 @@ exports.Prisma.JsonNullValueFilter = {
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
 };
+exports.UserRole = exports.$Enums.UserRole = {
+  STUDENT: 'STUDENT',
+  TEACHER: 'TEACHER'
+};
+
 exports.PlayMode = exports.$Enums.PlayMode = {
-  class: 'class',
+  quiz: 'quiz',
   tournament: 'tournament',
-  practice: 'practice'
+  practice: 'practice',
+  class: 'class'
 };
 
 exports.Prisma.ModelName = {
-  Teacher: 'Teacher',
-  Player: 'Player',
+  User: 'User',
+  TeacherProfile: 'TeacherProfile',
+  StudentProfile: 'StudentProfile',
   Question: 'Question',
-  QuizTemplate: 'QuizTemplate',
-  QuestionsInQuizTemplate: 'QuestionsInQuizTemplate',
+  GameTemplate: 'GameTemplate',
+  QuestionsInGameTemplate: 'QuestionsInGameTemplate',
   GameInstance: 'GameInstance',
   GameParticipant: 'GameParticipant'
 };

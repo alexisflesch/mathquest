@@ -240,7 +240,7 @@ Located at `/prisma/schema.prisma`. The schema has been refactored to improve cl
 
 5.  **`GameParticipant`**
     *   Primary key: `id` (UUID)
-    *   Fields: `score` (integer), `gameInstanceId` (links to `GameInstance`), `playerId` (links to `Player`).
+    *   Fields: `score` (integer), `gameInstanceId` (links to `GameInstance`), `userId` (links to `Player`).
     *   Relations: `gameInstance`, `player`.
 
 6.  **`Teacher`**

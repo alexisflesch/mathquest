@@ -44,7 +44,7 @@ export interface TournamentState {
     stopped: boolean;
     linkedQuizId?: string | null;
     currentQuestionDuration: number;
-    socketToPlayerId: Record<string, string>; // Renamed from socketToJoueur
+    socketTouserId: Record<string, string>; // Renamed from socketToJoueur
     isDeferred?: boolean; // Renamed from isDiffered
     status?: 'preparing' | 'in progress' | 'finished'; // Renamed from statut and translated values
     intervalTimer?: Timeout | null; // Using our custom Timeout type for better compatibility

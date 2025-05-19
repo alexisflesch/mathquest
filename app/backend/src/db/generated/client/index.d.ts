@@ -14,30 +14,35 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
 
 
 /**
- * Model Teacher
+ * Model User
  * 
  */
-export type Teacher = $Result.DefaultSelection<Prisma.$TeacherPayload>
+export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
- * Model Player
+ * Model TeacherProfile
  * 
  */
-export type Player = $Result.DefaultSelection<Prisma.$PlayerPayload>
+export type TeacherProfile = $Result.DefaultSelection<Prisma.$TeacherProfilePayload>
+/**
+ * Model StudentProfile
+ * 
+ */
+export type StudentProfile = $Result.DefaultSelection<Prisma.$StudentProfilePayload>
 /**
  * Model Question
  * 
  */
 export type Question = $Result.DefaultSelection<Prisma.$QuestionPayload>
 /**
- * Model QuizTemplate
+ * Model GameTemplate
  * 
  */
-export type QuizTemplate = $Result.DefaultSelection<Prisma.$QuizTemplatePayload>
+export type GameTemplate = $Result.DefaultSelection<Prisma.$GameTemplatePayload>
 /**
- * Model QuestionsInQuizTemplate
+ * Model QuestionsInGameTemplate
  * 
  */
-export type QuestionsInQuizTemplate = $Result.DefaultSelection<Prisma.$QuestionsInQuizTemplatePayload>
+export type QuestionsInGameTemplate = $Result.DefaultSelection<Prisma.$QuestionsInGameTemplatePayload>
 /**
  * Model GameInstance
  * 
@@ -53,15 +58,28 @@ export type GameParticipant = $Result.DefaultSelection<Prisma.$GameParticipantPa
  * Enums
  */
 export namespace $Enums {
-  export const PlayMode: {
-  class: 'class',
+  export const UserRole: {
+  STUDENT: 'STUDENT',
+  TEACHER: 'TEACHER'
+};
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
+
+export const PlayMode: {
+  quiz: 'quiz',
   tournament: 'tournament',
-  practice: 'practice'
+  practice: 'practice',
+  class: 'class'
 };
 
 export type PlayMode = (typeof PlayMode)[keyof typeof PlayMode]
 
 }
+
+export type UserRole = $Enums.UserRole
+
+export const UserRole: typeof $Enums.UserRole
 
 export type PlayMode = $Enums.PlayMode
 
@@ -74,8 +92,8 @@ export const PlayMode: typeof $Enums.PlayMode
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more Teachers
- * const teachers = await prisma.teacher.findMany()
+ * // Fetch zero or more Users
+ * const users = await prisma.user.findMany()
  * ```
  *
  *
@@ -95,8 +113,8 @@ export class PrismaClient<
    * @example
    * ```
    * const prisma = new PrismaClient()
-   * // Fetch zero or more Teachers
-   * const teachers = await prisma.teacher.findMany()
+   * // Fetch zero or more Users
+   * const users = await prisma.user.findMany()
    * ```
    *
    *
@@ -193,24 +211,34 @@ export class PrismaClient<
   }>>
 
       /**
-   * `prisma.teacher`: Exposes CRUD operations for the **Teacher** model.
+   * `prisma.user`: Exposes CRUD operations for the **User** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more Teachers
-    * const teachers = await prisma.teacher.findMany()
+    * // Fetch zero or more Users
+    * const users = await prisma.user.findMany()
     * ```
     */
-  get teacher(): Prisma.TeacherDelegate<ExtArgs, ClientOptions>;
+  get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.player`: Exposes CRUD operations for the **Player** model.
+   * `prisma.teacherProfile`: Exposes CRUD operations for the **TeacherProfile** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more Players
-    * const players = await prisma.player.findMany()
+    * // Fetch zero or more TeacherProfiles
+    * const teacherProfiles = await prisma.teacherProfile.findMany()
     * ```
     */
-  get player(): Prisma.PlayerDelegate<ExtArgs, ClientOptions>;
+  get teacherProfile(): Prisma.TeacherProfileDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.studentProfile`: Exposes CRUD operations for the **StudentProfile** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more StudentProfiles
+    * const studentProfiles = await prisma.studentProfile.findMany()
+    * ```
+    */
+  get studentProfile(): Prisma.StudentProfileDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.question`: Exposes CRUD operations for the **Question** model.
@@ -223,24 +251,24 @@ export class PrismaClient<
   get question(): Prisma.QuestionDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.quizTemplate`: Exposes CRUD operations for the **QuizTemplate** model.
+   * `prisma.gameTemplate`: Exposes CRUD operations for the **GameTemplate** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more QuizTemplates
-    * const quizTemplates = await prisma.quizTemplate.findMany()
+    * // Fetch zero or more GameTemplates
+    * const gameTemplates = await prisma.gameTemplate.findMany()
     * ```
     */
-  get quizTemplate(): Prisma.QuizTemplateDelegate<ExtArgs, ClientOptions>;
+  get gameTemplate(): Prisma.GameTemplateDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.questionsInQuizTemplate`: Exposes CRUD operations for the **QuestionsInQuizTemplate** model.
+   * `prisma.questionsInGameTemplate`: Exposes CRUD operations for the **QuestionsInGameTemplate** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more QuestionsInQuizTemplates
-    * const questionsInQuizTemplates = await prisma.questionsInQuizTemplate.findMany()
+    * // Fetch zero or more QuestionsInGameTemplates
+    * const questionsInGameTemplates = await prisma.questionsInGameTemplate.findMany()
     * ```
     */
-  get questionsInQuizTemplate(): Prisma.QuestionsInQuizTemplateDelegate<ExtArgs, ClientOptions>;
+  get questionsInGameTemplate(): Prisma.QuestionsInGameTemplateDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.gameInstance`: Exposes CRUD operations for the **GameInstance** model.
@@ -701,11 +729,12 @@ export namespace Prisma {
 
 
   export const ModelName: {
-    Teacher: 'Teacher',
-    Player: 'Player',
+    User: 'User',
+    TeacherProfile: 'TeacherProfile',
+    StudentProfile: 'StudentProfile',
     Question: 'Question',
-    QuizTemplate: 'QuizTemplate',
-    QuestionsInQuizTemplate: 'QuestionsInQuizTemplate',
+    GameTemplate: 'GameTemplate',
+    QuestionsInGameTemplate: 'QuestionsInGameTemplate',
     GameInstance: 'GameInstance',
     GameParticipant: 'GameParticipant'
   };
@@ -726,155 +755,229 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "teacher" | "player" | "question" | "quizTemplate" | "questionsInQuizTemplate" | "gameInstance" | "gameParticipant"
+      modelProps: "user" | "teacherProfile" | "studentProfile" | "question" | "gameTemplate" | "questionsInGameTemplate" | "gameInstance" | "gameParticipant"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
-      Teacher: {
-        payload: Prisma.$TeacherPayload<ExtArgs>
-        fields: Prisma.TeacherFieldRefs
+      User: {
+        payload: Prisma.$UserPayload<ExtArgs>
+        fields: Prisma.UserFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.TeacherFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload> | null
+            args: Prisma.UserFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.TeacherFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>
+            args: Prisma.UserFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
           }
           findFirst: {
-            args: Prisma.TeacherFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload> | null
+            args: Prisma.UserFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.TeacherFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>
+            args: Prisma.UserFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
           }
           findMany: {
-            args: Prisma.TeacherFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>[]
+            args: Prisma.UserFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
           }
           create: {
-            args: Prisma.TeacherCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>
+            args: Prisma.UserCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
           }
           createMany: {
-            args: Prisma.TeacherCreateManyArgs<ExtArgs>
+            args: Prisma.UserCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.TeacherCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>[]
+            args: Prisma.UserCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
           }
           delete: {
-            args: Prisma.TeacherDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>
+            args: Prisma.UserDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
           }
           update: {
-            args: Prisma.TeacherUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>
+            args: Prisma.UserUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
           }
           deleteMany: {
-            args: Prisma.TeacherDeleteManyArgs<ExtArgs>
+            args: Prisma.UserDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.TeacherUpdateManyArgs<ExtArgs>
+            args: Prisma.UserUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.TeacherUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>[]
+            args: Prisma.UserUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
           }
           upsert: {
-            args: Prisma.TeacherUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TeacherPayload>
+            args: Prisma.UserUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
           }
           aggregate: {
-            args: Prisma.TeacherAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateTeacher>
+            args: Prisma.UserAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUser>
           }
           groupBy: {
-            args: Prisma.TeacherGroupByArgs<ExtArgs>
-            result: $Utils.Optional<TeacherGroupByOutputType>[]
+            args: Prisma.UserGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserGroupByOutputType>[]
           }
           count: {
-            args: Prisma.TeacherCountArgs<ExtArgs>
-            result: $Utils.Optional<TeacherCountAggregateOutputType> | number
+            args: Prisma.UserCountArgs<ExtArgs>
+            result: $Utils.Optional<UserCountAggregateOutputType> | number
           }
         }
       }
-      Player: {
-        payload: Prisma.$PlayerPayload<ExtArgs>
-        fields: Prisma.PlayerFieldRefs
+      TeacherProfile: {
+        payload: Prisma.$TeacherProfilePayload<ExtArgs>
+        fields: Prisma.TeacherProfileFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.PlayerFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload> | null
+            args: Prisma.TeacherProfileFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.PlayerFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+            args: Prisma.TeacherProfileFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>
           }
           findFirst: {
-            args: Prisma.PlayerFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload> | null
+            args: Prisma.TeacherProfileFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.PlayerFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+            args: Prisma.TeacherProfileFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>
           }
           findMany: {
-            args: Prisma.PlayerFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>[]
+            args: Prisma.TeacherProfileFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>[]
           }
           create: {
-            args: Prisma.PlayerCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+            args: Prisma.TeacherProfileCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>
           }
           createMany: {
-            args: Prisma.PlayerCreateManyArgs<ExtArgs>
+            args: Prisma.TeacherProfileCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.PlayerCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>[]
+            args: Prisma.TeacherProfileCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>[]
           }
           delete: {
-            args: Prisma.PlayerDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+            args: Prisma.TeacherProfileDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>
           }
           update: {
-            args: Prisma.PlayerUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+            args: Prisma.TeacherProfileUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>
           }
           deleteMany: {
-            args: Prisma.PlayerDeleteManyArgs<ExtArgs>
+            args: Prisma.TeacherProfileDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.PlayerUpdateManyArgs<ExtArgs>
+            args: Prisma.TeacherProfileUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.PlayerUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>[]
+            args: Prisma.TeacherProfileUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>[]
           }
           upsert: {
-            args: Prisma.PlayerUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+            args: Prisma.TeacherProfileUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeacherProfilePayload>
           }
           aggregate: {
-            args: Prisma.PlayerAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregatePlayer>
+            args: Prisma.TeacherProfileAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTeacherProfile>
           }
           groupBy: {
-            args: Prisma.PlayerGroupByArgs<ExtArgs>
-            result: $Utils.Optional<PlayerGroupByOutputType>[]
+            args: Prisma.TeacherProfileGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TeacherProfileGroupByOutputType>[]
           }
           count: {
-            args: Prisma.PlayerCountArgs<ExtArgs>
-            result: $Utils.Optional<PlayerCountAggregateOutputType> | number
+            args: Prisma.TeacherProfileCountArgs<ExtArgs>
+            result: $Utils.Optional<TeacherProfileCountAggregateOutputType> | number
+          }
+        }
+      }
+      StudentProfile: {
+        payload: Prisma.$StudentProfilePayload<ExtArgs>
+        fields: Prisma.StudentProfileFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.StudentProfileFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.StudentProfileFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+          }
+          findFirst: {
+            args: Prisma.StudentProfileFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.StudentProfileFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+          }
+          findMany: {
+            args: Prisma.StudentProfileFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>[]
+          }
+          create: {
+            args: Prisma.StudentProfileCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+          }
+          createMany: {
+            args: Prisma.StudentProfileCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.StudentProfileCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>[]
+          }
+          delete: {
+            args: Prisma.StudentProfileDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+          }
+          update: {
+            args: Prisma.StudentProfileUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+          }
+          deleteMany: {
+            args: Prisma.StudentProfileDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.StudentProfileUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.StudentProfileUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>[]
+          }
+          upsert: {
+            args: Prisma.StudentProfileUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+          }
+          aggregate: {
+            args: Prisma.StudentProfileAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStudentProfile>
+          }
+          groupBy: {
+            args: Prisma.StudentProfileGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StudentProfileGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.StudentProfileCountArgs<ExtArgs>
+            result: $Utils.Optional<StudentProfileCountAggregateOutputType> | number
           }
         }
       }
@@ -952,151 +1055,151 @@ export namespace Prisma {
           }
         }
       }
-      QuizTemplate: {
-        payload: Prisma.$QuizTemplatePayload<ExtArgs>
-        fields: Prisma.QuizTemplateFieldRefs
+      GameTemplate: {
+        payload: Prisma.$GameTemplatePayload<ExtArgs>
+        fields: Prisma.GameTemplateFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.QuizTemplateFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload> | null
+            args: Prisma.GameTemplateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.QuizTemplateFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>
+            args: Prisma.GameTemplateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>
           }
           findFirst: {
-            args: Prisma.QuizTemplateFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload> | null
+            args: Prisma.GameTemplateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.QuizTemplateFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>
+            args: Prisma.GameTemplateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>
           }
           findMany: {
-            args: Prisma.QuizTemplateFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>[]
+            args: Prisma.GameTemplateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>[]
           }
           create: {
-            args: Prisma.QuizTemplateCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>
+            args: Prisma.GameTemplateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>
           }
           createMany: {
-            args: Prisma.QuizTemplateCreateManyArgs<ExtArgs>
+            args: Prisma.GameTemplateCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.QuizTemplateCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>[]
+            args: Prisma.GameTemplateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>[]
           }
           delete: {
-            args: Prisma.QuizTemplateDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>
+            args: Prisma.GameTemplateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>
           }
           update: {
-            args: Prisma.QuizTemplateUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>
+            args: Prisma.GameTemplateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>
           }
           deleteMany: {
-            args: Prisma.QuizTemplateDeleteManyArgs<ExtArgs>
+            args: Prisma.GameTemplateDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.QuizTemplateUpdateManyArgs<ExtArgs>
+            args: Prisma.GameTemplateUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.QuizTemplateUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>[]
+            args: Prisma.GameTemplateUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>[]
           }
           upsert: {
-            args: Prisma.QuizTemplateUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuizTemplatePayload>
+            args: Prisma.GameTemplateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameTemplatePayload>
           }
           aggregate: {
-            args: Prisma.QuizTemplateAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateQuizTemplate>
+            args: Prisma.GameTemplateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateGameTemplate>
           }
           groupBy: {
-            args: Prisma.QuizTemplateGroupByArgs<ExtArgs>
-            result: $Utils.Optional<QuizTemplateGroupByOutputType>[]
+            args: Prisma.GameTemplateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<GameTemplateGroupByOutputType>[]
           }
           count: {
-            args: Prisma.QuizTemplateCountArgs<ExtArgs>
-            result: $Utils.Optional<QuizTemplateCountAggregateOutputType> | number
+            args: Prisma.GameTemplateCountArgs<ExtArgs>
+            result: $Utils.Optional<GameTemplateCountAggregateOutputType> | number
           }
         }
       }
-      QuestionsInQuizTemplate: {
-        payload: Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>
-        fields: Prisma.QuestionsInQuizTemplateFieldRefs
+      QuestionsInGameTemplate: {
+        payload: Prisma.$QuestionsInGameTemplatePayload<ExtArgs>
+        fields: Prisma.QuestionsInGameTemplateFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.QuestionsInQuizTemplateFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload> | null
+            args: Prisma.QuestionsInGameTemplateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.QuestionsInQuizTemplateFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>
+            args: Prisma.QuestionsInGameTemplateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>
           }
           findFirst: {
-            args: Prisma.QuestionsInQuizTemplateFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload> | null
+            args: Prisma.QuestionsInGameTemplateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.QuestionsInQuizTemplateFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>
+            args: Prisma.QuestionsInGameTemplateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>
           }
           findMany: {
-            args: Prisma.QuestionsInQuizTemplateFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>[]
+            args: Prisma.QuestionsInGameTemplateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>[]
           }
           create: {
-            args: Prisma.QuestionsInQuizTemplateCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>
+            args: Prisma.QuestionsInGameTemplateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>
           }
           createMany: {
-            args: Prisma.QuestionsInQuizTemplateCreateManyArgs<ExtArgs>
+            args: Prisma.QuestionsInGameTemplateCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.QuestionsInQuizTemplateCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>[]
+            args: Prisma.QuestionsInGameTemplateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>[]
           }
           delete: {
-            args: Prisma.QuestionsInQuizTemplateDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>
+            args: Prisma.QuestionsInGameTemplateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>
           }
           update: {
-            args: Prisma.QuestionsInQuizTemplateUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>
+            args: Prisma.QuestionsInGameTemplateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>
           }
           deleteMany: {
-            args: Prisma.QuestionsInQuizTemplateDeleteManyArgs<ExtArgs>
+            args: Prisma.QuestionsInGameTemplateDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.QuestionsInQuizTemplateUpdateManyArgs<ExtArgs>
+            args: Prisma.QuestionsInGameTemplateUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.QuestionsInQuizTemplateUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>[]
+            args: Prisma.QuestionsInGameTemplateUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>[]
           }
           upsert: {
-            args: Prisma.QuestionsInQuizTemplateUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$QuestionsInQuizTemplatePayload>
+            args: Prisma.QuestionsInGameTemplateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuestionsInGameTemplatePayload>
           }
           aggregate: {
-            args: Prisma.QuestionsInQuizTemplateAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateQuestionsInQuizTemplate>
+            args: Prisma.QuestionsInGameTemplateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateQuestionsInGameTemplate>
           }
           groupBy: {
-            args: Prisma.QuestionsInQuizTemplateGroupByArgs<ExtArgs>
-            result: $Utils.Optional<QuestionsInQuizTemplateGroupByOutputType>[]
+            args: Prisma.QuestionsInGameTemplateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<QuestionsInGameTemplateGroupByOutputType>[]
           }
           count: {
-            args: Prisma.QuestionsInQuizTemplateCountArgs<ExtArgs>
-            result: $Utils.Optional<QuestionsInQuizTemplateCountAggregateOutputType> | number
+            args: Prisma.QuestionsInGameTemplateCountArgs<ExtArgs>
+            result: $Utils.Optional<QuestionsInGameTemplateCountAggregateOutputType> | number
           }
         }
       }
@@ -1332,11 +1435,12 @@ export namespace Prisma {
     omit?: Prisma.GlobalOmitConfig
   }
   export type GlobalOmitConfig = {
-    teacher?: TeacherOmit
-    player?: PlayerOmit
+    user?: UserOmit
+    teacherProfile?: TeacherProfileOmit
+    studentProfile?: StudentProfileOmit
     question?: QuestionOmit
-    quizTemplate?: QuizTemplateOmit
-    questionsInQuizTemplate?: QuestionsInQuizTemplateOmit
+    gameTemplate?: GameTemplateOmit
+    questionsInGameTemplate?: QuestionsInGameTemplateOmit
     gameInstance?: GameInstanceOmit
     gameParticipant?: GameParticipantOmit
   }
@@ -1429,72 +1533,50 @@ export namespace Prisma {
 
 
   /**
-   * Count Type TeacherCountOutputType
+   * Count Type UserCountOutputType
    */
 
-  export type TeacherCountOutputType = {
-    quizTemplates: number
-    gameInstances: number
-  }
-
-  export type TeacherCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplates?: boolean | TeacherCountOutputTypeCountQuizTemplatesArgs
-    gameInstances?: boolean | TeacherCountOutputTypeCountGameInstancesArgs
-  }
-
-  // Custom InputTypes
-  /**
-   * TeacherCountOutputType without action
-   */
-  export type TeacherCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the TeacherCountOutputType
-     */
-    select?: TeacherCountOutputTypeSelect<ExtArgs> | null
-  }
-
-  /**
-   * TeacherCountOutputType without action
-   */
-  export type TeacherCountOutputTypeCountQuizTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: QuizTemplateWhereInput
-  }
-
-  /**
-   * TeacherCountOutputType without action
-   */
-  export type TeacherCountOutputTypeCountGameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: GameInstanceWhereInput
-  }
-
-
-  /**
-   * Count Type PlayerCountOutputType
-   */
-
-  export type PlayerCountOutputType = {
+  export type UserCountOutputType = {
+    createdGameTemplates: number
+    initiatedGameInstances: number
     gameParticipations: number
   }
 
-  export type PlayerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    gameParticipations?: boolean | PlayerCountOutputTypeCountGameParticipationsArgs
+  export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    createdGameTemplates?: boolean | UserCountOutputTypeCountCreatedGameTemplatesArgs
+    initiatedGameInstances?: boolean | UserCountOutputTypeCountInitiatedGameInstancesArgs
+    gameParticipations?: boolean | UserCountOutputTypeCountGameParticipationsArgs
   }
 
   // Custom InputTypes
   /**
-   * PlayerCountOutputType without action
+   * UserCountOutputType without action
    */
-  export type PlayerCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the PlayerCountOutputType
+     * Select specific fields to fetch from the UserCountOutputType
      */
-    select?: PlayerCountOutputTypeSelect<ExtArgs> | null
+    select?: UserCountOutputTypeSelect<ExtArgs> | null
   }
 
   /**
-   * PlayerCountOutputType without action
+   * UserCountOutputType without action
    */
-  export type PlayerCountOutputTypeCountGameParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserCountOutputTypeCountCreatedGameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GameTemplateWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountInitiatedGameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GameInstanceWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountGameParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: GameParticipantWhereInput
   }
 
@@ -1504,11 +1586,11 @@ export namespace Prisma {
    */
 
   export type QuestionCountOutputType = {
-    quizTemplates: number
+    gameTemplates: number
   }
 
   export type QuestionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplates?: boolean | QuestionCountOutputTypeCountQuizTemplatesArgs
+    gameTemplates?: boolean | QuestionCountOutputTypeCountGameTemplatesArgs
   }
 
   // Custom InputTypes
@@ -1525,47 +1607,47 @@ export namespace Prisma {
   /**
    * QuestionCountOutputType without action
    */
-  export type QuestionCountOutputTypeCountQuizTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: QuestionsInQuizTemplateWhereInput
+  export type QuestionCountOutputTypeCountGameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuestionsInGameTemplateWhereInput
   }
 
 
   /**
-   * Count Type QuizTemplateCountOutputType
+   * Count Type GameTemplateCountOutputType
    */
 
-  export type QuizTemplateCountOutputType = {
+  export type GameTemplateCountOutputType = {
     questions: number
     gameInstances: number
   }
 
-  export type QuizTemplateCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    questions?: boolean | QuizTemplateCountOutputTypeCountQuestionsArgs
-    gameInstances?: boolean | QuizTemplateCountOutputTypeCountGameInstancesArgs
+  export type GameTemplateCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    questions?: boolean | GameTemplateCountOutputTypeCountQuestionsArgs
+    gameInstances?: boolean | GameTemplateCountOutputTypeCountGameInstancesArgs
   }
 
   // Custom InputTypes
   /**
-   * QuizTemplateCountOutputType without action
+   * GameTemplateCountOutputType without action
    */
-  export type QuizTemplateCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplateCountOutputType
+     * Select specific fields to fetch from the GameTemplateCountOutputType
      */
-    select?: QuizTemplateCountOutputTypeSelect<ExtArgs> | null
+    select?: GameTemplateCountOutputTypeSelect<ExtArgs> | null
   }
 
   /**
-   * QuizTemplateCountOutputType without action
+   * GameTemplateCountOutputType without action
    */
-  export type QuizTemplateCountOutputTypeCountQuestionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: QuestionsInQuizTemplateWhereInput
+  export type GameTemplateCountOutputTypeCountQuestionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuestionsInGameTemplateWhereInput
   }
 
   /**
-   * QuizTemplateCountOutputType without action
+   * GameTemplateCountOutputType without action
    */
-  export type QuizTemplateCountOutputTypeCountGameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateCountOutputTypeCountGameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: GameInstanceWhereInput
   }
 
@@ -1606,385 +1688,382 @@ export namespace Prisma {
    */
 
   /**
-   * Model Teacher
+   * Model User
    */
 
-  export type AggregateTeacher = {
-    _count: TeacherCountAggregateOutputType | null
-    _min: TeacherMinAggregateOutputType | null
-    _max: TeacherMaxAggregateOutputType | null
+  export type AggregateUser = {
+    _count: UserCountAggregateOutputType | null
+    _min: UserMinAggregateOutputType | null
+    _max: UserMaxAggregateOutputType | null
   }
 
-  export type TeacherMinAggregateOutputType = {
+  export type UserMinAggregateOutputType = {
     id: string | null
     username: string | null
-    passwordHash: string | null
     email: string | null
-    createdAt: Date | null
+    passwordHash: string | null
     avatarUrl: string | null
-    resetToken: string | null
-    resetTokenExpiresAt: Date | null
+    createdAt: Date | null
+    role: $Enums.UserRole | null
   }
 
-  export type TeacherMaxAggregateOutputType = {
+  export type UserMaxAggregateOutputType = {
     id: string | null
     username: string | null
-    passwordHash: string | null
     email: string | null
-    createdAt: Date | null
+    passwordHash: string | null
     avatarUrl: string | null
-    resetToken: string | null
-    resetTokenExpiresAt: Date | null
+    createdAt: Date | null
+    role: $Enums.UserRole | null
   }
 
-  export type TeacherCountAggregateOutputType = {
+  export type UserCountAggregateOutputType = {
     id: number
     username: number
-    passwordHash: number
     email: number
-    createdAt: number
+    passwordHash: number
     avatarUrl: number
-    resetToken: number
-    resetTokenExpiresAt: number
+    createdAt: number
+    role: number
     _all: number
   }
 
 
-  export type TeacherMinAggregateInputType = {
+  export type UserMinAggregateInputType = {
     id?: true
     username?: true
-    passwordHash?: true
     email?: true
-    createdAt?: true
+    passwordHash?: true
     avatarUrl?: true
-    resetToken?: true
-    resetTokenExpiresAt?: true
+    createdAt?: true
+    role?: true
   }
 
-  export type TeacherMaxAggregateInputType = {
+  export type UserMaxAggregateInputType = {
     id?: true
     username?: true
-    passwordHash?: true
     email?: true
-    createdAt?: true
+    passwordHash?: true
     avatarUrl?: true
-    resetToken?: true
-    resetTokenExpiresAt?: true
+    createdAt?: true
+    role?: true
   }
 
-  export type TeacherCountAggregateInputType = {
+  export type UserCountAggregateInputType = {
     id?: true
     username?: true
-    passwordHash?: true
     email?: true
-    createdAt?: true
+    passwordHash?: true
     avatarUrl?: true
-    resetToken?: true
-    resetTokenExpiresAt?: true
+    createdAt?: true
+    role?: true
     _all?: true
   }
 
-  export type TeacherAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which Teacher to aggregate.
+     * Filter which User to aggregate.
      */
-    where?: TeacherWhereInput
+    where?: UserWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Teachers to fetch.
+     * Determine the order of Users to fetch.
      */
-    orderBy?: TeacherOrderByWithRelationInput | TeacherOrderByWithRelationInput[]
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: TeacherWhereUniqueInput
+    cursor?: UserWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Teachers from the position of the cursor.
+     * Take `±n` Users from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Teachers.
+     * Skip the first `n` Users.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned Teachers
+     * Count returned Users
     **/
-    _count?: true | TeacherCountAggregateInputType
+    _count?: true | UserCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: TeacherMinAggregateInputType
+    _min?: UserMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: TeacherMaxAggregateInputType
+    _max?: UserMaxAggregateInputType
   }
 
-  export type GetTeacherAggregateType<T extends TeacherAggregateArgs> = {
-        [P in keyof T & keyof AggregateTeacher]: P extends '_count' | 'count'
+  export type GetUserAggregateType<T extends UserAggregateArgs> = {
+        [P in keyof T & keyof AggregateUser]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateTeacher[P]>
-      : GetScalarType<T[P], AggregateTeacher[P]>
+        : GetScalarType<T[P], AggregateUser[P]>
+      : GetScalarType<T[P], AggregateUser[P]>
   }
 
 
 
 
-  export type TeacherGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: TeacherWhereInput
-    orderBy?: TeacherOrderByWithAggregationInput | TeacherOrderByWithAggregationInput[]
-    by: TeacherScalarFieldEnum[] | TeacherScalarFieldEnum
-    having?: TeacherScalarWhereWithAggregatesInput
+  export type UserGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserWhereInput
+    orderBy?: UserOrderByWithAggregationInput | UserOrderByWithAggregationInput[]
+    by: UserScalarFieldEnum[] | UserScalarFieldEnum
+    having?: UserScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: TeacherCountAggregateInputType | true
-    _min?: TeacherMinAggregateInputType
-    _max?: TeacherMaxAggregateInputType
+    _count?: UserCountAggregateInputType | true
+    _min?: UserMinAggregateInputType
+    _max?: UserMaxAggregateInputType
   }
 
-  export type TeacherGroupByOutputType = {
+  export type UserGroupByOutputType = {
     id: string
     username: string
-    passwordHash: string
     email: string | null
-    createdAt: Date
+    passwordHash: string | null
     avatarUrl: string | null
-    resetToken: string | null
-    resetTokenExpiresAt: Date | null
-    _count: TeacherCountAggregateOutputType | null
-    _min: TeacherMinAggregateOutputType | null
-    _max: TeacherMaxAggregateOutputType | null
+    createdAt: Date
+    role: $Enums.UserRole
+    _count: UserCountAggregateOutputType | null
+    _min: UserMinAggregateOutputType | null
+    _max: UserMaxAggregateOutputType | null
   }
 
-  type GetTeacherGroupByPayload<T extends TeacherGroupByArgs> = Prisma.PrismaPromise<
+  type GetUserGroupByPayload<T extends UserGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<TeacherGroupByOutputType, T['by']> &
+      PickEnumerable<UserGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof TeacherGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof UserGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], TeacherGroupByOutputType[P]>
-            : GetScalarType<T[P], TeacherGroupByOutputType[P]>
+              : GetScalarType<T[P], UserGroupByOutputType[P]>
+            : GetScalarType<T[P], UserGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type TeacherSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type UserSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     username?: boolean
-    passwordHash?: boolean
     email?: boolean
-    createdAt?: boolean
+    passwordHash?: boolean
     avatarUrl?: boolean
-    resetToken?: boolean
-    resetTokenExpiresAt?: boolean
-    quizTemplates?: boolean | Teacher$quizTemplatesArgs<ExtArgs>
-    gameInstances?: boolean | Teacher$gameInstancesArgs<ExtArgs>
-    _count?: boolean | TeacherCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["teacher"]>
+    createdAt?: boolean
+    role?: boolean
+    createdGameTemplates?: boolean | User$createdGameTemplatesArgs<ExtArgs>
+    initiatedGameInstances?: boolean | User$initiatedGameInstancesArgs<ExtArgs>
+    gameParticipations?: boolean | User$gameParticipationsArgs<ExtArgs>
+    teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
+    studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
+    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["user"]>
 
-  export type TeacherSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     username?: boolean
-    passwordHash?: boolean
     email?: boolean
-    createdAt?: boolean
+    passwordHash?: boolean
     avatarUrl?: boolean
-    resetToken?: boolean
-    resetTokenExpiresAt?: boolean
-  }, ExtArgs["result"]["teacher"]>
+    createdAt?: boolean
+    role?: boolean
+  }, ExtArgs["result"]["user"]>
 
-  export type TeacherSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     username?: boolean
-    passwordHash?: boolean
     email?: boolean
-    createdAt?: boolean
+    passwordHash?: boolean
     avatarUrl?: boolean
-    resetToken?: boolean
-    resetTokenExpiresAt?: boolean
-  }, ExtArgs["result"]["teacher"]>
+    createdAt?: boolean
+    role?: boolean
+  }, ExtArgs["result"]["user"]>
 
-  export type TeacherSelectScalar = {
+  export type UserSelectScalar = {
     id?: boolean
     username?: boolean
-    passwordHash?: boolean
     email?: boolean
-    createdAt?: boolean
+    passwordHash?: boolean
     avatarUrl?: boolean
-    resetToken?: boolean
-    resetTokenExpiresAt?: boolean
+    createdAt?: boolean
+    role?: boolean
   }
 
-  export type TeacherOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "passwordHash" | "email" | "createdAt" | "avatarUrl" | "resetToken" | "resetTokenExpiresAt", ExtArgs["result"]["teacher"]>
-  export type TeacherInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplates?: boolean | Teacher$quizTemplatesArgs<ExtArgs>
-    gameInstances?: boolean | Teacher$gameInstancesArgs<ExtArgs>
-    _count?: boolean | TeacherCountOutputTypeDefaultArgs<ExtArgs>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "avatarUrl" | "createdAt" | "role", ExtArgs["result"]["user"]>
+  export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    createdGameTemplates?: boolean | User$createdGameTemplatesArgs<ExtArgs>
+    initiatedGameInstances?: boolean | User$initiatedGameInstancesArgs<ExtArgs>
+    gameParticipations?: boolean | User$gameParticipationsArgs<ExtArgs>
+    teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
+    studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
+    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type TeacherIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type TeacherIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
-  export type $TeacherPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "Teacher"
+  export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "User"
     objects: {
-      quizTemplates: Prisma.$QuizTemplatePayload<ExtArgs>[]
-      gameInstances: Prisma.$GameInstancePayload<ExtArgs>[]
+      createdGameTemplates: Prisma.$GameTemplatePayload<ExtArgs>[]
+      initiatedGameInstances: Prisma.$GameInstancePayload<ExtArgs>[]
+      gameParticipations: Prisma.$GameParticipantPayload<ExtArgs>[]
+      teacherProfile: Prisma.$TeacherProfilePayload<ExtArgs> | null
+      studentProfile: Prisma.$StudentProfilePayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       username: string
-      passwordHash: string
       email: string | null
-      createdAt: Date
+      passwordHash: string | null
       avatarUrl: string | null
-      resetToken: string | null
-      resetTokenExpiresAt: Date | null
-    }, ExtArgs["result"]["teacher"]>
+      createdAt: Date
+      role: $Enums.UserRole
+    }, ExtArgs["result"]["user"]>
     composites: {}
   }
 
-  type TeacherGetPayload<S extends boolean | null | undefined | TeacherDefaultArgs> = $Result.GetResult<Prisma.$TeacherPayload, S>
+  type UserGetPayload<S extends boolean | null | undefined | UserDefaultArgs> = $Result.GetResult<Prisma.$UserPayload, S>
 
-  type TeacherCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<TeacherFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: TeacherCountAggregateInputType | true
+  type UserCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserCountAggregateInputType | true
     }
 
-  export interface TeacherDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Teacher'], meta: { name: 'Teacher' } }
+  export interface UserDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['User'], meta: { name: 'User' } }
     /**
-     * Find zero or one Teacher that matches the filter.
-     * @param {TeacherFindUniqueArgs} args - Arguments to find a Teacher
+     * Find zero or one User that matches the filter.
+     * @param {UserFindUniqueArgs} args - Arguments to find a User
      * @example
-     * // Get one Teacher
-     * const teacher = await prisma.teacher.findUnique({
+     * // Get one User
+     * const user = await prisma.user.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends TeacherFindUniqueArgs>(args: SelectSubset<T, TeacherFindUniqueArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends UserFindUniqueArgs>(args: SelectSubset<T, UserFindUniqueArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one Teacher that matches the filter or throw an error with `error.code='P2025'`
+     * Find one User that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {TeacherFindUniqueOrThrowArgs} args - Arguments to find a Teacher
+     * @param {UserFindUniqueOrThrowArgs} args - Arguments to find a User
      * @example
-     * // Get one Teacher
-     * const teacher = await prisma.teacher.findUniqueOrThrow({
+     * // Get one User
+     * const user = await prisma.user.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends TeacherFindUniqueOrThrowArgs>(args: SelectSubset<T, TeacherFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends UserFindUniqueOrThrowArgs>(args: SelectSubset<T, UserFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first Teacher that matches the filter.
+     * Find the first User that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TeacherFindFirstArgs} args - Arguments to find a Teacher
+     * @param {UserFindFirstArgs} args - Arguments to find a User
      * @example
-     * // Get one Teacher
-     * const teacher = await prisma.teacher.findFirst({
+     * // Get one User
+     * const user = await prisma.user.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends TeacherFindFirstArgs>(args?: SelectSubset<T, TeacherFindFirstArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends UserFindFirstArgs>(args?: SelectSubset<T, UserFindFirstArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first Teacher that matches the filter or
+     * Find the first User that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TeacherFindFirstOrThrowArgs} args - Arguments to find a Teacher
+     * @param {UserFindFirstOrThrowArgs} args - Arguments to find a User
      * @example
-     * // Get one Teacher
-     * const teacher = await prisma.teacher.findFirstOrThrow({
+     * // Get one User
+     * const user = await prisma.user.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends TeacherFindFirstOrThrowArgs>(args?: SelectSubset<T, TeacherFindFirstOrThrowArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends UserFindFirstOrThrowArgs>(args?: SelectSubset<T, UserFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more Teachers that matches the filter.
+     * Find zero or more Users that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TeacherFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {UserFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all Teachers
-     * const teachers = await prisma.teacher.findMany()
+     * // Get all Users
+     * const users = await prisma.user.findMany()
      * 
-     * // Get first 10 Teachers
-     * const teachers = await prisma.teacher.findMany({ take: 10 })
+     * // Get first 10 Users
+     * const users = await prisma.user.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const teacherWithIdOnly = await prisma.teacher.findMany({ select: { id: true } })
+     * const userWithIdOnly = await prisma.user.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends TeacherFindManyArgs>(args?: SelectSubset<T, TeacherFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends UserFindManyArgs>(args?: SelectSubset<T, UserFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a Teacher.
-     * @param {TeacherCreateArgs} args - Arguments to create a Teacher.
+     * Create a User.
+     * @param {UserCreateArgs} args - Arguments to create a User.
      * @example
-     * // Create one Teacher
-     * const Teacher = await prisma.teacher.create({
+     * // Create one User
+     * const User = await prisma.user.create({
      *   data: {
-     *     // ... data to create a Teacher
+     *     // ... data to create a User
      *   }
      * })
      * 
      */
-    create<T extends TeacherCreateArgs>(args: SelectSubset<T, TeacherCreateArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends UserCreateArgs>(args: SelectSubset<T, UserCreateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many Teachers.
-     * @param {TeacherCreateManyArgs} args - Arguments to create many Teachers.
+     * Create many Users.
+     * @param {UserCreateManyArgs} args - Arguments to create many Users.
      * @example
-     * // Create many Teachers
-     * const teacher = await prisma.teacher.createMany({
+     * // Create many Users
+     * const user = await prisma.user.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends TeacherCreateManyArgs>(args?: SelectSubset<T, TeacherCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends UserCreateManyArgs>(args?: SelectSubset<T, UserCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Teachers and returns the data saved in the database.
-     * @param {TeacherCreateManyAndReturnArgs} args - Arguments to create many Teachers.
+     * Create many Users and returns the data saved in the database.
+     * @param {UserCreateManyAndReturnArgs} args - Arguments to create many Users.
      * @example
-     * // Create many Teachers
-     * const teacher = await prisma.teacher.createManyAndReturn({
+     * // Create many Users
+     * const user = await prisma.user.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many Teachers and only return the `id`
-     * const teacherWithIdOnly = await prisma.teacher.createManyAndReturn({
+     * // Create many Users and only return the `id`
+     * const userWithIdOnly = await prisma.user.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -1994,28 +2073,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends TeacherCreateManyAndReturnArgs>(args?: SelectSubset<T, TeacherCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends UserCreateManyAndReturnArgs>(args?: SelectSubset<T, UserCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a Teacher.
-     * @param {TeacherDeleteArgs} args - Arguments to delete one Teacher.
+     * Delete a User.
+     * @param {UserDeleteArgs} args - Arguments to delete one User.
      * @example
-     * // Delete one Teacher
-     * const Teacher = await prisma.teacher.delete({
+     * // Delete one User
+     * const User = await prisma.user.delete({
      *   where: {
-     *     // ... filter to delete one Teacher
+     *     // ... filter to delete one User
      *   }
      * })
      * 
      */
-    delete<T extends TeacherDeleteArgs>(args: SelectSubset<T, TeacherDeleteArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends UserDeleteArgs>(args: SelectSubset<T, UserDeleteArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one Teacher.
-     * @param {TeacherUpdateArgs} args - Arguments to update one Teacher.
+     * Update one User.
+     * @param {UserUpdateArgs} args - Arguments to update one User.
      * @example
-     * // Update one Teacher
-     * const teacher = await prisma.teacher.update({
+     * // Update one User
+     * const user = await prisma.user.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -2025,30 +2104,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends TeacherUpdateArgs>(args: SelectSubset<T, TeacherUpdateArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends UserUpdateArgs>(args: SelectSubset<T, UserUpdateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more Teachers.
-     * @param {TeacherDeleteManyArgs} args - Arguments to filter Teachers to delete.
+     * Delete zero or more Users.
+     * @param {UserDeleteManyArgs} args - Arguments to filter Users to delete.
      * @example
-     * // Delete a few Teachers
-     * const { count } = await prisma.teacher.deleteMany({
+     * // Delete a few Users
+     * const { count } = await prisma.user.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends TeacherDeleteManyArgs>(args?: SelectSubset<T, TeacherDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends UserDeleteManyArgs>(args?: SelectSubset<T, UserDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more Teachers.
+     * Update zero or more Users.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TeacherUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {UserUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many Teachers
-     * const teacher = await prisma.teacher.updateMany({
+     * // Update many Users
+     * const user = await prisma.user.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -2058,14 +2137,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends TeacherUpdateManyArgs>(args: SelectSubset<T, TeacherUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends UserUpdateManyArgs>(args: SelectSubset<T, UserUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more Teachers and returns the data updated in the database.
-     * @param {TeacherUpdateManyAndReturnArgs} args - Arguments to update many Teachers.
+     * Update zero or more Users and returns the data updated in the database.
+     * @param {UserUpdateManyAndReturnArgs} args - Arguments to update many Users.
      * @example
-     * // Update many Teachers
-     * const teacher = await prisma.teacher.updateManyAndReturn({
+     * // Update many Users
+     * const user = await prisma.user.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -2074,8 +2153,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more Teachers and only return the `id`
-     * const teacherWithIdOnly = await prisma.teacher.updateManyAndReturn({
+     * // Update zero or more Users and only return the `id`
+     * const userWithIdOnly = await prisma.user.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -2088,56 +2167,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends TeacherUpdateManyAndReturnArgs>(args: SelectSubset<T, TeacherUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends UserUpdateManyAndReturnArgs>(args: SelectSubset<T, UserUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one Teacher.
-     * @param {TeacherUpsertArgs} args - Arguments to update or create a Teacher.
+     * Create or update one User.
+     * @param {UserUpsertArgs} args - Arguments to update or create a User.
      * @example
-     * // Update or create a Teacher
-     * const teacher = await prisma.teacher.upsert({
+     * // Update or create a User
+     * const user = await prisma.user.upsert({
      *   create: {
-     *     // ... data to create a Teacher
+     *     // ... data to create a User
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the Teacher we want to update
+     *     // ... the filter for the User we want to update
      *   }
      * })
      */
-    upsert<T extends TeacherUpsertArgs>(args: SelectSubset<T, TeacherUpsertArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends UserUpsertArgs>(args: SelectSubset<T, UserUpsertArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of Teachers.
+     * Count the number of Users.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TeacherCountArgs} args - Arguments to filter Teachers to count.
+     * @param {UserCountArgs} args - Arguments to filter Users to count.
      * @example
-     * // Count the number of Teachers
-     * const count = await prisma.teacher.count({
+     * // Count the number of Users
+     * const count = await prisma.user.count({
      *   where: {
-     *     // ... the filter for the Teachers we want to count
+     *     // ... the filter for the Users we want to count
      *   }
      * })
     **/
-    count<T extends TeacherCountArgs>(
-      args?: Subset<T, TeacherCountArgs>,
+    count<T extends UserCountArgs>(
+      args?: Subset<T, UserCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], TeacherCountAggregateOutputType>
+          : GetScalarType<T['select'], UserCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a Teacher.
+     * Allows you to perform aggregations operations on a User.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TeacherAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {UserAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -2157,13 +2236,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends TeacherAggregateArgs>(args: Subset<T, TeacherAggregateArgs>): Prisma.PrismaPromise<GetTeacherAggregateType<T>>
+    aggregate<T extends UserAggregateArgs>(args: Subset<T, UserAggregateArgs>): Prisma.PrismaPromise<GetUserAggregateType<T>>
 
     /**
-     * Group by Teacher.
+     * Group by User.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TeacherGroupByArgs} args - Group by arguments.
+     * @param {UserGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -2178,14 +2257,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends TeacherGroupByArgs,
+      T extends UserGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: TeacherGroupByArgs['orderBy'] }
-        : { orderBy?: TeacherGroupByArgs['orderBy'] },
+        ? { orderBy: UserGroupByArgs['orderBy'] }
+        : { orderBy?: UserGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -2234,23 +2313,26 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, TeacherGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTeacherGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, UserGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the Teacher model
+   * Fields of the User model
    */
-  readonly fields: TeacherFieldRefs;
+  readonly fields: UserFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for Teacher.
+   * The delegate class that acts as a "Promise-like" for User.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__TeacherClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    quizTemplates<T extends Teacher$quizTemplatesArgs<ExtArgs> = {}>(args?: Subset<T, Teacher$quizTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    gameInstances<T extends Teacher$gameInstancesArgs<ExtArgs> = {}>(args?: Subset<T, Teacher$gameInstancesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameInstancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    createdGameTemplates<T extends User$createdGameTemplatesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdGameTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    initiatedGameInstances<T extends User$initiatedGameInstancesArgs<ExtArgs> = {}>(args?: Subset<T, User$initiatedGameInstancesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameInstancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    gameParticipations<T extends User$gameParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, User$gameParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    teacherProfile<T extends User$teacherProfileArgs<ExtArgs> = {}>(args?: Subset<T, User$teacherProfileArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    studentProfile<T extends User$studentProfileArgs<ExtArgs> = {}>(args?: Subset<T, User$studentProfileArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2277,432 +2359,431 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the Teacher model
+   * Fields of the User model
    */
-  interface TeacherFieldRefs {
-    readonly id: FieldRef<"Teacher", 'String'>
-    readonly username: FieldRef<"Teacher", 'String'>
-    readonly passwordHash: FieldRef<"Teacher", 'String'>
-    readonly email: FieldRef<"Teacher", 'String'>
-    readonly createdAt: FieldRef<"Teacher", 'DateTime'>
-    readonly avatarUrl: FieldRef<"Teacher", 'String'>
-    readonly resetToken: FieldRef<"Teacher", 'String'>
-    readonly resetTokenExpiresAt: FieldRef<"Teacher", 'DateTime'>
+  interface UserFieldRefs {
+    readonly id: FieldRef<"User", 'String'>
+    readonly username: FieldRef<"User", 'String'>
+    readonly email: FieldRef<"User", 'String'>
+    readonly passwordHash: FieldRef<"User", 'String'>
+    readonly avatarUrl: FieldRef<"User", 'String'>
+    readonly createdAt: FieldRef<"User", 'DateTime'>
+    readonly role: FieldRef<"User", 'UserRole'>
   }
     
 
   // Custom InputTypes
   /**
-   * Teacher findUnique
+   * User findUnique
    */
-  export type TeacherFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * Filter, which Teacher to fetch.
+     * Filter, which User to fetch.
      */
-    where: TeacherWhereUniqueInput
+    where: UserWhereUniqueInput
   }
 
   /**
-   * Teacher findUniqueOrThrow
+   * User findUniqueOrThrow
    */
-  export type TeacherFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * Filter, which Teacher to fetch.
+     * Filter, which User to fetch.
      */
-    where: TeacherWhereUniqueInput
+    where: UserWhereUniqueInput
   }
 
   /**
-   * Teacher findFirst
+   * User findFirst
    */
-  export type TeacherFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * Filter, which Teacher to fetch.
+     * Filter, which User to fetch.
      */
-    where?: TeacherWhereInput
+    where?: UserWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Teachers to fetch.
+     * Determine the order of Users to fetch.
      */
-    orderBy?: TeacherOrderByWithRelationInput | TeacherOrderByWithRelationInput[]
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for Teachers.
+     * Sets the position for searching for Users.
      */
-    cursor?: TeacherWhereUniqueInput
+    cursor?: UserWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Teachers from the position of the cursor.
+     * Take `±n` Users from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Teachers.
+     * Skip the first `n` Users.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of Teachers.
+     * Filter by unique combinations of Users.
      */
-    distinct?: TeacherScalarFieldEnum | TeacherScalarFieldEnum[]
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
   }
 
   /**
-   * Teacher findFirstOrThrow
+   * User findFirstOrThrow
    */
-  export type TeacherFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * Filter, which Teacher to fetch.
+     * Filter, which User to fetch.
      */
-    where?: TeacherWhereInput
+    where?: UserWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Teachers to fetch.
+     * Determine the order of Users to fetch.
      */
-    orderBy?: TeacherOrderByWithRelationInput | TeacherOrderByWithRelationInput[]
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for Teachers.
+     * Sets the position for searching for Users.
      */
-    cursor?: TeacherWhereUniqueInput
+    cursor?: UserWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Teachers from the position of the cursor.
+     * Take `±n` Users from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Teachers.
+     * Skip the first `n` Users.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of Teachers.
+     * Filter by unique combinations of Users.
      */
-    distinct?: TeacherScalarFieldEnum | TeacherScalarFieldEnum[]
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
   }
 
   /**
-   * Teacher findMany
+   * User findMany
    */
-  export type TeacherFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * Filter, which Teachers to fetch.
+     * Filter, which Users to fetch.
      */
-    where?: TeacherWhereInput
+    where?: UserWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Teachers to fetch.
+     * Determine the order of Users to fetch.
      */
-    orderBy?: TeacherOrderByWithRelationInput | TeacherOrderByWithRelationInput[]
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing Teachers.
+     * Sets the position for listing Users.
      */
-    cursor?: TeacherWhereUniqueInput
+    cursor?: UserWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Teachers from the position of the cursor.
+     * Take `±n` Users from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Teachers.
+     * Skip the first `n` Users.
      */
     skip?: number
-    distinct?: TeacherScalarFieldEnum | TeacherScalarFieldEnum[]
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
   }
 
   /**
-   * Teacher create
+   * User create
    */
-  export type TeacherCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * The data needed to create a Teacher.
+     * The data needed to create a User.
      */
-    data: XOR<TeacherCreateInput, TeacherUncheckedCreateInput>
+    data: XOR<UserCreateInput, UserUncheckedCreateInput>
   }
 
   /**
-   * Teacher createMany
+   * User createMany
    */
-  export type TeacherCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many Teachers.
+     * The data used to create many Users.
      */
-    data: TeacherCreateManyInput | TeacherCreateManyInput[]
+    data: UserCreateManyInput | UserCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * Teacher createManyAndReturn
+   * User createManyAndReturn
    */
-  export type TeacherCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelectCreateManyAndReturn<ExtArgs> | null
+    select?: UserSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
-     * The data used to create many Teachers.
+     * The data used to create many Users.
      */
-    data: TeacherCreateManyInput | TeacherCreateManyInput[]
+    data: UserCreateManyInput | UserCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * Teacher update
+   * User update
    */
-  export type TeacherUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * The data needed to update a Teacher.
+     * The data needed to update a User.
      */
-    data: XOR<TeacherUpdateInput, TeacherUncheckedUpdateInput>
+    data: XOR<UserUpdateInput, UserUncheckedUpdateInput>
     /**
-     * Choose, which Teacher to update.
+     * Choose, which User to update.
      */
-    where: TeacherWhereUniqueInput
+    where: UserWhereUniqueInput
   }
 
   /**
-   * Teacher updateMany
+   * User updateMany
    */
-  export type TeacherUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update Teachers.
+     * The data used to update Users.
      */
-    data: XOR<TeacherUpdateManyMutationInput, TeacherUncheckedUpdateManyInput>
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
     /**
-     * Filter which Teachers to update
+     * Filter which Users to update
      */
-    where?: TeacherWhereInput
+    where?: UserWhereInput
     /**
-     * Limit how many Teachers to update.
+     * Limit how many Users to update.
      */
     limit?: number
   }
 
   /**
-   * Teacher updateManyAndReturn
+   * User updateManyAndReturn
    */
-  export type TeacherUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: UserSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
-     * The data used to update Teachers.
+     * The data used to update Users.
      */
-    data: XOR<TeacherUpdateManyMutationInput, TeacherUncheckedUpdateManyInput>
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
     /**
-     * Filter which Teachers to update
+     * Filter which Users to update
      */
-    where?: TeacherWhereInput
+    where?: UserWhereInput
     /**
-     * Limit how many Teachers to update.
+     * Limit how many Users to update.
      */
     limit?: number
   }
 
   /**
-   * Teacher upsert
+   * User upsert
    */
-  export type TeacherUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * The filter to search for the Teacher to update in case it exists.
+     * The filter to search for the User to update in case it exists.
      */
-    where: TeacherWhereUniqueInput
+    where: UserWhereUniqueInput
     /**
-     * In case the Teacher found by the `where` argument doesn't exist, create a new Teacher with this data.
+     * In case the User found by the `where` argument doesn't exist, create a new User with this data.
      */
-    create: XOR<TeacherCreateInput, TeacherUncheckedCreateInput>
+    create: XOR<UserCreateInput, UserUncheckedCreateInput>
     /**
-     * In case the Teacher was found with the provided `where` argument, update it with this data.
+     * In case the User was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<TeacherUpdateInput, TeacherUncheckedUpdateInput>
+    update: XOR<UserUpdateInput, UserUncheckedUpdateInput>
   }
 
   /**
-   * Teacher delete
+   * User delete
    */
-  export type TeacherDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: UserInclude<ExtArgs> | null
     /**
-     * Filter which Teacher to delete.
+     * Filter which User to delete.
      */
-    where: TeacherWhereUniqueInput
+    where: UserWhereUniqueInput
   }
 
   /**
-   * Teacher deleteMany
+   * User deleteMany
    */
-  export type TeacherDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which Teachers to delete
+     * Filter which Users to delete
      */
-    where?: TeacherWhereInput
+    where?: UserWhereInput
     /**
-     * Limit how many Teachers to delete.
+     * Limit how many Users to delete.
      */
     limit?: number
   }
 
   /**
-   * Teacher.quizTemplates
+   * User.createdGameTemplates
    */
-  export type Teacher$quizTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$createdGameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
-    where?: QuizTemplateWhereInput
-    orderBy?: QuizTemplateOrderByWithRelationInput | QuizTemplateOrderByWithRelationInput[]
-    cursor?: QuizTemplateWhereUniqueInput
+    include?: GameTemplateInclude<ExtArgs> | null
+    where?: GameTemplateWhereInput
+    orderBy?: GameTemplateOrderByWithRelationInput | GameTemplateOrderByWithRelationInput[]
+    cursor?: GameTemplateWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: QuizTemplateScalarFieldEnum | QuizTemplateScalarFieldEnum[]
+    distinct?: GameTemplateScalarFieldEnum | GameTemplateScalarFieldEnum[]
   }
 
   /**
-   * Teacher.gameInstances
+   * User.initiatedGameInstances
    */
-  export type Teacher$gameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$initiatedGameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the GameInstance
      */
@@ -2724,389 +2805,383 @@ export namespace Prisma {
   }
 
   /**
-   * Teacher without action
+   * User.gameParticipations
    */
-  export type TeacherDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$gameParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the GameParticipant
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: GameParticipantSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the GameParticipant
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: GameParticipantOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
+    include?: GameParticipantInclude<ExtArgs> | null
+    where?: GameParticipantWhereInput
+    orderBy?: GameParticipantOrderByWithRelationInput | GameParticipantOrderByWithRelationInput[]
+    cursor?: GameParticipantWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: GameParticipantScalarFieldEnum | GameParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * User.teacherProfile
+   */
+  export type User$teacherProfileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeacherProfile
+     */
+    select?: TeacherProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeacherProfile
+     */
+    omit?: TeacherProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeacherProfileInclude<ExtArgs> | null
+    where?: TeacherProfileWhereInput
+  }
+
+  /**
+   * User.studentProfile
+   */
+  export type User$studentProfileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    where?: StudentProfileWhereInput
+  }
+
+  /**
+   * User without action
+   */
+  export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
   }
 
 
   /**
-   * Model Player
+   * Model TeacherProfile
    */
 
-  export type AggregatePlayer = {
-    _count: PlayerCountAggregateOutputType | null
-    _min: PlayerMinAggregateOutputType | null
-    _max: PlayerMaxAggregateOutputType | null
+  export type AggregateTeacherProfile = {
+    _count: TeacherProfileCountAggregateOutputType | null
+    _min: TeacherProfileMinAggregateOutputType | null
+    _max: TeacherProfileMaxAggregateOutputType | null
   }
 
-  export type PlayerMinAggregateOutputType = {
+  export type TeacherProfileMinAggregateOutputType = {
     id: string | null
-    username: string | null
-    cookieId: string | null
-    email: string | null
-    passwordHash: string | null
-    createdAt: Date | null
-    avatarUrl: string | null
   }
 
-  export type PlayerMaxAggregateOutputType = {
+  export type TeacherProfileMaxAggregateOutputType = {
     id: string | null
-    username: string | null
-    cookieId: string | null
-    email: string | null
-    passwordHash: string | null
-    createdAt: Date | null
-    avatarUrl: string | null
   }
 
-  export type PlayerCountAggregateOutputType = {
+  export type TeacherProfileCountAggregateOutputType = {
     id: number
-    username: number
-    cookieId: number
-    email: number
-    passwordHash: number
-    createdAt: number
-    avatarUrl: number
     _all: number
   }
 
 
-  export type PlayerMinAggregateInputType = {
+  export type TeacherProfileMinAggregateInputType = {
     id?: true
-    username?: true
-    cookieId?: true
-    email?: true
-    passwordHash?: true
-    createdAt?: true
-    avatarUrl?: true
   }
 
-  export type PlayerMaxAggregateInputType = {
+  export type TeacherProfileMaxAggregateInputType = {
     id?: true
-    username?: true
-    cookieId?: true
-    email?: true
-    passwordHash?: true
-    createdAt?: true
-    avatarUrl?: true
   }
 
-  export type PlayerCountAggregateInputType = {
+  export type TeacherProfileCountAggregateInputType = {
     id?: true
-    username?: true
-    cookieId?: true
-    email?: true
-    passwordHash?: true
-    createdAt?: true
-    avatarUrl?: true
     _all?: true
   }
 
-  export type PlayerAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which Player to aggregate.
+     * Filter which TeacherProfile to aggregate.
      */
-    where?: PlayerWhereInput
+    where?: TeacherProfileWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Players to fetch.
+     * Determine the order of TeacherProfiles to fetch.
      */
-    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    orderBy?: TeacherProfileOrderByWithRelationInput | TeacherProfileOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: PlayerWhereUniqueInput
+    cursor?: TeacherProfileWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Players from the position of the cursor.
+     * Take `±n` TeacherProfiles from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Players.
+     * Skip the first `n` TeacherProfiles.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned Players
+     * Count returned TeacherProfiles
     **/
-    _count?: true | PlayerCountAggregateInputType
+    _count?: true | TeacherProfileCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: PlayerMinAggregateInputType
+    _min?: TeacherProfileMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: PlayerMaxAggregateInputType
+    _max?: TeacherProfileMaxAggregateInputType
   }
 
-  export type GetPlayerAggregateType<T extends PlayerAggregateArgs> = {
-        [P in keyof T & keyof AggregatePlayer]: P extends '_count' | 'count'
+  export type GetTeacherProfileAggregateType<T extends TeacherProfileAggregateArgs> = {
+        [P in keyof T & keyof AggregateTeacherProfile]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregatePlayer[P]>
-      : GetScalarType<T[P], AggregatePlayer[P]>
+        : GetScalarType<T[P], AggregateTeacherProfile[P]>
+      : GetScalarType<T[P], AggregateTeacherProfile[P]>
   }
 
 
 
 
-  export type PlayerGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: PlayerWhereInput
-    orderBy?: PlayerOrderByWithAggregationInput | PlayerOrderByWithAggregationInput[]
-    by: PlayerScalarFieldEnum[] | PlayerScalarFieldEnum
-    having?: PlayerScalarWhereWithAggregatesInput
+  export type TeacherProfileGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeacherProfileWhereInput
+    orderBy?: TeacherProfileOrderByWithAggregationInput | TeacherProfileOrderByWithAggregationInput[]
+    by: TeacherProfileScalarFieldEnum[] | TeacherProfileScalarFieldEnum
+    having?: TeacherProfileScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: PlayerCountAggregateInputType | true
-    _min?: PlayerMinAggregateInputType
-    _max?: PlayerMaxAggregateInputType
+    _count?: TeacherProfileCountAggregateInputType | true
+    _min?: TeacherProfileMinAggregateInputType
+    _max?: TeacherProfileMaxAggregateInputType
   }
 
-  export type PlayerGroupByOutputType = {
+  export type TeacherProfileGroupByOutputType = {
     id: string
-    username: string
-    cookieId: string
-    email: string | null
-    passwordHash: string | null
-    createdAt: Date
-    avatarUrl: string | null
-    _count: PlayerCountAggregateOutputType | null
-    _min: PlayerMinAggregateOutputType | null
-    _max: PlayerMaxAggregateOutputType | null
+    _count: TeacherProfileCountAggregateOutputType | null
+    _min: TeacherProfileMinAggregateOutputType | null
+    _max: TeacherProfileMaxAggregateOutputType | null
   }
 
-  type GetPlayerGroupByPayload<T extends PlayerGroupByArgs> = Prisma.PrismaPromise<
+  type GetTeacherProfileGroupByPayload<T extends TeacherProfileGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<PlayerGroupByOutputType, T['by']> &
+      PickEnumerable<TeacherProfileGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof PlayerGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof TeacherProfileGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], PlayerGroupByOutputType[P]>
-            : GetScalarType<T[P], PlayerGroupByOutputType[P]>
+              : GetScalarType<T[P], TeacherProfileGroupByOutputType[P]>
+            : GetScalarType<T[P], TeacherProfileGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type PlayerSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TeacherProfileSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    username?: boolean
-    cookieId?: boolean
-    email?: boolean
-    passwordHash?: boolean
-    createdAt?: boolean
-    avatarUrl?: boolean
-    gameParticipations?: boolean | Player$gameParticipationsArgs<ExtArgs>
-    _count?: boolean | PlayerCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["player"]>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teacherProfile"]>
 
-  export type PlayerSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TeacherProfileSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    username?: boolean
-    cookieId?: boolean
-    email?: boolean
-    passwordHash?: boolean
-    createdAt?: boolean
-    avatarUrl?: boolean
-  }, ExtArgs["result"]["player"]>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teacherProfile"]>
 
-  export type PlayerSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TeacherProfileSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    username?: boolean
-    cookieId?: boolean
-    email?: boolean
-    passwordHash?: boolean
-    createdAt?: boolean
-    avatarUrl?: boolean
-  }, ExtArgs["result"]["player"]>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teacherProfile"]>
 
-  export type PlayerSelectScalar = {
+  export type TeacherProfileSelectScalar = {
     id?: boolean
-    username?: boolean
-    cookieId?: boolean
-    email?: boolean
-    passwordHash?: boolean
-    createdAt?: boolean
-    avatarUrl?: boolean
   }
 
-  export type PlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "cookieId" | "email" | "passwordHash" | "createdAt" | "avatarUrl", ExtArgs["result"]["player"]>
-  export type PlayerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    gameParticipations?: boolean | Player$gameParticipationsArgs<ExtArgs>
-    _count?: boolean | PlayerCountOutputTypeDefaultArgs<ExtArgs>
+  export type TeacherProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id", ExtArgs["result"]["teacherProfile"]>
+  export type TeacherProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
-  export type PlayerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type PlayerIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type TeacherProfileIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type TeacherProfileIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
 
-  export type $PlayerPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "Player"
+  export type $TeacherProfilePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TeacherProfile"
     objects: {
-      gameParticipations: Prisma.$GameParticipantPayload<ExtArgs>[]
+      user: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      username: string
-      cookieId: string
-      email: string | null
-      passwordHash: string | null
-      createdAt: Date
-      avatarUrl: string | null
-    }, ExtArgs["result"]["player"]>
+    }, ExtArgs["result"]["teacherProfile"]>
     composites: {}
   }
 
-  type PlayerGetPayload<S extends boolean | null | undefined | PlayerDefaultArgs> = $Result.GetResult<Prisma.$PlayerPayload, S>
+  type TeacherProfileGetPayload<S extends boolean | null | undefined | TeacherProfileDefaultArgs> = $Result.GetResult<Prisma.$TeacherProfilePayload, S>
 
-  type PlayerCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<PlayerFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: PlayerCountAggregateInputType | true
+  type TeacherProfileCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TeacherProfileFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TeacherProfileCountAggregateInputType | true
     }
 
-  export interface PlayerDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Player'], meta: { name: 'Player' } }
+  export interface TeacherProfileDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TeacherProfile'], meta: { name: 'TeacherProfile' } }
     /**
-     * Find zero or one Player that matches the filter.
-     * @param {PlayerFindUniqueArgs} args - Arguments to find a Player
+     * Find zero or one TeacherProfile that matches the filter.
+     * @param {TeacherProfileFindUniqueArgs} args - Arguments to find a TeacherProfile
      * @example
-     * // Get one Player
-     * const player = await prisma.player.findUnique({
+     * // Get one TeacherProfile
+     * const teacherProfile = await prisma.teacherProfile.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends PlayerFindUniqueArgs>(args: SelectSubset<T, PlayerFindUniqueArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends TeacherProfileFindUniqueArgs>(args: SelectSubset<T, TeacherProfileFindUniqueArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one Player that matches the filter or throw an error with `error.code='P2025'`
+     * Find one TeacherProfile that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {PlayerFindUniqueOrThrowArgs} args - Arguments to find a Player
+     * @param {TeacherProfileFindUniqueOrThrowArgs} args - Arguments to find a TeacherProfile
      * @example
-     * // Get one Player
-     * const player = await prisma.player.findUniqueOrThrow({
+     * // Get one TeacherProfile
+     * const teacherProfile = await prisma.teacherProfile.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends PlayerFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends TeacherProfileFindUniqueOrThrowArgs>(args: SelectSubset<T, TeacherProfileFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first Player that matches the filter.
+     * Find the first TeacherProfile that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {PlayerFindFirstArgs} args - Arguments to find a Player
+     * @param {TeacherProfileFindFirstArgs} args - Arguments to find a TeacherProfile
      * @example
-     * // Get one Player
-     * const player = await prisma.player.findFirst({
+     * // Get one TeacherProfile
+     * const teacherProfile = await prisma.teacherProfile.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends PlayerFindFirstArgs>(args?: SelectSubset<T, PlayerFindFirstArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends TeacherProfileFindFirstArgs>(args?: SelectSubset<T, TeacherProfileFindFirstArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first Player that matches the filter or
+     * Find the first TeacherProfile that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {PlayerFindFirstOrThrowArgs} args - Arguments to find a Player
+     * @param {TeacherProfileFindFirstOrThrowArgs} args - Arguments to find a TeacherProfile
      * @example
-     * // Get one Player
-     * const player = await prisma.player.findFirstOrThrow({
+     * // Get one TeacherProfile
+     * const teacherProfile = await prisma.teacherProfile.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends PlayerFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends TeacherProfileFindFirstOrThrowArgs>(args?: SelectSubset<T, TeacherProfileFindFirstOrThrowArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more Players that matches the filter.
+     * Find zero or more TeacherProfiles that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {PlayerFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {TeacherProfileFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all Players
-     * const players = await prisma.player.findMany()
+     * // Get all TeacherProfiles
+     * const teacherProfiles = await prisma.teacherProfile.findMany()
      * 
-     * // Get first 10 Players
-     * const players = await prisma.player.findMany({ take: 10 })
+     * // Get first 10 TeacherProfiles
+     * const teacherProfiles = await prisma.teacherProfile.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const playerWithIdOnly = await prisma.player.findMany({ select: { id: true } })
+     * const teacherProfileWithIdOnly = await prisma.teacherProfile.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends PlayerFindManyArgs>(args?: SelectSubset<T, PlayerFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends TeacherProfileFindManyArgs>(args?: SelectSubset<T, TeacherProfileFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a Player.
-     * @param {PlayerCreateArgs} args - Arguments to create a Player.
+     * Create a TeacherProfile.
+     * @param {TeacherProfileCreateArgs} args - Arguments to create a TeacherProfile.
      * @example
-     * // Create one Player
-     * const Player = await prisma.player.create({
+     * // Create one TeacherProfile
+     * const TeacherProfile = await prisma.teacherProfile.create({
      *   data: {
-     *     // ... data to create a Player
+     *     // ... data to create a TeacherProfile
      *   }
      * })
      * 
      */
-    create<T extends PlayerCreateArgs>(args: SelectSubset<T, PlayerCreateArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends TeacherProfileCreateArgs>(args: SelectSubset<T, TeacherProfileCreateArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many Players.
-     * @param {PlayerCreateManyArgs} args - Arguments to create many Players.
+     * Create many TeacherProfiles.
+     * @param {TeacherProfileCreateManyArgs} args - Arguments to create many TeacherProfiles.
      * @example
-     * // Create many Players
-     * const player = await prisma.player.createMany({
+     * // Create many TeacherProfiles
+     * const teacherProfile = await prisma.teacherProfile.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends PlayerCreateManyArgs>(args?: SelectSubset<T, PlayerCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends TeacherProfileCreateManyArgs>(args?: SelectSubset<T, TeacherProfileCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Players and returns the data saved in the database.
-     * @param {PlayerCreateManyAndReturnArgs} args - Arguments to create many Players.
+     * Create many TeacherProfiles and returns the data saved in the database.
+     * @param {TeacherProfileCreateManyAndReturnArgs} args - Arguments to create many TeacherProfiles.
      * @example
-     * // Create many Players
-     * const player = await prisma.player.createManyAndReturn({
+     * // Create many TeacherProfiles
+     * const teacherProfile = await prisma.teacherProfile.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many Players and only return the `id`
-     * const playerWithIdOnly = await prisma.player.createManyAndReturn({
+     * // Create many TeacherProfiles and only return the `id`
+     * const teacherProfileWithIdOnly = await prisma.teacherProfile.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -3116,28 +3191,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends PlayerCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends TeacherProfileCreateManyAndReturnArgs>(args?: SelectSubset<T, TeacherProfileCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a Player.
-     * @param {PlayerDeleteArgs} args - Arguments to delete one Player.
+     * Delete a TeacherProfile.
+     * @param {TeacherProfileDeleteArgs} args - Arguments to delete one TeacherProfile.
      * @example
-     * // Delete one Player
-     * const Player = await prisma.player.delete({
+     * // Delete one TeacherProfile
+     * const TeacherProfile = await prisma.teacherProfile.delete({
      *   where: {
-     *     // ... filter to delete one Player
+     *     // ... filter to delete one TeacherProfile
      *   }
      * })
      * 
      */
-    delete<T extends PlayerDeleteArgs>(args: SelectSubset<T, PlayerDeleteArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends TeacherProfileDeleteArgs>(args: SelectSubset<T, TeacherProfileDeleteArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one Player.
-     * @param {PlayerUpdateArgs} args - Arguments to update one Player.
+     * Update one TeacherProfile.
+     * @param {TeacherProfileUpdateArgs} args - Arguments to update one TeacherProfile.
      * @example
-     * // Update one Player
-     * const player = await prisma.player.update({
+     * // Update one TeacherProfile
+     * const teacherProfile = await prisma.teacherProfile.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -3147,30 +3222,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends PlayerUpdateArgs>(args: SelectSubset<T, PlayerUpdateArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends TeacherProfileUpdateArgs>(args: SelectSubset<T, TeacherProfileUpdateArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more Players.
-     * @param {PlayerDeleteManyArgs} args - Arguments to filter Players to delete.
+     * Delete zero or more TeacherProfiles.
+     * @param {TeacherProfileDeleteManyArgs} args - Arguments to filter TeacherProfiles to delete.
      * @example
-     * // Delete a few Players
-     * const { count } = await prisma.player.deleteMany({
+     * // Delete a few TeacherProfiles
+     * const { count } = await prisma.teacherProfile.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends PlayerDeleteManyArgs>(args?: SelectSubset<T, PlayerDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends TeacherProfileDeleteManyArgs>(args?: SelectSubset<T, TeacherProfileDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more Players.
+     * Update zero or more TeacherProfiles.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {PlayerUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {TeacherProfileUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many Players
-     * const player = await prisma.player.updateMany({
+     * // Update many TeacherProfiles
+     * const teacherProfile = await prisma.teacherProfile.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -3180,14 +3255,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends PlayerUpdateManyArgs>(args: SelectSubset<T, PlayerUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends TeacherProfileUpdateManyArgs>(args: SelectSubset<T, TeacherProfileUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more Players and returns the data updated in the database.
-     * @param {PlayerUpdateManyAndReturnArgs} args - Arguments to update many Players.
+     * Update zero or more TeacherProfiles and returns the data updated in the database.
+     * @param {TeacherProfileUpdateManyAndReturnArgs} args - Arguments to update many TeacherProfiles.
      * @example
-     * // Update many Players
-     * const player = await prisma.player.updateManyAndReturn({
+     * // Update many TeacherProfiles
+     * const teacherProfile = await prisma.teacherProfile.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -3196,8 +3271,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more Players and only return the `id`
-     * const playerWithIdOnly = await prisma.player.updateManyAndReturn({
+     * // Update zero or more TeacherProfiles and only return the `id`
+     * const teacherProfileWithIdOnly = await prisma.teacherProfile.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -3210,56 +3285,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends PlayerUpdateManyAndReturnArgs>(args: SelectSubset<T, PlayerUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends TeacherProfileUpdateManyAndReturnArgs>(args: SelectSubset<T, TeacherProfileUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one Player.
-     * @param {PlayerUpsertArgs} args - Arguments to update or create a Player.
+     * Create or update one TeacherProfile.
+     * @param {TeacherProfileUpsertArgs} args - Arguments to update or create a TeacherProfile.
      * @example
-     * // Update or create a Player
-     * const player = await prisma.player.upsert({
+     * // Update or create a TeacherProfile
+     * const teacherProfile = await prisma.teacherProfile.upsert({
      *   create: {
-     *     // ... data to create a Player
+     *     // ... data to create a TeacherProfile
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the Player we want to update
+     *     // ... the filter for the TeacherProfile we want to update
      *   }
      * })
      */
-    upsert<T extends PlayerUpsertArgs>(args: SelectSubset<T, PlayerUpsertArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends TeacherProfileUpsertArgs>(args: SelectSubset<T, TeacherProfileUpsertArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of Players.
+     * Count the number of TeacherProfiles.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {PlayerCountArgs} args - Arguments to filter Players to count.
+     * @param {TeacherProfileCountArgs} args - Arguments to filter TeacherProfiles to count.
      * @example
-     * // Count the number of Players
-     * const count = await prisma.player.count({
+     * // Count the number of TeacherProfiles
+     * const count = await prisma.teacherProfile.count({
      *   where: {
-     *     // ... the filter for the Players we want to count
+     *     // ... the filter for the TeacherProfiles we want to count
      *   }
      * })
     **/
-    count<T extends PlayerCountArgs>(
-      args?: Subset<T, PlayerCountArgs>,
+    count<T extends TeacherProfileCountArgs>(
+      args?: Subset<T, TeacherProfileCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], PlayerCountAggregateOutputType>
+          : GetScalarType<T['select'], TeacherProfileCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a Player.
+     * Allows you to perform aggregations operations on a TeacherProfile.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {PlayerAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {TeacherProfileAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -3279,13 +3354,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends PlayerAggregateArgs>(args: Subset<T, PlayerAggregateArgs>): Prisma.PrismaPromise<GetPlayerAggregateType<T>>
+    aggregate<T extends TeacherProfileAggregateArgs>(args: Subset<T, TeacherProfileAggregateArgs>): Prisma.PrismaPromise<GetTeacherProfileAggregateType<T>>
 
     /**
-     * Group by Player.
+     * Group by TeacherProfile.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {PlayerGroupByArgs} args - Group by arguments.
+     * @param {TeacherProfileGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -3300,14 +3375,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends PlayerGroupByArgs,
+      T extends TeacherProfileGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: PlayerGroupByArgs['orderBy'] }
-        : { orderBy?: PlayerGroupByArgs['orderBy'] },
+        ? { orderBy: TeacherProfileGroupByArgs['orderBy'] }
+        : { orderBy?: TeacherProfileGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -3356,22 +3431,22 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, PlayerGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, TeacherProfileGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTeacherProfileGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the Player model
+   * Fields of the TeacherProfile model
    */
-  readonly fields: PlayerFieldRefs;
+  readonly fields: TeacherProfileFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for Player.
+   * The delegate class that acts as a "Promise-like" for TeacherProfile.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__PlayerClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__TeacherProfileClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    gameParticipations<T extends Player$gameParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, Player$gameParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3398,443 +3473,1440 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the Player model
+   * Fields of the TeacherProfile model
    */
-  interface PlayerFieldRefs {
-    readonly id: FieldRef<"Player", 'String'>
-    readonly username: FieldRef<"Player", 'String'>
-    readonly cookieId: FieldRef<"Player", 'String'>
-    readonly email: FieldRef<"Player", 'String'>
-    readonly passwordHash: FieldRef<"Player", 'String'>
-    readonly createdAt: FieldRef<"Player", 'DateTime'>
-    readonly avatarUrl: FieldRef<"Player", 'String'>
+  interface TeacherProfileFieldRefs {
+    readonly id: FieldRef<"TeacherProfile", 'String'>
   }
     
 
   // Custom InputTypes
   /**
-   * Player findUnique
+   * TeacherProfile findUnique
    */
-  export type PlayerFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelect<ExtArgs> | null
+    select?: TeacherProfileSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
+    include?: TeacherProfileInclude<ExtArgs> | null
     /**
-     * Filter, which Player to fetch.
+     * Filter, which TeacherProfile to fetch.
      */
-    where: PlayerWhereUniqueInput
+    where: TeacherProfileWhereUniqueInput
   }
 
   /**
-   * Player findUniqueOrThrow
+   * TeacherProfile findUniqueOrThrow
    */
-  export type PlayerFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelect<ExtArgs> | null
+    select?: TeacherProfileSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
+    include?: TeacherProfileInclude<ExtArgs> | null
     /**
-     * Filter, which Player to fetch.
+     * Filter, which TeacherProfile to fetch.
      */
-    where: PlayerWhereUniqueInput
+    where: TeacherProfileWhereUniqueInput
   }
 
   /**
-   * Player findFirst
+   * TeacherProfile findFirst
    */
-  export type PlayerFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelect<ExtArgs> | null
+    select?: TeacherProfileSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
+    include?: TeacherProfileInclude<ExtArgs> | null
     /**
-     * Filter, which Player to fetch.
+     * Filter, which TeacherProfile to fetch.
      */
-    where?: PlayerWhereInput
+    where?: TeacherProfileWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Players to fetch.
+     * Determine the order of TeacherProfiles to fetch.
      */
-    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    orderBy?: TeacherProfileOrderByWithRelationInput | TeacherProfileOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for Players.
+     * Sets the position for searching for TeacherProfiles.
      */
-    cursor?: PlayerWhereUniqueInput
+    cursor?: TeacherProfileWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Players from the position of the cursor.
+     * Take `±n` TeacherProfiles from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Players.
+     * Skip the first `n` TeacherProfiles.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of Players.
+     * Filter by unique combinations of TeacherProfiles.
      */
-    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+    distinct?: TeacherProfileScalarFieldEnum | TeacherProfileScalarFieldEnum[]
   }
 
   /**
-   * Player findFirstOrThrow
+   * TeacherProfile findFirstOrThrow
    */
-  export type PlayerFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelect<ExtArgs> | null
+    select?: TeacherProfileSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
+    include?: TeacherProfileInclude<ExtArgs> | null
     /**
-     * Filter, which Player to fetch.
+     * Filter, which TeacherProfile to fetch.
      */
-    where?: PlayerWhereInput
+    where?: TeacherProfileWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Players to fetch.
+     * Determine the order of TeacherProfiles to fetch.
      */
-    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    orderBy?: TeacherProfileOrderByWithRelationInput | TeacherProfileOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for Players.
+     * Sets the position for searching for TeacherProfiles.
      */
-    cursor?: PlayerWhereUniqueInput
+    cursor?: TeacherProfileWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Players from the position of the cursor.
+     * Take `±n` TeacherProfiles from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Players.
+     * Skip the first `n` TeacherProfiles.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of Players.
+     * Filter by unique combinations of TeacherProfiles.
      */
-    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+    distinct?: TeacherProfileScalarFieldEnum | TeacherProfileScalarFieldEnum[]
   }
 
   /**
-   * Player findMany
+   * TeacherProfile findMany
    */
-  export type PlayerFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelect<ExtArgs> | null
+    select?: TeacherProfileSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
+    include?: TeacherProfileInclude<ExtArgs> | null
     /**
-     * Filter, which Players to fetch.
+     * Filter, which TeacherProfiles to fetch.
      */
-    where?: PlayerWhereInput
+    where?: TeacherProfileWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Players to fetch.
+     * Determine the order of TeacherProfiles to fetch.
      */
-    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    orderBy?: TeacherProfileOrderByWithRelationInput | TeacherProfileOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing Players.
+     * Sets the position for listing TeacherProfiles.
      */
-    cursor?: PlayerWhereUniqueInput
+    cursor?: TeacherProfileWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Players from the position of the cursor.
+     * Take `±n` TeacherProfiles from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Players.
+     * Skip the first `n` TeacherProfiles.
      */
     skip?: number
-    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+    distinct?: TeacherProfileScalarFieldEnum | TeacherProfileScalarFieldEnum[]
   }
 
   /**
-   * Player create
+   * TeacherProfile create
    */
-  export type PlayerCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelect<ExtArgs> | null
+    select?: TeacherProfileSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
+    include?: TeacherProfileInclude<ExtArgs> | null
     /**
-     * The data needed to create a Player.
+     * The data needed to create a TeacherProfile.
      */
-    data: XOR<PlayerCreateInput, PlayerUncheckedCreateInput>
+    data: XOR<TeacherProfileCreateInput, TeacherProfileUncheckedCreateInput>
   }
 
   /**
-   * Player createMany
+   * TeacherProfile createMany
    */
-  export type PlayerCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many Players.
+     * The data used to create many TeacherProfiles.
      */
-    data: PlayerCreateManyInput | PlayerCreateManyInput[]
+    data: TeacherProfileCreateManyInput | TeacherProfileCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * Player createManyAndReturn
+   * TeacherProfile createManyAndReturn
    */
-  export type PlayerCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelectCreateManyAndReturn<ExtArgs> | null
+    select?: TeacherProfileSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
-     * The data used to create many Players.
+     * The data used to create many TeacherProfiles.
      */
-    data: PlayerCreateManyInput | PlayerCreateManyInput[]
+    data: TeacherProfileCreateManyInput | TeacherProfileCreateManyInput[]
     skipDuplicates?: boolean
-  }
-
-  /**
-   * Player update
-   */
-  export type PlayerUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Player
-     */
-    select?: PlayerSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Player
-     */
-    omit?: PlayerOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
-    /**
-     * The data needed to update a Player.
-     */
-    data: XOR<PlayerUpdateInput, PlayerUncheckedUpdateInput>
-    /**
-     * Choose, which Player to update.
-     */
-    where: PlayerWhereUniqueInput
+    include?: TeacherProfileIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * Player updateMany
+   * TeacherProfile update
    */
-  export type PlayerUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update Players.
+     * Select specific fields to fetch from the TeacherProfile
      */
-    data: XOR<PlayerUpdateManyMutationInput, PlayerUncheckedUpdateManyInput>
+    select?: TeacherProfileSelect<ExtArgs> | null
     /**
-     * Filter which Players to update
+     * Omit specific fields from the TeacherProfile
      */
-    where?: PlayerWhereInput
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
-     * Limit how many Players to update.
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeacherProfileInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TeacherProfile.
+     */
+    data: XOR<TeacherProfileUpdateInput, TeacherProfileUncheckedUpdateInput>
+    /**
+     * Choose, which TeacherProfile to update.
+     */
+    where: TeacherProfileWhereUniqueInput
+  }
+
+  /**
+   * TeacherProfile updateMany
+   */
+  export type TeacherProfileUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TeacherProfiles.
+     */
+    data: XOR<TeacherProfileUpdateManyMutationInput, TeacherProfileUncheckedUpdateManyInput>
+    /**
+     * Filter which TeacherProfiles to update
+     */
+    where?: TeacherProfileWhereInput
+    /**
+     * Limit how many TeacherProfiles to update.
      */
     limit?: number
   }
 
   /**
-   * Player updateManyAndReturn
+   * TeacherProfile updateManyAndReturn
    */
-  export type PlayerUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: TeacherProfileSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
-     * The data used to update Players.
+     * The data used to update TeacherProfiles.
      */
-    data: XOR<PlayerUpdateManyMutationInput, PlayerUncheckedUpdateManyInput>
+    data: XOR<TeacherProfileUpdateManyMutationInput, TeacherProfileUncheckedUpdateManyInput>
     /**
-     * Filter which Players to update
+     * Filter which TeacherProfiles to update
      */
-    where?: PlayerWhereInput
+    where?: TeacherProfileWhereInput
     /**
-     * Limit how many Players to update.
+     * Limit how many TeacherProfiles to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeacherProfileIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TeacherProfile upsert
+   */
+  export type TeacherProfileUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeacherProfile
+     */
+    select?: TeacherProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeacherProfile
+     */
+    omit?: TeacherProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeacherProfileInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TeacherProfile to update in case it exists.
+     */
+    where: TeacherProfileWhereUniqueInput
+    /**
+     * In case the TeacherProfile found by the `where` argument doesn't exist, create a new TeacherProfile with this data.
+     */
+    create: XOR<TeacherProfileCreateInput, TeacherProfileUncheckedCreateInput>
+    /**
+     * In case the TeacherProfile was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TeacherProfileUpdateInput, TeacherProfileUncheckedUpdateInput>
+  }
+
+  /**
+   * TeacherProfile delete
+   */
+  export type TeacherProfileDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeacherProfile
+     */
+    select?: TeacherProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeacherProfile
+     */
+    omit?: TeacherProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeacherProfileInclude<ExtArgs> | null
+    /**
+     * Filter which TeacherProfile to delete.
+     */
+    where: TeacherProfileWhereUniqueInput
+  }
+
+  /**
+   * TeacherProfile deleteMany
+   */
+  export type TeacherProfileDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeacherProfiles to delete
+     */
+    where?: TeacherProfileWhereInput
+    /**
+     * Limit how many TeacherProfiles to delete.
      */
     limit?: number
   }
 
   /**
-   * Player upsert
+   * TeacherProfile without action
    */
-  export type PlayerUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TeacherProfileDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Player
+     * Select specific fields to fetch from the TeacherProfile
      */
-    select?: PlayerSelect<ExtArgs> | null
+    select?: TeacherProfileSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Player
+     * Omit specific fields from the TeacherProfile
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    omit?: TeacherProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
-    /**
-     * The filter to search for the Player to update in case it exists.
-     */
-    where: PlayerWhereUniqueInput
-    /**
-     * In case the Player found by the `where` argument doesn't exist, create a new Player with this data.
-     */
-    create: XOR<PlayerCreateInput, PlayerUncheckedCreateInput>
-    /**
-     * In case the Player was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<PlayerUpdateInput, PlayerUncheckedUpdateInput>
+    include?: TeacherProfileInclude<ExtArgs> | null
   }
 
-  /**
-   * Player delete
-   */
-  export type PlayerDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Player
-     */
-    select?: PlayerSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Player
-     */
-    omit?: PlayerOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: PlayerInclude<ExtArgs> | null
-    /**
-     * Filter which Player to delete.
-     */
-    where: PlayerWhereUniqueInput
-  }
 
   /**
-   * Player deleteMany
+   * Model StudentProfile
    */
-  export type PlayerDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which Players to delete
-     */
-    where?: PlayerWhereInput
-    /**
-     * Limit how many Players to delete.
-     */
-    limit?: number
+
+  export type AggregateStudentProfile = {
+    _count: StudentProfileCountAggregateOutputType | null
+    _min: StudentProfileMinAggregateOutputType | null
+    _max: StudentProfileMaxAggregateOutputType | null
   }
 
-  /**
-   * Player.gameParticipations
-   */
-  export type Player$gameParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StudentProfileMinAggregateOutputType = {
+    id: string | null
+    cookieId: string | null
+  }
+
+  export type StudentProfileMaxAggregateOutputType = {
+    id: string | null
+    cookieId: string | null
+  }
+
+  export type StudentProfileCountAggregateOutputType = {
+    id: number
+    cookieId: number
+    _all: number
+  }
+
+
+  export type StudentProfileMinAggregateInputType = {
+    id?: true
+    cookieId?: true
+  }
+
+  export type StudentProfileMaxAggregateInputType = {
+    id?: true
+    cookieId?: true
+  }
+
+  export type StudentProfileCountAggregateInputType = {
+    id?: true
+    cookieId?: true
+    _all?: true
+  }
+
+  export type StudentProfileAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the GameParticipant
+     * Filter which StudentProfile to aggregate.
      */
-    select?: GameParticipantSelect<ExtArgs> | null
+    where?: StudentProfileWhereInput
     /**
-     * Omit specific fields from the GameParticipant
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StudentProfiles to fetch.
      */
-    omit?: GameParticipantOmit<ExtArgs> | null
+    orderBy?: StudentProfileOrderByWithRelationInput | StudentProfileOrderByWithRelationInput[]
     /**
-     * Choose, which related nodes to fetch as well
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
      */
-    include?: GameParticipantInclude<ExtArgs> | null
-    where?: GameParticipantWhereInput
-    orderBy?: GameParticipantOrderByWithRelationInput | GameParticipantOrderByWithRelationInput[]
-    cursor?: GameParticipantWhereUniqueInput
+    cursor?: StudentProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StudentProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StudentProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned StudentProfiles
+    **/
+    _count?: true | StudentProfileCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: StudentProfileMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: StudentProfileMaxAggregateInputType
+  }
+
+  export type GetStudentProfileAggregateType<T extends StudentProfileAggregateArgs> = {
+        [P in keyof T & keyof AggregateStudentProfile]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateStudentProfile[P]>
+      : GetScalarType<T[P], AggregateStudentProfile[P]>
+  }
+
+
+
+
+  export type StudentProfileGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StudentProfileWhereInput
+    orderBy?: StudentProfileOrderByWithAggregationInput | StudentProfileOrderByWithAggregationInput[]
+    by: StudentProfileScalarFieldEnum[] | StudentProfileScalarFieldEnum
+    having?: StudentProfileScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    distinct?: GameParticipantScalarFieldEnum | GameParticipantScalarFieldEnum[]
+    _count?: StudentProfileCountAggregateInputType | true
+    _min?: StudentProfileMinAggregateInputType
+    _max?: StudentProfileMaxAggregateInputType
+  }
+
+  export type StudentProfileGroupByOutputType = {
+    id: string
+    cookieId: string | null
+    _count: StudentProfileCountAggregateOutputType | null
+    _min: StudentProfileMinAggregateOutputType | null
+    _max: StudentProfileMaxAggregateOutputType | null
+  }
+
+  type GetStudentProfileGroupByPayload<T extends StudentProfileGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<StudentProfileGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof StudentProfileGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], StudentProfileGroupByOutputType[P]>
+            : GetScalarType<T[P], StudentProfileGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type StudentProfileSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cookieId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["studentProfile"]>
+
+  export type StudentProfileSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cookieId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["studentProfile"]>
+
+  export type StudentProfileSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cookieId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["studentProfile"]>
+
+  export type StudentProfileSelectScalar = {
+    id?: boolean
+    cookieId?: boolean
+  }
+
+  export type StudentProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "cookieId", ExtArgs["result"]["studentProfile"]>
+  export type StudentProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type StudentProfileIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type StudentProfileIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $StudentProfilePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "StudentProfile"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      cookieId: string | null
+    }, ExtArgs["result"]["studentProfile"]>
+    composites: {}
+  }
+
+  type StudentProfileGetPayload<S extends boolean | null | undefined | StudentProfileDefaultArgs> = $Result.GetResult<Prisma.$StudentProfilePayload, S>
+
+  type StudentProfileCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StudentProfileFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StudentProfileCountAggregateInputType | true
+    }
+
+  export interface StudentProfileDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['StudentProfile'], meta: { name: 'StudentProfile' } }
+    /**
+     * Find zero or one StudentProfile that matches the filter.
+     * @param {StudentProfileFindUniqueArgs} args - Arguments to find a StudentProfile
+     * @example
+     * // Get one StudentProfile
+     * const studentProfile = await prisma.studentProfile.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends StudentProfileFindUniqueArgs>(args: SelectSubset<T, StudentProfileFindUniqueArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one StudentProfile that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {StudentProfileFindUniqueOrThrowArgs} args - Arguments to find a StudentProfile
+     * @example
+     * // Get one StudentProfile
+     * const studentProfile = await prisma.studentProfile.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends StudentProfileFindUniqueOrThrowArgs>(args: SelectSubset<T, StudentProfileFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StudentProfile that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StudentProfileFindFirstArgs} args - Arguments to find a StudentProfile
+     * @example
+     * // Get one StudentProfile
+     * const studentProfile = await prisma.studentProfile.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends StudentProfileFindFirstArgs>(args?: SelectSubset<T, StudentProfileFindFirstArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StudentProfile that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StudentProfileFindFirstOrThrowArgs} args - Arguments to find a StudentProfile
+     * @example
+     * // Get one StudentProfile
+     * const studentProfile = await prisma.studentProfile.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends StudentProfileFindFirstOrThrowArgs>(args?: SelectSubset<T, StudentProfileFindFirstOrThrowArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more StudentProfiles that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StudentProfileFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all StudentProfiles
+     * const studentProfiles = await prisma.studentProfile.findMany()
+     * 
+     * // Get first 10 StudentProfiles
+     * const studentProfiles = await prisma.studentProfile.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const studentProfileWithIdOnly = await prisma.studentProfile.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends StudentProfileFindManyArgs>(args?: SelectSubset<T, StudentProfileFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a StudentProfile.
+     * @param {StudentProfileCreateArgs} args - Arguments to create a StudentProfile.
+     * @example
+     * // Create one StudentProfile
+     * const StudentProfile = await prisma.studentProfile.create({
+     *   data: {
+     *     // ... data to create a StudentProfile
+     *   }
+     * })
+     * 
+     */
+    create<T extends StudentProfileCreateArgs>(args: SelectSubset<T, StudentProfileCreateArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many StudentProfiles.
+     * @param {StudentProfileCreateManyArgs} args - Arguments to create many StudentProfiles.
+     * @example
+     * // Create many StudentProfiles
+     * const studentProfile = await prisma.studentProfile.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends StudentProfileCreateManyArgs>(args?: SelectSubset<T, StudentProfileCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many StudentProfiles and returns the data saved in the database.
+     * @param {StudentProfileCreateManyAndReturnArgs} args - Arguments to create many StudentProfiles.
+     * @example
+     * // Create many StudentProfiles
+     * const studentProfile = await prisma.studentProfile.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many StudentProfiles and only return the `id`
+     * const studentProfileWithIdOnly = await prisma.studentProfile.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends StudentProfileCreateManyAndReturnArgs>(args?: SelectSubset<T, StudentProfileCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a StudentProfile.
+     * @param {StudentProfileDeleteArgs} args - Arguments to delete one StudentProfile.
+     * @example
+     * // Delete one StudentProfile
+     * const StudentProfile = await prisma.studentProfile.delete({
+     *   where: {
+     *     // ... filter to delete one StudentProfile
+     *   }
+     * })
+     * 
+     */
+    delete<T extends StudentProfileDeleteArgs>(args: SelectSubset<T, StudentProfileDeleteArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one StudentProfile.
+     * @param {StudentProfileUpdateArgs} args - Arguments to update one StudentProfile.
+     * @example
+     * // Update one StudentProfile
+     * const studentProfile = await prisma.studentProfile.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends StudentProfileUpdateArgs>(args: SelectSubset<T, StudentProfileUpdateArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more StudentProfiles.
+     * @param {StudentProfileDeleteManyArgs} args - Arguments to filter StudentProfiles to delete.
+     * @example
+     * // Delete a few StudentProfiles
+     * const { count } = await prisma.studentProfile.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends StudentProfileDeleteManyArgs>(args?: SelectSubset<T, StudentProfileDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StudentProfiles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StudentProfileUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many StudentProfiles
+     * const studentProfile = await prisma.studentProfile.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends StudentProfileUpdateManyArgs>(args: SelectSubset<T, StudentProfileUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StudentProfiles and returns the data updated in the database.
+     * @param {StudentProfileUpdateManyAndReturnArgs} args - Arguments to update many StudentProfiles.
+     * @example
+     * // Update many StudentProfiles
+     * const studentProfile = await prisma.studentProfile.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more StudentProfiles and only return the `id`
+     * const studentProfileWithIdOnly = await prisma.studentProfile.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends StudentProfileUpdateManyAndReturnArgs>(args: SelectSubset<T, StudentProfileUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one StudentProfile.
+     * @param {StudentProfileUpsertArgs} args - Arguments to update or create a StudentProfile.
+     * @example
+     * // Update or create a StudentProfile
+     * const studentProfile = await prisma.studentProfile.upsert({
+     *   create: {
+     *     // ... data to create a StudentProfile
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the StudentProfile we want to update
+     *   }
+     * })
+     */
+    upsert<T extends StudentProfileUpsertArgs>(args: SelectSubset<T, StudentProfileUpsertArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of StudentProfiles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StudentProfileCountArgs} args - Arguments to filter StudentProfiles to count.
+     * @example
+     * // Count the number of StudentProfiles
+     * const count = await prisma.studentProfile.count({
+     *   where: {
+     *     // ... the filter for the StudentProfiles we want to count
+     *   }
+     * })
+    **/
+    count<T extends StudentProfileCountArgs>(
+      args?: Subset<T, StudentProfileCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], StudentProfileCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a StudentProfile.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StudentProfileAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends StudentProfileAggregateArgs>(args: Subset<T, StudentProfileAggregateArgs>): Prisma.PrismaPromise<GetStudentProfileAggregateType<T>>
+
+    /**
+     * Group by StudentProfile.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StudentProfileGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends StudentProfileGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: StudentProfileGroupByArgs['orderBy'] }
+        : { orderBy?: StudentProfileGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, StudentProfileGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStudentProfileGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the StudentProfile model
+   */
+  readonly fields: StudentProfileFieldRefs;
   }
 
   /**
-   * Player without action
+   * The delegate class that acts as a "Promise-like" for StudentProfile.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export type PlayerDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export interface Prisma__StudentProfileClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
-     * Select specific fields to fetch from the Player
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
      */
-    select?: PlayerSelect<ExtArgs> | null
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
     /**
-     * Omit specific fields from the Player
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
      */
-    omit?: PlayerOmit<ExtArgs> | null
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the StudentProfile model
+   */
+  interface StudentProfileFieldRefs {
+    readonly id: FieldRef<"StudentProfile", 'String'>
+    readonly cookieId: FieldRef<"StudentProfile", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * StudentProfile findUnique
+   */
+  export type StudentProfileFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PlayerInclude<ExtArgs> | null
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which StudentProfile to fetch.
+     */
+    where: StudentProfileWhereUniqueInput
+  }
+
+  /**
+   * StudentProfile findUniqueOrThrow
+   */
+  export type StudentProfileFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which StudentProfile to fetch.
+     */
+    where: StudentProfileWhereUniqueInput
+  }
+
+  /**
+   * StudentProfile findFirst
+   */
+  export type StudentProfileFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which StudentProfile to fetch.
+     */
+    where?: StudentProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StudentProfiles to fetch.
+     */
+    orderBy?: StudentProfileOrderByWithRelationInput | StudentProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StudentProfiles.
+     */
+    cursor?: StudentProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StudentProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StudentProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StudentProfiles.
+     */
+    distinct?: StudentProfileScalarFieldEnum | StudentProfileScalarFieldEnum[]
+  }
+
+  /**
+   * StudentProfile findFirstOrThrow
+   */
+  export type StudentProfileFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which StudentProfile to fetch.
+     */
+    where?: StudentProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StudentProfiles to fetch.
+     */
+    orderBy?: StudentProfileOrderByWithRelationInput | StudentProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StudentProfiles.
+     */
+    cursor?: StudentProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StudentProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StudentProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StudentProfiles.
+     */
+    distinct?: StudentProfileScalarFieldEnum | StudentProfileScalarFieldEnum[]
+  }
+
+  /**
+   * StudentProfile findMany
+   */
+  export type StudentProfileFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * Filter, which StudentProfiles to fetch.
+     */
+    where?: StudentProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StudentProfiles to fetch.
+     */
+    orderBy?: StudentProfileOrderByWithRelationInput | StudentProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing StudentProfiles.
+     */
+    cursor?: StudentProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StudentProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StudentProfiles.
+     */
+    skip?: number
+    distinct?: StudentProfileScalarFieldEnum | StudentProfileScalarFieldEnum[]
+  }
+
+  /**
+   * StudentProfile create
+   */
+  export type StudentProfileCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * The data needed to create a StudentProfile.
+     */
+    data: XOR<StudentProfileCreateInput, StudentProfileUncheckedCreateInput>
+  }
+
+  /**
+   * StudentProfile createMany
+   */
+  export type StudentProfileCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many StudentProfiles.
+     */
+    data: StudentProfileCreateManyInput | StudentProfileCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * StudentProfile createManyAndReturn
+   */
+  export type StudentProfileCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * The data used to create many StudentProfiles.
+     */
+    data: StudentProfileCreateManyInput | StudentProfileCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * StudentProfile update
+   */
+  export type StudentProfileUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * The data needed to update a StudentProfile.
+     */
+    data: XOR<StudentProfileUpdateInput, StudentProfileUncheckedUpdateInput>
+    /**
+     * Choose, which StudentProfile to update.
+     */
+    where: StudentProfileWhereUniqueInput
+  }
+
+  /**
+   * StudentProfile updateMany
+   */
+  export type StudentProfileUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update StudentProfiles.
+     */
+    data: XOR<StudentProfileUpdateManyMutationInput, StudentProfileUncheckedUpdateManyInput>
+    /**
+     * Filter which StudentProfiles to update
+     */
+    where?: StudentProfileWhereInput
+    /**
+     * Limit how many StudentProfiles to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StudentProfile updateManyAndReturn
+   */
+  export type StudentProfileUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * The data used to update StudentProfiles.
+     */
+    data: XOR<StudentProfileUpdateManyMutationInput, StudentProfileUncheckedUpdateManyInput>
+    /**
+     * Filter which StudentProfiles to update
+     */
+    where?: StudentProfileWhereInput
+    /**
+     * Limit how many StudentProfiles to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * StudentProfile upsert
+   */
+  export type StudentProfileUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * The filter to search for the StudentProfile to update in case it exists.
+     */
+    where: StudentProfileWhereUniqueInput
+    /**
+     * In case the StudentProfile found by the `where` argument doesn't exist, create a new StudentProfile with this data.
+     */
+    create: XOR<StudentProfileCreateInput, StudentProfileUncheckedCreateInput>
+    /**
+     * In case the StudentProfile was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StudentProfileUpdateInput, StudentProfileUncheckedUpdateInput>
+  }
+
+  /**
+   * StudentProfile delete
+   */
+  export type StudentProfileDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
+    /**
+     * Filter which StudentProfile to delete.
+     */
+    where: StudentProfileWhereUniqueInput
+  }
+
+  /**
+   * StudentProfile deleteMany
+   */
+  export type StudentProfileDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StudentProfiles to delete
+     */
+    where?: StudentProfileWhereInput
+    /**
+     * Limit how many StudentProfiles to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * StudentProfile without action
+   */
+  export type StudentProfileDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StudentProfile
+     */
+    select?: StudentProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StudentProfile
+     */
+    omit?: StudentProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StudentProfileInclude<ExtArgs> | null
   }
 
 
@@ -3853,11 +4925,13 @@ export namespace Prisma {
   export type QuestionAvgAggregateOutputType = {
     difficulty: number | null
     timeLimit: number | null
+    feedbackWaitTime: number | null
   }
 
   export type QuestionSumAggregateOutputType = {
     difficulty: number | null
     timeLimit: number | null
+    feedbackWaitTime: number | null
   }
 
   export type QuestionMinAggregateOutputType = {
@@ -3872,6 +4946,7 @@ export namespace Prisma {
     explanation: string | null
     timeLimit: number | null
     isHidden: boolean | null
+    feedbackWaitTime: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3888,6 +4963,7 @@ export namespace Prisma {
     explanation: string | null
     timeLimit: number | null
     isHidden: boolean | null
+    feedbackWaitTime: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3896,7 +4972,8 @@ export namespace Prisma {
     uid: number
     title: number
     text: number
-    responses: number
+    answerOptions: number
+    correctAnswers: number
     questionType: number
     discipline: number
     themes: number
@@ -3907,6 +4984,7 @@ export namespace Prisma {
     tags: number
     timeLimit: number
     isHidden: number
+    feedbackWaitTime: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3916,11 +4994,13 @@ export namespace Prisma {
   export type QuestionAvgAggregateInputType = {
     difficulty?: true
     timeLimit?: true
+    feedbackWaitTime?: true
   }
 
   export type QuestionSumAggregateInputType = {
     difficulty?: true
     timeLimit?: true
+    feedbackWaitTime?: true
   }
 
   export type QuestionMinAggregateInputType = {
@@ -3935,6 +5015,7 @@ export namespace Prisma {
     explanation?: true
     timeLimit?: true
     isHidden?: true
+    feedbackWaitTime?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3951,6 +5032,7 @@ export namespace Prisma {
     explanation?: true
     timeLimit?: true
     isHidden?: true
+    feedbackWaitTime?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3959,7 +5041,8 @@ export namespace Prisma {
     uid?: true
     title?: true
     text?: true
-    responses?: true
+    answerOptions?: true
+    correctAnswers?: true
     questionType?: true
     discipline?: true
     themes?: true
@@ -3970,6 +5053,7 @@ export namespace Prisma {
     tags?: true
     timeLimit?: true
     isHidden?: true
+    feedbackWaitTime?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -4065,7 +5149,8 @@ export namespace Prisma {
     uid: string
     title: string | null
     text: string
-    responses: JsonValue
+    answerOptions: string[]
+    correctAnswers: boolean[]
     questionType: string
     discipline: string
     themes: string[]
@@ -4076,6 +5161,7 @@ export namespace Prisma {
     tags: string[]
     timeLimit: number | null
     isHidden: boolean | null
+    feedbackWaitTime: number | null
     createdAt: Date
     updatedAt: Date
     _count: QuestionCountAggregateOutputType | null
@@ -4103,7 +5189,8 @@ export namespace Prisma {
     uid?: boolean
     title?: boolean
     text?: boolean
-    responses?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
     questionType?: boolean
     discipline?: boolean
     themes?: boolean
@@ -4114,9 +5201,10 @@ export namespace Prisma {
     tags?: boolean
     timeLimit?: boolean
     isHidden?: boolean
+    feedbackWaitTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    quizTemplates?: boolean | Question$quizTemplatesArgs<ExtArgs>
+    gameTemplates?: boolean | Question$gameTemplatesArgs<ExtArgs>
     _count?: boolean | QuestionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["question"]>
 
@@ -4124,7 +5212,8 @@ export namespace Prisma {
     uid?: boolean
     title?: boolean
     text?: boolean
-    responses?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
     questionType?: boolean
     discipline?: boolean
     themes?: boolean
@@ -4135,6 +5224,7 @@ export namespace Prisma {
     tags?: boolean
     timeLimit?: boolean
     isHidden?: boolean
+    feedbackWaitTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["question"]>
@@ -4143,7 +5233,8 @@ export namespace Prisma {
     uid?: boolean
     title?: boolean
     text?: boolean
-    responses?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
     questionType?: boolean
     discipline?: boolean
     themes?: boolean
@@ -4154,6 +5245,7 @@ export namespace Prisma {
     tags?: boolean
     timeLimit?: boolean
     isHidden?: boolean
+    feedbackWaitTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["question"]>
@@ -4162,7 +5254,8 @@ export namespace Prisma {
     uid?: boolean
     title?: boolean
     text?: boolean
-    responses?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
     questionType?: boolean
     discipline?: boolean
     themes?: boolean
@@ -4173,13 +5266,14 @@ export namespace Prisma {
     tags?: boolean
     timeLimit?: boolean
     isHidden?: boolean
+    feedbackWaitTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "title" | "text" | "responses" | "questionType" | "discipline" | "themes" | "difficulty" | "gradeLevel" | "author" | "explanation" | "tags" | "timeLimit" | "isHidden" | "createdAt" | "updatedAt", ExtArgs["result"]["question"]>
+  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "title" | "text" | "answerOptions" | "correctAnswers" | "questionType" | "discipline" | "themes" | "difficulty" | "gradeLevel" | "author" | "explanation" | "tags" | "timeLimit" | "isHidden" | "feedbackWaitTime" | "createdAt" | "updatedAt", ExtArgs["result"]["question"]>
   export type QuestionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplates?: boolean | Question$quizTemplatesArgs<ExtArgs>
+    gameTemplates?: boolean | Question$gameTemplatesArgs<ExtArgs>
     _count?: boolean | QuestionCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type QuestionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -4188,13 +5282,14 @@ export namespace Prisma {
   export type $QuestionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Question"
     objects: {
-      quizTemplates: Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>[]
+      gameTemplates: Prisma.$QuestionsInGameTemplatePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       uid: string
       title: string | null
       text: string
-      responses: Prisma.JsonValue
+      answerOptions: string[]
+      correctAnswers: boolean[]
       questionType: string
       discipline: string
       themes: string[]
@@ -4205,6 +5300,7 @@ export namespace Prisma {
       tags: string[]
       timeLimit: number | null
       isHidden: boolean | null
+      feedbackWaitTime: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["question"]>
@@ -4601,7 +5697,7 @@ export namespace Prisma {
    */
   export interface Prisma__QuestionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    quizTemplates<T extends Question$quizTemplatesArgs<ExtArgs> = {}>(args?: Subset<T, Question$quizTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    gameTemplates<T extends Question$gameTemplatesArgs<ExtArgs> = {}>(args?: Subset<T, Question$gameTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4634,7 +5730,8 @@ export namespace Prisma {
     readonly uid: FieldRef<"Question", 'String'>
     readonly title: FieldRef<"Question", 'String'>
     readonly text: FieldRef<"Question", 'String'>
-    readonly responses: FieldRef<"Question", 'Json'>
+    readonly answerOptions: FieldRef<"Question", 'String[]'>
+    readonly correctAnswers: FieldRef<"Question", 'Boolean[]'>
     readonly questionType: FieldRef<"Question", 'String'>
     readonly discipline: FieldRef<"Question", 'String'>
     readonly themes: FieldRef<"Question", 'String[]'>
@@ -4645,6 +5742,7 @@ export namespace Prisma {
     readonly tags: FieldRef<"Question", 'String[]'>
     readonly timeLimit: FieldRef<"Question", 'Int'>
     readonly isHidden: FieldRef<"Question", 'Boolean'>
+    readonly feedbackWaitTime: FieldRef<"Question", 'Int'>
     readonly createdAt: FieldRef<"Question", 'DateTime'>
     readonly updatedAt: FieldRef<"Question", 'DateTime'>
   }
@@ -5035,27 +6133,27 @@ export namespace Prisma {
   }
 
   /**
-   * Question.quizTemplates
+   * Question.gameTemplates
    */
-  export type Question$quizTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Question$gameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
-    where?: QuestionsInQuizTemplateWhereInput
-    orderBy?: QuestionsInQuizTemplateOrderByWithRelationInput | QuestionsInQuizTemplateOrderByWithRelationInput[]
-    cursor?: QuestionsInQuizTemplateWhereUniqueInput
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
+    where?: QuestionsInGameTemplateWhereInput
+    orderBy?: QuestionsInGameTemplateOrderByWithRelationInput | QuestionsInGameTemplateOrderByWithRelationInput[]
+    cursor?: QuestionsInGameTemplateWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: QuestionsInQuizTemplateScalarFieldEnum | QuestionsInQuizTemplateScalarFieldEnum[]
+    distinct?: QuestionsInGameTemplateScalarFieldEnum | QuestionsInGameTemplateScalarFieldEnum[]
   }
 
   /**
@@ -5078,19 +6176,19 @@ export namespace Prisma {
 
 
   /**
-   * Model QuizTemplate
+   * Model GameTemplate
    */
 
-  export type AggregateQuizTemplate = {
-    _count: QuizTemplateCountAggregateOutputType | null
-    _min: QuizTemplateMinAggregateOutputType | null
-    _max: QuizTemplateMaxAggregateOutputType | null
+  export type AggregateGameTemplate = {
+    _count: GameTemplateCountAggregateOutputType | null
+    _min: GameTemplateMinAggregateOutputType | null
+    _max: GameTemplateMaxAggregateOutputType | null
   }
 
-  export type QuizTemplateMinAggregateOutputType = {
+  export type GameTemplateMinAggregateOutputType = {
     id: string | null
     name: string | null
-    creatorTeacherId: string | null
+    creatorId: string | null
     gradeLevel: string | null
     discipline: string | null
     description: string | null
@@ -5099,10 +6197,10 @@ export namespace Prisma {
     updatedAt: Date | null
   }
 
-  export type QuizTemplateMaxAggregateOutputType = {
+  export type GameTemplateMaxAggregateOutputType = {
     id: string | null
     name: string | null
-    creatorTeacherId: string | null
+    creatorId: string | null
     gradeLevel: string | null
     discipline: string | null
     description: string | null
@@ -5111,10 +6209,10 @@ export namespace Prisma {
     updatedAt: Date | null
   }
 
-  export type QuizTemplateCountAggregateOutputType = {
+  export type GameTemplateCountAggregateOutputType = {
     id: number
     name: number
-    creatorTeacherId: number
+    creatorId: number
     gradeLevel: number
     themes: number
     discipline: number
@@ -5126,10 +6224,10 @@ export namespace Prisma {
   }
 
 
-  export type QuizTemplateMinAggregateInputType = {
+  export type GameTemplateMinAggregateInputType = {
     id?: true
     name?: true
-    creatorTeacherId?: true
+    creatorId?: true
     gradeLevel?: true
     discipline?: true
     description?: true
@@ -5138,10 +6236,10 @@ export namespace Prisma {
     updatedAt?: true
   }
 
-  export type QuizTemplateMaxAggregateInputType = {
+  export type GameTemplateMaxAggregateInputType = {
     id?: true
     name?: true
-    creatorTeacherId?: true
+    creatorId?: true
     gradeLevel?: true
     discipline?: true
     description?: true
@@ -5150,10 +6248,10 @@ export namespace Prisma {
     updatedAt?: true
   }
 
-  export type QuizTemplateCountAggregateInputType = {
+  export type GameTemplateCountAggregateInputType = {
     id?: true
     name?: true
-    creatorTeacherId?: true
+    creatorId?: true
     gradeLevel?: true
     themes?: true
     discipline?: true
@@ -5164,82 +6262,82 @@ export namespace Prisma {
     _all?: true
   }
 
-  export type QuizTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which QuizTemplate to aggregate.
+     * Filter which GameTemplate to aggregate.
      */
-    where?: QuizTemplateWhereInput
+    where?: GameTemplateWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of QuizTemplates to fetch.
+     * Determine the order of GameTemplates to fetch.
      */
-    orderBy?: QuizTemplateOrderByWithRelationInput | QuizTemplateOrderByWithRelationInput[]
+    orderBy?: GameTemplateOrderByWithRelationInput | GameTemplateOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: QuizTemplateWhereUniqueInput
+    cursor?: GameTemplateWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` QuizTemplates from the position of the cursor.
+     * Take `±n` GameTemplates from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` QuizTemplates.
+     * Skip the first `n` GameTemplates.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned QuizTemplates
+     * Count returned GameTemplates
     **/
-    _count?: true | QuizTemplateCountAggregateInputType
+    _count?: true | GameTemplateCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: QuizTemplateMinAggregateInputType
+    _min?: GameTemplateMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: QuizTemplateMaxAggregateInputType
+    _max?: GameTemplateMaxAggregateInputType
   }
 
-  export type GetQuizTemplateAggregateType<T extends QuizTemplateAggregateArgs> = {
-        [P in keyof T & keyof AggregateQuizTemplate]: P extends '_count' | 'count'
+  export type GetGameTemplateAggregateType<T extends GameTemplateAggregateArgs> = {
+        [P in keyof T & keyof AggregateGameTemplate]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateQuizTemplate[P]>
-      : GetScalarType<T[P], AggregateQuizTemplate[P]>
+        : GetScalarType<T[P], AggregateGameTemplate[P]>
+      : GetScalarType<T[P], AggregateGameTemplate[P]>
   }
 
 
 
 
-  export type QuizTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: QuizTemplateWhereInput
-    orderBy?: QuizTemplateOrderByWithAggregationInput | QuizTemplateOrderByWithAggregationInput[]
-    by: QuizTemplateScalarFieldEnum[] | QuizTemplateScalarFieldEnum
-    having?: QuizTemplateScalarWhereWithAggregatesInput
+  export type GameTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GameTemplateWhereInput
+    orderBy?: GameTemplateOrderByWithAggregationInput | GameTemplateOrderByWithAggregationInput[]
+    by: GameTemplateScalarFieldEnum[] | GameTemplateScalarFieldEnum
+    having?: GameTemplateScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: QuizTemplateCountAggregateInputType | true
-    _min?: QuizTemplateMinAggregateInputType
-    _max?: QuizTemplateMaxAggregateInputType
+    _count?: GameTemplateCountAggregateInputType | true
+    _min?: GameTemplateMinAggregateInputType
+    _max?: GameTemplateMaxAggregateInputType
   }
 
-  export type QuizTemplateGroupByOutputType = {
+  export type GameTemplateGroupByOutputType = {
     id: string
     name: string
-    creatorTeacherId: string
+    creatorId: string
     gradeLevel: string | null
     themes: string[]
     discipline: string | null
@@ -5247,29 +6345,29 @@ export namespace Prisma {
     defaultMode: $Enums.PlayMode | null
     createdAt: Date
     updatedAt: Date
-    _count: QuizTemplateCountAggregateOutputType | null
-    _min: QuizTemplateMinAggregateOutputType | null
-    _max: QuizTemplateMaxAggregateOutputType | null
+    _count: GameTemplateCountAggregateOutputType | null
+    _min: GameTemplateMinAggregateOutputType | null
+    _max: GameTemplateMaxAggregateOutputType | null
   }
 
-  type GetQuizTemplateGroupByPayload<T extends QuizTemplateGroupByArgs> = Prisma.PrismaPromise<
+  type GetGameTemplateGroupByPayload<T extends GameTemplateGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<QuizTemplateGroupByOutputType, T['by']> &
+      PickEnumerable<GameTemplateGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof QuizTemplateGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof GameTemplateGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], QuizTemplateGroupByOutputType[P]>
-            : GetScalarType<T[P], QuizTemplateGroupByOutputType[P]>
+              : GetScalarType<T[P], GameTemplateGroupByOutputType[P]>
+            : GetScalarType<T[P], GameTemplateGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type QuizTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type GameTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    creatorTeacherId?: boolean
+    creatorId?: boolean
     gradeLevel?: boolean
     themes?: boolean
     discipline?: boolean
@@ -5277,16 +6375,16 @@ export namespace Prisma {
     defaultMode?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    creatorTeacher?: boolean | TeacherDefaultArgs<ExtArgs>
-    questions?: boolean | QuizTemplate$questionsArgs<ExtArgs>
-    gameInstances?: boolean | QuizTemplate$gameInstancesArgs<ExtArgs>
-    _count?: boolean | QuizTemplateCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["quizTemplate"]>
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    questions?: boolean | GameTemplate$questionsArgs<ExtArgs>
+    gameInstances?: boolean | GameTemplate$gameInstancesArgs<ExtArgs>
+    _count?: boolean | GameTemplateCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["gameTemplate"]>
 
-  export type QuizTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type GameTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    creatorTeacherId?: boolean
+    creatorId?: boolean
     gradeLevel?: boolean
     themes?: boolean
     discipline?: boolean
@@ -5294,13 +6392,13 @@ export namespace Prisma {
     defaultMode?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    creatorTeacher?: boolean | TeacherDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["quizTemplate"]>
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["gameTemplate"]>
 
-  export type QuizTemplateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type GameTemplateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    creatorTeacherId?: boolean
+    creatorId?: boolean
     gradeLevel?: boolean
     themes?: boolean
     discipline?: boolean
@@ -5308,13 +6406,13 @@ export namespace Prisma {
     defaultMode?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    creatorTeacher?: boolean | TeacherDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["quizTemplate"]>
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["gameTemplate"]>
 
-  export type QuizTemplateSelectScalar = {
+  export type GameTemplateSelectScalar = {
     id?: boolean
     name?: boolean
-    creatorTeacherId?: boolean
+    creatorId?: boolean
     gradeLevel?: boolean
     themes?: boolean
     discipline?: boolean
@@ -5324,31 +6422,31 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type QuizTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "creatorTeacherId" | "gradeLevel" | "themes" | "discipline" | "description" | "defaultMode" | "createdAt" | "updatedAt", ExtArgs["result"]["quizTemplate"]>
-  export type QuizTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    creatorTeacher?: boolean | TeacherDefaultArgs<ExtArgs>
-    questions?: boolean | QuizTemplate$questionsArgs<ExtArgs>
-    gameInstances?: boolean | QuizTemplate$gameInstancesArgs<ExtArgs>
-    _count?: boolean | QuizTemplateCountOutputTypeDefaultArgs<ExtArgs>
+  export type GameTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "creatorId" | "gradeLevel" | "themes" | "discipline" | "description" | "defaultMode" | "createdAt" | "updatedAt", ExtArgs["result"]["gameTemplate"]>
+  export type GameTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    questions?: boolean | GameTemplate$questionsArgs<ExtArgs>
+    gameInstances?: boolean | GameTemplate$gameInstancesArgs<ExtArgs>
+    _count?: boolean | GameTemplateCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type QuizTemplateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    creatorTeacher?: boolean | TeacherDefaultArgs<ExtArgs>
+  export type GameTemplateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
   }
-  export type QuizTemplateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    creatorTeacher?: boolean | TeacherDefaultArgs<ExtArgs>
+  export type GameTemplateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
   }
 
-  export type $QuizTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "QuizTemplate"
+  export type $GameTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "GameTemplate"
     objects: {
-      creatorTeacher: Prisma.$TeacherPayload<ExtArgs>
-      questions: Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>[]
+      creator: Prisma.$UserPayload<ExtArgs>
+      questions: Prisma.$QuestionsInGameTemplatePayload<ExtArgs>[]
       gameInstances: Prisma.$GameInstancePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string
-      creatorTeacherId: string
+      creatorId: string
       gradeLevel: string | null
       themes: string[]
       discipline: string | null
@@ -5356,136 +6454,136 @@ export namespace Prisma {
       defaultMode: $Enums.PlayMode | null
       createdAt: Date
       updatedAt: Date
-    }, ExtArgs["result"]["quizTemplate"]>
+    }, ExtArgs["result"]["gameTemplate"]>
     composites: {}
   }
 
-  type QuizTemplateGetPayload<S extends boolean | null | undefined | QuizTemplateDefaultArgs> = $Result.GetResult<Prisma.$QuizTemplatePayload, S>
+  type GameTemplateGetPayload<S extends boolean | null | undefined | GameTemplateDefaultArgs> = $Result.GetResult<Prisma.$GameTemplatePayload, S>
 
-  type QuizTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<QuizTemplateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: QuizTemplateCountAggregateInputType | true
+  type GameTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<GameTemplateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: GameTemplateCountAggregateInputType | true
     }
 
-  export interface QuizTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['QuizTemplate'], meta: { name: 'QuizTemplate' } }
+  export interface GameTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['GameTemplate'], meta: { name: 'GameTemplate' } }
     /**
-     * Find zero or one QuizTemplate that matches the filter.
-     * @param {QuizTemplateFindUniqueArgs} args - Arguments to find a QuizTemplate
+     * Find zero or one GameTemplate that matches the filter.
+     * @param {GameTemplateFindUniqueArgs} args - Arguments to find a GameTemplate
      * @example
-     * // Get one QuizTemplate
-     * const quizTemplate = await prisma.quizTemplate.findUnique({
+     * // Get one GameTemplate
+     * const gameTemplate = await prisma.gameTemplate.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends QuizTemplateFindUniqueArgs>(args: SelectSubset<T, QuizTemplateFindUniqueArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends GameTemplateFindUniqueArgs>(args: SelectSubset<T, GameTemplateFindUniqueArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one QuizTemplate that matches the filter or throw an error with `error.code='P2025'`
+     * Find one GameTemplate that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {QuizTemplateFindUniqueOrThrowArgs} args - Arguments to find a QuizTemplate
+     * @param {GameTemplateFindUniqueOrThrowArgs} args - Arguments to find a GameTemplate
      * @example
-     * // Get one QuizTemplate
-     * const quizTemplate = await prisma.quizTemplate.findUniqueOrThrow({
+     * // Get one GameTemplate
+     * const gameTemplate = await prisma.gameTemplate.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends QuizTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, QuizTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends GameTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, GameTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first QuizTemplate that matches the filter.
+     * Find the first GameTemplate that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuizTemplateFindFirstArgs} args - Arguments to find a QuizTemplate
+     * @param {GameTemplateFindFirstArgs} args - Arguments to find a GameTemplate
      * @example
-     * // Get one QuizTemplate
-     * const quizTemplate = await prisma.quizTemplate.findFirst({
+     * // Get one GameTemplate
+     * const gameTemplate = await prisma.gameTemplate.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends QuizTemplateFindFirstArgs>(args?: SelectSubset<T, QuizTemplateFindFirstArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends GameTemplateFindFirstArgs>(args?: SelectSubset<T, GameTemplateFindFirstArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first QuizTemplate that matches the filter or
+     * Find the first GameTemplate that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuizTemplateFindFirstOrThrowArgs} args - Arguments to find a QuizTemplate
+     * @param {GameTemplateFindFirstOrThrowArgs} args - Arguments to find a GameTemplate
      * @example
-     * // Get one QuizTemplate
-     * const quizTemplate = await prisma.quizTemplate.findFirstOrThrow({
+     * // Get one GameTemplate
+     * const gameTemplate = await prisma.gameTemplate.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends QuizTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, QuizTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends GameTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, GameTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more QuizTemplates that matches the filter.
+     * Find zero or more GameTemplates that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuizTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {GameTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all QuizTemplates
-     * const quizTemplates = await prisma.quizTemplate.findMany()
+     * // Get all GameTemplates
+     * const gameTemplates = await prisma.gameTemplate.findMany()
      * 
-     * // Get first 10 QuizTemplates
-     * const quizTemplates = await prisma.quizTemplate.findMany({ take: 10 })
+     * // Get first 10 GameTemplates
+     * const gameTemplates = await prisma.gameTemplate.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const quizTemplateWithIdOnly = await prisma.quizTemplate.findMany({ select: { id: true } })
+     * const gameTemplateWithIdOnly = await prisma.gameTemplate.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends QuizTemplateFindManyArgs>(args?: SelectSubset<T, QuizTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends GameTemplateFindManyArgs>(args?: SelectSubset<T, GameTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a QuizTemplate.
-     * @param {QuizTemplateCreateArgs} args - Arguments to create a QuizTemplate.
+     * Create a GameTemplate.
+     * @param {GameTemplateCreateArgs} args - Arguments to create a GameTemplate.
      * @example
-     * // Create one QuizTemplate
-     * const QuizTemplate = await prisma.quizTemplate.create({
+     * // Create one GameTemplate
+     * const GameTemplate = await prisma.gameTemplate.create({
      *   data: {
-     *     // ... data to create a QuizTemplate
+     *     // ... data to create a GameTemplate
      *   }
      * })
      * 
      */
-    create<T extends QuizTemplateCreateArgs>(args: SelectSubset<T, QuizTemplateCreateArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends GameTemplateCreateArgs>(args: SelectSubset<T, GameTemplateCreateArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many QuizTemplates.
-     * @param {QuizTemplateCreateManyArgs} args - Arguments to create many QuizTemplates.
+     * Create many GameTemplates.
+     * @param {GameTemplateCreateManyArgs} args - Arguments to create many GameTemplates.
      * @example
-     * // Create many QuizTemplates
-     * const quizTemplate = await prisma.quizTemplate.createMany({
+     * // Create many GameTemplates
+     * const gameTemplate = await prisma.gameTemplate.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends QuizTemplateCreateManyArgs>(args?: SelectSubset<T, QuizTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends GameTemplateCreateManyArgs>(args?: SelectSubset<T, GameTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many QuizTemplates and returns the data saved in the database.
-     * @param {QuizTemplateCreateManyAndReturnArgs} args - Arguments to create many QuizTemplates.
+     * Create many GameTemplates and returns the data saved in the database.
+     * @param {GameTemplateCreateManyAndReturnArgs} args - Arguments to create many GameTemplates.
      * @example
-     * // Create many QuizTemplates
-     * const quizTemplate = await prisma.quizTemplate.createManyAndReturn({
+     * // Create many GameTemplates
+     * const gameTemplate = await prisma.gameTemplate.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many QuizTemplates and only return the `id`
-     * const quizTemplateWithIdOnly = await prisma.quizTemplate.createManyAndReturn({
+     * // Create many GameTemplates and only return the `id`
+     * const gameTemplateWithIdOnly = await prisma.gameTemplate.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -5495,28 +6593,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends QuizTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, QuizTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends GameTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, GameTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a QuizTemplate.
-     * @param {QuizTemplateDeleteArgs} args - Arguments to delete one QuizTemplate.
+     * Delete a GameTemplate.
+     * @param {GameTemplateDeleteArgs} args - Arguments to delete one GameTemplate.
      * @example
-     * // Delete one QuizTemplate
-     * const QuizTemplate = await prisma.quizTemplate.delete({
+     * // Delete one GameTemplate
+     * const GameTemplate = await prisma.gameTemplate.delete({
      *   where: {
-     *     // ... filter to delete one QuizTemplate
+     *     // ... filter to delete one GameTemplate
      *   }
      * })
      * 
      */
-    delete<T extends QuizTemplateDeleteArgs>(args: SelectSubset<T, QuizTemplateDeleteArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends GameTemplateDeleteArgs>(args: SelectSubset<T, GameTemplateDeleteArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one QuizTemplate.
-     * @param {QuizTemplateUpdateArgs} args - Arguments to update one QuizTemplate.
+     * Update one GameTemplate.
+     * @param {GameTemplateUpdateArgs} args - Arguments to update one GameTemplate.
      * @example
-     * // Update one QuizTemplate
-     * const quizTemplate = await prisma.quizTemplate.update({
+     * // Update one GameTemplate
+     * const gameTemplate = await prisma.gameTemplate.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -5526,30 +6624,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends QuizTemplateUpdateArgs>(args: SelectSubset<T, QuizTemplateUpdateArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends GameTemplateUpdateArgs>(args: SelectSubset<T, GameTemplateUpdateArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more QuizTemplates.
-     * @param {QuizTemplateDeleteManyArgs} args - Arguments to filter QuizTemplates to delete.
+     * Delete zero or more GameTemplates.
+     * @param {GameTemplateDeleteManyArgs} args - Arguments to filter GameTemplates to delete.
      * @example
-     * // Delete a few QuizTemplates
-     * const { count } = await prisma.quizTemplate.deleteMany({
+     * // Delete a few GameTemplates
+     * const { count } = await prisma.gameTemplate.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends QuizTemplateDeleteManyArgs>(args?: SelectSubset<T, QuizTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends GameTemplateDeleteManyArgs>(args?: SelectSubset<T, GameTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more QuizTemplates.
+     * Update zero or more GameTemplates.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuizTemplateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {GameTemplateUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many QuizTemplates
-     * const quizTemplate = await prisma.quizTemplate.updateMany({
+     * // Update many GameTemplates
+     * const gameTemplate = await prisma.gameTemplate.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -5559,14 +6657,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends QuizTemplateUpdateManyArgs>(args: SelectSubset<T, QuizTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends GameTemplateUpdateManyArgs>(args: SelectSubset<T, GameTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more QuizTemplates and returns the data updated in the database.
-     * @param {QuizTemplateUpdateManyAndReturnArgs} args - Arguments to update many QuizTemplates.
+     * Update zero or more GameTemplates and returns the data updated in the database.
+     * @param {GameTemplateUpdateManyAndReturnArgs} args - Arguments to update many GameTemplates.
      * @example
-     * // Update many QuizTemplates
-     * const quizTemplate = await prisma.quizTemplate.updateManyAndReturn({
+     * // Update many GameTemplates
+     * const gameTemplate = await prisma.gameTemplate.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -5575,8 +6673,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more QuizTemplates and only return the `id`
-     * const quizTemplateWithIdOnly = await prisma.quizTemplate.updateManyAndReturn({
+     * // Update zero or more GameTemplates and only return the `id`
+     * const gameTemplateWithIdOnly = await prisma.gameTemplate.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -5589,56 +6687,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends QuizTemplateUpdateManyAndReturnArgs>(args: SelectSubset<T, QuizTemplateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends GameTemplateUpdateManyAndReturnArgs>(args: SelectSubset<T, GameTemplateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one QuizTemplate.
-     * @param {QuizTemplateUpsertArgs} args - Arguments to update or create a QuizTemplate.
+     * Create or update one GameTemplate.
+     * @param {GameTemplateUpsertArgs} args - Arguments to update or create a GameTemplate.
      * @example
-     * // Update or create a QuizTemplate
-     * const quizTemplate = await prisma.quizTemplate.upsert({
+     * // Update or create a GameTemplate
+     * const gameTemplate = await prisma.gameTemplate.upsert({
      *   create: {
-     *     // ... data to create a QuizTemplate
+     *     // ... data to create a GameTemplate
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the QuizTemplate we want to update
+     *     // ... the filter for the GameTemplate we want to update
      *   }
      * })
      */
-    upsert<T extends QuizTemplateUpsertArgs>(args: SelectSubset<T, QuizTemplateUpsertArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends GameTemplateUpsertArgs>(args: SelectSubset<T, GameTemplateUpsertArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of QuizTemplates.
+     * Count the number of GameTemplates.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuizTemplateCountArgs} args - Arguments to filter QuizTemplates to count.
+     * @param {GameTemplateCountArgs} args - Arguments to filter GameTemplates to count.
      * @example
-     * // Count the number of QuizTemplates
-     * const count = await prisma.quizTemplate.count({
+     * // Count the number of GameTemplates
+     * const count = await prisma.gameTemplate.count({
      *   where: {
-     *     // ... the filter for the QuizTemplates we want to count
+     *     // ... the filter for the GameTemplates we want to count
      *   }
      * })
     **/
-    count<T extends QuizTemplateCountArgs>(
-      args?: Subset<T, QuizTemplateCountArgs>,
+    count<T extends GameTemplateCountArgs>(
+      args?: Subset<T, GameTemplateCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], QuizTemplateCountAggregateOutputType>
+          : GetScalarType<T['select'], GameTemplateCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a QuizTemplate.
+     * Allows you to perform aggregations operations on a GameTemplate.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuizTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {GameTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -5658,13 +6756,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends QuizTemplateAggregateArgs>(args: Subset<T, QuizTemplateAggregateArgs>): Prisma.PrismaPromise<GetQuizTemplateAggregateType<T>>
+    aggregate<T extends GameTemplateAggregateArgs>(args: Subset<T, GameTemplateAggregateArgs>): Prisma.PrismaPromise<GetGameTemplateAggregateType<T>>
 
     /**
-     * Group by QuizTemplate.
+     * Group by GameTemplate.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuizTemplateGroupByArgs} args - Group by arguments.
+     * @param {GameTemplateGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -5679,14 +6777,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends QuizTemplateGroupByArgs,
+      T extends GameTemplateGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: QuizTemplateGroupByArgs['orderBy'] }
-        : { orderBy?: QuizTemplateGroupByArgs['orderBy'] },
+        ? { orderBy: GameTemplateGroupByArgs['orderBy'] }
+        : { orderBy?: GameTemplateGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -5735,24 +6833,24 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, QuizTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQuizTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, GameTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetGameTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the QuizTemplate model
+   * Fields of the GameTemplate model
    */
-  readonly fields: QuizTemplateFieldRefs;
+  readonly fields: GameTemplateFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for QuizTemplate.
+   * The delegate class that acts as a "Promise-like" for GameTemplate.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__QuizTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__GameTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    creatorTeacher<T extends TeacherDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeacherDefaultArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    questions<T extends QuizTemplate$questionsArgs<ExtArgs> = {}>(args?: Subset<T, QuizTemplate$questionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    gameInstances<T extends QuizTemplate$gameInstancesArgs<ExtArgs> = {}>(args?: Subset<T, QuizTemplate$gameInstancesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameInstancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    creator<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    questions<T extends GameTemplate$questionsArgs<ExtArgs> = {}>(args?: Subset<T, GameTemplate$questionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    gameInstances<T extends GameTemplate$gameInstancesArgs<ExtArgs> = {}>(args?: Subset<T, GameTemplate$gameInstancesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameInstancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5779,442 +6877,442 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the QuizTemplate model
+   * Fields of the GameTemplate model
    */
-  interface QuizTemplateFieldRefs {
-    readonly id: FieldRef<"QuizTemplate", 'String'>
-    readonly name: FieldRef<"QuizTemplate", 'String'>
-    readonly creatorTeacherId: FieldRef<"QuizTemplate", 'String'>
-    readonly gradeLevel: FieldRef<"QuizTemplate", 'String'>
-    readonly themes: FieldRef<"QuizTemplate", 'String[]'>
-    readonly discipline: FieldRef<"QuizTemplate", 'String'>
-    readonly description: FieldRef<"QuizTemplate", 'String'>
-    readonly defaultMode: FieldRef<"QuizTemplate", 'PlayMode'>
-    readonly createdAt: FieldRef<"QuizTemplate", 'DateTime'>
-    readonly updatedAt: FieldRef<"QuizTemplate", 'DateTime'>
+  interface GameTemplateFieldRefs {
+    readonly id: FieldRef<"GameTemplate", 'String'>
+    readonly name: FieldRef<"GameTemplate", 'String'>
+    readonly creatorId: FieldRef<"GameTemplate", 'String'>
+    readonly gradeLevel: FieldRef<"GameTemplate", 'String'>
+    readonly themes: FieldRef<"GameTemplate", 'String[]'>
+    readonly discipline: FieldRef<"GameTemplate", 'String'>
+    readonly description: FieldRef<"GameTemplate", 'String'>
+    readonly defaultMode: FieldRef<"GameTemplate", 'PlayMode'>
+    readonly createdAt: FieldRef<"GameTemplate", 'DateTime'>
+    readonly updatedAt: FieldRef<"GameTemplate", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * QuizTemplate findUnique
+   * GameTemplate findUnique
    */
-  export type QuizTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuizTemplate to fetch.
+     * Filter, which GameTemplate to fetch.
      */
-    where: QuizTemplateWhereUniqueInput
+    where: GameTemplateWhereUniqueInput
   }
 
   /**
-   * QuizTemplate findUniqueOrThrow
+   * GameTemplate findUniqueOrThrow
    */
-  export type QuizTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuizTemplate to fetch.
+     * Filter, which GameTemplate to fetch.
      */
-    where: QuizTemplateWhereUniqueInput
+    where: GameTemplateWhereUniqueInput
   }
 
   /**
-   * QuizTemplate findFirst
+   * GameTemplate findFirst
    */
-  export type QuizTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuizTemplate to fetch.
+     * Filter, which GameTemplate to fetch.
      */
-    where?: QuizTemplateWhereInput
+    where?: GameTemplateWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of QuizTemplates to fetch.
+     * Determine the order of GameTemplates to fetch.
      */
-    orderBy?: QuizTemplateOrderByWithRelationInput | QuizTemplateOrderByWithRelationInput[]
+    orderBy?: GameTemplateOrderByWithRelationInput | GameTemplateOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for QuizTemplates.
+     * Sets the position for searching for GameTemplates.
      */
-    cursor?: QuizTemplateWhereUniqueInput
+    cursor?: GameTemplateWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` QuizTemplates from the position of the cursor.
+     * Take `±n` GameTemplates from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` QuizTemplates.
+     * Skip the first `n` GameTemplates.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of QuizTemplates.
+     * Filter by unique combinations of GameTemplates.
      */
-    distinct?: QuizTemplateScalarFieldEnum | QuizTemplateScalarFieldEnum[]
+    distinct?: GameTemplateScalarFieldEnum | GameTemplateScalarFieldEnum[]
   }
 
   /**
-   * QuizTemplate findFirstOrThrow
+   * GameTemplate findFirstOrThrow
    */
-  export type QuizTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuizTemplate to fetch.
+     * Filter, which GameTemplate to fetch.
      */
-    where?: QuizTemplateWhereInput
+    where?: GameTemplateWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of QuizTemplates to fetch.
+     * Determine the order of GameTemplates to fetch.
      */
-    orderBy?: QuizTemplateOrderByWithRelationInput | QuizTemplateOrderByWithRelationInput[]
+    orderBy?: GameTemplateOrderByWithRelationInput | GameTemplateOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for QuizTemplates.
+     * Sets the position for searching for GameTemplates.
      */
-    cursor?: QuizTemplateWhereUniqueInput
+    cursor?: GameTemplateWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` QuizTemplates from the position of the cursor.
+     * Take `±n` GameTemplates from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` QuizTemplates.
+     * Skip the first `n` GameTemplates.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of QuizTemplates.
+     * Filter by unique combinations of GameTemplates.
      */
-    distinct?: QuizTemplateScalarFieldEnum | QuizTemplateScalarFieldEnum[]
+    distinct?: GameTemplateScalarFieldEnum | GameTemplateScalarFieldEnum[]
   }
 
   /**
-   * QuizTemplate findMany
+   * GameTemplate findMany
    */
-  export type QuizTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuizTemplates to fetch.
+     * Filter, which GameTemplates to fetch.
      */
-    where?: QuizTemplateWhereInput
+    where?: GameTemplateWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of QuizTemplates to fetch.
+     * Determine the order of GameTemplates to fetch.
      */
-    orderBy?: QuizTemplateOrderByWithRelationInput | QuizTemplateOrderByWithRelationInput[]
+    orderBy?: GameTemplateOrderByWithRelationInput | GameTemplateOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing QuizTemplates.
+     * Sets the position for listing GameTemplates.
      */
-    cursor?: QuizTemplateWhereUniqueInput
+    cursor?: GameTemplateWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` QuizTemplates from the position of the cursor.
+     * Take `±n` GameTemplates from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` QuizTemplates.
+     * Skip the first `n` GameTemplates.
      */
     skip?: number
-    distinct?: QuizTemplateScalarFieldEnum | QuizTemplateScalarFieldEnum[]
+    distinct?: GameTemplateScalarFieldEnum | GameTemplateScalarFieldEnum[]
   }
 
   /**
-   * QuizTemplate create
+   * GameTemplate create
    */
-  export type QuizTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * The data needed to create a QuizTemplate.
+     * The data needed to create a GameTemplate.
      */
-    data: XOR<QuizTemplateCreateInput, QuizTemplateUncheckedCreateInput>
+    data: XOR<GameTemplateCreateInput, GameTemplateUncheckedCreateInput>
   }
 
   /**
-   * QuizTemplate createMany
+   * GameTemplate createMany
    */
-  export type QuizTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many QuizTemplates.
+     * The data used to create many GameTemplates.
      */
-    data: QuizTemplateCreateManyInput | QuizTemplateCreateManyInput[]
+    data: GameTemplateCreateManyInput | GameTemplateCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * QuizTemplate createManyAndReturn
+   * GameTemplate createManyAndReturn
    */
-  export type QuizTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelectCreateManyAndReturn<ExtArgs> | null
+    select?: GameTemplateSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
-     * The data used to create many QuizTemplates.
+     * The data used to create many GameTemplates.
      */
-    data: QuizTemplateCreateManyInput | QuizTemplateCreateManyInput[]
+    data: GameTemplateCreateManyInput | GameTemplateCreateManyInput[]
     skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateIncludeCreateManyAndReturn<ExtArgs> | null
+    include?: GameTemplateIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * QuizTemplate update
+   * GameTemplate update
    */
-  export type QuizTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * The data needed to update a QuizTemplate.
+     * The data needed to update a GameTemplate.
      */
-    data: XOR<QuizTemplateUpdateInput, QuizTemplateUncheckedUpdateInput>
+    data: XOR<GameTemplateUpdateInput, GameTemplateUncheckedUpdateInput>
     /**
-     * Choose, which QuizTemplate to update.
+     * Choose, which GameTemplate to update.
      */
-    where: QuizTemplateWhereUniqueInput
+    where: GameTemplateWhereUniqueInput
   }
 
   /**
-   * QuizTemplate updateMany
+   * GameTemplate updateMany
    */
-  export type QuizTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update QuizTemplates.
+     * The data used to update GameTemplates.
      */
-    data: XOR<QuizTemplateUpdateManyMutationInput, QuizTemplateUncheckedUpdateManyInput>
+    data: XOR<GameTemplateUpdateManyMutationInput, GameTemplateUncheckedUpdateManyInput>
     /**
-     * Filter which QuizTemplates to update
+     * Filter which GameTemplates to update
      */
-    where?: QuizTemplateWhereInput
+    where?: GameTemplateWhereInput
     /**
-     * Limit how many QuizTemplates to update.
+     * Limit how many GameTemplates to update.
      */
     limit?: number
   }
 
   /**
-   * QuizTemplate updateManyAndReturn
+   * GameTemplate updateManyAndReturn
    */
-  export type QuizTemplateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: GameTemplateSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
-     * The data used to update QuizTemplates.
+     * The data used to update GameTemplates.
      */
-    data: XOR<QuizTemplateUpdateManyMutationInput, QuizTemplateUncheckedUpdateManyInput>
+    data: XOR<GameTemplateUpdateManyMutationInput, GameTemplateUncheckedUpdateManyInput>
     /**
-     * Filter which QuizTemplates to update
+     * Filter which GameTemplates to update
      */
-    where?: QuizTemplateWhereInput
+    where?: GameTemplateWhereInput
     /**
-     * Limit how many QuizTemplates to update.
+     * Limit how many GameTemplates to update.
      */
     limit?: number
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateIncludeUpdateManyAndReturn<ExtArgs> | null
+    include?: GameTemplateIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * QuizTemplate upsert
+   * GameTemplate upsert
    */
-  export type QuizTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * The filter to search for the QuizTemplate to update in case it exists.
+     * The filter to search for the GameTemplate to update in case it exists.
      */
-    where: QuizTemplateWhereUniqueInput
+    where: GameTemplateWhereUniqueInput
     /**
-     * In case the QuizTemplate found by the `where` argument doesn't exist, create a new QuizTemplate with this data.
+     * In case the GameTemplate found by the `where` argument doesn't exist, create a new GameTemplate with this data.
      */
-    create: XOR<QuizTemplateCreateInput, QuizTemplateUncheckedCreateInput>
+    create: XOR<GameTemplateCreateInput, GameTemplateUncheckedCreateInput>
     /**
-     * In case the QuizTemplate was found with the provided `where` argument, update it with this data.
+     * In case the GameTemplate was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<QuizTemplateUpdateInput, QuizTemplateUncheckedUpdateInput>
+    update: XOR<GameTemplateUpdateInput, GameTemplateUncheckedUpdateInput>
   }
 
   /**
-   * QuizTemplate delete
+   * GameTemplate delete
    */
-  export type QuizTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
     /**
-     * Filter which QuizTemplate to delete.
+     * Filter which GameTemplate to delete.
      */
-    where: QuizTemplateWhereUniqueInput
+    where: GameTemplateWhereUniqueInput
   }
 
   /**
-   * QuizTemplate deleteMany
+   * GameTemplate deleteMany
    */
-  export type QuizTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which QuizTemplates to delete
+     * Filter which GameTemplates to delete
      */
-    where?: QuizTemplateWhereInput
+    where?: GameTemplateWhereInput
     /**
-     * Limit how many QuizTemplates to delete.
+     * Limit how many GameTemplates to delete.
      */
     limit?: number
   }
 
   /**
-   * QuizTemplate.questions
+   * GameTemplate.questions
    */
-  export type QuizTemplate$questionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplate$questionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
-    where?: QuestionsInQuizTemplateWhereInput
-    orderBy?: QuestionsInQuizTemplateOrderByWithRelationInput | QuestionsInQuizTemplateOrderByWithRelationInput[]
-    cursor?: QuestionsInQuizTemplateWhereUniqueInput
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
+    where?: QuestionsInGameTemplateWhereInput
+    orderBy?: QuestionsInGameTemplateOrderByWithRelationInput | QuestionsInGameTemplateOrderByWithRelationInput[]
+    cursor?: QuestionsInGameTemplateWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: QuestionsInQuizTemplateScalarFieldEnum | QuestionsInQuizTemplateScalarFieldEnum[]
+    distinct?: QuestionsInGameTemplateScalarFieldEnum | QuestionsInGameTemplateScalarFieldEnum[]
   }
 
   /**
-   * QuizTemplate.gameInstances
+   * GameTemplate.gameInstances
    */
-  export type QuizTemplate$gameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplate$gameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the GameInstance
      */
@@ -6236,60 +7334,60 @@ export namespace Prisma {
   }
 
   /**
-   * QuizTemplate without action
+   * GameTemplate without action
    */
-  export type QuizTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuizTemplate
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: QuizTemplateSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuizTemplate
+     * Omit specific fields from the GameTemplate
      */
-    omit?: QuizTemplateOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuizTemplateInclude<ExtArgs> | null
+    include?: GameTemplateInclude<ExtArgs> | null
   }
 
 
   /**
-   * Model QuestionsInQuizTemplate
+   * Model QuestionsInGameTemplate
    */
 
-  export type AggregateQuestionsInQuizTemplate = {
-    _count: QuestionsInQuizTemplateCountAggregateOutputType | null
-    _avg: QuestionsInQuizTemplateAvgAggregateOutputType | null
-    _sum: QuestionsInQuizTemplateSumAggregateOutputType | null
-    _min: QuestionsInQuizTemplateMinAggregateOutputType | null
-    _max: QuestionsInQuizTemplateMaxAggregateOutputType | null
+  export type AggregateQuestionsInGameTemplate = {
+    _count: QuestionsInGameTemplateCountAggregateOutputType | null
+    _avg: QuestionsInGameTemplateAvgAggregateOutputType | null
+    _sum: QuestionsInGameTemplateSumAggregateOutputType | null
+    _min: QuestionsInGameTemplateMinAggregateOutputType | null
+    _max: QuestionsInGameTemplateMaxAggregateOutputType | null
   }
 
-  export type QuestionsInQuizTemplateAvgAggregateOutputType = {
+  export type QuestionsInGameTemplateAvgAggregateOutputType = {
     sequence: number | null
   }
 
-  export type QuestionsInQuizTemplateSumAggregateOutputType = {
+  export type QuestionsInGameTemplateSumAggregateOutputType = {
     sequence: number | null
   }
 
-  export type QuestionsInQuizTemplateMinAggregateOutputType = {
-    quizTemplateId: string | null
+  export type QuestionsInGameTemplateMinAggregateOutputType = {
+    gameTemplateId: string | null
     questionUid: string | null
     sequence: number | null
     createdAt: Date | null
   }
 
-  export type QuestionsInQuizTemplateMaxAggregateOutputType = {
-    quizTemplateId: string | null
+  export type QuestionsInGameTemplateMaxAggregateOutputType = {
+    gameTemplateId: string | null
     questionUid: string | null
     sequence: number | null
     createdAt: Date | null
   }
 
-  export type QuestionsInQuizTemplateCountAggregateOutputType = {
-    quizTemplateId: number
+  export type QuestionsInGameTemplateCountAggregateOutputType = {
+    gameTemplateId: number
     questionUid: number
     sequence: number
     createdAt: number
@@ -6297,338 +7395,338 @@ export namespace Prisma {
   }
 
 
-  export type QuestionsInQuizTemplateAvgAggregateInputType = {
+  export type QuestionsInGameTemplateAvgAggregateInputType = {
     sequence?: true
   }
 
-  export type QuestionsInQuizTemplateSumAggregateInputType = {
+  export type QuestionsInGameTemplateSumAggregateInputType = {
     sequence?: true
   }
 
-  export type QuestionsInQuizTemplateMinAggregateInputType = {
-    quizTemplateId?: true
+  export type QuestionsInGameTemplateMinAggregateInputType = {
+    gameTemplateId?: true
     questionUid?: true
     sequence?: true
     createdAt?: true
   }
 
-  export type QuestionsInQuizTemplateMaxAggregateInputType = {
-    quizTemplateId?: true
+  export type QuestionsInGameTemplateMaxAggregateInputType = {
+    gameTemplateId?: true
     questionUid?: true
     sequence?: true
     createdAt?: true
   }
 
-  export type QuestionsInQuizTemplateCountAggregateInputType = {
-    quizTemplateId?: true
+  export type QuestionsInGameTemplateCountAggregateInputType = {
+    gameTemplateId?: true
     questionUid?: true
     sequence?: true
     createdAt?: true
     _all?: true
   }
 
-  export type QuestionsInQuizTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which QuestionsInQuizTemplate to aggregate.
+     * Filter which QuestionsInGameTemplate to aggregate.
      */
-    where?: QuestionsInQuizTemplateWhereInput
+    where?: QuestionsInGameTemplateWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of QuestionsInQuizTemplates to fetch.
+     * Determine the order of QuestionsInGameTemplates to fetch.
      */
-    orderBy?: QuestionsInQuizTemplateOrderByWithRelationInput | QuestionsInQuizTemplateOrderByWithRelationInput[]
+    orderBy?: QuestionsInGameTemplateOrderByWithRelationInput | QuestionsInGameTemplateOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: QuestionsInQuizTemplateWhereUniqueInput
+    cursor?: QuestionsInGameTemplateWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` QuestionsInQuizTemplates from the position of the cursor.
+     * Take `±n` QuestionsInGameTemplates from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` QuestionsInQuizTemplates.
+     * Skip the first `n` QuestionsInGameTemplates.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned QuestionsInQuizTemplates
+     * Count returned QuestionsInGameTemplates
     **/
-    _count?: true | QuestionsInQuizTemplateCountAggregateInputType
+    _count?: true | QuestionsInGameTemplateCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: QuestionsInQuizTemplateAvgAggregateInputType
+    _avg?: QuestionsInGameTemplateAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: QuestionsInQuizTemplateSumAggregateInputType
+    _sum?: QuestionsInGameTemplateSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: QuestionsInQuizTemplateMinAggregateInputType
+    _min?: QuestionsInGameTemplateMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: QuestionsInQuizTemplateMaxAggregateInputType
+    _max?: QuestionsInGameTemplateMaxAggregateInputType
   }
 
-  export type GetQuestionsInQuizTemplateAggregateType<T extends QuestionsInQuizTemplateAggregateArgs> = {
-        [P in keyof T & keyof AggregateQuestionsInQuizTemplate]: P extends '_count' | 'count'
+  export type GetQuestionsInGameTemplateAggregateType<T extends QuestionsInGameTemplateAggregateArgs> = {
+        [P in keyof T & keyof AggregateQuestionsInGameTemplate]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateQuestionsInQuizTemplate[P]>
-      : GetScalarType<T[P], AggregateQuestionsInQuizTemplate[P]>
+        : GetScalarType<T[P], AggregateQuestionsInGameTemplate[P]>
+      : GetScalarType<T[P], AggregateQuestionsInGameTemplate[P]>
   }
 
 
 
 
-  export type QuestionsInQuizTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: QuestionsInQuizTemplateWhereInput
-    orderBy?: QuestionsInQuizTemplateOrderByWithAggregationInput | QuestionsInQuizTemplateOrderByWithAggregationInput[]
-    by: QuestionsInQuizTemplateScalarFieldEnum[] | QuestionsInQuizTemplateScalarFieldEnum
-    having?: QuestionsInQuizTemplateScalarWhereWithAggregatesInput
+  export type QuestionsInGameTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuestionsInGameTemplateWhereInput
+    orderBy?: QuestionsInGameTemplateOrderByWithAggregationInput | QuestionsInGameTemplateOrderByWithAggregationInput[]
+    by: QuestionsInGameTemplateScalarFieldEnum[] | QuestionsInGameTemplateScalarFieldEnum
+    having?: QuestionsInGameTemplateScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: QuestionsInQuizTemplateCountAggregateInputType | true
-    _avg?: QuestionsInQuizTemplateAvgAggregateInputType
-    _sum?: QuestionsInQuizTemplateSumAggregateInputType
-    _min?: QuestionsInQuizTemplateMinAggregateInputType
-    _max?: QuestionsInQuizTemplateMaxAggregateInputType
+    _count?: QuestionsInGameTemplateCountAggregateInputType | true
+    _avg?: QuestionsInGameTemplateAvgAggregateInputType
+    _sum?: QuestionsInGameTemplateSumAggregateInputType
+    _min?: QuestionsInGameTemplateMinAggregateInputType
+    _max?: QuestionsInGameTemplateMaxAggregateInputType
   }
 
-  export type QuestionsInQuizTemplateGroupByOutputType = {
-    quizTemplateId: string
+  export type QuestionsInGameTemplateGroupByOutputType = {
+    gameTemplateId: string
     questionUid: string
     sequence: number
     createdAt: Date
-    _count: QuestionsInQuizTemplateCountAggregateOutputType | null
-    _avg: QuestionsInQuizTemplateAvgAggregateOutputType | null
-    _sum: QuestionsInQuizTemplateSumAggregateOutputType | null
-    _min: QuestionsInQuizTemplateMinAggregateOutputType | null
-    _max: QuestionsInQuizTemplateMaxAggregateOutputType | null
+    _count: QuestionsInGameTemplateCountAggregateOutputType | null
+    _avg: QuestionsInGameTemplateAvgAggregateOutputType | null
+    _sum: QuestionsInGameTemplateSumAggregateOutputType | null
+    _min: QuestionsInGameTemplateMinAggregateOutputType | null
+    _max: QuestionsInGameTemplateMaxAggregateOutputType | null
   }
 
-  type GetQuestionsInQuizTemplateGroupByPayload<T extends QuestionsInQuizTemplateGroupByArgs> = Prisma.PrismaPromise<
+  type GetQuestionsInGameTemplateGroupByPayload<T extends QuestionsInGameTemplateGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<QuestionsInQuizTemplateGroupByOutputType, T['by']> &
+      PickEnumerable<QuestionsInGameTemplateGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof QuestionsInQuizTemplateGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof QuestionsInGameTemplateGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], QuestionsInQuizTemplateGroupByOutputType[P]>
-            : GetScalarType<T[P], QuestionsInQuizTemplateGroupByOutputType[P]>
+              : GetScalarType<T[P], QuestionsInGameTemplateGroupByOutputType[P]>
+            : GetScalarType<T[P], QuestionsInGameTemplateGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type QuestionsInQuizTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    quizTemplateId?: boolean
+  export type QuestionsInGameTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    gameTemplateId?: boolean
     questionUid?: boolean
     sequence?: boolean
     createdAt?: boolean
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     question?: boolean | QuestionDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["questionsInQuizTemplate"]>
+  }, ExtArgs["result"]["questionsInGameTemplate"]>
 
-  export type QuestionsInQuizTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    quizTemplateId?: boolean
+  export type QuestionsInGameTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    gameTemplateId?: boolean
     questionUid?: boolean
     sequence?: boolean
     createdAt?: boolean
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     question?: boolean | QuestionDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["questionsInQuizTemplate"]>
+  }, ExtArgs["result"]["questionsInGameTemplate"]>
 
-  export type QuestionsInQuizTemplateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    quizTemplateId?: boolean
+  export type QuestionsInGameTemplateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    gameTemplateId?: boolean
     questionUid?: boolean
     sequence?: boolean
     createdAt?: boolean
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     question?: boolean | QuestionDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["questionsInQuizTemplate"]>
+  }, ExtArgs["result"]["questionsInGameTemplate"]>
 
-  export type QuestionsInQuizTemplateSelectScalar = {
-    quizTemplateId?: boolean
+  export type QuestionsInGameTemplateSelectScalar = {
+    gameTemplateId?: boolean
     questionUid?: boolean
     sequence?: boolean
     createdAt?: boolean
   }
 
-  export type QuestionsInQuizTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"quizTemplateId" | "questionUid" | "sequence" | "createdAt", ExtArgs["result"]["questionsInQuizTemplate"]>
-  export type QuestionsInQuizTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
+  export type QuestionsInGameTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"gameTemplateId" | "questionUid" | "sequence" | "createdAt", ExtArgs["result"]["questionsInGameTemplate"]>
+  export type QuestionsInGameTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     question?: boolean | QuestionDefaultArgs<ExtArgs>
   }
-  export type QuestionsInQuizTemplateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
+  export type QuestionsInGameTemplateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     question?: boolean | QuestionDefaultArgs<ExtArgs>
   }
-  export type QuestionsInQuizTemplateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
+  export type QuestionsInGameTemplateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     question?: boolean | QuestionDefaultArgs<ExtArgs>
   }
 
-  export type $QuestionsInQuizTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "QuestionsInQuizTemplate"
+  export type $QuestionsInGameTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "QuestionsInGameTemplate"
     objects: {
-      quizTemplate: Prisma.$QuizTemplatePayload<ExtArgs>
+      gameTemplate: Prisma.$GameTemplatePayload<ExtArgs>
       question: Prisma.$QuestionPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
-      quizTemplateId: string
+      gameTemplateId: string
       questionUid: string
       sequence: number
       createdAt: Date
-    }, ExtArgs["result"]["questionsInQuizTemplate"]>
+    }, ExtArgs["result"]["questionsInGameTemplate"]>
     composites: {}
   }
 
-  type QuestionsInQuizTemplateGetPayload<S extends boolean | null | undefined | QuestionsInQuizTemplateDefaultArgs> = $Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload, S>
+  type QuestionsInGameTemplateGetPayload<S extends boolean | null | undefined | QuestionsInGameTemplateDefaultArgs> = $Result.GetResult<Prisma.$QuestionsInGameTemplatePayload, S>
 
-  type QuestionsInQuizTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<QuestionsInQuizTemplateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: QuestionsInQuizTemplateCountAggregateInputType | true
+  type QuestionsInGameTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<QuestionsInGameTemplateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: QuestionsInGameTemplateCountAggregateInputType | true
     }
 
-  export interface QuestionsInQuizTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['QuestionsInQuizTemplate'], meta: { name: 'QuestionsInQuizTemplate' } }
+  export interface QuestionsInGameTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['QuestionsInGameTemplate'], meta: { name: 'QuestionsInGameTemplate' } }
     /**
-     * Find zero or one QuestionsInQuizTemplate that matches the filter.
-     * @param {QuestionsInQuizTemplateFindUniqueArgs} args - Arguments to find a QuestionsInQuizTemplate
+     * Find zero or one QuestionsInGameTemplate that matches the filter.
+     * @param {QuestionsInGameTemplateFindUniqueArgs} args - Arguments to find a QuestionsInGameTemplate
      * @example
-     * // Get one QuestionsInQuizTemplate
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.findUnique({
+     * // Get one QuestionsInGameTemplate
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends QuestionsInQuizTemplateFindUniqueArgs>(args: SelectSubset<T, QuestionsInQuizTemplateFindUniqueArgs<ExtArgs>>): Prisma__QuestionsInQuizTemplateClient<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends QuestionsInGameTemplateFindUniqueArgs>(args: SelectSubset<T, QuestionsInGameTemplateFindUniqueArgs<ExtArgs>>): Prisma__QuestionsInGameTemplateClient<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one QuestionsInQuizTemplate that matches the filter or throw an error with `error.code='P2025'`
+     * Find one QuestionsInGameTemplate that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {QuestionsInQuizTemplateFindUniqueOrThrowArgs} args - Arguments to find a QuestionsInQuizTemplate
+     * @param {QuestionsInGameTemplateFindUniqueOrThrowArgs} args - Arguments to find a QuestionsInGameTemplate
      * @example
-     * // Get one QuestionsInQuizTemplate
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.findUniqueOrThrow({
+     * // Get one QuestionsInGameTemplate
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends QuestionsInQuizTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, QuestionsInQuizTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QuestionsInQuizTemplateClient<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends QuestionsInGameTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, QuestionsInGameTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QuestionsInGameTemplateClient<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first QuestionsInQuizTemplate that matches the filter.
+     * Find the first QuestionsInGameTemplate that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuestionsInQuizTemplateFindFirstArgs} args - Arguments to find a QuestionsInQuizTemplate
+     * @param {QuestionsInGameTemplateFindFirstArgs} args - Arguments to find a QuestionsInGameTemplate
      * @example
-     * // Get one QuestionsInQuizTemplate
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.findFirst({
+     * // Get one QuestionsInGameTemplate
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends QuestionsInQuizTemplateFindFirstArgs>(args?: SelectSubset<T, QuestionsInQuizTemplateFindFirstArgs<ExtArgs>>): Prisma__QuestionsInQuizTemplateClient<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends QuestionsInGameTemplateFindFirstArgs>(args?: SelectSubset<T, QuestionsInGameTemplateFindFirstArgs<ExtArgs>>): Prisma__QuestionsInGameTemplateClient<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first QuestionsInQuizTemplate that matches the filter or
+     * Find the first QuestionsInGameTemplate that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuestionsInQuizTemplateFindFirstOrThrowArgs} args - Arguments to find a QuestionsInQuizTemplate
+     * @param {QuestionsInGameTemplateFindFirstOrThrowArgs} args - Arguments to find a QuestionsInGameTemplate
      * @example
-     * // Get one QuestionsInQuizTemplate
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.findFirstOrThrow({
+     * // Get one QuestionsInGameTemplate
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends QuestionsInQuizTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, QuestionsInQuizTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__QuestionsInQuizTemplateClient<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends QuestionsInGameTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, QuestionsInGameTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__QuestionsInGameTemplateClient<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more QuestionsInQuizTemplates that matches the filter.
+     * Find zero or more QuestionsInGameTemplates that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuestionsInQuizTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {QuestionsInGameTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all QuestionsInQuizTemplates
-     * const questionsInQuizTemplates = await prisma.questionsInQuizTemplate.findMany()
+     * // Get all QuestionsInGameTemplates
+     * const questionsInGameTemplates = await prisma.questionsInGameTemplate.findMany()
      * 
-     * // Get first 10 QuestionsInQuizTemplates
-     * const questionsInQuizTemplates = await prisma.questionsInQuizTemplate.findMany({ take: 10 })
+     * // Get first 10 QuestionsInGameTemplates
+     * const questionsInGameTemplates = await prisma.questionsInGameTemplate.findMany({ take: 10 })
      * 
-     * // Only select the `quizTemplateId`
-     * const questionsInQuizTemplateWithQuizTemplateIdOnly = await prisma.questionsInQuizTemplate.findMany({ select: { quizTemplateId: true } })
+     * // Only select the `gameTemplateId`
+     * const questionsInGameTemplateWithGameTemplateIdOnly = await prisma.questionsInGameTemplate.findMany({ select: { gameTemplateId: true } })
      * 
      */
-    findMany<T extends QuestionsInQuizTemplateFindManyArgs>(args?: SelectSubset<T, QuestionsInQuizTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends QuestionsInGameTemplateFindManyArgs>(args?: SelectSubset<T, QuestionsInGameTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a QuestionsInQuizTemplate.
-     * @param {QuestionsInQuizTemplateCreateArgs} args - Arguments to create a QuestionsInQuizTemplate.
+     * Create a QuestionsInGameTemplate.
+     * @param {QuestionsInGameTemplateCreateArgs} args - Arguments to create a QuestionsInGameTemplate.
      * @example
-     * // Create one QuestionsInQuizTemplate
-     * const QuestionsInQuizTemplate = await prisma.questionsInQuizTemplate.create({
+     * // Create one QuestionsInGameTemplate
+     * const QuestionsInGameTemplate = await prisma.questionsInGameTemplate.create({
      *   data: {
-     *     // ... data to create a QuestionsInQuizTemplate
+     *     // ... data to create a QuestionsInGameTemplate
      *   }
      * })
      * 
      */
-    create<T extends QuestionsInQuizTemplateCreateArgs>(args: SelectSubset<T, QuestionsInQuizTemplateCreateArgs<ExtArgs>>): Prisma__QuestionsInQuizTemplateClient<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends QuestionsInGameTemplateCreateArgs>(args: SelectSubset<T, QuestionsInGameTemplateCreateArgs<ExtArgs>>): Prisma__QuestionsInGameTemplateClient<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many QuestionsInQuizTemplates.
-     * @param {QuestionsInQuizTemplateCreateManyArgs} args - Arguments to create many QuestionsInQuizTemplates.
+     * Create many QuestionsInGameTemplates.
+     * @param {QuestionsInGameTemplateCreateManyArgs} args - Arguments to create many QuestionsInGameTemplates.
      * @example
-     * // Create many QuestionsInQuizTemplates
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.createMany({
+     * // Create many QuestionsInGameTemplates
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends QuestionsInQuizTemplateCreateManyArgs>(args?: SelectSubset<T, QuestionsInQuizTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends QuestionsInGameTemplateCreateManyArgs>(args?: SelectSubset<T, QuestionsInGameTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many QuestionsInQuizTemplates and returns the data saved in the database.
-     * @param {QuestionsInQuizTemplateCreateManyAndReturnArgs} args - Arguments to create many QuestionsInQuizTemplates.
+     * Create many QuestionsInGameTemplates and returns the data saved in the database.
+     * @param {QuestionsInGameTemplateCreateManyAndReturnArgs} args - Arguments to create many QuestionsInGameTemplates.
      * @example
-     * // Create many QuestionsInQuizTemplates
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.createManyAndReturn({
+     * // Create many QuestionsInGameTemplates
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many QuestionsInQuizTemplates and only return the `quizTemplateId`
-     * const questionsInQuizTemplateWithQuizTemplateIdOnly = await prisma.questionsInQuizTemplate.createManyAndReturn({
-     *   select: { quizTemplateId: true },
+     * // Create many QuestionsInGameTemplates and only return the `gameTemplateId`
+     * const questionsInGameTemplateWithGameTemplateIdOnly = await prisma.questionsInGameTemplate.createManyAndReturn({
+     *   select: { gameTemplateId: true },
      *   data: [
      *     // ... provide data here
      *   ]
@@ -6637,28 +7735,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends QuestionsInQuizTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, QuestionsInQuizTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends QuestionsInGameTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, QuestionsInGameTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a QuestionsInQuizTemplate.
-     * @param {QuestionsInQuizTemplateDeleteArgs} args - Arguments to delete one QuestionsInQuizTemplate.
+     * Delete a QuestionsInGameTemplate.
+     * @param {QuestionsInGameTemplateDeleteArgs} args - Arguments to delete one QuestionsInGameTemplate.
      * @example
-     * // Delete one QuestionsInQuizTemplate
-     * const QuestionsInQuizTemplate = await prisma.questionsInQuizTemplate.delete({
+     * // Delete one QuestionsInGameTemplate
+     * const QuestionsInGameTemplate = await prisma.questionsInGameTemplate.delete({
      *   where: {
-     *     // ... filter to delete one QuestionsInQuizTemplate
+     *     // ... filter to delete one QuestionsInGameTemplate
      *   }
      * })
      * 
      */
-    delete<T extends QuestionsInQuizTemplateDeleteArgs>(args: SelectSubset<T, QuestionsInQuizTemplateDeleteArgs<ExtArgs>>): Prisma__QuestionsInQuizTemplateClient<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends QuestionsInGameTemplateDeleteArgs>(args: SelectSubset<T, QuestionsInGameTemplateDeleteArgs<ExtArgs>>): Prisma__QuestionsInGameTemplateClient<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one QuestionsInQuizTemplate.
-     * @param {QuestionsInQuizTemplateUpdateArgs} args - Arguments to update one QuestionsInQuizTemplate.
+     * Update one QuestionsInGameTemplate.
+     * @param {QuestionsInGameTemplateUpdateArgs} args - Arguments to update one QuestionsInGameTemplate.
      * @example
-     * // Update one QuestionsInQuizTemplate
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.update({
+     * // Update one QuestionsInGameTemplate
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6668,30 +7766,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends QuestionsInQuizTemplateUpdateArgs>(args: SelectSubset<T, QuestionsInQuizTemplateUpdateArgs<ExtArgs>>): Prisma__QuestionsInQuizTemplateClient<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends QuestionsInGameTemplateUpdateArgs>(args: SelectSubset<T, QuestionsInGameTemplateUpdateArgs<ExtArgs>>): Prisma__QuestionsInGameTemplateClient<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more QuestionsInQuizTemplates.
-     * @param {QuestionsInQuizTemplateDeleteManyArgs} args - Arguments to filter QuestionsInQuizTemplates to delete.
+     * Delete zero or more QuestionsInGameTemplates.
+     * @param {QuestionsInGameTemplateDeleteManyArgs} args - Arguments to filter QuestionsInGameTemplates to delete.
      * @example
-     * // Delete a few QuestionsInQuizTemplates
-     * const { count } = await prisma.questionsInQuizTemplate.deleteMany({
+     * // Delete a few QuestionsInGameTemplates
+     * const { count } = await prisma.questionsInGameTemplate.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends QuestionsInQuizTemplateDeleteManyArgs>(args?: SelectSubset<T, QuestionsInQuizTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends QuestionsInGameTemplateDeleteManyArgs>(args?: SelectSubset<T, QuestionsInGameTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more QuestionsInQuizTemplates.
+     * Update zero or more QuestionsInGameTemplates.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuestionsInQuizTemplateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {QuestionsInGameTemplateUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many QuestionsInQuizTemplates
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.updateMany({
+     * // Update many QuestionsInGameTemplates
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6701,14 +7799,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends QuestionsInQuizTemplateUpdateManyArgs>(args: SelectSubset<T, QuestionsInQuizTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends QuestionsInGameTemplateUpdateManyArgs>(args: SelectSubset<T, QuestionsInGameTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more QuestionsInQuizTemplates and returns the data updated in the database.
-     * @param {QuestionsInQuizTemplateUpdateManyAndReturnArgs} args - Arguments to update many QuestionsInQuizTemplates.
+     * Update zero or more QuestionsInGameTemplates and returns the data updated in the database.
+     * @param {QuestionsInGameTemplateUpdateManyAndReturnArgs} args - Arguments to update many QuestionsInGameTemplates.
      * @example
-     * // Update many QuestionsInQuizTemplates
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.updateManyAndReturn({
+     * // Update many QuestionsInGameTemplates
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6717,9 +7815,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more QuestionsInQuizTemplates and only return the `quizTemplateId`
-     * const questionsInQuizTemplateWithQuizTemplateIdOnly = await prisma.questionsInQuizTemplate.updateManyAndReturn({
-     *   select: { quizTemplateId: true },
+     * // Update zero or more QuestionsInGameTemplates and only return the `gameTemplateId`
+     * const questionsInGameTemplateWithGameTemplateIdOnly = await prisma.questionsInGameTemplate.updateManyAndReturn({
+     *   select: { gameTemplateId: true },
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6731,56 +7829,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends QuestionsInQuizTemplateUpdateManyAndReturnArgs>(args: SelectSubset<T, QuestionsInQuizTemplateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends QuestionsInGameTemplateUpdateManyAndReturnArgs>(args: SelectSubset<T, QuestionsInGameTemplateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one QuestionsInQuizTemplate.
-     * @param {QuestionsInQuizTemplateUpsertArgs} args - Arguments to update or create a QuestionsInQuizTemplate.
+     * Create or update one QuestionsInGameTemplate.
+     * @param {QuestionsInGameTemplateUpsertArgs} args - Arguments to update or create a QuestionsInGameTemplate.
      * @example
-     * // Update or create a QuestionsInQuizTemplate
-     * const questionsInQuizTemplate = await prisma.questionsInQuizTemplate.upsert({
+     * // Update or create a QuestionsInGameTemplate
+     * const questionsInGameTemplate = await prisma.questionsInGameTemplate.upsert({
      *   create: {
-     *     // ... data to create a QuestionsInQuizTemplate
+     *     // ... data to create a QuestionsInGameTemplate
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the QuestionsInQuizTemplate we want to update
+     *     // ... the filter for the QuestionsInGameTemplate we want to update
      *   }
      * })
      */
-    upsert<T extends QuestionsInQuizTemplateUpsertArgs>(args: SelectSubset<T, QuestionsInQuizTemplateUpsertArgs<ExtArgs>>): Prisma__QuestionsInQuizTemplateClient<$Result.GetResult<Prisma.$QuestionsInQuizTemplatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends QuestionsInGameTemplateUpsertArgs>(args: SelectSubset<T, QuestionsInGameTemplateUpsertArgs<ExtArgs>>): Prisma__QuestionsInGameTemplateClient<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of QuestionsInQuizTemplates.
+     * Count the number of QuestionsInGameTemplates.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuestionsInQuizTemplateCountArgs} args - Arguments to filter QuestionsInQuizTemplates to count.
+     * @param {QuestionsInGameTemplateCountArgs} args - Arguments to filter QuestionsInGameTemplates to count.
      * @example
-     * // Count the number of QuestionsInQuizTemplates
-     * const count = await prisma.questionsInQuizTemplate.count({
+     * // Count the number of QuestionsInGameTemplates
+     * const count = await prisma.questionsInGameTemplate.count({
      *   where: {
-     *     // ... the filter for the QuestionsInQuizTemplates we want to count
+     *     // ... the filter for the QuestionsInGameTemplates we want to count
      *   }
      * })
     **/
-    count<T extends QuestionsInQuizTemplateCountArgs>(
-      args?: Subset<T, QuestionsInQuizTemplateCountArgs>,
+    count<T extends QuestionsInGameTemplateCountArgs>(
+      args?: Subset<T, QuestionsInGameTemplateCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], QuestionsInQuizTemplateCountAggregateOutputType>
+          : GetScalarType<T['select'], QuestionsInGameTemplateCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a QuestionsInQuizTemplate.
+     * Allows you to perform aggregations operations on a QuestionsInGameTemplate.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuestionsInQuizTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {QuestionsInGameTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -6800,13 +7898,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends QuestionsInQuizTemplateAggregateArgs>(args: Subset<T, QuestionsInQuizTemplateAggregateArgs>): Prisma.PrismaPromise<GetQuestionsInQuizTemplateAggregateType<T>>
+    aggregate<T extends QuestionsInGameTemplateAggregateArgs>(args: Subset<T, QuestionsInGameTemplateAggregateArgs>): Prisma.PrismaPromise<GetQuestionsInGameTemplateAggregateType<T>>
 
     /**
-     * Group by QuestionsInQuizTemplate.
+     * Group by QuestionsInGameTemplate.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {QuestionsInQuizTemplateGroupByArgs} args - Group by arguments.
+     * @param {QuestionsInGameTemplateGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -6821,14 +7919,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends QuestionsInQuizTemplateGroupByArgs,
+      T extends QuestionsInGameTemplateGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: QuestionsInQuizTemplateGroupByArgs['orderBy'] }
-        : { orderBy?: QuestionsInQuizTemplateGroupByArgs['orderBy'] },
+        ? { orderBy: QuestionsInGameTemplateGroupByArgs['orderBy'] }
+        : { orderBy?: QuestionsInGameTemplateGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -6877,22 +7975,22 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, QuestionsInQuizTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQuestionsInQuizTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, QuestionsInGameTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQuestionsInGameTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the QuestionsInQuizTemplate model
+   * Fields of the QuestionsInGameTemplate model
    */
-  readonly fields: QuestionsInQuizTemplateFieldRefs;
+  readonly fields: QuestionsInGameTemplateFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for QuestionsInQuizTemplate.
+   * The delegate class that acts as a "Promise-like" for QuestionsInGameTemplate.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__QuestionsInQuizTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__QuestionsInGameTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    quizTemplate<T extends QuizTemplateDefaultArgs<ExtArgs> = {}>(args?: Subset<T, QuizTemplateDefaultArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    gameTemplate<T extends GameTemplateDefaultArgs<ExtArgs> = {}>(args?: Subset<T, GameTemplateDefaultArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     question<T extends QuestionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, QuestionDefaultArgs<ExtArgs>>): Prisma__QuestionClient<$Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -6920,424 +8018,424 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the QuestionsInQuizTemplate model
+   * Fields of the QuestionsInGameTemplate model
    */
-  interface QuestionsInQuizTemplateFieldRefs {
-    readonly quizTemplateId: FieldRef<"QuestionsInQuizTemplate", 'String'>
-    readonly questionUid: FieldRef<"QuestionsInQuizTemplate", 'String'>
-    readonly sequence: FieldRef<"QuestionsInQuizTemplate", 'Int'>
-    readonly createdAt: FieldRef<"QuestionsInQuizTemplate", 'DateTime'>
+  interface QuestionsInGameTemplateFieldRefs {
+    readonly gameTemplateId: FieldRef<"QuestionsInGameTemplate", 'String'>
+    readonly questionUid: FieldRef<"QuestionsInGameTemplate", 'String'>
+    readonly sequence: FieldRef<"QuestionsInGameTemplate", 'Int'>
+    readonly createdAt: FieldRef<"QuestionsInGameTemplate", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * QuestionsInQuizTemplate findUnique
+   * QuestionsInGameTemplate findUnique
    */
-  export type QuestionsInQuizTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuestionsInQuizTemplate to fetch.
+     * Filter, which QuestionsInGameTemplate to fetch.
      */
-    where: QuestionsInQuizTemplateWhereUniqueInput
+    where: QuestionsInGameTemplateWhereUniqueInput
   }
 
   /**
-   * QuestionsInQuizTemplate findUniqueOrThrow
+   * QuestionsInGameTemplate findUniqueOrThrow
    */
-  export type QuestionsInQuizTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuestionsInQuizTemplate to fetch.
+     * Filter, which QuestionsInGameTemplate to fetch.
      */
-    where: QuestionsInQuizTemplateWhereUniqueInput
+    where: QuestionsInGameTemplateWhereUniqueInput
   }
 
   /**
-   * QuestionsInQuizTemplate findFirst
+   * QuestionsInGameTemplate findFirst
    */
-  export type QuestionsInQuizTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuestionsInQuizTemplate to fetch.
+     * Filter, which QuestionsInGameTemplate to fetch.
      */
-    where?: QuestionsInQuizTemplateWhereInput
+    where?: QuestionsInGameTemplateWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of QuestionsInQuizTemplates to fetch.
+     * Determine the order of QuestionsInGameTemplates to fetch.
      */
-    orderBy?: QuestionsInQuizTemplateOrderByWithRelationInput | QuestionsInQuizTemplateOrderByWithRelationInput[]
+    orderBy?: QuestionsInGameTemplateOrderByWithRelationInput | QuestionsInGameTemplateOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for QuestionsInQuizTemplates.
+     * Sets the position for searching for QuestionsInGameTemplates.
      */
-    cursor?: QuestionsInQuizTemplateWhereUniqueInput
+    cursor?: QuestionsInGameTemplateWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` QuestionsInQuizTemplates from the position of the cursor.
+     * Take `±n` QuestionsInGameTemplates from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` QuestionsInQuizTemplates.
+     * Skip the first `n` QuestionsInGameTemplates.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of QuestionsInQuizTemplates.
+     * Filter by unique combinations of QuestionsInGameTemplates.
      */
-    distinct?: QuestionsInQuizTemplateScalarFieldEnum | QuestionsInQuizTemplateScalarFieldEnum[]
+    distinct?: QuestionsInGameTemplateScalarFieldEnum | QuestionsInGameTemplateScalarFieldEnum[]
   }
 
   /**
-   * QuestionsInQuizTemplate findFirstOrThrow
+   * QuestionsInGameTemplate findFirstOrThrow
    */
-  export type QuestionsInQuizTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuestionsInQuizTemplate to fetch.
+     * Filter, which QuestionsInGameTemplate to fetch.
      */
-    where?: QuestionsInQuizTemplateWhereInput
+    where?: QuestionsInGameTemplateWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of QuestionsInQuizTemplates to fetch.
+     * Determine the order of QuestionsInGameTemplates to fetch.
      */
-    orderBy?: QuestionsInQuizTemplateOrderByWithRelationInput | QuestionsInQuizTemplateOrderByWithRelationInput[]
+    orderBy?: QuestionsInGameTemplateOrderByWithRelationInput | QuestionsInGameTemplateOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for QuestionsInQuizTemplates.
+     * Sets the position for searching for QuestionsInGameTemplates.
      */
-    cursor?: QuestionsInQuizTemplateWhereUniqueInput
+    cursor?: QuestionsInGameTemplateWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` QuestionsInQuizTemplates from the position of the cursor.
+     * Take `±n` QuestionsInGameTemplates from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` QuestionsInQuizTemplates.
+     * Skip the first `n` QuestionsInGameTemplates.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of QuestionsInQuizTemplates.
+     * Filter by unique combinations of QuestionsInGameTemplates.
      */
-    distinct?: QuestionsInQuizTemplateScalarFieldEnum | QuestionsInQuizTemplateScalarFieldEnum[]
+    distinct?: QuestionsInGameTemplateScalarFieldEnum | QuestionsInGameTemplateScalarFieldEnum[]
   }
 
   /**
-   * QuestionsInQuizTemplate findMany
+   * QuestionsInGameTemplate findMany
    */
-  export type QuestionsInQuizTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * Filter, which QuestionsInQuizTemplates to fetch.
+     * Filter, which QuestionsInGameTemplates to fetch.
      */
-    where?: QuestionsInQuizTemplateWhereInput
+    where?: QuestionsInGameTemplateWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of QuestionsInQuizTemplates to fetch.
+     * Determine the order of QuestionsInGameTemplates to fetch.
      */
-    orderBy?: QuestionsInQuizTemplateOrderByWithRelationInput | QuestionsInQuizTemplateOrderByWithRelationInput[]
+    orderBy?: QuestionsInGameTemplateOrderByWithRelationInput | QuestionsInGameTemplateOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing QuestionsInQuizTemplates.
+     * Sets the position for listing QuestionsInGameTemplates.
      */
-    cursor?: QuestionsInQuizTemplateWhereUniqueInput
+    cursor?: QuestionsInGameTemplateWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` QuestionsInQuizTemplates from the position of the cursor.
+     * Take `±n` QuestionsInGameTemplates from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` QuestionsInQuizTemplates.
+     * Skip the first `n` QuestionsInGameTemplates.
      */
     skip?: number
-    distinct?: QuestionsInQuizTemplateScalarFieldEnum | QuestionsInQuizTemplateScalarFieldEnum[]
+    distinct?: QuestionsInGameTemplateScalarFieldEnum | QuestionsInGameTemplateScalarFieldEnum[]
   }
 
   /**
-   * QuestionsInQuizTemplate create
+   * QuestionsInGameTemplate create
    */
-  export type QuestionsInQuizTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * The data needed to create a QuestionsInQuizTemplate.
+     * The data needed to create a QuestionsInGameTemplate.
      */
-    data: XOR<QuestionsInQuizTemplateCreateInput, QuestionsInQuizTemplateUncheckedCreateInput>
+    data: XOR<QuestionsInGameTemplateCreateInput, QuestionsInGameTemplateUncheckedCreateInput>
   }
 
   /**
-   * QuestionsInQuizTemplate createMany
+   * QuestionsInGameTemplate createMany
    */
-  export type QuestionsInQuizTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many QuestionsInQuizTemplates.
+     * The data used to create many QuestionsInGameTemplates.
      */
-    data: QuestionsInQuizTemplateCreateManyInput | QuestionsInQuizTemplateCreateManyInput[]
+    data: QuestionsInGameTemplateCreateManyInput | QuestionsInGameTemplateCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * QuestionsInQuizTemplate createManyAndReturn
+   * QuestionsInGameTemplate createManyAndReturn
    */
-  export type QuestionsInQuizTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelectCreateManyAndReturn<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
-     * The data used to create many QuestionsInQuizTemplates.
+     * The data used to create many QuestionsInGameTemplates.
      */
-    data: QuestionsInQuizTemplateCreateManyInput | QuestionsInQuizTemplateCreateManyInput[]
+    data: QuestionsInGameTemplateCreateManyInput | QuestionsInGameTemplateCreateManyInput[]
     skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateIncludeCreateManyAndReturn<ExtArgs> | null
+    include?: QuestionsInGameTemplateIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * QuestionsInQuizTemplate update
+   * QuestionsInGameTemplate update
    */
-  export type QuestionsInQuizTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * The data needed to update a QuestionsInQuizTemplate.
+     * The data needed to update a QuestionsInGameTemplate.
      */
-    data: XOR<QuestionsInQuizTemplateUpdateInput, QuestionsInQuizTemplateUncheckedUpdateInput>
+    data: XOR<QuestionsInGameTemplateUpdateInput, QuestionsInGameTemplateUncheckedUpdateInput>
     /**
-     * Choose, which QuestionsInQuizTemplate to update.
+     * Choose, which QuestionsInGameTemplate to update.
      */
-    where: QuestionsInQuizTemplateWhereUniqueInput
+    where: QuestionsInGameTemplateWhereUniqueInput
   }
 
   /**
-   * QuestionsInQuizTemplate updateMany
+   * QuestionsInGameTemplate updateMany
    */
-  export type QuestionsInQuizTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update QuestionsInQuizTemplates.
+     * The data used to update QuestionsInGameTemplates.
      */
-    data: XOR<QuestionsInQuizTemplateUpdateManyMutationInput, QuestionsInQuizTemplateUncheckedUpdateManyInput>
+    data: XOR<QuestionsInGameTemplateUpdateManyMutationInput, QuestionsInGameTemplateUncheckedUpdateManyInput>
     /**
-     * Filter which QuestionsInQuizTemplates to update
+     * Filter which QuestionsInGameTemplates to update
      */
-    where?: QuestionsInQuizTemplateWhereInput
+    where?: QuestionsInGameTemplateWhereInput
     /**
-     * Limit how many QuestionsInQuizTemplates to update.
+     * Limit how many QuestionsInGameTemplates to update.
      */
     limit?: number
   }
 
   /**
-   * QuestionsInQuizTemplate updateManyAndReturn
+   * QuestionsInGameTemplate updateManyAndReturn
    */
-  export type QuestionsInQuizTemplateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
-     * The data used to update QuestionsInQuizTemplates.
+     * The data used to update QuestionsInGameTemplates.
      */
-    data: XOR<QuestionsInQuizTemplateUpdateManyMutationInput, QuestionsInQuizTemplateUncheckedUpdateManyInput>
+    data: XOR<QuestionsInGameTemplateUpdateManyMutationInput, QuestionsInGameTemplateUncheckedUpdateManyInput>
     /**
-     * Filter which QuestionsInQuizTemplates to update
+     * Filter which QuestionsInGameTemplates to update
      */
-    where?: QuestionsInQuizTemplateWhereInput
+    where?: QuestionsInGameTemplateWhereInput
     /**
-     * Limit how many QuestionsInQuizTemplates to update.
+     * Limit how many QuestionsInGameTemplates to update.
      */
     limit?: number
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateIncludeUpdateManyAndReturn<ExtArgs> | null
+    include?: QuestionsInGameTemplateIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * QuestionsInQuizTemplate upsert
+   * QuestionsInGameTemplate upsert
    */
-  export type QuestionsInQuizTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * The filter to search for the QuestionsInQuizTemplate to update in case it exists.
+     * The filter to search for the QuestionsInGameTemplate to update in case it exists.
      */
-    where: QuestionsInQuizTemplateWhereUniqueInput
+    where: QuestionsInGameTemplateWhereUniqueInput
     /**
-     * In case the QuestionsInQuizTemplate found by the `where` argument doesn't exist, create a new QuestionsInQuizTemplate with this data.
+     * In case the QuestionsInGameTemplate found by the `where` argument doesn't exist, create a new QuestionsInGameTemplate with this data.
      */
-    create: XOR<QuestionsInQuizTemplateCreateInput, QuestionsInQuizTemplateUncheckedCreateInput>
+    create: XOR<QuestionsInGameTemplateCreateInput, QuestionsInGameTemplateUncheckedCreateInput>
     /**
-     * In case the QuestionsInQuizTemplate was found with the provided `where` argument, update it with this data.
+     * In case the QuestionsInGameTemplate was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<QuestionsInQuizTemplateUpdateInput, QuestionsInQuizTemplateUncheckedUpdateInput>
+    update: XOR<QuestionsInGameTemplateUpdateInput, QuestionsInGameTemplateUncheckedUpdateInput>
   }
 
   /**
-   * QuestionsInQuizTemplate delete
+   * QuestionsInGameTemplate delete
    */
-  export type QuestionsInQuizTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
     /**
-     * Filter which QuestionsInQuizTemplate to delete.
+     * Filter which QuestionsInGameTemplate to delete.
      */
-    where: QuestionsInQuizTemplateWhereUniqueInput
+    where: QuestionsInGameTemplateWhereUniqueInput
   }
 
   /**
-   * QuestionsInQuizTemplate deleteMany
+   * QuestionsInGameTemplate deleteMany
    */
-  export type QuestionsInQuizTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which QuestionsInQuizTemplates to delete
+     * Filter which QuestionsInGameTemplates to delete
      */
-    where?: QuestionsInQuizTemplateWhereInput
+    where?: QuestionsInGameTemplateWhereInput
     /**
-     * Limit how many QuestionsInQuizTemplates to delete.
+     * Limit how many QuestionsInGameTemplates to delete.
      */
     limit?: number
   }
 
   /**
-   * QuestionsInQuizTemplate without action
+   * QuestionsInGameTemplate without action
    */
-  export type QuestionsInQuizTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type QuestionsInGameTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the QuestionsInQuizTemplate
+     * Select specific fields to fetch from the QuestionsInGameTemplate
      */
-    select?: QuestionsInQuizTemplateSelect<ExtArgs> | null
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the QuestionsInQuizTemplate
+     * Omit specific fields from the QuestionsInGameTemplate
      */
-    omit?: QuestionsInQuizTemplateOmit<ExtArgs> | null
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: QuestionsInQuizTemplateInclude<ExtArgs> | null
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
   }
 
 
@@ -7364,8 +8462,8 @@ export namespace Prisma {
   export type GameInstanceMinAggregateOutputType = {
     id: string | null
     name: string | null
-    quizTemplateId: string | null
-    initiatorTeacherId: string | null
+    gameTemplateId: string | null
+    initiatorUserId: string | null
     accessCode: string | null
     status: string | null
     playMode: $Enums.PlayMode | null
@@ -7373,13 +8471,16 @@ export namespace Prisma {
     createdAt: Date | null
     startedAt: Date | null
     endedAt: Date | null
+    isDiffered: boolean | null
+    differedAvailableFrom: Date | null
+    differedAvailableTo: Date | null
   }
 
   export type GameInstanceMaxAggregateOutputType = {
     id: string | null
     name: string | null
-    quizTemplateId: string | null
-    initiatorTeacherId: string | null
+    gameTemplateId: string | null
+    initiatorUserId: string | null
     accessCode: string | null
     status: string | null
     playMode: $Enums.PlayMode | null
@@ -7387,13 +8488,16 @@ export namespace Prisma {
     createdAt: Date | null
     startedAt: Date | null
     endedAt: Date | null
+    isDiffered: boolean | null
+    differedAvailableFrom: Date | null
+    differedAvailableTo: Date | null
   }
 
   export type GameInstanceCountAggregateOutputType = {
     id: number
     name: number
-    quizTemplateId: number
-    initiatorTeacherId: number
+    gameTemplateId: number
+    initiatorUserId: number
     accessCode: number
     status: number
     playMode: number
@@ -7403,6 +8507,9 @@ export namespace Prisma {
     createdAt: number
     startedAt: number
     endedAt: number
+    isDiffered: number
+    differedAvailableFrom: number
+    differedAvailableTo: number
     _all: number
   }
 
@@ -7418,8 +8525,8 @@ export namespace Prisma {
   export type GameInstanceMinAggregateInputType = {
     id?: true
     name?: true
-    quizTemplateId?: true
-    initiatorTeacherId?: true
+    gameTemplateId?: true
+    initiatorUserId?: true
     accessCode?: true
     status?: true
     playMode?: true
@@ -7427,13 +8534,16 @@ export namespace Prisma {
     createdAt?: true
     startedAt?: true
     endedAt?: true
+    isDiffered?: true
+    differedAvailableFrom?: true
+    differedAvailableTo?: true
   }
 
   export type GameInstanceMaxAggregateInputType = {
     id?: true
     name?: true
-    quizTemplateId?: true
-    initiatorTeacherId?: true
+    gameTemplateId?: true
+    initiatorUserId?: true
     accessCode?: true
     status?: true
     playMode?: true
@@ -7441,13 +8551,16 @@ export namespace Prisma {
     createdAt?: true
     startedAt?: true
     endedAt?: true
+    isDiffered?: true
+    differedAvailableFrom?: true
+    differedAvailableTo?: true
   }
 
   export type GameInstanceCountAggregateInputType = {
     id?: true
     name?: true
-    quizTemplateId?: true
-    initiatorTeacherId?: true
+    gameTemplateId?: true
+    initiatorUserId?: true
     accessCode?: true
     status?: true
     playMode?: true
@@ -7457,6 +8570,9 @@ export namespace Prisma {
     createdAt?: true
     startedAt?: true
     endedAt?: true
+    isDiffered?: true
+    differedAvailableFrom?: true
+    differedAvailableTo?: true
     _all?: true
   }
 
@@ -7549,8 +8665,8 @@ export namespace Prisma {
   export type GameInstanceGroupByOutputType = {
     id: string
     name: string
-    quizTemplateId: string
-    initiatorTeacherId: string | null
+    gameTemplateId: string
+    initiatorUserId: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -7560,6 +8676,9 @@ export namespace Prisma {
     createdAt: Date
     startedAt: Date | null
     endedAt: Date | null
+    isDiffered: boolean
+    differedAvailableFrom: Date | null
+    differedAvailableTo: Date | null
     _count: GameInstanceCountAggregateOutputType | null
     _avg: GameInstanceAvgAggregateOutputType | null
     _sum: GameInstanceSumAggregateOutputType | null
@@ -7584,8 +8703,8 @@ export namespace Prisma {
   export type GameInstanceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    quizTemplateId?: boolean
-    initiatorTeacherId?: boolean
+    gameTemplateId?: boolean
+    initiatorUserId?: boolean
     accessCode?: boolean
     status?: boolean
     playMode?: boolean
@@ -7595,8 +8714,11 @@ export namespace Prisma {
     createdAt?: boolean
     startedAt?: boolean
     endedAt?: boolean
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
-    initiatorTeacher?: boolean | GameInstance$initiatorTeacherArgs<ExtArgs>
+    isDiffered?: boolean
+    differedAvailableFrom?: boolean
+    differedAvailableTo?: boolean
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
+    initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
     participants?: boolean | GameInstance$participantsArgs<ExtArgs>
     _count?: boolean | GameInstanceCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameInstance"]>
@@ -7604,8 +8726,8 @@ export namespace Prisma {
   export type GameInstanceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    quizTemplateId?: boolean
-    initiatorTeacherId?: boolean
+    gameTemplateId?: boolean
+    initiatorUserId?: boolean
     accessCode?: boolean
     status?: boolean
     playMode?: boolean
@@ -7615,15 +8737,18 @@ export namespace Prisma {
     createdAt?: boolean
     startedAt?: boolean
     endedAt?: boolean
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
-    initiatorTeacher?: boolean | GameInstance$initiatorTeacherArgs<ExtArgs>
+    isDiffered?: boolean
+    differedAvailableFrom?: boolean
+    differedAvailableTo?: boolean
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
+    initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
   }, ExtArgs["result"]["gameInstance"]>
 
   export type GameInstanceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    quizTemplateId?: boolean
-    initiatorTeacherId?: boolean
+    gameTemplateId?: boolean
+    initiatorUserId?: boolean
     accessCode?: boolean
     status?: boolean
     playMode?: boolean
@@ -7633,15 +8758,18 @@ export namespace Prisma {
     createdAt?: boolean
     startedAt?: boolean
     endedAt?: boolean
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
-    initiatorTeacher?: boolean | GameInstance$initiatorTeacherArgs<ExtArgs>
+    isDiffered?: boolean
+    differedAvailableFrom?: boolean
+    differedAvailableTo?: boolean
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
+    initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
   }, ExtArgs["result"]["gameInstance"]>
 
   export type GameInstanceSelectScalar = {
     id?: boolean
     name?: boolean
-    quizTemplateId?: boolean
-    initiatorTeacherId?: boolean
+    gameTemplateId?: boolean
+    initiatorUserId?: boolean
     accessCode?: boolean
     status?: boolean
     playMode?: boolean
@@ -7651,36 +8779,39 @@ export namespace Prisma {
     createdAt?: boolean
     startedAt?: boolean
     endedAt?: boolean
+    isDiffered?: boolean
+    differedAvailableFrom?: boolean
+    differedAvailableTo?: boolean
   }
 
-  export type GameInstanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "quizTemplateId" | "initiatorTeacherId" | "accessCode" | "status" | "playMode" | "leaderboard" | "currentQuestionIndex" | "settings" | "createdAt" | "startedAt" | "endedAt", ExtArgs["result"]["gameInstance"]>
+  export type GameInstanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "gameTemplateId" | "initiatorUserId" | "accessCode" | "status" | "playMode" | "leaderboard" | "currentQuestionIndex" | "settings" | "createdAt" | "startedAt" | "endedAt" | "isDiffered" | "differedAvailableFrom" | "differedAvailableTo", ExtArgs["result"]["gameInstance"]>
   export type GameInstanceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
-    initiatorTeacher?: boolean | GameInstance$initiatorTeacherArgs<ExtArgs>
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
+    initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
     participants?: boolean | GameInstance$participantsArgs<ExtArgs>
     _count?: boolean | GameInstanceCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type GameInstanceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
-    initiatorTeacher?: boolean | GameInstance$initiatorTeacherArgs<ExtArgs>
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
+    initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
   }
   export type GameInstanceIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    quizTemplate?: boolean | QuizTemplateDefaultArgs<ExtArgs>
-    initiatorTeacher?: boolean | GameInstance$initiatorTeacherArgs<ExtArgs>
+    gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
+    initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
   }
 
   export type $GameInstancePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "GameInstance"
     objects: {
-      quizTemplate: Prisma.$QuizTemplatePayload<ExtArgs>
-      initiatorTeacher: Prisma.$TeacherPayload<ExtArgs> | null
+      gameTemplate: Prisma.$GameTemplatePayload<ExtArgs>
+      initiatorUser: Prisma.$UserPayload<ExtArgs> | null
       participants: Prisma.$GameParticipantPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string
-      quizTemplateId: string
-      initiatorTeacherId: string | null
+      gameTemplateId: string
+      initiatorUserId: string | null
       accessCode: string
       status: string
       playMode: $Enums.PlayMode
@@ -7690,6 +8821,9 @@ export namespace Prisma {
       createdAt: Date
       startedAt: Date | null
       endedAt: Date | null
+      isDiffered: boolean
+      differedAvailableFrom: Date | null
+      differedAvailableTo: Date | null
     }, ExtArgs["result"]["gameInstance"]>
     composites: {}
   }
@@ -8084,8 +9218,8 @@ export namespace Prisma {
    */
   export interface Prisma__GameInstanceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    quizTemplate<T extends QuizTemplateDefaultArgs<ExtArgs> = {}>(args?: Subset<T, QuizTemplateDefaultArgs<ExtArgs>>): Prisma__QuizTemplateClient<$Result.GetResult<Prisma.$QuizTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    initiatorTeacher<T extends GameInstance$initiatorTeacherArgs<ExtArgs> = {}>(args?: Subset<T, GameInstance$initiatorTeacherArgs<ExtArgs>>): Prisma__TeacherClient<$Result.GetResult<Prisma.$TeacherPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    gameTemplate<T extends GameTemplateDefaultArgs<ExtArgs> = {}>(args?: Subset<T, GameTemplateDefaultArgs<ExtArgs>>): Prisma__GameTemplateClient<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    initiatorUser<T extends GameInstance$initiatorUserArgs<ExtArgs> = {}>(args?: Subset<T, GameInstance$initiatorUserArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     participants<T extends GameInstance$participantsArgs<ExtArgs> = {}>(args?: Subset<T, GameInstance$participantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -8118,8 +9252,8 @@ export namespace Prisma {
   interface GameInstanceFieldRefs {
     readonly id: FieldRef<"GameInstance", 'String'>
     readonly name: FieldRef<"GameInstance", 'String'>
-    readonly quizTemplateId: FieldRef<"GameInstance", 'String'>
-    readonly initiatorTeacherId: FieldRef<"GameInstance", 'String'>
+    readonly gameTemplateId: FieldRef<"GameInstance", 'String'>
+    readonly initiatorUserId: FieldRef<"GameInstance", 'String'>
     readonly accessCode: FieldRef<"GameInstance", 'String'>
     readonly status: FieldRef<"GameInstance", 'String'>
     readonly playMode: FieldRef<"GameInstance", 'PlayMode'>
@@ -8129,6 +9263,9 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"GameInstance", 'DateTime'>
     readonly startedAt: FieldRef<"GameInstance", 'DateTime'>
     readonly endedAt: FieldRef<"GameInstance", 'DateTime'>
+    readonly isDiffered: FieldRef<"GameInstance", 'Boolean'>
+    readonly differedAvailableFrom: FieldRef<"GameInstance", 'DateTime'>
+    readonly differedAvailableTo: FieldRef<"GameInstance", 'DateTime'>
   }
     
 
@@ -8525,22 +9662,22 @@ export namespace Prisma {
   }
 
   /**
-   * GameInstance.initiatorTeacher
+   * GameInstance.initiatorUser
    */
-  export type GameInstance$initiatorTeacherArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type GameInstance$initiatorUserArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Teacher
+     * Select specific fields to fetch from the User
      */
-    select?: TeacherSelect<ExtArgs> | null
+    select?: UserSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Teacher
+     * Omit specific fields from the User
      */
-    omit?: TeacherOmit<ExtArgs> | null
+    omit?: UserOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherInclude<ExtArgs> | null
-    where?: TeacherWhereInput
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
   }
 
   /**
@@ -8613,7 +9750,7 @@ export namespace Prisma {
   export type GameParticipantMinAggregateOutputType = {
     id: string | null
     gameInstanceId: string | null
-    playerId: string | null
+    userId: string | null
     score: number | null
     rank: number | null
     timeTakenMs: number | null
@@ -8626,7 +9763,7 @@ export namespace Prisma {
   export type GameParticipantMaxAggregateOutputType = {
     id: string | null
     gameInstanceId: string | null
-    playerId: string | null
+    userId: string | null
     score: number | null
     rank: number | null
     timeTakenMs: number | null
@@ -8639,7 +9776,7 @@ export namespace Prisma {
   export type GameParticipantCountAggregateOutputType = {
     id: number
     gameInstanceId: number
-    playerId: number
+    userId: number
     score: number
     rank: number
     timeTakenMs: number
@@ -8667,7 +9804,7 @@ export namespace Prisma {
   export type GameParticipantMinAggregateInputType = {
     id?: true
     gameInstanceId?: true
-    playerId?: true
+    userId?: true
     score?: true
     rank?: true
     timeTakenMs?: true
@@ -8680,7 +9817,7 @@ export namespace Prisma {
   export type GameParticipantMaxAggregateInputType = {
     id?: true
     gameInstanceId?: true
-    playerId?: true
+    userId?: true
     score?: true
     rank?: true
     timeTakenMs?: true
@@ -8693,7 +9830,7 @@ export namespace Prisma {
   export type GameParticipantCountAggregateInputType = {
     id?: true
     gameInstanceId?: true
-    playerId?: true
+    userId?: true
     score?: true
     rank?: true
     timeTakenMs?: true
@@ -8794,7 +9931,7 @@ export namespace Prisma {
   export type GameParticipantGroupByOutputType = {
     id: string
     gameInstanceId: string
-    playerId: string
+    userId: string
     score: number
     rank: number | null
     timeTakenMs: number | null
@@ -8827,7 +9964,7 @@ export namespace Prisma {
   export type GameParticipantSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     gameInstanceId?: boolean
-    playerId?: boolean
+    userId?: boolean
     score?: boolean
     rank?: boolean
     timeTakenMs?: boolean
@@ -8837,13 +9974,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
-    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
 
   export type GameParticipantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     gameInstanceId?: boolean
-    playerId?: boolean
+    userId?: boolean
     score?: boolean
     rank?: boolean
     timeTakenMs?: boolean
@@ -8853,13 +9990,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
-    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
 
   export type GameParticipantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     gameInstanceId?: boolean
-    playerId?: boolean
+    userId?: boolean
     score?: boolean
     rank?: boolean
     timeTakenMs?: boolean
@@ -8869,13 +10006,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
-    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
 
   export type GameParticipantSelectScalar = {
     id?: boolean
     gameInstanceId?: boolean
-    playerId?: boolean
+    userId?: boolean
     score?: boolean
     rank?: boolean
     timeTakenMs?: boolean
@@ -8886,30 +10023,30 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type GameParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "gameInstanceId" | "playerId" | "score" | "rank" | "timeTakenMs" | "joinedAt" | "completedAt" | "answers" | "createdAt" | "updatedAt", ExtArgs["result"]["gameParticipant"]>
+  export type GameParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "gameInstanceId" | "userId" | "score" | "rank" | "timeTakenMs" | "joinedAt" | "completedAt" | "answers" | "createdAt" | "updatedAt", ExtArgs["result"]["gameParticipant"]>
   export type GameParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
-    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type GameParticipantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
-    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type GameParticipantIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
-    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $GameParticipantPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "GameParticipant"
     objects: {
       gameInstance: Prisma.$GameInstancePayload<ExtArgs>
-      player: Prisma.$PlayerPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       gameInstanceId: string
-      playerId: string
+      userId: string
       score: number
       rank: number | null
       timeTakenMs: number | null
@@ -9313,7 +10450,7 @@ export namespace Prisma {
   export interface Prisma__GameParticipantClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     gameInstance<T extends GameInstanceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, GameInstanceDefaultArgs<ExtArgs>>): Prisma__GameInstanceClient<$Result.GetResult<Prisma.$GameInstancePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    player<T extends PlayerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlayerDefaultArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9345,7 +10482,7 @@ export namespace Prisma {
   interface GameParticipantFieldRefs {
     readonly id: FieldRef<"GameParticipant", 'String'>
     readonly gameInstanceId: FieldRef<"GameParticipant", 'String'>
-    readonly playerId: FieldRef<"GameParticipant", 'String'>
+    readonly userId: FieldRef<"GameParticipant", 'String'>
     readonly score: FieldRef<"GameParticipant", 'Int'>
     readonly rank: FieldRef<"GameParticipant", 'Int'>
     readonly timeTakenMs: FieldRef<"GameParticipant", 'Int'>
@@ -9782,38 +10919,40 @@ export namespace Prisma {
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-  export const TeacherScalarFieldEnum: {
+  export const UserScalarFieldEnum: {
     id: 'id',
     username: 'username',
-    passwordHash: 'passwordHash',
     email: 'email',
-    createdAt: 'createdAt',
+    passwordHash: 'passwordHash',
     avatarUrl: 'avatarUrl',
-    resetToken: 'resetToken',
-    resetTokenExpiresAt: 'resetTokenExpiresAt'
-  };
-
-  export type TeacherScalarFieldEnum = (typeof TeacherScalarFieldEnum)[keyof typeof TeacherScalarFieldEnum]
-
-
-  export const PlayerScalarFieldEnum: {
-    id: 'id',
-    username: 'username',
-    cookieId: 'cookieId',
-    email: 'email',
-    passwordHash: 'passwordHash',
     createdAt: 'createdAt',
-    avatarUrl: 'avatarUrl'
+    role: 'role'
   };
 
-  export type PlayerScalarFieldEnum = (typeof PlayerScalarFieldEnum)[keyof typeof PlayerScalarFieldEnum]
+  export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const TeacherProfileScalarFieldEnum: {
+    id: 'id'
+  };
+
+  export type TeacherProfileScalarFieldEnum = (typeof TeacherProfileScalarFieldEnum)[keyof typeof TeacherProfileScalarFieldEnum]
+
+
+  export const StudentProfileScalarFieldEnum: {
+    id: 'id',
+    cookieId: 'cookieId'
+  };
+
+  export type StudentProfileScalarFieldEnum = (typeof StudentProfileScalarFieldEnum)[keyof typeof StudentProfileScalarFieldEnum]
 
 
   export const QuestionScalarFieldEnum: {
     uid: 'uid',
     title: 'title',
     text: 'text',
-    responses: 'responses',
+    answerOptions: 'answerOptions',
+    correctAnswers: 'correctAnswers',
     questionType: 'questionType',
     discipline: 'discipline',
     themes: 'themes',
@@ -9824,6 +10963,7 @@ export namespace Prisma {
     tags: 'tags',
     timeLimit: 'timeLimit',
     isHidden: 'isHidden',
+    feedbackWaitTime: 'feedbackWaitTime',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -9831,10 +10971,10 @@ export namespace Prisma {
   export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
 
 
-  export const QuizTemplateScalarFieldEnum: {
+  export const GameTemplateScalarFieldEnum: {
     id: 'id',
     name: 'name',
-    creatorTeacherId: 'creatorTeacherId',
+    creatorId: 'creatorId',
     gradeLevel: 'gradeLevel',
     themes: 'themes',
     discipline: 'discipline',
@@ -9844,24 +10984,24 @@ export namespace Prisma {
     updatedAt: 'updatedAt'
   };
 
-  export type QuizTemplateScalarFieldEnum = (typeof QuizTemplateScalarFieldEnum)[keyof typeof QuizTemplateScalarFieldEnum]
+  export type GameTemplateScalarFieldEnum = (typeof GameTemplateScalarFieldEnum)[keyof typeof GameTemplateScalarFieldEnum]
 
 
-  export const QuestionsInQuizTemplateScalarFieldEnum: {
-    quizTemplateId: 'quizTemplateId',
+  export const QuestionsInGameTemplateScalarFieldEnum: {
+    gameTemplateId: 'gameTemplateId',
     questionUid: 'questionUid',
     sequence: 'sequence',
     createdAt: 'createdAt'
   };
 
-  export type QuestionsInQuizTemplateScalarFieldEnum = (typeof QuestionsInQuizTemplateScalarFieldEnum)[keyof typeof QuestionsInQuizTemplateScalarFieldEnum]
+  export type QuestionsInGameTemplateScalarFieldEnum = (typeof QuestionsInGameTemplateScalarFieldEnum)[keyof typeof QuestionsInGameTemplateScalarFieldEnum]
 
 
   export const GameInstanceScalarFieldEnum: {
     id: 'id',
     name: 'name',
-    quizTemplateId: 'quizTemplateId',
-    initiatorTeacherId: 'initiatorTeacherId',
+    gameTemplateId: 'gameTemplateId',
+    initiatorUserId: 'initiatorUserId',
     accessCode: 'accessCode',
     status: 'status',
     playMode: 'playMode',
@@ -9870,7 +11010,10 @@ export namespace Prisma {
     settings: 'settings',
     createdAt: 'createdAt',
     startedAt: 'startedAt',
-    endedAt: 'endedAt'
+    endedAt: 'endedAt',
+    isDiffered: 'isDiffered',
+    differedAvailableFrom: 'differedAvailableFrom',
+    differedAvailableTo: 'differedAvailableTo'
   };
 
   export type GameInstanceScalarFieldEnum = (typeof GameInstanceScalarFieldEnum)[keyof typeof GameInstanceScalarFieldEnum]
@@ -9879,7 +11022,7 @@ export namespace Prisma {
   export const GameParticipantScalarFieldEnum: {
     id: 'id',
     gameInstanceId: 'gameInstanceId',
-    playerId: 'playerId',
+    userId: 'userId',
     score: 'score',
     rank: 'rank',
     timeTakenMs: 'timeTakenMs',
@@ -9899,13 +11042,6 @@ export namespace Prisma {
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
-
-
-  export const JsonNullValueInput: {
-    JsonNull: typeof JsonNull
-  };
-
-  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const NullableJsonNullValueInput: {
@@ -9975,16 +11111,30 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Json'
+   * Reference to a field of type 'UserRole'
    */
-  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+  export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
     
 
 
   /**
-   * Reference to a field of type 'QueryMode'
+   * Reference to a field of type 'UserRole[]'
    */
-  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean[]'
+   */
+  export type ListBooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -10003,13 +11153,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-  /**
    * Reference to a field of type 'PlayMode'
    */
   export type EnumPlayModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlayMode'>
@@ -10020,6 +11163,20 @@ export namespace Prisma {
    * Reference to a field of type 'PlayMode[]'
    */
   export type ListEnumPlayModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlayMode[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -10040,142 +11197,156 @@ export namespace Prisma {
    */
 
 
-  export type TeacherWhereInput = {
-    AND?: TeacherWhereInput | TeacherWhereInput[]
-    OR?: TeacherWhereInput[]
-    NOT?: TeacherWhereInput | TeacherWhereInput[]
-    id?: StringFilter<"Teacher"> | string
-    username?: StringFilter<"Teacher"> | string
-    passwordHash?: StringFilter<"Teacher"> | string
-    email?: StringNullableFilter<"Teacher"> | string | null
-    createdAt?: DateTimeFilter<"Teacher"> | Date | string
-    avatarUrl?: StringNullableFilter<"Teacher"> | string | null
-    resetToken?: StringNullableFilter<"Teacher"> | string | null
-    resetTokenExpiresAt?: DateTimeNullableFilter<"Teacher"> | Date | string | null
-    quizTemplates?: QuizTemplateListRelationFilter
-    gameInstances?: GameInstanceListRelationFilter
-  }
-
-  export type TeacherOrderByWithRelationInput = {
-    id?: SortOrder
-    username?: SortOrder
-    passwordHash?: SortOrder
-    email?: SortOrderInput | SortOrder
-    createdAt?: SortOrder
-    avatarUrl?: SortOrderInput | SortOrder
-    resetToken?: SortOrderInput | SortOrder
-    resetTokenExpiresAt?: SortOrderInput | SortOrder
-    quizTemplates?: QuizTemplateOrderByRelationAggregateInput
-    gameInstances?: GameInstanceOrderByRelationAggregateInput
-  }
-
-  export type TeacherWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
-    username?: string
-    email?: string
-    AND?: TeacherWhereInput | TeacherWhereInput[]
-    OR?: TeacherWhereInput[]
-    NOT?: TeacherWhereInput | TeacherWhereInput[]
-    passwordHash?: StringFilter<"Teacher"> | string
-    createdAt?: DateTimeFilter<"Teacher"> | Date | string
-    avatarUrl?: StringNullableFilter<"Teacher"> | string | null
-    resetToken?: StringNullableFilter<"Teacher"> | string | null
-    resetTokenExpiresAt?: DateTimeNullableFilter<"Teacher"> | Date | string | null
-    quizTemplates?: QuizTemplateListRelationFilter
-    gameInstances?: GameInstanceListRelationFilter
-  }, "id" | "username" | "email">
-
-  export type TeacherOrderByWithAggregationInput = {
-    id?: SortOrder
-    username?: SortOrder
-    passwordHash?: SortOrder
-    email?: SortOrderInput | SortOrder
-    createdAt?: SortOrder
-    avatarUrl?: SortOrderInput | SortOrder
-    resetToken?: SortOrderInput | SortOrder
-    resetTokenExpiresAt?: SortOrderInput | SortOrder
-    _count?: TeacherCountOrderByAggregateInput
-    _max?: TeacherMaxOrderByAggregateInput
-    _min?: TeacherMinOrderByAggregateInput
-  }
-
-  export type TeacherScalarWhereWithAggregatesInput = {
-    AND?: TeacherScalarWhereWithAggregatesInput | TeacherScalarWhereWithAggregatesInput[]
-    OR?: TeacherScalarWhereWithAggregatesInput[]
-    NOT?: TeacherScalarWhereWithAggregatesInput | TeacherScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"Teacher"> | string
-    username?: StringWithAggregatesFilter<"Teacher"> | string
-    passwordHash?: StringWithAggregatesFilter<"Teacher"> | string
-    email?: StringNullableWithAggregatesFilter<"Teacher"> | string | null
-    createdAt?: DateTimeWithAggregatesFilter<"Teacher"> | Date | string
-    avatarUrl?: StringNullableWithAggregatesFilter<"Teacher"> | string | null
-    resetToken?: StringNullableWithAggregatesFilter<"Teacher"> | string | null
-    resetTokenExpiresAt?: DateTimeNullableWithAggregatesFilter<"Teacher"> | Date | string | null
-  }
-
-  export type PlayerWhereInput = {
-    AND?: PlayerWhereInput | PlayerWhereInput[]
-    OR?: PlayerWhereInput[]
-    NOT?: PlayerWhereInput | PlayerWhereInput[]
-    id?: StringFilter<"Player"> | string
-    username?: StringFilter<"Player"> | string
-    cookieId?: StringFilter<"Player"> | string
-    email?: StringNullableFilter<"Player"> | string | null
-    passwordHash?: StringNullableFilter<"Player"> | string | null
-    createdAt?: DateTimeFilter<"Player"> | Date | string
-    avatarUrl?: StringNullableFilter<"Player"> | string | null
+  export type UserWhereInput = {
+    AND?: UserWhereInput | UserWhereInput[]
+    OR?: UserWhereInput[]
+    NOT?: UserWhereInput | UserWhereInput[]
+    id?: StringFilter<"User"> | string
+    username?: StringFilter<"User"> | string
+    email?: StringNullableFilter<"User"> | string | null
+    passwordHash?: StringNullableFilter<"User"> | string | null
+    avatarUrl?: StringNullableFilter<"User"> | string | null
+    createdAt?: DateTimeFilter<"User"> | Date | string
+    role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
+    createdGameTemplates?: GameTemplateListRelationFilter
+    initiatedGameInstances?: GameInstanceListRelationFilter
     gameParticipations?: GameParticipantListRelationFilter
+    teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
+    studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
   }
 
-  export type PlayerOrderByWithRelationInput = {
+  export type UserOrderByWithRelationInput = {
     id?: SortOrder
     username?: SortOrder
-    cookieId?: SortOrder
     email?: SortOrderInput | SortOrder
     passwordHash?: SortOrderInput | SortOrder
-    createdAt?: SortOrder
     avatarUrl?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    role?: SortOrder
+    createdGameTemplates?: GameTemplateOrderByRelationAggregateInput
+    initiatedGameInstances?: GameInstanceOrderByRelationAggregateInput
     gameParticipations?: GameParticipantOrderByRelationAggregateInput
+    teacherProfile?: TeacherProfileOrderByWithRelationInput
+    studentProfile?: StudentProfileOrderByWithRelationInput
   }
 
-  export type PlayerWhereUniqueInput = Prisma.AtLeast<{
+  export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    username?: string
-    cookieId?: string
     email?: string
-    AND?: PlayerWhereInput | PlayerWhereInput[]
-    OR?: PlayerWhereInput[]
-    NOT?: PlayerWhereInput | PlayerWhereInput[]
-    passwordHash?: StringNullableFilter<"Player"> | string | null
-    createdAt?: DateTimeFilter<"Player"> | Date | string
-    avatarUrl?: StringNullableFilter<"Player"> | string | null
+    AND?: UserWhereInput | UserWhereInput[]
+    OR?: UserWhereInput[]
+    NOT?: UserWhereInput | UserWhereInput[]
+    username?: StringFilter<"User"> | string
+    passwordHash?: StringNullableFilter<"User"> | string | null
+    avatarUrl?: StringNullableFilter<"User"> | string | null
+    createdAt?: DateTimeFilter<"User"> | Date | string
+    role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
+    createdGameTemplates?: GameTemplateListRelationFilter
+    initiatedGameInstances?: GameInstanceListRelationFilter
     gameParticipations?: GameParticipantListRelationFilter
-  }, "id" | "username" | "cookieId" | "email">
+    teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
+    studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
+  }, "id" | "email">
 
-  export type PlayerOrderByWithAggregationInput = {
+  export type UserOrderByWithAggregationInput = {
     id?: SortOrder
     username?: SortOrder
-    cookieId?: SortOrder
     email?: SortOrderInput | SortOrder
     passwordHash?: SortOrderInput | SortOrder
-    createdAt?: SortOrder
     avatarUrl?: SortOrderInput | SortOrder
-    _count?: PlayerCountOrderByAggregateInput
-    _max?: PlayerMaxOrderByAggregateInput
-    _min?: PlayerMinOrderByAggregateInput
+    createdAt?: SortOrder
+    role?: SortOrder
+    _count?: UserCountOrderByAggregateInput
+    _max?: UserMaxOrderByAggregateInput
+    _min?: UserMinOrderByAggregateInput
   }
 
-  export type PlayerScalarWhereWithAggregatesInput = {
-    AND?: PlayerScalarWhereWithAggregatesInput | PlayerScalarWhereWithAggregatesInput[]
-    OR?: PlayerScalarWhereWithAggregatesInput[]
-    NOT?: PlayerScalarWhereWithAggregatesInput | PlayerScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"Player"> | string
-    username?: StringWithAggregatesFilter<"Player"> | string
-    cookieId?: StringWithAggregatesFilter<"Player"> | string
-    email?: StringNullableWithAggregatesFilter<"Player"> | string | null
-    passwordHash?: StringNullableWithAggregatesFilter<"Player"> | string | null
-    createdAt?: DateTimeWithAggregatesFilter<"Player"> | Date | string
-    avatarUrl?: StringNullableWithAggregatesFilter<"Player"> | string | null
+  export type UserScalarWhereWithAggregatesInput = {
+    AND?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
+    OR?: UserScalarWhereWithAggregatesInput[]
+    NOT?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"User"> | string
+    username?: StringWithAggregatesFilter<"User"> | string
+    email?: StringNullableWithAggregatesFilter<"User"> | string | null
+    passwordHash?: StringNullableWithAggregatesFilter<"User"> | string | null
+    avatarUrl?: StringNullableWithAggregatesFilter<"User"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    role?: EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
+  }
+
+  export type TeacherProfileWhereInput = {
+    AND?: TeacherProfileWhereInput | TeacherProfileWhereInput[]
+    OR?: TeacherProfileWhereInput[]
+    NOT?: TeacherProfileWhereInput | TeacherProfileWhereInput[]
+    id?: StringFilter<"TeacherProfile"> | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type TeacherProfileOrderByWithRelationInput = {
+    id?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type TeacherProfileWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: TeacherProfileWhereInput | TeacherProfileWhereInput[]
+    OR?: TeacherProfileWhereInput[]
+    NOT?: TeacherProfileWhereInput | TeacherProfileWhereInput[]
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type TeacherProfileOrderByWithAggregationInput = {
+    id?: SortOrder
+    _count?: TeacherProfileCountOrderByAggregateInput
+    _max?: TeacherProfileMaxOrderByAggregateInput
+    _min?: TeacherProfileMinOrderByAggregateInput
+  }
+
+  export type TeacherProfileScalarWhereWithAggregatesInput = {
+    AND?: TeacherProfileScalarWhereWithAggregatesInput | TeacherProfileScalarWhereWithAggregatesInput[]
+    OR?: TeacherProfileScalarWhereWithAggregatesInput[]
+    NOT?: TeacherProfileScalarWhereWithAggregatesInput | TeacherProfileScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TeacherProfile"> | string
+  }
+
+  export type StudentProfileWhereInput = {
+    AND?: StudentProfileWhereInput | StudentProfileWhereInput[]
+    OR?: StudentProfileWhereInput[]
+    NOT?: StudentProfileWhereInput | StudentProfileWhereInput[]
+    id?: StringFilter<"StudentProfile"> | string
+    cookieId?: StringNullableFilter<"StudentProfile"> | string | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type StudentProfileOrderByWithRelationInput = {
+    id?: SortOrder
+    cookieId?: SortOrderInput | SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type StudentProfileWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    cookieId?: string
+    AND?: StudentProfileWhereInput | StudentProfileWhereInput[]
+    OR?: StudentProfileWhereInput[]
+    NOT?: StudentProfileWhereInput | StudentProfileWhereInput[]
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "cookieId">
+
+  export type StudentProfileOrderByWithAggregationInput = {
+    id?: SortOrder
+    cookieId?: SortOrderInput | SortOrder
+    _count?: StudentProfileCountOrderByAggregateInput
+    _max?: StudentProfileMaxOrderByAggregateInput
+    _min?: StudentProfileMinOrderByAggregateInput
+  }
+
+  export type StudentProfileScalarWhereWithAggregatesInput = {
+    AND?: StudentProfileScalarWhereWithAggregatesInput | StudentProfileScalarWhereWithAggregatesInput[]
+    OR?: StudentProfileScalarWhereWithAggregatesInput[]
+    NOT?: StudentProfileScalarWhereWithAggregatesInput | StudentProfileScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"StudentProfile"> | string
+    cookieId?: StringNullableWithAggregatesFilter<"StudentProfile"> | string | null
   }
 
   export type QuestionWhereInput = {
@@ -10185,7 +11356,8 @@ export namespace Prisma {
     uid?: StringFilter<"Question"> | string
     title?: StringNullableFilter<"Question"> | string | null
     text?: StringFilter<"Question"> | string
-    responses?: JsonFilter<"Question">
+    answerOptions?: StringNullableListFilter<"Question">
+    correctAnswers?: BoolNullableListFilter<"Question">
     questionType?: StringFilter<"Question"> | string
     discipline?: StringFilter<"Question"> | string
     themes?: StringNullableListFilter<"Question">
@@ -10196,16 +11368,18 @@ export namespace Prisma {
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntNullableFilter<"Question"> | number | null
     isHidden?: BoolNullableFilter<"Question"> | boolean | null
+    feedbackWaitTime?: IntNullableFilter<"Question"> | number | null
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
-    quizTemplates?: QuestionsInQuizTemplateListRelationFilter
+    gameTemplates?: QuestionsInGameTemplateListRelationFilter
   }
 
   export type QuestionOrderByWithRelationInput = {
     uid?: SortOrder
     title?: SortOrderInput | SortOrder
     text?: SortOrder
-    responses?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
     questionType?: SortOrder
     discipline?: SortOrder
     themes?: SortOrder
@@ -10216,9 +11390,10 @@ export namespace Prisma {
     tags?: SortOrder
     timeLimit?: SortOrderInput | SortOrder
     isHidden?: SortOrderInput | SortOrder
+    feedbackWaitTime?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    quizTemplates?: QuestionsInQuizTemplateOrderByRelationAggregateInput
+    gameTemplates?: QuestionsInGameTemplateOrderByRelationAggregateInput
   }
 
   export type QuestionWhereUniqueInput = Prisma.AtLeast<{
@@ -10228,7 +11403,8 @@ export namespace Prisma {
     NOT?: QuestionWhereInput | QuestionWhereInput[]
     title?: StringNullableFilter<"Question"> | string | null
     text?: StringFilter<"Question"> | string
-    responses?: JsonFilter<"Question">
+    answerOptions?: StringNullableListFilter<"Question">
+    correctAnswers?: BoolNullableListFilter<"Question">
     questionType?: StringFilter<"Question"> | string
     discipline?: StringFilter<"Question"> | string
     themes?: StringNullableListFilter<"Question">
@@ -10239,16 +11415,18 @@ export namespace Prisma {
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntNullableFilter<"Question"> | number | null
     isHidden?: BoolNullableFilter<"Question"> | boolean | null
+    feedbackWaitTime?: IntNullableFilter<"Question"> | number | null
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
-    quizTemplates?: QuestionsInQuizTemplateListRelationFilter
+    gameTemplates?: QuestionsInGameTemplateListRelationFilter
   }, "uid">
 
   export type QuestionOrderByWithAggregationInput = {
     uid?: SortOrder
     title?: SortOrderInput | SortOrder
     text?: SortOrder
-    responses?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
     questionType?: SortOrder
     discipline?: SortOrder
     themes?: SortOrder
@@ -10259,6 +11437,7 @@ export namespace Prisma {
     tags?: SortOrder
     timeLimit?: SortOrderInput | SortOrder
     isHidden?: SortOrderInput | SortOrder
+    feedbackWaitTime?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: QuestionCountOrderByAggregateInput
@@ -10275,7 +11454,8 @@ export namespace Prisma {
     uid?: StringWithAggregatesFilter<"Question"> | string
     title?: StringNullableWithAggregatesFilter<"Question"> | string | null
     text?: StringWithAggregatesFilter<"Question"> | string
-    responses?: JsonWithAggregatesFilter<"Question">
+    answerOptions?: StringNullableListFilter<"Question">
+    correctAnswers?: BoolNullableListFilter<"Question">
     questionType?: StringWithAggregatesFilter<"Question"> | string
     discipline?: StringWithAggregatesFilter<"Question"> | string
     themes?: StringNullableListFilter<"Question">
@@ -10286,33 +11466,34 @@ export namespace Prisma {
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntNullableWithAggregatesFilter<"Question"> | number | null
     isHidden?: BoolNullableWithAggregatesFilter<"Question"> | boolean | null
+    feedbackWaitTime?: IntNullableWithAggregatesFilter<"Question"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
   }
 
-  export type QuizTemplateWhereInput = {
-    AND?: QuizTemplateWhereInput | QuizTemplateWhereInput[]
-    OR?: QuizTemplateWhereInput[]
-    NOT?: QuizTemplateWhereInput | QuizTemplateWhereInput[]
-    id?: StringFilter<"QuizTemplate"> | string
-    name?: StringFilter<"QuizTemplate"> | string
-    creatorTeacherId?: StringFilter<"QuizTemplate"> | string
-    gradeLevel?: StringNullableFilter<"QuizTemplate"> | string | null
-    themes?: StringNullableListFilter<"QuizTemplate">
-    discipline?: StringNullableFilter<"QuizTemplate"> | string | null
-    description?: StringNullableFilter<"QuizTemplate"> | string | null
-    defaultMode?: EnumPlayModeNullableFilter<"QuizTemplate"> | $Enums.PlayMode | null
-    createdAt?: DateTimeFilter<"QuizTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"QuizTemplate"> | Date | string
-    creatorTeacher?: XOR<TeacherScalarRelationFilter, TeacherWhereInput>
-    questions?: QuestionsInQuizTemplateListRelationFilter
+  export type GameTemplateWhereInput = {
+    AND?: GameTemplateWhereInput | GameTemplateWhereInput[]
+    OR?: GameTemplateWhereInput[]
+    NOT?: GameTemplateWhereInput | GameTemplateWhereInput[]
+    id?: StringFilter<"GameTemplate"> | string
+    name?: StringFilter<"GameTemplate"> | string
+    creatorId?: StringFilter<"GameTemplate"> | string
+    gradeLevel?: StringNullableFilter<"GameTemplate"> | string | null
+    themes?: StringNullableListFilter<"GameTemplate">
+    discipline?: StringNullableFilter<"GameTemplate"> | string | null
+    description?: StringNullableFilter<"GameTemplate"> | string | null
+    defaultMode?: EnumPlayModeNullableFilter<"GameTemplate"> | $Enums.PlayMode | null
+    createdAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    creator?: XOR<UserScalarRelationFilter, UserWhereInput>
+    questions?: QuestionsInGameTemplateListRelationFilter
     gameInstances?: GameInstanceListRelationFilter
   }
 
-  export type QuizTemplateOrderByWithRelationInput = {
+  export type GameTemplateOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorTeacherId?: SortOrder
+    creatorId?: SortOrder
     gradeLevel?: SortOrderInput | SortOrder
     themes?: SortOrder
     discipline?: SortOrderInput | SortOrder
@@ -10320,34 +11501,34 @@ export namespace Prisma {
     defaultMode?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    creatorTeacher?: TeacherOrderByWithRelationInput
-    questions?: QuestionsInQuizTemplateOrderByRelationAggregateInput
+    creator?: UserOrderByWithRelationInput
+    questions?: QuestionsInGameTemplateOrderByRelationAggregateInput
     gameInstances?: GameInstanceOrderByRelationAggregateInput
   }
 
-  export type QuizTemplateWhereUniqueInput = Prisma.AtLeast<{
+  export type GameTemplateWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    AND?: QuizTemplateWhereInput | QuizTemplateWhereInput[]
-    OR?: QuizTemplateWhereInput[]
-    NOT?: QuizTemplateWhereInput | QuizTemplateWhereInput[]
-    name?: StringFilter<"QuizTemplate"> | string
-    creatorTeacherId?: StringFilter<"QuizTemplate"> | string
-    gradeLevel?: StringNullableFilter<"QuizTemplate"> | string | null
-    themes?: StringNullableListFilter<"QuizTemplate">
-    discipline?: StringNullableFilter<"QuizTemplate"> | string | null
-    description?: StringNullableFilter<"QuizTemplate"> | string | null
-    defaultMode?: EnumPlayModeNullableFilter<"QuizTemplate"> | $Enums.PlayMode | null
-    createdAt?: DateTimeFilter<"QuizTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"QuizTemplate"> | Date | string
-    creatorTeacher?: XOR<TeacherScalarRelationFilter, TeacherWhereInput>
-    questions?: QuestionsInQuizTemplateListRelationFilter
+    AND?: GameTemplateWhereInput | GameTemplateWhereInput[]
+    OR?: GameTemplateWhereInput[]
+    NOT?: GameTemplateWhereInput | GameTemplateWhereInput[]
+    name?: StringFilter<"GameTemplate"> | string
+    creatorId?: StringFilter<"GameTemplate"> | string
+    gradeLevel?: StringNullableFilter<"GameTemplate"> | string | null
+    themes?: StringNullableListFilter<"GameTemplate">
+    discipline?: StringNullableFilter<"GameTemplate"> | string | null
+    description?: StringNullableFilter<"GameTemplate"> | string | null
+    defaultMode?: EnumPlayModeNullableFilter<"GameTemplate"> | $Enums.PlayMode | null
+    createdAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    creator?: XOR<UserScalarRelationFilter, UserWhereInput>
+    questions?: QuestionsInGameTemplateListRelationFilter
     gameInstances?: GameInstanceListRelationFilter
   }, "id">
 
-  export type QuizTemplateOrderByWithAggregationInput = {
+  export type GameTemplateOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorTeacherId?: SortOrder
+    creatorId?: SortOrder
     gradeLevel?: SortOrderInput | SortOrder
     themes?: SortOrder
     discipline?: SortOrderInput | SortOrder
@@ -10355,82 +11536,82 @@ export namespace Prisma {
     defaultMode?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    _count?: QuizTemplateCountOrderByAggregateInput
-    _max?: QuizTemplateMaxOrderByAggregateInput
-    _min?: QuizTemplateMinOrderByAggregateInput
+    _count?: GameTemplateCountOrderByAggregateInput
+    _max?: GameTemplateMaxOrderByAggregateInput
+    _min?: GameTemplateMinOrderByAggregateInput
   }
 
-  export type QuizTemplateScalarWhereWithAggregatesInput = {
-    AND?: QuizTemplateScalarWhereWithAggregatesInput | QuizTemplateScalarWhereWithAggregatesInput[]
-    OR?: QuizTemplateScalarWhereWithAggregatesInput[]
-    NOT?: QuizTemplateScalarWhereWithAggregatesInput | QuizTemplateScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"QuizTemplate"> | string
-    name?: StringWithAggregatesFilter<"QuizTemplate"> | string
-    creatorTeacherId?: StringWithAggregatesFilter<"QuizTemplate"> | string
-    gradeLevel?: StringNullableWithAggregatesFilter<"QuizTemplate"> | string | null
-    themes?: StringNullableListFilter<"QuizTemplate">
-    discipline?: StringNullableWithAggregatesFilter<"QuizTemplate"> | string | null
-    description?: StringNullableWithAggregatesFilter<"QuizTemplate"> | string | null
-    defaultMode?: EnumPlayModeNullableWithAggregatesFilter<"QuizTemplate"> | $Enums.PlayMode | null
-    createdAt?: DateTimeWithAggregatesFilter<"QuizTemplate"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"QuizTemplate"> | Date | string
+  export type GameTemplateScalarWhereWithAggregatesInput = {
+    AND?: GameTemplateScalarWhereWithAggregatesInput | GameTemplateScalarWhereWithAggregatesInput[]
+    OR?: GameTemplateScalarWhereWithAggregatesInput[]
+    NOT?: GameTemplateScalarWhereWithAggregatesInput | GameTemplateScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"GameTemplate"> | string
+    name?: StringWithAggregatesFilter<"GameTemplate"> | string
+    creatorId?: StringWithAggregatesFilter<"GameTemplate"> | string
+    gradeLevel?: StringNullableWithAggregatesFilter<"GameTemplate"> | string | null
+    themes?: StringNullableListFilter<"GameTemplate">
+    discipline?: StringNullableWithAggregatesFilter<"GameTemplate"> | string | null
+    description?: StringNullableWithAggregatesFilter<"GameTemplate"> | string | null
+    defaultMode?: EnumPlayModeNullableWithAggregatesFilter<"GameTemplate"> | $Enums.PlayMode | null
+    createdAt?: DateTimeWithAggregatesFilter<"GameTemplate"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"GameTemplate"> | Date | string
   }
 
-  export type QuestionsInQuizTemplateWhereInput = {
-    AND?: QuestionsInQuizTemplateWhereInput | QuestionsInQuizTemplateWhereInput[]
-    OR?: QuestionsInQuizTemplateWhereInput[]
-    NOT?: QuestionsInQuizTemplateWhereInput | QuestionsInQuizTemplateWhereInput[]
-    quizTemplateId?: StringFilter<"QuestionsInQuizTemplate"> | string
-    questionUid?: StringFilter<"QuestionsInQuizTemplate"> | string
-    sequence?: IntFilter<"QuestionsInQuizTemplate"> | number
-    createdAt?: DateTimeFilter<"QuestionsInQuizTemplate"> | Date | string
-    quizTemplate?: XOR<QuizTemplateScalarRelationFilter, QuizTemplateWhereInput>
+  export type QuestionsInGameTemplateWhereInput = {
+    AND?: QuestionsInGameTemplateWhereInput | QuestionsInGameTemplateWhereInput[]
+    OR?: QuestionsInGameTemplateWhereInput[]
+    NOT?: QuestionsInGameTemplateWhereInput | QuestionsInGameTemplateWhereInput[]
+    gameTemplateId?: StringFilter<"QuestionsInGameTemplate"> | string
+    questionUid?: StringFilter<"QuestionsInGameTemplate"> | string
+    sequence?: IntFilter<"QuestionsInGameTemplate"> | number
+    createdAt?: DateTimeFilter<"QuestionsInGameTemplate"> | Date | string
+    gameTemplate?: XOR<GameTemplateScalarRelationFilter, GameTemplateWhereInput>
     question?: XOR<QuestionScalarRelationFilter, QuestionWhereInput>
   }
 
-  export type QuestionsInQuizTemplateOrderByWithRelationInput = {
-    quizTemplateId?: SortOrder
+  export type QuestionsInGameTemplateOrderByWithRelationInput = {
+    gameTemplateId?: SortOrder
     questionUid?: SortOrder
     sequence?: SortOrder
     createdAt?: SortOrder
-    quizTemplate?: QuizTemplateOrderByWithRelationInput
+    gameTemplate?: GameTemplateOrderByWithRelationInput
     question?: QuestionOrderByWithRelationInput
   }
 
-  export type QuestionsInQuizTemplateWhereUniqueInput = Prisma.AtLeast<{
-    quizTemplateId_questionUid?: QuestionsInQuizTemplateQuizTemplateIdQuestionUidCompoundUniqueInput
-    quizTemplateId_sequence?: QuestionsInQuizTemplateQuizTemplateIdSequenceCompoundUniqueInput
-    AND?: QuestionsInQuizTemplateWhereInput | QuestionsInQuizTemplateWhereInput[]
-    OR?: QuestionsInQuizTemplateWhereInput[]
-    NOT?: QuestionsInQuizTemplateWhereInput | QuestionsInQuizTemplateWhereInput[]
-    quizTemplateId?: StringFilter<"QuestionsInQuizTemplate"> | string
-    questionUid?: StringFilter<"QuestionsInQuizTemplate"> | string
-    sequence?: IntFilter<"QuestionsInQuizTemplate"> | number
-    createdAt?: DateTimeFilter<"QuestionsInQuizTemplate"> | Date | string
-    quizTemplate?: XOR<QuizTemplateScalarRelationFilter, QuizTemplateWhereInput>
+  export type QuestionsInGameTemplateWhereUniqueInput = Prisma.AtLeast<{
+    gameTemplateId_questionUid?: QuestionsInGameTemplateGameTemplateIdQuestionUidCompoundUniqueInput
+    gameTemplateId_sequence?: QuestionsInGameTemplateGameTemplateIdSequenceCompoundUniqueInput
+    AND?: QuestionsInGameTemplateWhereInput | QuestionsInGameTemplateWhereInput[]
+    OR?: QuestionsInGameTemplateWhereInput[]
+    NOT?: QuestionsInGameTemplateWhereInput | QuestionsInGameTemplateWhereInput[]
+    gameTemplateId?: StringFilter<"QuestionsInGameTemplate"> | string
+    questionUid?: StringFilter<"QuestionsInGameTemplate"> | string
+    sequence?: IntFilter<"QuestionsInGameTemplate"> | number
+    createdAt?: DateTimeFilter<"QuestionsInGameTemplate"> | Date | string
+    gameTemplate?: XOR<GameTemplateScalarRelationFilter, GameTemplateWhereInput>
     question?: XOR<QuestionScalarRelationFilter, QuestionWhereInput>
-  }, "quizTemplateId_sequence" | "quizTemplateId_questionUid">
+  }, "gameTemplateId_sequence" | "gameTemplateId_questionUid">
 
-  export type QuestionsInQuizTemplateOrderByWithAggregationInput = {
-    quizTemplateId?: SortOrder
+  export type QuestionsInGameTemplateOrderByWithAggregationInput = {
+    gameTemplateId?: SortOrder
     questionUid?: SortOrder
     sequence?: SortOrder
     createdAt?: SortOrder
-    _count?: QuestionsInQuizTemplateCountOrderByAggregateInput
-    _avg?: QuestionsInQuizTemplateAvgOrderByAggregateInput
-    _max?: QuestionsInQuizTemplateMaxOrderByAggregateInput
-    _min?: QuestionsInQuizTemplateMinOrderByAggregateInput
-    _sum?: QuestionsInQuizTemplateSumOrderByAggregateInput
+    _count?: QuestionsInGameTemplateCountOrderByAggregateInput
+    _avg?: QuestionsInGameTemplateAvgOrderByAggregateInput
+    _max?: QuestionsInGameTemplateMaxOrderByAggregateInput
+    _min?: QuestionsInGameTemplateMinOrderByAggregateInput
+    _sum?: QuestionsInGameTemplateSumOrderByAggregateInput
   }
 
-  export type QuestionsInQuizTemplateScalarWhereWithAggregatesInput = {
-    AND?: QuestionsInQuizTemplateScalarWhereWithAggregatesInput | QuestionsInQuizTemplateScalarWhereWithAggregatesInput[]
-    OR?: QuestionsInQuizTemplateScalarWhereWithAggregatesInput[]
-    NOT?: QuestionsInQuizTemplateScalarWhereWithAggregatesInput | QuestionsInQuizTemplateScalarWhereWithAggregatesInput[]
-    quizTemplateId?: StringWithAggregatesFilter<"QuestionsInQuizTemplate"> | string
-    questionUid?: StringWithAggregatesFilter<"QuestionsInQuizTemplate"> | string
-    sequence?: IntWithAggregatesFilter<"QuestionsInQuizTemplate"> | number
-    createdAt?: DateTimeWithAggregatesFilter<"QuestionsInQuizTemplate"> | Date | string
+  export type QuestionsInGameTemplateScalarWhereWithAggregatesInput = {
+    AND?: QuestionsInGameTemplateScalarWhereWithAggregatesInput | QuestionsInGameTemplateScalarWhereWithAggregatesInput[]
+    OR?: QuestionsInGameTemplateScalarWhereWithAggregatesInput[]
+    NOT?: QuestionsInGameTemplateScalarWhereWithAggregatesInput | QuestionsInGameTemplateScalarWhereWithAggregatesInput[]
+    gameTemplateId?: StringWithAggregatesFilter<"QuestionsInGameTemplate"> | string
+    questionUid?: StringWithAggregatesFilter<"QuestionsInGameTemplate"> | string
+    sequence?: IntWithAggregatesFilter<"QuestionsInGameTemplate"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"QuestionsInGameTemplate"> | Date | string
   }
 
   export type GameInstanceWhereInput = {
@@ -10439,8 +11620,8 @@ export namespace Prisma {
     NOT?: GameInstanceWhereInput | GameInstanceWhereInput[]
     id?: StringFilter<"GameInstance"> | string
     name?: StringFilter<"GameInstance"> | string
-    quizTemplateId?: StringFilter<"GameInstance"> | string
-    initiatorTeacherId?: StringNullableFilter<"GameInstance"> | string | null
+    gameTemplateId?: StringFilter<"GameInstance"> | string
+    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     accessCode?: StringFilter<"GameInstance"> | string
     status?: StringFilter<"GameInstance"> | string
     playMode?: EnumPlayModeFilter<"GameInstance"> | $Enums.PlayMode
@@ -10450,16 +11631,19 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"GameInstance"> | Date | string
     startedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    quizTemplate?: XOR<QuizTemplateScalarRelationFilter, QuizTemplateWhereInput>
-    initiatorTeacher?: XOR<TeacherNullableScalarRelationFilter, TeacherWhereInput> | null
+    isDiffered?: BoolFilter<"GameInstance"> | boolean
+    differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    gameTemplate?: XOR<GameTemplateScalarRelationFilter, GameTemplateWhereInput>
+    initiatorUser?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     participants?: GameParticipantListRelationFilter
   }
 
   export type GameInstanceOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
-    quizTemplateId?: SortOrder
-    initiatorTeacherId?: SortOrderInput | SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrderInput | SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -10469,8 +11653,11 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrderInput | SortOrder
     endedAt?: SortOrderInput | SortOrder
-    quizTemplate?: QuizTemplateOrderByWithRelationInput
-    initiatorTeacher?: TeacherOrderByWithRelationInput
+    isDiffered?: SortOrder
+    differedAvailableFrom?: SortOrderInput | SortOrder
+    differedAvailableTo?: SortOrderInput | SortOrder
+    gameTemplate?: GameTemplateOrderByWithRelationInput
+    initiatorUser?: UserOrderByWithRelationInput
     participants?: GameParticipantOrderByRelationAggregateInput
   }
 
@@ -10481,8 +11668,8 @@ export namespace Prisma {
     OR?: GameInstanceWhereInput[]
     NOT?: GameInstanceWhereInput | GameInstanceWhereInput[]
     name?: StringFilter<"GameInstance"> | string
-    quizTemplateId?: StringFilter<"GameInstance"> | string
-    initiatorTeacherId?: StringNullableFilter<"GameInstance"> | string | null
+    gameTemplateId?: StringFilter<"GameInstance"> | string
+    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     status?: StringFilter<"GameInstance"> | string
     playMode?: EnumPlayModeFilter<"GameInstance"> | $Enums.PlayMode
     leaderboard?: JsonNullableFilter<"GameInstance">
@@ -10491,16 +11678,19 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"GameInstance"> | Date | string
     startedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    quizTemplate?: XOR<QuizTemplateScalarRelationFilter, QuizTemplateWhereInput>
-    initiatorTeacher?: XOR<TeacherNullableScalarRelationFilter, TeacherWhereInput> | null
+    isDiffered?: BoolFilter<"GameInstance"> | boolean
+    differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    gameTemplate?: XOR<GameTemplateScalarRelationFilter, GameTemplateWhereInput>
+    initiatorUser?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     participants?: GameParticipantListRelationFilter
   }, "id" | "accessCode">
 
   export type GameInstanceOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
-    quizTemplateId?: SortOrder
-    initiatorTeacherId?: SortOrderInput | SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrderInput | SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -10510,6 +11700,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrderInput | SortOrder
     endedAt?: SortOrderInput | SortOrder
+    isDiffered?: SortOrder
+    differedAvailableFrom?: SortOrderInput | SortOrder
+    differedAvailableTo?: SortOrderInput | SortOrder
     _count?: GameInstanceCountOrderByAggregateInput
     _avg?: GameInstanceAvgOrderByAggregateInput
     _max?: GameInstanceMaxOrderByAggregateInput
@@ -10523,8 +11716,8 @@ export namespace Prisma {
     NOT?: GameInstanceScalarWhereWithAggregatesInput | GameInstanceScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"GameInstance"> | string
     name?: StringWithAggregatesFilter<"GameInstance"> | string
-    quizTemplateId?: StringWithAggregatesFilter<"GameInstance"> | string
-    initiatorTeacherId?: StringNullableWithAggregatesFilter<"GameInstance"> | string | null
+    gameTemplateId?: StringWithAggregatesFilter<"GameInstance"> | string
+    initiatorUserId?: StringNullableWithAggregatesFilter<"GameInstance"> | string | null
     accessCode?: StringWithAggregatesFilter<"GameInstance"> | string
     status?: StringWithAggregatesFilter<"GameInstance"> | string
     playMode?: EnumPlayModeWithAggregatesFilter<"GameInstance"> | $Enums.PlayMode
@@ -10534,6 +11727,9 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"GameInstance"> | Date | string
     startedAt?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
     endedAt?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
+    isDiffered?: BoolWithAggregatesFilter<"GameInstance"> | boolean
+    differedAvailableFrom?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
+    differedAvailableTo?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
   }
 
   export type GameParticipantWhereInput = {
@@ -10542,7 +11738,7 @@ export namespace Prisma {
     NOT?: GameParticipantWhereInput | GameParticipantWhereInput[]
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
-    playerId?: StringFilter<"GameParticipant"> | string
+    userId?: StringFilter<"GameParticipant"> | string
     score?: IntFilter<"GameParticipant"> | number
     rank?: IntNullableFilter<"GameParticipant"> | number | null
     timeTakenMs?: IntNullableFilter<"GameParticipant"> | number | null
@@ -10552,13 +11748,13 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"GameParticipant"> | Date | string
     updatedAt?: DateTimeFilter<"GameParticipant"> | Date | string
     gameInstance?: XOR<GameInstanceScalarRelationFilter, GameInstanceWhereInput>
-    player?: XOR<PlayerScalarRelationFilter, PlayerWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
   export type GameParticipantOrderByWithRelationInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    playerId?: SortOrder
+    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrderInput | SortOrder
     timeTakenMs?: SortOrderInput | SortOrder
@@ -10568,17 +11764,17 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     gameInstance?: GameInstanceOrderByWithRelationInput
-    player?: PlayerOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
   }
 
   export type GameParticipantWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    gameInstanceId_playerId?: GameParticipantGameInstanceIdPlayerIdCompoundUniqueInput
+    gameInstanceId_userId?: GameParticipantGameInstanceIdUserIdCompoundUniqueInput
     AND?: GameParticipantWhereInput | GameParticipantWhereInput[]
     OR?: GameParticipantWhereInput[]
     NOT?: GameParticipantWhereInput | GameParticipantWhereInput[]
     gameInstanceId?: StringFilter<"GameParticipant"> | string
-    playerId?: StringFilter<"GameParticipant"> | string
+    userId?: StringFilter<"GameParticipant"> | string
     score?: IntFilter<"GameParticipant"> | number
     rank?: IntNullableFilter<"GameParticipant"> | number | null
     timeTakenMs?: IntNullableFilter<"GameParticipant"> | number | null
@@ -10588,13 +11784,13 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"GameParticipant"> | Date | string
     updatedAt?: DateTimeFilter<"GameParticipant"> | Date | string
     gameInstance?: XOR<GameInstanceScalarRelationFilter, GameInstanceWhereInput>
-    player?: XOR<PlayerScalarRelationFilter, PlayerWhereInput>
-  }, "id" | "gameInstanceId_playerId">
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "gameInstanceId_userId">
 
   export type GameParticipantOrderByWithAggregationInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    playerId?: SortOrder
+    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrderInput | SortOrder
     timeTakenMs?: SortOrderInput | SortOrder
@@ -10616,7 +11812,7 @@ export namespace Prisma {
     NOT?: GameParticipantScalarWhereWithAggregatesInput | GameParticipantScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"GameParticipant"> | string
     gameInstanceId?: StringWithAggregatesFilter<"GameParticipant"> | string
-    playerId?: StringWithAggregatesFilter<"GameParticipant"> | string
+    userId?: StringWithAggregatesFilter<"GameParticipant"> | string
     score?: IntWithAggregatesFilter<"GameParticipant"> | number
     rank?: IntNullableWithAggregatesFilter<"GameParticipant"> | number | null
     timeTakenMs?: IntNullableWithAggregatesFilter<"GameParticipant"> | number | null
@@ -10627,170 +11823,164 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"GameParticipant"> | Date | string
   }
 
-  export type TeacherCreateInput = {
+  export type UserCreateInput = {
     id?: string
     username: string
-    passwordHash: string
-    email?: string | null
-    createdAt?: Date | string
-    avatarUrl?: string | null
-    resetToken?: string | null
-    resetTokenExpiresAt?: Date | string | null
-    quizTemplates?: QuizTemplateCreateNestedManyWithoutCreatorTeacherInput
-    gameInstances?: GameInstanceCreateNestedManyWithoutInitiatorTeacherInput
-  }
-
-  export type TeacherUncheckedCreateInput = {
-    id?: string
-    username: string
-    passwordHash: string
-    email?: string | null
-    createdAt?: Date | string
-    avatarUrl?: string | null
-    resetToken?: string | null
-    resetTokenExpiresAt?: Date | string | null
-    quizTemplates?: QuizTemplateUncheckedCreateNestedManyWithoutCreatorTeacherInput
-    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorTeacherInput
-  }
-
-  export type TeacherUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    username?: StringFieldUpdateOperationsInput | string
-    passwordHash?: StringFieldUpdateOperationsInput | string
-    email?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
-    resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    quizTemplates?: QuizTemplateUpdateManyWithoutCreatorTeacherNestedInput
-    gameInstances?: GameInstanceUpdateManyWithoutInitiatorTeacherNestedInput
-  }
-
-  export type TeacherUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    username?: StringFieldUpdateOperationsInput | string
-    passwordHash?: StringFieldUpdateOperationsInput | string
-    email?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
-    resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    quizTemplates?: QuizTemplateUncheckedUpdateManyWithoutCreatorTeacherNestedInput
-    gameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorTeacherNestedInput
-  }
-
-  export type TeacherCreateManyInput = {
-    id?: string
-    username: string
-    passwordHash: string
-    email?: string | null
-    createdAt?: Date | string
-    avatarUrl?: string | null
-    resetToken?: string | null
-    resetTokenExpiresAt?: Date | string | null
-  }
-
-  export type TeacherUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    username?: StringFieldUpdateOperationsInput | string
-    passwordHash?: StringFieldUpdateOperationsInput | string
-    email?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
-    resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type TeacherUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    username?: StringFieldUpdateOperationsInput | string
-    passwordHash?: StringFieldUpdateOperationsInput | string
-    email?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
-    resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type PlayerCreateInput = {
-    id?: string
-    username: string
-    cookieId: string
     email?: string | null
     passwordHash?: string | null
-    createdAt?: Date | string
     avatarUrl?: string | null
-    gameParticipations?: GameParticipantCreateNestedManyWithoutPlayerInput
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
+    initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
+    gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
+    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
   }
 
-  export type PlayerUncheckedCreateInput = {
+  export type UserUncheckedCreateInput = {
     id?: string
     username: string
-    cookieId: string
     email?: string | null
     passwordHash?: string | null
-    createdAt?: Date | string
     avatarUrl?: string | null
-    gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutPlayerInput
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
+    initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
+    gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
+    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
   }
 
-  export type PlayerUpdateInput = {
+  export type UserUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    cookieId?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    gameParticipations?: GameParticipantUpdateManyWithoutPlayerNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
+    initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
+    gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
+    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
   }
 
-  export type PlayerUncheckedUpdateInput = {
+  export type UserUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    cookieId?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    gameParticipations?: GameParticipantUncheckedUpdateManyWithoutPlayerNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+    initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
+    gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
+    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   }
 
-  export type PlayerCreateManyInput = {
+  export type UserCreateManyInput = {
     id?: string
     username: string
-    cookieId: string
     email?: string | null
     passwordHash?: string | null
-    createdAt?: Date | string
     avatarUrl?: string | null
+    createdAt?: Date | string
+    role: $Enums.UserRole
   }
 
-  export type PlayerUpdateManyMutationInput = {
+  export type UserUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    cookieId?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   }
 
-  export type PlayerUncheckedUpdateManyInput = {
+  export type UserUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    cookieId?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  }
+
+  export type TeacherProfileCreateInput = {
+    user: UserCreateNestedOneWithoutTeacherProfileInput
+  }
+
+  export type TeacherProfileUncheckedCreateInput = {
+    id: string
+  }
+
+  export type TeacherProfileUpdateInput = {
+    user?: UserUpdateOneRequiredWithoutTeacherProfileNestedInput
+  }
+
+  export type TeacherProfileUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type TeacherProfileCreateManyInput = {
+    id: string
+  }
+
+  export type TeacherProfileUpdateManyMutationInput = {
+
+  }
+
+  export type TeacherProfileUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StudentProfileCreateInput = {
+    cookieId?: string | null
+    user: UserCreateNestedOneWithoutStudentProfileInput
+  }
+
+  export type StudentProfileUncheckedCreateInput = {
+    id: string
+    cookieId?: string | null
+  }
+
+  export type StudentProfileUpdateInput = {
+    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
+    user?: UserUpdateOneRequiredWithoutStudentProfileNestedInput
+  }
+
+  export type StudentProfileUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type StudentProfileCreateManyInput = {
+    id: string
+    cookieId?: string | null
+  }
+
+  export type StudentProfileUpdateManyMutationInput = {
+    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type StudentProfileUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type QuestionCreateInput = {
     uid?: string
     title?: string | null
     text: string
-    responses: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -10801,16 +11991,18 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
+    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    quizTemplates?: QuestionsInQuizTemplateCreateNestedManyWithoutQuestionInput
+    gameTemplates?: QuestionsInGameTemplateCreateNestedManyWithoutQuestionInput
   }
 
   export type QuestionUncheckedCreateInput = {
     uid?: string
     title?: string | null
     text: string
-    responses: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -10821,16 +12013,18 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
+    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    quizTemplates?: QuestionsInQuizTemplateUncheckedCreateNestedManyWithoutQuestionInput
+    gameTemplates?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutQuestionInput
   }
 
   export type QuestionUpdateInput = {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    responses?: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -10841,16 +12035,18 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    quizTemplates?: QuestionsInQuizTemplateUpdateManyWithoutQuestionNestedInput
+    gameTemplates?: QuestionsInGameTemplateUpdateManyWithoutQuestionNestedInput
   }
 
   export type QuestionUncheckedUpdateInput = {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    responses?: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -10861,16 +12057,18 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    quizTemplates?: QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuestionNestedInput
+    gameTemplates?: QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionNestedInput
   }
 
   export type QuestionCreateManyInput = {
     uid?: string
     title?: string | null
     text: string
-    responses: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -10881,6 +12079,7 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
+    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -10889,7 +12088,8 @@ export namespace Prisma {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    responses?: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -10900,6 +12100,7 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10908,7 +12109,8 @@ export namespace Prisma {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    responses?: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -10919,76 +12121,77 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuizTemplateCreateInput = {
+  export type GameTemplateCreateInput = {
     id?: string
     name: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    creatorTeacher: TeacherCreateNestedOneWithoutQuizTemplatesInput
-    questions?: QuestionsInQuizTemplateCreateNestedManyWithoutQuizTemplateInput
-    gameInstances?: GameInstanceCreateNestedManyWithoutQuizTemplateInput
+    creator: UserCreateNestedOneWithoutCreatedGameTemplatesInput
+    questions?: QuestionsInGameTemplateCreateNestedManyWithoutGameTemplateInput
+    gameInstances?: GameInstanceCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type QuizTemplateUncheckedCreateInput = {
+  export type GameTemplateUncheckedCreateInput = {
     id?: string
     name: string
-    creatorTeacherId: string
+    creatorId: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    questions?: QuestionsInQuizTemplateUncheckedCreateNestedManyWithoutQuizTemplateInput
-    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutQuizTemplateInput
+    questions?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput
+    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type QuizTemplateUpdateInput = {
+  export type GameTemplateUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
+    themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    creatorTeacher?: TeacherUpdateOneRequiredWithoutQuizTemplatesNestedInput
-    questions?: QuestionsInQuizTemplateUpdateManyWithoutQuizTemplateNestedInput
-    gameInstances?: GameInstanceUpdateManyWithoutQuizTemplateNestedInput
+    creator?: UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput
+    questions?: QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput
+    gameInstances?: GameInstanceUpdateManyWithoutGameTemplateNestedInput
   }
 
-  export type QuizTemplateUncheckedUpdateInput = {
+  export type GameTemplateUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    creatorTeacherId?: StringFieldUpdateOperationsInput | string
+    creatorId?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
+    themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    questions?: QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuizTemplateNestedInput
-    gameInstances?: GameInstanceUncheckedUpdateManyWithoutQuizTemplateNestedInput
+    questions?: QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput
+    gameInstances?: GameInstanceUncheckedUpdateManyWithoutGameTemplateNestedInput
   }
 
-  export type QuizTemplateCreateManyInput = {
+  export type GameTemplateCreateManyInput = {
     id?: string
     name: string
-    creatorTeacherId: string
+    creatorId: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
@@ -10996,11 +12199,11 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type QuizTemplateUpdateManyMutationInput = {
+  export type GameTemplateUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
+    themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
@@ -11008,12 +12211,12 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuizTemplateUncheckedUpdateManyInput = {
+  export type GameTemplateUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    creatorTeacherId?: StringFieldUpdateOperationsInput | string
+    creatorId?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
+    themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
@@ -11021,48 +12224,48 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuestionsInQuizTemplateCreateInput = {
+  export type QuestionsInGameTemplateCreateInput = {
     sequence: number
     createdAt?: Date | string
-    quizTemplate: QuizTemplateCreateNestedOneWithoutQuestionsInput
-    question: QuestionCreateNestedOneWithoutQuizTemplatesInput
+    gameTemplate: GameTemplateCreateNestedOneWithoutQuestionsInput
+    question: QuestionCreateNestedOneWithoutGameTemplatesInput
   }
 
-  export type QuestionsInQuizTemplateUncheckedCreateInput = {
-    quizTemplateId: string
+  export type QuestionsInGameTemplateUncheckedCreateInput = {
+    gameTemplateId: string
     questionUid: string
     sequence: number
     createdAt?: Date | string
   }
 
-  export type QuestionsInQuizTemplateUpdateInput = {
+  export type QuestionsInGameTemplateUpdateInput = {
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    quizTemplate?: QuizTemplateUpdateOneRequiredWithoutQuestionsNestedInput
-    question?: QuestionUpdateOneRequiredWithoutQuizTemplatesNestedInput
+    gameTemplate?: GameTemplateUpdateOneRequiredWithoutQuestionsNestedInput
+    question?: QuestionUpdateOneRequiredWithoutGameTemplatesNestedInput
   }
 
-  export type QuestionsInQuizTemplateUncheckedUpdateInput = {
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
+  export type QuestionsInGameTemplateUncheckedUpdateInput = {
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
     questionUid?: StringFieldUpdateOperationsInput | string
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuestionsInQuizTemplateCreateManyInput = {
-    quizTemplateId: string
+  export type QuestionsInGameTemplateCreateManyInput = {
+    gameTemplateId: string
     questionUid: string
     sequence: number
     createdAt?: Date | string
   }
 
-  export type QuestionsInQuizTemplateUpdateManyMutationInput = {
+  export type QuestionsInGameTemplateUpdateManyMutationInput = {
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuestionsInQuizTemplateUncheckedUpdateManyInput = {
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
+  export type QuestionsInGameTemplateUncheckedUpdateManyInput = {
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
     questionUid?: StringFieldUpdateOperationsInput | string
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11080,16 +12283,19 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    quizTemplate: QuizTemplateCreateNestedOneWithoutGameInstancesInput
-    initiatorTeacher?: TeacherCreateNestedOneWithoutGameInstancesInput
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
+    gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
+    initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
     participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
   }
 
   export type GameInstanceUncheckedCreateInput = {
     id?: string
     name: string
-    quizTemplateId: string
-    initiatorTeacherId?: string | null
+    gameTemplateId: string
+    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -11099,6 +12305,9 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
     participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
   }
 
@@ -11114,16 +12323,19 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    quizTemplate?: QuizTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
-    initiatorTeacher?: TeacherUpdateOneWithoutGameInstancesNestedInput
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
+    initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
     participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
   }
 
   export type GameInstanceUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
-    initiatorTeacherId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -11133,14 +12345,17 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
   }
 
   export type GameInstanceCreateManyInput = {
     id?: string
     name: string
-    quizTemplateId: string
-    initiatorTeacherId?: string | null
+    gameTemplateId: string
+    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -11150,6 +12365,9 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
   }
 
   export type GameInstanceUpdateManyMutationInput = {
@@ -11164,13 +12382,16 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type GameInstanceUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
-    initiatorTeacherId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -11180,6 +12401,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type GameParticipantCreateInput = {
@@ -11193,13 +12417,13 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     gameInstance: GameInstanceCreateNestedOneWithoutParticipantsInput
-    player: PlayerCreateNestedOneWithoutGameParticipationsInput
+    user: UserCreateNestedOneWithoutGameParticipationsInput
   }
 
   export type GameParticipantUncheckedCreateInput = {
     id?: string
     gameInstanceId: string
-    playerId: string
+    userId: string
     score?: number
     rank?: number | null
     timeTakenMs?: number | null
@@ -11221,13 +12445,13 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     gameInstance?: GameInstanceUpdateOneRequiredWithoutParticipantsNestedInput
-    player?: PlayerUpdateOneRequiredWithoutGameParticipationsNestedInput
+    user?: UserUpdateOneRequiredWithoutGameParticipationsNestedInput
   }
 
   export type GameParticipantUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    playerId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
     timeTakenMs?: NullableIntFieldUpdateOperationsInput | number | null
@@ -11241,7 +12465,7 @@ export namespace Prisma {
   export type GameParticipantCreateManyInput = {
     id?: string
     gameInstanceId: string
-    playerId: string
+    userId: string
     score?: number
     rank?: number | null
     timeTakenMs?: number | null
@@ -11267,7 +12491,7 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    playerId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
     timeTakenMs?: NullableIntFieldUpdateOperationsInput | number | null
@@ -11319,21 +12543,17 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
-  export type DateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  export type EnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
-  export type QuizTemplateListRelationFilter = {
-    every?: QuizTemplateWhereInput
-    some?: QuizTemplateWhereInput
-    none?: QuizTemplateWhereInput
+  export type GameTemplateListRelationFilter = {
+    every?: GameTemplateWhereInput
+    some?: GameTemplateWhereInput
+    none?: GameTemplateWhereInput
   }
 
   export type GameInstanceListRelationFilter = {
@@ -11342,12 +12562,28 @@ export namespace Prisma {
     none?: GameInstanceWhereInput
   }
 
+  export type GameParticipantListRelationFilter = {
+    every?: GameParticipantWhereInput
+    some?: GameParticipantWhereInput
+    none?: GameParticipantWhereInput
+  }
+
+  export type TeacherProfileNullableScalarRelationFilter = {
+    is?: TeacherProfileWhereInput | null
+    isNot?: TeacherProfileWhereInput | null
+  }
+
+  export type StudentProfileNullableScalarRelationFilter = {
+    is?: StudentProfileWhereInput | null
+    isNot?: StudentProfileWhereInput | null
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
   }
 
-  export type QuizTemplateOrderByRelationAggregateInput = {
+  export type GameTemplateOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -11355,37 +12591,38 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type TeacherCountOrderByAggregateInput = {
-    id?: SortOrder
-    username?: SortOrder
-    passwordHash?: SortOrder
-    email?: SortOrder
-    createdAt?: SortOrder
-    avatarUrl?: SortOrder
-    resetToken?: SortOrder
-    resetTokenExpiresAt?: SortOrder
+  export type GameParticipantOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
-  export type TeacherMaxOrderByAggregateInput = {
+  export type UserCountOrderByAggregateInput = {
     id?: SortOrder
     username?: SortOrder
-    passwordHash?: SortOrder
     email?: SortOrder
-    createdAt?: SortOrder
+    passwordHash?: SortOrder
     avatarUrl?: SortOrder
-    resetToken?: SortOrder
-    resetTokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    role?: SortOrder
   }
 
-  export type TeacherMinOrderByAggregateInput = {
+  export type UserMaxOrderByAggregateInput = {
     id?: SortOrder
     username?: SortOrder
-    passwordHash?: SortOrder
     email?: SortOrder
-    createdAt?: SortOrder
+    passwordHash?: SortOrder
     avatarUrl?: SortOrder
-    resetToken?: SortOrder
-    resetTokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    role?: SortOrder
+  }
+
+  export type UserMinOrderByAggregateInput = {
+    id?: SortOrder
+    username?: SortOrder
+    email?: SortOrder
+    passwordHash?: SortOrder
+    avatarUrl?: SortOrder
+    createdAt?: SortOrder
+    role?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -11438,81 +12675,46 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
-  export type GameParticipantListRelationFilter = {
-    every?: GameParticipantWhereInput
-    some?: GameParticipantWhereInput
-    none?: GameParticipantWhereInput
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
   }
 
-  export type GameParticipantOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type PlayerCountOrderByAggregateInput = {
+  export type TeacherProfileCountOrderByAggregateInput = {
     id?: SortOrder
-    username?: SortOrder
-    cookieId?: SortOrder
-    email?: SortOrder
-    passwordHash?: SortOrder
-    createdAt?: SortOrder
-    avatarUrl?: SortOrder
   }
 
-  export type PlayerMaxOrderByAggregateInput = {
+  export type TeacherProfileMaxOrderByAggregateInput = {
     id?: SortOrder
-    username?: SortOrder
-    cookieId?: SortOrder
-    email?: SortOrder
-    passwordHash?: SortOrder
-    createdAt?: SortOrder
-    avatarUrl?: SortOrder
   }
 
-  export type PlayerMinOrderByAggregateInput = {
+  export type TeacherProfileMinOrderByAggregateInput = {
     id?: SortOrder
-    username?: SortOrder
-    cookieId?: SortOrder
-    email?: SortOrder
-    passwordHash?: SortOrder
-    createdAt?: SortOrder
-    avatarUrl?: SortOrder
   }
-  export type JsonFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
 
-  export type JsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  export type StudentProfileCountOrderByAggregateInput = {
+    id?: SortOrder
+    cookieId?: SortOrder
+  }
+
+  export type StudentProfileMaxOrderByAggregateInput = {
+    id?: SortOrder
+    cookieId?: SortOrder
+  }
+
+  export type StudentProfileMinOrderByAggregateInput = {
+    id?: SortOrder
+    cookieId?: SortOrder
   }
 
   export type StringNullableListFilter<$PrismaModel = never> = {
@@ -11520,6 +12722,14 @@ export namespace Prisma {
     has?: string | StringFieldRefInput<$PrismaModel> | null
     hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
     hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type BoolNullableListFilter<$PrismaModel = never> = {
+    equals?: boolean[] | ListBooleanFieldRefInput<$PrismaModel> | null
+    has?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    hasEvery?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
+    hasSome?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
     isEmpty?: boolean
   }
 
@@ -11539,13 +12749,13 @@ export namespace Prisma {
     not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
   }
 
-  export type QuestionsInQuizTemplateListRelationFilter = {
-    every?: QuestionsInQuizTemplateWhereInput
-    some?: QuestionsInQuizTemplateWhereInput
-    none?: QuestionsInQuizTemplateWhereInput
+  export type QuestionsInGameTemplateListRelationFilter = {
+    every?: QuestionsInGameTemplateWhereInput
+    some?: QuestionsInGameTemplateWhereInput
+    none?: QuestionsInGameTemplateWhereInput
   }
 
-  export type QuestionsInQuizTemplateOrderByRelationAggregateInput = {
+  export type QuestionsInGameTemplateOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -11553,7 +12763,8 @@ export namespace Prisma {
     uid?: SortOrder
     title?: SortOrder
     text?: SortOrder
-    responses?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
     questionType?: SortOrder
     discipline?: SortOrder
     themes?: SortOrder
@@ -11564,6 +12775,7 @@ export namespace Prisma {
     tags?: SortOrder
     timeLimit?: SortOrder
     isHidden?: SortOrder
+    feedbackWaitTime?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -11571,6 +12783,7 @@ export namespace Prisma {
   export type QuestionAvgOrderByAggregateInput = {
     difficulty?: SortOrder
     timeLimit?: SortOrder
+    feedbackWaitTime?: SortOrder
   }
 
   export type QuestionMaxOrderByAggregateInput = {
@@ -11585,6 +12798,7 @@ export namespace Prisma {
     explanation?: SortOrder
     timeLimit?: SortOrder
     isHidden?: SortOrder
+    feedbackWaitTime?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -11601,6 +12815,7 @@ export namespace Prisma {
     explanation?: SortOrder
     timeLimit?: SortOrder
     isHidden?: SortOrder
+    feedbackWaitTime?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -11608,32 +12823,7 @@ export namespace Prisma {
   export type QuestionSumOrderByAggregateInput = {
     difficulty?: SortOrder
     timeLimit?: SortOrder
-  }
-  export type JsonWithAggregatesFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedJsonFilter<$PrismaModel>
-    _max?: NestedJsonFilter<$PrismaModel>
+    feedbackWaitTime?: SortOrder
   }
 
   export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -11667,15 +12857,10 @@ export namespace Prisma {
     not?: NestedEnumPlayModeNullableFilter<$PrismaModel> | $Enums.PlayMode | null
   }
 
-  export type TeacherScalarRelationFilter = {
-    is?: TeacherWhereInput
-    isNot?: TeacherWhereInput
-  }
-
-  export type QuizTemplateCountOrderByAggregateInput = {
+  export type GameTemplateCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorTeacherId?: SortOrder
+    creatorId?: SortOrder
     gradeLevel?: SortOrder
     themes?: SortOrder
     discipline?: SortOrder
@@ -11685,10 +12870,10 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type QuizTemplateMaxOrderByAggregateInput = {
+  export type GameTemplateMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorTeacherId?: SortOrder
+    creatorId?: SortOrder
     gradeLevel?: SortOrder
     discipline?: SortOrder
     description?: SortOrder
@@ -11697,10 +12882,10 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type QuizTemplateMinOrderByAggregateInput = {
+  export type GameTemplateMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorTeacherId?: SortOrder
+    creatorId?: SortOrder
     gradeLevel?: SortOrder
     discipline?: SortOrder
     description?: SortOrder
@@ -11730,9 +12915,9 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type QuizTemplateScalarRelationFilter = {
-    is?: QuizTemplateWhereInput
-    isNot?: QuizTemplateWhereInput
+  export type GameTemplateScalarRelationFilter = {
+    is?: GameTemplateWhereInput
+    isNot?: GameTemplateWhereInput
   }
 
   export type QuestionScalarRelationFilter = {
@@ -11740,42 +12925,42 @@ export namespace Prisma {
     isNot?: QuestionWhereInput
   }
 
-  export type QuestionsInQuizTemplateQuizTemplateIdQuestionUidCompoundUniqueInput = {
-    quizTemplateId: string
+  export type QuestionsInGameTemplateGameTemplateIdQuestionUidCompoundUniqueInput = {
+    gameTemplateId: string
     questionUid: string
   }
 
-  export type QuestionsInQuizTemplateQuizTemplateIdSequenceCompoundUniqueInput = {
-    quizTemplateId: string
+  export type QuestionsInGameTemplateGameTemplateIdSequenceCompoundUniqueInput = {
+    gameTemplateId: string
     sequence: number
   }
 
-  export type QuestionsInQuizTemplateCountOrderByAggregateInput = {
-    quizTemplateId?: SortOrder
+  export type QuestionsInGameTemplateCountOrderByAggregateInput = {
+    gameTemplateId?: SortOrder
     questionUid?: SortOrder
     sequence?: SortOrder
     createdAt?: SortOrder
   }
 
-  export type QuestionsInQuizTemplateAvgOrderByAggregateInput = {
+  export type QuestionsInGameTemplateAvgOrderByAggregateInput = {
     sequence?: SortOrder
   }
 
-  export type QuestionsInQuizTemplateMaxOrderByAggregateInput = {
-    quizTemplateId?: SortOrder
+  export type QuestionsInGameTemplateMaxOrderByAggregateInput = {
+    gameTemplateId?: SortOrder
     questionUid?: SortOrder
     sequence?: SortOrder
     createdAt?: SortOrder
   }
 
-  export type QuestionsInQuizTemplateMinOrderByAggregateInput = {
-    quizTemplateId?: SortOrder
+  export type QuestionsInGameTemplateMinOrderByAggregateInput = {
+    gameTemplateId?: SortOrder
     questionUid?: SortOrder
     sequence?: SortOrder
     createdAt?: SortOrder
   }
 
-  export type QuestionsInQuizTemplateSumOrderByAggregateInput = {
+  export type QuestionsInGameTemplateSumOrderByAggregateInput = {
     sequence?: SortOrder
   }
 
@@ -11825,16 +13010,32 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type TeacherNullableScalarRelationFilter = {
-    is?: TeacherWhereInput | null
-    isNot?: TeacherWhereInput | null
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
   }
 
   export type GameInstanceCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    quizTemplateId?: SortOrder
-    initiatorTeacherId?: SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -11844,6 +13045,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrder
     endedAt?: SortOrder
+    isDiffered?: SortOrder
+    differedAvailableFrom?: SortOrder
+    differedAvailableTo?: SortOrder
   }
 
   export type GameInstanceAvgOrderByAggregateInput = {
@@ -11853,8 +13057,8 @@ export namespace Prisma {
   export type GameInstanceMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    quizTemplateId?: SortOrder
-    initiatorTeacherId?: SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -11862,13 +13066,16 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrder
     endedAt?: SortOrder
+    isDiffered?: SortOrder
+    differedAvailableFrom?: SortOrder
+    differedAvailableTo?: SortOrder
   }
 
   export type GameInstanceMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    quizTemplateId?: SortOrder
-    initiatorTeacherId?: SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -11876,6 +13083,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrder
     endedAt?: SortOrder
+    isDiffered?: SortOrder
+    differedAvailableFrom?: SortOrder
+    differedAvailableTo?: SortOrder
   }
 
   export type GameInstanceSumOrderByAggregateInput = {
@@ -11918,25 +13128,42 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type GameInstanceScalarRelationFilter = {
     is?: GameInstanceWhereInput
     isNot?: GameInstanceWhereInput
   }
 
-  export type PlayerScalarRelationFilter = {
-    is?: PlayerWhereInput
-    isNot?: PlayerWhereInput
-  }
-
-  export type GameParticipantGameInstanceIdPlayerIdCompoundUniqueInput = {
+  export type GameParticipantGameInstanceIdUserIdCompoundUniqueInput = {
     gameInstanceId: string
-    playerId: string
+    userId: string
   }
 
   export type GameParticipantCountOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    playerId?: SortOrder
+    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrder
     timeTakenMs?: SortOrder
@@ -11956,7 +13183,7 @@ export namespace Prisma {
   export type GameParticipantMaxOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    playerId?: SortOrder
+    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrder
     timeTakenMs?: SortOrder
@@ -11969,7 +13196,7 @@ export namespace Prisma {
   export type GameParticipantMinOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    playerId?: SortOrder
+    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrder
     timeTakenMs?: SortOrder
@@ -11985,32 +13212,70 @@ export namespace Prisma {
     timeTakenMs?: SortOrder
   }
 
-  export type QuizTemplateCreateNestedManyWithoutCreatorTeacherInput = {
-    create?: XOR<QuizTemplateCreateWithoutCreatorTeacherInput, QuizTemplateUncheckedCreateWithoutCreatorTeacherInput> | QuizTemplateCreateWithoutCreatorTeacherInput[] | QuizTemplateUncheckedCreateWithoutCreatorTeacherInput[]
-    connectOrCreate?: QuizTemplateCreateOrConnectWithoutCreatorTeacherInput | QuizTemplateCreateOrConnectWithoutCreatorTeacherInput[]
-    createMany?: QuizTemplateCreateManyCreatorTeacherInputEnvelope
-    connect?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
+  export type GameTemplateCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
+    createMany?: GameTemplateCreateManyCreatorInputEnvelope
+    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
   }
 
-  export type GameInstanceCreateNestedManyWithoutInitiatorTeacherInput = {
-    create?: XOR<GameInstanceCreateWithoutInitiatorTeacherInput, GameInstanceUncheckedCreateWithoutInitiatorTeacherInput> | GameInstanceCreateWithoutInitiatorTeacherInput[] | GameInstanceUncheckedCreateWithoutInitiatorTeacherInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutInitiatorTeacherInput | GameInstanceCreateOrConnectWithoutInitiatorTeacherInput[]
-    createMany?: GameInstanceCreateManyInitiatorTeacherInputEnvelope
+  export type GameInstanceCreateNestedManyWithoutInitiatorUserInput = {
+    create?: XOR<GameInstanceCreateWithoutInitiatorUserInput, GameInstanceUncheckedCreateWithoutInitiatorUserInput> | GameInstanceCreateWithoutInitiatorUserInput[] | GameInstanceUncheckedCreateWithoutInitiatorUserInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutInitiatorUserInput | GameInstanceCreateOrConnectWithoutInitiatorUserInput[]
+    createMany?: GameInstanceCreateManyInitiatorUserInputEnvelope
     connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
   }
 
-  export type QuizTemplateUncheckedCreateNestedManyWithoutCreatorTeacherInput = {
-    create?: XOR<QuizTemplateCreateWithoutCreatorTeacherInput, QuizTemplateUncheckedCreateWithoutCreatorTeacherInput> | QuizTemplateCreateWithoutCreatorTeacherInput[] | QuizTemplateUncheckedCreateWithoutCreatorTeacherInput[]
-    connectOrCreate?: QuizTemplateCreateOrConnectWithoutCreatorTeacherInput | QuizTemplateCreateOrConnectWithoutCreatorTeacherInput[]
-    createMany?: QuizTemplateCreateManyCreatorTeacherInputEnvelope
-    connect?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
+  export type GameParticipantCreateNestedManyWithoutUserInput = {
+    create?: XOR<GameParticipantCreateWithoutUserInput, GameParticipantUncheckedCreateWithoutUserInput> | GameParticipantCreateWithoutUserInput[] | GameParticipantUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: GameParticipantCreateOrConnectWithoutUserInput | GameParticipantCreateOrConnectWithoutUserInput[]
+    createMany?: GameParticipantCreateManyUserInputEnvelope
+    connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
   }
 
-  export type GameInstanceUncheckedCreateNestedManyWithoutInitiatorTeacherInput = {
-    create?: XOR<GameInstanceCreateWithoutInitiatorTeacherInput, GameInstanceUncheckedCreateWithoutInitiatorTeacherInput> | GameInstanceCreateWithoutInitiatorTeacherInput[] | GameInstanceUncheckedCreateWithoutInitiatorTeacherInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutInitiatorTeacherInput | GameInstanceCreateOrConnectWithoutInitiatorTeacherInput[]
-    createMany?: GameInstanceCreateManyInitiatorTeacherInputEnvelope
+  export type TeacherProfileCreateNestedOneWithoutUserInput = {
+    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
+    connect?: TeacherProfileWhereUniqueInput
+  }
+
+  export type StudentProfileCreateNestedOneWithoutUserInput = {
+    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
+    connect?: StudentProfileWhereUniqueInput
+  }
+
+  export type GameTemplateUncheckedCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
+    createMany?: GameTemplateCreateManyCreatorInputEnvelope
+    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+  }
+
+  export type GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput = {
+    create?: XOR<GameInstanceCreateWithoutInitiatorUserInput, GameInstanceUncheckedCreateWithoutInitiatorUserInput> | GameInstanceCreateWithoutInitiatorUserInput[] | GameInstanceUncheckedCreateWithoutInitiatorUserInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutInitiatorUserInput | GameInstanceCreateOrConnectWithoutInitiatorUserInput[]
+    createMany?: GameInstanceCreateManyInitiatorUserInputEnvelope
     connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
+  }
+
+  export type GameParticipantUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<GameParticipantCreateWithoutUserInput, GameParticipantUncheckedCreateWithoutUserInput> | GameParticipantCreateWithoutUserInput[] | GameParticipantUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: GameParticipantCreateOrConnectWithoutUserInput | GameParticipantCreateOrConnectWithoutUserInput[]
+    createMany?: GameParticipantCreateManyUserInputEnvelope
+    connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
+  }
+
+  export type TeacherProfileUncheckedCreateNestedOneWithoutUserInput = {
+    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
+    connect?: TeacherProfileWhereUniqueInput
+  }
+
+  export type StudentProfileUncheckedCreateNestedOneWithoutUserInput = {
+    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
+    connect?: StudentProfileWhereUniqueInput
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -12025,106 +13290,168 @@ export namespace Prisma {
     set?: Date | string
   }
 
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
+  export type EnumUserRoleFieldUpdateOperationsInput = {
+    set?: $Enums.UserRole
   }
 
-  export type QuizTemplateUpdateManyWithoutCreatorTeacherNestedInput = {
-    create?: XOR<QuizTemplateCreateWithoutCreatorTeacherInput, QuizTemplateUncheckedCreateWithoutCreatorTeacherInput> | QuizTemplateCreateWithoutCreatorTeacherInput[] | QuizTemplateUncheckedCreateWithoutCreatorTeacherInput[]
-    connectOrCreate?: QuizTemplateCreateOrConnectWithoutCreatorTeacherInput | QuizTemplateCreateOrConnectWithoutCreatorTeacherInput[]
-    upsert?: QuizTemplateUpsertWithWhereUniqueWithoutCreatorTeacherInput | QuizTemplateUpsertWithWhereUniqueWithoutCreatorTeacherInput[]
-    createMany?: QuizTemplateCreateManyCreatorTeacherInputEnvelope
-    set?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
-    disconnect?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
-    delete?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
-    connect?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
-    update?: QuizTemplateUpdateWithWhereUniqueWithoutCreatorTeacherInput | QuizTemplateUpdateWithWhereUniqueWithoutCreatorTeacherInput[]
-    updateMany?: QuizTemplateUpdateManyWithWhereWithoutCreatorTeacherInput | QuizTemplateUpdateManyWithWhereWithoutCreatorTeacherInput[]
-    deleteMany?: QuizTemplateScalarWhereInput | QuizTemplateScalarWhereInput[]
+  export type GameTemplateUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
+    upsert?: GameTemplateUpsertWithWhereUniqueWithoutCreatorInput | GameTemplateUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: GameTemplateCreateManyCreatorInputEnvelope
+    set?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    disconnect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    delete?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    update?: GameTemplateUpdateWithWhereUniqueWithoutCreatorInput | GameTemplateUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: GameTemplateUpdateManyWithWhereWithoutCreatorInput | GameTemplateUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
   }
 
-  export type GameInstanceUpdateManyWithoutInitiatorTeacherNestedInput = {
-    create?: XOR<GameInstanceCreateWithoutInitiatorTeacherInput, GameInstanceUncheckedCreateWithoutInitiatorTeacherInput> | GameInstanceCreateWithoutInitiatorTeacherInput[] | GameInstanceUncheckedCreateWithoutInitiatorTeacherInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutInitiatorTeacherInput | GameInstanceCreateOrConnectWithoutInitiatorTeacherInput[]
-    upsert?: GameInstanceUpsertWithWhereUniqueWithoutInitiatorTeacherInput | GameInstanceUpsertWithWhereUniqueWithoutInitiatorTeacherInput[]
-    createMany?: GameInstanceCreateManyInitiatorTeacherInputEnvelope
+  export type GameInstanceUpdateManyWithoutInitiatorUserNestedInput = {
+    create?: XOR<GameInstanceCreateWithoutInitiatorUserInput, GameInstanceUncheckedCreateWithoutInitiatorUserInput> | GameInstanceCreateWithoutInitiatorUserInput[] | GameInstanceUncheckedCreateWithoutInitiatorUserInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutInitiatorUserInput | GameInstanceCreateOrConnectWithoutInitiatorUserInput[]
+    upsert?: GameInstanceUpsertWithWhereUniqueWithoutInitiatorUserInput | GameInstanceUpsertWithWhereUniqueWithoutInitiatorUserInput[]
+    createMany?: GameInstanceCreateManyInitiatorUserInputEnvelope
     set?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     disconnect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     delete?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
-    update?: GameInstanceUpdateWithWhereUniqueWithoutInitiatorTeacherInput | GameInstanceUpdateWithWhereUniqueWithoutInitiatorTeacherInput[]
-    updateMany?: GameInstanceUpdateManyWithWhereWithoutInitiatorTeacherInput | GameInstanceUpdateManyWithWhereWithoutInitiatorTeacherInput[]
+    update?: GameInstanceUpdateWithWhereUniqueWithoutInitiatorUserInput | GameInstanceUpdateWithWhereUniqueWithoutInitiatorUserInput[]
+    updateMany?: GameInstanceUpdateManyWithWhereWithoutInitiatorUserInput | GameInstanceUpdateManyWithWhereWithoutInitiatorUserInput[]
     deleteMany?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
   }
 
-  export type QuizTemplateUncheckedUpdateManyWithoutCreatorTeacherNestedInput = {
-    create?: XOR<QuizTemplateCreateWithoutCreatorTeacherInput, QuizTemplateUncheckedCreateWithoutCreatorTeacherInput> | QuizTemplateCreateWithoutCreatorTeacherInput[] | QuizTemplateUncheckedCreateWithoutCreatorTeacherInput[]
-    connectOrCreate?: QuizTemplateCreateOrConnectWithoutCreatorTeacherInput | QuizTemplateCreateOrConnectWithoutCreatorTeacherInput[]
-    upsert?: QuizTemplateUpsertWithWhereUniqueWithoutCreatorTeacherInput | QuizTemplateUpsertWithWhereUniqueWithoutCreatorTeacherInput[]
-    createMany?: QuizTemplateCreateManyCreatorTeacherInputEnvelope
-    set?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
-    disconnect?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
-    delete?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
-    connect?: QuizTemplateWhereUniqueInput | QuizTemplateWhereUniqueInput[]
-    update?: QuizTemplateUpdateWithWhereUniqueWithoutCreatorTeacherInput | QuizTemplateUpdateWithWhereUniqueWithoutCreatorTeacherInput[]
-    updateMany?: QuizTemplateUpdateManyWithWhereWithoutCreatorTeacherInput | QuizTemplateUpdateManyWithWhereWithoutCreatorTeacherInput[]
-    deleteMany?: QuizTemplateScalarWhereInput | QuizTemplateScalarWhereInput[]
+  export type GameParticipantUpdateManyWithoutUserNestedInput = {
+    create?: XOR<GameParticipantCreateWithoutUserInput, GameParticipantUncheckedCreateWithoutUserInput> | GameParticipantCreateWithoutUserInput[] | GameParticipantUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: GameParticipantCreateOrConnectWithoutUserInput | GameParticipantCreateOrConnectWithoutUserInput[]
+    upsert?: GameParticipantUpsertWithWhereUniqueWithoutUserInput | GameParticipantUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: GameParticipantCreateManyUserInputEnvelope
+    set?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
+    disconnect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
+    delete?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
+    connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
+    update?: GameParticipantUpdateWithWhereUniqueWithoutUserInput | GameParticipantUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: GameParticipantUpdateManyWithWhereWithoutUserInput | GameParticipantUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: GameParticipantScalarWhereInput | GameParticipantScalarWhereInput[]
   }
 
-  export type GameInstanceUncheckedUpdateManyWithoutInitiatorTeacherNestedInput = {
-    create?: XOR<GameInstanceCreateWithoutInitiatorTeacherInput, GameInstanceUncheckedCreateWithoutInitiatorTeacherInput> | GameInstanceCreateWithoutInitiatorTeacherInput[] | GameInstanceUncheckedCreateWithoutInitiatorTeacherInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutInitiatorTeacherInput | GameInstanceCreateOrConnectWithoutInitiatorTeacherInput[]
-    upsert?: GameInstanceUpsertWithWhereUniqueWithoutInitiatorTeacherInput | GameInstanceUpsertWithWhereUniqueWithoutInitiatorTeacherInput[]
-    createMany?: GameInstanceCreateManyInitiatorTeacherInputEnvelope
+  export type TeacherProfileUpdateOneWithoutUserNestedInput = {
+    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
+    upsert?: TeacherProfileUpsertWithoutUserInput
+    disconnect?: TeacherProfileWhereInput | boolean
+    delete?: TeacherProfileWhereInput | boolean
+    connect?: TeacherProfileWhereUniqueInput
+    update?: XOR<XOR<TeacherProfileUpdateToOneWithWhereWithoutUserInput, TeacherProfileUpdateWithoutUserInput>, TeacherProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type StudentProfileUpdateOneWithoutUserNestedInput = {
+    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
+    upsert?: StudentProfileUpsertWithoutUserInput
+    disconnect?: StudentProfileWhereInput | boolean
+    delete?: StudentProfileWhereInput | boolean
+    connect?: StudentProfileWhereUniqueInput
+    update?: XOR<XOR<StudentProfileUpdateToOneWithWhereWithoutUserInput, StudentProfileUpdateWithoutUserInput>, StudentProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
+    upsert?: GameTemplateUpsertWithWhereUniqueWithoutCreatorInput | GameTemplateUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: GameTemplateCreateManyCreatorInputEnvelope
+    set?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    disconnect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    delete?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    update?: GameTemplateUpdateWithWhereUniqueWithoutCreatorInput | GameTemplateUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: GameTemplateUpdateManyWithWhereWithoutCreatorInput | GameTemplateUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
+  }
+
+  export type GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput = {
+    create?: XOR<GameInstanceCreateWithoutInitiatorUserInput, GameInstanceUncheckedCreateWithoutInitiatorUserInput> | GameInstanceCreateWithoutInitiatorUserInput[] | GameInstanceUncheckedCreateWithoutInitiatorUserInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutInitiatorUserInput | GameInstanceCreateOrConnectWithoutInitiatorUserInput[]
+    upsert?: GameInstanceUpsertWithWhereUniqueWithoutInitiatorUserInput | GameInstanceUpsertWithWhereUniqueWithoutInitiatorUserInput[]
+    createMany?: GameInstanceCreateManyInitiatorUserInputEnvelope
     set?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     disconnect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     delete?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
-    update?: GameInstanceUpdateWithWhereUniqueWithoutInitiatorTeacherInput | GameInstanceUpdateWithWhereUniqueWithoutInitiatorTeacherInput[]
-    updateMany?: GameInstanceUpdateManyWithWhereWithoutInitiatorTeacherInput | GameInstanceUpdateManyWithWhereWithoutInitiatorTeacherInput[]
+    update?: GameInstanceUpdateWithWhereUniqueWithoutInitiatorUserInput | GameInstanceUpdateWithWhereUniqueWithoutInitiatorUserInput[]
+    updateMany?: GameInstanceUpdateManyWithWhereWithoutInitiatorUserInput | GameInstanceUpdateManyWithWhereWithoutInitiatorUserInput[]
     deleteMany?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
   }
 
-  export type GameParticipantCreateNestedManyWithoutPlayerInput = {
-    create?: XOR<GameParticipantCreateWithoutPlayerInput, GameParticipantUncheckedCreateWithoutPlayerInput> | GameParticipantCreateWithoutPlayerInput[] | GameParticipantUncheckedCreateWithoutPlayerInput[]
-    connectOrCreate?: GameParticipantCreateOrConnectWithoutPlayerInput | GameParticipantCreateOrConnectWithoutPlayerInput[]
-    createMany?: GameParticipantCreateManyPlayerInputEnvelope
-    connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
-  }
-
-  export type GameParticipantUncheckedCreateNestedManyWithoutPlayerInput = {
-    create?: XOR<GameParticipantCreateWithoutPlayerInput, GameParticipantUncheckedCreateWithoutPlayerInput> | GameParticipantCreateWithoutPlayerInput[] | GameParticipantUncheckedCreateWithoutPlayerInput[]
-    connectOrCreate?: GameParticipantCreateOrConnectWithoutPlayerInput | GameParticipantCreateOrConnectWithoutPlayerInput[]
-    createMany?: GameParticipantCreateManyPlayerInputEnvelope
-    connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
-  }
-
-  export type GameParticipantUpdateManyWithoutPlayerNestedInput = {
-    create?: XOR<GameParticipantCreateWithoutPlayerInput, GameParticipantUncheckedCreateWithoutPlayerInput> | GameParticipantCreateWithoutPlayerInput[] | GameParticipantUncheckedCreateWithoutPlayerInput[]
-    connectOrCreate?: GameParticipantCreateOrConnectWithoutPlayerInput | GameParticipantCreateOrConnectWithoutPlayerInput[]
-    upsert?: GameParticipantUpsertWithWhereUniqueWithoutPlayerInput | GameParticipantUpsertWithWhereUniqueWithoutPlayerInput[]
-    createMany?: GameParticipantCreateManyPlayerInputEnvelope
+  export type GameParticipantUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<GameParticipantCreateWithoutUserInput, GameParticipantUncheckedCreateWithoutUserInput> | GameParticipantCreateWithoutUserInput[] | GameParticipantUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: GameParticipantCreateOrConnectWithoutUserInput | GameParticipantCreateOrConnectWithoutUserInput[]
+    upsert?: GameParticipantUpsertWithWhereUniqueWithoutUserInput | GameParticipantUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: GameParticipantCreateManyUserInputEnvelope
     set?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
     disconnect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
     delete?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
     connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
-    update?: GameParticipantUpdateWithWhereUniqueWithoutPlayerInput | GameParticipantUpdateWithWhereUniqueWithoutPlayerInput[]
-    updateMany?: GameParticipantUpdateManyWithWhereWithoutPlayerInput | GameParticipantUpdateManyWithWhereWithoutPlayerInput[]
+    update?: GameParticipantUpdateWithWhereUniqueWithoutUserInput | GameParticipantUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: GameParticipantUpdateManyWithWhereWithoutUserInput | GameParticipantUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: GameParticipantScalarWhereInput | GameParticipantScalarWhereInput[]
   }
 
-  export type GameParticipantUncheckedUpdateManyWithoutPlayerNestedInput = {
-    create?: XOR<GameParticipantCreateWithoutPlayerInput, GameParticipantUncheckedCreateWithoutPlayerInput> | GameParticipantCreateWithoutPlayerInput[] | GameParticipantUncheckedCreateWithoutPlayerInput[]
-    connectOrCreate?: GameParticipantCreateOrConnectWithoutPlayerInput | GameParticipantCreateOrConnectWithoutPlayerInput[]
-    upsert?: GameParticipantUpsertWithWhereUniqueWithoutPlayerInput | GameParticipantUpsertWithWhereUniqueWithoutPlayerInput[]
-    createMany?: GameParticipantCreateManyPlayerInputEnvelope
-    set?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
-    disconnect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
-    delete?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
-    connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
-    update?: GameParticipantUpdateWithWhereUniqueWithoutPlayerInput | GameParticipantUpdateWithWhereUniqueWithoutPlayerInput[]
-    updateMany?: GameParticipantUpdateManyWithWhereWithoutPlayerInput | GameParticipantUpdateManyWithWhereWithoutPlayerInput[]
-    deleteMany?: GameParticipantScalarWhereInput | GameParticipantScalarWhereInput[]
+  export type TeacherProfileUncheckedUpdateOneWithoutUserNestedInput = {
+    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
+    upsert?: TeacherProfileUpsertWithoutUserInput
+    disconnect?: TeacherProfileWhereInput | boolean
+    delete?: TeacherProfileWhereInput | boolean
+    connect?: TeacherProfileWhereUniqueInput
+    update?: XOR<XOR<TeacherProfileUpdateToOneWithWhereWithoutUserInput, TeacherProfileUpdateWithoutUserInput>, TeacherProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type StudentProfileUncheckedUpdateOneWithoutUserNestedInput = {
+    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
+    upsert?: StudentProfileUpsertWithoutUserInput
+    disconnect?: StudentProfileWhereInput | boolean
+    delete?: StudentProfileWhereInput | boolean
+    connect?: StudentProfileWhereUniqueInput
+    update?: XOR<XOR<StudentProfileUpdateToOneWithWhereWithoutUserInput, StudentProfileUpdateWithoutUserInput>, StudentProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserCreateNestedOneWithoutTeacherProfileInput = {
+    create?: XOR<UserCreateWithoutTeacherProfileInput, UserUncheckedCreateWithoutTeacherProfileInput>
+    connectOrCreate?: UserCreateOrConnectWithoutTeacherProfileInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutTeacherProfileNestedInput = {
+    create?: XOR<UserCreateWithoutTeacherProfileInput, UserUncheckedCreateWithoutTeacherProfileInput>
+    connectOrCreate?: UserCreateOrConnectWithoutTeacherProfileInput
+    upsert?: UserUpsertWithoutTeacherProfileInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutTeacherProfileInput, UserUpdateWithoutTeacherProfileInput>, UserUncheckedUpdateWithoutTeacherProfileInput>
+  }
+
+  export type UserCreateNestedOneWithoutStudentProfileInput = {
+    create?: XOR<UserCreateWithoutStudentProfileInput, UserUncheckedCreateWithoutStudentProfileInput>
+    connectOrCreate?: UserCreateOrConnectWithoutStudentProfileInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutStudentProfileNestedInput = {
+    create?: XOR<UserCreateWithoutStudentProfileInput, UserUncheckedCreateWithoutStudentProfileInput>
+    connectOrCreate?: UserCreateOrConnectWithoutStudentProfileInput
+    upsert?: UserUpsertWithoutStudentProfileInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutStudentProfileInput, UserUpdateWithoutStudentProfileInput>, UserUncheckedUpdateWithoutStudentProfileInput>
+  }
+
+  export type QuestionCreateanswerOptionsInput = {
+    set: string[]
+  }
+
+  export type QuestionCreatecorrectAnswersInput = {
+    set: boolean[]
   }
 
   export type QuestionCreatethemesInput = {
@@ -12135,18 +13462,28 @@ export namespace Prisma {
     set: string[]
   }
 
-  export type QuestionsInQuizTemplateCreateNestedManyWithoutQuestionInput = {
-    create?: XOR<QuestionsInQuizTemplateCreateWithoutQuestionInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInQuizTemplateCreateWithoutQuestionInput[] | QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput[]
-    connectOrCreate?: QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput | QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput[]
-    createMany?: QuestionsInQuizTemplateCreateManyQuestionInputEnvelope
-    connect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
+  export type QuestionsInGameTemplateCreateNestedManyWithoutQuestionInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutQuestionInput, QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInGameTemplateCreateWithoutQuestionInput[] | QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput | QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput[]
+    createMany?: QuestionsInGameTemplateCreateManyQuestionInputEnvelope
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
   }
 
-  export type QuestionsInQuizTemplateUncheckedCreateNestedManyWithoutQuestionInput = {
-    create?: XOR<QuestionsInQuizTemplateCreateWithoutQuestionInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInQuizTemplateCreateWithoutQuestionInput[] | QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput[]
-    connectOrCreate?: QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput | QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput[]
-    createMany?: QuestionsInQuizTemplateCreateManyQuestionInputEnvelope
-    connect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
+  export type QuestionsInGameTemplateUncheckedCreateNestedManyWithoutQuestionInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutQuestionInput, QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInGameTemplateCreateWithoutQuestionInput[] | QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput | QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput[]
+    createMany?: QuestionsInGameTemplateCreateManyQuestionInputEnvelope
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+  }
+
+  export type QuestionUpdateanswerOptionsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type QuestionUpdatecorrectAnswersInput = {
+    set?: boolean[]
+    push?: boolean | boolean[]
   }
 
   export type QuestionUpdatethemesInput = {
@@ -12171,73 +13508,73 @@ export namespace Prisma {
     set?: boolean | null
   }
 
-  export type QuestionsInQuizTemplateUpdateManyWithoutQuestionNestedInput = {
-    create?: XOR<QuestionsInQuizTemplateCreateWithoutQuestionInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInQuizTemplateCreateWithoutQuestionInput[] | QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput[]
-    connectOrCreate?: QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput | QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput[]
-    upsert?: QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuestionInput | QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuestionInput[]
-    createMany?: QuestionsInQuizTemplateCreateManyQuestionInputEnvelope
-    set?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    disconnect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    delete?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    connect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    update?: QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuestionInput | QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuestionInput[]
-    updateMany?: QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuestionInput | QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuestionInput[]
-    deleteMany?: QuestionsInQuizTemplateScalarWhereInput | QuestionsInQuizTemplateScalarWhereInput[]
+  export type QuestionsInGameTemplateUpdateManyWithoutQuestionNestedInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutQuestionInput, QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInGameTemplateCreateWithoutQuestionInput[] | QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput | QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput[]
+    upsert?: QuestionsInGameTemplateUpsertWithWhereUniqueWithoutQuestionInput | QuestionsInGameTemplateUpsertWithWhereUniqueWithoutQuestionInput[]
+    createMany?: QuestionsInGameTemplateCreateManyQuestionInputEnvelope
+    set?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    disconnect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    delete?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    update?: QuestionsInGameTemplateUpdateWithWhereUniqueWithoutQuestionInput | QuestionsInGameTemplateUpdateWithWhereUniqueWithoutQuestionInput[]
+    updateMany?: QuestionsInGameTemplateUpdateManyWithWhereWithoutQuestionInput | QuestionsInGameTemplateUpdateManyWithWhereWithoutQuestionInput[]
+    deleteMany?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
   }
 
-  export type QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuestionNestedInput = {
-    create?: XOR<QuestionsInQuizTemplateCreateWithoutQuestionInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInQuizTemplateCreateWithoutQuestionInput[] | QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput[]
-    connectOrCreate?: QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput | QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput[]
-    upsert?: QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuestionInput | QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuestionInput[]
-    createMany?: QuestionsInQuizTemplateCreateManyQuestionInputEnvelope
-    set?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    disconnect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    delete?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    connect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    update?: QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuestionInput | QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuestionInput[]
-    updateMany?: QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuestionInput | QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuestionInput[]
-    deleteMany?: QuestionsInQuizTemplateScalarWhereInput | QuestionsInQuizTemplateScalarWhereInput[]
+  export type QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionNestedInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutQuestionInput, QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput> | QuestionsInGameTemplateCreateWithoutQuestionInput[] | QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput | QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput[]
+    upsert?: QuestionsInGameTemplateUpsertWithWhereUniqueWithoutQuestionInput | QuestionsInGameTemplateUpsertWithWhereUniqueWithoutQuestionInput[]
+    createMany?: QuestionsInGameTemplateCreateManyQuestionInputEnvelope
+    set?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    disconnect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    delete?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    update?: QuestionsInGameTemplateUpdateWithWhereUniqueWithoutQuestionInput | QuestionsInGameTemplateUpdateWithWhereUniqueWithoutQuestionInput[]
+    updateMany?: QuestionsInGameTemplateUpdateManyWithWhereWithoutQuestionInput | QuestionsInGameTemplateUpdateManyWithWhereWithoutQuestionInput[]
+    deleteMany?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
   }
 
-  export type QuizTemplateCreatethemesInput = {
+  export type GameTemplateCreatethemesInput = {
     set: string[]
   }
 
-  export type TeacherCreateNestedOneWithoutQuizTemplatesInput = {
-    create?: XOR<TeacherCreateWithoutQuizTemplatesInput, TeacherUncheckedCreateWithoutQuizTemplatesInput>
-    connectOrCreate?: TeacherCreateOrConnectWithoutQuizTemplatesInput
-    connect?: TeacherWhereUniqueInput
+  export type UserCreateNestedOneWithoutCreatedGameTemplatesInput = {
+    create?: XOR<UserCreateWithoutCreatedGameTemplatesInput, UserUncheckedCreateWithoutCreatedGameTemplatesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCreatedGameTemplatesInput
+    connect?: UserWhereUniqueInput
   }
 
-  export type QuestionsInQuizTemplateCreateNestedManyWithoutQuizTemplateInput = {
-    create?: XOR<QuestionsInQuizTemplateCreateWithoutQuizTemplateInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput> | QuestionsInQuizTemplateCreateWithoutQuizTemplateInput[] | QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput[]
-    connectOrCreate?: QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput | QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput[]
-    createMany?: QuestionsInQuizTemplateCreateManyQuizTemplateInputEnvelope
-    connect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
+  export type QuestionsInGameTemplateCreateNestedManyWithoutGameTemplateInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput> | QuestionsInGameTemplateCreateWithoutGameTemplateInput[] | QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput | QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput[]
+    createMany?: QuestionsInGameTemplateCreateManyGameTemplateInputEnvelope
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
   }
 
-  export type GameInstanceCreateNestedManyWithoutQuizTemplateInput = {
-    create?: XOR<GameInstanceCreateWithoutQuizTemplateInput, GameInstanceUncheckedCreateWithoutQuizTemplateInput> | GameInstanceCreateWithoutQuizTemplateInput[] | GameInstanceUncheckedCreateWithoutQuizTemplateInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutQuizTemplateInput | GameInstanceCreateOrConnectWithoutQuizTemplateInput[]
-    createMany?: GameInstanceCreateManyQuizTemplateInputEnvelope
+  export type GameInstanceCreateNestedManyWithoutGameTemplateInput = {
+    create?: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput> | GameInstanceCreateWithoutGameTemplateInput[] | GameInstanceUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutGameTemplateInput | GameInstanceCreateOrConnectWithoutGameTemplateInput[]
+    createMany?: GameInstanceCreateManyGameTemplateInputEnvelope
     connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
   }
 
-  export type QuestionsInQuizTemplateUncheckedCreateNestedManyWithoutQuizTemplateInput = {
-    create?: XOR<QuestionsInQuizTemplateCreateWithoutQuizTemplateInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput> | QuestionsInQuizTemplateCreateWithoutQuizTemplateInput[] | QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput[]
-    connectOrCreate?: QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput | QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput[]
-    createMany?: QuestionsInQuizTemplateCreateManyQuizTemplateInputEnvelope
-    connect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
+  export type QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput> | QuestionsInGameTemplateCreateWithoutGameTemplateInput[] | QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput | QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput[]
+    createMany?: QuestionsInGameTemplateCreateManyGameTemplateInputEnvelope
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
   }
 
-  export type GameInstanceUncheckedCreateNestedManyWithoutQuizTemplateInput = {
-    create?: XOR<GameInstanceCreateWithoutQuizTemplateInput, GameInstanceUncheckedCreateWithoutQuizTemplateInput> | GameInstanceCreateWithoutQuizTemplateInput[] | GameInstanceUncheckedCreateWithoutQuizTemplateInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutQuizTemplateInput | GameInstanceCreateOrConnectWithoutQuizTemplateInput[]
-    createMany?: GameInstanceCreateManyQuizTemplateInputEnvelope
+  export type GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput = {
+    create?: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput> | GameInstanceCreateWithoutGameTemplateInput[] | GameInstanceUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutGameTemplateInput | GameInstanceCreateOrConnectWithoutGameTemplateInput[]
+    createMany?: GameInstanceCreateManyGameTemplateInputEnvelope
     connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
   }
 
-  export type QuizTemplateUpdatethemesInput = {
+  export type GameTemplateUpdatethemesInput = {
     set?: string[]
     push?: string | string[]
   }
@@ -12246,79 +13583,79 @@ export namespace Prisma {
     set?: $Enums.PlayMode | null
   }
 
-  export type TeacherUpdateOneRequiredWithoutQuizTemplatesNestedInput = {
-    create?: XOR<TeacherCreateWithoutQuizTemplatesInput, TeacherUncheckedCreateWithoutQuizTemplatesInput>
-    connectOrCreate?: TeacherCreateOrConnectWithoutQuizTemplatesInput
-    upsert?: TeacherUpsertWithoutQuizTemplatesInput
-    connect?: TeacherWhereUniqueInput
-    update?: XOR<XOR<TeacherUpdateToOneWithWhereWithoutQuizTemplatesInput, TeacherUpdateWithoutQuizTemplatesInput>, TeacherUncheckedUpdateWithoutQuizTemplatesInput>
+  export type UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput = {
+    create?: XOR<UserCreateWithoutCreatedGameTemplatesInput, UserUncheckedCreateWithoutCreatedGameTemplatesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCreatedGameTemplatesInput
+    upsert?: UserUpsertWithoutCreatedGameTemplatesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCreatedGameTemplatesInput, UserUpdateWithoutCreatedGameTemplatesInput>, UserUncheckedUpdateWithoutCreatedGameTemplatesInput>
   }
 
-  export type QuestionsInQuizTemplateUpdateManyWithoutQuizTemplateNestedInput = {
-    create?: XOR<QuestionsInQuizTemplateCreateWithoutQuizTemplateInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput> | QuestionsInQuizTemplateCreateWithoutQuizTemplateInput[] | QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput[]
-    connectOrCreate?: QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput | QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput[]
-    upsert?: QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuizTemplateInput | QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuizTemplateInput[]
-    createMany?: QuestionsInQuizTemplateCreateManyQuizTemplateInputEnvelope
-    set?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    disconnect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    delete?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    connect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    update?: QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuizTemplateInput | QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuizTemplateInput[]
-    updateMany?: QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuizTemplateInput | QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuizTemplateInput[]
-    deleteMany?: QuestionsInQuizTemplateScalarWhereInput | QuestionsInQuizTemplateScalarWhereInput[]
+  export type QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput> | QuestionsInGameTemplateCreateWithoutGameTemplateInput[] | QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput | QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput[]
+    upsert?: QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput[]
+    createMany?: QuestionsInGameTemplateCreateManyGameTemplateInputEnvelope
+    set?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    disconnect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    delete?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    update?: QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput[]
+    updateMany?: QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput | QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput[]
+    deleteMany?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
   }
 
-  export type GameInstanceUpdateManyWithoutQuizTemplateNestedInput = {
-    create?: XOR<GameInstanceCreateWithoutQuizTemplateInput, GameInstanceUncheckedCreateWithoutQuizTemplateInput> | GameInstanceCreateWithoutQuizTemplateInput[] | GameInstanceUncheckedCreateWithoutQuizTemplateInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutQuizTemplateInput | GameInstanceCreateOrConnectWithoutQuizTemplateInput[]
-    upsert?: GameInstanceUpsertWithWhereUniqueWithoutQuizTemplateInput | GameInstanceUpsertWithWhereUniqueWithoutQuizTemplateInput[]
-    createMany?: GameInstanceCreateManyQuizTemplateInputEnvelope
+  export type GameInstanceUpdateManyWithoutGameTemplateNestedInput = {
+    create?: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput> | GameInstanceCreateWithoutGameTemplateInput[] | GameInstanceUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutGameTemplateInput | GameInstanceCreateOrConnectWithoutGameTemplateInput[]
+    upsert?: GameInstanceUpsertWithWhereUniqueWithoutGameTemplateInput | GameInstanceUpsertWithWhereUniqueWithoutGameTemplateInput[]
+    createMany?: GameInstanceCreateManyGameTemplateInputEnvelope
     set?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     disconnect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     delete?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
-    update?: GameInstanceUpdateWithWhereUniqueWithoutQuizTemplateInput | GameInstanceUpdateWithWhereUniqueWithoutQuizTemplateInput[]
-    updateMany?: GameInstanceUpdateManyWithWhereWithoutQuizTemplateInput | GameInstanceUpdateManyWithWhereWithoutQuizTemplateInput[]
+    update?: GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput | GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput[]
+    updateMany?: GameInstanceUpdateManyWithWhereWithoutGameTemplateInput | GameInstanceUpdateManyWithWhereWithoutGameTemplateInput[]
     deleteMany?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
   }
 
-  export type QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuizTemplateNestedInput = {
-    create?: XOR<QuestionsInQuizTemplateCreateWithoutQuizTemplateInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput> | QuestionsInQuizTemplateCreateWithoutQuizTemplateInput[] | QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput[]
-    connectOrCreate?: QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput | QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput[]
-    upsert?: QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuizTemplateInput | QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuizTemplateInput[]
-    createMany?: QuestionsInQuizTemplateCreateManyQuizTemplateInputEnvelope
-    set?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    disconnect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    delete?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    connect?: QuestionsInQuizTemplateWhereUniqueInput | QuestionsInQuizTemplateWhereUniqueInput[]
-    update?: QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuizTemplateInput | QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuizTemplateInput[]
-    updateMany?: QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuizTemplateInput | QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuizTemplateInput[]
-    deleteMany?: QuestionsInQuizTemplateScalarWhereInput | QuestionsInQuizTemplateScalarWhereInput[]
+  export type QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput> | QuestionsInGameTemplateCreateWithoutGameTemplateInput[] | QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput | QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput[]
+    upsert?: QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput[]
+    createMany?: QuestionsInGameTemplateCreateManyGameTemplateInputEnvelope
+    set?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    disconnect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    delete?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    update?: QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput[]
+    updateMany?: QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput | QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput[]
+    deleteMany?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
   }
 
-  export type GameInstanceUncheckedUpdateManyWithoutQuizTemplateNestedInput = {
-    create?: XOR<GameInstanceCreateWithoutQuizTemplateInput, GameInstanceUncheckedCreateWithoutQuizTemplateInput> | GameInstanceCreateWithoutQuizTemplateInput[] | GameInstanceUncheckedCreateWithoutQuizTemplateInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutQuizTemplateInput | GameInstanceCreateOrConnectWithoutQuizTemplateInput[]
-    upsert?: GameInstanceUpsertWithWhereUniqueWithoutQuizTemplateInput | GameInstanceUpsertWithWhereUniqueWithoutQuizTemplateInput[]
-    createMany?: GameInstanceCreateManyQuizTemplateInputEnvelope
+  export type GameInstanceUncheckedUpdateManyWithoutGameTemplateNestedInput = {
+    create?: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput> | GameInstanceCreateWithoutGameTemplateInput[] | GameInstanceUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutGameTemplateInput | GameInstanceCreateOrConnectWithoutGameTemplateInput[]
+    upsert?: GameInstanceUpsertWithWhereUniqueWithoutGameTemplateInput | GameInstanceUpsertWithWhereUniqueWithoutGameTemplateInput[]
+    createMany?: GameInstanceCreateManyGameTemplateInputEnvelope
     set?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     disconnect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     delete?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
     connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
-    update?: GameInstanceUpdateWithWhereUniqueWithoutQuizTemplateInput | GameInstanceUpdateWithWhereUniqueWithoutQuizTemplateInput[]
-    updateMany?: GameInstanceUpdateManyWithWhereWithoutQuizTemplateInput | GameInstanceUpdateManyWithWhereWithoutQuizTemplateInput[]
+    update?: GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput | GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput[]
+    updateMany?: GameInstanceUpdateManyWithWhereWithoutGameTemplateInput | GameInstanceUpdateManyWithWhereWithoutGameTemplateInput[]
     deleteMany?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
   }
 
-  export type QuizTemplateCreateNestedOneWithoutQuestionsInput = {
-    create?: XOR<QuizTemplateCreateWithoutQuestionsInput, QuizTemplateUncheckedCreateWithoutQuestionsInput>
-    connectOrCreate?: QuizTemplateCreateOrConnectWithoutQuestionsInput
-    connect?: QuizTemplateWhereUniqueInput
+  export type GameTemplateCreateNestedOneWithoutQuestionsInput = {
+    create?: XOR<GameTemplateCreateWithoutQuestionsInput, GameTemplateUncheckedCreateWithoutQuestionsInput>
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutQuestionsInput
+    connect?: GameTemplateWhereUniqueInput
   }
 
-  export type QuestionCreateNestedOneWithoutQuizTemplatesInput = {
-    create?: XOR<QuestionCreateWithoutQuizTemplatesInput, QuestionUncheckedCreateWithoutQuizTemplatesInput>
-    connectOrCreate?: QuestionCreateOrConnectWithoutQuizTemplatesInput
+  export type QuestionCreateNestedOneWithoutGameTemplatesInput = {
+    create?: XOR<QuestionCreateWithoutGameTemplatesInput, QuestionUncheckedCreateWithoutGameTemplatesInput>
+    connectOrCreate?: QuestionCreateOrConnectWithoutGameTemplatesInput
     connect?: QuestionWhereUniqueInput
   }
 
@@ -12330,32 +13667,32 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type QuizTemplateUpdateOneRequiredWithoutQuestionsNestedInput = {
-    create?: XOR<QuizTemplateCreateWithoutQuestionsInput, QuizTemplateUncheckedCreateWithoutQuestionsInput>
-    connectOrCreate?: QuizTemplateCreateOrConnectWithoutQuestionsInput
-    upsert?: QuizTemplateUpsertWithoutQuestionsInput
-    connect?: QuizTemplateWhereUniqueInput
-    update?: XOR<XOR<QuizTemplateUpdateToOneWithWhereWithoutQuestionsInput, QuizTemplateUpdateWithoutQuestionsInput>, QuizTemplateUncheckedUpdateWithoutQuestionsInput>
+  export type GameTemplateUpdateOneRequiredWithoutQuestionsNestedInput = {
+    create?: XOR<GameTemplateCreateWithoutQuestionsInput, GameTemplateUncheckedCreateWithoutQuestionsInput>
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutQuestionsInput
+    upsert?: GameTemplateUpsertWithoutQuestionsInput
+    connect?: GameTemplateWhereUniqueInput
+    update?: XOR<XOR<GameTemplateUpdateToOneWithWhereWithoutQuestionsInput, GameTemplateUpdateWithoutQuestionsInput>, GameTemplateUncheckedUpdateWithoutQuestionsInput>
   }
 
-  export type QuestionUpdateOneRequiredWithoutQuizTemplatesNestedInput = {
-    create?: XOR<QuestionCreateWithoutQuizTemplatesInput, QuestionUncheckedCreateWithoutQuizTemplatesInput>
-    connectOrCreate?: QuestionCreateOrConnectWithoutQuizTemplatesInput
-    upsert?: QuestionUpsertWithoutQuizTemplatesInput
+  export type QuestionUpdateOneRequiredWithoutGameTemplatesNestedInput = {
+    create?: XOR<QuestionCreateWithoutGameTemplatesInput, QuestionUncheckedCreateWithoutGameTemplatesInput>
+    connectOrCreate?: QuestionCreateOrConnectWithoutGameTemplatesInput
+    upsert?: QuestionUpsertWithoutGameTemplatesInput
     connect?: QuestionWhereUniqueInput
-    update?: XOR<XOR<QuestionUpdateToOneWithWhereWithoutQuizTemplatesInput, QuestionUpdateWithoutQuizTemplatesInput>, QuestionUncheckedUpdateWithoutQuizTemplatesInput>
+    update?: XOR<XOR<QuestionUpdateToOneWithWhereWithoutGameTemplatesInput, QuestionUpdateWithoutGameTemplatesInput>, QuestionUncheckedUpdateWithoutGameTemplatesInput>
   }
 
-  export type QuizTemplateCreateNestedOneWithoutGameInstancesInput = {
-    create?: XOR<QuizTemplateCreateWithoutGameInstancesInput, QuizTemplateUncheckedCreateWithoutGameInstancesInput>
-    connectOrCreate?: QuizTemplateCreateOrConnectWithoutGameInstancesInput
-    connect?: QuizTemplateWhereUniqueInput
+  export type GameTemplateCreateNestedOneWithoutGameInstancesInput = {
+    create?: XOR<GameTemplateCreateWithoutGameInstancesInput, GameTemplateUncheckedCreateWithoutGameInstancesInput>
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutGameInstancesInput
+    connect?: GameTemplateWhereUniqueInput
   }
 
-  export type TeacherCreateNestedOneWithoutGameInstancesInput = {
-    create?: XOR<TeacherCreateWithoutGameInstancesInput, TeacherUncheckedCreateWithoutGameInstancesInput>
-    connectOrCreate?: TeacherCreateOrConnectWithoutGameInstancesInput
-    connect?: TeacherWhereUniqueInput
+  export type UserCreateNestedOneWithoutInitiatedGameInstancesInput = {
+    create?: XOR<UserCreateWithoutInitiatedGameInstancesInput, UserUncheckedCreateWithoutInitiatedGameInstancesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutInitiatedGameInstancesInput
+    connect?: UserWhereUniqueInput
   }
 
   export type GameParticipantCreateNestedManyWithoutGameInstanceInput = {
@@ -12376,22 +13713,30 @@ export namespace Prisma {
     set?: $Enums.PlayMode
   }
 
-  export type QuizTemplateUpdateOneRequiredWithoutGameInstancesNestedInput = {
-    create?: XOR<QuizTemplateCreateWithoutGameInstancesInput, QuizTemplateUncheckedCreateWithoutGameInstancesInput>
-    connectOrCreate?: QuizTemplateCreateOrConnectWithoutGameInstancesInput
-    upsert?: QuizTemplateUpsertWithoutGameInstancesInput
-    connect?: QuizTemplateWhereUniqueInput
-    update?: XOR<XOR<QuizTemplateUpdateToOneWithWhereWithoutGameInstancesInput, QuizTemplateUpdateWithoutGameInstancesInput>, QuizTemplateUncheckedUpdateWithoutGameInstancesInput>
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
   }
 
-  export type TeacherUpdateOneWithoutGameInstancesNestedInput = {
-    create?: XOR<TeacherCreateWithoutGameInstancesInput, TeacherUncheckedCreateWithoutGameInstancesInput>
-    connectOrCreate?: TeacherCreateOrConnectWithoutGameInstancesInput
-    upsert?: TeacherUpsertWithoutGameInstancesInput
-    disconnect?: TeacherWhereInput | boolean
-    delete?: TeacherWhereInput | boolean
-    connect?: TeacherWhereUniqueInput
-    update?: XOR<XOR<TeacherUpdateToOneWithWhereWithoutGameInstancesInput, TeacherUpdateWithoutGameInstancesInput>, TeacherUncheckedUpdateWithoutGameInstancesInput>
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
+  export type GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput = {
+    create?: XOR<GameTemplateCreateWithoutGameInstancesInput, GameTemplateUncheckedCreateWithoutGameInstancesInput>
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutGameInstancesInput
+    upsert?: GameTemplateUpsertWithoutGameInstancesInput
+    connect?: GameTemplateWhereUniqueInput
+    update?: XOR<XOR<GameTemplateUpdateToOneWithWhereWithoutGameInstancesInput, GameTemplateUpdateWithoutGameInstancesInput>, GameTemplateUncheckedUpdateWithoutGameInstancesInput>
+  }
+
+  export type UserUpdateOneWithoutInitiatedGameInstancesNestedInput = {
+    create?: XOR<UserCreateWithoutInitiatedGameInstancesInput, UserUncheckedCreateWithoutInitiatedGameInstancesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutInitiatedGameInstancesInput
+    upsert?: UserUpsertWithoutInitiatedGameInstancesInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutInitiatedGameInstancesInput, UserUpdateWithoutInitiatedGameInstancesInput>, UserUncheckedUpdateWithoutInitiatedGameInstancesInput>
   }
 
   export type GameParticipantUpdateManyWithoutGameInstanceNestedInput = {
@@ -12428,10 +13773,10 @@ export namespace Prisma {
     connect?: GameInstanceWhereUniqueInput
   }
 
-  export type PlayerCreateNestedOneWithoutGameParticipationsInput = {
-    create?: XOR<PlayerCreateWithoutGameParticipationsInput, PlayerUncheckedCreateWithoutGameParticipationsInput>
-    connectOrCreate?: PlayerCreateOrConnectWithoutGameParticipationsInput
-    connect?: PlayerWhereUniqueInput
+  export type UserCreateNestedOneWithoutGameParticipationsInput = {
+    create?: XOR<UserCreateWithoutGameParticipationsInput, UserUncheckedCreateWithoutGameParticipationsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutGameParticipationsInput
+    connect?: UserWhereUniqueInput
   }
 
   export type GameInstanceUpdateOneRequiredWithoutParticipantsNestedInput = {
@@ -12442,12 +13787,12 @@ export namespace Prisma {
     update?: XOR<XOR<GameInstanceUpdateToOneWithWhereWithoutParticipantsInput, GameInstanceUpdateWithoutParticipantsInput>, GameInstanceUncheckedUpdateWithoutParticipantsInput>
   }
 
-  export type PlayerUpdateOneRequiredWithoutGameParticipationsNestedInput = {
-    create?: XOR<PlayerCreateWithoutGameParticipationsInput, PlayerUncheckedCreateWithoutGameParticipationsInput>
-    connectOrCreate?: PlayerCreateOrConnectWithoutGameParticipationsInput
-    upsert?: PlayerUpsertWithoutGameParticipationsInput
-    connect?: PlayerWhereUniqueInput
-    update?: XOR<XOR<PlayerUpdateToOneWithWhereWithoutGameParticipationsInput, PlayerUpdateWithoutGameParticipationsInput>, PlayerUncheckedUpdateWithoutGameParticipationsInput>
+  export type UserUpdateOneRequiredWithoutGameParticipationsNestedInput = {
+    create?: XOR<UserCreateWithoutGameParticipationsInput, UserUncheckedCreateWithoutGameParticipationsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutGameParticipationsInput
+    upsert?: UserUpsertWithoutGameParticipationsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutGameParticipationsInput, UserUpdateWithoutGameParticipationsInput>, UserUncheckedUpdateWithoutGameParticipationsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -12489,15 +13834,11 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
-  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
@@ -12570,46 +13911,19 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type NestedBoolNullableFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
     not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-  export type NestedJsonFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
-
-  export type NestedJsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -12698,6 +14012,22 @@ export namespace Prisma {
     not?: NestedEnumPlayModeFilter<$PrismaModel> | $Enums.PlayMode
   }
 
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedEnumPlayModeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.PlayMode | EnumPlayModeFieldRefInput<$PrismaModel>
     in?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel>
@@ -12731,45 +14061,67 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type QuizTemplateCreateWithoutCreatorTeacherInput = {
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type GameTemplateCreateWithoutCreatorInput = {
     id?: string
     name: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    questions?: QuestionsInQuizTemplateCreateNestedManyWithoutQuizTemplateInput
-    gameInstances?: GameInstanceCreateNestedManyWithoutQuizTemplateInput
+    questions?: QuestionsInGameTemplateCreateNestedManyWithoutGameTemplateInput
+    gameInstances?: GameInstanceCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type QuizTemplateUncheckedCreateWithoutCreatorTeacherInput = {
+  export type GameTemplateUncheckedCreateWithoutCreatorInput = {
     id?: string
     name: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    questions?: QuestionsInQuizTemplateUncheckedCreateNestedManyWithoutQuizTemplateInput
-    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutQuizTemplateInput
+    questions?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput
+    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type QuizTemplateCreateOrConnectWithoutCreatorTeacherInput = {
-    where: QuizTemplateWhereUniqueInput
-    create: XOR<QuizTemplateCreateWithoutCreatorTeacherInput, QuizTemplateUncheckedCreateWithoutCreatorTeacherInput>
+  export type GameTemplateCreateOrConnectWithoutCreatorInput = {
+    where: GameTemplateWhereUniqueInput
+    create: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput>
   }
 
-  export type QuizTemplateCreateManyCreatorTeacherInputEnvelope = {
-    data: QuizTemplateCreateManyCreatorTeacherInput | QuizTemplateCreateManyCreatorTeacherInput[]
+  export type GameTemplateCreateManyCreatorInputEnvelope = {
+    data: GameTemplateCreateManyCreatorInput | GameTemplateCreateManyCreatorInput[]
     skipDuplicates?: boolean
   }
 
-  export type GameInstanceCreateWithoutInitiatorTeacherInput = {
+  export type GameInstanceCreateWithoutInitiatorUserInput = {
     id?: string
     name: string
     accessCode: string
@@ -12781,14 +14133,17 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    quizTemplate: QuizTemplateCreateNestedOneWithoutGameInstancesInput
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
+    gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
     participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
   }
 
-  export type GameInstanceUncheckedCreateWithoutInitiatorTeacherInput = {
+  export type GameInstanceUncheckedCreateWithoutInitiatorUserInput = {
     id?: string
     name: string
-    quizTemplateId: string
+    gameTemplateId: string
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -12798,87 +14153,23 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
     participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
   }
 
-  export type GameInstanceCreateOrConnectWithoutInitiatorTeacherInput = {
+  export type GameInstanceCreateOrConnectWithoutInitiatorUserInput = {
     where: GameInstanceWhereUniqueInput
-    create: XOR<GameInstanceCreateWithoutInitiatorTeacherInput, GameInstanceUncheckedCreateWithoutInitiatorTeacherInput>
+    create: XOR<GameInstanceCreateWithoutInitiatorUserInput, GameInstanceUncheckedCreateWithoutInitiatorUserInput>
   }
 
-  export type GameInstanceCreateManyInitiatorTeacherInputEnvelope = {
-    data: GameInstanceCreateManyInitiatorTeacherInput | GameInstanceCreateManyInitiatorTeacherInput[]
+  export type GameInstanceCreateManyInitiatorUserInputEnvelope = {
+    data: GameInstanceCreateManyInitiatorUserInput | GameInstanceCreateManyInitiatorUserInput[]
     skipDuplicates?: boolean
   }
 
-  export type QuizTemplateUpsertWithWhereUniqueWithoutCreatorTeacherInput = {
-    where: QuizTemplateWhereUniqueInput
-    update: XOR<QuizTemplateUpdateWithoutCreatorTeacherInput, QuizTemplateUncheckedUpdateWithoutCreatorTeacherInput>
-    create: XOR<QuizTemplateCreateWithoutCreatorTeacherInput, QuizTemplateUncheckedCreateWithoutCreatorTeacherInput>
-  }
-
-  export type QuizTemplateUpdateWithWhereUniqueWithoutCreatorTeacherInput = {
-    where: QuizTemplateWhereUniqueInput
-    data: XOR<QuizTemplateUpdateWithoutCreatorTeacherInput, QuizTemplateUncheckedUpdateWithoutCreatorTeacherInput>
-  }
-
-  export type QuizTemplateUpdateManyWithWhereWithoutCreatorTeacherInput = {
-    where: QuizTemplateScalarWhereInput
-    data: XOR<QuizTemplateUpdateManyMutationInput, QuizTemplateUncheckedUpdateManyWithoutCreatorTeacherInput>
-  }
-
-  export type QuizTemplateScalarWhereInput = {
-    AND?: QuizTemplateScalarWhereInput | QuizTemplateScalarWhereInput[]
-    OR?: QuizTemplateScalarWhereInput[]
-    NOT?: QuizTemplateScalarWhereInput | QuizTemplateScalarWhereInput[]
-    id?: StringFilter<"QuizTemplate"> | string
-    name?: StringFilter<"QuizTemplate"> | string
-    creatorTeacherId?: StringFilter<"QuizTemplate"> | string
-    gradeLevel?: StringNullableFilter<"QuizTemplate"> | string | null
-    themes?: StringNullableListFilter<"QuizTemplate">
-    discipline?: StringNullableFilter<"QuizTemplate"> | string | null
-    description?: StringNullableFilter<"QuizTemplate"> | string | null
-    defaultMode?: EnumPlayModeNullableFilter<"QuizTemplate"> | $Enums.PlayMode | null
-    createdAt?: DateTimeFilter<"QuizTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"QuizTemplate"> | Date | string
-  }
-
-  export type GameInstanceUpsertWithWhereUniqueWithoutInitiatorTeacherInput = {
-    where: GameInstanceWhereUniqueInput
-    update: XOR<GameInstanceUpdateWithoutInitiatorTeacherInput, GameInstanceUncheckedUpdateWithoutInitiatorTeacherInput>
-    create: XOR<GameInstanceCreateWithoutInitiatorTeacherInput, GameInstanceUncheckedCreateWithoutInitiatorTeacherInput>
-  }
-
-  export type GameInstanceUpdateWithWhereUniqueWithoutInitiatorTeacherInput = {
-    where: GameInstanceWhereUniqueInput
-    data: XOR<GameInstanceUpdateWithoutInitiatorTeacherInput, GameInstanceUncheckedUpdateWithoutInitiatorTeacherInput>
-  }
-
-  export type GameInstanceUpdateManyWithWhereWithoutInitiatorTeacherInput = {
-    where: GameInstanceScalarWhereInput
-    data: XOR<GameInstanceUpdateManyMutationInput, GameInstanceUncheckedUpdateManyWithoutInitiatorTeacherInput>
-  }
-
-  export type GameInstanceScalarWhereInput = {
-    AND?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
-    OR?: GameInstanceScalarWhereInput[]
-    NOT?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
-    id?: StringFilter<"GameInstance"> | string
-    name?: StringFilter<"GameInstance"> | string
-    quizTemplateId?: StringFilter<"GameInstance"> | string
-    initiatorTeacherId?: StringNullableFilter<"GameInstance"> | string | null
-    accessCode?: StringFilter<"GameInstance"> | string
-    status?: StringFilter<"GameInstance"> | string
-    playMode?: EnumPlayModeFilter<"GameInstance"> | $Enums.PlayMode
-    leaderboard?: JsonNullableFilter<"GameInstance">
-    currentQuestionIndex?: IntNullableFilter<"GameInstance"> | number | null
-    settings?: JsonNullableFilter<"GameInstance">
-    createdAt?: DateTimeFilter<"GameInstance"> | Date | string
-    startedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-  }
-
-  export type GameParticipantCreateWithoutPlayerInput = {
+  export type GameParticipantCreateWithoutUserInput = {
     id?: string
     score?: number
     rank?: number | null
@@ -12891,7 +14182,7 @@ export namespace Prisma {
     gameInstance: GameInstanceCreateNestedOneWithoutParticipantsInput
   }
 
-  export type GameParticipantUncheckedCreateWithoutPlayerInput = {
+  export type GameParticipantUncheckedCreateWithoutUserInput = {
     id?: string
     gameInstanceId: string
     score?: number
@@ -12904,30 +14195,126 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type GameParticipantCreateOrConnectWithoutPlayerInput = {
+  export type GameParticipantCreateOrConnectWithoutUserInput = {
     where: GameParticipantWhereUniqueInput
-    create: XOR<GameParticipantCreateWithoutPlayerInput, GameParticipantUncheckedCreateWithoutPlayerInput>
+    create: XOR<GameParticipantCreateWithoutUserInput, GameParticipantUncheckedCreateWithoutUserInput>
   }
 
-  export type GameParticipantCreateManyPlayerInputEnvelope = {
-    data: GameParticipantCreateManyPlayerInput | GameParticipantCreateManyPlayerInput[]
+  export type GameParticipantCreateManyUserInputEnvelope = {
+    data: GameParticipantCreateManyUserInput | GameParticipantCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
-  export type GameParticipantUpsertWithWhereUniqueWithoutPlayerInput = {
-    where: GameParticipantWhereUniqueInput
-    update: XOR<GameParticipantUpdateWithoutPlayerInput, GameParticipantUncheckedUpdateWithoutPlayerInput>
-    create: XOR<GameParticipantCreateWithoutPlayerInput, GameParticipantUncheckedCreateWithoutPlayerInput>
+  export type TeacherProfileCreateWithoutUserInput = {
+
   }
 
-  export type GameParticipantUpdateWithWhereUniqueWithoutPlayerInput = {
-    where: GameParticipantWhereUniqueInput
-    data: XOR<GameParticipantUpdateWithoutPlayerInput, GameParticipantUncheckedUpdateWithoutPlayerInput>
+  export type TeacherProfileUncheckedCreateWithoutUserInput = {
+
   }
 
-  export type GameParticipantUpdateManyWithWhereWithoutPlayerInput = {
+  export type TeacherProfileCreateOrConnectWithoutUserInput = {
+    where: TeacherProfileWhereUniqueInput
+    create: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+  }
+
+  export type StudentProfileCreateWithoutUserInput = {
+    cookieId?: string | null
+  }
+
+  export type StudentProfileUncheckedCreateWithoutUserInput = {
+    cookieId?: string | null
+  }
+
+  export type StudentProfileCreateOrConnectWithoutUserInput = {
+    where: StudentProfileWhereUniqueInput
+    create: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+  }
+
+  export type GameTemplateUpsertWithWhereUniqueWithoutCreatorInput = {
+    where: GameTemplateWhereUniqueInput
+    update: XOR<GameTemplateUpdateWithoutCreatorInput, GameTemplateUncheckedUpdateWithoutCreatorInput>
+    create: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type GameTemplateUpdateWithWhereUniqueWithoutCreatorInput = {
+    where: GameTemplateWhereUniqueInput
+    data: XOR<GameTemplateUpdateWithoutCreatorInput, GameTemplateUncheckedUpdateWithoutCreatorInput>
+  }
+
+  export type GameTemplateUpdateManyWithWhereWithoutCreatorInput = {
+    where: GameTemplateScalarWhereInput
+    data: XOR<GameTemplateUpdateManyMutationInput, GameTemplateUncheckedUpdateManyWithoutCreatorInput>
+  }
+
+  export type GameTemplateScalarWhereInput = {
+    AND?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
+    OR?: GameTemplateScalarWhereInput[]
+    NOT?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
+    id?: StringFilter<"GameTemplate"> | string
+    name?: StringFilter<"GameTemplate"> | string
+    creatorId?: StringFilter<"GameTemplate"> | string
+    gradeLevel?: StringNullableFilter<"GameTemplate"> | string | null
+    themes?: StringNullableListFilter<"GameTemplate">
+    discipline?: StringNullableFilter<"GameTemplate"> | string | null
+    description?: StringNullableFilter<"GameTemplate"> | string | null
+    defaultMode?: EnumPlayModeNullableFilter<"GameTemplate"> | $Enums.PlayMode | null
+    createdAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"GameTemplate"> | Date | string
+  }
+
+  export type GameInstanceUpsertWithWhereUniqueWithoutInitiatorUserInput = {
+    where: GameInstanceWhereUniqueInput
+    update: XOR<GameInstanceUpdateWithoutInitiatorUserInput, GameInstanceUncheckedUpdateWithoutInitiatorUserInput>
+    create: XOR<GameInstanceCreateWithoutInitiatorUserInput, GameInstanceUncheckedCreateWithoutInitiatorUserInput>
+  }
+
+  export type GameInstanceUpdateWithWhereUniqueWithoutInitiatorUserInput = {
+    where: GameInstanceWhereUniqueInput
+    data: XOR<GameInstanceUpdateWithoutInitiatorUserInput, GameInstanceUncheckedUpdateWithoutInitiatorUserInput>
+  }
+
+  export type GameInstanceUpdateManyWithWhereWithoutInitiatorUserInput = {
+    where: GameInstanceScalarWhereInput
+    data: XOR<GameInstanceUpdateManyMutationInput, GameInstanceUncheckedUpdateManyWithoutInitiatorUserInput>
+  }
+
+  export type GameInstanceScalarWhereInput = {
+    AND?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
+    OR?: GameInstanceScalarWhereInput[]
+    NOT?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
+    id?: StringFilter<"GameInstance"> | string
+    name?: StringFilter<"GameInstance"> | string
+    gameTemplateId?: StringFilter<"GameInstance"> | string
+    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
+    accessCode?: StringFilter<"GameInstance"> | string
+    status?: StringFilter<"GameInstance"> | string
+    playMode?: EnumPlayModeFilter<"GameInstance"> | $Enums.PlayMode
+    leaderboard?: JsonNullableFilter<"GameInstance">
+    currentQuestionIndex?: IntNullableFilter<"GameInstance"> | number | null
+    settings?: JsonNullableFilter<"GameInstance">
+    createdAt?: DateTimeFilter<"GameInstance"> | Date | string
+    startedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    isDiffered?: BoolFilter<"GameInstance"> | boolean
+    differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+  }
+
+  export type GameParticipantUpsertWithWhereUniqueWithoutUserInput = {
+    where: GameParticipantWhereUniqueInput
+    update: XOR<GameParticipantUpdateWithoutUserInput, GameParticipantUncheckedUpdateWithoutUserInput>
+    create: XOR<GameParticipantCreateWithoutUserInput, GameParticipantUncheckedCreateWithoutUserInput>
+  }
+
+  export type GameParticipantUpdateWithWhereUniqueWithoutUserInput = {
+    where: GameParticipantWhereUniqueInput
+    data: XOR<GameParticipantUpdateWithoutUserInput, GameParticipantUncheckedUpdateWithoutUserInput>
+  }
+
+  export type GameParticipantUpdateManyWithWhereWithoutUserInput = {
     where: GameParticipantScalarWhereInput
-    data: XOR<GameParticipantUpdateManyMutationInput, GameParticipantUncheckedUpdateManyWithoutPlayerInput>
+    data: XOR<GameParticipantUpdateManyMutationInput, GameParticipantUncheckedUpdateManyWithoutUserInput>
   }
 
   export type GameParticipantScalarWhereInput = {
@@ -12936,7 +14323,7 @@ export namespace Prisma {
     NOT?: GameParticipantScalarWhereInput | GameParticipantScalarWhereInput[]
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
-    playerId?: StringFilter<"GameParticipant"> | string
+    userId?: StringFilter<"GameParticipant"> | string
     score?: IntFilter<"GameParticipant"> | number
     rank?: IntNullableFilter<"GameParticipant"> | number | null
     timeTakenMs?: IntNullableFilter<"GameParticipant"> | number | null
@@ -12947,106 +14334,292 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"GameParticipant"> | Date | string
   }
 
-  export type QuestionsInQuizTemplateCreateWithoutQuestionInput = {
+  export type TeacherProfileUpsertWithoutUserInput = {
+    update: XOR<TeacherProfileUpdateWithoutUserInput, TeacherProfileUncheckedUpdateWithoutUserInput>
+    create: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    where?: TeacherProfileWhereInput
+  }
+
+  export type TeacherProfileUpdateToOneWithWhereWithoutUserInput = {
+    where?: TeacherProfileWhereInput
+    data: XOR<TeacherProfileUpdateWithoutUserInput, TeacherProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type TeacherProfileUpdateWithoutUserInput = {
+
+  }
+
+  export type TeacherProfileUncheckedUpdateWithoutUserInput = {
+
+  }
+
+  export type StudentProfileUpsertWithoutUserInput = {
+    update: XOR<StudentProfileUpdateWithoutUserInput, StudentProfileUncheckedUpdateWithoutUserInput>
+    create: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    where?: StudentProfileWhereInput
+  }
+
+  export type StudentProfileUpdateToOneWithWhereWithoutUserInput = {
+    where?: StudentProfileWhereInput
+    data: XOR<StudentProfileUpdateWithoutUserInput, StudentProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type StudentProfileUpdateWithoutUserInput = {
+    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type StudentProfileUncheckedUpdateWithoutUserInput = {
+    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type UserCreateWithoutTeacherProfileInput = {
+    id?: string
+    username: string
+    email?: string | null
+    passwordHash?: string | null
+    avatarUrl?: string | null
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
+    initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
+    gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
+    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutTeacherProfileInput = {
+    id?: string
+    username: string
+    email?: string | null
+    passwordHash?: string | null
+    avatarUrl?: string | null
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
+    initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
+    gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
+    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutTeacherProfileInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutTeacherProfileInput, UserUncheckedCreateWithoutTeacherProfileInput>
+  }
+
+  export type UserUpsertWithoutTeacherProfileInput = {
+    update: XOR<UserUpdateWithoutTeacherProfileInput, UserUncheckedUpdateWithoutTeacherProfileInput>
+    create: XOR<UserCreateWithoutTeacherProfileInput, UserUncheckedCreateWithoutTeacherProfileInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutTeacherProfileInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutTeacherProfileInput, UserUncheckedUpdateWithoutTeacherProfileInput>
+  }
+
+  export type UserUpdateWithoutTeacherProfileInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
+    initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
+    gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
+    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutTeacherProfileInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+    initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
+    gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
+    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutStudentProfileInput = {
+    id?: string
+    username: string
+    email?: string | null
+    passwordHash?: string | null
+    avatarUrl?: string | null
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
+    initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
+    gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutStudentProfileInput = {
+    id?: string
+    username: string
+    email?: string | null
+    passwordHash?: string | null
+    avatarUrl?: string | null
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
+    initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
+    gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutStudentProfileInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutStudentProfileInput, UserUncheckedCreateWithoutStudentProfileInput>
+  }
+
+  export type UserUpsertWithoutStudentProfileInput = {
+    update: XOR<UserUpdateWithoutStudentProfileInput, UserUncheckedUpdateWithoutStudentProfileInput>
+    create: XOR<UserCreateWithoutStudentProfileInput, UserUncheckedCreateWithoutStudentProfileInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutStudentProfileInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutStudentProfileInput, UserUncheckedUpdateWithoutStudentProfileInput>
+  }
+
+  export type UserUpdateWithoutStudentProfileInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
+    initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
+    gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutStudentProfileInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+    initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
+    gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
+  }
+
+  export type QuestionsInGameTemplateCreateWithoutQuestionInput = {
     sequence: number
     createdAt?: Date | string
-    quizTemplate: QuizTemplateCreateNestedOneWithoutQuestionsInput
+    gameTemplate: GameTemplateCreateNestedOneWithoutQuestionsInput
   }
 
-  export type QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput = {
-    quizTemplateId: string
+  export type QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput = {
+    gameTemplateId: string
     sequence: number
     createdAt?: Date | string
   }
 
-  export type QuestionsInQuizTemplateCreateOrConnectWithoutQuestionInput = {
-    where: QuestionsInQuizTemplateWhereUniqueInput
-    create: XOR<QuestionsInQuizTemplateCreateWithoutQuestionInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput>
+  export type QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput = {
+    where: QuestionsInGameTemplateWhereUniqueInput
+    create: XOR<QuestionsInGameTemplateCreateWithoutQuestionInput, QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput>
   }
 
-  export type QuestionsInQuizTemplateCreateManyQuestionInputEnvelope = {
-    data: QuestionsInQuizTemplateCreateManyQuestionInput | QuestionsInQuizTemplateCreateManyQuestionInput[]
+  export type QuestionsInGameTemplateCreateManyQuestionInputEnvelope = {
+    data: QuestionsInGameTemplateCreateManyQuestionInput | QuestionsInGameTemplateCreateManyQuestionInput[]
     skipDuplicates?: boolean
   }
 
-  export type QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuestionInput = {
-    where: QuestionsInQuizTemplateWhereUniqueInput
-    update: XOR<QuestionsInQuizTemplateUpdateWithoutQuestionInput, QuestionsInQuizTemplateUncheckedUpdateWithoutQuestionInput>
-    create: XOR<QuestionsInQuizTemplateCreateWithoutQuestionInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuestionInput>
+  export type QuestionsInGameTemplateUpsertWithWhereUniqueWithoutQuestionInput = {
+    where: QuestionsInGameTemplateWhereUniqueInput
+    update: XOR<QuestionsInGameTemplateUpdateWithoutQuestionInput, QuestionsInGameTemplateUncheckedUpdateWithoutQuestionInput>
+    create: XOR<QuestionsInGameTemplateCreateWithoutQuestionInput, QuestionsInGameTemplateUncheckedCreateWithoutQuestionInput>
   }
 
-  export type QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuestionInput = {
-    where: QuestionsInQuizTemplateWhereUniqueInput
-    data: XOR<QuestionsInQuizTemplateUpdateWithoutQuestionInput, QuestionsInQuizTemplateUncheckedUpdateWithoutQuestionInput>
+  export type QuestionsInGameTemplateUpdateWithWhereUniqueWithoutQuestionInput = {
+    where: QuestionsInGameTemplateWhereUniqueInput
+    data: XOR<QuestionsInGameTemplateUpdateWithoutQuestionInput, QuestionsInGameTemplateUncheckedUpdateWithoutQuestionInput>
   }
 
-  export type QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuestionInput = {
-    where: QuestionsInQuizTemplateScalarWhereInput
-    data: XOR<QuestionsInQuizTemplateUpdateManyMutationInput, QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuestionInput>
+  export type QuestionsInGameTemplateUpdateManyWithWhereWithoutQuestionInput = {
+    where: QuestionsInGameTemplateScalarWhereInput
+    data: XOR<QuestionsInGameTemplateUpdateManyMutationInput, QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionInput>
   }
 
-  export type QuestionsInQuizTemplateScalarWhereInput = {
-    AND?: QuestionsInQuizTemplateScalarWhereInput | QuestionsInQuizTemplateScalarWhereInput[]
-    OR?: QuestionsInQuizTemplateScalarWhereInput[]
-    NOT?: QuestionsInQuizTemplateScalarWhereInput | QuestionsInQuizTemplateScalarWhereInput[]
-    quizTemplateId?: StringFilter<"QuestionsInQuizTemplate"> | string
-    questionUid?: StringFilter<"QuestionsInQuizTemplate"> | string
-    sequence?: IntFilter<"QuestionsInQuizTemplate"> | number
-    createdAt?: DateTimeFilter<"QuestionsInQuizTemplate"> | Date | string
+  export type QuestionsInGameTemplateScalarWhereInput = {
+    AND?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
+    OR?: QuestionsInGameTemplateScalarWhereInput[]
+    NOT?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
+    gameTemplateId?: StringFilter<"QuestionsInGameTemplate"> | string
+    questionUid?: StringFilter<"QuestionsInGameTemplate"> | string
+    sequence?: IntFilter<"QuestionsInGameTemplate"> | number
+    createdAt?: DateTimeFilter<"QuestionsInGameTemplate"> | Date | string
   }
 
-  export type TeacherCreateWithoutQuizTemplatesInput = {
+  export type UserCreateWithoutCreatedGameTemplatesInput = {
     id?: string
     username: string
-    passwordHash: string
     email?: string | null
-    createdAt?: Date | string
+    passwordHash?: string | null
     avatarUrl?: string | null
-    resetToken?: string | null
-    resetTokenExpiresAt?: Date | string | null
-    gameInstances?: GameInstanceCreateNestedManyWithoutInitiatorTeacherInput
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
+    gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
+    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
   }
 
-  export type TeacherUncheckedCreateWithoutQuizTemplatesInput = {
+  export type UserUncheckedCreateWithoutCreatedGameTemplatesInput = {
     id?: string
     username: string
-    passwordHash: string
     email?: string | null
-    createdAt?: Date | string
+    passwordHash?: string | null
     avatarUrl?: string | null
-    resetToken?: string | null
-    resetTokenExpiresAt?: Date | string | null
-    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorTeacherInput
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
+    gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
+    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
   }
 
-  export type TeacherCreateOrConnectWithoutQuizTemplatesInput = {
-    where: TeacherWhereUniqueInput
-    create: XOR<TeacherCreateWithoutQuizTemplatesInput, TeacherUncheckedCreateWithoutQuizTemplatesInput>
+  export type UserCreateOrConnectWithoutCreatedGameTemplatesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCreatedGameTemplatesInput, UserUncheckedCreateWithoutCreatedGameTemplatesInput>
   }
 
-  export type QuestionsInQuizTemplateCreateWithoutQuizTemplateInput = {
+  export type QuestionsInGameTemplateCreateWithoutGameTemplateInput = {
     sequence: number
     createdAt?: Date | string
-    question: QuestionCreateNestedOneWithoutQuizTemplatesInput
+    question: QuestionCreateNestedOneWithoutGameTemplatesInput
   }
 
-  export type QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput = {
+  export type QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput = {
     questionUid: string
     sequence: number
     createdAt?: Date | string
   }
 
-  export type QuestionsInQuizTemplateCreateOrConnectWithoutQuizTemplateInput = {
-    where: QuestionsInQuizTemplateWhereUniqueInput
-    create: XOR<QuestionsInQuizTemplateCreateWithoutQuizTemplateInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput>
+  export type QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput = {
+    where: QuestionsInGameTemplateWhereUniqueInput
+    create: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput>
   }
 
-  export type QuestionsInQuizTemplateCreateManyQuizTemplateInputEnvelope = {
-    data: QuestionsInQuizTemplateCreateManyQuizTemplateInput | QuestionsInQuizTemplateCreateManyQuizTemplateInput[]
+  export type QuestionsInGameTemplateCreateManyGameTemplateInputEnvelope = {
+    data: QuestionsInGameTemplateCreateManyGameTemplateInput | QuestionsInGameTemplateCreateManyGameTemplateInput[]
     skipDuplicates?: boolean
   }
 
-  export type GameInstanceCreateWithoutQuizTemplateInput = {
+  export type GameInstanceCreateWithoutGameTemplateInput = {
     id?: string
     name: string
     accessCode: string
@@ -13058,14 +14631,17 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    initiatorTeacher?: TeacherCreateNestedOneWithoutGameInstancesInput
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
+    initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
     participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
   }
 
-  export type GameInstanceUncheckedCreateWithoutQuizTemplateInput = {
+  export type GameInstanceUncheckedCreateWithoutGameTemplateInput = {
     id?: string
     name: string
-    initiatorTeacherId?: string | null
+    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -13075,124 +14651,132 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
     participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
   }
 
-  export type GameInstanceCreateOrConnectWithoutQuizTemplateInput = {
+  export type GameInstanceCreateOrConnectWithoutGameTemplateInput = {
     where: GameInstanceWhereUniqueInput
-    create: XOR<GameInstanceCreateWithoutQuizTemplateInput, GameInstanceUncheckedCreateWithoutQuizTemplateInput>
+    create: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput>
   }
 
-  export type GameInstanceCreateManyQuizTemplateInputEnvelope = {
-    data: GameInstanceCreateManyQuizTemplateInput | GameInstanceCreateManyQuizTemplateInput[]
+  export type GameInstanceCreateManyGameTemplateInputEnvelope = {
+    data: GameInstanceCreateManyGameTemplateInput | GameInstanceCreateManyGameTemplateInput[]
     skipDuplicates?: boolean
   }
 
-  export type TeacherUpsertWithoutQuizTemplatesInput = {
-    update: XOR<TeacherUpdateWithoutQuizTemplatesInput, TeacherUncheckedUpdateWithoutQuizTemplatesInput>
-    create: XOR<TeacherCreateWithoutQuizTemplatesInput, TeacherUncheckedCreateWithoutQuizTemplatesInput>
-    where?: TeacherWhereInput
+  export type UserUpsertWithoutCreatedGameTemplatesInput = {
+    update: XOR<UserUpdateWithoutCreatedGameTemplatesInput, UserUncheckedUpdateWithoutCreatedGameTemplatesInput>
+    create: XOR<UserCreateWithoutCreatedGameTemplatesInput, UserUncheckedCreateWithoutCreatedGameTemplatesInput>
+    where?: UserWhereInput
   }
 
-  export type TeacherUpdateToOneWithWhereWithoutQuizTemplatesInput = {
-    where?: TeacherWhereInput
-    data: XOR<TeacherUpdateWithoutQuizTemplatesInput, TeacherUncheckedUpdateWithoutQuizTemplatesInput>
+  export type UserUpdateToOneWithWhereWithoutCreatedGameTemplatesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCreatedGameTemplatesInput, UserUncheckedUpdateWithoutCreatedGameTemplatesInput>
   }
 
-  export type TeacherUpdateWithoutQuizTemplatesInput = {
+  export type UserUpdateWithoutCreatedGameTemplatesInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    passwordHash?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
-    resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    gameInstances?: GameInstanceUpdateManyWithoutInitiatorTeacherNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
+    gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
+    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
   }
 
-  export type TeacherUncheckedUpdateWithoutQuizTemplatesInput = {
+  export type UserUncheckedUpdateWithoutCreatedGameTemplatesInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    passwordHash?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
-    resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    gameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorTeacherNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
+    gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
+    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   }
 
-  export type QuestionsInQuizTemplateUpsertWithWhereUniqueWithoutQuizTemplateInput = {
-    where: QuestionsInQuizTemplateWhereUniqueInput
-    update: XOR<QuestionsInQuizTemplateUpdateWithoutQuizTemplateInput, QuestionsInQuizTemplateUncheckedUpdateWithoutQuizTemplateInput>
-    create: XOR<QuestionsInQuizTemplateCreateWithoutQuizTemplateInput, QuestionsInQuizTemplateUncheckedCreateWithoutQuizTemplateInput>
+  export type QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput = {
+    where: QuestionsInGameTemplateWhereUniqueInput
+    update: XOR<QuestionsInGameTemplateUpdateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedUpdateWithoutGameTemplateInput>
+    create: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput>
   }
 
-  export type QuestionsInQuizTemplateUpdateWithWhereUniqueWithoutQuizTemplateInput = {
-    where: QuestionsInQuizTemplateWhereUniqueInput
-    data: XOR<QuestionsInQuizTemplateUpdateWithoutQuizTemplateInput, QuestionsInQuizTemplateUncheckedUpdateWithoutQuizTemplateInput>
+  export type QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput = {
+    where: QuestionsInGameTemplateWhereUniqueInput
+    data: XOR<QuestionsInGameTemplateUpdateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedUpdateWithoutGameTemplateInput>
   }
 
-  export type QuestionsInQuizTemplateUpdateManyWithWhereWithoutQuizTemplateInput = {
-    where: QuestionsInQuizTemplateScalarWhereInput
-    data: XOR<QuestionsInQuizTemplateUpdateManyMutationInput, QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuizTemplateInput>
+  export type QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput = {
+    where: QuestionsInGameTemplateScalarWhereInput
+    data: XOR<QuestionsInGameTemplateUpdateManyMutationInput, QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateInput>
   }
 
-  export type GameInstanceUpsertWithWhereUniqueWithoutQuizTemplateInput = {
+  export type GameInstanceUpsertWithWhereUniqueWithoutGameTemplateInput = {
     where: GameInstanceWhereUniqueInput
-    update: XOR<GameInstanceUpdateWithoutQuizTemplateInput, GameInstanceUncheckedUpdateWithoutQuizTemplateInput>
-    create: XOR<GameInstanceCreateWithoutQuizTemplateInput, GameInstanceUncheckedCreateWithoutQuizTemplateInput>
+    update: XOR<GameInstanceUpdateWithoutGameTemplateInput, GameInstanceUncheckedUpdateWithoutGameTemplateInput>
+    create: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput>
   }
 
-  export type GameInstanceUpdateWithWhereUniqueWithoutQuizTemplateInput = {
+  export type GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput = {
     where: GameInstanceWhereUniqueInput
-    data: XOR<GameInstanceUpdateWithoutQuizTemplateInput, GameInstanceUncheckedUpdateWithoutQuizTemplateInput>
+    data: XOR<GameInstanceUpdateWithoutGameTemplateInput, GameInstanceUncheckedUpdateWithoutGameTemplateInput>
   }
 
-  export type GameInstanceUpdateManyWithWhereWithoutQuizTemplateInput = {
+  export type GameInstanceUpdateManyWithWhereWithoutGameTemplateInput = {
     where: GameInstanceScalarWhereInput
-    data: XOR<GameInstanceUpdateManyMutationInput, GameInstanceUncheckedUpdateManyWithoutQuizTemplateInput>
+    data: XOR<GameInstanceUpdateManyMutationInput, GameInstanceUncheckedUpdateManyWithoutGameTemplateInput>
   }
 
-  export type QuizTemplateCreateWithoutQuestionsInput = {
+  export type GameTemplateCreateWithoutQuestionsInput = {
     id?: string
     name: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    creatorTeacher: TeacherCreateNestedOneWithoutQuizTemplatesInput
-    gameInstances?: GameInstanceCreateNestedManyWithoutQuizTemplateInput
+    creator: UserCreateNestedOneWithoutCreatedGameTemplatesInput
+    gameInstances?: GameInstanceCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type QuizTemplateUncheckedCreateWithoutQuestionsInput = {
+  export type GameTemplateUncheckedCreateWithoutQuestionsInput = {
     id?: string
     name: string
-    creatorTeacherId: string
+    creatorId: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutQuizTemplateInput
+    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type QuizTemplateCreateOrConnectWithoutQuestionsInput = {
-    where: QuizTemplateWhereUniqueInput
-    create: XOR<QuizTemplateCreateWithoutQuestionsInput, QuizTemplateUncheckedCreateWithoutQuestionsInput>
+  export type GameTemplateCreateOrConnectWithoutQuestionsInput = {
+    where: GameTemplateWhereUniqueInput
+    create: XOR<GameTemplateCreateWithoutQuestionsInput, GameTemplateUncheckedCreateWithoutQuestionsInput>
   }
 
-  export type QuestionCreateWithoutQuizTemplatesInput = {
+  export type QuestionCreateWithoutGameTemplatesInput = {
     uid?: string
     title?: string | null
     text: string
-    responses: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -13203,15 +14787,17 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
+    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type QuestionUncheckedCreateWithoutQuizTemplatesInput = {
+  export type QuestionUncheckedCreateWithoutGameTemplatesInput = {
     uid?: string
     title?: string | null
     text: string
-    responses: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -13222,70 +14808,72 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
+    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type QuestionCreateOrConnectWithoutQuizTemplatesInput = {
+  export type QuestionCreateOrConnectWithoutGameTemplatesInput = {
     where: QuestionWhereUniqueInput
-    create: XOR<QuestionCreateWithoutQuizTemplatesInput, QuestionUncheckedCreateWithoutQuizTemplatesInput>
+    create: XOR<QuestionCreateWithoutGameTemplatesInput, QuestionUncheckedCreateWithoutGameTemplatesInput>
   }
 
-  export type QuizTemplateUpsertWithoutQuestionsInput = {
-    update: XOR<QuizTemplateUpdateWithoutQuestionsInput, QuizTemplateUncheckedUpdateWithoutQuestionsInput>
-    create: XOR<QuizTemplateCreateWithoutQuestionsInput, QuizTemplateUncheckedCreateWithoutQuestionsInput>
-    where?: QuizTemplateWhereInput
+  export type GameTemplateUpsertWithoutQuestionsInput = {
+    update: XOR<GameTemplateUpdateWithoutQuestionsInput, GameTemplateUncheckedUpdateWithoutQuestionsInput>
+    create: XOR<GameTemplateCreateWithoutQuestionsInput, GameTemplateUncheckedCreateWithoutQuestionsInput>
+    where?: GameTemplateWhereInput
   }
 
-  export type QuizTemplateUpdateToOneWithWhereWithoutQuestionsInput = {
-    where?: QuizTemplateWhereInput
-    data: XOR<QuizTemplateUpdateWithoutQuestionsInput, QuizTemplateUncheckedUpdateWithoutQuestionsInput>
+  export type GameTemplateUpdateToOneWithWhereWithoutQuestionsInput = {
+    where?: GameTemplateWhereInput
+    data: XOR<GameTemplateUpdateWithoutQuestionsInput, GameTemplateUncheckedUpdateWithoutQuestionsInput>
   }
 
-  export type QuizTemplateUpdateWithoutQuestionsInput = {
+  export type GameTemplateUpdateWithoutQuestionsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
+    themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    creatorTeacher?: TeacherUpdateOneRequiredWithoutQuizTemplatesNestedInput
-    gameInstances?: GameInstanceUpdateManyWithoutQuizTemplateNestedInput
+    creator?: UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput
+    gameInstances?: GameInstanceUpdateManyWithoutGameTemplateNestedInput
   }
 
-  export type QuizTemplateUncheckedUpdateWithoutQuestionsInput = {
+  export type GameTemplateUncheckedUpdateWithoutQuestionsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    creatorTeacherId?: StringFieldUpdateOperationsInput | string
+    creatorId?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
+    themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    gameInstances?: GameInstanceUncheckedUpdateManyWithoutQuizTemplateNestedInput
+    gameInstances?: GameInstanceUncheckedUpdateManyWithoutGameTemplateNestedInput
   }
 
-  export type QuestionUpsertWithoutQuizTemplatesInput = {
-    update: XOR<QuestionUpdateWithoutQuizTemplatesInput, QuestionUncheckedUpdateWithoutQuizTemplatesInput>
-    create: XOR<QuestionCreateWithoutQuizTemplatesInput, QuestionUncheckedCreateWithoutQuizTemplatesInput>
+  export type QuestionUpsertWithoutGameTemplatesInput = {
+    update: XOR<QuestionUpdateWithoutGameTemplatesInput, QuestionUncheckedUpdateWithoutGameTemplatesInput>
+    create: XOR<QuestionCreateWithoutGameTemplatesInput, QuestionUncheckedCreateWithoutGameTemplatesInput>
     where?: QuestionWhereInput
   }
 
-  export type QuestionUpdateToOneWithWhereWithoutQuizTemplatesInput = {
+  export type QuestionUpdateToOneWithWhereWithoutGameTemplatesInput = {
     where?: QuestionWhereInput
-    data: XOR<QuestionUpdateWithoutQuizTemplatesInput, QuestionUncheckedUpdateWithoutQuizTemplatesInput>
+    data: XOR<QuestionUpdateWithoutGameTemplatesInput, QuestionUncheckedUpdateWithoutGameTemplatesInput>
   }
 
-  export type QuestionUpdateWithoutQuizTemplatesInput = {
+  export type QuestionUpdateWithoutGameTemplatesInput = {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    responses?: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -13296,15 +14884,17 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuestionUncheckedUpdateWithoutQuizTemplatesInput = {
+  export type QuestionUncheckedUpdateWithoutGameTemplatesInput = {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    responses?: JsonNullValueInput | InputJsonValue
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -13315,70 +14905,75 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuizTemplateCreateWithoutGameInstancesInput = {
+  export type GameTemplateCreateWithoutGameInstancesInput = {
     id?: string
     name: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    creatorTeacher: TeacherCreateNestedOneWithoutQuizTemplatesInput
-    questions?: QuestionsInQuizTemplateCreateNestedManyWithoutQuizTemplateInput
+    creator: UserCreateNestedOneWithoutCreatedGameTemplatesInput
+    questions?: QuestionsInGameTemplateCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type QuizTemplateUncheckedCreateWithoutGameInstancesInput = {
+  export type GameTemplateUncheckedCreateWithoutGameInstancesInput = {
     id?: string
     name: string
-    creatorTeacherId: string
+    creatorId: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    questions?: QuestionsInQuizTemplateUncheckedCreateNestedManyWithoutQuizTemplateInput
+    questions?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type QuizTemplateCreateOrConnectWithoutGameInstancesInput = {
-    where: QuizTemplateWhereUniqueInput
-    create: XOR<QuizTemplateCreateWithoutGameInstancesInput, QuizTemplateUncheckedCreateWithoutGameInstancesInput>
+  export type GameTemplateCreateOrConnectWithoutGameInstancesInput = {
+    where: GameTemplateWhereUniqueInput
+    create: XOR<GameTemplateCreateWithoutGameInstancesInput, GameTemplateUncheckedCreateWithoutGameInstancesInput>
   }
 
-  export type TeacherCreateWithoutGameInstancesInput = {
+  export type UserCreateWithoutInitiatedGameInstancesInput = {
     id?: string
     username: string
-    passwordHash: string
     email?: string | null
-    createdAt?: Date | string
+    passwordHash?: string | null
     avatarUrl?: string | null
-    resetToken?: string | null
-    resetTokenExpiresAt?: Date | string | null
-    quizTemplates?: QuizTemplateCreateNestedManyWithoutCreatorTeacherInput
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
+    gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
+    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
   }
 
-  export type TeacherUncheckedCreateWithoutGameInstancesInput = {
+  export type UserUncheckedCreateWithoutInitiatedGameInstancesInput = {
     id?: string
     username: string
-    passwordHash: string
     email?: string | null
-    createdAt?: Date | string
+    passwordHash?: string | null
     avatarUrl?: string | null
-    resetToken?: string | null
-    resetTokenExpiresAt?: Date | string | null
-    quizTemplates?: QuizTemplateUncheckedCreateNestedManyWithoutCreatorTeacherInput
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
+    gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
+    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
   }
 
-  export type TeacherCreateOrConnectWithoutGameInstancesInput = {
-    where: TeacherWhereUniqueInput
-    create: XOR<TeacherCreateWithoutGameInstancesInput, TeacherUncheckedCreateWithoutGameInstancesInput>
+  export type UserCreateOrConnectWithoutInitiatedGameInstancesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutInitiatedGameInstancesInput, UserUncheckedCreateWithoutInitiatedGameInstancesInput>
   }
 
   export type GameParticipantCreateWithoutGameInstanceInput = {
@@ -13391,12 +14986,12 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    player: PlayerCreateNestedOneWithoutGameParticipationsInput
+    user: UserCreateNestedOneWithoutGameParticipationsInput
   }
 
   export type GameParticipantUncheckedCreateWithoutGameInstanceInput = {
     id?: string
-    playerId: string
+    userId: string
     score?: number
     rank?: number | null
     timeTakenMs?: number | null
@@ -13417,78 +15012,82 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type QuizTemplateUpsertWithoutGameInstancesInput = {
-    update: XOR<QuizTemplateUpdateWithoutGameInstancesInput, QuizTemplateUncheckedUpdateWithoutGameInstancesInput>
-    create: XOR<QuizTemplateCreateWithoutGameInstancesInput, QuizTemplateUncheckedCreateWithoutGameInstancesInput>
-    where?: QuizTemplateWhereInput
+  export type GameTemplateUpsertWithoutGameInstancesInput = {
+    update: XOR<GameTemplateUpdateWithoutGameInstancesInput, GameTemplateUncheckedUpdateWithoutGameInstancesInput>
+    create: XOR<GameTemplateCreateWithoutGameInstancesInput, GameTemplateUncheckedCreateWithoutGameInstancesInput>
+    where?: GameTemplateWhereInput
   }
 
-  export type QuizTemplateUpdateToOneWithWhereWithoutGameInstancesInput = {
-    where?: QuizTemplateWhereInput
-    data: XOR<QuizTemplateUpdateWithoutGameInstancesInput, QuizTemplateUncheckedUpdateWithoutGameInstancesInput>
+  export type GameTemplateUpdateToOneWithWhereWithoutGameInstancesInput = {
+    where?: GameTemplateWhereInput
+    data: XOR<GameTemplateUpdateWithoutGameInstancesInput, GameTemplateUncheckedUpdateWithoutGameInstancesInput>
   }
 
-  export type QuizTemplateUpdateWithoutGameInstancesInput = {
+  export type GameTemplateUpdateWithoutGameInstancesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
+    themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    creatorTeacher?: TeacherUpdateOneRequiredWithoutQuizTemplatesNestedInput
-    questions?: QuestionsInQuizTemplateUpdateManyWithoutQuizTemplateNestedInput
+    creator?: UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput
+    questions?: QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput
   }
 
-  export type QuizTemplateUncheckedUpdateWithoutGameInstancesInput = {
+  export type GameTemplateUncheckedUpdateWithoutGameInstancesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    creatorTeacherId?: StringFieldUpdateOperationsInput | string
+    creatorId?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
+    themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    questions?: QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuizTemplateNestedInput
+    questions?: QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput
   }
 
-  export type TeacherUpsertWithoutGameInstancesInput = {
-    update: XOR<TeacherUpdateWithoutGameInstancesInput, TeacherUncheckedUpdateWithoutGameInstancesInput>
-    create: XOR<TeacherCreateWithoutGameInstancesInput, TeacherUncheckedCreateWithoutGameInstancesInput>
-    where?: TeacherWhereInput
+  export type UserUpsertWithoutInitiatedGameInstancesInput = {
+    update: XOR<UserUpdateWithoutInitiatedGameInstancesInput, UserUncheckedUpdateWithoutInitiatedGameInstancesInput>
+    create: XOR<UserCreateWithoutInitiatedGameInstancesInput, UserUncheckedCreateWithoutInitiatedGameInstancesInput>
+    where?: UserWhereInput
   }
 
-  export type TeacherUpdateToOneWithWhereWithoutGameInstancesInput = {
-    where?: TeacherWhereInput
-    data: XOR<TeacherUpdateWithoutGameInstancesInput, TeacherUncheckedUpdateWithoutGameInstancesInput>
+  export type UserUpdateToOneWithWhereWithoutInitiatedGameInstancesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutInitiatedGameInstancesInput, UserUncheckedUpdateWithoutInitiatedGameInstancesInput>
   }
 
-  export type TeacherUpdateWithoutGameInstancesInput = {
+  export type UserUpdateWithoutInitiatedGameInstancesInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    passwordHash?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
-    resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    quizTemplates?: QuizTemplateUpdateManyWithoutCreatorTeacherNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
+    gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
+    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
   }
 
-  export type TeacherUncheckedUpdateWithoutGameInstancesInput = {
+  export type UserUncheckedUpdateWithoutInitiatedGameInstancesInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    passwordHash?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
-    resetTokenExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    quizTemplates?: QuizTemplateUncheckedUpdateManyWithoutCreatorTeacherNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+    gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
+    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type GameParticipantUpsertWithWhereUniqueWithoutGameInstanceInput = {
@@ -13519,15 +15118,18 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    quizTemplate: QuizTemplateCreateNestedOneWithoutGameInstancesInput
-    initiatorTeacher?: TeacherCreateNestedOneWithoutGameInstancesInput
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
+    gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
+    initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
   }
 
   export type GameInstanceUncheckedCreateWithoutParticipantsInput = {
     id?: string
     name: string
-    quizTemplateId: string
-    initiatorTeacherId?: string | null
+    gameTemplateId: string
+    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -13537,6 +15139,9 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
   }
 
   export type GameInstanceCreateOrConnectWithoutParticipantsInput = {
@@ -13544,29 +15149,37 @@ export namespace Prisma {
     create: XOR<GameInstanceCreateWithoutParticipantsInput, GameInstanceUncheckedCreateWithoutParticipantsInput>
   }
 
-  export type PlayerCreateWithoutGameParticipationsInput = {
+  export type UserCreateWithoutGameParticipationsInput = {
     id?: string
     username: string
-    cookieId: string
     email?: string | null
     passwordHash?: string | null
-    createdAt?: Date | string
     avatarUrl?: string | null
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
+    initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
+    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
   }
 
-  export type PlayerUncheckedCreateWithoutGameParticipationsInput = {
+  export type UserUncheckedCreateWithoutGameParticipationsInput = {
     id?: string
     username: string
-    cookieId: string
     email?: string | null
     passwordHash?: string | null
-    createdAt?: Date | string
     avatarUrl?: string | null
+    createdAt?: Date | string
+    role: $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
+    initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
+    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
   }
 
-  export type PlayerCreateOrConnectWithoutGameParticipationsInput = {
-    where: PlayerWhereUniqueInput
-    create: XOR<PlayerCreateWithoutGameParticipationsInput, PlayerUncheckedCreateWithoutGameParticipationsInput>
+  export type UserCreateOrConnectWithoutGameParticipationsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutGameParticipationsInput, UserUncheckedCreateWithoutGameParticipationsInput>
   }
 
   export type GameInstanceUpsertWithoutParticipantsInput = {
@@ -13592,15 +15205,18 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    quizTemplate?: QuizTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
-    initiatorTeacher?: TeacherUpdateOneWithoutGameInstancesNestedInput
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
+    initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
   }
 
   export type GameInstanceUncheckedUpdateWithoutParticipantsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
-    initiatorTeacherId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -13610,44 +15226,55 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
-  export type PlayerUpsertWithoutGameParticipationsInput = {
-    update: XOR<PlayerUpdateWithoutGameParticipationsInput, PlayerUncheckedUpdateWithoutGameParticipationsInput>
-    create: XOR<PlayerCreateWithoutGameParticipationsInput, PlayerUncheckedCreateWithoutGameParticipationsInput>
-    where?: PlayerWhereInput
+  export type UserUpsertWithoutGameParticipationsInput = {
+    update: XOR<UserUpdateWithoutGameParticipationsInput, UserUncheckedUpdateWithoutGameParticipationsInput>
+    create: XOR<UserCreateWithoutGameParticipationsInput, UserUncheckedCreateWithoutGameParticipationsInput>
+    where?: UserWhereInput
   }
 
-  export type PlayerUpdateToOneWithWhereWithoutGameParticipationsInput = {
-    where?: PlayerWhereInput
-    data: XOR<PlayerUpdateWithoutGameParticipationsInput, PlayerUncheckedUpdateWithoutGameParticipationsInput>
+  export type UserUpdateToOneWithWhereWithoutGameParticipationsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutGameParticipationsInput, UserUncheckedUpdateWithoutGameParticipationsInput>
   }
 
-  export type PlayerUpdateWithoutGameParticipationsInput = {
+  export type UserUpdateWithoutGameParticipationsInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    cookieId?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
+    initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
+    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
   }
 
-  export type PlayerUncheckedUpdateWithoutGameParticipationsInput = {
+  export type UserUncheckedUpdateWithoutGameParticipationsInput = {
     id?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
-    cookieId?: StringFieldUpdateOperationsInput | string
     email?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+    initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
+    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   }
 
-  export type QuizTemplateCreateManyCreatorTeacherInput = {
+  export type GameTemplateCreateManyCreatorInput = {
     id?: string
     name: string
     gradeLevel?: string | null
-    themes?: QuizTemplateCreatethemesInput | string[]
+    themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
     description?: string | null
     defaultMode?: $Enums.PlayMode | null
@@ -13655,10 +15282,10 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type GameInstanceCreateManyInitiatorTeacherInput = {
+  export type GameInstanceCreateManyInitiatorUserInput = {
     id?: string
     name: string
-    quizTemplateId: string
+    gameTemplateId: string
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -13668,96 +15295,12 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
   }
 
-  export type QuizTemplateUpdateWithoutCreatorTeacherInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
-    discipline?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    questions?: QuestionsInQuizTemplateUpdateManyWithoutQuizTemplateNestedInput
-    gameInstances?: GameInstanceUpdateManyWithoutQuizTemplateNestedInput
-  }
-
-  export type QuizTemplateUncheckedUpdateWithoutCreatorTeacherInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
-    discipline?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    questions?: QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuizTemplateNestedInput
-    gameInstances?: GameInstanceUncheckedUpdateManyWithoutQuizTemplateNestedInput
-  }
-
-  export type QuizTemplateUncheckedUpdateManyWithoutCreatorTeacherInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: QuizTemplateUpdatethemesInput | string[]
-    discipline?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type GameInstanceUpdateWithoutInitiatorTeacherInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    accessCode?: StringFieldUpdateOperationsInput | string
-    status?: StringFieldUpdateOperationsInput | string
-    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
-    leaderboard?: NullableJsonNullValueInput | InputJsonValue
-    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
-    settings?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    quizTemplate?: QuizTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
-    participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
-  }
-
-  export type GameInstanceUncheckedUpdateWithoutInitiatorTeacherInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
-    accessCode?: StringFieldUpdateOperationsInput | string
-    status?: StringFieldUpdateOperationsInput | string
-    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
-    leaderboard?: NullableJsonNullValueInput | InputJsonValue
-    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
-    settings?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
-  }
-
-  export type GameInstanceUncheckedUpdateManyWithoutInitiatorTeacherInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
-    accessCode?: StringFieldUpdateOperationsInput | string
-    status?: StringFieldUpdateOperationsInput | string
-    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
-    leaderboard?: NullableJsonNullValueInput | InputJsonValue
-    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
-    settings?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type GameParticipantCreateManyPlayerInput = {
+  export type GameParticipantCreateManyUserInput = {
     id?: string
     gameInstanceId: string
     score?: number
@@ -13770,7 +15313,103 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type GameParticipantUpdateWithoutPlayerInput = {
+  export type GameTemplateUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: GameTemplateUpdatethemesInput | string[]
+    discipline?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    questions?: QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput
+    gameInstances?: GameInstanceUpdateManyWithoutGameTemplateNestedInput
+  }
+
+  export type GameTemplateUncheckedUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: GameTemplateUpdatethemesInput | string[]
+    discipline?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    questions?: QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput
+    gameInstances?: GameInstanceUncheckedUpdateManyWithoutGameTemplateNestedInput
+  }
+
+  export type GameTemplateUncheckedUpdateManyWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: GameTemplateUpdatethemesInput | string[]
+    discipline?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type GameInstanceUpdateWithoutInitiatorUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    accessCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
+    participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
+  }
+
+  export type GameInstanceUncheckedUpdateWithoutInitiatorUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    accessCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
+  }
+
+  export type GameInstanceUncheckedUpdateManyWithoutInitiatorUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    accessCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type GameParticipantUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
@@ -13783,7 +15422,7 @@ export namespace Prisma {
     gameInstance?: GameInstanceUpdateOneRequiredWithoutParticipantsNestedInput
   }
 
-  export type GameParticipantUncheckedUpdateWithoutPlayerInput = {
+  export type GameParticipantUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
@@ -13796,7 +15435,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type GameParticipantUncheckedUpdateManyWithoutPlayerInput = {
+  export type GameParticipantUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
@@ -13809,40 +15448,40 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuestionsInQuizTemplateCreateManyQuestionInput = {
-    quizTemplateId: string
+  export type QuestionsInGameTemplateCreateManyQuestionInput = {
+    gameTemplateId: string
     sequence: number
     createdAt?: Date | string
   }
 
-  export type QuestionsInQuizTemplateUpdateWithoutQuestionInput = {
+  export type QuestionsInGameTemplateUpdateWithoutQuestionInput = {
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    quizTemplate?: QuizTemplateUpdateOneRequiredWithoutQuestionsNestedInput
+    gameTemplate?: GameTemplateUpdateOneRequiredWithoutQuestionsNestedInput
   }
 
-  export type QuestionsInQuizTemplateUncheckedUpdateWithoutQuestionInput = {
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
-    sequence?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuestionInput = {
-    quizTemplateId?: StringFieldUpdateOperationsInput | string
+  export type QuestionsInGameTemplateUncheckedUpdateWithoutQuestionInput = {
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuestionsInQuizTemplateCreateManyQuizTemplateInput = {
+  export type QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionInput = {
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    sequence?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuestionsInGameTemplateCreateManyGameTemplateInput = {
     questionUid: string
     sequence: number
     createdAt?: Date | string
   }
 
-  export type GameInstanceCreateManyQuizTemplateInput = {
+  export type GameInstanceCreateManyGameTemplateInput = {
     id?: string
     name: string
-    initiatorTeacherId?: string | null
+    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -13852,27 +15491,30 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
+    isDiffered?: boolean
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
   }
 
-  export type QuestionsInQuizTemplateUpdateWithoutQuizTemplateInput = {
+  export type QuestionsInGameTemplateUpdateWithoutGameTemplateInput = {
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    question?: QuestionUpdateOneRequiredWithoutQuizTemplatesNestedInput
+    question?: QuestionUpdateOneRequiredWithoutGameTemplatesNestedInput
   }
 
-  export type QuestionsInQuizTemplateUncheckedUpdateWithoutQuizTemplateInput = {
+  export type QuestionsInGameTemplateUncheckedUpdateWithoutGameTemplateInput = {
     questionUid?: StringFieldUpdateOperationsInput | string
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuestionsInQuizTemplateUncheckedUpdateManyWithoutQuizTemplateInput = {
+  export type QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateInput = {
     questionUid?: StringFieldUpdateOperationsInput | string
     sequence?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type GameInstanceUpdateWithoutQuizTemplateInput = {
+  export type GameInstanceUpdateWithoutGameTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     accessCode?: StringFieldUpdateOperationsInput | string
@@ -13884,14 +15526,17 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    initiatorTeacher?: TeacherUpdateOneWithoutGameInstancesNestedInput
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
     participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
   }
 
-  export type GameInstanceUncheckedUpdateWithoutQuizTemplateInput = {
+  export type GameInstanceUncheckedUpdateWithoutGameTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    initiatorTeacherId?: NullableStringFieldUpdateOperationsInput | string | null
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -13901,13 +15546,16 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
   }
 
-  export type GameInstanceUncheckedUpdateManyWithoutQuizTemplateInput = {
+  export type GameInstanceUncheckedUpdateManyWithoutGameTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    initiatorTeacherId?: NullableStringFieldUpdateOperationsInput | string | null
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -13917,11 +15565,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type GameParticipantCreateManyGameInstanceInput = {
     id?: string
-    playerId: string
+    userId: string
     score?: number
     rank?: number | null
     timeTakenMs?: number | null
@@ -13942,12 +15593,12 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    player?: PlayerUpdateOneRequiredWithoutGameParticipationsNestedInput
+    user?: UserUpdateOneRequiredWithoutGameParticipationsNestedInput
   }
 
   export type GameParticipantUncheckedUpdateWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
-    playerId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
     timeTakenMs?: NullableIntFieldUpdateOperationsInput | number | null
@@ -13960,7 +15611,7 @@ export namespace Prisma {
 
   export type GameParticipantUncheckedUpdateManyWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
-    playerId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
     timeTakenMs?: NullableIntFieldUpdateOperationsInput | number | null

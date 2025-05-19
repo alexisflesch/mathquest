@@ -39,7 +39,7 @@ async function handleJoinTournament(io, socket, payload) {
                 paused: false,
                 stopped: false,
                 currentQuestionDuration: 0, // Default or from settings
-                socketToPlayerId: {},
+                socketTouserId: {},
                 askedQuestions: new Set(),
                 status: 'preparing' // Corrected from status to statut
             };
@@ -59,7 +59,7 @@ async function handleJoinTournament(io, socket, payload) {
         }
         // Map socket.id to joueurId (cookie_id) for easy lookup
         if (cookieId) {
-            tournamentState_1.tournamentState[code].socketToPlayerId[socket.id] = cookieId;
+            tournamentState_1.tournamentState[code].socketTouserId[socket.id] = cookieId;
             logger.debug(`Mapped socket ${socket.id} to joueurId ${cookieId} for tournament ${code}`);
         }
         else {

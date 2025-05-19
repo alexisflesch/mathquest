@@ -10,8 +10,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret';
 
 // Define interface for decoded JWT payload
 export interface JwtPayload {
-    teacherId: string;
+    userId: string;
     username: string;
+    role: string;
 }
 
 // Extend Express Request type to include user property

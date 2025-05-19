@@ -27,6 +27,7 @@ import {
     isQuestion,
     getQuestionText
 } from '../index';
+import React from 'react'; // Explicitly import React for JSX support
 
 // Example of extending a shared type
 interface EnhancedQuestion extends Question {
@@ -48,15 +49,15 @@ function ExampleQuestionComponent(props: { question: Question }) {
     // Using the helper function to get the question text
     const questionText = getQuestionText(question);
 
-    // Get answers safely using nullish coalescing
-    const answers = question.answers || []; // MODIFIED: Removed question.responses
+    // Get answer options safely using nullish coalescing
+    const answerOptions: string[] = question.answerOptions || []; // Ensure `answerOptions` is typed as a string array
 
     return (
         <div>
             <h2>{questionText}</h2>
             <ul>
-                {answers.map((answer, index) => (
-                    <li key={index}>{answer.text}</li>
+                {answerOptions.map((option: string, index: number) => (
+                    <li key={index}>{option}</li>
                 ))}
             </ul>
         </div>

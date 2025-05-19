@@ -3,7 +3,15 @@ import { prisma } from '../../src/db/prisma';
 import { redisClient } from '../../src/config/redis';
 import gameStateService from '../../src/core/gameStateService';
 import { jest } from '@jest/globals';
-import { registerGameHandlers } from '../../src/sockets/handlers/gameHandler';
+import { registerGameHandlers } from '../../src/sockets/handlers/game';
+
+// Add a unique suffix for all test users/teachers to avoid unique constraint errors
+const UNIQUE = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+// Helper functions to generate unique test values
+function uniqueId(base: string) { return `${base}_${UNIQUE}`; }
+function uniqueEmail(base: string) { return `${base}_${UNIQUE}@example.com`; }
+// Note: Usernames are NOT unique. Do not use usernames as unique identifiers in tests or code.
 
 // Define mock types
 interface MockSocket {
@@ -40,16 +48,20 @@ function createMockSocket(): MockSocket {
         emit: jest.fn(),
         on: jest.fn(),
         once: jest.fn(),
-        join: jest.fn(),
+        join: jest.fn(async function (room: string) {
+            socket.rooms.add(room);
+            return Promise.resolve();
+        }),
         to: jest.fn().mockReturnThis(),
         _eventHandlers: new Map<string, Function[]>(),
-
+        data: {}, // <-- Fix: allow handler to set socket.data.currentGameRoom
         triggerEvent: async function (event: string, payload?: any): Promise<void> {
             const handlers = this._eventHandlers.get(event) || [];
             for (const handler of handlers) {
                 await handler(payload);
             }
-        }
+        },
+        onAny: jest.fn() // Add a no-op onAny method to mock Socket.IO v4+ API
     };
 
     // Add proper event handler registration
@@ -78,7 +90,50 @@ function createMockIO(): MockIO {
     } as unknown as MockIO;
 }
 
-describe('Mocked Game Handler Tests', () => {
+// --- Add/Update types for event payloads ---
+
+// Strict type for game_answer event payload
+interface GameAnswerPayload {
+    accessCode: string;
+    userId: string;
+    questionId: string;
+    answer: number; // strictly index for multiple choice
+    timeSpent: number;
+}
+
+describe('Direct handler unit tests', () => {
+    const { requestParticipantsHandler } = require('../../src/sockets/handlers/game/requestParticipants');
+    const { disconnectHandler } = require('../../src/sockets/handlers/game/disconnect');
+    const localIO = createMockIO();
+
+    test('requestParticipantsHandler emits participants list', async () => {
+        const socket: any = createMockSocket();
+        await redisClient.hset(
+            `${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`,
+            'socket-id-1',
+            JSON.stringify({ id: 'socket-id-1', userId: 'player-1', user: { username: 'Test', avatarUrl: '' }, joinedAt: Date.now(), score: 0, online: true })
+        );
+        const handler = requestParticipantsHandler(localIO as any, socket);
+        await handler({ accessCode: TEST_ACCESS_CODE });
+        expect(socket.emit).toHaveBeenCalledWith('game_participants', expect.objectContaining({ participants: expect.any(Array) }));
+    });
+
+    test('disconnectHandler removes participant from Redis', async () => {
+        const socket: any = createMockSocket();
+        await redisClient.hset(
+            `${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`,
+            socket.id,
+            JSON.stringify({ id: socket.id, userId: 'player-1', user: { username: 'Test', avatarUrl: '' }, joinedAt: Date.now(), score: 0, online: true })
+        );
+        const handler = disconnectHandler(localIO as any, socket);
+        await handler();
+        const participants = await redisClient.hgetall(`${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`);
+        expect(Object.keys(participants)).not.toContain(socket.id);
+    });
+});
+
+describe('Mocked Game Handler', () => {
+    jest.setTimeout(3000);
     let io: MockIO;
 
     beforeAll(async () => {
@@ -91,42 +146,45 @@ describe('Mocked Game Handler Tests', () => {
         });
 
         // Create test players for our tests
-        await prisma.player.upsert({
-            where: { id: 'player-1' },
+        await prisma.user.upsert({
+            where: { id: uniqueId('player-1') },
             update: {},
             create: {
-                id: 'player-1',
+                id: uniqueId('player-1'),
                 username: 'Player 1',
-                cookieId: 'cookie-player-1'
+                role: 'STUDENT',
+                studentProfile: { create: { cookieId: uniqueId('cookie-player-1') } }
             }
         });
 
-        await prisma.player.upsert({
-            where: { id: 'player-2' },
+        await prisma.user.upsert({
+            where: { id: uniqueId('player-2') },
             update: {},
             create: {
-                id: 'player-2',
+                id: uniqueId('player-2'),
                 username: 'Player 2',
-                cookieId: 'cookie-player-2'
+                role: 'STUDENT',
+                studentProfile: { create: { cookieId: uniqueId('cookie-player-2') } }
             }
         });
 
         // Create a quiz template first (required for the game instance)
-        const testTeacher = await prisma.teacher.upsert({
-            where: { email: 'test@example.com' },
+        const testTeacher = await prisma.user.upsert({
+            where: { email: uniqueEmail('test') },
             update: {},
             create: {
-                username: 'testteacher',
+                username: 'Teacher', // Use plain, non-unique username
                 passwordHash: 'hash-not-important-for-test',
-                email: 'test@example.com'
+                email: uniqueEmail('test'),
+                role: 'TEACHER'
             }
         });
 
         // Create a quiz template with some questions
-        const testTemplate = await prisma.quizTemplate.create({
+        const testTemplate = await prisma.gameTemplate.create({
             data: {
-                name: 'Test Quiz Template',
-                creatorTeacherId: testTeacher.id,
+                name: `Test Quiz Template ${UNIQUE}`,
+                creatorId: testTeacher.id,
                 themes: ['math']
             }
         });
@@ -141,20 +199,16 @@ describe('Mocked Game Handler Tests', () => {
                 timeLimit: 20,
                 discipline: 'math',
                 themes: ['arithmetic'],
-                responses: JSON.stringify([
-                    { id: 'a', content: '3', isCorrect: false },
-                    { id: 'b', content: '4', isCorrect: true },
-                    { id: 'c', content: '5', isCorrect: false },
-                    { id: 'd', content: '22', isCorrect: false }
-                ]),
+                answerOptions: ['3', '4', '5', '22'],
+                correctAnswers: [false, true, false, false],
                 author: testTeacher.username
             }
         });
 
         // Link questions to quiz template
-        await prisma.questionsInQuizTemplate.create({
+        await prisma.questionsInGameTemplate.create({
             data: {
-                quizTemplateId: testTemplate.id,
+                gameTemplateId: testTemplate.id,
                 questionUid: question1.uid,
                 sequence: 0
             }
@@ -166,13 +220,13 @@ describe('Mocked Game Handler Tests', () => {
                 accessCode: TEST_ACCESS_CODE,
                 name: 'Test Game',
                 status: 'active',
-                playMode: 'class',
+                playMode: 'quiz',
                 settings: {
                     timeMultiplier: 1.0,
                     showLeaderboard: true
                 },
-                quizTemplateId: testTemplate.id,
-                initiatorTeacherId: testTeacher.id
+                gameTemplateId: testTemplate.id,
+                initiatorUserId: testTeacher.id
             }
         });
 
@@ -192,6 +246,70 @@ describe('Mocked Game Handler Tests', () => {
         }
     });
 
+    beforeEach(async () => {
+        // Clear all Redis keys related to the test game before each test
+        const keys = await redisClient.keys(`mathquest:game:*${TEST_ACCESS_CODE}*`);
+        if (keys.length > 0) {
+            await redisClient.del(keys);
+        }
+        // Ensure test players exist
+        await prisma.user.upsert({
+            where: { id: uniqueId('player-1') },
+            update: {},
+            create: {
+                id: uniqueId('player-1'),
+                username: 'Player 1',
+                role: 'STUDENT',
+                studentProfile: { create: { cookieId: uniqueId('cookie-player-1') } }
+            }
+        });
+        await prisma.user.upsert({
+            where: { id: uniqueId('player-2') },
+            update: {},
+            create: {
+                id: uniqueId('player-2'),
+                username: 'Player 2',
+                role: 'STUDENT',
+                studentProfile: { create: { cookieId: uniqueId('cookie-player-2') } }
+            }
+        });
+        // Ensure the test game instance exists
+        const testTeacher = await prisma.user.upsert({
+            where: { email: uniqueEmail('test') },
+            update: {},
+            create: {
+                username: 'Teacher', // Use plain, non-unique username
+                passwordHash: 'hash-not-important-for-test',
+                email: uniqueEmail('test'),
+                role: 'TEACHER'
+            }
+        });
+        let testTemplate = await prisma.gameTemplate.findFirst({ where: { name: `Test Quiz Template ${UNIQUE}` } });
+        if (!testTemplate) {
+            testTemplate = await prisma.gameTemplate.create({
+                data: {
+                    name: `Test Quiz Template ${UNIQUE}`,
+                    creatorId: testTeacher.id,
+                    themes: ['math']
+                }
+            });
+        }
+        let gameInstance = await prisma.gameInstance.findFirst({ where: { accessCode: TEST_ACCESS_CODE } });
+        if (!gameInstance) {
+            await prisma.gameInstance.create({
+                data: {
+                    accessCode: TEST_ACCESS_CODE,
+                    name: 'Test Game',
+                    status: 'active',
+                    playMode: 'quiz',
+                    settings: { timeMultiplier: 1.0, showLeaderboard: true },
+                    gameTemplateId: testTemplate.id,
+                    initiatorUserId: testTeacher.id
+                }
+            });
+        }
+    });
+
     afterEach(() => {
         // Reset all mocks
         jest.clearAllMocks();
@@ -204,13 +322,15 @@ describe('Mocked Game Handler Tests', () => {
         });
 
         // Clean up the quiz template we created
-        await prisma.quizTemplate.deleteMany({
-            where: { name: 'Test Quiz Template' }
+        await prisma.gameTemplate.deleteMany({
+            where: { name: `Test Quiz Template ${UNIQUE}` }
         });
 
-        // Clean up test players
-        await prisma.player.deleteMany({
-            where: { id: { in: ['player-1', 'player-2'] } }
+        // Clean up test profiles before users to avoid FK constraint errors
+        await prisma.studentProfile.deleteMany({});
+        await prisma.teacherProfile.deleteMany({});
+        await prisma.user.deleteMany({
+            where: { role: 'STUDENT' }
         });
 
         // Clean up Redis
@@ -231,9 +351,6 @@ describe('Mocked Game Handler Tests', () => {
         // Register game handlers
         registerGameHandlers(io as any, socket as any);
 
-        // Set up room to simulate socket.io room functionality
-        socket.rooms.add(`game_${TEST_ACCESS_CODE}`);
-
         // Clear any existing data in Redis for this test
         const keys = await redisClient.keys(`mathquest:game:participants:${TEST_ACCESS_CODE}`);
         if (keys.length > 0) {
@@ -243,9 +360,9 @@ describe('Mocked Game Handler Tests', () => {
         // Trigger the join_game event with our payload
         await socket.triggerEvent('join_game', {
             accessCode: TEST_ACCESS_CODE,
-            playerId: 'player-1',
-            username: 'Player One',
-            avatarUrl: 'avatar1.jpg'
+            userId: uniqueId('player-1'),
+            username: 'Player 1',
+            avatarUrl: 'https://example.com/avatar1.jpg' // must be a valid URL per Zod schema
         });
 
         // Give Redis time to process
@@ -260,17 +377,19 @@ describe('Mocked Game Handler Tests', () => {
         // Verify the correct player data was stored
         const participantEntry = Object.values(participantsHash)[0];
         const participant = JSON.parse(participantEntry);
-        expect(participant.playerId).toBe('player-1');
-        expect(participant.username).toBe('Player One');
-        expect(participant.avatarUrl).toBe('avatar1.jpg');
+        expect(participant.userId).toBe(uniqueId('player-1'));
+        expect(participant.username).toBe('Player 1');
+        expect(participant.avatarUrl).toBe('https://example.com/avatar1.jpg');
 
         // Verify socket.emit was called with game_joined and appropriate data
         expect(socket.emit).toHaveBeenCalledWith('game_joined', expect.objectContaining({
             accessCode: TEST_ACCESS_CODE
         }));
 
-        // Verify socket.to().emit was called with player_joined_game
-        expect(socket.to).toHaveBeenCalledWith(`game_${TEST_ACCESS_CODE}`);
+        // Find the test game instance to get the initiatorUserId
+        const gameInstance = await prisma.gameInstance.findUnique({ where: { accessCode: TEST_ACCESS_CODE } });
+        // Update this line to match the backend's room naming logic
+        expect(socket.to).toHaveBeenCalledWith(`teacher_${gameInstance?.initiatorUserId}_${TEST_ACCESS_CODE}`);
     });
 
     // Test 2: Test the request_participants event
@@ -280,9 +399,6 @@ describe('Mocked Game Handler Tests', () => {
 
         // Register game handlers
         registerGameHandlers(io as any, socket as any);
-
-        // Set up room to simulate socket.io room functionality
-        socket.rooms.add(`game_${TEST_ACCESS_CODE}`);
 
         // Clear any existing participants first
         const existingKeys = await redisClient.keys(`${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`);
@@ -296,9 +412,8 @@ describe('Mocked Game Handler Tests', () => {
             'socket-id-1',
             JSON.stringify({
                 id: 'socket-id-1',
-                playerId: 'player-1',
-                username: 'Player One',
-                avatarUrl: 'avatar1.jpg',
+                userId: 'player-1',
+                user: { username: 'Player 1', avatarUrl: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
                 joinedAt: Date.now(),
                 score: 10,
                 online: true
@@ -310,9 +425,8 @@ describe('Mocked Game Handler Tests', () => {
             'socket-id-2',
             JSON.stringify({
                 id: 'socket-id-2',
-                playerId: 'player-2',
-                username: 'Player Two',
-                avatarUrl: 'avatar2.jpg',
+                userId: 'player-2',
+                user: { username: 'Player 2', avatarUrl: 'https://example.com/avatar2.jpg' }, // Use plain, non-unique username
                 joinedAt: Date.now(),
                 score: 5,
                 online: true
@@ -344,15 +458,15 @@ describe('Mocked Game Handler Tests', () => {
             expect(participantsData.participants).toHaveLength(2);
 
             // Verify participant data
-            const p1 = participantsData.participants.find((p: any) => p.playerId === 'player-1');
-            const p2 = participantsData.participants.find((p: any) => p.playerId === 'player-2');
+            const p1 = participantsData.participants.find((p: any) => p.userId === 'player-1');
+            const p2 = participantsData.participants.find((p: any) => p.userId === 'player-2');
 
             expect(p1).toBeTruthy();
-            expect(p1.username).toBe('Player One');
+            expect(p1.user.username).toBe('Player 1'); // Use plain, non-unique username
             expect(p1.score).toBe(10);
 
             expect(p2).toBeTruthy();
-            expect(p2.username).toBe('Player Two');
+            expect(p2.user.username).toBe('Player 2'); // Use plain, non-unique username
             expect(p2.score).toBe(5);
         } else {
             fail('No game_participants event was emitted');
@@ -373,10 +487,9 @@ describe('Mocked Game Handler Tests', () => {
             socket.id,
             JSON.stringify({
                 id: socket.id,
-                playerId: 'player-1',
-                username: 'Player One',
+                userId: 'player-1',
+                user: { username: 'Player 1', avatarUrl: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
                 score: 0,
-                avatarUrl: 'avatar1.jpg',
                 joinedAt: Date.now(),
                 online: true
             })
@@ -441,7 +554,7 @@ describe('Mocked Game Handler Tests', () => {
             socket.id,
             JSON.stringify({
                 socketId: socket.id,
-                playerId: 'player-1',
+                userId: 'player-1',
                 answer: { selectedOption: 'b' },
                 timeSpent: 5000,
                 submittedAt: Date.now()
@@ -465,7 +578,7 @@ describe('Mocked Game Handler Tests', () => {
 
         // Verify the answer data
         const answerData = JSON.parse(Object.values(answers)[0]);
-        expect(answerData.playerId).toBe('player-1');
+        expect(answerData.userId).toBe('player-1');
     });
 
     // Test 4: Test the disconnect event
@@ -488,10 +601,9 @@ describe('Mocked Game Handler Tests', () => {
             socket.id,
             JSON.stringify({
                 id: socket.id,
-                playerId: 'player-1',
-                username: 'Player One',
+                userId: 'player-1',
+                user: { username: 'Player 1', avatarUrl: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
                 score: 0,
-                avatarUrl: 'avatar1.jpg',
                 joinedAt: Date.now(),
                 online: true
             })
@@ -521,7 +633,7 @@ describe('Mocked Game Handler Tests', () => {
         registerGameHandlers(io as any, socket as any);
 
         // Set up room
-        socket.rooms.add(`game_${TEST_ACCESS_CODE}`);
+        socket.rooms.add(`live_${TEST_ACCESS_CODE}`);
 
         // Clear any existing participants
         const keys = await redisClient.keys(`${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`);
@@ -537,5 +649,290 @@ describe('Mocked Game Handler Tests', () => {
 
         // Verify socket.emit was called with game_participants containing empty array
         expect(socket.emit).toHaveBeenCalledWith('game_participants', { participants: [] });
+    });
+
+    // Differed mode tests must be inside this describe so 'io' is in scope
+    describe('Differed Mode - Game Handler', () => {
+        let differedGameId: string;
+        let differedAccessCode = 'DIFF123';
+        let testTeacher: any;
+        let testTemplate: any;
+        let question: any;
+        beforeAll(async () => {
+            // Clean up any previous differed game
+            await prisma.gameInstance.deleteMany({ where: { accessCode: differedAccessCode } });
+            // Create teacher and template
+            testTeacher = await prisma.user.upsert({
+                where: { email: uniqueEmail('diff') },
+                update: {},
+                create: {
+                    username: 'Teacher', // Use plain, non-unique username
+                    passwordHash: 'hash',
+                    email: uniqueEmail('diff'),
+                    role: 'TEACHER'
+                }
+            });
+            testTemplate = await prisma.gameTemplate.create({
+                data: {
+                    name: `Differed Template ${UNIQUE}`,
+                    creatorId: testTeacher.id,
+                    themes: ['math']
+                }
+            });
+            question = await prisma.question.create({
+                data: {
+                    title: 'Diff Q',
+                    text: 'What is 1+1?',
+                    questionType: 'multiple_choice_single_answer',
+                    difficulty: 1,
+                    timeLimit: 20,
+                    discipline: 'math',
+                    themes: ['arithmetic'],
+                    answerOptions: ['1', '2'],
+                    correctAnswers: [false, true],
+                    author: testTeacher.username
+                }
+            });
+            await prisma.questionsInGameTemplate.create({
+                data: {
+                    gameTemplateId: testTemplate.id,
+                    questionUid: question.uid,
+                    sequence: 0
+                }
+            });
+            await prisma.user.upsert({
+                where: { id: uniqueId('player-1') },
+                update: {},
+                create: {
+                    id: uniqueId('player-1'),
+                    username: 'Player 1',
+                    role: 'STUDENT',
+                    studentProfile: { create: { cookieId: uniqueId('cookie-player-1') } }
+                }
+            });
+            await prisma.user.upsert({
+                where: { id: uniqueId('player-2') },
+                update: {},
+                create: {
+                    id: uniqueId('player-2'),
+                    username: 'Player 2',
+                    role: 'STUDENT',
+                    studentProfile: { create: { cookieId: uniqueId('cookie-player-2') } }
+                }
+            });
+            await prisma.user.upsert({
+                where: { id: uniqueId('player-3') },
+                update: {},
+                create: {
+                    id: uniqueId('player-3'),
+                    username: 'Player 3',
+                    role: 'STUDENT',
+                    studentProfile: { create: { cookieId: uniqueId('cookie-player-3') } }
+                }
+            });
+            // Differed window: open now, closes in 1 hour
+            const now = new Date();
+            const to = new Date(now.getTime() + 60 * 60 * 1000);
+            const game = await prisma.gameInstance.create({
+                data: {
+                    accessCode: differedAccessCode,
+                    name: 'Differed Game',
+                    status: 'active',
+                    playMode: 'tournament',
+                    isDiffered: true,
+                    differedAvailableFrom: now,
+                    differedAvailableTo: to,
+                    settings: {},
+                    gameTemplateId: testTemplate.id,
+                    initiatorUserId: testTeacher.id
+                }
+            });
+            differedGameId = game.id;
+        });
+        afterAll(async () => {
+            await prisma.gameInstance.deleteMany({ where: { accessCode: differedAccessCode } });
+            await prisma.gameTemplate.deleteMany({ where: { name: 'Differed Template' } });
+            await prisma.question.deleteMany({ where: { text: 'What is 1+1?' } });
+        });
+        test('Player can join a differed game within window', async () => {
+            const socket: MockSocket = createMockSocket();
+            registerGameHandlers(io as any, socket as any);
+            await socket.triggerEvent('join_game', {
+                accessCode: differedAccessCode,
+                userId: uniqueId('player-1'),
+                username: 'Player 1', // Use plain, non-unique username
+                avatarUrl: 'https://example.com/avatar1.jpg',
+                isDiffered: true
+            });
+            expect(socket.emit).toHaveBeenCalledWith('game_joined', expect.objectContaining({ accessCode: differedAccessCode }));
+        });
+        test('Player cannot join a differed game outside window', async () => {
+            // Set window to past
+            await prisma.gameInstance.update({
+                where: { accessCode: differedAccessCode },
+                data: {
+                    differedAvailableFrom: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    differedAvailableTo: new Date(Date.now() - 60 * 60 * 1000)
+                }
+            });
+            const socket: MockSocket = createMockSocket();
+            registerGameHandlers(io as any, socket as any);
+            await socket.triggerEvent('join_game', {
+                accessCode: differedAccessCode,
+                userId: uniqueId('player-2'),
+                username: 'Player 2', // Use plain, non-unique username
+                avatarUrl: 'https://example.com/avatar2.jpg',
+                isDiffered: true
+            });
+            expect(socket.emit).toHaveBeenCalledWith('game_error', expect.objectContaining({ message: expect.stringContaining('Differed mode not available') }));
+            // Restore window for next tests
+            const now = new Date();
+            const to = new Date(now.getTime() + 60 * 60 * 1000);
+            await prisma.gameInstance.update({
+                where: { accessCode: differedAccessCode },
+                data: {
+                    differedAvailableFrom: now,
+                    differedAvailableTo: to
+                }
+            });
+        });
+        test('Player cannot replay a differed game after completion', async () => {
+            // Mark as completed
+            const participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: differedGameId, userId: uniqueId('player-1') } });
+            await prisma.gameParticipant.update({ where: { id: participant!.id }, data: { completedAt: new Date() } });
+            const socket: MockSocket = createMockSocket();
+            registerGameHandlers(io as any, socket as any);
+            await socket.triggerEvent('join_game', {
+                accessCode: differedAccessCode,
+                userId: uniqueId('player-1'),
+                username: 'Player 1',
+                avatarUrl: 'https://example.com/avatar1.jpg',
+                isDiffered: true
+            });
+            expect(socket.emit).toHaveBeenCalledWith('game_already_played', expect.objectContaining({ accessCode: differedAccessCode }));
+        });
+        test('Player can submit answer in differed mode and leaderboard updates', async () => {
+            // New player
+            const socket: MockSocket = createMockSocket();
+            registerGameHandlers(io as any, socket as any);
+            await socket.triggerEvent('join_game', {
+                accessCode: differedAccessCode,
+                userId: uniqueId('player-3'),
+                username: 'Player 3',
+                avatarUrl: 'https://example.com/avatar3.jpg',
+                isDiffered: true
+            });
+            socket.emit.mockClear();
+            await socket.triggerEvent('game_answer', {
+                accessCode: differedAccessCode,
+                userId: uniqueId('player-3'),
+                questionId: question.uid,
+                answer: 'b',
+                timeSpent: 2000
+            });
+            expect(socket.emit).toHaveBeenCalledWith('leaderboard_update', expect.objectContaining({ leaderboard: expect.any(Array) }));
+            expect(socket.emit).toHaveBeenCalledWith('answer_received', expect.objectContaining({ questionId: question.uid, timeSpent: 2000 }));
+        });
+    });
+
+    // Test 6: Test robust answer submission flow
+    test('Player can submit an answer to a question', async () => {
+        // Create a mock socket
+        const socket: MockSocket = createMockSocket();
+        registerGameHandlers(io as any, socket as any);
+
+        // Simulate player joining the game
+        await socket.triggerEvent('join_game', {
+            accessCode: TEST_ACCESS_CODE,
+            userId: uniqueId('player-1'),
+            username: 'Player 1',
+            avatarUrl: 'https://example.com/avatar1.jpg'
+        });
+
+        // Get the question UID from the test setup
+        const gameInstance = await prisma.gameInstance.findFirst({ where: { accessCode: TEST_ACCESS_CODE } });
+        if (!gameInstance) throw new Error('Test setup error: gameInstance not found');
+        const gameTemplate = await prisma.gameTemplate.findFirst({ where: { id: gameInstance.gameTemplateId } });
+        const questionsInTemplate = await prisma.questionsInGameTemplate.findMany({ where: { gameTemplateId: gameTemplate?.id } });
+        const questionUid = questionsInTemplate[0]?.questionUid;
+        // Ensure game state in Redis is initialized with correct questionIds
+        const questionIds = questionsInTemplate.map(q => q.questionUid);
+        await gameStateService.updateGameState(TEST_ACCESS_CODE, {
+            gameId: gameInstance.id,
+            accessCode: TEST_ACCESS_CODE,
+            status: 'active',
+            currentQuestionIndex: 0,
+            questionIds,
+            answersLocked: false,
+            timer: {
+                startedAt: Date.now(),
+                duration: 20000,
+                isPaused: false
+            },
+            settings: {
+                timeMultiplier: 1.0,
+                showLeaderboard: true
+            }
+        });
+        const fullState = await gameStateService.getFullGameState(TEST_ACCESS_CODE);
+        const questionIndex = Array.isArray(fullState?.gameState.questionIds)
+            ? fullState.gameState.questionIds.findIndex((uid) => uid === questionUid)
+            : undefined;
+        expect(typeof questionIndex).toBe('number');
+        expect(questionIndex).toBeGreaterThanOrEqual(0);
+
+        // Simulate setting the question (teacher action)
+        await gameStateService.setCurrentQuestion(TEST_ACCESS_CODE, questionIndex!);
+
+        // Simulate answer submission
+        // Use strict typing for payload
+        const answerPayload: GameAnswerPayload = {
+            accessCode: TEST_ACCESS_CODE,
+            userId: uniqueId('player-1'),
+            questionId: questionUid,
+            answer: 1, // correct answer index for the seeded question (['3', '4', '5', '22'])
+            timeSpent: 5000
+        };
+        await socket.triggerEvent('game_answer', answerPayload);
+
+        // The handler should have emitted an answer_received event
+        expect(socket.emit).toHaveBeenCalledWith('answer_received', expect.objectContaining({ questionId: questionUid, timeSpent: 5000 }));
+
+        // Instead of checking Redis (which is only updated by scoring), check the DB for the answer
+        const participant = await prisma.gameParticipant.findFirst({
+            where: { userId: uniqueId('player-1'), gameInstance: { accessCode: TEST_ACCESS_CODE } }
+        });
+        expect(participant).toBeTruthy();
+        // Defensive: answers may be null or not an array
+        const answersArr = Array.isArray(participant?.answers) ? participant.answers : (participant?.answers ? JSON.parse(participant.answers as any) : []);
+        expect(Array.isArray(answersArr)).toBe(true);
+        const found = answersArr.find((a: any) => a.questionUid === questionUid && a.answer === 1);
+        expect(found).toBeTruthy();
+        // Optionally, check timeSpent
+        expect(found.timeTakenMs).toBe(5000);
+
+        // Now trigger scoring and check Redis for the answer
+        // Debug: print all Redis answer keys before scoring
+        const beforeKeys = await redisClient.keys(`${ANSWERS_KEY_PREFIX}${TEST_ACCESS_CODE}:*`);
+        for (const k of beforeKeys) {
+            const v = await redisClient.hgetall(k);
+            console.log('[DEBUG before scoring] Redis key:', k, 'value:', v);
+        }
+        await gameStateService.calculateScores(TEST_ACCESS_CODE, questionUid);
+        // Debug: print all Redis answer keys after scoring
+        const afterKeys = await redisClient.keys(`${ANSWERS_KEY_PREFIX}${TEST_ACCESS_CODE}:*`);
+        for (const k of afterKeys) {
+            const v = await redisClient.hgetall(k);
+            console.log('[DEBUG after scoring] Redis key:', k, 'value:', v);
+        }
+        const redisAnswers = await redisClient.hgetall(`${ANSWERS_KEY_PREFIX}${TEST_ACCESS_CODE}:${questionUid}`);
+        expect(Object.keys(redisAnswers).length).toBeGreaterThan(0);
+        // Find the answer for player-1
+        const redisAnswer = Object.values(redisAnswers).map((v) => {
+            try { return JSON.parse(v); } catch { return null; }
+        }).find((a: any) => a && a.userId === uniqueId('player-1'));
+        expect(redisAnswer).toBeTruthy();
+        expect(redisAnswer.answer).toBe(1);
+        expect(redisAnswer.timeSpent).toBe(5000);
     });
 });

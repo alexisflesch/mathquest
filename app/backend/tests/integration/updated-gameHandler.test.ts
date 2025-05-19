@@ -44,7 +44,7 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 describe('Game Handler (Updated Tests)', () => {
     // Set a longer timeout for all tests in this suite
-    jest.setTimeout(10000);
+    jest.setTimeout(3000);
 
     beforeAll(async () => {
         // Start test server and get Socket.IO instance
@@ -54,13 +54,14 @@ describe('Game Handler (Updated Tests)', () => {
         serverCleanup = setup.cleanup;
 
         // Create test players for our tests
-        await prisma.player.upsert({
+        await prisma.user.upsert({
             where: { id: 'player-123' },
             update: {},
             create: {
                 id: 'player-123',
-                username: 'Test Player',
-                cookieId: 'cookie-player-123'
+                username: 'player-123',
+                role: 'STUDENT',
+                studentProfile: { create: { cookieId: 'cookie-player-123' } }
             }
         });
     });
@@ -84,8 +85,12 @@ describe('Game Handler (Updated Tests)', () => {
         // Clean up server
         await serverCleanup();
 
+        // Clean up test player dependencies first
+        await prisma.studentProfile.deleteMany({
+            where: { user: { id: 'player-123' } }
+        });
         // Clean up test players
-        await prisma.player.deleteMany({
+        await prisma.user.deleteMany({
             where: { id: 'player-123' }
         });
 
@@ -114,12 +119,12 @@ describe('Game Handler (Updated Tests)', () => {
     // Basic test to verify player creation
     test('Player creation is working', async () => {
         // Check if our test player exists
-        const player = await prisma.player.findUnique({
+        const player = await prisma.user.findUnique({
             where: { id: 'player-123' }
         });
 
         expect(player).not.toBeNull();
-        expect(player?.username).toBe('Test Player');
+        expect(player?.username).toBe('player-123');
     });
 
     // Test that verifies Redis functionality more thoroughly

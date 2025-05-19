@@ -5,14 +5,14 @@ import createLogger from '@/utils/logger';
 const logger = createLogger('GameInstanceService');
 
 // Define the play mode type to match the Prisma schema
-export type PlayMode = 'class' | 'tournament' | 'practice';
+export type PlayMode = 'quiz' | 'tournament' | 'practice';
 
 // Define possible game statuses
 export type GameStatus = 'pending' | 'active' | 'paused' | 'completed' | 'archived';
 
 export interface GameInstanceCreationData {
     name: string;
-    quizTemplateId: string;
+    gameTemplateId: string;
     playMode: PlayMode;
     settings?: Record<string, any>;
 }
@@ -22,6 +22,14 @@ export interface GameStatusUpdateData {
     currentQuestionIndex?: number;
 }
 
+export interface GameInstanceUnifiedCreationData {
+    name: string;
+    gameTemplateId: string;
+    playMode: PlayMode;
+    settings?: Record<string, any>;
+    initiatorUserId?: string; // Unified field for user ID (teacher or student)
+}
+
 /**
  * GameInstance service class for managing game instances
  */
@@ -29,7 +37,7 @@ export class GameInstanceService {
     /**
      * Create a new game instance
      */
-    async createGameInstance(teacherId: string, data: GameInstanceCreationData) {
+    async createGameInstance(initiatorUserId: string, data: GameInstanceCreationData) {
         try {
             // Generate a unique access code
             const accessCode = await this.generateUniqueAccessCode();
@@ -38,8 +46,8 @@ export class GameInstanceService {
             const gameInstance = await prisma.gameInstance.create({
                 data: {
                     name: data.name,
-                    quizTemplateId: data.quizTemplateId,
-                    initiatorTeacherId: teacherId,
+                    gameTemplateId: data.gameTemplateId,
+                    initiatorUserId: initiatorUserId,
                     accessCode,
                     status: 'pending', // All games start in pending status
                     playMode: data.playMode,
@@ -47,7 +55,7 @@ export class GameInstanceService {
                     currentQuestionIndex: null, // No question shown initially
                 },
                 include: {
-                    quizTemplate: {
+                    gameTemplate: {
                         select: {
                             name: true,
                             themes: true,
@@ -66,6 +74,42 @@ export class GameInstanceService {
     }
 
     /**
+     * Create a new game instance (teacher or student)
+     */
+    async createGameInstanceUnified(data: GameInstanceUnifiedCreationData) {
+        try {
+            const accessCode = await this.generateUniqueAccessCode();
+            const createData: any = {
+                name: data.name,
+                gameTemplateId: data.gameTemplateId,
+                accessCode,
+                status: 'pending',
+                playMode: data.playMode,
+                settings: data.settings || {},
+                currentQuestionIndex: null,
+            };
+            if (data.initiatorUserId) createData.initiatorUserId = data.initiatorUserId;
+            const gameInstance = await prisma.gameInstance.create({
+                data: createData,
+                include: {
+                    gameTemplate: {
+                        select: {
+                            name: true,
+                            themes: true,
+                            discipline: true,
+                            gradeLevel: true,
+                        }
+                    }
+                }
+            });
+            return gameInstance;
+        } catch (error: any) {
+            logger.error({ error }, 'Error creating game instance (unified)');
+            throw error;
+        }
+    }
+
+    /**
      * Get a game instance by access code
      */
     async getGameInstanceByAccessCode(accessCode: string, includeParticipants: boolean = false) {
@@ -73,7 +117,7 @@ export class GameInstanceService {
             return await prisma.gameInstance.findUnique({
                 where: { accessCode },
                 include: {
-                    quizTemplate: {
+                    gameTemplate: {
                         select: {
                             name: true,
                             themes: true,
@@ -83,7 +127,7 @@ export class GameInstanceService {
                     },
                     participants: includeParticipants ? {
                         include: {
-                            player: {
+                            user: {
                                 select: {
                                     username: true,
                                     avatarUrl: true
@@ -110,7 +154,7 @@ export class GameInstanceService {
             return await prisma.gameInstance.findUnique({
                 where: { id },
                 include: {
-                    quizTemplate: {
+                    gameTemplate: {
                         select: {
                             name: true,
                             themes: true,
@@ -120,7 +164,7 @@ export class GameInstanceService {
                     },
                     participants: includeParticipants ? {
                         include: {
-                            player: {
+                            user: {
                                 select: {
                                     username: true,
                                     avatarUrl: true
@@ -182,6 +226,27 @@ export class GameInstanceService {
     }
 
     /**
+     * Update differed mode and window for a game instance
+     */
+    async updateDifferedMode(gameId: string, opts: { isDiffered: boolean, differedAvailableFrom?: Date, differedAvailableTo?: Date }) {
+        try {
+            const updates: Record<string, any> = {
+                isDiffered: opts.isDiffered,
+                differedAvailableFrom: opts.differedAvailableFrom,
+                differedAvailableTo: opts.differedAvailableTo
+            };
+            const updatedGame = await prisma.gameInstance.update({
+                where: { id: gameId },
+                data: updates
+            });
+            return updatedGame;
+        } catch (error) {
+            logger.error({ error }, `Error updating differed mode for game ID ${gameId}`);
+            throw error;
+        }
+    }
+
+    /**
      * Generate a unique 6-character access code
      * The code consists of uppercase letters and numbers, avoiding
      * easily confused characters like 0, O, 1, I
@@ -224,11 +289,11 @@ export class GameInstanceService {
         try {
             return await prisma.gameInstance.findMany({
                 where: {
-                    initiatorTeacherId: teacherId,
+                    initiatorUserId: teacherId,
                     status: { in: ['pending', 'active', 'paused'] }
                 },
                 include: {
-                    quizTemplate: {
+                    gameTemplate: {
                         select: {
                             name: true
                         }
@@ -247,5 +312,18 @@ export class GameInstanceService {
             logger.error({ error }, `Error fetching active games for teacher ${teacherId}`);
             throw error;
         }
+    }
+
+    /**
+     * Get game instances by initiator user ID
+     */
+    async getGameInstanceByInitiatorUserId(userId: string) {
+        return prisma.gameInstance.findMany({
+            where: { initiatorUserId: userId },
+            include: {
+                gameTemplate: true,
+                participants: true
+            }
+        });
     }
 }

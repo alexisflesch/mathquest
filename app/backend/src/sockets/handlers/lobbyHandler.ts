@@ -13,7 +13,7 @@ const LOBBY_KEY_PREFIX = 'mathquest:lobby:';
 // Define types for lobby participants
 export interface LobbyParticipant {
     id: string;           // Socket ID
-    playerId: string;     // Player ID from database
+    userId: string;     // Player ID from database
     username: string;     // Display name
     avatarUrl?: string;   // URL to avatar image
     joinedAt: number;     // Timestamp when joined
@@ -22,7 +22,7 @@ export interface LobbyParticipant {
 // Define event payload types
 export interface JoinLobbyPayload {
     accessCode: string;   // Game access code
-    playerId: string;     // Player ID
+    userId: string;     // Player ID
     username: string;     // Display name
     avatarUrl?: string;   // Avatar URL
 }
@@ -43,8 +43,8 @@ export interface GetParticipantsPayload {
 export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void {
     // Join a game lobby
     socket.on('join_lobby', async (payload: JoinLobbyPayload) => {
-        const { accessCode, playerId, username, avatarUrl } = payload;
-        logger.info({ accessCode, playerId, username, socketId: socket.id }, 'Player joining lobby');
+        const { accessCode, userId, username, avatarUrl } = payload;
+        logger.info({ accessCode, userId, username, socketId: socket.id }, 'Player joining lobby');
 
         try {
             // Verify the game exists and check its status
@@ -54,7 +54,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                     id: true,
                     status: true,
                     name: true,
-                    quizTemplateId: true
+                    gameTemplateId: true
                 }
             });
 
@@ -84,7 +84,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
 
                 // Still join the lobby room temporarily to receive any announcements
                 await joinRoom(socket, `lobby_${accessCode}`, {
-                    playerId,
+                    userId,
                     username,
                     avatarUrl,
                     redirected: true
@@ -95,7 +95,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
 
             // Join the lobby room
             await joinRoom(socket, `lobby_${accessCode}`, {
-                playerId,
+                userId,
                 username,
                 avatarUrl,
                 joinedAt: Date.now()
@@ -104,7 +104,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             // Store participant data in Redis
             const participant: LobbyParticipant = {
                 id: socket.id,
-                playerId,
+                userId,
                 username,
                 avatarUrl,
                 joinedAt: Date.now()
@@ -226,7 +226,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             const socketId = socket.id;
 
             // Check if socket is in any lobby rooms
-            for (const room of socket.rooms) {
+            for (const room of Array.from(socket.rooms)) {
                 if (room.startsWith('lobby_')) {
                     const accessCode = room.replace('lobby_', '');
                     logger.info({ accessCode, socketId }, 'Socket disconnecting from lobby');

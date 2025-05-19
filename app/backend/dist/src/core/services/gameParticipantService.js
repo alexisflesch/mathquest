@@ -23,8 +23,14 @@ class GameParticipantService {
             // Find the game instance
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
                 where: { accessCode },
-                include: {
-                    quizTemplate: {
+                select: {
+                    id: true,
+                    name: true,
+                    status: true,
+                    isDiffered: true,
+                    differedAvailableFrom: true,
+                    differedAvailableTo: true,
+                    gameTemplate: {
                         select: {
                             name: true
                         }
@@ -38,11 +44,18 @@ class GameParticipantService {
                     error: 'Game not found'
                 };
             }
-            // Check if game is in a joinable state
-            if (gameInstance.status !== 'pending' && gameInstance.status !== 'active') {
+            // Differed mode join logic
+            const now = new Date();
+            const isDiffered = !!gameInstance.isDiffered;
+            const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
+            const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
+            const inDifferedWindow = isDiffered && (!from || now >= from) && (!to || now <= to);
+            if (gameInstance.status !== 'pending' &&
+                gameInstance.status !== 'active' &&
+                !inDifferedWindow) {
                 return {
                     success: false,
-                    error: `Cannot join game in '${gameInstance.status}' status`
+                    error: `Cannot join game in '${gameInstance.status}' status` + (isDiffered ? ' (differed window closed or not started)' : '')
                 };
             }
             // Check if player is already in this game
@@ -228,7 +241,7 @@ class GameParticipantService {
                             status: true,
                             playMode: true,
                             currentQuestionIndex: true,
-                            quizTemplate: {
+                            gameTemplate: {
                                 select: {
                                     name: true
                                 }

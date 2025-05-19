@@ -8,6 +8,7 @@ exports.setCurrentQuestion = setCurrentQuestion;
 exports.getFullGameState = getFullGameState;
 exports.endCurrentQuestion = endCurrentQuestion;
 exports.calculateScores = calculateScores;
+exports.updateGameState = updateGameState;
 const redis_1 = require("@/config/redis");
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
@@ -32,7 +33,7 @@ async function initializeGameState(gameInstanceId) {
         const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
             where: { id: gameInstanceId },
             include: {
-                quizTemplate: {
+                gameTemplate: {
                     include: {
                         questions: {
                             include: {
@@ -51,7 +52,7 @@ async function initializeGameState(gameInstanceId) {
             return null;
         }
         // Extract question UIDs in order
-        const questionIds = gameInstance.quizTemplate?.questions?.map(q => q.question.uid) || [];
+        const questionIds = gameInstance.gameTemplate?.questions?.map(q => q.question.uid) || [];
         if (questionIds.length === 0) {
             logger.warn({ gameInstanceId }, 'No questions found in quiz template');
             return null;
@@ -395,10 +396,31 @@ async function calculateScores(accessCode, questionId) {
         return false;
     }
 }
+/**
+ * Updates the game state in Redis
+ *
+ * @param accessCode Access code of the game
+ * @param gameState Updated game state object
+ * @returns The updated game state object
+ */
+async function updateGameState(accessCode, gameState) {
+    try {
+        // Store in Redis with expiration (24 hours)
+        await redis_1.redisClient.set(`${GAME_KEY_PREFIX}${accessCode}`, JSON.stringify(gameState), 'EX', 86400 // 24 hours in seconds
+        );
+        logger.info({ accessCode }, 'Game state updated');
+        return gameState;
+    }
+    catch (error) {
+        logger.error({ accessCode, error }, 'Failed to update game state');
+        throw new Error(`Failed to update game state: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
 exports.default = {
     initializeGameState,
     setCurrentQuestion,
     getFullGameState,
     endCurrentQuestion,
-    calculateScores
+    calculateScores,
+    updateGameState
 };

@@ -17,7 +17,7 @@ const router = express.Router();
  */
 router.get('/:accessCode', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });
             return;
         }
@@ -34,7 +34,7 @@ router.get('/:accessCode', teacherAuth, async (req: Request, res: Response): Pro
             return;
         }
 
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance.initiatorUserId !== req.user.userId) {
             res.status(403).json({ error: 'You do not have permission to access this game' });
             return;
         }
@@ -61,7 +61,7 @@ router.get('/:accessCode', teacherAuth, async (req: Request, res: Response): Pro
  */
 router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });
             return;
         }
@@ -84,7 +84,7 @@ router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Resp
             return;
         }
 
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance.initiatorUserId !== req.user.userId) {
             res.status(403).json({ error: 'You do not have permission to control this game' });
             return;
         }
@@ -101,12 +101,17 @@ router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Resp
         const io = getIO();
 
         if (io) {
-            // Emit the question to all players in the game
+            // Emit the question to all players in the game using the proper QuestionData structure
             io.to(`game_${accessCode}`).emit('game_question', {
-                question: updatedGameState.questionData,
-                index: questionIndex,
-                total: updatedGameState.questionIds.length,
-                timer: updatedGameState.timer.duration
+                uid: updatedGameState.questionData.uid,
+                text: updatedGameState.questionData.text,
+                title: updatedGameState.questionData.title,
+                answerOptions: updatedGameState.questionData.answerOptions,
+                correctAnswers: new Array(updatedGameState.questionData.answerOptions.length).fill(false), // Hide correct answers
+                questionType: updatedGameState.questionData.questionType,
+                timeLimit: updatedGameState.timer.duration / 1000, // Convert ms to seconds
+                currentQuestionIndex: questionIndex,
+                totalQuestions: updatedGameState.questionIds.length
             });
 
             // Emit to teacher control room as well
@@ -135,7 +140,7 @@ router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Resp
  */
 router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });
             return;
         }
@@ -152,7 +157,7 @@ router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: 
             return;
         }
 
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance.initiatorUserId !== req.user.userId) {
             res.status(403).json({ error: 'You do not have permission to control this game' });
             return;
         }
@@ -216,7 +221,7 @@ router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: 
  */
 router.post('/:accessCode/end-game', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });
             return;
         }
@@ -233,7 +238,7 @@ router.post('/:accessCode/end-game', teacherAuth, async (req: Request, res: Resp
             return;
         }
 
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        if (gameInstance.initiatorUserId !== req.user.userId) {
             res.status(403).json({ error: 'You do not have permission to control this game' });
             return;
         }
@@ -253,8 +258,7 @@ router.post('/:accessCode/end-game', teacherAuth, async (req: Request, res: Resp
         if (io) {
             // Tell all players the game has ended
             io.to(`game_${accessCode}`).emit('game_ended', {
-                accessCode,
-                leaderboard: finalGameState ? finalGameState.leaderboard : []
+                accessCode
             });
         }
 

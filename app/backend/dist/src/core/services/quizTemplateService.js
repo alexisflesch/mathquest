@@ -3,22 +3,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QuizTemplateService = void 0;
+exports.gameTemplateService = void 0;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 // Create a service-specific logger
-const logger = (0, logger_1.default)('QuizTemplateService');
+const logger = (0, logger_1.default)('gameTemplateService');
 /**
- * QuizTemplate service class for handling quiz template-related operations
+ * gameTemplate service class for handling quiz template-related operations
  */
-class QuizTemplateService {
+class gameTemplateService {
     /**
      * Create a new quiz template
      */
-    async createQuizTemplate(teacherId, data) {
+    async creategameTemplate(teacherId, data) {
         try {
             // Create the quiz template in the database
-            const quizTemplate = await prisma_1.prisma.quizTemplate.create({
+            const gameTemplate = await prisma_1.prisma.gameTemplate.create({
                 data: {
                     name: data.name,
                     creatorTeacherId: teacherId,
@@ -26,7 +26,7 @@ class QuizTemplateService {
                     themes: data.themes || [],
                     discipline: data.discipline,
                     description: data.description,
-                    defaultMode: data.defaultMode || 'class',
+                    defaultMode: data.defaultMode || 'quiz',
                     // Include questions if any
                     questions: data.questions ? {
                         create: data.questions.map(q => ({
@@ -43,7 +43,7 @@ class QuizTemplateService {
                     }
                 }
             });
-            return quizTemplate;
+            return gameTemplate;
         }
         catch (error) {
             logger.error({ error }, 'Error creating quiz template');
@@ -53,9 +53,9 @@ class QuizTemplateService {
     /**
      * Get a quiz template by ID
      */
-    async getQuizTemplateById(id, includeQuestions = false) {
+    async getgameTemplateById(id, includeQuestions = false) {
         try {
-            return await prisma_1.prisma.quizTemplate.findUnique({
+            return await prisma_1.prisma.gameTemplate.findUnique({
                 where: { id },
                 include: includeQuestions ? {
                     questions: {
@@ -77,7 +77,7 @@ class QuizTemplateService {
     /**
      * Get quiz templates with filters
      */
-    async getQuizTemplates(teacherId, filters = {}, pagination = {}) {
+    async getgameTemplates(teacherId, filters = {}, pagination = {}) {
         try {
             const { discipline, themes, gradeLevel } = filters;
             const { skip = 0, take = 20 } = pagination;
@@ -96,8 +96,8 @@ class QuizTemplateService {
             if (gradeLevel) {
                 where.gradeLevel = gradeLevel;
             }
-            const [quizTemplates, total] = await Promise.all([
-                prisma_1.prisma.quizTemplate.findMany({
+            const [gameTemplates, total] = await Promise.all([
+                prisma_1.prisma.gameTemplate.findMany({
                     where,
                     skip,
                     take,
@@ -113,10 +113,10 @@ class QuizTemplateService {
                         }
                     }
                 }),
-                prisma_1.prisma.quizTemplate.count({ where })
+                prisma_1.prisma.gameTemplate.count({ where })
             ]);
             return {
-                quizTemplates,
+                gameTemplates,
                 total,
                 page: Math.floor(skip / take) + 1,
                 pageSize: take,
@@ -131,11 +131,11 @@ class QuizTemplateService {
     /**
      * Update a quiz template
      */
-    async updateQuizTemplate(teacherId, data) {
+    async updategameTemplate(teacherId, data) {
         try {
             const { id, ...updateData } = data;
             // Check if the quiz template exists and belongs to the teacher
-            const existingTemplate = await prisma_1.prisma.quizTemplate.findFirst({
+            const existingTemplate = await prisma_1.prisma.gameTemplate.findFirst({
                 where: {
                     id,
                     creatorTeacherId: teacherId
@@ -145,7 +145,7 @@ class QuizTemplateService {
                 throw new Error(`Quiz template with ID ${id} not found or you don't have permission to update it`);
             }
             // Update the quiz template
-            const updatedTemplate = await prisma_1.prisma.quizTemplate.update({
+            const updatedTemplate = await prisma_1.prisma.gameTemplate.update({
                 where: { id },
                 data: updateData,
                 include: {
@@ -169,10 +169,10 @@ class QuizTemplateService {
     /**
      * Delete a quiz template
      */
-    async deleteQuizTemplate(teacherId, id) {
+    async deletegameTemplate(teacherId, id) {
         try {
             // Check if the quiz template exists and belongs to the teacher
-            const existingTemplate = await prisma_1.prisma.quizTemplate.findFirst({
+            const existingTemplate = await prisma_1.prisma.gameTemplate.findFirst({
                 where: {
                     id,
                     creatorTeacherId: teacherId
@@ -182,7 +182,7 @@ class QuizTemplateService {
                 throw new Error(`Quiz template with ID ${id} not found or you don't have permission to delete it`);
             }
             // Delete the quiz template
-            await prisma_1.prisma.quizTemplate.delete({
+            await prisma_1.prisma.gameTemplate.delete({
                 where: { id }
             });
             return { success: true };
@@ -195,12 +195,12 @@ class QuizTemplateService {
     /**
      * Add a question to a quiz template
      */
-    async addQuestionToQuizTemplate(teacherId, quizTemplateId, questionUid, sequence) {
+    async addQuestionTogameTemplate(teacherId, gameTemplateId, questionUid, sequence) {
         try {
             // Check if the quiz template exists and belongs to the teacher
-            const quizTemplate = await prisma_1.prisma.quizTemplate.findFirst({
+            const gameTemplate = await prisma_1.prisma.gameTemplate.findFirst({
                 where: {
-                    id: quizTemplateId,
+                    id: gameTemplateId,
                     creatorTeacherId: teacherId
                 },
                 include: {
@@ -212,8 +212,8 @@ class QuizTemplateService {
                     }
                 }
             });
-            if (!quizTemplate) {
-                throw new Error(`Quiz template with ID ${quizTemplateId} not found or you don't have permission to update it`);
+            if (!gameTemplate) {
+                throw new Error(`Quiz template with ID ${gameTemplateId} not found or you don't have permission to update it`);
             }
             // Check if the question exists
             const question = await prisma_1.prisma.question.findUnique({
@@ -224,20 +224,20 @@ class QuizTemplateService {
             }
             // If no sequence is provided, add the question at the end
             let nextSequence = 1;
-            if (quizTemplate.questions.length > 0) {
-                nextSequence = quizTemplate.questions[0].sequence + 1;
+            if (gameTemplate.questions.length > 0) {
+                nextSequence = gameTemplate.questions[0].sequence + 1;
             }
             const actualSequence = sequence || nextSequence;
             // Add the question to the quiz template
-            await prisma_1.prisma.questionsInQuizTemplate.create({
+            await prisma_1.prisma.questionsInGameTemplate.create({
                 data: {
-                    quizTemplateId,
+                    gameTemplateId,
                     questionUid,
                     sequence: actualSequence
                 }
             });
             // Return the updated quiz template
-            return this.getQuizTemplateById(quizTemplateId, true);
+            return this.getgameTemplateById(gameTemplateId, true);
         }
         catch (error) {
             logger.error({ error }, 'Error adding question to quiz template');
@@ -247,29 +247,29 @@ class QuizTemplateService {
     /**
      * Remove a question from a quiz template
      */
-    async removeQuestionFromQuizTemplate(teacherId, quizTemplateId, questionUid) {
+    async removeQuestionFromgameTemplate(teacherId, gameTemplateId, questionUid) {
         try {
             // Check if the quiz template exists and belongs to the teacher
-            const quizTemplate = await prisma_1.prisma.quizTemplate.findFirst({
+            const gameTemplate = await prisma_1.prisma.gameTemplate.findFirst({
                 where: {
-                    id: quizTemplateId,
+                    id: gameTemplateId,
                     creatorTeacherId: teacherId
                 }
             });
-            if (!quizTemplate) {
-                throw new Error(`Quiz template with ID ${quizTemplateId} not found or you don't have permission to update it`);
+            if (!gameTemplate) {
+                throw new Error(`Quiz template with ID ${gameTemplateId} not found or you don't have permission to update it`);
             }
             // Delete the question from the quiz template
-            await prisma_1.prisma.questionsInQuizTemplate.delete({
+            await prisma_1.prisma.questionsInGameTemplate.delete({
                 where: {
-                    quizTemplateId_questionUid: {
-                        quizTemplateId,
+                    gameTemplateId_questionUid: {
+                        gameTemplateId,
                         questionUid
                     }
                 }
             });
             // Return the updated quiz template
-            return this.getQuizTemplateById(quizTemplateId, true);
+            return this.getgameTemplateById(gameTemplateId, true);
         }
         catch (error) {
             logger.error({ error }, 'Error removing question from quiz template');
@@ -279,24 +279,24 @@ class QuizTemplateService {
     /**
      * Update the sequence of questions in a quiz template
      */
-    async updateQuestionSequence(teacherId, quizTemplateId, updates) {
+    async updateQuestionSequence(teacherId, gameTemplateId, updates) {
         try {
             // Check if the quiz template exists and belongs to the teacher
-            const quizTemplate = await prisma_1.prisma.quizTemplate.findFirst({
+            const gameTemplate = await prisma_1.prisma.gameTemplate.findFirst({
                 where: {
-                    id: quizTemplateId,
+                    id: gameTemplateId,
                     creatorTeacherId: teacherId
                 }
             });
-            if (!quizTemplate) {
-                throw new Error(`Quiz template with ID ${quizTemplateId} not found or you don't have permission to update it`);
+            if (!gameTemplate) {
+                throw new Error(`Quiz template with ID ${gameTemplateId} not found or you don't have permission to update it`);
             }
             // Update each question sequence
             for (const update of updates) {
-                await prisma_1.prisma.questionsInQuizTemplate.update({
+                await prisma_1.prisma.questionsInGameTemplate.update({
                     where: {
-                        quizTemplateId_questionUid: {
-                            quizTemplateId,
+                        gameTemplateId_questionUid: {
+                            gameTemplateId,
                             questionUid: update.questionUid
                         }
                     },
@@ -306,7 +306,7 @@ class QuizTemplateService {
                 });
             }
             // Return the updated quiz template
-            return this.getQuizTemplateById(quizTemplateId, true);
+            return this.getgameTemplateById(gameTemplateId, true);
         }
         catch (error) {
             logger.error({ error }, 'Error updating question sequence in quiz template');
@@ -314,4 +314,4 @@ class QuizTemplateService {
         }
     }
 }
-exports.QuizTemplateService = QuizTemplateService;
+exports.gameTemplateService = gameTemplateService;

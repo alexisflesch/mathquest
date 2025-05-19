@@ -30,11 +30,11 @@ socket.on('error', (error) => {
 });
 
 // Join a lobby when user enters an access code
-function joinLobby(accessCode, username, playerId, avatarUrl = null) {
+function joinLobby(accessCode, username, userId, avatarUrl = null) {
   socket.emit('join_lobby', {
     accessCode,
     username,
-    playerId,
+    userId,
     avatarUrl
   });
 }
@@ -83,10 +83,10 @@ socket.on('redirect_to_game', (data) => {
 document.getElementById('join-button').addEventListener('click', () => {
   const accessCode = document.getElementById('access-code-input').value;
   const username = document.getElementById('username-input').value;
-  // Assuming playerId is stored in localStorage from previous registration
-  const playerId = localStorage.getItem('playerId');
+  // Assuming userId is stored in localStorage from previous registration
+  const userId = localStorage.getItem('userId');
   
-  joinLobby(accessCode, username, playerId);
+  joinLobby(accessCode, username, userId);
 });
 
 document.getElementById('leave-button').addEventListener('click', () => {

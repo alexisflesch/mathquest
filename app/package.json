@@ -21,5 +21,8 @@
     "@types/node": "^22.15.17",
     "concurrently": "^8.2.2",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "zod": "^3.24.4"
   }
 }

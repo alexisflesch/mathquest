@@ -35,6 +35,8 @@ jest.mock('@/utils/logger', () => {
 });
 
 describe('QuestionService', () => {
+    jest.setTimeout(3000);
+
     let questionService: QuestionService;
     const mockTeacherId = 'teacher-123';
 
@@ -48,7 +50,8 @@ describe('QuestionService', () => {
             const mockQuestionData: QuestionCreationData = {
                 title: 'Test Question',
                 text: 'What is 2+2?',
-                responses: { options: [{ id: 1, text: '4', correct: true }, { id: 2, text: '5', correct: false }] },
+                answerOptions: ['4', '5'],
+                correctAnswers: [true, false],
                 questionType: 'multiple_choice_single_answer',
                 discipline: 'math',
                 themes: ['arithmetic', 'addition'],
@@ -72,7 +75,8 @@ describe('QuestionService', () => {
                 data: expect.objectContaining({
                     title: mockQuestionData.title,
                     text: mockQuestionData.text,
-                    responses: mockQuestionData.responses,
+                    answerOptions: mockQuestionData.answerOptions,
+                    correctAnswers: mockQuestionData.correctAnswers,
                     questionType: mockQuestionData.questionType,
                     discipline: mockQuestionData.discipline,
                     themes: mockQuestionData.themes,
@@ -85,7 +89,8 @@ describe('QuestionService', () => {
         it('should handle errors during question creation', async () => {
             const mockQuestionData: QuestionCreationData = {
                 text: 'What is 2+2?',
-                responses: { options: [] },
+                answerOptions: ['4', '5'],
+                correctAnswers: [true, false],
                 questionType: 'multiple_choice_single_answer',
                 discipline: 'math',
                 themes: ['arithmetic']
@@ -103,7 +108,8 @@ describe('QuestionService', () => {
                 uid: 'question-123',
                 title: 'Test Question',
                 text: 'What is 2+2?',
-                responses: { options: [] },
+                answerOptions: ['4', '5'],
+                correctAnswers: [true, false],
                 questionType: 'multiple_choice_single_answer',
                 discipline: 'math',
                 themes: ['arithmetic'],
@@ -238,7 +244,8 @@ describe('QuestionService', () => {
                 title: 'Old Title',
                 difficulty: 1,
                 text: 'What is 2+2?',
-                responses: { options: [] },
+                answerOptions: ['4', '5'],
+                correctAnswers: [true, false],
                 questionType: 'multiple_choice_single_answer',
                 discipline: 'math',
                 themes: ['arithmetic']

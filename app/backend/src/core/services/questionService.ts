@@ -7,7 +7,8 @@ const logger = createLogger('QuestionService');
 export interface QuestionCreationData {
     title?: string;
     text: string;
-    responses: any; // JSON - depends on question type
+    answerOptions: string[]; // Array of possible answers 
+    correctAnswers: boolean[]; // Array of booleans indicating which answers are correct
     questionType: string;
     discipline: string;
     themes: string[];
@@ -38,7 +39,8 @@ export class QuestionService {
                 data: {
                     title: data.title,
                     text: data.text,
-                    responses: data.responses,
+                    answerOptions: data.answerOptions,
+                    correctAnswers: data.correctAnswers,
                     questionType: data.questionType,
                     discipline: data.discipline,
                     themes: data.themes,

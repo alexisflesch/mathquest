@@ -12,7 +12,7 @@ These events are used for players joining and participating in active games.
   ```typescript
   {
     accessCode: string;     // The unique code for the game
-    playerId: string;       // Unique identifier for the player
+    userId: string;       // Unique identifier for the player
     username: string;       // Display name for the player
     avatarUrl?: string;     // Optional URL to player's avatar image
   }
@@ -79,7 +79,7 @@ These events are used for players joining and participating in active games.
   {
     id: string;             // Socket ID of new participant
     username: string;       // Display name of new participant
-    playerId: string;       // Unique ID of new participant
+    userId: string;       // Unique ID of new participant
     avatarUrl?: string;     // Optional avatar URL
   }
   ```
@@ -98,7 +98,7 @@ These events are used for players joining and participating in active games.
     participants: Array<{
       id: string;           // Socket ID of participant
       username: string;     // Display name
-      playerId: string;     // Unique identifier
+      userId: string;     // Unique identifier
       score: number;        // Current score
       avatarUrl?: string;   // Optional avatar URL
     }>;
@@ -116,7 +116,7 @@ These events are used for players joining and participating in active games.
   ```typescript
   {
     leaderboard: Array<{
-      playerId: string;     // Unique player ID
+      userId: string;     // Unique player ID
       username: string;     // Display name
       score: number;        // Current total score
       avatarUrl?: string;   // Optional avatar URL
@@ -129,7 +129,7 @@ These events are used for players joining and participating in active games.
   {
     accessCode: string;     // Game access code
     leaderboard: Array<{    // Final leaderboard
-      playerId: string;
+      userId: string;
       username: string;
       score: number;
       avatarUrl?: string;

@@ -103,7 +103,7 @@ export interface JoinTournamentPayload {
     username?: string; // Renamed from username
     avatar?: string;
     isDeferred?: boolean; // Renamed from isDiffered
-    playerId?: string; // Renamed from joueurId
+    userId?: string; // Renamed from joueurId
     classId?: string;
     cookieId?: string; // Renamed from cookie_id
 }

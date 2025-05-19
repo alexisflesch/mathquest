@@ -1,11 +1,10 @@
-
 import express from 'express';
 import teachersRouter from './teachers';
 import playersRouter from './players';
 import questionsRouter from './questions';
-import quizTemplatesRouter from './quizTemplates';
 import gamesRouter from './games';
 import gameControlRouter from './gameControl';
+import quizTemplatesRouter from './quizTemplates';
 
 const router = express.Router();
 
@@ -19,7 +18,7 @@ router.use('/players', playersRouter);
 router.use('/questions', questionsRouter);
 
 // Mount the quiz templates router
-router.use('/quiz-templates', quizTemplatesRouter);
+router.use('/game-templates', quizTemplatesRouter);
 
 // Mount the games router
 router.use('/games', gamesRouter);

@@ -1,21 +1,23 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
-import http from 'http';
+import * as http from 'http';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import { socketAuthMiddleware } from './middleware/socketAuth';
 import { registerConnectionHandlers } from './handlers/connectionHandlers';
+import { projectorHandler } from './handlers/projectorHandler';
+import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 
 // Create a socket-specific logger
 const logger = createLogger('SocketIO');
 
-let io: SocketIOServer | null = null;
+let io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null = null;
 
 /**
  * Initialize Socket.IO server with Redis adapter
  * @param server HTTP server instance to attach Socket.IO to
  */
-export function initializeSocketIO(server: http.Server): SocketIOServer {
+export function initializeSocketIO(server: http.Server): SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> {
     if (io) {
         logger.warn('Socket.IO server already initialized');
         return io;
@@ -25,7 +27,7 @@ export function initializeSocketIO(server: http.Server): SocketIOServer {
     const subClient = redisClient.duplicate();
 
     // Create Socket.IO server with CORS configuration
-    io = new SocketIOServer(server, {
+    io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
         cors: {
             // Allow connections from frontend in dev and prod
             origin: process.env.NODE_ENV === 'production'
@@ -61,7 +63,7 @@ export function initializeSocketIO(server: http.Server): SocketIOServer {
  * Get the Socket.IO server instance
  * @returns The Socket.IO server instance or null if not initialized
  */
-export function getIO(): SocketIOServer | null {
+export function getIO(): SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null {
     return io;
 }
 
@@ -70,19 +72,26 @@ export function getIO(): SocketIOServer | null {
  * This is used for testing to configure a server that's created outside the normal startup flow
  * @param socketServer The Socket.IO server to configure
  */
-export function configureSocketServer(socketServer: SocketIOServer): void {
+export function configureSocketServer(socketServer: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
     // If we're already tracking an instance, log a warning
     if (io && io !== socketServer) {
         logger.warn('Configuring a new Socket.IO server while another one exists');
     }
-
     io = socketServer;
+    // --- Ensure middleware is applied in test/configure mode ---
+    io.use(socketAuthMiddleware);
 }
 
 /**
  * Register all socket event handlers
  * @param socketServer The Socket.IO server to register handlers on
  */
-export function registerHandlers(socketServer: SocketIOServer): void {
+export function registerHandlers(socketServer: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
     registerConnectionHandlers(socketServer);
+}
+
+export function setupSocketHandlers(io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) {
+    io.on('connection', (socket) => {
+        projectorHandler(io, socket);
+    });
 }

@@ -18,11 +18,12 @@ module.exports = {
     // Automatically clear mock calls and instances between every test
     clearMocks: true,
     // Setup global test environment
-    globalSetup: '<rootDir>/tests/support/globalSetup.js',
-    globalTeardown: '<rootDir>/tests/support/globalTeardown.js',
+    globalSetup: '<rootDir>/tests/support/globalSetup.ts',
+    globalTeardown: '<rootDir>/tests/support/globalTeardown.ts',
     // Module name mapper for path aliases
     moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1'
+        '^@/(.*)$': '<rootDir>/src/$1',
+        '^@shared/(.*)$': '<rootDir>/../shared/$1'
     },
     modulePaths: ['<rootDir>'],
     // Prevent running the same tests in parallel to avoid port conflicts

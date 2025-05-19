@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
 import { GameParticipantService } from '@/core/services/gameParticipantService';
-import { teacherAuth } from '@/middleware/auth';
+import { GameTemplateService } from '@/core/services/gameTemplateService';
+import { teacherAuth, optionalAuth } from '@/middleware/auth';
 import createLogger from '@/utils/logger';
 import gameStateService from '@/core/gameStateService';
 
@@ -38,48 +39,79 @@ export const __setGameParticipantServiceForTesting = (mockService: GameParticipa
 };
 
 /**
- * Create a new game instance (teacher only)
+ * Create a new game instance (quiz, tournament, or practice)
  * POST /api/v1/games
- * Requires teacher authentication
+ * Allows teacher or student authentication
  */
-router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/', optionalAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
-            res.status(401).json({ error: 'Teacher authentication required' });
-            return;
-        }
-
         const {
             name,
-            quizTemplateId,
+            gameTemplateId,
             playMode,
-            settings
+            settings,
+            gradeLevel,
+            discipline,
+            themes,
+            nbOfQuestions
         } = req.body;
 
-        // Basic validation
-        if (!name || !quizTemplateId || !playMode) {
+        // Strict playMode values
+        const validPlayModes = ['quiz', 'tournament', 'practice'];
+        if (!playMode || !validPlayModes.includes(playMode)) {
             res.status(400).json({
-                error: 'Required fields missing',
-                required: ['name', 'quizTemplateId', 'playMode']
-            });
-            return;
-        }
-
-        // Valid playMode values
-        const validPlayModes = ['class', 'tournament', 'practice'];
-        if (!validPlayModes.includes(playMode)) {
-            res.status(400).json({
-                error: 'Invalid playMode value',
+                error: 'Invalid or missing playMode value',
                 allowedValues: validPlayModes
             });
             return;
         }
 
-        const gameInstance = await getGameInstanceService().createGameInstance(req.user.teacherId, {
+        // Use unified user model
+        let userId: string | undefined = undefined;
+        let role: string | undefined = undefined;
+        if (req.user) {
+            userId = req.user.userId;
+            role = req.user.role;
+        }
+        if (!userId) {
+            res.status(401).json({ error: 'Authentication required (teacher or student)' });
+            return;
+        }
+
+        let finalgameTemplateId = gameTemplateId;
+        // If no gameTemplateId but student tournament params are provided, create GameTemplate on-the-fly
+        if (!gameTemplateId && playMode === 'tournament' && gradeLevel && discipline && Array.isArray(themes) && nbOfQuestions) {
+            try {
+                const gameTemplateService = new GameTemplateService();
+                const template = await gameTemplateService.createStudentGameTemplate({
+                    userId: userId!,
+                    gradeLevel,
+                    discipline,
+                    themes,
+                    nbOfQuestions
+                });
+                finalgameTemplateId = template.id;
+            } catch (err: any) {
+                res.status(400).json({ error: err.message || 'Failed to create game template' });
+                return;
+            }
+        }
+
+        // Basic validation for required fields
+        if (!name || !finalgameTemplateId || !playMode) {
+            res.status(400).json({
+                error: 'Required fields missing',
+                required: ['name', 'gameTemplateId', 'playMode']
+            });
+            return;
+        }
+
+        const gameInstance = await getGameInstanceService().createGameInstanceUnified({
             name,
-            quizTemplateId,
+            gameTemplateId: finalgameTemplateId,
             playMode,
-            settings
+            settings,
+            initiatorUserId: userId
         });
 
         res.status(201).json({ gameInstance });
@@ -127,14 +159,14 @@ router.get('/:accessCode', async (req: Request, res: Response): Promise<void> =>
 router.post('/:accessCode/join', async (req: Request, res: Response): Promise<void> => {
     try {
         const { accessCode } = req.params;
-        const { playerId } = req.body;
+        const { userId } = req.body;
 
-        if (!playerId) {
+        if (!userId) {
             res.status(400).json({ error: 'Player ID is required' });
             return;
         }
 
-        const joinResult = await getGameParticipantService().joinGame(playerId, accessCode);
+        const joinResult = await getGameParticipantService().joinGame(userId, accessCode);
 
         if (!joinResult.success) {
             res.status(400).json({ error: joinResult.error });
@@ -157,22 +189,20 @@ router.post('/:accessCode/join', async (req: Request, res: Response): Promise<vo
  * PUT /api/v1/games/:id/status
  * Requires teacher authentication
  */
-router.put('/:id/status', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.put('/:id/status', optionalAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
-            res.status(401).json({ error: 'Teacher authentication required' });
+        const user = req.user;
+        const studentId = req.headers['x-student-id'] as string | undefined;
+        if (!user && !studentId) {
+            res.status(401).json({ error: 'Authentication required' });
             return;
         }
-
         const { id } = req.params;
         const { status, currentQuestionIndex } = req.body;
-
         if (!status) {
             res.status(400).json({ error: 'Status is required' });
             return;
         }
-
-        // Valid status values
         const validStatuses = ['pending', 'active', 'paused', 'completed', 'archived'];
         if (!validStatuses.includes(status)) {
             res.status(400).json({
@@ -181,25 +211,21 @@ router.put('/:id/status', teacherAuth, async (req: Request, res: Response): Prom
             });
             return;
         }
-
-        // Verify the game belongs to this teacher
         const gameInstance = await getGameInstanceService().getGameInstanceById(id);
-
         if (!gameInstance) {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        // Only the creator (teacher or student) can update
+        const isCreator = user && user.userId && gameInstance.initiatorUserId === user.userId;
+        if (!isCreator) {
             res.status(403).json({ error: 'You do not have permission to update this game' });
             return;
         }
-
         const updatedGame = await getGameInstanceService().updateGameStatus(id, {
             status,
             currentQuestionIndex
         });
-
         res.status(200).json({ gameInstance: updatedGame });
     } catch (error) {
         logger.error({ error }, 'Error updating game status');
@@ -210,35 +236,31 @@ router.put('/:id/status', teacherAuth, async (req: Request, res: Response): Prom
 /**
  * Update game status (teacher only)
  */
-router.patch('/:id/status', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.patch('/:id/status', optionalAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
-            res.status(401).json({ error: 'Teacher authentication required' });
+        const user = req.user;
+        const studentId = req.headers['x-student-id'] as string | undefined;
+        if (!user && !studentId) {
+            res.status(401).json({ error: 'Authentication required' });
             return;
         }
-
         const { id } = req.params;
         const { status, currentQuestionIndex } = req.body;
-
-        // Validate required fields
         if (!status) {
             res.status(400).json({ error: 'Status is required' });
             return;
         }
-
-        // Verify the game belongs to this teacher
         const gameInstance = await getGameInstanceService().getGameInstanceById(id);
-
         if (!gameInstance) {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-
-        if (gameInstance.initiatorTeacherId !== req.user.teacherId) {
+        // Only the creator (teacher or student) can update
+        const isCreator = user && user.userId && gameInstance.initiatorUserId === user.userId;
+        if (!isCreator) {
             res.status(403).json({ error: 'You do not have permission to update this game' });
             return;
         }
-
         // If changing to active status, initialize game state in Redis
         if (status === 'active' && gameInstance.status !== 'active') {
             const gameState = await gameStateService.initializeGameState(id);
@@ -248,12 +270,10 @@ router.patch('/:id/status', teacherAuth, async (req: Request, res: Response): Pr
             }
             logger.info({ gameId: id, accessCode: gameInstance.accessCode }, 'Game state initialized');
         }
-
         const updatedGame = await getGameInstanceService().updateGameStatus(id, {
             status,
             currentQuestionIndex
         });
-
         res.status(200).json({ gameInstance: updatedGame });
     } catch (error) {
         logger.error({ error }, 'Error updating game status');
@@ -262,19 +282,82 @@ router.patch('/:id/status', teacherAuth, async (req: Request, res: Response): Pr
 });
 
 /**
- * Get all active games for a teacher
- * GET /api/v1/games/teacher/active
+ * Update differed mode and window (teacher only)
+ * PATCH /api/v1/games/:id/differed
  * Requires teacher authentication
  */
-router.get('/teacher/active', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.patch('/:id/differed', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });
             return;
         }
 
-        const games = await getGameInstanceService().getTeacherActiveGames(req.user.teacherId);
+        const games = await getGameInstanceService().getTeacherActiveGames(req.user.userId);
 
+        res.status(200).json({ games });
+    } catch (error) {
+        logger.error({ error }, 'Error fetching teacher active games');
+        res.status(500).json({ error: 'An error occurred while fetching active games' });
+    }
+});
+
+/**
+ * GET /api/v1/games/:code/leaderboard
+ * Returns the leaderboard for a given game instance (by access code)
+ */
+router.get('/:code/leaderboard', async (req: Request, res: Response) => {
+    const { code } = req.params;
+    try {
+        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        // Return leaderboard from DB (or empty array if not set)
+        res.json({ leaderboard: gameInstance.leaderboard || [] });
+    } catch (err: any) {
+        logger.error('Failed to fetch leaderboard', err);
+        res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    }
+});
+
+/**
+ * GET /api/v1/games/:code/state
+ * Returns the current question and timer state for a live game (for late joiners)
+ */
+router.get('/:code/state', async (req: Request, res: Response) => {
+    const { code } = req.params;
+    try {
+        // Use gameStateService to get full game state
+        const gameStateRaw = await gameStateService.getFullGameState(code);
+        if (!gameStateRaw || !gameStateRaw.gameState) {
+            res.status(404).json({ error: 'Game not found or not live' });
+            return;
+        }
+        // Return current question, timer, and status
+        const { currentQuestionIndex, questionIds, questionData, timer, status } = gameStateRaw.gameState;
+        res.json({
+            currentQuestionIndex,
+            questionId: questionIds[currentQuestionIndex],
+            questionData,
+            timer,
+            status
+        });
+    } catch (err: any) {
+        logger.error('Failed to fetch game state', err);
+        res.status(500).json({ error: 'Failed to fetch game state' });
+    }
+});
+
+// Add missing route for teacher active games
+router.get('/teacher/active', teacherAuth, async (req: Request, res: Response) => {
+    try {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
+            res.status(401).json({ error: 'Teacher authentication required' });
+            return;
+        }
+        const games = await getGameInstanceService().getTeacherActiveGames(req.user.userId);
         res.status(200).json({ games });
     } catch (error) {
         logger.error({ error }, 'Error fetching teacher active games');

@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "PlayMode" AS ENUM ('class', 'tournament', 'practice');
+CREATE TYPE "PlayMode" AS ENUM ('quiz', 'tournament', 'practice');
 
 -- CreateTable
 CREATE TABLE "teachers" (

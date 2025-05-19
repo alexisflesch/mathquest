@@ -1,6 +1,6 @@
-
 import express, { Request, Response } from 'express';
-import { TeacherService } from '@/core/services/teacherService';
+import { UserService } from '@/core/services/userService';
+import { UserRole } from '@/db/generated/client';
 import { teacherAuth } from '@/middleware/auth';
 import createLogger from '@/utils/logger';
 
@@ -10,18 +10,18 @@ const logger = createLogger('TeachersAPI');
 const router = express.Router();
 
 // Create a singleton instance or allow injection for testing
-let teacherServiceInstance: TeacherService | null = null;
+let userServiceInstance: UserService | null = null;
 
-const getTeacherService = (): TeacherService => {
-    if (!teacherServiceInstance) {
-        teacherServiceInstance = new TeacherService();
+const getUserService = (): UserService => {
+    if (!userServiceInstance) {
+        userServiceInstance = new UserService();
     }
-    return teacherServiceInstance;
+    return userServiceInstance;
 };
 
 // For testing purposes only - allows tests to inject a mock service
-export const __setTeacherServiceForTesting = (mockService: TeacherService): void => {
-    teacherServiceInstance = mockService;
+export const __setUserServiceForTesting = (mockService: UserService): void => {
+    userServiceInstance = mockService;
 };
 
 /**
@@ -43,10 +43,12 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const result = await getTeacherService().registerTeacher({
+        // Register the user as a TEACHER
+        const result = await getUserService().registerUser({
             username,
             email,
             password,
+            role: UserRole.TEACHER,
         });
 
         res.status(201).json(result);
@@ -64,7 +66,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 });
 
 /**
- * Login a teacher
+ * Login a teacher (now generic user login)
  * POST /api/v1/teachers/login
  */
 router.post('/login', async (req: Request, res: Response): Promise<void> => {
@@ -77,10 +79,15 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const result = await getTeacherService().loginTeacher({
+        const result = await getUserService().loginUser({
             email,
             password,
         });
+
+        if (result.user.role !== UserRole.TEACHER) {
+            res.status(403).json({ error: 'Not a teacher account' });
+            return;
+        }
 
         res.status(200).json(result);
     } catch (error) {
@@ -105,19 +112,17 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
  */
 router.get('/profile', teacherAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        if (!req.user?.teacherId) {
+        // Expect req.user to have userId (set by auth middleware)
+        if (!req.user?.userId) {
             res.status(401).json({ error: 'Authentication required' });
             return;
         }
-
-        const teacher = await getTeacherService().getTeacherById(req.user.teacherId);
-
-        if (!teacher) {
+        const user = await getUserService().getUserById(req.user.userId);
+        if (!user || user.role !== UserRole.TEACHER) {
             res.status(404).json({ error: 'Teacher not found' });
             return;
         }
-
-        res.status(200).json({ teacher });
+        res.status(200).json({ user });
     } catch (error) {
         logger.error({ error }, 'Error fetching teacher profile');
         res.status(500).json({ error: 'An error occurred fetching the profile' });

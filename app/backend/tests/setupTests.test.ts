@@ -9,6 +9,8 @@ const teardown = async (): Promise<void> => {
 };
 
 describe('Mock environment setup', () => {
+    jest.setTimeout(3000);
+
     beforeAll(async () => {
         await setup();
     });

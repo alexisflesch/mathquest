@@ -25,6 +25,8 @@ jest.mock('@/utils/logger', () => {
 });
 
 describe('GameInstanceService', () => {
+    jest.setTimeout(3000);
+
     let gameInstanceService: GameInstanceService;
     const mockTeacherId = 'teacher-123';
 
@@ -37,21 +39,21 @@ describe('GameInstanceService', () => {
         it('should create a game instance successfully', async () => {
             const mockGameData: GameInstanceCreationData = {
                 name: 'Test Game',
-                quizTemplateId: 'quiz-123',
-                playMode: 'class',
+                gameTemplateId: 'quiz-123',
+                playMode: 'quiz',
                 settings: { timeLimit: 30 }
             };
 
             const mockCreatedGame = {
                 id: 'game-123',
-                initiatorTeacherId: mockTeacherId,
+                initiatorUserId: mockTeacherId, // was 
                 accessCode: 'ABC123',
                 status: 'pending',
                 currentQuestionIndex: null,
                 ...mockGameData,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                quizTemplate: {
+                gameTemplate: {
                     name: 'Test Quiz',
                     themes: ['algebra'],
                     discipline: 'math',
@@ -70,8 +72,8 @@ describe('GameInstanceService', () => {
             expect(prisma.gameInstance.create).toHaveBeenCalledWith({
                 data: expect.objectContaining({
                     name: mockGameData.name,
-                    quizTemplateId: mockGameData.quizTemplateId,
-                    initiatorTeacherId: mockTeacherId,
+                    gameTemplateId: mockGameData.gameTemplateId,
+                    initiatorUserId: mockTeacherId, // was 
                     accessCode: 'ABC123',
                     status: 'pending',
                     playMode: mockGameData.playMode,
@@ -86,8 +88,8 @@ describe('GameInstanceService', () => {
         it('should handle errors during game instance creation', async () => {
             const mockGameData: GameInstanceCreationData = {
                 name: 'Test Game',
-                quizTemplateId: 'quiz-123',
-                playMode: 'class'
+                gameTemplateId: 'quiz-123',
+                playMode: 'quiz'
             };
 
             const mockError = new Error('Database error');
@@ -104,7 +106,7 @@ describe('GameInstanceService', () => {
                 id: 'game-123',
                 name: 'Test Game',
                 accessCode: mockAccessCode,
-                quizTemplate: { name: 'Test Quiz' }
+                gameTemplate: { name: 'Test Quiz' }
             };
 
             (prisma.gameInstance.findUnique as any).mockResolvedValue(mockGameInstance);
@@ -125,7 +127,7 @@ describe('GameInstanceService', () => {
                 id: 'game-123',
                 name: 'Test Game',
                 accessCode: mockAccessCode,
-                quizTemplate: { name: 'Test Quiz' },
+                gameTemplate: { name: 'Test Quiz' },
                 participants: [{ id: 'participant-1', player: { username: 'player1' } }]
             };
 
@@ -157,7 +159,7 @@ describe('GameInstanceService', () => {
             const mockGameInstance = {
                 id: mockId,
                 name: 'Test Game',
-                quizTemplate: { name: 'Test Quiz' }
+                gameTemplate: { name: 'Test Quiz' }
             };
 
             (prisma.gameInstance.findUnique as any).mockResolvedValue(mockGameInstance);
@@ -330,7 +332,7 @@ describe('GameInstanceService', () => {
 
             expect(prisma.gameInstance.findMany).toHaveBeenCalledWith({
                 where: {
-                    initiatorTeacherId: mockTeacherId,
+                    initiatorUserId: mockTeacherId, // was 
                     status: { in: ['pending', 'active', 'paused'] }
                 },
                 include: expect.any(Object),

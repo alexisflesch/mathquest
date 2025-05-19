@@ -1,0 +1,82 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.registerConnectionHandlers = registerConnectionHandlers;
+const logger_1 = __importDefault(require("@/utils/logger"));
+const lobbyHandler_1 = require("./lobbyHandler");
+const gameHandler_1 = __importDefault(require("./gameHandler"));
+const teacherControlHandler_1 = __importDefault(require("./teacherControlHandler"));
+const tournament_1 = require("./tournament");
+// Create a handler-specific logger
+const logger = (0, logger_1.default)('ConnectionHandlers');
+/**
+ * Register connection and disconnection handlers for Socket.IO
+ * @param io Socket.IO server instance
+ */
+function registerConnectionHandlers(io) {
+    io.on('connection', (socket) => {
+        handleConnection(socket);
+        handleDisconnection(socket);
+        // Register feature-specific handlers
+        (0, lobbyHandler_1.registerLobbyHandlers)(io, socket);
+        (0, gameHandler_1.default)(io, socket);
+        (0, teacherControlHandler_1.default)(io, socket);
+        (0, tournament_1.registerTournamentHandlers)(io, socket);
+    });
+}
+/**
+ * Handle new socket connection
+ * @param socket Connected socket
+ */
+function handleConnection(socket) {
+    const { id } = socket;
+    // socket.data is now typed as SocketData
+    // Fix: extract user from socket.data.user if present
+    const user = (socket.data && socket.data.user) ? socket.data.user : (socket.data || { role: 'anonymous' });
+    logger.info({
+        socketId: id,
+        user,
+        address: socket.handshake.address
+    }, 'New socket connection established');
+    // Build user object for event, using userId for all roles (players, teachers, admins)
+    let userPayload = {};
+    userPayload = {
+        role: user.role,
+        userId: user.id || user.userId, // always use userId for all roles
+        username: user.username
+    };
+    // Remove undefined keys for clean payload
+    Object.keys(userPayload).forEach(key => userPayload[key] === undefined && delete userPayload[key]);
+    // Emit welcome event to the client - this will be type-checked
+    socket.emit('connection_established', {
+        socketId: id,
+        timestamp: new Date().toISOString(),
+        user: userPayload
+    });
+    // Register any other connection-specific event handlers here
+}
+/**
+ * Handle socket disconnection
+ * @param socket Connected socket
+ */
+function handleDisconnection(socket) {
+    socket.on('disconnect', (reason) => {
+        const user = socket.data || { role: 'anonymous' };
+        logger.info({
+            socketId: socket.id,
+            user,
+            reason
+        }, 'Socket disconnected');
+        // Example: If the socket was in a game, notify other players
+        if (socket.data.accessCode && socket.data.userId) {
+            // The specific event 'player_left_game' and its payload are defined in ServerToClientEvents
+            socket.to(socket.data.accessCode).emit('player_left_game', {
+                userId: socket.data.userId,
+                socketId: socket.id
+            });
+        }
+        // Add any other cleanup logic needed on disconnection
+    });
+}
