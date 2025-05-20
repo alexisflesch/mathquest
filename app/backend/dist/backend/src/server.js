@@ -13,7 +13,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 const api_1 = __importDefault(require("@/api"));
 const logger_1 = __importDefault(require("@/utils/logger"));
-const sockets_1 = require("@/sockets");
+const sockets_1 = require("@/sockets"); // Import getIO
 // Create a server-specific logger
 const logger = (0, logger_1.default)('Server');
 // Load environment variables from the root .env file
@@ -30,8 +30,14 @@ app.use(express_1.default.json());
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
-// Mount API routes
-app.use('/api', api_1.default);
+// Mount API routes, but ensure /api/socket.io is not intercepted by apiRouter
+app.use('/api', (req, res, next) => {
+    if (req.path.startsWith('/socket.io')) { // req.path is relative to the mount point '/api'
+        return next('router'); // Skip this router instance for socket.io paths
+    }
+    // Ensure apiRouter is treated as a middleware function
+    return (0, api_1.default)(req, res, next); // Process other /api paths with apiRouter
+});
 // Global error handler
 app.use((err, req, res, next) => {
     logger.error({ err, req: { method: req.method, url: req.url } }, 'Unhandled error');
@@ -40,7 +46,9 @@ app.use((err, req, res, next) => {
 });
 const server = http_1.default.createServer(app);
 // Initialize Socket.IO with Redis adapter
-(0, sockets_1.initializeSocketIO)(server);
+if (process.env.NODE_ENV !== 'test') {
+    (0, sockets_1.initializeSocketIO)(server);
+}
 // Only start the server if this file is run directly (not imported as a module)
 // This helps prevent port conflicts during testing
 if (process.env.NODE_ENV !== 'test') {
@@ -57,11 +65,11 @@ else {
 function setupServer(testPort) {
     const serverInstance = http_1.default.createServer(app);
     // Initialize Socket.IO for test server also
-    (0, sockets_1.initializeSocketIO)(serverInstance);
+    const ioInstance = (0, sockets_1.initializeSocketIO)(serverInstance);
     if (testPort) {
         serverInstance.listen(testPort);
         logger.debug(`Test server started on port ${testPort}`);
     }
-    return serverInstance;
+    return { httpServer: serverInstance, io: ioInstance };
 }
 exports.default = server;

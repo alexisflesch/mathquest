@@ -28,13 +28,17 @@ var LogLevel;
     LogLevel[LogLevel["NONE"] = 4] = "NONE";
 })(LogLevel || (LogLevel = {}));
 // Set minimum log level based on environment (can be overridden via env var)
-// Default level is DEBUG in development, INFO in production, and DEBUG in test
+// Default level is DEBUG in development, INFO in production, and WARN in test
 const DEFAULT_LOG_LEVEL = process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
-const MIN_LOG_LEVEL = process.env.NODE_ENV === 'test'
-    ? LogLevel.DEBUG // Always print debug logs in test
+let MIN_LOG_LEVEL = process.env.NODE_ENV === 'test'
+    ? LogLevel.WARN // Only print warn+ in test by default
     : (process.env.LOG_LEVEL
         ? (LogLevel[process.env.LOG_LEVEL.toUpperCase()] ?? DEFAULT_LOG_LEVEL)
         : DEFAULT_LOG_LEVEL);
+// Allow override from global (for test patching)
+if (typeof global !== 'undefined' && global.MIN_LOG_LEVEL !== undefined) {
+    MIN_LOG_LEVEL = global.MIN_LOG_LEVEL;
+}
 // ANSI color codes for different log levels
 const COLORS = {
     DEBUG: '\x1b[36m', // Cyan

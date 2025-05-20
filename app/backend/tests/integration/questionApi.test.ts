@@ -29,7 +29,7 @@ describe('Question API Integration Tests', () => {
 
     beforeAll(async () => {
         // Use the imported app from server.ts and create a test server
-        server = setupServer(3999); // Use test port 3999
+        server = setupServer(3999).httpServer; // Use test port 3999
 
         mockQuestionService = {
             createQuestion: jest.fn(),

@@ -2,9 +2,11 @@ import express, { Request, Response } from 'express';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
 import { GameParticipantService } from '@/core/services/gameParticipantService';
 import { GameTemplateService } from '@/core/services/gameTemplateService';
+// Import specific functions from gameStateService
+import { initializeGameState, getFullGameState, getFormattedLeaderboard } from '@/core/gameStateService';
+import { redisClient } from '@/config/redis';
 import { teacherAuth, optionalAuth } from '@/middleware/auth';
 import createLogger from '@/utils/logger';
-import gameStateService from '@/core/gameStateService';
 
 // Create a route-specific logger
 const logger = createLogger('GamesAPI');
@@ -113,6 +115,9 @@ router.post('/', optionalAuth, async (req: Request, res: Response): Promise<void
             settings,
             initiatorUserId: userId
         });
+
+        // Initialize game state in Redis immediately after game instance creation
+        await initializeGameState(gameInstance.id);
 
         res.status(201).json({ gameInstance });
     } catch (error) {
@@ -263,7 +268,8 @@ router.patch('/:id/status', optionalAuth, async (req: Request, res: Response): P
         }
         // If changing to active status, initialize game state in Redis
         if (status === 'active' && gameInstance.status !== 'active') {
-            const gameState = await gameStateService.initializeGameState(id);
+            // Use the imported initializeGameState function directly
+            const gameState = await initializeGameState(id);
             if (!gameState) {
                 res.status(500).json({ error: 'Failed to initialize game state' });
                 return;
@@ -314,10 +320,16 @@ router.get('/:code/leaderboard', async (req: Request, res: Response) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        // Return leaderboard from DB (or empty array if not set)
-        res.json({ leaderboard: gameInstance.leaderboard || [] });
-    } catch (err: any) {
-        logger.error('Failed to fetch leaderboard', err);
+        // Use the new getFormattedLeaderboard function
+        const leaderboard = await getFormattedLeaderboard(code);
+
+        // If gameInstance.leaderboard is the source of truth and needs to be updated,
+        // consider doing that here or in a separate sync process.
+        // For now, we return the Redis-based leaderboard directly.
+
+        res.json(leaderboard);
+    } catch (error) {
+        logger.error('Failed to fetch leaderboard', error);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
     }
 });
@@ -329,8 +341,8 @@ router.get('/:code/leaderboard', async (req: Request, res: Response) => {
 router.get('/:code/state', async (req: Request, res: Response) => {
     const { code } = req.params;
     try {
-        // Use gameStateService to get full game state
-        const gameStateRaw = await gameStateService.getFullGameState(code);
+        // Use the imported getFullGameState function directly
+        const gameStateRaw = await getFullGameState(code);
         if (!gameStateRaw || !gameStateRaw.gameState) {
             res.status(404).json({ error: 'Game not found or not live' });
             return;

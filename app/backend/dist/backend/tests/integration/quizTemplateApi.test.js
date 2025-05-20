@@ -11,14 +11,18 @@ const globals_1 = require("@jest/globals");
 globals_1.jest.mock('@/middleware/auth', () => ({
     teacherAuth: (req, res, next) => {
         req.user = {
+            userId: 'teacher-123',
             teacherId: 'teacher-123',
+            role: 'TEACHER',
             username: 'testteacher'
         };
         next();
     },
     optionalAuth: (req, res, next) => {
         req.user = {
+            userId: 'teacher-123',
             teacherId: 'teacher-123',
+            role: 'TEACHER',
             username: 'testteacher'
         };
         next();
@@ -29,7 +33,7 @@ describe('gameTemplate API Integration Tests', () => {
     let server;
     let mockGameTemplateService;
     beforeAll(async () => {
-        server = (0, server_1.setupServer)(4000); // Use test port 4000
+        server = (0, server_1.setupServer)(4000).httpServer; // Use test port 4000
         mockGameTemplateService = {
             creategameTemplate: globals_1.jest.fn(),
             getgameTemplateById: globals_1.jest.fn(),
@@ -59,7 +63,7 @@ describe('gameTemplate API Integration Tests', () => {
             };
             const createdQuiz = {
                 id: 'quiz-123',
-                creatorTeacherId: 'teacher-123',
+                creatorId: 'teacher-123',
                 ...quizData,
                 createdAt: new Date().toISOString(),
                 questions: []
@@ -92,7 +96,7 @@ describe('gameTemplate API Integration Tests', () => {
             const mockQuiz = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: 'teacher-123',
+                creatorId: 'teacher-123',
                 themes: ['algebra'],
                 questions: []
             };
@@ -116,7 +120,7 @@ describe('gameTemplate API Integration Tests', () => {
             const mockQuiz = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: 'different-teacher',
+                creatorId: 'different-teacher',
                 themes: ['algebra'],
                 questions: []
             };
@@ -131,8 +135,8 @@ describe('gameTemplate API Integration Tests', () => {
         it('should get quiz templates with filters and pagination', async () => {
             const mockResult = {
                 gameTemplates: [
-                    { id: 'quiz-1', name: 'Quiz 1', creatorTeacherId: 'teacher-123' },
-                    { id: 'quiz-2', name: 'Quiz 2', creatorTeacherId: 'teacher-123' }
+                    { id: 'quiz-1', name: 'Quiz 1', creatorId: 'teacher-123' },
+                    { id: 'quiz-2', name: 'Quiz 2', creatorId: 'teacher-123' }
                 ],
                 total: 2,
                 page: 1,
@@ -156,7 +160,7 @@ describe('gameTemplate API Integration Tests', () => {
             };
             const updatedQuiz = {
                 id: 'quiz-123',
-                creatorTeacherId: 'teacher-123',
+                creatorId: 'teacher-123',
                 ...updateData,
                 questions: []
             };
@@ -210,7 +214,7 @@ describe('gameTemplate API Integration Tests', () => {
             const updatedQuiz = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: 'teacher-123',
+                creatorId: 'teacher-123',
                 questions: [
                     {
                         gameTemplateId: 'quiz-123',
@@ -243,7 +247,7 @@ describe('gameTemplate API Integration Tests', () => {
             const updatedQuiz = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: 'teacher-123',
+                creatorId: 'teacher-123',
                 questions: [] // Question removed
             };
             mockGameTemplateService.removeQuestionFromgameTemplate.mockResolvedValue(updatedQuiz);
@@ -264,7 +268,7 @@ describe('gameTemplate API Integration Tests', () => {
             const updatedQuiz = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: 'teacher-123',
+                creatorId: 'teacher-123',
                 questions: [
                     {
                         gameTemplateId: 'quiz-123',

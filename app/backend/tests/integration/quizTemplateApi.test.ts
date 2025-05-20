@@ -35,7 +35,7 @@ describe('gameTemplate API Integration Tests', () => {
     let mockGameTemplateService: jest.Mocked<GameTemplateService>;
 
     beforeAll(async () => {
-        server = setupServer(4000); // Use test port 4000
+        server = setupServer(4000).httpServer; // Use test port 4000
 
         mockGameTemplateService = {
             creategameTemplate: jest.fn(),

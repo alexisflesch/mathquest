@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initializeSocketIO = initializeSocketIO;
+exports.closeSocketIORedisClients = closeSocketIORedisClients;
 exports.getIO = getIO;
 exports.configureSocketServer = configureSocketServer;
 exports.registerHandlers = registerHandlers;
@@ -15,9 +16,11 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const socketAuth_1 = require("./middleware/socketAuth");
 const connectionHandlers_1 = require("./handlers/connectionHandlers");
 const projectorHandler_1 = require("./handlers/projectorHandler");
+const tournamentHandler_1 = __importDefault(require("./handlers/tournamentHandler")); // Changed to default import
 // Create a socket-specific logger
 const logger = (0, logger_1.default)('SocketIO');
 let io = null;
+let subClient = null;
 /**
  * Initialize Socket.IO server with Redis adapter
  * @param server HTTP server instance to attach Socket.IO to
@@ -28,7 +31,7 @@ function initializeSocketIO(server) {
         return io;
     }
     // Create a duplicate Redis client for subscription
-    const subClient = redis_1.redisClient.duplicate();
+    subClient = redis_1.redisClient.duplicate();
     // Create Socket.IO server with CORS configuration
     io = new socket_io_1.Server(server, {
         cors: {
@@ -55,6 +58,20 @@ function initializeSocketIO(server) {
     (0, connectionHandlers_1.registerConnectionHandlers)(io);
     logger.info('Socket.IO server initialized with Redis adapter');
     return io;
+}
+/**
+ * Cleanup function to close the Redis subClient (for tests)
+ */
+async function closeSocketIORedisClients() {
+    if (subClient) {
+        try {
+            await subClient.quit();
+        }
+        catch (e) {
+            logger.warn('Error closing Socket.IO Redis subClient:', e);
+        }
+        subClient = null;
+    }
 }
 /**
  * Get the Socket.IO server instance
@@ -87,5 +104,6 @@ function registerHandlers(socketServer) {
 function setupSocketHandlers(io) {
     io.on('connection', (socket) => {
         (0, projectorHandler_1.projectorHandler)(io, socket);
+        (0, tournamentHandler_1.default)(io, socket); // Use the imported default handler
     });
 }

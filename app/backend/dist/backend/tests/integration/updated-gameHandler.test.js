@@ -75,6 +75,10 @@ describe('Game Handler (Updated Tests)', () => {
     afterAll(async () => {
         // Clean up server
         await serverCleanup();
+        // Clean up test player dependencies first
+        await prisma_1.prisma.studentProfile.deleteMany({
+            where: { user: { id: 'player-123' } }
+        });
         // Clean up test players
         await prisma_1.prisma.user.deleteMany({
             where: { id: 'player-123' }

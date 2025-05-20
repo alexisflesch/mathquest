@@ -11,12 +11,14 @@ globals_1.jest.mock('@/db/prisma', () => ({
         },
         gameParticipant: {
             findFirst: globals_1.jest.fn(),
-            findUnique: globals_1.jest.fn(),
             create: globals_1.jest.fn(),
-            findMany: globals_1.jest.fn(),
-            update: globals_1.jest.fn()
-        }
-    }
+            findUnique: globals_1.jest.fn(),
+            update: globals_1.jest.fn(), // Add this mock
+        },
+        user: {
+            upsert: globals_1.jest.fn(),
+        },
+    },
 }));
 // Mock the logger
 globals_1.jest.mock('@/utils/logger', () => {
@@ -98,7 +100,9 @@ describe('Game Participant Service', () => {
                 completedAt: null
             });
             const result = await gameParticipantService.joinGame(userId, accessCode);
-            expect(result.success).toBe(true);
+            expect(result.success).toBe(true); // Idempotent join: should return true if already joined
+            // Optionally, check for a message or flag if your service provides it
+            // expect(result.alreadyJoined).toBe(true);
         });
         it('should return error for non-existent game', async () => {
             const userId = 'player-123';
@@ -207,8 +211,9 @@ describe('Game Participant Service', () => {
                             where: { id: userId },
                             create: {
                                 username: `guest-${userId}`,
+                                role: 'STUDENT',
+                                studentProfile: { create: { cookieId: `cookie-${userId}` } },
                                 avatarUrl: null,
-                                cookieId: `cookie-${userId}`
                             }
                         }
                     }

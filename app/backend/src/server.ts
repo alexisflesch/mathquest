@@ -7,7 +7,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import apiRouter from '@/api';
 import createLogger from '@/utils/logger';
-import { initializeSocketIO } from '@/sockets';
+import { initializeSocketIO, getIO } from '@/sockets'; // Import getIO
+import { Server as SocketIOServer } from 'socket.io'; // Import SocketIOServer type
+import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 
 // Create a server-specific logger
 const logger = createLogger('Server');
@@ -30,8 +32,14 @@ app.get('/health', (req: Request, res: Response) => {
     res.status(200).send('OK');
 });
 
-// Mount API routes
-app.use('/api', apiRouter);
+// Mount API routes, but ensure /api/socket.io is not intercepted by apiRouter
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/socket.io')) { // req.path is relative to the mount point '/api'
+        return next('router'); // Skip this router instance for socket.io paths
+    }
+    // Ensure apiRouter is treated as a middleware function
+    return apiRouter(req, res, next); // Process other /api paths with apiRouter
+});
 
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -43,7 +51,9 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 const server = http.createServer(app);
 
 // Initialize Socket.IO with Redis adapter
-initializeSocketIO(server);
+if (process.env.NODE_ENV !== 'test') {
+    initializeSocketIO(server);
+}
 
 // Only start the server if this file is run directly (not imported as a module)
 // This helps prevent port conflicts during testing
@@ -58,17 +68,17 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Helper function for tests to setup and start the server on a specific port
-export function setupServer(testPort?: number): http.Server {
+export function setupServer(testPort?: number): { httpServer: http.Server, io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> } {
     const serverInstance = http.createServer(app);
 
     // Initialize Socket.IO for test server also
-    initializeSocketIO(serverInstance);
+    const ioInstance = initializeSocketIO(serverInstance);
 
     if (testPort) {
         serverInstance.listen(testPort);
         logger.debug(`Test server started on port ${testPort}`);
     }
-    return serverInstance;
+    return { httpServer: serverInstance, io: ioInstance };
 }
 
 export { app };

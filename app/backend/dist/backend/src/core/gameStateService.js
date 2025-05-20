@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getFormattedLeaderboard = getFormattedLeaderboard;
 exports.initializeGameState = initializeGameState;
 exports.setCurrentQuestion = setCurrentQuestion;
 exports.getFullGameState = getFullGameState;
@@ -20,6 +21,77 @@ const GAME_KEY_PREFIX = 'mathquest:game:';
 const GAME_PARTICIPANTS_PREFIX = 'mathquest:game:participants:';
 const GAME_ANSWERS_PREFIX = 'mathquest:game:answers:';
 const GAME_LEADERBOARD_PREFIX = 'mathquest:game:leaderboard:';
+/**
+ * Get formatted leaderboard data for a game
+ *
+ * @param accessCode The game access code
+ * @returns The formatted leaderboard data
+ */
+async function getFormattedLeaderboard(accessCode) {
+    try {
+        const participantsHash = await redis_1.redisClient.hgetall(`${GAME_PARTICIPANTS_PREFIX}${accessCode}`);
+        const participantsFromRedis = participantsHash
+            ? Object.values(participantsHash).map(p => JSON.parse(p))
+            : [];
+        const leaderboardRaw = await redis_1.redisClient.zrevrange(`${GAME_LEADERBOARD_PREFIX}${accessCode}`, 0, -1, 'WITHSCORES');
+        const leaderboardPromises = [];
+        for (let i = 0; i < leaderboardRaw.length; i += 2) {
+            const userId = leaderboardRaw[i];
+            const score = parseInt(leaderboardRaw[i + 1], 10);
+            let playerInfo = participantsFromRedis.find(p => p.userId === userId);
+            if (playerInfo) {
+                leaderboardPromises.push(Promise.resolve({
+                    userId,
+                    username: playerInfo.username,
+                    avatarUrl: playerInfo.avatarUrl,
+                    score
+                }));
+            }
+            else {
+                // Participant not in Redis hash (e.g., disconnected)
+                // Try to fetch from User table in DB as a fallback for username/avatar
+                logger.warn({ accessCode, userId }, "Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.");
+                const userPromise = prisma_1.prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { username: true, avatarUrl: true }
+                }).then(user => {
+                    if (user) {
+                        return {
+                            userId,
+                            username: user.username || 'Unknown Player',
+                            avatarUrl: user.avatarUrl || undefined,
+                            score
+                        };
+                    }
+                    logger.warn({ accessCode, userId }, "User details not found in DB for leaderboard entry.");
+                    return {
+                        userId,
+                        username: 'Unknown Player',
+                        avatarUrl: undefined,
+                        score
+                    };
+                });
+                leaderboardPromises.push(userPromise);
+            }
+        }
+        let leaderboard = await Promise.all(leaderboardPromises);
+        // Sort by score descending, then by username ascending as a tie-breaker
+        leaderboard.sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            return (a.username || '').localeCompare(b.username || '');
+        });
+        // Add rank after sorting
+        leaderboard = leaderboard.map((entry, index) => ({ ...entry, rank: index + 1 }));
+        logger.info({ accessCode, count: leaderboard.length }, "Formatted leaderboard from Redis/DB.");
+        return leaderboard;
+    }
+    catch (error) {
+        logger.error({ accessCode, error }, 'Error fetching formatted leaderboard');
+        return []; // Return empty array on error
+    }
+}
 /**
  * Initialize game state in Redis when a game is activated
  * This should be called when a teacher starts a game
@@ -263,108 +335,114 @@ async function endCurrentQuestion(accessCode) {
  */
 async function calculateScores(accessCode, questionId) {
     try {
-        // Get the question from the database to check correct answers
         const question = await prisma_1.prisma.question.findUnique({
             where: { uid: questionId }
         });
         if (!question) {
-            logger.warn({ accessCode, questionId }, 'Question not found');
+            logger.warn({ accessCode, questionId }, 'Question not found for scoring');
             return false;
         }
-        // Get all answers for this question
-        const answersHash = await redis_1.redisClient.hgetall(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionId}`);
-        if (!answersHash) {
-            logger.warn({ accessCode, questionId }, 'No answers found for this question');
-            return true; // Not an error, just no answers
+        const participantsKey = `${GAME_PARTICIPANTS_PREFIX}${accessCode}`;
+        const leaderboardKey = `${GAME_LEADERBOARD_PREFIX}${accessCode}`; // Definition of leaderboardKey
+        const participantsHash = await redis_1.redisClient.hgetall(participantsKey);
+        if (!participantsHash || Object.keys(participantsHash).length === 0) {
+            logger.warn({ accessCode }, 'No participants found for this game. Cannot calculate scores.');
+            return true; // No participants, so no scores to calculate, not an error.
         }
-        // Get all participants
-        const participantsHash = await redis_1.redisClient.hgetall(`${GAME_PARTICIPANTS_PREFIX}${accessCode}`);
-        if (!participantsHash) {
-            logger.warn({ accessCode }, 'No participants found for this game');
-            return false;
-        }
-        // Determine correct answers based on question type
         let correctAnswerValues = [];
-        // Process the new answerOptions and correctAnswers fields
-        if (question.questionType === 'multiple_choice_single_answer' ||
-            question.questionType === 'multiple_choice_multiple_answers') {
-            // For multiple choice, get the indices of correct answers
-            correctAnswerValues = question.answerOptions.filter((_, index) => question.correctAnswers[index]);
-        }
-        else if (question.questionType === 'number') {
-            // For number questions, there should be only one correct answer
-            // Find the index of the correct answer
-            const correctIndex = question.correctAnswers.findIndex(isCorrect => isCorrect);
-            if (correctIndex >= 0) {
+        // Correctly determine correctAnswerValues based on question.questionType and question.correctAnswers
+        // This logic needs to be robust for different question types.
+        if (question.questionType === 'multiple_choice_single_answer' || question.questionType === 'single_correct') {
+            const correctIndex = question.correctAnswers.findIndex(ca => ca === true);
+            if (correctIndex !== -1 && question.answerOptions[correctIndex] !== undefined) {
                 correctAnswerValues = [question.answerOptions[correctIndex]];
             }
         }
+        else if (question.questionType === 'multiple_choice_multiple_answers') {
+            correctAnswerValues = question.answerOptions.filter((_, index) => question.correctAnswers[index] === true);
+        }
+        else if (question.questionType === 'number') {
+            // Assuming correctAnswers for number type stores the number itself or an index
+            // For this example, let's assume correctAnswers[0] is the correct numeric string if answerOptions are not direct numbers
+            const correctIndex = question.correctAnswers.findIndex(ca => ca === true);
+            if (correctIndex !== -1 && question.answerOptions[correctIndex] !== undefined) {
+                correctAnswerValues = [question.answerOptions[correctIndex]]; // Store the string value
+            }
+        }
         else {
-            // For other question types, use all marked as correct
-            correctAnswerValues = question.answerOptions.filter((_, index) => question.correctAnswers[index]);
+            // Fallback or other types
+            correctAnswerValues = question.answerOptions.filter((_, index) => question.correctAnswers[index] === true);
         }
         if (correctAnswerValues.length === 0) {
-            logger.warn({ accessCode, questionId, questionType: question.questionType }, 'No correct answers found');
+            logger.warn({ accessCode, questionId, questionType: question.questionType }, 'No correct answers defined for question during scoring. No points will be awarded for this question.');
         }
-        // Calculate and update scores for each answer
-        for (const [socketId, answerJson] of Object.entries(answersHash)) {
+        for (const userId of Object.keys(participantsHash)) {
+            let participant;
             try {
-                const answerData = JSON.parse(answerJson);
-                const participant = JSON.parse(participantsHash[socketId] || 'null');
-                if (!participant) {
-                    logger.warn({ accessCode, socketId }, 'Participant not found for answer');
+                const participantJson = participantsHash[userId];
+                if (!participantJson) {
+                    logger.warn({ accessCode, userId }, 'Participant JSON data not found in hash for scoring. Skipping.');
                     continue;
                 }
-                // Check if answer is correct based on question type
+                participant = JSON.parse(participantJson);
+                if (!participant || !participant.answers || !Array.isArray(participant.answers)) {
+                    // logger.info({ accessCode, userId }, 'Participant has no answers array or is invalid. Skipping for scoring.');
+                    continue;
+                }
+                const answerData = participant.answers.find((ans) => ans.questionId === questionId);
+                if (!answerData) {
+                    // logger.info({ accessCode, userId, questionId }, 'No answer submitted by this participant for this question.');
+                    continue;
+                }
                 let isCorrect = false;
-                let scoreForAnswer = 0;
-                if (question.questionType === 'multiple_choice_single_answer' || question.questionType === 'multiple_choice_multiple_answers') {
-                    isCorrect = correctAnswerValues.includes(answerData.answer);
+                const submittedAnswer = answerData.answer; // This is typically the index for single_correct
+                if (question.questionType === 'multiple_choice_multiple_answers') {
+                    const submittedAnswersSet = new Set(Array.isArray(submittedAnswer) ? submittedAnswer : [submittedAnswer]);
+                    const correctAnswersSet = new Set(correctAnswerValues);
+                    isCorrect = submittedAnswersSet.size === correctAnswersSet.size && [...submittedAnswersSet].every(val => correctAnswersSet.has(val));
                 }
                 else if (question.questionType === 'number') {
-                    isCorrect = parseFloat(answerData.answer) === parseFloat(correctAnswerValues[0]);
+                    // For number questions, direct comparison of the value
+                    // Ensure both are treated as strings for comparison if that's how they are stored
+                    isCorrect = correctAnswerValues.includes(String(submittedAnswer));
                 }
-                else {
-                    // For other question types (e.g., text)
-                    isCorrect = correctAnswerValues.includes(answerData.answer);
+                else { // single_correct, multiple_choice_single_answer
+                    if (typeof submittedAnswer === 'number' && submittedAnswer >= 0 && submittedAnswer < question.answerOptions.length) {
+                        const submittedOptionValue = question.answerOptions[submittedAnswer];
+                        isCorrect = correctAnswerValues.includes(submittedOptionValue);
+                    }
                 }
-                // Calculate score based on time spent and correctness
+                let points = 0;
                 if (isCorrect) {
-                    // Base points for correct answer
-                    const maxPoints = 1000;
-                    // Time factor: earlier answers get more points
-                    const timeSpent = answerData.timeSpent ||
-                        (answerData.timestamp - (participant.lastAnswerAt || participant.joinedAt));
-                    const timeFactor = Math.max(0, 1 - (timeSpent / ((question.timeLimit || 30) * 1000)));
-                    // Calculate final score
-                    scoreForAnswer = Math.round(maxPoints * timeFactor);
+                    const timeSpent = Math.max(0, answerData.timeSpent || (question.timeLimit || 30));
+                    points = Math.max(100, 1000 - Math.floor(timeSpent * 10));
                 }
-                // Update participant score
-                participant.score = (participant.score || 0) + scoreForAnswer;
-                await redis_1.redisClient.hset(`${GAME_PARTICIPANTS_PREFIX}${accessCode}`, socketId, JSON.stringify(participant));
-                // Update the sorted set leaderboard
-                await redis_1.redisClient.zadd(`${GAME_LEADERBOARD_PREFIX}${accessCode}`, participant.score, participant.userId);
-                // Update answer with correctness and score
-                answerData.isCorrect = isCorrect;
-                answerData.score = scoreForAnswer;
-                await redis_1.redisClient.hset(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionId}`, socketId, JSON.stringify(answerData));
-                logger.debug({
-                    accessCode,
-                    questionId,
-                    userId: participant.userId,
-                    isCorrect,
-                    score: scoreForAnswer
-                }, 'Score calculated for player answer');
+                participant.score = (participant.score || 0) + points;
+                participant.lastAnswerAt = answerData.timestamp || Date.now();
+                await redis_1.redisClient.hset(participantsKey, userId, JSON.stringify(participant));
+                logger.debug({ userId, totalScore: participant.score, accessCode }, `[GameStateService] Updated participant ${userId} in Redis.`);
+                // Add/Update participant in the leaderboard sorted set
+                const scoreForZadd = participant.score;
+                const userIdForZadd = userId;
+                logger.debug({ accessCode, questionId, userId, scoreForZadd, leaderboardKey }, `[GameStateService] Attempting ZADD to leaderboard for user ${userIdForZadd} with score ${scoreForZadd}.`);
+                try {
+                    const zaddResult = await redis_1.redisClient.zadd(leaderboardKey, scoreForZadd, userIdForZadd);
+                    logger.debug({ accessCode, questionId, userId, totalScore: scoreForZadd, zaddResult, leaderboardKey }, `[GameStateService] ZADD result for user ${userIdForZadd}: ${zaddResult}. Added/Updated in leaderboard ZSET.`);
+                }
+                catch (err) {
+                    logger.error({ accessCode, questionId, userId, scoreForZadd, leaderboardKey, error: err }, `[GameStateService] ERROR during ZADD for user ${userIdForZadd}.`);
+                }
+                // logger.info({ accessCode, userId, questionId, points, newScore: participant.score, isCorrect }, 'Score calculated and updated for participant');
             }
-            catch (error) {
-                logger.error({ accessCode, questionId, socketId, error }, 'Error processing answer for scoring');
+            catch (e) {
+                logger.error({ accessCode, userId, questionId, error: e.message, participantData: participant, stack: e.stack }, 'Error processing score for a single participant');
             }
         }
-        logger.info({ accessCode, questionId }, 'Scores calculated and updated successfully');
+        logger.info({ accessCode, questionId }, 'Scores calculated for question');
         return true;
     }
     catch (error) {
-        logger.error({ accessCode, questionId, error }, 'Error calculating scores');
+        logger.error({ accessCode, questionId, error: error.message, stack: error.stack }, 'Error calculating scores for question');
         return false;
     }
 }
@@ -394,5 +472,6 @@ exports.default = {
     getFullGameState,
     endCurrentQuestion,
     calculateScores,
-    updateGameState
+    updateGameState,
+    getFormattedLeaderboard // Add new function to default export
 };

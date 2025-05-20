@@ -32,7 +32,7 @@ describe('Games API Integration Tests', () => {
     let mockGameInstanceService;
     let mockGameParticipantService;
     beforeAll(async () => {
-        server = (0, server_1.setupServer)(4001); // Use test port 4001
+        server = (0, server_1.setupServer)(4001).httpServer; // Use test port 4001
         mockGameInstanceService = {
             createGameInstanceUnified: globals_1.jest.fn(),
             createGameInstance: globals_1.jest.fn(),
@@ -293,9 +293,12 @@ describe('Games API Integration Tests', () => {
             ];
             mockGameInstanceService.getTeacherActiveGames.mockResolvedValue(mockGames);
             const response = await (0, supertest_1.default)(server_1.app)
-                .get('/api/v1/games/teacher/active')
-                .expect('Content-Type', /json/)
-                .expect(200);
+                .get('/api/v1/games/teacher/active');
+            // Debug output for troubleshooting
+            // eslint-disable-next-line no-console
+            console.log('DEBUG response:', response.status, response.headers['content-type'], response.text);
+            expect(response.headers['content-type']).toMatch(/json/);
+            expect(response.status).toBe(200);
             expect(mockGameInstanceService.getTeacherActiveGames).toHaveBeenCalledWith('teacher-123');
             expect(response.body).toEqual({ games: mockGames });
         });

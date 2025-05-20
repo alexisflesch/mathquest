@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import dotenv from 'dotenv';
 import path from 'path';
 import { testQuestions } from './testQuestions';
-import { mockQuiz, mockTournament } from './mockQuizAndTournament';
 import { PrismaClient } from '../../src/db/generated/client';
 
 export default async (): Promise<void> => {
@@ -67,47 +66,69 @@ export default async (): Promise<void> => {
             }
         });
 
-        // Insert a dozen test questions for all tests
+        // Seed the teacher and template for integration tests
+        const teacher = await prisma.user.upsert({
+            where: { email: 'integration-teacher@example.com' },
+            update: {},
+            create: {
+                username: 'integration-teacher',
+                email: 'integration-teacher@example.com',
+                passwordHash: 'test',
+                role: 'TEACHER',
+            },
+        });
+
+        // Insert all test questions (idempotent)
         await prisma.question.createMany({
-            data: testQuestions
+            data: testQuestions,
+            skipDuplicates: true,
         });
         console.log('Inserted default test questions.');
 
-        // Insert a mock quiz
-        const gameTemplate = await prisma.gameTemplate.create({
-            data: {
-                id: mockQuiz.id,
-                name: mockQuiz.name,
-                creatorId: 'teacher-1', // was creatorTeacherId
-                themes: mockQuiz.themes
-            }
+        // Use a fixed id for the integration test template
+        const integrationTemplateId = 'integration-test-template-1';
+        const template = await prisma.gameTemplate.upsert({
+            where: { id: integrationTemplateId },
+            update: {
+                name: 'Teacher Quiz Integration Test',
+                creatorId: teacher.id,
+                themes: ['math'],
+                discipline: 'math',
+                defaultMode: 'quiz',
+            },
+            create: {
+                id: integrationTemplateId,
+                name: 'Teacher Quiz Integration Test',
+                creatorId: teacher.id,
+                themes: ['math'],
+                discipline: 'math',
+                defaultMode: 'quiz',
+            },
         });
-        await prisma.questionsInGameTemplate.createMany({
-            data: mockQuiz.questions.map((q, idx) => ({
-                gameTemplateId: gameTemplate.id,
-                questionUid: q.uid,
-                sequence: idx
-            }))
+        // Use two questions from testQuestions (q-1, q-2)
+        const questionUids = ['q-1', 'q-2'];
+        for (let i = 0; i < questionUids.length; i++) {
+            await prisma.questionsInGameTemplate.upsert({
+                where: { gameTemplateId_questionUid: { gameTemplateId: template.id, questionUid: questionUids[i] } },
+                update: { sequence: i },
+                create: { gameTemplateId: template.id, questionUid: questionUids[i], sequence: i },
+            });
+        }
+        // Create a game instance for this template
+        await prisma.gameInstance.upsert({
+            where: { accessCode: 'QUIZCODE1' },
+            update: {},
+            create: {
+                accessCode: 'QUIZCODE1',
+                name: 'Teacher Quiz Instance',
+                status: 'pending',
+                playMode: 'quiz',
+                settings: {},
+                gameTemplateId: template.id,
+                initiatorUserId: teacher.id,
+            },
         });
-        console.log('Inserted mock quiz and linked questions.');
-
-        // Insert a mock tournament (as a gameTemplate with a different id and theme)
-        const tournamentTemplate = await prisma.gameTemplate.create({
-            data: {
-                id: mockTournament.id,
-                name: mockTournament.name,
-                creatorId: 'teacher-1', // was creatorTeacherId
-                themes: mockTournament.themes
-            }
-        });
-        await prisma.questionsInGameTemplate.createMany({
-            data: mockTournament.questions.map((q, idx) => ({
-                gameTemplateId: tournamentTemplate.id,
-                questionUid: q.uid,
-                sequence: idx
-            }))
-        });
-        console.log('Inserted mock tournament and linked questions.');
+        console.log('Seeded integration teacher, template, questions, and game instance.');
     } catch (error) {
         console.error('Error cleaning database:', error);
         // Propagate the error to fail the setup if cleaning fails

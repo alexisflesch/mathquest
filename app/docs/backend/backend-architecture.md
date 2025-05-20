@@ -1,4 +1,6 @@
-# MathQuest Backend - AI Agent Technical Guide
+# MathQuest Backend - Technical Architecture & Shared Logic Guide
+
+> **Note:** This is the canonical technical reference for the MathQuest backend. It covers architecture, real-time/event-driven logic, state management, shared live logic, type-safety improvements, and best practices. All contributors should refer here for backend design and extension.
 
 ## Overview
 This document provides a comprehensive technical reference for MathQuest's backend, focusing on the real-time game logic, state management, and event-driven architecture. It is intended for AI agents and developers who need to understand, debug, or extend the backend logic.
@@ -182,61 +184,66 @@ This document provides a comprehensive technical reference for MathQuest's backe
 
 ---
 
-## 10. References
+## 10. Shared Live Logic Refactoring (Quiz & Tournament)
+
+### Goal
+Reduce code duplication and improve maintainability by consolidating shared logic between quiz and tournament modes. This makes the codebase DRYer and easier to extend.
+
+### Approach
+- Shared logic is housed in `app/backend/sockets/sharedLiveLogic/`.
+- Common functionalities (emitting results, sending questions, score updates) are extracted into generic modules.
+- Both quiz and tournament handlers use these shared modules.
+
+### Key Refactorings & Type-Safety Improvements
+
+#### 1. Emitting Question Results & Scores
+- `emitQuestionResults(io, roomName, params)` is used to broadcast correct answers and leaderboard to a room.
+- `emitParticipantScoreUpdate(socket, data)` sends per-participant score updates.
+- Tournament and quiz flows both use these shared functions for result emission.
+
+#### 2. Sending Questions
+- `sendQuestion.ts` standardizes the `live_question` event payload for both modes.
+
+#### 3. Handling Answers
+- Tournament answer handlers ensure answers are only registered if the question is active.
+- Score/rank is only sent when the question concludes, not immediately on answer.
+
+#### 4. Scoring Logic
+- Common scoring patterns are abstracted into shared utilities, with mode-specific extensions as needed.
+
+#### 5. Session End/Stop Signal
+- Shared mechanism for handling "stop" signals and redirection to leaderboards.
+
+#### 6. Type-Safety Improvements
+- Enhanced type constraints for room names (template literal types).
+- Flexible parameter objects for shared functions.
+- Unified event payload types and Zod validation.
+- Consistent import/export patterns for state objects.
+
+#### 7. Process
+- Identify shared logic, move to sharedLiveLogic, update handlers, test incrementally.
+
+## 11. References
 - See `/prisma/schema.prisma` for DB schema.
 - See `/README.md` for high-level project overview.
 - See `/src/clientLogger.ts` for client-side logging.
 
 ---
 
-## Differed Tournament Error Handling
+## 12. Timer Management & Synchronization
 
-- When a user attempts to play a tournament in differed mode, the backend (in `/sockets/tournamentEventHandlers/joinHandler.js`) must emit a `tournament_error` event with a clear error message if initialization fails (e.g., missing tournament, missing questions, or user already played).
-- All `tournament_error` emissions should include a descriptive `message` property in the payload for frontend debugging.
-- Example:
-  ```js
-  socket.emit("tournament_error", { message: "Tournament not found or already played." });
-  ```
-- The frontend should log and display this message for user feedback and debugging.
-
----
-
-## Differed Mode Isolation & DRY Event Emission
-
-- In differed mode, each student must receive tournament events (question, explication, end, etc.) only on their own socket (or a unique room), never in the shared `live_${code}` room.
-- All backend emit logic (question, explication, etc.) is DRY: the same handler functions accept a `targetSocket` parameter. In live mode, events are sent to the shared room; in differed mode, they are sent only to the individual socket.
-- This ensures:
-  - No cross-talk between students playing the same tournament asynchronously
-  - The frontend logic remains identical for live and differed modes
-- See `handleTimerExpiration` and `sendQuestionWithState` in `tournamentHelpers.js` for the DRY implementation.
-- All new event logic must follow this pattern for both modes.
-
----
-
-## Differed Mode Room Isolation (Robust to Reconnection)
-
-- In differed mode, each student joins a dedicated room: `live_${code}_${joueurId}`.
-- All emits for that session (questions, explication, etc.) use this room, not the shared `live_${code}` room.
-- On reconnection, the backend ensures the socket rejoins the same room, so the user continues their session seamlessly.
-- The same DRY handler functions are used for both live and differed modes, with a `targetRoom` parameter.
-- See `handleTimerExpiration` and `sendQuestionWithState` in `tournamentHelpers.js` for implementation details.
-
----
-
-## 11. Timer Management & Synchronization
-
-### 11.1. Single Source of Truth
+### 12.1. Single Source of Truth
 - The backend is the single source of truth for all timer values.
 - Timer values are always stored with 1 decimal place precision.
 - Frontend never determines timer values; it only displays and sends control actions.
 
-### 11.2. Backend Timer Sources (in order of precedence)
+### 12.2. Backend Timer Sources (in order of precedence)
 - When starting a question: Value comes from the question object's `temps` field
 - When pausing: Backend calculates and stores the precise remaining time
 - When resuming: Backend uses its stored `pausedRemainingTime` value
 - When editing: Frontend sends an explicit update via `quiz_set_timer`
 
-### 11.3. Key Timer State Fields
+### 12.3. Key Timer State Fields
 - In quizState:
   - `chrono.timeLeft`: Timer value in seconds (with 1 decimal precision)
   - `timerTimeLeft`: Duplicate of chrono.timeLeft for compatibility
@@ -250,12 +257,12 @@ This document provides a comprehensive technical reference for MathQuest's backe
   - `paused`, `stopped`: Boolean flags for timer state
   - `questionStart`: Timestamp when question timer started
 
-### 11.4. Timer Synchronization Logic
+### 12.4. Timer Synchronization Logic
 - `synchronizeTimerValues()` in `quizUtils.js` ensures consistent timer values between quiz and tournament states
 - `triggerTournamentPause()`, `triggerTournamentTimerSet()` in `tournamentTriggers.js` manage timer state transitions
 - `updateChrono()` in `quizUtils.js` maintains synchronized timer properties
 
-### 11.5. Frontend Timer Handling
+### 12.5. Frontend Timer Handling
 - Frontend uses `quiz_timer_update` events to synchronize its local timer
 - Frontend maintains a local timer only for smooth UI countdown between updates
 - For pause/resume actions, frontend never sends timeLeft values to backend
@@ -264,9 +271,9 @@ This document provides a comprehensive technical reference for MathQuest's backe
 
 ---
 
-## 12. Known Issues & Solutions
+## 13. Known Issues & Solutions
 
-### 12.1. Quiz State Synchronization Bug
+### 13.1. Quiz State Synchronization Bug
 
 #### Issue: 
 A critical bug was identified where `currentQuestionUid` in the `quizState` was not being properly synchronized across different components of the application. This manifested as the dashboard/projection views showing "question A" as active, while the backend was processing "question B" during timer actions.
@@ -307,3 +314,4 @@ A critical bug was identified where `currentQuestionUid` in the `quizState` was 
 - Added explicit property validation in state access functions
 
 ---
+_Last updated: 2025-05-20_

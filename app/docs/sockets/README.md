@@ -21,10 +21,10 @@ Socket events follow a consistent naming convention:
 
 ## Key Event Types
 
-- **State Update Events** - Events that notify clients of state changes
-- **Action Events** - Events that trigger actions on the server
-- **Notification Events** - Events that provide notifications to users
-- **Error Events** - Events that notify clients of errors
+- **State Update Events** - Notify clients of state changes
+- **Action Events** - Trigger actions on the server
+- **Notification Events** - Provide notifications to users
+- **Error Events** - Notify clients of errors
 
 ## Event Flow
 
@@ -36,6 +36,6 @@ Socket events follow a consistent naming convention:
 
 ## Related Documentation
 
-- [Socket Event Reference](event-reference.md) - Complete list of socket events
-- [Socket Authentication](socket-authentication.md) - How socket authentication works
-- [Socket Testing](socket-testing.md) - Guide to testing socket communications
+- [Socket Event Reference](event-reference.md) — Complete, up-to-date list of all socket events and payloads.
+- [Socket Authentication](socket-authentication.md) — How socket authentication and authorization is handled.
+- [Socket Testing](socket-testing.md) — How to test socket logic and event flows.

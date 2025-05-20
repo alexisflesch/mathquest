@@ -8,9 +8,10 @@ const express_1 = __importDefault(require("express"));
 const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const gameParticipantService_1 = require("@/core/services/gameParticipantService");
 const gameTemplateService_1 = require("@/core/services/gameTemplateService");
+// Import specific functions from gameStateService
+const gameStateService_1 = require("@/core/gameStateService");
 const auth_1 = require("@/middleware/auth");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 // Create a route-specific logger
 const logger = (0, logger_1.default)('GamesAPI');
 const router = express_1.default.Router();
@@ -241,7 +242,8 @@ router.patch('/:id/status', auth_1.optionalAuth, async (req, res) => {
         }
         // If changing to active status, initialize game state in Redis
         if (status === 'active' && gameInstance.status !== 'active') {
-            const gameState = await gameStateService_1.default.initializeGameState(id);
+            // Use the imported initializeGameState function directly
+            const gameState = await (0, gameStateService_1.initializeGameState)(id);
             if (!gameState) {
                 res.status(500).json({ error: 'Failed to initialize game state' });
                 return;
@@ -290,11 +292,15 @@ router.get('/:code/leaderboard', async (req, res) => {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        // Return leaderboard from DB (or empty array if not set)
-        res.json({ leaderboard: gameInstance.leaderboard || [] });
+        // Use the new getFormattedLeaderboard function
+        const leaderboard = await (0, gameStateService_1.getFormattedLeaderboard)(code);
+        // If gameInstance.leaderboard is the source of truth and needs to be updated,
+        // consider doing that here or in a separate sync process.
+        // For now, we return the Redis-based leaderboard directly.
+        res.json(leaderboard);
     }
-    catch (err) {
-        logger.error('Failed to fetch leaderboard', err);
+    catch (error) {
+        logger.error('Failed to fetch leaderboard', error);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
     }
 });
@@ -305,8 +311,8 @@ router.get('/:code/leaderboard', async (req, res) => {
 router.get('/:code/state', async (req, res) => {
     const { code } = req.params;
     try {
-        // Use gameStateService to get full game state
-        const gameStateRaw = await gameStateService_1.default.getFullGameState(code);
+        // Use the imported getFullGameState function directly
+        const gameStateRaw = await (0, gameStateService_1.getFullGameState)(code);
         if (!gameStateRaw || !gameStateRaw.gameState) {
             res.status(404).json({ error: 'Game not found or not live' });
             return;
@@ -324,6 +330,21 @@ router.get('/:code/state', async (req, res) => {
     catch (err) {
         logger.error('Failed to fetch game state', err);
         res.status(500).json({ error: 'Failed to fetch game state' });
+    }
+});
+// Add missing route for teacher active games
+router.get('/teacher/active', auth_1.teacherAuth, async (req, res) => {
+    try {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
+            res.status(401).json({ error: 'Teacher authentication required' });
+            return;
+        }
+        const games = await getGameInstanceService().getTeacherActiveGames(req.user.userId);
+        res.status(200).json({ games });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error fetching teacher active games');
+        res.status(500).json({ error: 'An error occurred while fetching active games' });
     }
 });
 exports.default = router;

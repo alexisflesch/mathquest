@@ -10,6 +10,14 @@ const socket_io_1 = require("socket.io");
 const redis_adapter_1 = require("@socket.io/redis-adapter");
 const ioredis_1 = __importDefault(require("ioredis"));
 const sockets_1 = require("@/sockets");
+// Patch: Set logger to warn level in test unless overridden
+const logger_1 = __importDefault(require("@/utils/logger"));
+const testLogger = (0, logger_1.default)('TestSetup');
+if (process.env.NODE_ENV === 'test' && !process.env.LOG_LEVEL) {
+    // @ts-ignore
+    global.MIN_LOG_LEVEL = 2; // WARN
+    testLogger.info('Set logger to WARN for tests');
+}
 // Keep track of any open servers during tests
 const openServers = [];
 // Keep track of Redis clients created for tests

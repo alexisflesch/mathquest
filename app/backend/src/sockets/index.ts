@@ -6,12 +6,14 @@ import createLogger from '@/utils/logger';
 import { socketAuthMiddleware } from './middleware/socketAuth';
 import { registerConnectionHandlers } from './handlers/connectionHandlers';
 import { projectorHandler } from './handlers/projectorHandler';
+import tournamentHandler from './handlers/tournamentHandler'; // Changed to default import
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 
 // Create a socket-specific logger
 const logger = createLogger('SocketIO');
 
 let io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null = null;
+let subClient: ReturnType<typeof redisClient.duplicate> | null = null;
 
 /**
  * Initialize Socket.IO server with Redis adapter
@@ -24,7 +26,7 @@ export function initializeSocketIO(server: http.Server): SocketIOServer<ClientTo
     }
 
     // Create a duplicate Redis client for subscription
-    const subClient = redisClient.duplicate();
+    subClient = redisClient.duplicate();
 
     // Create Socket.IO server with CORS configuration
     io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
@@ -57,6 +59,20 @@ export function initializeSocketIO(server: http.Server): SocketIOServer<ClientTo
     logger.info('Socket.IO server initialized with Redis adapter');
 
     return io;
+}
+
+/**
+ * Cleanup function to close the Redis subClient (for tests)
+ */
+export async function closeSocketIORedisClients() {
+    if (subClient) {
+        try {
+            await subClient.quit();
+        } catch (e) {
+            logger.warn('Error closing Socket.IO Redis subClient:', e);
+        }
+        subClient = null;
+    }
 }
 
 /**
@@ -93,5 +109,6 @@ export function registerHandlers(socketServer: SocketIOServer<ClientToServerEven
 export function setupSocketHandlers(io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) {
     io.on('connection', (socket) => {
         projectorHandler(io, socket);
+        tournamentHandler(io, socket); // Use the imported default handler
     });
 }

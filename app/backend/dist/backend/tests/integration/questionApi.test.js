@@ -3,16 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const supertest_1 = __importDefault(require("supertest"));
-const server_1 = require("../../src/server");
-const questions_1 = require("@/api/v1/questions");
-const globals_1 = require("@jest/globals");
 // Mock authentication middleware
 globals_1.jest.mock('@/middleware/auth', () => ({
     teacherAuth: (req, res, next) => {
         req.user = {
-            teacherId: 'teacher-123',
-            username: 'testteacher'
+            userId: 'teacher-123',
+            username: 'testteacher',
+            role: 'TEACHER'
         };
         next();
     },
@@ -20,13 +17,17 @@ globals_1.jest.mock('@/middleware/auth', () => ({
         next();
     }
 }));
+const supertest_1 = __importDefault(require("supertest"));
+const server_1 = require("../../src/server");
+const questions_1 = require("@/api/v1/questions");
+const globals_1 = require("@jest/globals");
 describe('Question API Integration Tests', () => {
     globals_1.jest.setTimeout(3000);
     let server;
     let mockQuestionService;
     beforeAll(async () => {
         // Use the imported app from server.ts and create a test server
-        server = (0, server_1.setupServer)(3999); // Use test port 3999
+        server = (0, server_1.setupServer)(3999).httpServer; // Use test port 3999
         mockQuestionService = {
             createQuestion: globals_1.jest.fn(),
             getQuestionById: globals_1.jest.fn(),

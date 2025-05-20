@@ -57,7 +57,7 @@ describe('gameTemplateService', () => {
             };
             const mockCreatedQuiz = {
                 id: 'quiz-123',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 ...mockQuizData,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -68,7 +68,7 @@ describe('gameTemplateService', () => {
             expect(prisma_1.prisma.gameTemplate.create).toHaveBeenCalledWith({
                 data: {
                     name: mockQuizData.name,
-                    creatorTeacherId: mockTeacherId,
+                    creatorId: mockTeacherId,
                     gradeLevel: mockQuizData.gradeLevel,
                     themes: mockQuizData.themes,
                     discipline: mockQuizData.discipline,
@@ -104,7 +104,7 @@ describe('gameTemplateService', () => {
             const mockgameTemplate = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 themes: ['algebra'],
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -122,7 +122,7 @@ describe('gameTemplateService', () => {
             const mockgameTemplate = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 themes: ['algebra'],
                 questions: [
                     {
@@ -173,7 +173,7 @@ describe('gameTemplateService', () => {
             const result = await service.getgameTemplates(mockTeacherId, { discipline: 'math' }, { skip: 0, take: 10 });
             expect(prisma_1.prisma.gameTemplate.findMany).toHaveBeenCalledWith(expect.objectContaining({
                 where: expect.objectContaining({
-                    creatorTeacherId: mockTeacherId,
+                    creatorId: mockTeacherId,
                     discipline: 'math'
                 }),
                 skip: 0,
@@ -200,7 +200,7 @@ describe('gameTemplateService', () => {
                 id: 'quiz-123',
                 name: 'Old Name',
                 description: 'Old description',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 themes: ['algebra'],
                 questions: [
                     { sequence: 2, questionUid: 'question-123' }
@@ -210,7 +210,7 @@ describe('gameTemplateService', () => {
                 id: 'quiz-123',
                 name: 'Updated Quiz',
                 description: 'Updated description',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 themes: ['algebra'],
                 questions: []
             };
@@ -223,7 +223,7 @@ describe('gameTemplateService', () => {
             expect(prisma_1.prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
                     id: 'quiz-123',
-                    creatorTeacherId: mockTeacherId
+                    creatorId: mockTeacherId
                 }
             });
             expect(prisma_1.prisma.gameTemplate.update).toHaveBeenCalledWith({
@@ -252,7 +252,7 @@ describe('gameTemplateService', () => {
             const mockExistingQuiz = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorTeacherId: mockTeacherId
+                creatorId: mockTeacherId
             };
             prisma_1.prisma.gameTemplate.findFirst.mockResolvedValueOnce(mockExistingQuiz);
             prisma_1.prisma.gameTemplate.delete.mockResolvedValue({});
@@ -260,7 +260,7 @@ describe('gameTemplateService', () => {
             expect(prisma_1.prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
                     id: 'quiz-123',
-                    creatorTeacherId: mockTeacherId
+                    creatorId: mockTeacherId
                 }
             });
             expect(prisma_1.prisma.gameTemplate.delete).toHaveBeenCalledWith({
@@ -283,7 +283,7 @@ describe('gameTemplateService', () => {
             const mockgameTemplate = {
                 id: gameTemplateId,
                 name: 'Test Quiz',
-                creatorTeacherId: mockTeacherId,
+                creatorId: mockTeacherId,
                 questions: [
                     { sequence: 2, questionUid: 'question-123' }
                 ]
@@ -312,7 +312,7 @@ describe('gameTemplateService', () => {
             expect(prisma_1.prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
                     id: gameTemplateId,
-                    creatorTeacherId: mockTeacherId
+                    creatorId: mockTeacherId
                 },
                 include: {
                     questions: {

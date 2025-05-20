@@ -8,7 +8,11 @@ module.exports = {
     ],
     transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', {
-            tsconfig: 'tsconfig.json' // Points to backend's tsconfig
+            tsconfig: 'tsconfig.json', // Points to backend's tsconfig
+            // Add baseUrl to help ts-jest resolve paths correctly
+            compilerOptions: {
+                baseUrl: './'
+            }
         }]
     },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
@@ -22,15 +26,15 @@ module.exports = {
     globalTeardown: '<rootDir>/tests/support/globalTeardown.ts',
     // Module name mapper for path aliases
     moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1',
+        '^@/(.*)$': '<rootDir>/src/$1', // <rootDir> is /home/aflesch/mathquest/app/backend/
         '^@shared/(.*)$': '<rootDir>/../shared/$1'
     },
-    modulePaths: ['<rootDir>'],
+    modulePaths: ['<rootDir>/src'], // Add src to modulePaths
     // Prevent running the same tests in parallel to avoid port conflicts
     maxConcurrency: 1,
     maxWorkers: 1,
     // Force exit after tests complete to avoid hanging due to open handles
     forceExit: true,
     // Set a timeout for tests to avoid hanging indefinitely
-    testTimeout: 30000
+    testTimeout: 30000 // Reverted to 30 seconds
 };

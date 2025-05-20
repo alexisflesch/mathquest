@@ -34,7 +34,7 @@ describe('Games API Integration Tests', () => {
     let mockGameParticipantService: jest.Mocked<GameParticipantService>;
 
     beforeAll(async () => {
-        server = setupServer(4001); // Use test port 4001
+        server = setupServer(4001).httpServer; // Use test port 4001
 
         mockGameInstanceService = {
             createGameInstanceUnified: jest.fn(),

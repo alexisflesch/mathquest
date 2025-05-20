@@ -95,11 +95,15 @@ class GameInstanceService {
                 where: { accessCode },
                 include: {
                     gameTemplate: {
-                        select: {
-                            name: true,
-                            themes: true,
-                            discipline: true,
-                            gradeLevel: true,
+                        include: {
+                            questions: {
+                                include: {
+                                    question: true // Include the actual Question data
+                                },
+                                orderBy: {
+                                    sequence: 'asc' // Ensure questions are ordered by sequence
+                                }
+                            }
                         }
                     },
                     participants: includeParticipants ? {

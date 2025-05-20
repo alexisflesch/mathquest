@@ -207,6 +207,12 @@ describe('Game Handler', () => {
         await prisma_1.prisma.question.deleteMany({
             where: { text: { in: ['What is 2+2?', 'What is 3×3?'] } }
         });
+        // Clean up test player dependencies first
+        await prisma_1.prisma.studentProfile.deleteMany({
+            where: {
+                id: { in: ['player-123', 'player-1', 'player-2'] }
+            }
+        });
         // Clean up test players
         await prisma_1.prisma.user.deleteMany({
             where: { role: 'STUDENT' }
@@ -413,6 +419,7 @@ describe('Game Handler', () => {
         // Wait for second player to join
         await joinPromise2;
         // Wait a bit to make sure all events are processed
+        await wait(100);
         // Verify participants in Redis
         const participantsCount = await redis_1.redisClient.hlen(`mathquest:game:participants:${TEST_ACCESS_CODE}`);
         expect(participantsCount).toBe(2);

@@ -1,187 +1,202 @@
 // A dozen diverse test questions for backend tests
 
 export const testQuestions = [
+    // New questions for late-join/feedback scenarios
     {
-        uid: 'q-math-1',
-        text: 'What is 2 + 2?',
-        answerOptions: ['3', '4', '5', '6'],
-        correctAnswers: [false, true, false, false],
+        uid: 'q-late-1',
+        text: 'What is 10 + 5?',
+        answerOptions: ['12', '13', '14', '15'],
+        correctAnswers: [false, false, false, true],
         questionType: 'single_correct',
         discipline: 'math',
         themes: ['arithmetic'],
         gradeLevel: 'elementary',
-        tags: ['addition', 'easy'],
-        difficulty: 1
+        tags: ['addition', 'late-join'],
+        difficulty: 1,
+        timeLimit: 2, // 2 seconds to answer
+        feedbackWaitTime: 2 // 2 seconds feedback
     },
     {
-        uid: 'q-math-2',
-        text: 'Solve for x: 2x = 10',
-        answerOptions: ['2', '5', '10', '8'],
+        uid: 'q-late-2',
+        text: 'What is 7 x 3?',
+        answerOptions: ['20', '21', '24', '27'],
         correctAnswers: [false, true, false, false],
         questionType: 'single_correct',
         discipline: 'math',
-        themes: ['algebra'],
-        gradeLevel: 'middle',
-        tags: ['equation', 'algebra'],
-        difficulty: 2
-    },
-    {
-        uid: 'q-sci-1',
-        text: 'What planet is known as the Red Planet?',
-        answerOptions: ['Earth', 'Mars', 'Jupiter', 'Venus'],
-        correctAnswers: [false, true, false, false],
-        questionType: 'single_correct',
-        discipline: 'science',
-        themes: ['astronomy'],
+        themes: ['multiplication'],
         gradeLevel: 'elementary',
-        tags: ['planets', 'space'],
-        difficulty: 1
+        tags: ['multiplication', 'late-join'],
+        difficulty: 1,
+        timeLimit: 2, // 2 seconds to answer
+        feedbackWaitTime: 0 // No feedback
     },
     {
-        uid: 'q-hist-1',
-        text: 'Who was the first President of the United States?',
-        answerOptions: ['Abraham Lincoln', 'George Washington', 'John Adams', 'Thomas Jefferson'],
-        correctAnswers: [false, true, false, false],
-        questionType: 'single_correct',
-        discipline: 'history',
-        themes: ['american history'],
-        gradeLevel: 'middle',
-        tags: ['presidents', 'usa'],
-        difficulty: 2
-    },
-    {
-        uid: 'q-geo-1',
+        uid: 'q-1',
         text: 'What is the capital of France?',
-        answerOptions: ['Paris', 'London', 'Berlin', 'Madrid'],
-        correctAnswers: [true, false, false, false],
+        answerOptions: ['Berlin', 'Madrid', 'Paris', 'Rome'],
+        correctAnswers: [false, false, true, false],
         questionType: 'single_correct',
         discipline: 'geography',
         themes: ['capitals'],
         gradeLevel: 'elementary',
-        tags: ['europe', 'cities'],
-        difficulty: 1
+        tags: ['geography', 'capitals'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
     },
     {
-        uid: 'q-eng-1',
-        text: 'Which word is a noun?',
-        answerOptions: ['run', 'happy', 'cat', 'blue'],
+        uid: 'q-2',
+        text: 'Which planet is closest to the sun?',
+        answerOptions: ['Earth', 'Mars', 'Mercury', 'Venus'],
         correctAnswers: [false, false, true, false],
         questionType: 'single_correct',
-        discipline: 'english',
-        themes: ['grammar'],
+        discipline: 'science',
+        themes: ['planets'],
         gradeLevel: 'elementary',
-        tags: ['parts of speech'],
-        difficulty: 1
+        tags: ['science', 'planets'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
     },
     {
-        uid: 'q-math-3',
-        text: 'What is the square root of 81?',
-        answerOptions: ['7', '8', '9', '10'],
-        correctAnswers: [false, false, true, false],
-        questionType: 'single_correct',
-        discipline: 'math',
-        themes: ['roots'],
-        gradeLevel: 'middle',
-        tags: ['square root'],
-        difficulty: 2
-    },
-    {
-        uid: 'q-sci-2',
-        text: 'What gas do plants absorb from the atmosphere?',
-        answerOptions: ['Oxygen', 'Carbon Dioxide', 'Nitrogen', 'Hydrogen'],
+        uid: 'q-3',
+        text: 'What is the largest mammal in the world?',
+        answerOptions: ['African Elephant', 'Blue Whale', 'Giraffe', 'Orca'],
         correctAnswers: [false, true, false, false],
         questionType: 'single_correct',
         discipline: 'science',
-        themes: ['biology'],
+        themes: ['animals'],
         gradeLevel: 'elementary',
-        tags: ['photosynthesis'],
-        difficulty: 1
+        tags: ['science', 'animals'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
     },
     {
-        uid: 'q-hist-2',
-        text: 'In what year did World War II end?',
-        answerOptions: ['1942', '1945', '1948', '1950'],
-        correctAnswers: [false, true, false, false],
-        questionType: 'single_correct',
-        discipline: 'history',
-        themes: ['world history'],
-        gradeLevel: 'high',
-        tags: ['ww2'],
-        difficulty: 3
-    },
-    {
-        uid: 'q-geo-2',
-        text: 'Which continent is the Sahara Desert located on?',
-        answerOptions: ['Asia', 'Africa', 'Australia', 'Europe'],
-        correctAnswers: [false, true, false, false],
-        questionType: 'single_correct',
-        discipline: 'geography',
-        themes: ['deserts'],
-        gradeLevel: 'middle',
-        tags: ['africa', 'desert'],
-        difficulty: 2
-    },
-    {
-        uid: 'q-eng-2',
-        text: 'What is the synonym of "quick"?',
-        answerOptions: ['slow', 'fast', 'tall', 'short'],
-        correctAnswers: [false, true, false, false],
-        questionType: 'single_correct',
-        discipline: 'english',
-        themes: ['vocabulary'],
-        gradeLevel: 'middle',
-        tags: ['synonyms'],
-        difficulty: 2
-    },
-    {
-        uid: 'q-math-4',
-        text: 'What is the value of pi (π) rounded to two decimal places?',
-        answerOptions: ['3.12', '3.14', '3.16', '3.18'],
-        correctAnswers: [false, true, false, false],
-        questionType: 'single_correct',
-        discipline: 'math',
-        themes: ['geometry'],
-        gradeLevel: 'high',
-        tags: ['pi', 'circle'],
-        difficulty: 3
-    },
-    // Multiple correct answers example
-    {
-        uid: 'q-math-multi-1',
-        text: 'Select all prime numbers.',
-        answerOptions: ['2', '3', '4', '5'],
-        correctAnswers: [true, true, false, true],
-        questionType: 'multiple_correct',
-        discipline: 'math',
-        themes: ['primes'],
-        gradeLevel: 'elementary',
-        tags: ['prime numbers'],
-        difficulty: 2
-    },
-    // Single Answer (SA) examples
-    {
-        uid: 'q-math-sa-1',
-        text: 'What is the derivative of x^2?',
-        answerOptions: ['2x', 'x', 'x^2', '2'],
-        correctAnswers: [true, false, false, false],
-        questionType: 'single_correct',
-        discipline: 'math',
-        themes: ['calculus'],
-        gradeLevel: 'high',
-        tags: ['derivative'],
-        difficulty: 3
-    },
-    {
-        uid: 'q-eng-sa-1',
-        text: 'What is the past tense of "go"?',
-        answerOptions: ['goes', 'gone', 'went', 'going'],
+        uid: 'q-4',
+        text: 'What is the boiling point of water?',
+        answerOptions: ['0°C', '50°C', '100°C', '150°C'],
         correctAnswers: [false, false, true, false],
         questionType: 'single_correct',
-        discipline: 'english',
-        themes: ['verbs'],
+        discipline: 'science',
+        themes: ['temperature'],
         gradeLevel: 'elementary',
-        tags: ['past tense'],
-        difficulty: 1
+        tags: ['science', 'temperature'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
+    },
+    {
+        uid: 'q-5',
+        text: 'Who wrote "Romeo and Juliet"?',
+        answerOptions: ['Charles Dickens', 'Jane Austen', 'Mark Twain', 'William Shakespeare'],
+        correctAnswers: [false, false, false, true],
+        questionType: 'single_correct',
+        discipline: 'literature',
+        themes: ['plays'],
+        gradeLevel: 'elementary',
+        tags: ['literature', 'plays'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
+    },
+    {
+        uid: 'q-6',
+        text: 'What is the hardest natural substance on Earth?',
+        answerOptions: ['Gold', 'Iron', 'Diamond', 'Platinum'],
+        correctAnswers: [false, false, true, false],
+        questionType: 'single_correct',
+        discipline: 'science',
+        themes: ['minerals'],
+        gradeLevel: 'elementary',
+        tags: ['science', 'minerals'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
+    },
+    {
+        uid: 'q-7',
+        text: 'Which ocean is the largest?',
+        answerOptions: ['Atlantic Ocean', 'Indian Ocean', 'Arctic Ocean', 'Pacific Ocean'],
+        correctAnswers: [false, false, false, true],
+        questionType: 'single_correct',
+        discipline: 'geography',
+        themes: ['oceans'],
+        gradeLevel: 'elementary',
+        tags: ['geography', 'oceans'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
+    },
+    {
+        uid: 'q-8',
+        text: 'What is the chemical symbol for gold?',
+        answerOptions: ['Au', 'Ag', 'Pb', 'Fe'],
+        correctAnswers: [true, false, false, false],
+        questionType: 'single_correct',
+        discipline: 'science',
+        themes: ['chemistry'],
+        gradeLevel: 'elementary',
+        tags: ['science', 'chemistry'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
+    },
+    {
+        uid: 'q-9',
+        text: 'Who painted the Mona Lisa?',
+        answerOptions: ['Vincent Van Gogh', 'Pablo Picasso', 'Leonardo da Vinci', 'Claude Monet'],
+        correctAnswers: [false, false, true, false],
+        questionType: 'single_correct',
+        discipline: 'art',
+        themes: ['paintings'],
+        gradeLevel: 'elementary',
+        tags: ['art', 'paintings'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
+    },
+    {
+        uid: 'q-10',
+        text: 'What is the largest planet in our solar system?',
+        answerOptions: ['Earth', 'Jupiter', 'Saturn', 'Mars'],
+        correctAnswers: [false, true, false, false],
+        questionType: 'single_correct',
+        discipline: 'science',
+        themes: ['planets'],
+        gradeLevel: 'elementary',
+        tags: ['science', 'planets'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
+    },
+    {
+        uid: 'q-11',
+        text: 'What is the main ingredient in guacamole?',
+        answerOptions: ['Tomato', 'Avocado', 'Onion', 'Pepper'],
+        correctAnswers: [false, true, false, false],
+        questionType: 'single_correct',
+        discipline: 'cooking',
+        themes: ['ingredients'],
+        gradeLevel: 'elementary',
+        tags: ['cooking', 'ingredients'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
+    },
+    {
+        uid: 'q-12',
+        text: 'Which gas do plants absorb from the atmosphere?',
+        answerOptions: ['Oxygen', 'Nitrogen', 'Carbon Dioxide', 'Hydrogen'],
+        correctAnswers: [false, false, true, false],
+        questionType: 'single_correct',
+        discipline: 'science',
+        themes: ['photosynthesis'],
+        gradeLevel: 'elementary',
+        tags: ['science', 'photosynthesis'],
+        difficulty: 1,
+        timeLimit: 5, // 5 seconds to answer
+        feedbackWaitTime: 3 // 3 seconds feedback
     }
 ];
 

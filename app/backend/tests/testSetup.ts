@@ -6,6 +6,15 @@ import Redis from 'ioredis';
 import { redisClient } from '@/config/redis';
 import { configureSocketServer, registerHandlers } from '@/sockets';
 
+// Patch: Set logger to warn level in test unless overridden
+import createLogger from '@/utils/logger';
+const testLogger = createLogger('TestSetup');
+if (process.env.NODE_ENV === 'test' && !process.env.LOG_LEVEL) {
+    // @ts-ignore
+    global.MIN_LOG_LEVEL = 2; // WARN
+    testLogger.info('Set logger to WARN for tests');
+}
+
 // Keep track of any open servers during tests
 const openServers: http.Server[] = [];
 // Keep track of Redis clients created for tests

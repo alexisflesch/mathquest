@@ -66,14 +66,21 @@ describe('User API', () => {
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error', 'Password must be at least 6 characters long');
         });
-        it('should return 409 if username already exists', async () => {
-            const error = new Error('User with this username already exists');
-            mockUserService.registerUser.mockRejectedValueOnce(error);
+        it('should allow registration with an already taken username', async () => {
+            mockUserService.registerUser.mockResolvedValueOnce({
+                token: 'mock-token',
+                user: {
+                    id: 'user-uuid',
+                    username: 'existinguser',
+                    email: undefined,
+                    role: 'STUDENT',
+                },
+            });
             const res = await (0, supertest_1.default)(server_1.app)
                 .post('/api/v1/players/register')
                 .send({ username: 'existinguser' });
-            expect(res.status).toBe(409);
-            expect(res.body).toHaveProperty('error', 'User with this username already exists');
+            expect(res.status).toBe(201);
+            expect(res.body.user).toHaveProperty('username', 'existinguser');
         });
     });
     describe('GET /api/v1/players/cookie/:cookieId', () => {
@@ -81,7 +88,7 @@ describe('User API', () => {
             mockUserService.getUserByCookieId.mockResolvedValueOnce({
                 id: 'user-uuid',
                 username: 'testuser',
-                email: null,
+                email: null, // Prisma returns null for missing optional fields
                 role: 'STUDENT',
                 createdAt: new Date(),
                 avatarUrl: null,
@@ -92,7 +99,7 @@ describe('User API', () => {
             expect(res.body).toHaveProperty('user');
             expect(res.body.user).toHaveProperty('id', 'user-uuid');
             expect(res.body.user).toHaveProperty('username', 'testuser');
-            expect(res.body.user).toHaveProperty('email', null);
+            expect(res.body.user).toHaveProperty('email', null); // Accept null as valid for missing email
         });
         it('should return 404 when user not found by cookieId', async () => {
             mockUserService.getUserByCookieId.mockResolvedValueOnce(null);

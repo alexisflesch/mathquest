@@ -72,21 +72,23 @@ describe('Basic Lobby Handler Test', () => {
             where: { accessCode: TEST_ACCESS_CODE }
         });
         // Find or create a teacher to use as creator
-        const teacher = await prisma.teacher.upsert({
+        const teacher = await prisma.user.upsert({
             where: { email: 'test@example.com' },
             update: {},
             create: {
                 username: 'testteacher',
                 passwordHash: 'hash-not-important-for-test',
-                email: 'test@example.com'
+                email: 'test@example.com',
+                role: 'TEACHER',
+                teacherProfile: { create: {} }
             }
         });
         // Create a quiz template for the game instance
         const testTemplate = await prisma.gameTemplate.create({
             data: {
                 name: 'Test Quiz Template',
-                creatorTeacherId: teacher.id,
-                themes: ['math']
+                themes: ['math'],
+                creator: { connect: { id: teacher.id } }
             }
         });
         // Create the game instance with the teacher ID
