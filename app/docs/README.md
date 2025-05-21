@@ -18,12 +18,22 @@ The documentation is organized into logical categories to help you quickly find 
 - [Socket Communication](./sockets/README.md): Socket.IO implementation and events
 - [Type System](./types/README.md): Shared types and type validation
 - [Project Management](./project/README.md): TODO lists, migration status, and priorities
+- [Testing](./tests/README.md): Backend and socket testing strategy and conventions
+- [Troubleshooting](./troubleshooting/README.md): Solutions for common issues and debugging tips
+- [Security Practices](./security.md): Authentication, authorization, and security guidelines
+- [Environment Variables](./environment-variables.md): Reference for all required environment variables
+- [Monitoring & Operations](./monitoring.md): Production monitoring, logging, and scaling
+- [TypeScript Enforcement](./typescript_enforcing.md): Strict typing for Socket.IO and event payloads
+- [Shared Types Guide](./shared-types-guide.md): How to use and extend shared types
+- [Type Architecture](./type-architecture.md): Type system structure and best practices
+- [Documentation Standards](./documentation-standards.md): Guidelines for writing and maintaining docs
 
 ### Quick Links
 - [Project Overview](./overview/project-overview.md): What is MathQuest?
 - [TODO List](./project/TODO.md): Current development priorities
 - [TypeScript Guide](./types/typescript-guide.md): Guide to TypeScript usage
 - [Socket Guide](./sockets/socket-guide.md): Guide to Socket.IO implementation
+- [Contribution Guide](./contributing.md): How to contribute as an AI agent or human collaborator
 
 ### Archive
 - Historical documentation and obsolete files have been moved to the [archive/](./archive/) directory
