@@ -7,13 +7,13 @@ The backend has been completely rewritten. The frontend must be updated to recon
 ## TODO List
 
 ### 0. Testing
-- [ ] Set up Jest and React Testing Library for unit and component tests
-    - [ ] Install dependencies: `npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event ts-jest`
-    - [ ] Add a Jest config (e.g., `jest.config.js` or use `npx ts-jest config:init`)
-    - [ ] Add a test script to `package.json`: `"test": "jest"`
-    - [ ] Create a `__tests__/` folder in `src/components/` and add a sample test file
-    - [ ] Ensure tests run with `npm test`
-    - [ ] (Optional) Add coverage reporting: `"test:coverage": "jest --coverage"`
+- [x] Set up Jest and React Testing Library for unit and component tests
+    - [x] Install dependencies: `npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event ts-jest`
+    - [x] Add a Jest config (e.g., `jest.config.js` or use `npx ts-jest config:init`)
+    - [x] Add a test script to `package.json`: `"test": "jest"`
+    - [x] Create a `__tests__/` folder in `src/components/` and add a sample test file
+    - [x] Ensure tests run with `npm test`
+    - [x] (Optional) Add coverage reporting: `"test:coverage": "jest --coverage"`
 
 ### 1. General
 - [ ] Review all backend API and socket documentation in `/docs/backend` (especially payloads, event names, and type definitions)
@@ -55,6 +55,11 @@ The backend has been completely rewritten. The frontend must be updated to recon
 - Backend API & Socket Docs: `/docs/backend/`
 - Shared Types & Zod: `/docs/backend/type-architecture.md`, `/docs/backend/shared-types-guide.md`
 - Frontend Docs: `README.md`, `components.md`, `socket.md`
+
+---
+
+## See Also
+- [Main Frontend README](../README.md)
 
 ---
 

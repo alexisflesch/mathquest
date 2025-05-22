@@ -42,7 +42,11 @@
                 "../shared/prisma-client"
             ]
         },
-        "noEmit": true
+        "noEmit": true,
+        "types": [
+            "jest",
+            "@testing-library/jest-dom"
+        ]
     },
     "include": [
         "next-env.d.ts",
