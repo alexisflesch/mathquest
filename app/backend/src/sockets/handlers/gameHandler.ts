@@ -9,7 +9,10 @@ import { registerSharedLiveHandlers } from './sharedLiveHandler';
 export function gameHandler(io: SocketIOServer, socket: Socket): void {
     // Register shared live handlers for join/answer
     registerSharedLiveHandlers(io, socket);
-    // Optionally: registerGameHandlers(io, socket); // keep if there are other game-specific events
+
+    // Import and register game-specific handlers from the ./game directory
+    const { registerGameHandlers } = require('./game');
+    registerGameHandlers(io, socket);
 }
 
 export default gameHandler;

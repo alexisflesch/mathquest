@@ -78,7 +78,7 @@ This document outlines the implementation plan for Phase 8 of the MathQuest back
 Update the existing file with:
 - Rename `join_teacher_control` to `join_dashboard`
 - Use `dashboard_${gameId}` instead of `teacher_control_${gameId}` for room naming
-- Remove unnecessary `teacherId` from payload (use `socket.data.teacherId` instead)
+- Remove unnecessary `userId` from payload (use `socket.data.userId` instead)
 - Add support for projector room via `projection_${gameId}`
 - Enhance `game_control_state` to include complete question data with correct answers
 

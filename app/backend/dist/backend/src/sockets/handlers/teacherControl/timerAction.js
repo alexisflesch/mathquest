@@ -11,25 +11,38 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const logger = (0, logger_1.default)('TimerActionHandler');
 function timerActionHandler(io, socket) {
     return async (payload) => {
+        logger.info({ payload }, 'Received quiz_timer_action event');
+        // Only support gameId, do not allow quizId for timer actions
         const { gameId, action, duration } = payload;
-        const teacherId = socket.data?.teacherId;
-        if (!teacherId) {
+        const userId = socket.data?.userId;
+        logger.info({ gameId, userId, action, duration }, 'Timer action handler entered');
+        if (!gameId) {
+            logger.warn({ action }, 'No gameId provided in payload, aborting timer action');
+            socket.emit('error_dashboard', {
+                code: 'GAME_ID_REQUIRED',
+                message: 'gameId is required to control the timer',
+            });
+            return;
+        }
+        if (!userId) {
+            logger.warn({ gameId, action }, 'No userId on socket, aborting timer action');
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control the timer',
             });
             return;
         }
-        logger.info({ gameId, teacherId, action, duration }, 'Timer action requested');
+        logger.info({ gameId, userId, action, duration }, 'Timer action requested');
         try {
             // Verify authorization
             const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
-                    initiatorUserId: teacherId
+                    initiatorUserId: userId
                 }
             });
             if (!gameInstance) {
+                logger.warn({ gameId, userId, action }, 'Not authorized for this game, aborting timer action');
                 socket.emit('error_dashboard', {
                     code: 'NOT_AUTHORIZED',
                     message: 'Not authorized to control this game',
@@ -39,6 +52,7 @@ function timerActionHandler(io, socket) {
             // Get current game state
             const fullState = await gameStateService_1.default.getFullGameState(gameInstance.accessCode);
             if (!fullState || !fullState.gameState) {
+                logger.warn({ gameId, userId, action }, 'No game state found, aborting timer action');
                 socket.emit('error_dashboard', {
                     code: 'STATE_ERROR',
                     message: 'Could not retrieve game state',
@@ -103,17 +117,19 @@ function timerActionHandler(io, socket) {
                     }
                     break;
             }
+            logger.info({ gameId, action, timer }, 'Timer state after action');
             // Update game state with new timer
             gameState.timer = timer;
             await gameStateService_1.default.updateGameState(gameInstance.accessCode, gameState);
             // Broadcast timer update to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;
-            const gameRoom = `game_${gameInstance.accessCode}`;
+            const liveRoom = `live_${gameInstance.accessCode}`;
             const projectionRoom = `projection_${gameId}`;
+            logger.info({ gameId, action, dashboardRoom, liveRoom, projectionRoom }, 'Emitting timer updates to rooms');
             // To dashboard
             io.to(dashboardRoom).emit('dashboard_timer_updated', { timer });
-            // To game room
-            io.to(gameRoom).emit('game_timer_updated', { timer });
+            // To live room (for quiz players)
+            io.to(liveRoom).emit('game_timer_updated', { timer });
             // To projection room
             io.to(projectionRoom).emit('projection_timer_updated', { timer });
             logger.info({ gameId, action }, 'Timer updated successfully');

@@ -12,11 +12,11 @@ const logger = (0, logger_1.default)('PauseTimerHandler');
 function pauseTimerHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId, accessCode } = payload;
-        const teacherId = socket.data?.teacherId;
+        const userId = socket.data?.userId;
         // Variables that will be needed throughout the function
         let gameInstance = null;
         let gameAccessCode = null;
-        if (!teacherId) {
+        if (!userId) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control timer',
@@ -29,7 +29,7 @@ function pauseTimerHandler(io, socket) {
             }
             return;
         }
-        logger.info({ accessCode, gameId, teacherId }, 'Pausing timer');
+        logger.info({ accessCode, gameId, userId }, 'Pausing timer');
         try {
             // Find the game instance by gameId or accessCode
             if (gameId) {
@@ -76,7 +76,7 @@ function pauseTimerHandler(io, socket) {
                 }
                 return;
             }
-            if (gameInstance.initiatorUserId !== teacherId) {
+            if (gameInstance.initiatorUserId !== userId) {
                 socket.emit('error_dashboard', {
                     code: 'NOT_AUTHORIZED',
                     message: 'You are not authorized to control this game',
@@ -161,7 +161,7 @@ function pauseTimerHandler(io, socket) {
             gameState.timer = timer;
             await gameStateService_1.default.updateGameState(accessCodeStr, gameState);
             // Broadcast to all relevant rooms
-            const gameRoom = `game_${accessCodeStr}`;
+            const gameRoom = `live_${accessCodeStr}`;
             const dashboardRoom = `dashboard_${gameInstance.id}`;
             const projectionRoom = `projection_${gameInstance.id}`;
             // Broadcast to game room

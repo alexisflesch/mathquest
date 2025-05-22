@@ -15,7 +15,7 @@ class QuestionService {
     /**
      * Create a new question
      */
-    async createQuestion(teacherId, data) {
+    async createQuestion(userId, data) {
         try {
             // Create the question in the database
             const question = await prisma_1.prisma.question.create({
@@ -29,7 +29,7 @@ class QuestionService {
                     themes: data.themes,
                     difficulty: data.difficulty,
                     gradeLevel: data.gradeLevel,
-                    author: data.author || teacherId, // Default to teacherId if not specified
+                    author: data.author || userId, // Default to userId if not specified
                     explanation: data.explanation,
                     tags: data.tags || [],
                     timeLimit: data.timeLimit,

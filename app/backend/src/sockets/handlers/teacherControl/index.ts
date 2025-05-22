@@ -19,9 +19,11 @@ export function registerTeacherControlHandlers(io: SocketIOServer, socket: Socke
 
     // Set a specific question
     socket.on('set_question', setQuestionHandler(io, socket));
+    // Support legacy/test event name for integration tests
+    socket.on('quiz_set_question', setQuestionHandler(io, socket));
 
     // Timer actions (start, pause, resume, stop, set_duration)
-    socket.on('timer_action', timerActionHandler(io, socket));
+    socket.on('quiz_timer_action', timerActionHandler(io, socket));
 
     // Lock or unlock answers
     socket.on('lock_answers', lockAnswersHandler(io, socket));

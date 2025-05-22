@@ -411,6 +411,10 @@ async function calculateScores(accessCode, questionId) {
                         const submittedOptionValue = question.answerOptions[submittedAnswer];
                         isCorrect = correctAnswerValues.includes(submittedOptionValue);
                     }
+                    else if (typeof submittedAnswer === 'string') {
+                        // Accept string answers matching the correct value
+                        isCorrect = correctAnswerValues.includes(submittedAnswer);
+                    }
                 }
                 let points = 0;
                 if (isCorrect) {

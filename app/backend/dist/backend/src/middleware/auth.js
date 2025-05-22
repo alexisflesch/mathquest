@@ -17,6 +17,8 @@ const teacherAuth = (req, res, next) => {
     try {
         // Get the authorization header
         const authHeader = req.headers.authorization;
+        // Debug log for incoming Authorization header
+        logger.info({ authHeader }, 'DEBUG: Received Authorization header');
         if (!authHeader) {
             res.status(401).json({ error: 'Authentication required' });
             return;

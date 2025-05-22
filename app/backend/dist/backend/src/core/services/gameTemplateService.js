@@ -57,9 +57,9 @@ class GameTemplateService {
                 defaultMode: data.defaultMode,
                 ...(questions ? {
                     questions: {
-                        create: questions.map((q, idx) => ({
-                            questionUid: q.uid,
-                            sequence: idx + 1
+                        create: questions.map(q => ({
+                            questionUid: q.questionUid, // Corrected: use q.questionUid from input
+                            sequence: q.sequence // Corrected: use q.sequence from input
                         }))
                     }
                 } : {})

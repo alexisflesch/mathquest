@@ -5,15 +5,13 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
 import { redisClient } from '@/config/redis';
 import { configureSocketServer, registerHandlers } from '@/sockets';
+import * as jwt from 'jsonwebtoken'; // Added import
 
 // Patch: Set logger to warn level in test unless overridden
 import createLogger from '@/utils/logger';
 const testLogger = createLogger('TestSetup');
-if (process.env.NODE_ENV === 'test' && !process.env.LOG_LEVEL) {
-    // @ts-ignore
-    global.MIN_LOG_LEVEL = 2; // WARN
-    testLogger.info('Set logger to WARN for tests');
-}
+const testSocketAuthLogger = createLogger('TestSocketAuth'); // Added logger for auth
+const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret'; // Added JWT Secret
 
 // Keep track of any open servers during tests
 const openServers: http.Server[] = [];
@@ -60,19 +58,51 @@ export const startTestServer = async (): Promise<{
 
     // Add authentication middleware (but with relaxed rules for testing)
     io.use(async (socket, next) => {
-        const token = socket.handshake.query.token;
-        const role = socket.handshake.query.role;
+        const token = socket.handshake.query.token as string;
+        const roleFromQuery = socket.handshake.query.role as string;
 
-        // For testing, allow any token/role combination
-        if (token && role) {
-            // Add user data to the socket for handlers to access
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload & { userId: string; username: string; role: string };
+
+                if (!decoded.userId || !decoded.username || !decoded.role) {
+                    testSocketAuthLogger.warn({ decoded, socketId: socket.id }, 'Token decoded but missing essential fields (userId, username, role)');
+                    return next(new Error('Authentication failed in testSetup.ts: Token missing essential fields'));
+                }
+
+                if (roleFromQuery && decoded.role !== roleFromQuery) {
+                    testSocketAuthLogger.warn(
+                        { tokenRole: decoded.role, queryRole: roleFromQuery, socketId: socket.id },
+                        'Role mismatch between JWT and query parameter in testSetup.ts. Using token role.'
+                    );
+                }
+
+                socket.data.user = {
+                    id: decoded.userId, // Set id to userId
+                    userId: decoded.userId,
+                    username: decoded.username,
+                    role: decoded.role
+                };
+                testSocketAuthLogger.debug({ user: socket.data.user, socketId: socket.id }, 'Test user authenticated via JWT in testSetup.ts');
+                next();
+            } catch (err: any) {
+                testSocketAuthLogger.error({ error: err.message, token, socketId: socket.id }, 'Invalid token in testSetup.ts');
+                next(new Error(`Authentication failed in testSetup.ts: Invalid token (${err.message})`));
+            }
+        } else if (roleFromQuery) {
+            // This case might be for tests not using JWT.
+            // For current practiceMode.test.ts, token should always be present.
+            testSocketAuthLogger.warn({ roleFromQuery, socketId: socket.id }, 'Token missing, role provided in query (testSetup.ts). Authenticating with role only.');
             socket.data.user = {
-                id: typeof token === 'string' ? token : 'test-user',
-                role: typeof role === 'string' ? role : 'player'
+                id: 'test-user-no-token', // Generic ID
+                userId: 'test-user-no-token',
+                username: 'Anonymous Test User (No Token)',
+                role: roleFromQuery
             };
             next();
         } else {
-            next(new Error('Authentication failed: Missing token or role'));
+            testSocketAuthLogger.warn({ socketId: socket.id }, 'Missing token and role in query parameters in testSetup.ts');
+            next(new Error('Authentication failed in testSetup.ts: Missing token or role in query parameters'));
         }
     });
 
@@ -143,12 +173,9 @@ export const stopAllTestServers = async (): Promise<void> => {
     // Close all Redis clients
     const redisClosePromises = redisClients.map((client) => {
         try {
-            // Check if the client is still connected before trying to quit
+            // Check if the client is still connected before trying to disconnect
             if (client.status !== 'end' && client.status !== 'close') {
-                return client.quit().catch(() => {
-                    // Ignore errors on quit
-                    return Promise.resolve();
-                });
+                client.disconnect();
             }
             return Promise.resolve();
         } catch (e) {

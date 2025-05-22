@@ -6,7 +6,7 @@ This project is developed primarily by AI agents under human guidance. To ensure
 - **DRY (Don't Repeat Yourself):** Always check for existing utilities, components, or logic before writing new code. Reuse and refactor where possible.
 - **Documentation First:** Every code change must be reflected in the relevant documentation file(s) before or alongside the code update.
 - **Type Safety:** Use TypeScript for all new code. Avoid `any` types unless absolutely necessary and justified in comments.
-- **Small Files:** Keep files under 500 lines where possible. Split logic into focused modules.
+- **Small Files:** Keep files under 500 lines where possible. **Script files (including handlers, services, and utilities) should be kept as short and focused as possible—preferably under 300 lines.** If a file grows too large, split it into smaller modules. Large files increase the risk of AI hallucination and reduce maintainability.
 - **Commenting:** Every file should have a header comment explaining its purpose. Complex logic should be well-commented.
 
 ## Workflow for AI Agents

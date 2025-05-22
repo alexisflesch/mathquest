@@ -1,4 +1,40 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerTournamentHandlers = void 0;
 exports.registerGameHandlers = registerGameHandlers;
@@ -6,41 +42,83 @@ const joinGame_1 = require("./joinGame");
 const gameAnswer_1 = require("./gameAnswer");
 const requestParticipants_1 = require("./requestParticipants");
 const disconnect_1 = require("./disconnect");
+const requestNextQuestion_1 = require("./requestNextQuestion");
+const logger_1 = __importDefault(require("@/utils/logger"));
+const logger = (0, logger_1.default)('GameHandlers');
 function registerGameHandlers(io, socket) {
-    // Debug all events received
-    socket.onAny((event, ...args) => {
-        // eslint-disable-next-line no-console
-        console.log(`[SOCKET.IO onAny] Event received:`, event, args);
-    });
+    logger.info({ socketId: socket.id }, 'Registering game handlers');
     // Register direct handlers on socket instance
     socket.on('join_game', (0, joinGame_1.joinGameHandler)(io, socket));
-    // Enhanced handler for game_answer with additional logging
-    socket.on('game_answer', (payload) => {
-        console.log('[DIRECT HANDLER] game_answer event received with payload:', payload);
-        console.log(`Socket ID: ${socket.id}, Connected: ${socket.connected}`);
-        // Forward to the regular handler
+    socket.on('game_answer', (0, gameAnswer_1.gameAnswerHandler)(io, socket));
+    socket.on('request_participants', (0, requestParticipants_1.requestParticipantsHandler)(io, socket));
+    socket.on('request_next_question', (0, requestNextQuestion_1.requestNextQuestionHandler)(io, socket));
+    socket.on('disconnect', (0, disconnect_1.disconnectHandler)(io, socket));
+    // Direct handler for start_game in practice mode
+    socket.on('start_game', async (payload) => {
+        logger.info({ socketId: socket.id, payload }, 'Start game event received');
         try {
-            // For debugging purposes, log the handler type
-            console.log('[DIRECT HANDLER] Handler type:', typeof (0, gameAnswer_1.gameAnswerHandler)(io, socket));
-            const handlerFn = (0, gameAnswer_1.gameAnswerHandler)(io, socket);
-            handlerFn(payload);
+            const { accessCode, userId } = payload;
+            const prismaInstance = (await Promise.resolve().then(() => __importStar(require('@/db/prisma')))).prisma;
+            const gameInstance = await prismaInstance.gameInstance.findUnique({
+                where: { accessCode },
+                include: {
+                    gameTemplate: {
+                        include: {
+                            questions: {
+                                include: { question: true },
+                                orderBy: { sequence: 'asc' }
+                            }
+                        }
+                    }
+                }
+            });
+            if (!gameInstance || !gameInstance.gameTemplate) {
+                logger.warn({ socketId: socket.id, accessCode }, 'Game instance or template not found');
+                socket.emit('game_error', { message: 'Game not found or template missing.' });
+                return;
+            }
+            if (gameInstance.playMode !== 'practice') {
+                logger.warn({ socketId: socket.id, playMode: gameInstance.playMode }, 'start_game is only for practice mode');
+                socket.emit('game_error', { message: 'start_game only allowed in practice mode.' });
+                return;
+            }
+            // Update game status
+            await prismaInstance.gameInstance.update({
+                where: { id: gameInstance.id },
+                data: { status: 'active', startedAt: new Date() }
+            });
+            // Check if we have questions
+            if (gameInstance.gameTemplate.questions.length === 0) {
+                logger.warn({ socketId: socket.id, accessCode }, 'No questions in template');
+                socket.emit('game_error', { message: 'No questions available in this game.' });
+                return;
+            }
+            // Get first question
+            const firstQuestionInTemplate = gameInstance.gameTemplate.questions[0];
+            const firstQuestion = firstQuestionInTemplate.question;
+            // Send first question
+            logger.info({ socketId: socket.id, questionId: firstQuestion.uid }, 'Sending first question');
+            // Send first question data directly as per QuestionData type
+            socket.emit('game_question', {
+                uid: firstQuestion.uid,
+                text: firstQuestion.text,
+                answerOptions: firstQuestion.answerOptions,
+                correctAnswers: firstQuestion.correctAnswers,
+                timeLimit: firstQuestion.timeLimit,
+                questionType: firstQuestion.questionType,
+                themes: firstQuestion.themes,
+                difficulty: firstQuestion.difficulty,
+                discipline: firstQuestion.discipline,
+                title: firstQuestion.title || undefined,
+                currentQuestionIndex: 0,
+                totalQuestions: gameInstance.gameTemplate.questions.length
+            });
         }
-        catch (error) {
-            console.error('[DIRECT HANDLER] Error in game_answer handler:', error);
-            // Ensure the client gets a response even if the handler fails
-            try {
-                socket.emit('answer_received', {
-                    questionId: payload.questionId || 'unknown',
-                    timeSpent: payload.timeSpent || 0
-                });
-            }
-            catch (emitError) {
-                console.error('[DIRECT HANDLER] Failed to send error response:', emitError);
-            }
+        catch (err) {
+            logger.error({ socketId: socket.id, error: err }, 'Error in start_game handler');
+            socket.emit('game_error', { message: 'Failed to start game: ' + err.message });
         }
     });
-    socket.on('request_participants', (0, requestParticipants_1.requestParticipantsHandler)(io, socket));
-    socket.on('disconnect', (0, disconnect_1.disconnectHandler)(io, socket));
 }
 var index_1 = require("../tournament/index");
 Object.defineProperty(exports, "registerTournamentHandlers", { enumerable: true, get: function () { return index_1.registerTournamentHandlers; } });

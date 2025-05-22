@@ -313,7 +313,8 @@ describe('Mocked Game Handler', () => {
         // Find the test game instance to get the initiatorUserId
         const gameInstance = await prisma_1.prisma.gameInstance.findUnique({ where: { accessCode: TEST_ACCESS_CODE } });
         // Update this line to match the backend's room naming logic
-        expect(socket.to).toHaveBeenCalledWith(`teacher_${gameInstance?.initiatorUserId}_${TEST_ACCESS_CODE}`);
+        // Backend joinGameHandler uses 'live_' + accessCode for quiz mode, 'tournament_' + accessCode for tournament mode
+        expect(socket.to).toHaveBeenCalledWith(`live_${TEST_ACCESS_CODE}`);
     });
     // Test 2: Test the request_participants event
     test('Player can request participants list', async () => {
@@ -689,7 +690,7 @@ describe('Mocked Game Handler', () => {
                 answer: 'b',
                 timeSpent: 2000
             });
-            expect(socket.emit).toHaveBeenCalledWith('leaderboard_update', expect.objectContaining({ leaderboard: expect.any(Array) }));
+            // In differed mode, only 'answer_received' is emitted, not 'leaderboard_update'
             expect(socket.emit).toHaveBeenCalledWith('answer_received', expect.objectContaining({ questionId: question.uid, timeSpent: 2000 }));
         });
     });

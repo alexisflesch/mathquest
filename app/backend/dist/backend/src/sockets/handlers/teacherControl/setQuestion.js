@@ -12,19 +12,19 @@ const logger = (0, logger_1.default)('SetQuestionHandler');
 function setQuestionHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId, questionUid, questionIndex } = payload;
-        const teacherId = socket.data?.teacherId;
+        const userId = socket.data?.userId;
         const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
-        let effectiveTeacherId = teacherId;
+        let effectiveuserId = userId;
         let callbackCalled = false;
-        if (!effectiveTeacherId) {
-            const testTeacherId = socket.handshake.auth.userId;
-            if (testTeacherId && socket.handshake.auth.userType === 'teacher') {
-                socket.data.teacherId = testTeacherId;
-                socket.data.user = { teacherId: testTeacherId, role: 'teacher' };
-                effectiveTeacherId = testTeacherId;
+        if (!effectiveuserId) {
+            const testuserId = socket.handshake.auth.userId;
+            if (testuserId && socket.handshake.auth.userType === 'teacher') {
+                socket.data.userId = testuserId;
+                socket.data.user = { userId: testuserId, role: 'teacher' };
+                effectiveuserId = testuserId;
             }
         }
-        if (!effectiveTeacherId) {
+        if (!effectiveuserId) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control the game',
@@ -38,13 +38,13 @@ function setQuestionHandler(io, socket) {
             }
             return;
         }
-        logger.info({ gameId, teacherId: effectiveTeacherId, questionUid }, 'Setting question');
+        logger.info({ gameId, userId: effectiveuserId, questionUid }, 'Setting question');
         try {
             // Verify authorization
             const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
-                    initiatorUserId: effectiveTeacherId
+                    initiatorUserId: effectiveuserId
                 }
             });
             if (!gameInstance) {
@@ -92,9 +92,14 @@ function setQuestionHandler(io, socket) {
                 return;
             }
             const gameState = fullState.gameState;
+            // Only use questionUid for question lookup; ignore questionIndex
+            if (typeof questionIndex !== 'undefined') {
+                logger.warn({ gameId, questionUid, questionIndex }, 'Received questionIndex in setQuestion payload, but only questionUid is supported. Ignoring questionIndex.');
+            }
             // Find the index of the requested question
             const foundQuestionIndex = gameState.questionIds.findIndex(id => id === questionUid);
             if (foundQuestionIndex === -1) {
+                logger.warn({ gameId, questionUid, questionIds: gameState.questionIds }, 'Question UID not found in gameState');
                 socket.emit('error_dashboard', {
                     code: 'QUESTION_NOT_FOUND',
                     message: 'Question not found in this game',
@@ -141,8 +146,8 @@ function setQuestionHandler(io, socket) {
                 oldQuestionUid,
                 timer: gameState.timer
             });
-            // Also broadcast to the game room (for players)
-            const gameRoom = `game_${gameInstance.accessCode}`;
+            // Also broadcast to the live room (for players)
+            const liveRoom = `live_${gameInstance.accessCode}`;
             // Get the question data to send to players (without correct answers)
             if (question) {
                 // Create questionData object matching QuestionData type
@@ -151,16 +156,31 @@ function setQuestionHandler(io, socket) {
                     title: question.title || undefined,
                     text: question.text,
                     answerOptions: question.answerOptions,
-                    // Send correctAnswers only in teacher mode, for players send a matching array of false values
-                    // This maintains the shape of the data without revealing which answers are correct
                     correctAnswers: new Array(question.answerOptions.length).fill(false),
                     questionType: question.questionType,
                     timeLimit: question.timeLimit || 30,
                     currentQuestionIndex: foundQuestionIndex,
                     totalQuestions: gameState.questionIds.length
                 };
-                // Send the question to the game room
-                io.to(gameRoom).emit('game_question', questionData);
+                // Send the question to the live room
+                // --- DEBUG: Log sockets in the live room before emitting ---
+                const liveRoomSockets = io.sockets.adapter.rooms.get(liveRoom);
+                const liveRoomSocketIds = liveRoomSockets ? Array.from(liveRoomSockets) : [];
+                logger.info({
+                    liveRoom,
+                    liveRoomSocketIds,
+                    payload: { question: questionData, timer: gameState.timer }
+                }, '[DEBUG] Emitting game_question to live room');
+                // --- FORCE CONSOLE LOG FOR TEST VISIBILITY ---
+                console.log('[setQuestion] Emitting game_question:', {
+                    liveRoom,
+                    liveRoomSocketIds,
+                    payload: { question: questionData, timer: gameState.timer }
+                });
+                io.to(liveRoom).emit('game_question', {
+                    question: questionData,
+                    timer: gameState.timer
+                });
             }
             // Broadcast to projection room if needed
             const projectionRoom = `projection_${gameId}`;
@@ -172,24 +192,20 @@ function setQuestionHandler(io, socket) {
             });
             logger.info({ gameId, questionUid, questionIndex: foundQuestionIndex }, 'Question set successfully');
             if (callback && !callbackCalled) {
-                callback({
-                    success: true,
-                    gameId,
-                    questionUid
-                });
+                callback({ success: true, gameId, questionUid });
                 callbackCalled = true;
             }
         }
         catch (error) {
-            logger.error({ error, gameId, questionUid }, 'Error setting question');
+            logger.error({ gameId, error }, 'Error in setQuestionHandler');
             socket.emit('error_dashboard', {
-                code: 'SERVER_ERROR',
-                message: 'Internal server error setting question',
+                code: 'UNKNOWN_ERROR',
+                message: 'An unknown error occurred while setting the question',
             });
             if (callback && !callbackCalled) {
                 callback({
                     success: false,
-                    error: 'Server error'
+                    error: 'Unknown error'
                 });
                 callbackCalled = true;
             }

@@ -82,9 +82,13 @@ export async function runGameFlow(
         const feedbackWait = (typeof questions[i].feedbackWaitTime === 'number' && questions[i].feedbackWaitTime > 0)
             ? questions[i].feedbackWaitTime
             : (options.playMode === 'tournament' ? 1.5 : 1);
+        // Compute feedbackRemaining based on feedback phase timing
+        const feedbackStart = Date.now();
+        const feedbackEnd = feedbackStart + feedbackWait * 1000;
+        const feedbackRemaining = Math.max(0, Math.round((feedbackEnd - Date.now()) / 1000));
         await new Promise((resolve) => setTimeout(resolve, feedbackWait * 1000));
         logger.info({ room: `live_${accessCode}`, event: 'feedback', questionId: questions[i].uid }, '[DEBUG] Emitting feedback');
-        io.to(`live_${accessCode}`).emit('feedback', { questionId: questions[i].uid });
+        io.to(`live_${accessCode}`).emit('feedback', { questionId: questions[i].uid, feedbackRemaining });
         logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid }, '[TRACE] Emitted feedback');
         options.onFeedback?.(i);
     }

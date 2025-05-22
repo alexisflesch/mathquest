@@ -59,7 +59,7 @@ This document provides a comprehensive technical reference for MathQuest's backe
 - `locked`: Boolean, whether answers are locked.
 - `ended`: Boolean, whether the quiz is finished.
 - `profSocketId`: Socket ID of the teacher.
-- `profTeacherId`: Teacher's DB ID.
+- `profuserId`: Teacher's DB ID.
 - `timerStatus`, `timerQuestionId`, `timerTimeLeft`, `timerTimestamp`: Timer tracking for real-time sync.
 - `tournament_code`: Linked tournament code (if any).
 - `connectedSockets`: Set of connected socket IDs.

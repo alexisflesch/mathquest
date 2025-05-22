@@ -35,7 +35,7 @@ globals_1.jest.mock('@/utils/logger', () => {
 describe('QuestionService', () => {
     globals_1.jest.setTimeout(3000);
     let questionService;
-    const mockTeacherId = 'teacher-123';
+    const mockuserId = 'teacher-123';
     beforeEach(() => {
         questionService = new questionService_1.QuestionService();
         globals_1.jest.clearAllMocks();
@@ -55,7 +55,7 @@ describe('QuestionService', () => {
             const mockCreatedQuestion = {
                 uid: 'question-123',
                 ...mockQuestionData,
-                author: mockTeacherId,
+                author: mockuserId,
                 tags: [],
                 isHidden: undefined,
                 timeLimit: undefined,
@@ -65,7 +65,7 @@ describe('QuestionService', () => {
                 updatedAt: new Date()
             };
             prisma_1.prisma.question.create.mockResolvedValue(mockCreatedQuestion);
-            const result = await questionService.createQuestion(mockTeacherId, mockQuestionData);
+            const result = await questionService.createQuestion(mockuserId, mockQuestionData);
             expect(prisma_1.prisma.question.create).toHaveBeenCalledWith({
                 data: expect.objectContaining({
                     title: mockQuestionData.title,
@@ -76,7 +76,7 @@ describe('QuestionService', () => {
                     discipline: mockQuestionData.discipline,
                     themes: mockQuestionData.themes,
                     difficulty: mockQuestionData.difficulty,
-                    author: mockTeacherId
+                    author: mockuserId
                 })
             });
             expect(result).toEqual(mockCreatedQuestion);
@@ -92,7 +92,7 @@ describe('QuestionService', () => {
             };
             const mockError = new Error('Database error');
             prisma_1.prisma.question.create.mockRejectedValue(mockError);
-            await expect(questionService.createQuestion(mockTeacherId, mockQuestionData))
+            await expect(questionService.createQuestion(mockuserId, mockQuestionData))
                 .rejects.toThrow(mockError);
         });
     });

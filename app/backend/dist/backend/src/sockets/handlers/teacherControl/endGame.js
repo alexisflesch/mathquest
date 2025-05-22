@@ -12,21 +12,21 @@ const logger = (0, logger_1.default)('EndGameHandler');
 function endGameHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId } = payload;
-        const teacherId = socket.data?.teacherId;
-        if (!teacherId) {
+        const userId = socket.data?.userId;
+        if (!userId) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to end the game',
             });
             return;
         }
-        logger.info({ gameId, teacherId }, 'Game end requested');
+        logger.info({ gameId, userId }, 'Game end requested');
         try {
             // Verify authorization
             const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
-                    initiatorUserId: teacherId
+                    initiatorUserId: userId
                 }
             });
             if (!gameInstance) {
@@ -60,7 +60,7 @@ function endGameHandler(io, socket) {
             });
             // Broadcast to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;
-            const gameRoom = `game_${gameInstance.accessCode}`;
+            const gameRoom = `live_${gameInstance.accessCode}`;
             const projectionRoom = `projection_${gameId}`;
             // To dashboard
             io.to(dashboardRoom).emit('dashboard_game_status_changed', {

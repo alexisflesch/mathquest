@@ -61,7 +61,7 @@ describe('Lobby Handler', () => {
         const testTemplate = await prisma.gameTemplate.create({
             data: {
                 name: 'Test Quiz Template',
-                creatorId: testTeacher.id, // was creatorTeacherId
+                creatorId: testTeacher.id, // was creatoruserId
                 themes: ['math']
             }
         });

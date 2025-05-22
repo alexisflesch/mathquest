@@ -4,6 +4,7 @@ import { registerLobbyHandlers } from './lobbyHandler';
 import gameHandler from './gameHandler';
 import teacherControlHandler from './teacherControlHandler';
 import { registerTournamentHandlers } from './tournament';
+import { disconnectHandler } from './disconnectHandler';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 
 // Create a handler-specific logger
@@ -16,7 +17,7 @@ const logger = createLogger('ConnectionHandlers');
 export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
     io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
         handleConnection(socket);
-        handleDisconnection(socket);
+        socket.on('disconnect', disconnectHandler(io, socket));
 
         // Register feature-specific handlers
         registerLobbyHandlers(io, socket);
@@ -66,23 +67,23 @@ function handleConnection(socket: Socket<ClientToServerEvents, ServerToClientEve
  * Handle socket disconnection
  * @param socket Connected socket
  */
-function handleDisconnection(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
-    socket.on('disconnect', (reason) => {
-        const user = socket.data || { role: 'anonymous' };
-        logger.info({
-            socketId: socket.id,
-            user,
-            reason
-        }, 'Socket disconnected');
+// function handleDisconnection(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
+//     socket.on('disconnect', (reason) => {
+//         const user = socket.data || { role: 'anonymous' };
+//         logger.info({
+//             socketId: socket.id,
+//             user,
+//             reason
+//         }, 'Socket disconnected (old handler - should be removed after new one is confirmed working)');
 
-        // Example: If the socket was in a game, notify other players
-        if (socket.data.accessCode && socket.data.userId) {
-            // The specific event 'player_left_game' and its payload are defined in ServerToClientEvents
-            socket.to(socket.data.accessCode).emit('player_left_game', {
-                userId: socket.data.userId,
-                socketId: socket.id
-            });
-        }
-        // Add any other cleanup logic needed on disconnection
-    });
-}
+//         // Example: If the socket was in a game, notify other players
+//         // This specific logic is now part of the new disconnectHandler.ts
+//         // if (socket.data.accessCode && socket.data.userId) {
+//         //     socket.to(socket.data.accessCode).emit('player_left_game', {
+//         //         userId: socket.data.userId,
+//         //         socketId: socket.id
+//         //     });
+//         // }
+//         // Add any other cleanup logic needed on disconnection
+//     });
+// }

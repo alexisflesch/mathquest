@@ -12,11 +12,11 @@ const logger = (0, logger_1.default)('StartTimerHandler');
 function startTimerHandler(io, socket) {
     return async (payload, callback) => {
         const { duration, gameId, accessCode } = payload;
-        const teacherId = socket.data?.teacherId;
+        const userId = socket.data?.userId;
         // Variables that will be needed throughout the function
         let gameInstance = null;
         let gameAccessCode = null;
-        if (!teacherId) {
+        if (!userId) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control timer',
@@ -29,7 +29,7 @@ function startTimerHandler(io, socket) {
             }
             return;
         }
-        logger.info({ accessCode, gameId, duration, teacherId }, 'Starting timer');
+        logger.info({ accessCode, gameId, duration, userId }, 'Starting timer');
         try {
             // Find the game instance by gameId or accessCode
             if (gameId) {
@@ -76,7 +76,7 @@ function startTimerHandler(io, socket) {
                 }
                 return;
             }
-            if (gameInstance.initiatorUserId !== teacherId) {
+            if (gameInstance.initiatorUserId !== userId) {
                 // For test environment, check if we should bypass auth check
                 const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
                 // If we're in a test environment and both IDs exist, we'll allow it
@@ -94,7 +94,7 @@ function startTimerHandler(io, socket) {
                     }
                     return;
                 }
-                logger.info({ gameId, teacherId }, 'Test environment: Bypassing authorization check');
+                logger.info({ gameId, userId }, 'Test environment: Bypassing authorization check');
             }
             // Need accessCode for game state operations
             if (!gameAccessCode) {
@@ -168,7 +168,7 @@ function startTimerHandler(io, socket) {
             gameState.timer = timer;
             await gameStateService_1.default.updateGameState(accessCodeStr, gameState);
             // Broadcast to all relevant rooms
-            const gameRoom = `game_${accessCodeStr}`;
+            const gameRoom = `live_${accessCodeStr}`;
             const dashboardRoom = `dashboard_${gameInstance.id}`;
             const projectionRoom = `projection_${gameInstance.id}`;
             // Broadcast to game room

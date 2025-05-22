@@ -72,4 +72,30 @@ From the `backend/` directory:
 
 ---
 
-For more details, see the test files and helpers in `backend/tests/`.
+# JWT Authentication in Integration Tests
+
+**Important:** When writing integration tests for endpoints that require authentication (such as quiz template APIs), you must generate JWT tokens that exactly match backend expectations.
+
+- The backend expects the JWT payload to include `userId`, `username`, and `role` fields.
+- The `role` value must be uppercase (e.g., `'TEACHER'`, not `'teacher'`).
+- The JWT must be signed with the secret in `process.env.JWT_SECRET` (set in test setup to `'test-secret-key-for-tests'`).
+- Use the provided helper (`generateTeacherToken`) and always pass the correct role casing:
+
+```typescript
+// Correct usage in tests:
+const token = generateTeacherToken('teacher-1', 'teacher-1', 'TEACHER');
+```
+
+If you use a lowercase role (e.g., `'teacher'`), the backend will reject the token as malformed or unauthorized.
+
+See also: `backend/tests/helpers/generateTeacherToken.ts` and `src/middleware/auth.ts` for backend verification logic.
+
+---
+
+**Troubleshooting:**
+- If you see 401 errors or `jwt malformed` in test output, check the role casing and secret used to sign the JWT.
+- The backend will only accept tokens with the correct structure and secret.
+
+---
+
+_Last updated: 2025-05-22_

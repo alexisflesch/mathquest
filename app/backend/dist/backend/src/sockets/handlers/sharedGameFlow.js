@@ -23,6 +23,23 @@ async function runGameFlow(io, accessCode, questions, options) {
     logger.info({ accessCode, playMode: options.playMode, questionCount: questions.length }, `[SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.`);
     logger.info({ accessCode }, `[SharedGameFlow] Proceeding with first question immediately.`);
     for (let i = 0; i < questions.length; i++) {
+        // Set and persist timer in game state before emitting question
+        const timeLimitSec = questions[i].timeLimit || 30;
+        const timer = {
+            startedAt: Date.now(),
+            duration: timeLimitSec * 1000,
+            isPaused: false
+        };
+        // Fetch and update game state
+        const currentState = await gameStateService_1.default.getFullGameState(accessCode);
+        if (currentState && currentState.gameState) {
+            const updatedState = {
+                ...currentState.gameState,
+                currentQuestionIndex: i,
+                timer
+            };
+            await gameStateService_1.default.updateGameState(accessCode, updatedState);
+        }
         if (i === 0) {
             const room = io.sockets.adapter.rooms.get(`live_${accessCode}`);
             const socketIds = room ? Array.from(room) : [];
@@ -53,9 +70,13 @@ async function runGameFlow(io, accessCode, questions, options) {
         const feedbackWait = (typeof questions[i].feedbackWaitTime === 'number' && questions[i].feedbackWaitTime > 0)
             ? questions[i].feedbackWaitTime
             : (options.playMode === 'tournament' ? 1.5 : 1);
+        // Compute feedbackRemaining based on feedback phase timing
+        const feedbackStart = Date.now();
+        const feedbackEnd = feedbackStart + feedbackWait * 1000;
+        const feedbackRemaining = Math.max(0, Math.round((feedbackEnd - Date.now()) / 1000));
         await new Promise((resolve) => setTimeout(resolve, feedbackWait * 1000));
         logger.info({ room: `live_${accessCode}`, event: 'feedback', questionId: questions[i].uid }, '[DEBUG] Emitting feedback');
-        io.to(`live_${accessCode}`).emit('feedback', { questionId: questions[i].uid });
+        io.to(`live_${accessCode}`).emit('feedback', { questionId: questions[i].uid, feedbackRemaining });
         logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid }, '[TRACE] Emitted feedback');
         options.onFeedback?.(i);
     }

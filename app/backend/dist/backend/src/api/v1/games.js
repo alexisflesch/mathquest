@@ -101,6 +101,8 @@ router.post('/', auth_1.optionalAuth, async (req, res) => {
             settings,
             initiatorUserId: userId
         });
+        // Initialize game state in Redis immediately after game instance creation
+        await (0, gameStateService_1.initializeGameState)(gameInstance.id);
         res.status(201).json({ gameInstance });
     }
     catch (error) {

@@ -38,7 +38,7 @@ describe('QuestionService', () => {
     jest.setTimeout(3000);
 
     let questionService: QuestionService;
-    const mockTeacherId = 'teacher-123';
+    const mockuserId = 'teacher-123';
 
     beforeEach(() => {
         questionService = new QuestionService();
@@ -60,7 +60,7 @@ describe('QuestionService', () => {
             const mockCreatedQuestion = {
                 uid: 'question-123',
                 ...mockQuestionData,
-                author: mockTeacherId,
+                author: mockuserId,
                 tags: [],
                 isHidden: undefined,
                 timeLimit: undefined,
@@ -70,7 +70,7 @@ describe('QuestionService', () => {
                 updatedAt: new Date()
             };
             (prisma.question.create as any).mockResolvedValue(mockCreatedQuestion);
-            const result = await questionService.createQuestion(mockTeacherId, mockQuestionData);
+            const result = await questionService.createQuestion(mockuserId, mockQuestionData);
             expect(prisma.question.create).toHaveBeenCalledWith({
                 data: expect.objectContaining({
                     title: mockQuestionData.title,
@@ -81,7 +81,7 @@ describe('QuestionService', () => {
                     discipline: mockQuestionData.discipline,
                     themes: mockQuestionData.themes,
                     difficulty: mockQuestionData.difficulty,
-                    author: mockTeacherId
+                    author: mockuserId
                 })
             });
             expect(result).toEqual(mockCreatedQuestion);
@@ -97,7 +97,7 @@ describe('QuestionService', () => {
             };
             const mockError = new Error('Database error');
             (prisma.question.create as any).mockRejectedValue(mockError);
-            await expect(questionService.createQuestion(mockTeacherId, mockQuestionData))
+            await expect(questionService.createQuestion(mockuserId, mockQuestionData))
                 .rejects.toThrow(mockError);
         });
     });

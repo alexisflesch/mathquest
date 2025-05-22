@@ -3,46 +3,95 @@ import { joinGameHandler } from './joinGame';
 import { gameAnswerHandler } from './gameAnswer';
 import { requestParticipantsHandler } from './requestParticipants';
 import { disconnectHandler } from './disconnect';
+import { requestNextQuestionHandler } from './requestNextQuestion';
+import createLogger from '@/utils/logger';
+
+const logger = createLogger('GameHandlers');
 
 export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
-    // Debug all events received
-    socket.onAny((event, ...args) => {
-        // eslint-disable-next-line no-console
-        console.log(`[SOCKET.IO onAny] Event received:`, event, args);
-    });
+    logger.info({ socketId: socket.id }, 'Registering game handlers');
 
     // Register direct handlers on socket instance
     socket.on('join_game', joinGameHandler(io, socket));
+    socket.on('game_answer', gameAnswerHandler(io, socket));
+    socket.on('request_participants', requestParticipantsHandler(io, socket));
+    socket.on('request_next_question', requestNextQuestionHandler(io, socket));
+    socket.on('disconnect', disconnectHandler(io, socket));
 
-    // Enhanced handler for game_answer with additional logging
-    socket.on('game_answer', (payload) => {
-        console.log('[DIRECT HANDLER] game_answer event received with payload:', payload);
-        console.log(`Socket ID: ${socket.id}, Connected: ${socket.connected}`);
+    // Direct handler for start_game in practice mode
+    socket.on('start_game', async (payload) => {
+        logger.info({ socketId: socket.id, payload }, 'Start game event received');
 
-        // Forward to the regular handler
         try {
-            // For debugging purposes, log the handler type
-            console.log('[DIRECT HANDLER] Handler type:', typeof gameAnswerHandler(io, socket));
+            const { accessCode, userId } = payload;
 
-            const handlerFn = gameAnswerHandler(io, socket);
-            handlerFn(payload);
-        } catch (error) {
-            console.error('[DIRECT HANDLER] Error in game_answer handler:', error);
+            const prismaInstance = (await import('@/db/prisma')).prisma;
+            const gameInstance = await prismaInstance.gameInstance.findUnique({
+                where: { accessCode },
+                include: {
+                    gameTemplate: {
+                        include: {
+                            questions: {
+                                include: { question: true },
+                                orderBy: { sequence: 'asc' }
+                            }
+                        }
+                    }
+                }
+            });
 
-            // Ensure the client gets a response even if the handler fails
-            try {
-                socket.emit('answer_received', {
-                    questionId: payload.questionId || 'unknown',
-                    timeSpent: payload.timeSpent || 0
-                });
-            } catch (emitError) {
-                console.error('[DIRECT HANDLER] Failed to send error response:', emitError);
+            if (!gameInstance || !gameInstance.gameTemplate) {
+                logger.warn({ socketId: socket.id, accessCode }, 'Game instance or template not found');
+                socket.emit('game_error', { message: 'Game not found or template missing.' });
+                return;
             }
+
+            if (gameInstance.playMode !== 'practice') {
+                logger.warn({ socketId: socket.id, playMode: gameInstance.playMode }, 'start_game is only for practice mode');
+                socket.emit('game_error', { message: 'start_game only allowed in practice mode.' });
+                return;
+            }
+
+            // Update game status
+            await prismaInstance.gameInstance.update({
+                where: { id: gameInstance.id },
+                data: { status: 'active', startedAt: new Date() }
+            });
+
+            // Check if we have questions
+            if (gameInstance.gameTemplate.questions.length === 0) {
+                logger.warn({ socketId: socket.id, accessCode }, 'No questions in template');
+                socket.emit('game_error', { message: 'No questions available in this game.' });
+                return;
+            }
+
+            // Get first question
+            const firstQuestionInTemplate = gameInstance.gameTemplate.questions[0];
+            const firstQuestion = firstQuestionInTemplate.question;
+
+            // Send first question
+            logger.info({ socketId: socket.id, questionId: firstQuestion.uid }, 'Sending first question');
+            // Send first question data directly as per QuestionData type
+            socket.emit('game_question', {
+                uid: firstQuestion.uid,
+                text: firstQuestion.text,
+                answerOptions: firstQuestion.answerOptions,
+                correctAnswers: firstQuestion.correctAnswers,
+                timeLimit: firstQuestion.timeLimit,
+                questionType: firstQuestion.questionType,
+                themes: firstQuestion.themes,
+                difficulty: firstQuestion.difficulty,
+                discipline: firstQuestion.discipline,
+                title: firstQuestion.title || undefined,
+                currentQuestionIndex: 0,
+                totalQuestions: gameInstance.gameTemplate.questions.length
+            });
+
+        } catch (err) {
+            logger.error({ socketId: socket.id, error: err }, 'Error in start_game handler');
+            socket.emit('game_error', { message: 'Failed to start game: ' + (err as Error).message });
         }
     });
-
-    socket.on('request_participants', requestParticipantsHandler(io, socket));
-    socket.on('disconnect', disconnectHandler(io, socket));
 }
 
 export { registerTournamentHandlers } from '../tournament/index';

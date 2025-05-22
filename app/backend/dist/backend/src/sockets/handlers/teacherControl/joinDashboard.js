@@ -13,8 +13,8 @@ const logger = (0, logger_1.default)('JoinDashboardHandler');
 function joinDashboardHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId, accessCode } = payload;
-        // Get teacherId from socket.data (should be populated by auth middleware)
-        let effectiveTeacherId = socket.data?.teacherId;
+        // Get userId from socket.data (should be populated by auth middleware)
+        let effectiveUserId = socket.data?.userId || socket.data?.user?.userId;
         // Debug authentication data
         logger.info({
             socketId: socket.id,
@@ -22,19 +22,19 @@ function joinDashboardHandler(io, socket) {
             auth: socket.handshake.auth,
             headers: socket.handshake.headers
         }, 'Socket authentication data');
-        if (!effectiveTeacherId) {
-            logger.warn({ gameId, accessCode, socketId: socket.id }, 'No teacherId on socket.data');
-            // Try to get teacherId from auth directly for testing purposes
-            const testTeacherId = socket.handshake.auth.userId;
-            if (testTeacherId && socket.handshake.auth.userType === 'teacher') {
-                logger.info({ testTeacherId }, 'Using teacherId from auth directly for testing');
-                // Set the teacherId on socket.data for future usage
-                socket.data.teacherId = testTeacherId;
-                socket.data.user = { teacherId: testTeacherId, role: 'teacher' };
-                effectiveTeacherId = testTeacherId;
+        if (!effectiveUserId) {
+            logger.warn({ gameId, accessCode, socketId: socket.id }, 'No userId on socket.data');
+            // Try to get userId from auth directly for testing purposes
+            const testUserId = socket.handshake.auth.userId;
+            if (testUserId && socket.handshake.auth.userType === 'teacher') {
+                logger.info({ testUserId }, 'Using userId from auth directly for testing');
+                // Set the userId on socket.data for future usage
+                socket.data.userId = testUserId;
+                socket.data.user = { userId: testUserId, role: 'teacher' };
+                effectiveUserId = testUserId;
             }
             else {
-                // No teacherId found anywhere, return error
+                // No userId found anywhere, return error
                 socket.emit('error_dashboard', {
                     code: 'AUTHENTICATION_REQUIRED',
                     message: 'Authentication required to join dashboard',
@@ -48,9 +48,9 @@ function joinDashboardHandler(io, socket) {
                 return;
             }
         }
-        logger.info({ gameId, accessCode, teacherId: effectiveTeacherId, socketId: socket.id }, 'Teacher joining dashboard');
+        logger.info({ gameId, accessCode, userId: effectiveUserId, socketId: socket.id }, 'User joining dashboard');
         try {
-            // Verify the game exists and belongs to this teacher
+            // Verify the game exists and belongs to this user
             let gameInstance;
             if (gameId) {
                 gameInstance = await prisma_1.prisma.gameInstance.findUnique({
@@ -78,8 +78,8 @@ function joinDashboardHandler(io, socket) {
                 });
                 return;
             }
-            if (gameInstance.initiatorUserId !== effectiveTeacherId) {
-                logger.warn({ gameId, teacherId: effectiveTeacherId, ownerId: gameInstance.initiatorUserId }, 'Teacher not authorized for this game');
+            if (gameInstance.initiatorUserId !== effectiveUserId) {
+                logger.warn({ gameId, userId: effectiveUserId, ownerId: gameInstance.initiatorUserId }, 'User not authorized for this game');
                 // For test environment, check if we should bypass auth check
                 const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
                 // If we're in a test environment and both IDs exist, we'll allow it
@@ -97,24 +97,36 @@ function joinDashboardHandler(io, socket) {
                     }
                     return;
                 }
-                logger.info({ gameId, teacherId: effectiveTeacherId }, 'Test environment: Bypassing authorization check');
+                logger.info({ gameId, userId: effectiveUserId }, 'Test environment: Bypassing authorization check');
             }
             // Join both the dashboard and projection rooms
             const dashboardRoom = `dashboard_${gameId}`;
             const projectionRoom = `projection_${gameId}`;
             await socket.join(dashboardRoom);
             await socket.join(projectionRoom);
-            // Track teacher's dashboard session in Redis
+            // Debug: Log all rooms this socket is in after joining
+            const allRooms = Array.from(socket.rooms);
+            const dashboardSockets = Array.from(io.sockets.adapter.rooms.get(dashboardRoom) || []);
+            const projectionSockets = Array.from(io.sockets.adapter.rooms.get(projectionRoom) || []);
+            logger.info({
+                socketId: socket.id,
+                allRooms,
+                dashboardRoom,
+                dashboardSockets,
+                projectionRoom,
+                projectionSockets
+            }, 'Socket joined dashboard and projection rooms');
+            // Track user's dashboard session in Redis
             await redis_1.redisClient.hset(`${helpers_1.DASHBOARD_PREFIX}${gameId}`, socket.id, JSON.stringify({
                 id: socket.id,
-                teacherId: effectiveTeacherId,
+                userId: effectiveUserId,
                 joinedAt: Date.now()
             }));
             // Get and send comprehensive game state for dashboard
             const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
-            const controlState = await (0, helpers_1.getGameControlState)(gameInstance.id, effectiveTeacherId, isTestEnvironment);
+            const controlState = await (0, helpers_1.getGameControlState)(gameInstance.id, effectiveUserId, isTestEnvironment);
             if (!controlState) {
-                logger.warn({ gameId, teacherId: effectiveTeacherId }, 'Could not retrieve game control state');
+                logger.warn({ gameId, userId: effectiveUserId }, 'Could not retrieve game control state');
                 const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
                 if (isTestEnvironment) {
                     // In test environment, return success anyway to not block tests
@@ -152,9 +164,10 @@ function joinDashboardHandler(io, socket) {
                     }
                 }
                 return;
-            } // Send the comprehensive initial state
+            }
+            // Send the comprehensive initial state
             socket.emit('game_control_state', controlState);
-            logger.info({ gameId, teacherId: effectiveTeacherId, socketId: socket.id }, 'Teacher joined dashboard successfully');
+            logger.info({ gameId, userId: effectiveUserId, socketId: socket.id }, 'User joined dashboard successfully');
             // Call the callback if provided
             if (callback) {
                 console.log('Calling callback with data:', {
@@ -180,7 +193,7 @@ function joinDashboardHandler(io, socket) {
             }
         }
         catch (error) {
-            logger.error({ gameId, teacherId: effectiveTeacherId, error }, 'Error handling join_dashboard event');
+            logger.error({ gameId, userId: effectiveUserId, error }, 'Error handling join_dashboard event');
             socket.emit('error_dashboard', {
                 code: 'JOIN_ERROR',
                 message: 'Failed to join dashboard',

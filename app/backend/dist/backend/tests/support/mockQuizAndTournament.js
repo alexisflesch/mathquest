@@ -6,7 +6,7 @@ const testQuestions_1 = require("./testQuestions");
 exports.mockQuiz = {
     id: 'mock-quiz-1',
     name: 'Mock Quiz for Testing',
-    creatorTeacherId: 'teacher-1',
+    creatoruserId: 'teacher-1',
     themes: ['math', 'science'],
     questions: [
         testQuestions_1.testQuestions[0], // q-math-1
@@ -17,7 +17,7 @@ exports.mockQuiz = {
 exports.mockTournament = {
     id: 'mock-tournament-1',
     name: 'Mock Tournament for Testing',
-    creatorTeacherId: 'teacher-1',
+    creatoruserId: 'teacher-1',
     themes: ['math', 'history'],
     questions: [
         testQuestions_1.testQuestions[1], // q-math-2

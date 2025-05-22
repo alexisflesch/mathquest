@@ -35,6 +35,9 @@ describe('Minimal Tournament Flow', () => {
     let player1, player2;
     let accessCode;
     beforeAll(async () => {
+        // Seed all testQuestions into the database before running tournament tests
+        await prisma_1.prisma.question.deleteMany();
+        await prisma_1.prisma.question.createMany({ data: testQuestions_1.testQuestions });
         const serverSetup = (0, server_1.setupServer)();
         httpServer = serverSetup.httpServer;
         io = serverSetup.io;
@@ -211,10 +214,12 @@ describe('Minimal Tournament Flow', () => {
             .send({ name: 'Test Tournament', playMode: 'tournament', gameTemplateId: gameTemplate.id, discipline: 'math', nbOfQuestions: 1 })
             .set('Authorization', `Bearer ${player1.token}`);
         expect(createRes.status).toBe(201);
-        accessCode = createRes.body.gameInstance.accessCode;
+        const accessCode1 = createRes.body.gameInstance.accessCode;
+        // No need to manually initialize game state; backend now does this
+        await wait(100); // Give backend time to persist state
         // Both join lobby (HTTP)
-        await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode}/join`).send({ userId: player1.id }).set('Authorization', `Bearer ${player1.token}`).expect(200);
-        await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode}/join`).send({ userId: player2.id }).set('Authorization', `Bearer ${player2.token}`).expect(200);
+        await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode1}/join`).send({ userId: player1.id }).set('Authorization', `Bearer ${player1.token}`).expect(200);
+        await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode1}/join`).send({ userId: player2.id }).set('Authorization', `Bearer ${player2.token}`).expect(200);
         // Connect sockets
         // Connect player 1
         socket1 = (0, socket_io_client_1.io)(address, { auth: { token: player1.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
@@ -225,8 +230,8 @@ describe('Minimal Tournament Flow', () => {
             new Promise((res) => socket2.on('connect', () => res())),
         ]);
         // Join tournament via socket
-        socket1.emit('join_tournament', { accessCode, userId: player1.id, username: player1.username });
-        socket2.emit('join_tournament', { accessCode, userId: player2.id, username: player2.username });
+        socket1.emit('join_tournament', { accessCode: accessCode1, userId: player1.id, username: player1.username });
+        socket2.emit('join_tournament', { accessCode: accessCode1, userId: player2.id, username: player2.username });
         await Promise.all([
             waitForEvent(socket1, 'game_joined'),
             waitForEvent(socket2, 'game_joined'),
@@ -237,7 +242,7 @@ describe('Minimal Tournament Flow', () => {
             .send({ status: 'active' })
             .set('Authorization', `Bearer ${player1.token}`)
             .expect(200);
-        socket1.emit('start_tournament', { accessCode });
+        socket1.emit('start_tournament', { accessCode: accessCode1 });
         // Both should receive Q1
         const [q1p1, q1p2] = await Promise.all([
             waitForEvent(socket1, 'game_question', 10000),
@@ -245,6 +250,47 @@ describe('Minimal Tournament Flow', () => {
         ]);
         expect(q1p1.question.uid).toBe(testQuestions_1.testQuestions[0].uid);
         expect(q1p2.question.uid).toBe(testQuestions_1.testQuestions[0].uid);
+        // Player 1 answers correctly, Player 2 answers incorrectly
+        // correctAnswers is a boolean array, answerOptions is a string array
+        const correctIndex = q1p1.question.correctAnswers.findIndex((v) => v);
+        const correctAnswer = q1p1.question.answerOptions[correctIndex];
+        // Pick a wrong answer (first option that is not correct)
+        const wrongIndex = q1p1.question.correctAnswers.findIndex((v, idx) => !v && idx !== correctIndex);
+        const wrongAnswer = q1p2.question.answerOptions[wrongIndex];
+        expect(wrongAnswer).toBeDefined();
+        socket1.emit('tournament_answer', {
+            accessCode: accessCode1,
+            userId: player1.id,
+            questionId: q1p1.question.uid,
+            answer: correctAnswer,
+            timeSpent: 2
+        });
+        socket2.emit('tournament_answer', {
+            accessCode: accessCode1,
+            userId: player2.id,
+            questionId: q1p2.question.uid,
+            answer: wrongAnswer,
+            timeSpent: 2
+        });
+        // Wait for correct_answers event from backend for both
+        const [ca1, ca2] = await Promise.all([
+            waitForEvent(socket1, 'correct_answers', 10000),
+            waitForEvent(socket2, 'correct_answers', 10000),
+        ]);
+        // Print the raw leaderboard for debugging
+        const leaderboardRes = await (0, supertest_1.default)(address)
+            .get(`/api/v1/games/${accessCode1}/leaderboard`)
+            .set('Authorization', `Bearer ${player1.token}`)
+            .expect(200);
+        // Print the raw leaderboard for debugging
+        // eslint-disable-next-line no-console
+        console.log('Leaderboard response:', JSON.stringify(leaderboardRes.body, null, 2));
+        const leaderboard = leaderboardRes.body.leaderboard || leaderboardRes.body;
+        const p1Entry = leaderboard.find((entry) => entry.userId === player1.id);
+        const p2Entry = leaderboard.find((entry) => entry.userId === player2.id);
+        expect(p1Entry).toBeDefined();
+        expect(p2Entry).toBeDefined();
+        expect(p1Entry.score).toBeGreaterThan(p2Entry.score);
     });
     it('P1 creates, P2 joins, backend sets the rhythm', async () => {
         // Create template and game
@@ -263,10 +309,12 @@ describe('Minimal Tournament Flow', () => {
             .send({ name: 'Test Tournament', playMode: 'tournament', gameTemplateId: gameTemplate.id, discipline: 'math', nbOfQuestions: 1 })
             .set('Authorization', `Bearer ${player1.token}`);
         expect(createRes.status).toBe(201);
-        accessCode = createRes.body.gameInstance.accessCode;
+        const accessCode2 = createRes.body.gameInstance.accessCode;
+        // No need to manually initialize game state; backend now does this
+        await wait(100); // Give backend time to persist state
         // Both join lobby (HTTP)
-        await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode}/join`).send({ userId: player1.id }).set('Authorization', `Bearer ${player1.token}`).expect(200);
-        await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode}/join`).send({ userId: player2.id }).set('Authorization', `Bearer ${player2.token}`).expect(200);
+        await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode2}/join`).send({ userId: player1.id }).set('Authorization', `Bearer ${player1.token}`).expect(200);
+        await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode2}/join`).send({ userId: player2.id }).set('Authorization', `Bearer ${player2.token}`).expect(200);
         // Connect sockets
         // Connect player 1
         socket1 = (0, socket_io_client_1.io)(address, { auth: { token: player1.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
@@ -277,8 +325,8 @@ describe('Minimal Tournament Flow', () => {
             new Promise((res) => socket2.on('connect', () => res())),
         ]);
         // Join tournament via socket
-        socket1.emit('join_tournament', { accessCode, userId: player1.id, username: player1.username });
-        socket2.emit('join_tournament', { accessCode, userId: player2.id, username: player2.username });
+        socket1.emit('join_tournament', { accessCode: accessCode2, userId: player1.id, username: player1.username });
+        socket2.emit('join_tournament', { accessCode: accessCode2, userId: player2.id, username: player2.username });
         await Promise.all([
             waitForEvent(socket1, 'game_joined'),
             waitForEvent(socket2, 'game_joined'),
@@ -289,7 +337,7 @@ describe('Minimal Tournament Flow', () => {
             .send({ status: 'active' })
             .set('Authorization', `Bearer ${player1.token}`)
             .expect(200);
-        socket1.emit('start_tournament', { accessCode });
+        socket1.emit('start_tournament', { accessCode: accessCode2 });
         // Wait for tournament_starting and countdown_complete
         await Promise.all([
             waitForEvent(socket1, 'tournament_starting', 5000),
@@ -306,19 +354,26 @@ describe('Minimal Tournament Flow', () => {
         ]);
         expect(q1p1.question.uid).toBe(testQuestions_1.testQuestions[0].uid);
         expect(q1p2.question.uid).toBe(testQuestions_1.testQuestions[0].uid);
-        // Both send answers
+        // Player 1 answers correctly, Player 2 answers incorrectly
+        // correctAnswers is a boolean array, answerOptions is a string array
+        const correctIndex = q1p1.question.correctAnswers.findIndex((v) => v);
+        const correctAnswer = q1p1.question.answerOptions[correctIndex];
+        // Pick a wrong answer (first option that is not correct)
+        const wrongIndex = q1p1.question.correctAnswers.findIndex((v, idx) => !v && idx !== correctIndex);
+        const wrongAnswer = q1p2.question.answerOptions[wrongIndex];
+        expect(wrongAnswer).toBeDefined();
         socket1.emit('tournament_answer', {
-            accessCode,
+            accessCode: accessCode2,
             userId: player1.id,
             questionId: q1p1.question.uid,
-            answer: q1p1.question.answerOptions[0],
+            answer: correctAnswer,
             timeSpent: 2
         });
         socket2.emit('tournament_answer', {
-            accessCode,
+            accessCode: accessCode2,
             userId: player2.id,
             questionId: q1p2.question.uid,
-            answer: q1p2.question.answerOptions[0],
+            answer: wrongAnswer,
             timeSpent: 2
         });
         // Wait for correct_answers event from backend for both
@@ -326,7 +381,19 @@ describe('Minimal Tournament Flow', () => {
             waitForEvent(socket1, 'correct_answers', 10000),
             waitForEvent(socket2, 'correct_answers', 10000),
         ]);
-        expect(ca1.questionId).toBe(testQuestions_1.testQuestions[0].uid);
-        expect(ca2.questionId).toBe(testQuestions_1.testQuestions[0].uid);
+        // Print the raw leaderboard for debugging
+        const leaderboardRes = await (0, supertest_1.default)(address)
+            .get(`/api/v1/games/${accessCode2}/leaderboard`)
+            .set('Authorization', `Bearer ${player1.token}`)
+            .expect(200);
+        // Print the raw leaderboard for debugging
+        // eslint-disable-next-line no-console
+        console.log('Leaderboard response:', JSON.stringify(leaderboardRes.body, null, 2));
+        const leaderboard = leaderboardRes.body.leaderboard || leaderboardRes.body;
+        const p1Entry = leaderboard.find((entry) => entry.userId === player1.id);
+        const p2Entry = leaderboard.find((entry) => entry.userId === player2.id);
+        expect(p1Entry).toBeDefined();
+        expect(p2Entry).toBeDefined();
+        expect(p1Entry.score).toBeGreaterThan(p2Entry.score);
     });
 });

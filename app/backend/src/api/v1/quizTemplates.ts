@@ -25,7 +25,7 @@ export const __setGameTemplateServiceForTesting = (mockService: GameTemplateServ
 
 /**
  * Create a new quiz template
- * POST /api/v1/game-templates
+ * POST /api/v1/quiz-templates
  * Requires teacher authentication
  */
 router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void> => {
@@ -67,13 +67,13 @@ router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void>
         res.status(201).type('application/json').json({ gameTemplate });
     } catch (error) {
         logger.error({ error }, 'Error creating quiz template');
-        res.status(500).json({ error: 'An error occurred while creating the quiz template' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while creating the quiz template' });
     }
 });
 
 /**
  * Get a quiz template by ID
- * GET /api/v1/game-templates/:id
+ * GET /api/v1/quiz-templates/:id
  * Requires teacher authentication
  */
 router.get('/:id', teacherAuth, async (req: Request, res: Response): Promise<void> => {
@@ -102,13 +102,13 @@ router.get('/:id', teacherAuth, async (req: Request, res: Response): Promise<voi
         res.status(200).type('application/json').json({ gameTemplate });
     } catch (error) {
         logger.error({ error }, 'Error fetching quiz template');
-        res.status(500).json({ error: 'An error occurred while fetching the quiz template' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while fetching the quiz template' });
     }
 });
 
 /**
  * Get all quiz templates for a teacher with filtering and pagination
- * GET /api/v1/game-templates
+ * GET /api/v1/quiz-templates
  * Requires teacher authentication
  */
 router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> => {
@@ -153,13 +153,13 @@ router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> 
         res.status(200).type('application/json').json(result);
     } catch (error) {
         logger.error({ error }, 'Error fetching quiz templates');
-        res.status(500).json({ error: 'An error occurred while fetching quiz templates' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while fetching quiz templates' });
     }
 });
 
 /**
  * Update a quiz template
- * PUT /api/v1/game-templates/:id
+ * PUT /api/v1/quiz-templates/:id
  * Requires teacher authentication
  */
 router.put('/:id', teacherAuth, async (req: Request, res: Response): Promise<void> => {
@@ -185,22 +185,22 @@ router.put('/:id', teacherAuth, async (req: Request, res: Response): Promise<voi
         logger.error({ error }, 'Error updating quiz template');
 
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
 
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
 
-        res.status(500).json({ error: 'An error occurred while updating the quiz template' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while updating the quiz template' });
     }
 });
 
 /**
  * Delete a quiz template
- * DELETE /api/v1/game-templates/:id
+ * DELETE /api/v1/quiz-templates/:id
  * Requires teacher authentication
  */
 router.delete('/:id', teacherAuth, async (req: Request, res: Response): Promise<void> => {
@@ -219,22 +219,22 @@ router.delete('/:id', teacherAuth, async (req: Request, res: Response): Promise<
         logger.error({ error }, 'Error deleting quiz template');
 
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
 
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
 
-        res.status(500).json({ error: 'An error occurred while deleting the quiz template' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while deleting the quiz template' });
     }
 });
 
 /**
  * Add a question to a quiz template
- * POST /api/v1/game-templates/:id/questions
+ * POST /api/v1/quiz-templates/:id/questions
  * Requires teacher authentication
  */
 router.post('/:id/questions', teacherAuth, async (req: Request, res: Response): Promise<void> => {
@@ -264,22 +264,22 @@ router.post('/:id/questions', teacherAuth, async (req: Request, res: Response): 
         logger.error({ error }, 'Error adding question to quiz template');
 
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
 
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
 
-        res.status(500).json({ error: 'An error occurred while adding the question' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while adding the question' });
     }
 });
 
 /**
  * Remove a question from a quiz template
- * DELETE /api/v1/game-templates/:id/questions/:questionUid
+ * DELETE /api/v1/quiz-templates/:id/questions/:questionUid
  * Requires teacher authentication
  */
 router.delete('/:id/questions/:questionUid', teacherAuth, async (req: Request, res: Response): Promise<void> => {
@@ -302,22 +302,22 @@ router.delete('/:id/questions/:questionUid', teacherAuth, async (req: Request, r
         logger.error({ error }, 'Error removing question from quiz template');
 
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
 
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
 
-        res.status(500).json({ error: 'An error occurred while removing the question' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while removing the question' });
     }
 });
 
 /**
  * Update question sequence in a quiz template
- * PUT /api/v1/game-templates/:id/questions-sequence
+ * PUT /api/v1/quiz-templates/:id/questions-sequence
  * Requires teacher authentication
  */
 router.put('/:id/questions-sequence', teacherAuth, async (req: Request, res: Response): Promise<void> => {
@@ -346,16 +346,16 @@ router.put('/:id/questions-sequence', teacherAuth, async (req: Request, res: Res
         logger.error({ error }, 'Error updating question sequence');
 
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
 
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
 
-        res.status(500).json({ error: 'An error occurred while updating question sequence' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while updating question sequence' });
     }
 });
 

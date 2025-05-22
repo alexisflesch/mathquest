@@ -8,6 +8,7 @@ const testSetup_1 = require("../testSetup");
 const prisma_1 = require("../../src/db/prisma");
 const redis_1 = require("../../src/config/redis");
 const gameStateService_1 = __importDefault(require("../../src/core/gameStateService"));
+const jwt_1 = __importDefault(require("../helpers/jwt"));
 // Global test variables
 let io;
 let clientSockets = []; // Initialize as empty array
@@ -16,7 +17,7 @@ let serverCleanup;
 // Variables to store IDs from beforeAll
 let gameInstanceIdDb;
 let firstQuestionUidDb;
-let teacherIdDb;
+let userIdDb;
 // Test access code for fake game instance
 const TEST_ACCESS_CODE = 'TST789';
 // Helper to wait for an event
@@ -91,7 +92,7 @@ describe('Game Handler', () => {
                 teacherProfile: { create: {} }
             }
         });
-        teacherIdDb = testTeacher.id;
+        userIdDb = testTeacher.id;
         // Create a quiz template with some questions
         const testTemplate = await prisma_1.prisma.gameTemplate.create({
             data: {
@@ -157,7 +158,7 @@ describe('Game Handler', () => {
                     showLeaderboard: true
                 },
                 gameTemplateId: testTemplate.id,
-                initiatorUserId: teacherIdDb
+                initiatorUserId: userIdDb
             }
         });
         gameInstanceIdDb = createdGameInstance.id; // Store game instance ID
@@ -186,8 +187,8 @@ describe('Game Handler', () => {
             }
         }
         clientSockets = [];
-        // Clear Redis game data
-        const keys = await redis_1.redisClient.keys(`mathquest:game:participants:${TEST_ACCESS_CODE}`);
+        // Clear all Redis keys related to the test game
+        const keys = await redis_1.redisClient.keys(`mathquest:game:*${TEST_ACCESS_CODE}*`);
         if (keys.length > 0) {
             await redis_1.redisClient.del(keys);
         }
@@ -229,6 +230,10 @@ describe('Game Handler', () => {
         if (query.role === 'player' && !query.userId) {
             query.userId = 'player-123';
         }
+        // If a token is not provided, generate a valid JWT for the user
+        if (!query.token && query.userId) {
+            query.token = (0, jwt_1.default)(query.userId, query.username || 'Test Player', 'STUDENT');
+        }
         const socket = (0, socket_io_client_1.default)(`http://localhost:${port}`, {
             path: '/api/socket.io',
             query,
@@ -249,7 +254,8 @@ describe('Game Handler', () => {
     test('Player can join a game', async () => {
         // Create client socket
         const socket = createSocketClient({
-            token: 'player-token-123',
+            userId: 'player-123',
+            username: 'Test Player',
             role: 'player'
         });
         clientSockets.push(socket);
@@ -373,11 +379,13 @@ describe('Game Handler', () => {
     test('Multiple players can join a game and see each other', async () => {
         // Create 2 client sockets
         const socket1 = createSocketClient({
-            token: 'player1-token',
+            userId: 'player-1',
+            username: 'Player 1',
             role: 'player'
         });
         const socket2 = createSocketClient({
-            token: 'player2-token',
+            userId: 'player-2',
+            username: 'Player 2',
             role: 'player'
         });
         clientSockets.push(socket1, socket2);
@@ -420,6 +428,9 @@ describe('Game Handler', () => {
         await joinPromise2;
         // Wait a bit to make sure all events are processed
         await wait(100);
+        // Debug: print all participant entries in Redis
+        const participantEntries = await redis_1.redisClient.hgetall(`mathquest:game:participants:${TEST_ACCESS_CODE}`);
+        console.log('DEBUG: Redis participants:', participantEntries);
         // Verify participants in Redis
         const participantsCount = await redis_1.redisClient.hlen(`mathquest:game:participants:${TEST_ACCESS_CODE}`);
         expect(participantsCount).toBe(2);
@@ -446,11 +457,13 @@ describe('Game Handler', () => {
     test('Simplified test: Multiple players can join a game', async () => {
         // Create 2 client sockets
         const socket1 = createSocketClient({
-            token: 'player1-token',
+            userId: 'player-1',
+            username: 'Player 1',
             role: 'player'
         });
         const socket2 = createSocketClient({
-            token: 'player2-token',
+            userId: 'player-2',
+            username: 'Player 2',
             role: 'player'
         });
         clientSockets.push(socket1, socket2);
@@ -491,6 +504,9 @@ describe('Game Handler', () => {
         ]);
         // Wait briefly to allow Redis operations to complete
         await wait(500);
+        // Debug: print all participant entries in Redis
+        const participantEntries = await redis_1.redisClient.hgetall(`mathquest:game:participants:${TEST_ACCESS_CODE}`);
+        console.log('DEBUG: Redis participants:', participantEntries);
         // Directly verify the Redis state
         const participantsCount = await redis_1.redisClient.hlen(`mathquest:game:participants:${TEST_ACCESS_CODE}`);
         expect(participantsCount).toBe(2);

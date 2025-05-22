@@ -2,6 +2,7 @@
 ARQOS : Advanced Realtime Quiz(zing) Online System
 IRQOS : Interactive Real-time Quiz(zing) Online System
 ASTOR — Advanced System for Trivia, Open-source, and Real-time
+Brainzorn, Zornigma, Zornify, Axorn, Zornium (dérivé du lemme de Zorn)
 
 # MathQuest
 

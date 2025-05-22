@@ -255,11 +255,11 @@ class GameInstanceService {
     /**
      * Get active games created by a teacher
      */
-    async getTeacherActiveGames(teacherId) {
+    async getTeacherActiveGames(userId) {
         try {
             return await prisma_1.prisma.gameInstance.findMany({
                 where: {
-                    initiatorUserId: teacherId,
+                    initiatorUserId: userId,
                     status: { in: ['pending', 'active', 'paused'] }
                 },
                 include: {
@@ -280,7 +280,7 @@ class GameInstanceService {
             });
         }
         catch (error) {
-            logger.error({ error }, `Error fetching active games for teacher ${teacherId}`);
+            logger.error({ error }, `Error fetching active games for teacher ${userId}`);
             throw error;
         }
     }

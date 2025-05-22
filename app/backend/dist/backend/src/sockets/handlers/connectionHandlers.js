@@ -9,6 +9,7 @@ const lobbyHandler_1 = require("./lobbyHandler");
 const gameHandler_1 = __importDefault(require("./gameHandler"));
 const teacherControlHandler_1 = __importDefault(require("./teacherControlHandler"));
 const tournament_1 = require("./tournament");
+const disconnectHandler_1 = require("./disconnectHandler");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('ConnectionHandlers');
 /**
@@ -18,7 +19,7 @@ const logger = (0, logger_1.default)('ConnectionHandlers');
 function registerConnectionHandlers(io) {
     io.on('connection', (socket) => {
         handleConnection(socket);
-        handleDisconnection(socket);
+        socket.on('disconnect', (0, disconnectHandler_1.disconnectHandler)(io, socket));
         // Register feature-specific handlers
         (0, lobbyHandler_1.registerLobbyHandlers)(io, socket);
         (0, gameHandler_1.default)(io, socket);
@@ -61,22 +62,22 @@ function handleConnection(socket) {
  * Handle socket disconnection
  * @param socket Connected socket
  */
-function handleDisconnection(socket) {
-    socket.on('disconnect', (reason) => {
-        const user = socket.data || { role: 'anonymous' };
-        logger.info({
-            socketId: socket.id,
-            user,
-            reason
-        }, 'Socket disconnected');
-        // Example: If the socket was in a game, notify other players
-        if (socket.data.accessCode && socket.data.userId) {
-            // The specific event 'player_left_game' and its payload are defined in ServerToClientEvents
-            socket.to(socket.data.accessCode).emit('player_left_game', {
-                userId: socket.data.userId,
-                socketId: socket.id
-            });
-        }
-        // Add any other cleanup logic needed on disconnection
-    });
-}
+// function handleDisconnection(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
+//     socket.on('disconnect', (reason) => {
+//         const user = socket.data || { role: 'anonymous' };
+//         logger.info({
+//             socketId: socket.id,
+//             user,
+//             reason
+//         }, 'Socket disconnected (old handler - should be removed after new one is confirmed working)');
+//         // Example: If the socket was in a game, notify other players
+//         // This specific logic is now part of the new disconnectHandler.ts
+//         // if (socket.data.accessCode && socket.data.userId) {
+//         //     socket.to(socket.data.accessCode).emit('player_left_game', {
+//         //         userId: socket.data.userId,
+//         //         socketId: socket.id
+//         //     });
+//         // }
+//         // Add any other cleanup logic needed on disconnection
+//     });
+// }

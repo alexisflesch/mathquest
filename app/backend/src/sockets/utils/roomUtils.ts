@@ -26,7 +26,7 @@ export async function joinRoom(socket: Socket, roomName: string, userData?: Reco
         const roomKey = `${ROOM_KEY_PREFIX}${roomName}`;
         const memberData = {
             socketId,
-            userId: user.teacherId || user.userId || 'anonymous',
+            userId: user.userId || user.userId || 'anonymous',
             userRole: user.role,
             joinedAt: Date.now(),
             ...userData

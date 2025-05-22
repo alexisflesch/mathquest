@@ -19,8 +19,10 @@ function registerTeacherControlHandlers(io, socket) {
     socket.on('join_dashboard', (0, joinDashboard_1.joinDashboardHandler)(io, socket));
     // Set a specific question
     socket.on('set_question', (0, setQuestion_1.setQuestionHandler)(io, socket));
+    // Support legacy/test event name for integration tests
+    socket.on('quiz_set_question', (0, setQuestion_1.setQuestionHandler)(io, socket));
     // Timer actions (start, pause, resume, stop, set_duration)
-    socket.on('timer_action', (0, timerAction_1.timerActionHandler)(io, socket));
+    socket.on('quiz_timer_action', (0, timerAction_1.timerActionHandler)(io, socket));
     // Lock or unlock answers
     socket.on('lock_answers', (0, lockAnswers_1.lockAnswersHandler)(io, socket));
     // End the game

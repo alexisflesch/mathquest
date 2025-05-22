@@ -55,15 +55,14 @@ const socketAuthMiddleware = (socket, next) => {
         const userId = socket.handshake.auth.userId || socket.handshake.query.userId;
         const userType = socket.handshake.auth.userType || socket.handshake.query.userType;
         const token = socket.handshake.auth.token || socket.handshake.query.token;
-        // --- PATCH: Accept teacherId from auth or query for test/dev compatibility ---
-        const teacherId = socket.handshake.auth.teacherId || socket.handshake.query.teacherId;
-        if (teacherId) {
-            socket.data.teacherId = teacherId;
+        // --- PATCH: Accept userId from auth or query for test/dev compatibility ---
+        if (userId) {
+            socket.data.userId = userId;
             socket.data.user = {
-                teacherId,
+                userId,
                 role: 'teacher'
             };
-            logger.debug({ teacherId, socketId: socket.id }, 'Teacher socket authenticated via teacherId (test/dev mode)');
+            logger.debug({ userId, socketId: socket.id }, 'Teacher socket authenticated via userId (test/dev mode)');
         }
         // --- END PATCH ---
         // Store connection info for debugging

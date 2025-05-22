@@ -166,7 +166,7 @@ describe('Question API Integration Tests', () => {
             // Override auth middleware just for this test
             globals_1.jest.mock('@/middleware/auth', () => ({
                 teacherAuth: (req, res, next) => {
-                    // No teacherId in req.user
+                    // No userId in req.user
                     req.user = { userId: 'player-123' };
                     next();
                 }

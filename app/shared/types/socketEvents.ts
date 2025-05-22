@@ -98,6 +98,7 @@ export interface ClientToServerEvents {
     join_game: (payload: JoinGamePayload) => void;
     game_answer: (payload: GameAnswerPayload) => void;
     request_participants: (payload: { accessCode: string }) => void;
+    request_next_question: (payload: { accessCode: string; userId: string; currentQuestionId: string }) => void;
     // Example: teacher controls
     teacher_set_question: (payload: { accessCode: string; questionUid: string; questionIndex: number }) => void;
     teacher_timer_action: (payload: { accessCode: string; action: 'start' | 'pause' | 'resume' | 'stop' | 'set_duration'; duration?: number }) => void;
@@ -114,7 +115,13 @@ export interface ServerToClientEvents {
 
     game_joined: (payload: GameJoinedPayload) => void; // Updated to use GameJoinedPayload
     game_question: (payload: QuestionData) => void;
-    answer_received: (payload: { questionId: string; timeSpent: number; /* any other relevant ack data */ }) => void;
+    answer_received: (payload: {
+        questionId: string;
+        timeSpent: number;
+        correct?: boolean;
+        correctAnswers?: boolean[];
+        explanation?: string;
+    }) => void;
     leaderboard_update: (payload: { leaderboard: LeaderboardEntryData[] }) => void;
     player_joined_game: (payload: PlayerJoinedGamePayload) => void; // Updated to use PlayerJoinedGamePayload
     player_left_game: (payload: { userId: string; socketId: string }) => void; // Broadcast when a player leaves
@@ -128,7 +135,7 @@ export interface ServerToClientEvents {
     game_state_update: (payload: any /* TODO: Define GameStatePayload for overall game state */) => void;
     timer_update: (payload: { timeLeft: number | null; running: boolean; duration?: number }) => void;
     answers_locked: (payload: { locked: boolean }) => void;
-    game_ended: (payload: { accessCode: string; /* any final stats */ }) => void;
+    game_ended: (payload: { accessCode: string; correct?: number; total?: number; score?: number; totalQuestions?: number; /* any final stats */ }) => void;
 
     game_error: (payload: ErrorPayload) => void;
     game_already_played: (payload: GameAlreadyPlayedPayload) => void; // Updated to use GameAlreadyPlayedPayload

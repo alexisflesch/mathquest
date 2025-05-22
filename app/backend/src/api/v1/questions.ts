@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { QuestionService, QuestionCreationData, QuestionUpdateData } from '@/core/services/questionService';
-import { teacherAuth } from '@/middleware/auth';
+import { teacherAuth, optionalAuth } from '@/middleware/auth';
 import createLogger from '@/utils/logger';
 import { questionSchema, questionCreationSchema } from '../../../../shared/types/quiz/question.zod';
 
@@ -60,7 +60,7 @@ router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void>
  * Get a question by ID
  * GET /api/v1/questions/:uid
  */
-router.get('/:uid', async (req: Request, res: Response): Promise<void> => {
+router.get('/:uid', optionalAuth, async (req: Request, res: Response): Promise<void> => {
     try {
         const { uid } = req.params;
 
@@ -88,7 +88,7 @@ router.get('/:uid', async (req: Request, res: Response): Promise<void> => {
  * Get all questions with filtering and pagination
  * GET /api/v1/questions
  */
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void> => {
     try {
         const {
             discipline,
@@ -97,7 +97,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             gradeLevel,
             tags,
             questionType,
-            includeHidden,
+            includeHidden, // req.query.includeHidden (string | undefined)
             page = '1',
             pageSize = '20'
         } = req.query;
@@ -124,8 +124,20 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
         if (questionType) filters.questionType = questionType as string;
 
-        // Only teachers can see hidden questions
-        filters.includeHidden = req.user?.userId && req.user?.role === 'TEACHER' && includeHidden === 'true';
+        // Handle includeHidden filter
+        // If includeHidden query param is provided (e.g., 'true' or 'false')
+        if (typeof includeHidden === 'string') {
+            if (req.user?.role === 'TEACHER') {
+                filters.includeHidden = (includeHidden === 'true');
+            } else {
+                // Non-teachers cannot request hidden questions.
+                // If they specify includeHidden, it's treated as false.
+                filters.includeHidden = false;
+            }
+        }
+        // If includeHidden query param is NOT provided (is undefined),
+        // filters.includeHidden remains undefined on the filters object.
+        // The service layer will handle the default visibility.
 
         const pagination = {
             skip: (Number(page) - 1) * Number(pageSize),

@@ -11,13 +11,13 @@ const logger = createLogger('StartTimerHandler');
 export function startTimerHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: StartTimerPayload, callback?: (data: any) => void) => {
         const { duration, gameId, accessCode } = payload;
-        const teacherId = socket.data?.teacherId;
+        const userId = socket.data?.userId;
 
         // Variables that will be needed throughout the function
         let gameInstance: any = null;
         let gameAccessCode: string | null = null;
 
-        if (!teacherId) {
+        if (!userId) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control timer',
@@ -31,7 +31,7 @@ export function startTimerHandler(io: SocketIOServer, socket: Socket) {
             return;
         }
 
-        logger.info({ accessCode, gameId, duration, teacherId }, 'Starting timer');
+        logger.info({ accessCode, gameId, duration, userId }, 'Starting timer');
 
         try {
             // Find the game instance by gameId or accessCode
@@ -79,7 +79,7 @@ export function startTimerHandler(io: SocketIOServer, socket: Socket) {
                 return;
             }
 
-            if (gameInstance.initiatorUserId !== teacherId) {
+            if (gameInstance.initiatorUserId !== userId) {
                 // For test environment, check if we should bypass auth check
                 const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
 
@@ -99,7 +99,7 @@ export function startTimerHandler(io: SocketIOServer, socket: Socket) {
                     return;
                 }
 
-                logger.info({ gameId, teacherId }, 'Test environment: Bypassing authorization check');
+                logger.info({ gameId, userId }, 'Test environment: Bypassing authorization check');
             }
 
             // Need accessCode for game state operations
@@ -173,7 +173,7 @@ export function startTimerHandler(io: SocketIOServer, socket: Socket) {
             gameState.timer = timer;
             await gameStateService.updateGameState(accessCodeStr, gameState);
             // Broadcast to all relevant rooms
-            const gameRoom = `game_${accessCodeStr}`;
+            const gameRoom = `live_${accessCodeStr}`;
             const dashboardRoom = `dashboard_${gameInstance.id}`;
             const projectionRoom = `projection_${gameInstance.id}`;
             // Broadcast to game room

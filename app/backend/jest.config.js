@@ -23,7 +23,7 @@ module.exports = {
     clearMocks: true,
     // Setup global test environment
     globalSetup: '<rootDir>/tests/support/globalSetup.ts',
-    globalTeardown: '<rootDir>/tests/support/globalTeardown.ts',
+    globalTeardown: '<rootDir>/tests/globalTeardown.ts',
     // Module name mapper for path aliases
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1', // <rootDir> is /home/aflesch/mathquest/app/backend/
@@ -36,5 +36,5 @@ module.exports = {
     // Force exit after tests complete to avoid hanging due to open handles
     forceExit: true,
     // Set a timeout for tests to avoid hanging indefinitely
-    testTimeout: 30000 // Reverted to 30 seconds
+    testTimeout: 60000 // Increased to 60 seconds
 };

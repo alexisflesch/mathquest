@@ -18,9 +18,9 @@ exports.ANSWERS_KEY_PREFIX = 'mathquest:game:answers:';
 /**
  * Helper function to fetch and prepare the comprehensive dashboard state
  */
-async function getGameControlState(gameId, teacherId, isTestEnvironment = false) {
+async function getGameControlState(gameId, userId, isTestEnvironment = false) {
     if (!gameId) {
-        logger.warn({ teacherId }, 'Game ID is undefined');
+        logger.warn({ userId }, 'Game ID is undefined');
         return null;
     }
     try {
@@ -28,11 +28,11 @@ async function getGameControlState(gameId, teacherId, isTestEnvironment = false)
         const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
             where: {
                 id: gameId,
-                ...(isTestEnvironment ? {} : { initiatorUserId: teacherId }) // Skip teacher ID check in test environment
+                ...(isTestEnvironment ? {} : { initiatorUserId: userId }) // Skip teacher ID check in test environment
             }
         });
         if (!gameInstance) {
-            logger.warn({ gameId, teacherId }, 'Game instance not found or not authorized');
+            logger.warn({ gameId, userId }, 'Game instance not found or not authorized');
             return null;
         }
         // Fetch the quiz template with questions
@@ -50,7 +50,7 @@ async function getGameControlState(gameId, teacherId, isTestEnvironment = false)
             }
         });
         if (!gameTemplate) {
-            logger.warn({ gameId, teacherId }, 'Quiz template not found');
+            logger.warn({ gameId, userId }, 'Quiz template not found');
             return null;
         }
         // Get the game state from Redis
@@ -103,7 +103,7 @@ async function getGameControlState(gameId, teacherId, isTestEnvironment = false)
         };
     }
     catch (error) {
-        logger.error({ gameId, teacherId, error }, 'Error preparing game control state');
+        logger.error({ gameId, userId, error }, 'Error preparing game control state');
         return null;
     }
 }

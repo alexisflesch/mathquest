@@ -24,7 +24,7 @@ describe('Teacher Dashboard & Game Control', () => {
     let seededQuestionUids;
     // Setup mock user data
     const teacherId = 'teacher-1';
-    const userId = 'player-1';
+    const playerId = 'player-1';
     beforeAll(async () => {
         // Create HTTP server and Socket.IO instance
         httpServer = (0, http_1.createServer)();
@@ -55,7 +55,7 @@ describe('Teacher Dashboard & Game Control', () => {
             data: {
                 id: 'quiz-1',
                 name: 'Test Quiz',
-                creatorId: teacherId, // was creatorTeacherId
+                creatorId: teacherId, // was creatoruserId
                 themes: [],
             }
         });
@@ -105,7 +105,6 @@ describe('Teacher Dashboard & Game Control', () => {
         }
         // Delete all gameInstances for this teacher (to satisfy FK constraint)
         await prisma_1.prisma.gameInstance.deleteMany({ where: { initiatorUserId: teacherId } });
-        // Delete all gameTemplates for this teacher (to satisfy FK constraint)
         const gameTemplates = await prisma_1.prisma.gameTemplate.findMany({ where: { creatorId: teacherId } });
         for (const qt of gameTemplates) {
             await prisma_1.prisma.questionsInGameTemplate.deleteMany({ where: { gameTemplateId: qt.id } });
@@ -125,7 +124,7 @@ describe('Teacher Dashboard & Game Control', () => {
     });
     it('Should allow a teacher to join the dashboard', (done) => {
         teacherSocket = (0, socket_io_client_1.io)('http://localhost:3001', {
-            auth: { teacherId }
+            auth: { userId: teacherId }
         });
         teacherSocket.on('connect', () => {
             teacherSocket.emit('join_dashboard', { gameId });

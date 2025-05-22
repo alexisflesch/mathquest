@@ -59,7 +59,7 @@ router.post('/', auth_1.teacherAuth, async (req, res) => {
  * Get a question by ID
  * GET /api/v1/questions/:uid
  */
-router.get('/:uid', async (req, res) => {
+router.get('/:uid', auth_1.optionalAuth, async (req, res) => {
     try {
         const { uid } = req.params;
         const question = await getQuestionService().getQuestionById(uid);
@@ -83,9 +83,10 @@ router.get('/:uid', async (req, res) => {
  * Get all questions with filtering and pagination
  * GET /api/v1/questions
  */
-router.get('/', async (req, res) => {
+router.get('/', auth_1.optionalAuth, async (req, res) => {
     try {
-        const { discipline, themes, difficulty, gradeLevel, tags, questionType, includeHidden, page = '1', pageSize = '20' } = req.query;
+        const { discipline, themes, difficulty, gradeLevel, tags, questionType, includeHidden, // req.query.includeHidden (string | undefined)
+        page = '1', pageSize = '20' } = req.query;
         // Convert to appropriate types
         const filters = {};
         if (discipline)
@@ -106,8 +107,21 @@ router.get('/', async (req, res) => {
         }
         if (questionType)
             filters.questionType = questionType;
-        // Only teachers can see hidden questions
-        filters.includeHidden = req.user?.userId && req.user?.role === 'TEACHER' && includeHidden === 'true';
+        // Handle includeHidden filter
+        // If includeHidden query param is provided (e.g., 'true' or 'false')
+        if (typeof includeHidden === 'string') {
+            if (req.user?.role === 'TEACHER') {
+                filters.includeHidden = (includeHidden === 'true');
+            }
+            else {
+                // Non-teachers cannot request hidden questions.
+                // If they specify includeHidden, it's treated as false.
+                filters.includeHidden = false;
+            }
+        }
+        // If includeHidden query param is NOT provided (is undefined),
+        // filters.includeHidden remains undefined on the filters object.
+        // The service layer will handle the default visibility.
         const pagination = {
             skip: (Number(page) - 1) * Number(pageSize),
             take: Number(pageSize)

@@ -5,6 +5,7 @@ import { collectAnswers } from './sharedAnswers';
 import { calculateScore } from './sharedScore';
 import createLogger from '@/utils/logger';
 import { getFullGameState, GameState } from '@/core/gameStateService'; // Ensure GameState is imported
+import { redisClient as redis } from '@/config/redis'; // Import redisClient
 
 const logger = createLogger('SharedLiveHandler');
 
@@ -22,20 +23,50 @@ interface AnswerPayload {
     questionId: string;
     answer: any;
     timeSpent: number;
-    playMode: 'quiz' | 'tournament' | 'practice';
+    playMode?: 'quiz' | 'tournament' | 'practice'; // playMode is optional
 }
 
 export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
-    // Join event for both quiz and tournament
     const joinHandler = async (payload: JoinPayload) => {
-        const { accessCode, userId, username, avatarUrl, playMode } = payload;
+        const { accessCode, userId, username, avatarUrl } = payload;
+        let { playMode } = payload;
+
+        // Determine playMode if not provided
+        if (!playMode) {
+            try {
+                const prisma = await import('@/db/prisma').then(m => m.prisma);
+                const gameInstance = await prisma.gameInstance.findUnique({
+                    where: { accessCode },
+                    select: { playMode: true }
+                });
+                if (gameInstance && gameInstance.playMode) {
+                    playMode = gameInstance.playMode as 'quiz' | 'tournament' | 'practice';
+                    logger.info({ accessCode, userId, determinedPlayMode: playMode }, 'Determined playMode from game instance');
+                } else {
+                    logger.warn({ accessCode, userId }, 'Could not determine playMode from game instance, defaulting to quiz');
+                    playMode = 'quiz'; // Default playMode
+                }
+            } catch (error) {
+                logger.error({ accessCode, userId, error }, 'Error fetching game instance to determine playMode, defaulting to quiz');
+                playMode = 'quiz'; // Default playMode on error
+            }
+        }
+
         const room = `live_${accessCode}`;
-        logger.info({ accessCode, userId, room, playMode, username, avatarUrl }, '[DEBUG] Attempting to join room');
-        socket.join(room);
+        const participantUsername = typeof username === 'string' ? username : 'Anonymous';
+        const participantAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl : undefined;
+
+        // Populate socket.data for disconnectHandler and other potential uses
+        socket.data.userId = userId;
+        socket.data.accessCode = accessCode;
+        socket.data.username = participantUsername;
+        socket.data.currentGameRoom = room;
+
+        logger.info({ accessCode, userId, room, playMode, username: participantUsername, avatarUrl: participantAvatarUrl }, '[DEBUG] Attempting to join room');
+        await socket.join(room); // Use await for join
         logger.info({ accessCode, userId, room, playMode }, '[DEBUG] Joined room');
 
-        // Fetch game state for game_joined event
-        const gameStateRaw = await import('@/core/gameStateService').then(m => m.getFullGameState(accessCode));
+        const gameStateRaw = await getFullGameState(accessCode);
         let gameJoinPayload: any = {};
         if (gameStateRaw && gameStateRaw.gameState) {
             const gs = gameStateRaw.gameState;
@@ -48,13 +79,11 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 timer: gs.timer || null,
                 question: null
             };
-            // If a question is active, include it
             if (gs.currentQuestionIndex >= 0 && gs.currentQuestionIndex < gs.questionIds.length) {
                 const prisma = await import('@/db/prisma').then(m => m.prisma);
                 const questionId = gs.questionIds[gs.currentQuestionIndex];
                 const question = await prisma.question.findUnique({ where: { uid: questionId } });
                 if (question) {
-                    // Patch Prisma question to match shared Question type
                     const patchedQuestion = {
                         ...question,
                         type: question.questionType || 'single_correct',
@@ -72,19 +101,15 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                     const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
                     gameJoinPayload.question = filterQuestionForClient(patchedQuestion);
 
-                    // --- Late joiner logic for correct_answers and feedback ---
-                    // Determine if correct answers or feedback should be sent
                     let shouldSendCorrectAnswers = false;
                     let shouldSendFeedback = false;
                     let feedbackRemaining = 0;
-                    // If timer is stopped or expired, send correct_answers
                     if (gs.timer && typeof gs.timer.startedAt === 'number' && typeof gs.timer.duration === 'number') {
                         const now = Date.now();
                         const elapsed = now - gs.timer.startedAt;
                         const remaining = Math.max(0, gs.timer.duration - elapsed);
                         if (remaining <= 0) {
                             shouldSendCorrectAnswers = true;
-                            // If in feedback phase, also send feedback
                             if (patchedQuestion.feedbackWaitTime && patchedQuestion.feedbackWaitTime > 0) {
                                 const feedbackStart = gs.timer.startedAt + gs.timer.duration;
                                 const feedbackEnd = feedbackStart + patchedQuestion.feedbackWaitTime * 1000;
@@ -99,7 +124,8 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                         socket.emit('correct_answers', { questionId });
                     }
                     if (shouldSendFeedback) {
-                        socket.emit('feedback', { questionId, feedbackRemaining });
+                        const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
+                        socket.emit('feedback', { questionId, feedbackRemaining: safeFeedbackRemaining });
                     }
                 }
             }
@@ -114,53 +140,53 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 question: null
             };
         }
-        // Always include timer value (countdown or question)
         socket.emit('game_joined', gameJoinPayload);
         logger.info({ accessCode, userId, room, playMode, gameJoinPayload }, '[DEBUG] Emitted game_joined with timer and state');
 
-        // Ensure username is a string, default if not provided
-        const participantUsername = typeof username === 'string' ? username : 'Anonymous';
-        // Ensure avatarUrl is a string or undefined
-        const participantAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl : undefined;
+        // const participantUsername = typeof username === 'string' ? username : 'Anonymous'; // Moved up
+        // const participantAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl : undefined; // Moved up
 
         io.to(room).emit('participant_joined', { userId, username: participantUsername, avatarUrl: participantAvatarUrl, playMode });
 
-        // Add participant to Redis participants hash (by userId and socket.id for resilience)
         try {
-            const redis = await import('@/config/redis').then(m => m.redisClient);
-            // Map userId to socket.id for personalized emission
-            await redis.hset(`mathquest:game:userIdToSocketId:${accessCode}`, payload.userId, socket.id);
-            // Map socket.id to userId for disconnect cleanup
-            await redis.hset(`mathquest:game:socketIdToUserId:${accessCode}`, socket.id, payload.userId);
+            // Redis keys
+            const participantsKey = `mathquest:game:participants:${accessCode}`;
+            const userIdToSocketIdKey = `mathquest:game:userIdToSocketId:${accessCode}`;
+            const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
 
-            // Ensure participant data is robustly created
-            const initialParticipantData = {
+            logger.debug({ userIdToSocketIdKey, userId, socketId: socket.id }, 'Updating userIdToSocketId mapping in sharedLiveHandler');
+            await redis.hset(userIdToSocketIdKey, userId, socket.id);
+            logger.debug({ socketIdToUserIdKey, socketId: socket.id, userId }, 'Updating socketIdToUserId mapping in sharedLiveHandler');
+            await redis.hset(socketIdToUserIdKey, socket.id, userId);
+
+            const participantDataForRedis = {
                 userId,
                 username: participantUsername,
                 avatarUrl: participantAvatarUrl,
-                score: 0, // Explicitly initialize score
-                answers: [] // Explicitly initialize answers array
+                score: 0, // Initial score, can be updated by answers
+                answers: [], // For tracking answers within the live session
+                online: true,
+                lastSocketId: socket.id,
+                joinedAt: new Date().toISOString()
             };
+            logger.debug({ participantsKey, userId, participantDataForRedis }, 'Storing participant in Redis by userId in sharedLiveHandler');
             await redis.hset(
-                `mathquest:game:participants:${accessCode}`,
-                payload.userId,
-                JSON.stringify(initialParticipantData)
+                participantsKey,
+                userId, // Use userId as the key
+                JSON.stringify(participantDataForRedis)
             );
         } catch (err) {
-            logger.error({ err, accessCode, userId }, 'Failed to add participant to Redis');
+            logger.error({ err, accessCode, userId }, 'Failed to add participant to Redis in sharedLiveHandler');
         }
 
-        logger.info({ accessCode, userId, playMode }, 'Participant joined live room');
+        logger.info({ accessCode, userId, playMode }, 'Participant joined live room via sharedLiveHandler');
 
-        // Late joiner: emit current question if game is active and a question is in progress
         if (gameStateRaw && gameStateRaw.gameState && typeof gameStateRaw.gameState.currentQuestionIndex === 'number' && gameStateRaw.gameState.currentQuestionIndex >= 0) {
             const currentIndex = gameStateRaw.gameState.currentQuestionIndex;
             const questionId = gameStateRaw.gameState.questionIds[currentIndex];
-            // Fetch the current question from the DB
             const prisma = await import('@/db/prisma').then(m => m.prisma);
             const question = await prisma.question.findUnique({ where: { uid: questionId } });
             if (question) {
-                // Patch Prisma question to match shared Question type
                 const patchedQuestion = {
                     ...question,
                     type: question.questionType || 'single_correct',
@@ -177,26 +203,23 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 };
                 const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
                 const filteredQuestion = filterQuestionForClient(patchedQuestion);
-                // Ensure 'answers' is always present and is an array of strings
                 if (!Array.isArray(filteredQuestion.answers)) {
                     filteredQuestion.answers = [];
                 }
 
-                // Determine question state and timer for late joiner, considering playMode
                 let questionState: 'pending' | 'active' | 'paused' | 'stopped' | 'finished' = 'active';
                 let timer = question.timeLimit || 30;
                 let phase: 'question' | 'show_answers' | 'feedback' = 'question';
-                let feedbackRemaining = 0;
+                let feedbackRemaining: number = 0; // Always initialize as number
                 const actualFeedbackWaitTime = playMode === 'quiz' ? (question.feedbackWaitTime || 0) : 0;
 
                 if (gameStateRaw && gameStateRaw.gameState && gameStateRaw.gameState.timer) {
                     const timerObj = gameStateRaw.gameState.timer;
-
                     if (timerObj.isPaused) {
                         if (playMode === 'quiz') {
                             questionState = 'paused';
                             timer = typeof timerObj.timeRemaining === 'number' ? Math.ceil(timerObj.timeRemaining / 1000) : timer;
-                        } else { // Tournament
+                        } else {
                             questionState = 'stopped';
                             timer = typeof timerObj.timeRemaining === 'number' ? Math.ceil(timerObj.timeRemaining / 1000) : 0;
                             if (timer <= 0) phase = 'show_answers';
@@ -205,14 +228,12 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                         const elapsed = Date.now() - timerObj.startedAt;
                         const remaining = Math.max(0, timerObj.duration - elapsed);
                         timer = Math.ceil(remaining / 1000);
-
-                        if (remaining <= 0) { // Timer expired
+                        if (remaining <= 0) {
                             timer = 0;
                             if (playMode === 'quiz' && actualFeedbackWaitTime > 0) {
                                 const feedbackStart = timerObj.startedAt + timerObj.duration;
                                 const now = Date.now();
-                                // Force feedback wait time to 5s for test consistency
-                                const feedbackWaitMs = 5000;
+                                const feedbackWaitMs = actualFeedbackWaitTime * 1000;
                                 const feedbackEnd = feedbackStart + feedbackWaitMs;
                                 feedbackRemaining = Math.max(0, Math.ceil((feedbackEnd - now) / 1000));
                                 if (now < feedbackEnd) {
@@ -252,27 +273,23 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 };
 
                 if (playMode === 'quiz' && phase === 'feedback') {
+                    const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
                     liveQuestionPayload.phase = phase;
-                    liveQuestionPayload.feedbackRemaining = feedbackRemaining;
+                    liveQuestionPayload.feedbackRemaining = safeFeedbackRemaining;
                 }
 
-                // Log socket ID and room membership for late joiner
                 const liveRoom = `live_${accessCode}`;
-                const room = io.sockets.adapter.rooms.get(liveRoom);
-                const socketIds = room ? Array.from(room) : [];
+                const roomMembers = io.sockets.adapter.rooms.get(liveRoom);
+                const socketIds = roomMembers ? Array.from(roomMembers) : [];
                 logger.info({ accessCode, userId, socketId: socket.id, liveRoom, socketIds }, '[DEBUG] Late joiner socket and current live room members before emitting game_question');
                 socket.emit('game_question', liveQuestionPayload);
                 logger.info({ accessCode, userId, currentIndex, questionId, questionState, timer, playMode, phase, feedbackRemaining }, '[DEBUG] Emitted game_question to late joiner');
 
-                // --- Late joiner feedback/correct answers logic ---
-                // If the question is over for the late joiner (stopped, or quiz-paused for feedback)
                 if (questionState === 'stopped' || (playMode === 'quiz' && questionState === 'paused' && phase === 'feedback')) {
                     socket.emit('correct_answers', { questionId });
                     logger.info({ accessCode, userId, questionId, playMode, questionState, phase }, '[DEBUG] Emitted correct_answers to late joiner');
                 }
-                // Always emit feedback if in feedback phase (even if feedbackRemaining is 0)
                 if (playMode === 'quiz' && phase === 'feedback') {
-                    // Ensure feedbackRemaining is always a number
                     const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
                     socket.emit('feedback', { questionId, feedbackRemaining: safeFeedbackRemaining });
                     logger.info({ accessCode, userId, questionId, feedbackRemaining: safeFeedbackRemaining, playMode }, '[DEBUG] Emitted feedback to late joiner (quiz feedback phase, always)');
@@ -281,184 +298,206 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         }
     };
 
-    // Answer event for both quiz and tournament
     const answerHandler = async (payload: AnswerPayload) => {
-        const { accessCode, userId, questionId, answer, timeSpent, playMode } = payload;
-        logger.info({ accessCode, userId, questionId, playMode, answer }, '[DEBUG] Received answer');
+        const { accessCode, userId, questionId, answer, timeSpent } = payload;
+        let { playMode } = payload;
 
-        try {
-            const redis = await import('@/config/redis').then(m => m.redisClient);
-            const fullGameState = await getFullGameState(accessCode);
+        logger.info({ accessCode, userId, questionId, answer, timeSpent, receivedPlayMode: playMode, socketId: socket.id }, '[SHARED_LIVE_HANDLER] game_answer received');
 
-            if (!fullGameState || !fullGameState.gameState) {
-                logger.warn({ accessCode, userId, questionId }, 'Game state not found for answer validation.');
-                socket.emit('answer_feedback', {
-                    status: 'error',
-                    code: 'GAME_NOT_FOUND',
-                    message: 'Jeu non trouvé. Impossible de soumettre la réponse.'
+        if (!playMode) {
+            try {
+                const prisma = await import('@/db/prisma').then(m => m.prisma);
+                const gameInstance = await prisma.gameInstance.findUnique({
+                    where: { accessCode },
+                    select: { playMode: true, status: true }
                 });
-                return;
-            }
-
-            const { gameState } = fullGameState;
-
-            // Refined checks for game and question state
-            if (gameState.status !== 'active') {
-                logger.warn({ accessCode, userId, questionId, gameStatus: gameState.status }, 'Answer submitted but game is not active.');
-                socket.emit('answer_feedback', {
-                    status: 'error',
-                    code: 'GAME_NOT_ACTIVE',
-                    message: 'Le jeu n\'est pas actif ou est terminé.'
-                });
-                return;
-            }
-
-            if (gameState.currentQuestionIndex < 0 || gameState.currentQuestionIndex >= gameState.questionIds.length) {
-                logger.warn({ accessCode, userId, questionId, currentIndex: gameState.currentQuestionIndex, totalQuestions: gameState.questionIds.length }, 'Answer submitted but no valid question is currently indexed.');
-                socket.emit('answer_feedback', {
-                    status: 'error',
-                    code: 'NO_CURRENT_QUESTION_INDEXED',
-                    message: 'Aucune question n\'est actuellement sélectionnée ou le jeu est terminé.'
-                });
-                return;
-            }
-
-            const currentQuestionIdFromState = gameState.questionIds[gameState.currentQuestionIndex];
-            const questionTimer = gameState.timer; // This can be undefined
-
-            // 1. Check if questionId matches current question
-            // gameState.status !== 'active' is already checked above.
-            if (questionId !== currentQuestionIdFromState) {
-                logger.warn({ accessCode, userId, submittedQId: questionId, currentQId: currentQuestionIdFromState, gameStatus: gameState.status }, 'Answer submitted for non-current question.');
-                socket.emit('answer_feedback', {
-                    status: 'error',
-                    code: 'INVALID_QUESTION',
-                    message: 'Réponse soumise pour une question incorrecte.'
-                });
-                return;
-            }
-
-            // 2. Check time limit
-            const timeNow = Date.now();
-            let isLate = false;
-
-            if (!questionTimer) {
-                logger.warn({ accessCode, userId, questionId }, 'Timer object is missing in gameState. Answer considered late.');
-                isLate = true;
-            } else if (questionTimer.isPaused) {
-                logger.info({ accessCode, userId, questionId }, 'Timer is paused. Answer considered late.');
-                isLate = true;
-            } else if (typeof questionTimer.startedAt === 'number' && typeof questionTimer.duration === 'number') {
-                // Timer is active and has necessary properties
-                if (timeNow > (questionTimer.startedAt + questionTimer.duration)) {
-                    logger.info({ accessCode, userId, questionId, now: timeNow, started: questionTimer.startedAt, duration: questionTimer.duration }, 'Answer submitted after timer expired.');
-                    isLate = true;
+                if (gameInstance && gameInstance.playMode) {
+                    playMode = gameInstance.playMode as 'quiz' | 'tournament' | 'practice';
+                    logger.info({ accessCode, userId, determinedPlayMode: playMode, gameStatus: gameInstance.status }, 'Determined playMode from game instance for answer');
+                    if (playMode === 'practice') {
+                        logger.info({ accessCode, userId, playMode }, 'Practice mode answer, bypassing sharedLiveHandler logic. GameAnswer.ts should handle.');
+                        return;
+                    }
+                } else {
+                    logger.warn({ accessCode, userId }, 'Could not determine playMode from game instance for answer, defaulting to quiz');
+                    playMode = 'quiz';
                 }
-                // else, isLate remains false, answer is on time
-            } else {
-                // Timer object exists but is not in a state where answers can be accepted
-                // (e.g., not started, or duration is invalid/missing, or startedAt is missing)
-                logger.warn({ accessCode, userId, questionId, questionTimerDetails: JSON.stringify(questionTimer) }, 'Timer not started, duration invalid, or other incomplete timer state. Answer considered late.');
-                isLate = true;
+            } catch (error) {
+                logger.error({ accessCode, userId, error }, 'Error fetching game instance to determine playMode for answer, defaulting to quiz');
+                playMode = 'quiz';
             }
+        }
 
-            if (isLate) {
-                // Consolidated logging for any late condition
-                logger.warn({ accessCode, userId, questionId, timerState: questionTimer ? JSON.stringify(questionTimer) : 'undefined' }, 'Answer rejected due to timing conditions (late, paused, or timer not ready).');
-                socket.emit('answer_feedback', {
-                    status: 'error',
-                    code: 'TIME_EXPIRED', // Using a general code for all these timer-related rejections
-                    message: 'Délai dépassé, jeu en pause, ou minuteur non actif.'
-                });
-                return;
-            }
+        logger.info({ accessCode, userId, questionId, answer, timeSpent, finalPlayMode: playMode, socketId: socket.id }, '[SHARED_LIVE_HANDLER] Processing game_answer with playMode');
 
-            const participantKey = `mathquest:game:participants:${accessCode}`;
-            const participantJson = await redis.hget(participantKey, userId);
+        const currentPlayMode = playMode || 'quiz';
+        const room = `live_${accessCode}`;
 
-            let participantData: { userId: string; username: string; score: number; answers: any[]; avatarUrl?: string };
-            if (participantJson) {
-                participantData = JSON.parse(participantJson);
-                // Ensure answers array exists
-                if (!Array.isArray(participantData.answers)) {
-                    participantData.answers = [];
-                }
-            } else {
-                // This case should ideally be handled by the join_game/join_tournament logic ensuring participant exists.
-                // However, as a fallback, create a new participant structure.
-                // Attempt to get username from the socket handshake or a default.
-                // This part might need more robust username fetching if this path is commonly hit.
-                const socketData = io.sockets.sockets.get(socket.id);
-                const usernameFromSocket = socketData?.data?.username || 'Unknown User';
-                logger.warn({ accessCode, userId }, 'Participant data not found in Redis for answer submission. Creating with default/socket username.');
-                participantData = { userId, username: usernameFromSocket, score: 0, answers: [] };
-                // Persist this new participant immediately so they exist for subsequent operations
-                await redis.hset(participantKey, userId, JSON.stringify(participantData));
-            }
-
-            // Optional: Check if already answered this specific question
-            const existingAnswerIndex = participantData.answers.findIndex((ans: any) => ans.questionId === questionId);
-            if (existingAnswerIndex !== -1) {
-                logger.info({ accessCode, userId, questionId }, 'Participant already answered this question. Updating answer.');
-                // Update existing answer
-                participantData.answers[existingAnswerIndex] = {
-                    questionId,
-                    answer,
-                    timeSpent,
-                    timestamp: Date.now()
-                };
-                await redis.hset(participantKey, userId, JSON.stringify(participantData));
-                socket.emit('answer_feedback', {
-                    status: 'success',
-                    code: 'ANSWER_UPDATED',
-                    message: 'Réponse mise à jour !'
-                });
-                return; // Exit after updating
-            }
-
-            participantData.answers.push({
-                questionId,
-                answer,
-                timeSpent,
-                timestamp: Date.now()
-            });
-            await redis.hset(participantKey, userId, JSON.stringify(participantData));
-
-            logger.info({ accessCode, userId, questionId }, 'Answer successfully recorded.');
-            socket.emit('answer_feedback', {
-                status: 'success',
-                code: 'ANSWER_SAVED',
-                message: 'Réponse enregistrée !'
-            });
-
-        } catch (error) {
-            logger.error({ accessCode, userId, questionId, error }, 'Error processing answer');
+        const fullGameState = await getFullGameState(accessCode);
+        if (!fullGameState || !fullGameState.gameState) {
+            logger.warn({ accessCode, userId, questionId }, 'Game state not found for answer validation.');
             socket.emit('answer_feedback', {
                 status: 'error',
-                code: 'INTERNAL_ERROR',
-                message: 'Erreur lors de l\'enregistrement de la réponse.'
+                code: 'GAME_NOT_FOUND',
+                message: 'Jeu non trouvé. Impossible de soumettre la réponse.'
+            });
+            return;
+        }
+
+        const { gameState } = fullGameState;
+
+        if (gameState.status !== 'active') {
+            logger.warn({ accessCode, userId, questionId, gameStatus: gameState.status, playMode: currentPlayMode }, 'Answer submitted but game is not active.');
+            socket.emit('answer_feedback', {
+                status: 'error',
+                code: 'GAME_NOT_ACTIVE',
+                message: 'Le jeu n\'est pas actif ou est terminé.'
+            });
+            return;
+        }
+
+        if (gameState.answersLocked) {
+            logger.warn({ accessCode, userId, questionId }, 'Answers are locked. Submission rejected.');
+            socket.emit('answer_feedback', {
+                status: 'error',
+                code: 'ANSWERS_LOCKED',
+                message: 'Les réponses sont verrouillées pour cette question.'
+            });
+            return;
+        }
+
+        // Check if timer has expired for this question (tournament mode)
+        if (currentPlayMode === 'tournament') {
+            const timerObj = gameState.timer;
+            if (timerObj && typeof timerObj.startedAt === 'number' && typeof timerObj.duration === 'number') {
+                const elapsed = Date.now() - timerObj.startedAt;
+                const remaining = Math.max(0, timerObj.duration - elapsed);
+                if (remaining <= 0) {
+                    logger.warn({ accessCode, userId, questionId }, 'Answer submitted after timer expired (tournament mode).');
+                    socket.emit('answer_feedback', {
+                        status: 'error',
+                        code: 'TIME_EXPIRED',
+                        message: 'Le temps est écoulé pour cette question.'
+                    });
+                    return;
+                }
+            }
+        }
+
+        if (!gameState.questionIds || gameState.currentQuestionIndex === undefined || questionId !== gameState.questionIds[gameState.currentQuestionIndex]) {
+            logger.warn({ accessCode, userId, questionId, currentQId: gameState.questionIds ? gameState.questionIds[gameState.currentQuestionIndex] : 'N/A' }, 'Answer submitted for wrong question.');
+            socket.emit('answer_feedback', {
+                status: 'error',
+                code: 'WRONG_QUESTION',
+                message: 'Réponse soumise pour une question incorrecte ou non active.'
+            });
+            return;
+        }
+
+        try {
+            const participantKey = `mathquest:game:participants:${accessCode}`;
+            const participantJson = await redis.hget(participantKey, userId);
+            let participantData;
+            if (participantJson) {
+                participantData = JSON.parse(participantJson);
+            } else {
+                logger.warn({ accessCode, userId }, "Participant not found in Redis for answer submission. Creating entry.");
+                participantData = { userId, username: 'Unknown (from answer)', score: 0, answers: [] };
+            }
+
+            const existingAnswer = participantData.answers.find((a: any) => a.questionId === questionId);
+            if (existingAnswer) {
+                logger.info({ accessCode, userId, questionId }, 'Participant already answered this question. Updating answer.');
+                existingAnswer.answer = answer;
+                existingAnswer.timeSpent = timeSpent;
+            } else {
+                participantData.answers.push({ questionId, answer, timeSpent });
+            }
+
+            await redis.hset(participantKey, userId, JSON.stringify(participantData));
+
+            // Fetch question details to pass to calculateScore
+            const prisma = await import('@/db/prisma').then(m => m.prisma);
+            const question = await prisma.question.findUnique({ where: { uid: questionId } });
+
+            if (!question) {
+                logger.error({ accessCode, userId, questionId }, "Question not found for scoring");
+                socket.emit('answer_feedback', {
+                    status: 'error',
+                    code: 'QUESTION_NOT_FOUND',
+                    message: 'Question non trouvée pour le calcul du score.'
+                });
+                return;
+            }
+
+            // Determine if the answer is correct
+            // This is a simplified check, adapt as per your actual answer structure and correctness logic
+            let isCorrect = false;
+            if (question.correctAnswers && Array.isArray(question.correctAnswers)) {
+                // Example for multiple choice where answer is an index or array of indices
+                if (Array.isArray(answer)) { // multiple answers possible
+                    isCorrect = JSON.stringify(answer.sort()) === JSON.stringify(question.correctAnswers.sort());
+                } else { // single answer
+                    isCorrect = question.correctAnswers.includes(answer);
+                }
+            } else if (question.correctAnswers) { // single correct answer not in an array
+                isCorrect = question.correctAnswers === answer;
+            }
+
+
+            const answerForScoring = {
+                isCorrect,
+                timeSpent, // timeSpent from payload
+                // Add any other properties 'calculateScore' might need from the 'answer' payload
+                value: answer
+            };
+
+            const score = calculateScore(answerForScoring, question); // Corrected call
+            participantData.score = (participantData.score || 0) + score;
+            await redis.hset(participantKey, userId, JSON.stringify(participantData));
+
+            await redis.zadd(`mathquest:game:leaderboard:${accessCode}`, 'INCR', score, userId);
+
+            socket.emit('answer_feedback', { status: 'ok', questionId, scoreAwarded: score });
+            logger.info({ accessCode, userId, questionId, scoreAwarded: score }, 'Answer processed, feedback sent');
+
+            if (currentPlayMode === 'quiz') {
+                const collected = await collectAnswers(accessCode, questionId);
+                io.to(`teacher_control_${gameState.gameId}`).emit('quiz_answer_update', collected);
+            }
+
+            const leaderboard = await calculateLeaderboard(accessCode);
+            io.to(room).emit('leaderboard_update', { leaderboard });
+
+        } catch (error: any) {
+            logger.error({ accessCode: payload.accessCode, userId: payload.userId, questionId: payload.questionId, error: error.message, stack: error.stack }, 'Error processing answer in sharedLiveHandler');
+            socket.emit('answer_feedback', {
+                status: 'error',
+                code: 'PROCESSING_ERROR',
+                message: 'Erreur lors du traitement de la réponse.'
             });
         }
     };
 
-    // Handle request_participants event
-    socket.on('request_participants', async ({ accessCode }) => {
+    socket.on('request_participants', async (payload: { accessCode: string }) => {
         try {
-            const redis = await import('@/config/redis').then(m => m.redisClient);
-            const participantsHash = await redis.hgetall(`mathquest:game:participants:${accessCode}`);
-            const participants = participantsHash
-                ? Object.values(participantsHash).map((p: any) => JSON.parse(p))
-                : [];
-            socket.emit('game_participants', { participants });
-        } catch (err) {
-            logger.error({ err, accessCode }, 'Failed to fetch participants for game_participants event');
+            const participants = await redis.hvals(`mathquest:game:participants:${payload.accessCode}`);
+            socket.emit('game_participants', { participants: participants.map(p => JSON.parse(p)) });
+        } catch (error) {
+            logger.error({ accessCode: payload.accessCode, error }, 'Error fetching participants');
             socket.emit('game_participants', { participants: [] });
         }
     });
 
-    // Register both quiz and tournament events
-    socket.on('join_game', (payload) => joinHandler({ ...payload, playMode: 'quiz' }));
-    socket.on('join_tournament', (payload) => joinHandler({ ...payload, playMode: 'tournament' }));
-    socket.on('game_answer', (payload) => answerHandler({ ...payload, playMode: 'quiz' }));
-    socket.on('tournament_answer', (payload) => answerHandler({ ...payload, playMode: 'tournament' }));
+    socket.on('join_game', (payload: JoinPayload) => joinHandler(payload));
+    socket.on('join_tournament', (payload: JoinPayload) => joinHandler({ ...payload, playMode: 'tournament' }));
+
+    // Ensure game_answer is handled by answerHandler if not practice mode
+    // For practice mode, gameAnswer.ts (registered in game/index.ts) should take precedence.
+    socket.on('game_answer', (payload: AnswerPayload) => {
+        // This registration will be called if gameAnswer.ts doesn't stop propagation or if it's not practice.
+        // The logic inside answerHandler now checks for playMode === 'practice' and returns early.
+        answerHandler(payload);
+    });
+    socket.on('tournament_answer', (payload: AnswerPayload) => answerHandler({ ...payload, playMode: 'tournament' }));
 }

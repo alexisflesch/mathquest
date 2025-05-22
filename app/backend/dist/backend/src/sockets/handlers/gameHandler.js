@@ -10,6 +10,8 @@ const sharedLiveHandler_1 = require("./sharedLiveHandler");
 function gameHandler(io, socket) {
     // Register shared live handlers for join/answer
     (0, sharedLiveHandler_1.registerSharedLiveHandlers)(io, socket);
-    // Optionally: registerGameHandlers(io, socket); // keep if there are other game-specific events
+    // Import and register game-specific handlers from the ./game directory
+    const { registerGameHandlers } = require('./game');
+    registerGameHandlers(io, socket);
 }
 exports.default = gameHandler;

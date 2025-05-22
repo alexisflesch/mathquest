@@ -75,14 +75,19 @@ function joinGameHandler(io, socket) {
             }
             else {
                 let roomName = accessCode;
-                if (gameInstance.playMode === 'quiz' && gameInstance.initiatorUserId) {
-                    roomName = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
+                if (gameInstance.playMode === 'quiz') {
+                    roomName = `live_${accessCode}`;
                 }
                 else if (gameInstance.playMode === 'tournament') {
                     roomName = `tournament_${accessCode}`;
                 }
-                logger.debug({ roomName }, 'Joining socket.io room');
+                logger.debug({ roomName, socketId: socket.id }, '[DEBUG] Player joining room');
                 await socket.join(roomName);
+                // --- DEBUG: Print room membership after join ---
+                const joinedRoomSockets = io.sockets.adapter.rooms.get(roomName);
+                const joinedRoomSocketIds = joinedRoomSockets ? Array.from(joinedRoomSockets) : [];
+                console.log('[joinGame] Player joined room:', { roomName, socketId: socket.id, joinedRoomSocketIds });
+                logger.debug({ roomName, socketId: socket.id, rooms: Array.from(socket.rooms) }, '[DEBUG] Player joined room');
                 socket.data.currentGameRoom = roomName;
             }
             const participantService = new gameParticipantService_1.GameParticipantService();
@@ -98,18 +103,28 @@ function joinGameHandler(io, socket) {
             socket.data.userId = userId;
             socket.data.accessCode = accessCode;
             socket.data.username = joinResult.participant.user.username;
-            const redisKey = `mathquest:game:participants:${accessCode}`;
+            // Redis keys
+            const participantsKey = `mathquest:game:participants:${accessCode}`;
+            const userIdToSocketIdKey = `mathquest:game:userIdToSocketId:${accessCode}`;
+            const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
             const participantDataForRedis = {
-                id: socket.id,
+                // id: socket.id, // No longer using socket.id as the primary participant identifier in this hash
                 userId: joinResult.participant.userId,
                 username: joinResult.participant.user.username,
                 avatarUrl: joinResult.participant.user.avatarUrl,
                 joinedAt: joinResult.participant.joinedAt.toISOString(),
                 score: joinResult.participant.score,
-                online: true
+                online: true,
+                lastSocketId: socket.id // Keep track of the latest socket ID for this user
             };
-            logger.debug({ redisKey, participantDataForRedis }, 'Storing participant in Redis');
-            await redis_1.redisClient.hset(redisKey, socket.id, JSON.stringify(participantDataForRedis));
+            logger.debug({ participantsKey, userId: joinResult.participant.userId, participantDataForRedis }, 'Storing participant in Redis by userId');
+            // Store main participant data keyed by userId
+            await redis_1.redisClient.hset(participantsKey, joinResult.participant.userId, JSON.stringify(participantDataForRedis));
+            // Update mappings
+            logger.debug({ userIdToSocketIdKey, userId, socketId: socket.id }, 'Updating userIdToSocketId mapping');
+            await redis_1.redisClient.hset(userIdToSocketIdKey, userId, socket.id);
+            logger.debug({ socketIdToUserIdKey, socketId: socket.id, userId }, 'Updating socketIdToUserId mapping');
+            await redis_1.redisClient.hset(socketIdToUserIdKey, socket.id, userId);
             const gameJoinedPayload = {
                 accessCode,
                 participant: {

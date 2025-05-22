@@ -12,21 +12,21 @@ const logger = (0, logger_1.default)('LockAnswersHandler');
 function lockAnswersHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId, lock } = payload;
-        const teacherId = socket.data?.teacherId;
-        if (!teacherId) {
+        const userId = socket.data?.userId;
+        if (!userId) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to lock answers',
             });
             return;
         }
-        logger.info({ gameId, teacherId, lock }, 'Answer lock requested');
+        logger.info({ gameId, userId, lock }, 'Answer lock requested');
         try {
             // Verify authorization
             const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
-                    initiatorUserId: teacherId
+                    initiatorUserId: userId
                 }
             });
             if (!gameInstance) {
@@ -52,7 +52,7 @@ function lockAnswersHandler(io, socket) {
             await gameStateService_1.default.updateGameState(gameInstance.accessCode, gameState);
             // Broadcast to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;
-            const gameRoom = `game_${gameInstance.accessCode}`;
+            const gameRoom = `live_${gameInstance.accessCode}`;
             const projectionRoom = `projection_${gameId}`;
             // To dashboard
             io.to(dashboardRoom).emit('dashboard_answers_lock_changed', {

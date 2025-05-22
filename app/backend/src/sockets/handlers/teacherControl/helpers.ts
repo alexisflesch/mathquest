@@ -14,9 +14,9 @@ export const ANSWERS_KEY_PREFIX = 'mathquest:game:answers:';
 /**
  * Helper function to fetch and prepare the comprehensive dashboard state
  */
-export async function getGameControlState(gameId: string | undefined, teacherId: string, isTestEnvironment = false): Promise<GameControlStatePayload | null> {
+export async function getGameControlState(gameId: string | undefined, userId: string, isTestEnvironment = false): Promise<GameControlStatePayload | null> {
     if (!gameId) {
-        logger.warn({ teacherId }, 'Game ID is undefined');
+        logger.warn({ userId }, 'Game ID is undefined');
         return null;
     }
     try {
@@ -24,12 +24,12 @@ export async function getGameControlState(gameId: string | undefined, teacherId:
         const gameInstance = await prisma.gameInstance.findUnique({
             where: {
                 id: gameId,
-                ...(isTestEnvironment ? {} : { initiatorUserId: teacherId }) // Skip teacher ID check in test environment
+                ...(isTestEnvironment ? {} : { initiatorUserId: userId }) // Skip teacher ID check in test environment
             }
         });
 
         if (!gameInstance) {
-            logger.warn({ gameId, teacherId }, 'Game instance not found or not authorized');
+            logger.warn({ gameId, userId }, 'Game instance not found or not authorized');
             return null;
         }
 
@@ -49,7 +49,7 @@ export async function getGameControlState(gameId: string | undefined, teacherId:
         });
 
         if (!gameTemplate) {
-            logger.warn({ gameId, teacherId }, 'Quiz template not found');
+            logger.warn({ gameId, userId }, 'Quiz template not found');
             return null;
         }
 
@@ -109,7 +109,7 @@ export async function getGameControlState(gameId: string | undefined, teacherId:
             answerStats
         };
     } catch (error) {
-        logger.error({ gameId, teacherId, error }, 'Error preparing game control state');
+        logger.error({ gameId, userId, error }, 'Error preparing game control state');
         return null;
     }
 }

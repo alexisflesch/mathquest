@@ -9,14 +9,18 @@ Phase 8 focused on implementing the Teacher Dashboard & Game Control functionali
 ### 1. Socket Event Handlers
 - **`join_dashboard`**: Teacher can join a game's dashboard and receive complete game state
 - **`set_question`**: Teacher can set the current question by its UID
-- **`timer_action`**: Teacher can control the timer (start, pause, resume, stop, set duration)
+- **`quiz_timer_action`**: Teacher can control the timer (start, pause, resume, stop, set duration)
+  - **Note:** The backend listens for the event name `quiz_timer_action` (not `timer_action`). Integration tests and frontend code must emit `quiz_timer_action` for timer control. See `src/sockets/handlers/teacherControl/index.ts` for event registration.
 - **`lock_answers`**: Teacher can lock or unlock answer submissions from players
 - **`end_game`**: Teacher can end the game, updating both Redis and database records
+
+> **Warning for Test Writers:**
+> When writing integration tests for timer control, always emit the event as `quiz_timer_action`. Emitting `timer_action` will not trigger any backend logic and will cause tests to fail or time out.
 
 ### 2. Real-time Communication
 - **Room Structure**:
   - `dashboard_${gameId}` - For teacher dashboard communications 
-  - `game_${accessCode}` - For player communications
+  - `live_${accessCode}` - For player communications
   - `projection_${gameId}` - For classroom display communications
 
 - **Dashboard-to-Server Events**:

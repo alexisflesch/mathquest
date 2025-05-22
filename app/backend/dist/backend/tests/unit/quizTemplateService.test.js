@@ -37,7 +37,7 @@ globals_1.jest.mock('@/utils/logger', () => {
 describe('gameTemplateService', () => {
     globals_1.jest.setTimeout(3000);
     let service;
-    const mockTeacherId = 'teacher-123';
+    const mockuserId = 'teacher-123';
     beforeEach(() => {
         service = new quizTemplateService_1.gameTemplateService();
         globals_1.jest.clearAllMocks();
@@ -57,18 +57,18 @@ describe('gameTemplateService', () => {
             };
             const mockCreatedQuiz = {
                 id: 'quiz-123',
-                creatorId: mockTeacherId,
+                creatorId: mockuserId,
                 ...mockQuizData,
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 questions: []
             };
             prisma_1.prisma.gameTemplate.create.mockResolvedValue(mockCreatedQuiz);
-            const result = await service.creategameTemplate(mockTeacherId, mockQuizData);
+            const result = await service.creategameTemplate(mockuserId, mockQuizData);
             expect(prisma_1.prisma.gameTemplate.create).toHaveBeenCalledWith({
                 data: {
                     name: mockQuizData.name,
-                    creatorId: mockTeacherId,
+                    creatorId: mockuserId,
                     gradeLevel: mockQuizData.gradeLevel,
                     themes: mockQuizData.themes,
                     discipline: mockQuizData.discipline,
@@ -95,7 +95,7 @@ describe('gameTemplateService', () => {
             };
             const mockError = new Error('Database error');
             prisma_1.prisma.gameTemplate.create.mockRejectedValue(mockError);
-            await expect(service.creategameTemplate(mockTeacherId, mockQuizData))
+            await expect(service.creategameTemplate(mockuserId, mockQuizData))
                 .rejects.toThrow(mockError);
         });
     });
@@ -104,7 +104,7 @@ describe('gameTemplateService', () => {
             const mockgameTemplate = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorId: mockTeacherId,
+                creatorId: mockuserId,
                 themes: ['algebra'],
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -122,7 +122,7 @@ describe('gameTemplateService', () => {
             const mockgameTemplate = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorId: mockTeacherId,
+                creatorId: mockuserId,
                 themes: ['algebra'],
                 questions: [
                     {
@@ -170,10 +170,10 @@ describe('gameTemplateService', () => {
             const mockTotal = 2;
             prisma_1.prisma.gameTemplate.findMany.mockResolvedValue(mockgameTemplates);
             prisma_1.prisma.gameTemplate.count.mockResolvedValue(mockTotal);
-            const result = await service.getgameTemplates(mockTeacherId, { discipline: 'math' }, { skip: 0, take: 10 });
+            const result = await service.getgameTemplates(mockuserId, { discipline: 'math' }, { skip: 0, take: 10 });
             expect(prisma_1.prisma.gameTemplate.findMany).toHaveBeenCalledWith(expect.objectContaining({
                 where: expect.objectContaining({
-                    creatorId: mockTeacherId,
+                    creatorId: mockuserId,
                     discipline: 'math'
                 }),
                 skip: 0,
@@ -200,7 +200,7 @@ describe('gameTemplateService', () => {
                 id: 'quiz-123',
                 name: 'Old Name',
                 description: 'Old description',
-                creatorId: mockTeacherId,
+                creatorId: mockuserId,
                 themes: ['algebra'],
                 questions: [
                     { sequence: 2, questionUid: 'question-123' }
@@ -210,7 +210,7 @@ describe('gameTemplateService', () => {
                 id: 'quiz-123',
                 name: 'Updated Quiz',
                 description: 'Updated description',
-                creatorId: mockTeacherId,
+                creatorId: mockuserId,
                 themes: ['algebra'],
                 questions: []
             };
@@ -219,11 +219,11 @@ describe('gameTemplateService', () => {
                 .mockResolvedValueOnce(mockUpdatedQuiz);
             prisma_1.prisma.gameTemplate.update.mockResolvedValue(mockUpdatedQuiz);
             globals_1.jest.spyOn(service, 'getgameTemplateById').mockResolvedValueOnce(mockUpdatedQuiz);
-            const result = await service.updategameTemplate(mockTeacherId, mockUpdateData);
+            const result = await service.updategameTemplate(mockuserId, mockUpdateData);
             expect(prisma_1.prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
                     id: 'quiz-123',
-                    creatorId: mockTeacherId
+                    creatorId: mockuserId
                 }
             });
             expect(prisma_1.prisma.gameTemplate.update).toHaveBeenCalledWith({
@@ -242,7 +242,7 @@ describe('gameTemplateService', () => {
                 id: 'nonexistent-id',
                 name: 'Updated Quiz'
             };
-            await expect(service.updategameTemplate(mockTeacherId, mockUpdateData))
+            await expect(service.updategameTemplate(mockuserId, mockUpdateData))
                 .rejects.toThrow('Quiz template with ID nonexistent-id not found or you don\'t have permission to update it');
         });
     });
@@ -252,15 +252,15 @@ describe('gameTemplateService', () => {
             const mockExistingQuiz = {
                 id: 'quiz-123',
                 name: 'Test Quiz',
-                creatorId: mockTeacherId
+                creatorId: mockuserId
             };
             prisma_1.prisma.gameTemplate.findFirst.mockResolvedValueOnce(mockExistingQuiz);
             prisma_1.prisma.gameTemplate.delete.mockResolvedValue({});
-            const result = await service.deletegameTemplate(mockTeacherId, 'quiz-123');
+            const result = await service.deletegameTemplate(mockuserId, 'quiz-123');
             expect(prisma_1.prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
                     id: 'quiz-123',
-                    creatorId: mockTeacherId
+                    creatorId: mockuserId
                 }
             });
             expect(prisma_1.prisma.gameTemplate.delete).toHaveBeenCalledWith({
@@ -271,7 +271,7 @@ describe('gameTemplateService', () => {
         it('should throw an error if the quiz template does not exist', async () => {
             globals_1.jest.clearAllMocks();
             prisma_1.prisma.gameTemplate.findFirst.mockResolvedValueOnce(null);
-            await expect(service.deletegameTemplate(mockTeacherId, 'nonexistent-id'))
+            await expect(service.deletegameTemplate(mockuserId, 'nonexistent-id'))
                 .rejects.toThrow('Quiz template with ID nonexistent-id not found or you don\'t have permission to delete it');
         });
     });
@@ -283,7 +283,7 @@ describe('gameTemplateService', () => {
             const mockgameTemplate = {
                 id: gameTemplateId,
                 name: 'Test Quiz',
-                creatorId: mockTeacherId,
+                creatorId: mockuserId,
                 questions: [
                     { sequence: 2, questionUid: 'question-123' }
                 ]
@@ -308,11 +308,11 @@ describe('gameTemplateService', () => {
             prisma_1.prisma.question.findUnique.mockResolvedValue(mockQuestion);
             prisma_1.prisma.questionsInGameTemplate.create.mockResolvedValue({ gameTemplateId, questionUid, sequence });
             globals_1.jest.spyOn(service, 'getgameTemplateById').mockResolvedValue(mockUpdatedgameTemplate);
-            const result = await service.addQuestionTogameTemplate(mockTeacherId, gameTemplateId, questionUid, sequence);
+            const result = await service.addQuestionTogameTemplate(mockuserId, gameTemplateId, questionUid, sequence);
             expect(prisma_1.prisma.gameTemplate.findFirst).toHaveBeenCalledWith({
                 where: {
                     id: gameTemplateId,
-                    creatorId: mockTeacherId
+                    creatorId: mockuserId
                 },
                 include: {
                     questions: {

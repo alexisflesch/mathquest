@@ -102,7 +102,7 @@ router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Resp
 
         if (io) {
             // Emit the question to all players in the game using the proper QuestionData structure
-            io.to(`game_${accessCode}`).emit('game_question', {
+            io.to(`live_${accessCode}`).emit('game_question', {
                 uid: updatedGameState.questionData.uid,
                 text: updatedGameState.questionData.text,
                 title: updatedGameState.questionData.title,
@@ -184,13 +184,13 @@ router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: 
 
         if (io && fullGameState) {
             // Tell all players that question time is up
-            io.to(`game_${accessCode}`).emit('question_ended', {
+            io.to(`live_${accessCode}`).emit('question_ended', {
                 questionIndex: updatedGameState.currentQuestionIndex
             });
 
             // Send leaderboard update
             if (fullGameState.leaderboard.length > 0) {
-                io.to(`game_${accessCode}`).emit('leaderboard_update', {
+                io.to(`live_${accessCode}`).emit('leaderboard_update', {
                     leaderboard: fullGameState.leaderboard.slice(0, 10) // Top 10
                 });
             }
@@ -257,7 +257,7 @@ router.post('/:accessCode/end-game', teacherAuth, async (req: Request, res: Resp
 
         if (io) {
             // Tell all players the game has ended
-            io.to(`game_${accessCode}`).emit('game_ended', {
+            io.to(`live_${accessCode}`).emit('game_ended', {
                 accessCode
             });
         }

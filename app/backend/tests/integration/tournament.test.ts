@@ -41,6 +41,10 @@ describe('Minimal Tournament Flow', () => {
     let accessCode: string;
 
     beforeAll(async () => {
+        // Seed all testQuestions into the database before running tournament tests
+        await prisma.question.deleteMany();
+        await prisma.question.createMany({ data: testQuestions });
+
         const serverSetup = setupServer();
         httpServer = serverSetup.httpServer;
         io = serverSetup.io;
@@ -199,13 +203,29 @@ describe('Minimal Tournament Flow', () => {
         // 6. Clean up DB
         console.log('Cleaning up database...');
         try {
-            await prisma.gameParticipant.deleteMany();
+            await prisma.gameParticipant.deleteMany({
+                where: {
+                    userId: { in: [player1?.id, player2?.id].filter(Boolean) }
+                }
+            });
             await prisma.gameInstance.deleteMany();
             await prisma.gameTemplate.deleteMany();
+            // Delete StudentProfiles before Users to avoid foreign key constraint errors
+            await prisma.studentProfile.deleteMany({ where: { id: { in: [player1?.id, player2?.id].filter(Boolean) } } });
             await prisma.user.deleteMany({ where: { username: { in: ['p1', 'p2'] } } });
             console.log('Database cleanup successful.');
         } catch (e: any) { // Added type for e
             console.error('Error during database cleanup:', e.message || e);
+        }
+        // Optionally clean up Redis keys for tournament (if a unique prefix is used)
+        try {
+            const keys = await redisClient.keys('mathquest:game:*');
+            if (keys.length > 0) {
+                await redisClient.del(keys);
+                console.log('Tournament Redis keys cleaned up.');
+            }
+        } catch (e: any) {
+            console.warn('Error cleaning up Redis keys:', e.message || e);
         }
 
         await new Promise(resolve => setTimeout(resolve, 300));
