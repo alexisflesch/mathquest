@@ -208,6 +208,12 @@ describe('Game Handler', () => {
         await prisma_1.prisma.question.deleteMany({
             where: { text: { in: ['What is 2+2?', 'What is 3×3?'] } }
         });
+        // Clean up GameParticipant records for test users (must be before deleting users)
+        await prisma_1.prisma.gameParticipant.deleteMany({
+            where: {
+                userId: { in: ['player-123', 'player-1', 'player-2'] }
+            }
+        });
         // Clean up test player dependencies first
         await prisma_1.prisma.studentProfile.deleteMany({
             where: {

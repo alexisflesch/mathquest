@@ -7,7 +7,7 @@
     "build:backend": "cd backend && npm run build && cd ..",
     "build": "npm run build:backend && npm run build:frontend",
     "dev:frontend": "cd frontend && npm run dev && cd ..",
-    "dev:backend": "cd backend && npm run dev:ts && cd ..",
+    "dev:backend": "cd backend && npm run dev && cd ..",
     "dev": "concurrently --names \"B,F\" --prefix-colors \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "server": "cd backend && npm run dev:ts",
     "server:port": "cd backend && npm run dev:ts:port",

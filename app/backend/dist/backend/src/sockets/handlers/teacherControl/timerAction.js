@@ -72,11 +72,13 @@ function timerActionHandler(io, socket) {
             // Update timer based on the action
             switch (action) {
                 case 'start':
+                    logger.info({ gameId, action, now, validDuration, timer }, '[TIMER_ACTION] Processing start action');
                     timer = {
                         startedAt: now,
                         duration: validDuration ? validDuration * 1000 : (timer.duration || 30000), // Convert to ms if provided
                         isPaused: false
                     };
+                    logger.info({ gameId, action, timer }, '[TIMER_ACTION] Timer object after start processing');
                     break;
                 case 'pause':
                     if (!timer.isPaused) {
@@ -123,15 +125,18 @@ function timerActionHandler(io, socket) {
             await gameStateService_1.default.updateGameState(gameInstance.accessCode, gameState);
             // Broadcast timer update to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;
-            const liveRoom = `live_${gameInstance.accessCode}`;
+            const liveRoom = `live_${gameInstance.accessCode}`; // Ensure gameInstance.accessCode is correct
             const projectionRoom = `projection_${gameId}`;
-            logger.info({ gameId, action, dashboardRoom, liveRoom, projectionRoom }, 'Emitting timer updates to rooms');
+            logger.info({ gameId, action, dashboardRoom, liveRoom, projectionRoom, timer }, '[TIMER_ACTION] Emitting timer updates to rooms');
             // To dashboard
             io.to(dashboardRoom).emit('dashboard_timer_updated', { timer });
+            logger.info({ gameId, action, dashboardRoom, timer }, '[TIMER_ACTION] Emitted to dashboardRoom');
             // To live room (for quiz players)
             io.to(liveRoom).emit('game_timer_updated', { timer });
+            logger.info({ gameId, action, liveRoom, timer }, '[TIMER_ACTION] Emitted to liveRoom');
             // To projection room
             io.to(projectionRoom).emit('projection_timer_updated', { timer });
+            logger.info({ gameId, action, projectionRoom, timer }, '[TIMER_ACTION] Emitted to projectionRoom');
             logger.info({ gameId, action }, 'Timer updated successfully');
         }
         catch (error) {

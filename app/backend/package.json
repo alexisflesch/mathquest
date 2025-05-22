@@ -15,7 +15,7 @@
     "test:clean": "npm run test:init-db && jest"
   },
   "_moduleAliases": {
-    "@": "dist"
+    "@": "src"
   },
   "keywords": [],
   "author": "",

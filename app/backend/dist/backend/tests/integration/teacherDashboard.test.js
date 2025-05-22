@@ -11,6 +11,7 @@ const prisma_1 = require("../../src/db/prisma");
 const redis_1 = require("../../src/config/redis");
 const gameStateService_1 = __importDefault(require("../../src/core/gameStateService"));
 const testQuestions_1 = require("../support/testQuestions");
+const logger_1 = __importDefault(require("../../src/utils/logger"));
 describe('Teacher Dashboard & Game Control', () => {
     jest.setTimeout(3000); // Revert to 3s timeout for async/socket tests
     let httpServer;
@@ -118,28 +119,57 @@ describe('Teacher Dashboard & Game Control', () => {
         if (keys.length > 0) {
             await redis_1.redisClient.del(keys);
         }
+        // Close Socket.IO Redis adapter clients
+        try {
+            await (0, sockets_1.closeSocketIORedisClients)();
+        }
+        catch (e) {
+            // Ignore errors on shutdown
+        }
+        // Give ioredis a moment to fully close before Jest exits
+        await new Promise(res => setTimeout(res, 50));
         // Close database connections
         await prisma_1.prisma.$disconnect();
-        await redis_1.redisClient.quit();
+        try {
+            if (redis_1.redisClient.status !== 'end') {
+                await redis_1.redisClient.quit();
+                await new Promise(res => setTimeout(res, 50));
+            }
+        }
+        catch (e) {
+            // Ignore errors on shutdown
+        }
     });
-    it('Should allow a teacher to join the dashboard', (done) => {
+    beforeEach((done) => {
         teacherSocket = (0, socket_io_client_1.io)('http://localhost:3001', {
             auth: { userId: teacherId }
         });
         teacherSocket.on('connect', () => {
             teacherSocket.emit('join_dashboard', { gameId });
         });
-        teacherSocket.on('game_control_state', (data) => {
+        teacherSocket.once('game_control_state', () => {
+            done();
+        });
+    });
+    afterEach(() => {
+        if (teacherSocket)
+            teacherSocket.disconnect();
+    });
+    it('Should allow a teacher to join the dashboard', (done) => {
+        // Already joined in beforeEach, just check state
+        teacherSocket.once('game_control_state', (data) => {
             expect(data).toBeDefined();
             expect(data.gameId).toBe(gameId);
             expect(data.accessCode).toBe(accessCode);
             expect(data.status).toBe('pending');
             done();
         });
+        // Re-emit join_dashboard to trigger event for this test
+        teacherSocket.emit('join_dashboard', { gameId });
     });
     it('Should allow a teacher to set a question', (done) => {
         const questionUid = seededQuestionUids[0];
-        teacherSocket.on('dashboard_question_changed', (data) => {
+        teacherSocket.once('dashboard_question_changed', (data) => {
             expect(data.questionUid).toBe(questionUid);
             expect(data.timer).toBeDefined();
             done();
@@ -150,19 +180,31 @@ describe('Teacher Dashboard & Game Control', () => {
         });
     });
     it('Should allow a teacher to control the timer', (done) => {
-        teacherSocket.on('dashboard_timer_updated', (data) => {
+        // NOTE: The backend only listens for 'quiz_timer_action', not 'timer_action'.
+        // See src/sockets/handlers/teacherControl/index.ts for event registration.
+        // This is required for the test to work!
+        const logger = (0, logger_1.default)('Test');
+        let timeoutId = setTimeout(() => {
+            logger.info('[TEST] dashboard_timer_updated event NOT received within timeout');
+            done(new Error('dashboard_timer_updated event not received'));
+        }, 4500);
+        logger.info('[TEST] About to emit quiz_timer_action event');
+        teacherSocket.once('dashboard_timer_updated', (data) => {
+            logger.info('[TEST] Received dashboard_timer_updated event', data);
+            clearTimeout(timeoutId);
             expect(data.timer).toBeDefined();
             expect(data.timer.isPaused).toBe(false);
             done();
         });
-        teacherSocket.emit('timer_action', {
+        teacherSocket.emit('quiz_timer_action', {
             gameId,
             action: 'start',
             duration: 30
         });
-    });
+        logger.info('[TEST] quiz_timer_action event emitted');
+    }, 5000);
     it('Should allow a teacher to lock/unlock answers', (done) => {
-        teacherSocket.on('dashboard_answers_lock_changed', (data) => {
+        teacherSocket.once('dashboard_answers_lock_changed', (data) => {
             expect(data.answersLocked).toBe(true);
             done();
         });
@@ -172,7 +214,7 @@ describe('Teacher Dashboard & Game Control', () => {
         });
     });
     it('Should allow a teacher to end the game', (done) => {
-        teacherSocket.on('dashboard_game_status_changed', (data) => {
+        teacherSocket.once('dashboard_game_status_changed', (data) => {
             expect(data.status).toBe('completed');
             done();
         });

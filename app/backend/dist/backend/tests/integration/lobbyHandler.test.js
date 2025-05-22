@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const socket_io_client_1 = __importDefault(require("socket.io-client"));
 const testSetup_1 = require("../testSetup");
+const jwt_1 = require("../helpers/jwt"); // Added import
 // Use require for these imports to avoid module resolution issues in Jest
 const { prisma } = require('../../src/db/prisma');
 const { redisClient } = require('../../src/config/redis');
@@ -128,8 +129,8 @@ describe('Lobby Handler', () => {
     test('Player can join and leave a lobby', async () => {
         // Create client socket
         const socket = createSocketClient({
-            token: 'player-token-123',
-            role: 'player'
+            token: (0, jwt_1.generateStudentToken)('player-123', 'Test Player'), // Use helper
+            role: 'player' // role in query might be redundant if token has it
         });
         clientSockets.push(socket);
         // Connect the socket
@@ -167,9 +168,9 @@ describe('Lobby Handler', () => {
     });
     test('Multiple players can join a lobby and see each other', async () => {
         // Create 3 client sockets
-        const socket1 = createSocketClient({ token: 'player1-token', role: 'player' });
-        const socket2 = createSocketClient({ token: 'player2-token', role: 'player' });
-        const socket3 = createSocketClient({ token: 'player3-token', role: 'player' });
+        const socket1 = createSocketClient({ token: (0, jwt_1.generateStudentToken)('player-1', 'Player 1'), role: 'player' });
+        const socket2 = createSocketClient({ token: (0, jwt_1.generateStudentToken)('player-2', 'Player 2'), role: 'player' });
+        const socket3 = createSocketClient({ token: (0, jwt_1.generateStudentToken)('player-3', 'Player 3'), role: 'player' });
         clientSockets.push(socket1, socket2, socket3);
         // Connect all sockets
         socket1.connect();
@@ -235,7 +236,7 @@ describe('Lobby Handler', () => {
     });
     test('Players should be redirected when game becomes active', async () => {
         // Create client socket
-        const socket = createSocketClient({ token: 'player-token', role: 'player' });
+        const socket = createSocketClient({ token: (0, jwt_1.generateStudentToken)('player-redirect-test', 'Redirect Test'), role: 'player' });
         clientSockets.push(socket);
         // Connect the socket
         socket.connect();
@@ -268,8 +269,8 @@ describe('Lobby Handler', () => {
     });
     test('Disconnecting socket should be removed from lobby', async () => {
         // Create two client sockets
-        const socket1 = createSocketClient({ token: 'disconnect-test-1', role: 'player' });
-        const socket2 = createSocketClient({ token: 'disconnect-test-2', role: 'player' });
+        const socket1 = createSocketClient({ token: (0, jwt_1.generateStudentToken)('player-d1', 'Disconnect Test 1'), role: 'player' });
+        const socket2 = createSocketClient({ token: (0, jwt_1.generateStudentToken)('player-d2', 'Disconnect Test 2'), role: 'player' });
         clientSockets.push(socket1, socket2);
         // Connect both sockets
         socket1.connect();

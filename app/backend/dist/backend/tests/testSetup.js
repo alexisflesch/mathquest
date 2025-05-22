@@ -187,12 +187,9 @@ const stopAllTestServers = async () => {
     // Close all Redis clients
     const redisClosePromises = redisClients.map((client) => {
         try {
-            // Check if the client is still connected before trying to quit
+            // Check if the client is still connected before trying to disconnect
             if (client.status !== 'end' && client.status !== 'close') {
-                return client.quit().catch(() => {
-                    // Ignore errors on quit
-                    return Promise.resolve();
-                });
+                client.disconnect();
             }
             return Promise.resolve();
         }
