@@ -11,11 +11,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import createLogger from '@logger';
 import { Logger } from '@/types';
 
-const prisma = new PrismaClient();
 const logger = createLogger('API:TeacherQuizQuestions') as Logger;
 
 export async function GET(req: NextRequest) {
@@ -30,20 +28,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'quizId manquant' }, { status: 400 });
     }
 
-    // Récupérer le quiz (enseignant)
-    const quiz = await prisma.quiz.findUnique({
-        where: { id: quizId },
-    });
-    if (!quiz) {
-        logger.warn('Quiz not found', { quizId });
-        return NextResponse.json({ error: 'Quiz introuvable' }, { status: 404 });
-    }
-
-    // Récupérer les questions liées à ce quiz
-    const questions = await prisma.question.findMany({
-        where: { uid: { in: quiz.questions_ids } },
-    });
-    logger.info('Quiz found', { quizId, questionCount: questions.length });
-
-    return NextResponse.json({ questions });
+    // TODO: Replace this with a call to the backend API endpoint for teacher quiz questions
+    // Example: return fetch('http://localhost:PORT/api/teacher/quiz/[quizId]/questions?...')
+    return NextResponse.json({ error: 'Not implemented. Use backend API.' }, { status: 501 });
 }

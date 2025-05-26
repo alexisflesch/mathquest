@@ -6,9 +6,9 @@ import { SOCKET_CONFIG } from '@/config';
 
 const logger = createLogger('useProjectionQuizSocket');
 
-export function useProjectionQuizSocket(quizId: string | null, tournamentCode: string | null) {
-    const [quizSocket, setQuizSocket] = useState<Socket | null>(null);
-    const [quizState, setQuizState] = useState<QuizState | null>(null);
+export function useProjectionQuizSocket(gameId: string | null, tournamentCode: string | null) {
+    const [gameSocket, setGameSocket] = useState<Socket | null>(null);
+    const [gameState, setGameState] = useState<QuizState | null>(null);
     const [timerStatus, setTimerStatus] = useState<'play' | 'pause' | 'stop'>('stop');
     const [timerQuestionId, setTimerQuestionId] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
@@ -20,22 +20,22 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
     const animationFrameRef = useRef<number | null>(null);
 
     useEffect(() => {
-        if (!quizId) return;
-        logger.info(`Initializing socket connection for projection: ${quizId} to ${SOCKET_CONFIG.url}`);
+        if (!gameId) return;
+        logger.info(`Initializing socket connection for projection: ${gameId} to ${SOCKET_CONFIG.url}`);
         // Connect to backend using complete centralized configuration
         const s = io(SOCKET_CONFIG.url, SOCKET_CONFIG);
-        setQuizSocket(s);
+        setGameSocket(s);
         const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
         const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-        logger.info(`[DEBUG][CLIENT] Emitting join_projection for quizId=${quizId}, teacherId=${teacherId}, cookie_id=${cookie_id}`);
-        s.emit("join_projection", { quizId, teacherId, cookie_id });
+        logger.info(`[DEBUG][CLIENT] Emitting join_projector for gameId=${gameId}, teacherId=${teacherId}, cookie_id=${cookie_id}`);
+        s.emit("join_projector", gameId);
         s.on("connect", () => {
             logger.info(`Socket connected: ${s.id}`);
-            s.emit("get_quiz_state", { quizId });
+            // Note: The initial state is sent automatically upon joining the projector room
         });
         s.on("disconnect", (reason) => {
             logger.warn(`Socket disconnected: ${reason}`);
-            setQuizState(null);
+            setGameState(null);
             setTimerStatus('stop');
             setTimerQuestionId(null);
             setTimeLeft(0);
@@ -52,25 +52,25 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
             logger.debug(`Socket event received: ${event}`, args);
         });
         return () => {
-            logger.info(`Disconnecting socket for projection: ${quizId}`);
+            logger.info(`Disconnecting socket for projection: ${gameId}`);
             s.disconnect();
-            setQuizSocket(null);
+            setGameSocket(null);
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [quizId]);
+    }, [gameId]);
 
     useEffect(() => {
-        if (!quizSocket) return;
-        logger.info('Socket info', { id: quizSocket.id });
-        quizSocket.on("joined_room", ({ room, socketId }) => {
+        if (!gameSocket) return;
+        logger.info('Socket info', { id: gameSocket.id });
+        gameSocket.on("joined_room", ({ room, socketId }) => {
             logger.info('joined_room', { room, socketId });
         });
-        quizSocket.onAny((event, ...args) => {
+        gameSocket.onAny((event, ...args) => {
             logger.debug(`[SOCKET EVENT RECEIVED]`, event, args);
         });
-        const handleQuizState = (state: QuizState) => {
-            logger.debug('Processing quiz_state', state);
-            setQuizState(state);
+        const handleGameState = (state: QuizState) => {
+            logger.debug('Processing projector_state', state);
+            setGameState(state);
             // Always set timerQuestionId from state if present
             if (state.timerQuestionId) {
                 setTimerQuestionId(state.timerQuestionId);
@@ -115,36 +115,51 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
                 setLocalTimeLeft(null);
             }
         };
-        const handleTimerUpdate = (data: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
-            logger.debug('Received quiz_timer_update', data);
-            setTimerStatus(data.status);
-            setTimerQuestionId(data.questionId);
-            setTimeLeft(data.timeLeft);
-            // Defensive: never set localTimeLeft to non-zero if stopped
-            if (data.status === 'stop') {
-                setLocalTimeLeft(0);
+        const handleTimerUpdate = (data: { timer?: { startedAt: number, duration: number, isPaused: boolean } }) => {
+            logger.debug('Received projection_timer_updated', data);
+
+            if (data.timer) {
+                const { startedAt, duration, isPaused } = data.timer;
+
+                if (isPaused) {
+                    setTimerStatus('pause');
+                    // Calculate remaining time at pause
+                    const elapsed = Date.now() - startedAt;
+                    const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+                    setTimeLeft(remaining);
+                    setLocalTimeLeft(remaining);
+                } else {
+                    setTimerStatus('play');
+                    // Calculate current remaining time
+                    const elapsed = Date.now() - startedAt;
+                    const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+                    setTimeLeft(remaining);
+                    setLocalTimeLeft(remaining);
+                }
             } else {
-                setLocalTimeLeft(data.timeLeft);
+                // Timer stopped/cleared
+                setTimerStatus('stop');
+                setTimeLeft(0);
+                setLocalTimeLeft(0);
             }
         };
-        quizSocket.on("quiz_state", handleQuizState);
-        quizSocket.on("quiz_timer_update", handleTimerUpdate);
-        quizSocket.on("quiz_connected_count", (data: { count: number }) => {
-            logger.debug('Received quiz_connected_count', data);
+        gameSocket.on("projector_state", handleGameState);
+        gameSocket.on("projection_timer_updated", handleTimerUpdate);
+        gameSocket.on("projector_connected_count", (data: { count: number }) => {
+            logger.debug('Received projector_connected_count', data);
             setConnectedCount(data.count);
         });
-        quizSocket.on("connect", () => {
-            logger.info("Reconnected, requesting quiz state again.");
-            quizSocket.emit("get_quiz_state", { quizId });
+        gameSocket.on("connect", () => {
+            logger.info("Reconnected, projector state will be sent automatically.");
         });
         return () => {
-            quizSocket.off("quiz_state", handleQuizState);
-            quizSocket.off("quiz_timer_update", handleTimerUpdate);
-            quizSocket.off("quiz_connected_count");
-            quizSocket.off("connect");
-            quizSocket.offAny();
+            gameSocket.off("projector_state", handleGameState);
+            gameSocket.off("projection_timer_updated", handleTimerUpdate);
+            gameSocket.off("projector_connected_count");
+            gameSocket.off("connect");
+            gameSocket.offAny();
         };
-    }, [quizSocket, quizId]);
+    }, [gameSocket, gameId]);
 
     useEffect(() => {
         if (timerRef.current) clearInterval(timerRef.current);
@@ -185,8 +200,8 @@ export function useProjectionQuizSocket(quizId: string | null, tournamentCode: s
     }, [timerStatus, timeLeft]);
 
     return {
-        quizSocket,
-        quizState,
+        gameSocket,
+        gameState,
         timerStatus,
         timerQuestionId,
         timeLeft,

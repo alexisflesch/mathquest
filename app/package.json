@@ -19,6 +19,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@types/node": "^22.15.17",
+    "babel-preset-react-app": "^10.1.0",
     "concurrently": "^8.2.2",
     "typescript": "^5.8.3"
   },

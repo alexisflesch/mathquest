@@ -2,7 +2,25 @@
  * Teacher Projection Page Component
  *
  * This page provides a full-screen projection view for teachers to display
- * quiz components on a larger screen (projector, interactive whiteboard, etc.)
+ * q    // Listen for show    // Clear correctAnswers when a new question is set
+    const lastQuestionIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!gameState || !timerQuestionId) return;
+        if (lastQuestionIdRef.current !== timerQuestionId) {
+            debugSetCorrectAnswers([], 'new question detected');
+            lastQuestionIdRef.current = timerQuestionId;
+        }
+    }, [gameState, timerQuestionId]);ts toggle
+    useEffect(() => {
+        if (!gameSocket) return;
+        const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
+            setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
+        };
+        gameSocket.on('quiz_toggle_stats', handleToggleStats);
+        return () => {
+            gameSocket.off('quiz_toggle_stats', handleToggleStats);
+        };
+    }, [gameSocket]);nts on a larger screen (projector, interactive whiteboard, etc.)
  * Features:
  * - Draggable and resizable components
  * - Real-time updates via socket connection
@@ -66,10 +84,10 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     const [questionStats, setQuestionStats] = useState<Record<string, StatsData>>({});
     const [showStats, setShowStats] = useState<Record<string, boolean>>({});
 
-    // Move the useProjectionQuizSocket hook call to the top, before any useEffect or code that uses quizSocket
+    // Move the useProjectionQuizSocket hook call to the top, before any useEffect or code that uses gameSocket
     const {
-        quizSocket,
-        quizState,
+        gameSocket,
+        gameState,
         timerStatus,
         timerQuestionId,
         localTimeLeft,
@@ -84,65 +102,65 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     };
 
     useEffect(() => {
-        if (!quizSocket) return;
+        if (!gameSocket) return;
         const handleResults = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
             logger.info('[Projection] Received quiz_question_results', data);
             setLeaderboard(data.leaderboard || []);
             debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_results');
             setPodiumKey(k => k + 1); // Remount ClassementPodium for animation
         };
-        quizSocket.on('quiz_question_results', handleResults);
+        gameSocket.on('quiz_question_results', handleResults);
         return () => {
-            quizSocket.off('quiz_question_results', handleResults);
+            gameSocket.off('quiz_question_results', handleResults);
         };
-    }, [quizSocket]);
+    }, [gameSocket]);
 
     useEffect(() => {
-        if (!quizSocket) return;
+        if (!gameSocket) return;
         const handleClosed = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
             logger.info('[Projection] Received quiz_question_closed', data);
             setLeaderboard(data.leaderboard || []);
             debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_closed');
         };
-        quizSocket.on('quiz_question_closed', handleClosed);
+        gameSocket.on('quiz_question_closed', handleClosed);
         return () => {
-            quizSocket.off('quiz_question_closed', handleClosed);
+            gameSocket.off('quiz_question_closed', handleClosed);
         };
-    }, [quizSocket]);
+    }, [gameSocket]);
 
     // Listen for stats updates
     useEffect(() => {
-        if (!quizSocket) return;
+        if (!gameSocket) return;
         const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
             setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
         };
-        quizSocket.on('quiz_answer_stats_update', handleStatsUpdate);
+        gameSocket.on('quiz_answer_stats_update', handleStatsUpdate);
         return () => {
-            quizSocket.off('quiz_answer_stats_update', handleStatsUpdate);
+            gameSocket.off('quiz_answer_stats_update', handleStatsUpdate);
         };
-    }, [quizSocket]);
+    }, [gameSocket]);
 
     // Listen for show/hide stats toggle
     useEffect(() => {
-        if (!quizSocket) return;
+        if (!gameSocket) return;
         const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
             setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
         };
-        quizSocket.on('quiz_toggle_stats', handleToggleStats);
+        gameSocket.on('quiz_toggle_stats', handleToggleStats);
         return () => {
-            quizSocket.off('quiz_toggle_stats', handleToggleStats);
+            gameSocket.off('quiz_toggle_stats', handleToggleStats);
         };
-    }, [quizSocket]);
+    }, [gameSocket]);
 
     // Clear correctAnswers when a new question is set
     const lastQuestionIdRef = useRef<string | null>(null);
     useEffect(() => {
-        if (!quizState || !timerQuestionId) return;
+        if (!gameState || !timerQuestionId) return;
         if (lastQuestionIdRef.current !== timerQuestionId) {
             debugSetCorrectAnswers([], 'new question');
             lastQuestionIdRef.current = timerQuestionId;
         }
-    }, [quizState, timerQuestionId]);
+    }, [gameState, timerQuestionId]);
 
     // --- Patch: Ensure timer is set to 0 and countdown is stopped when quiz is stopped ---
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -292,12 +310,12 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     // Format timer display
     // const formatTime = (seconds: number | null): string => { ... };
 
-    // Get current question from quiz state
+    // Get current question from game state
     const getCurrentQuestion = (): Question | null => {
-        if (!quizState || !timerQuestionId) {
+        if (!gameState || !timerQuestionId) {
             return null;
         }
-        const found = quizState.questions.find(q => q.uid === timerQuestionId) || null;
+        const found = gameState.questions.find((q: Question) => q.uid === timerQuestionId) || null;
         return found;
     };
 
@@ -313,7 +331,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     if (loading) return <div className="p-8">Chargement de la vue projection...</div>;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
     if (!quizId) return <div className="p-8 text-orange-600">Aucun ID de quiz fourni.</div>;
-    if (!quizState) return <div className="p-8">Connexion au serveur...</div>;
+    if (!gameState) return <div className="p-8">Connexion au serveur...</div>;
     if (!layout || layout.length === 0) return <div className="p-8 text-orange-600">Aucun layout défini pour la projection.</div>;
 
     const currentQuestion = getCurrentQuestion();
@@ -427,8 +445,8 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                                         <QuestionCard
                                             key={questionKey}
                                             currentQuestion={currentTournamentQuestion}
-                                            questionIndex={quizState?.questions.findIndex(q => q.uid === currentTournamentQuestion?.uid) ?? 0}
-                                            totalQuestions={quizState?.questions.length ?? 0}
+                                            questionIndex={gameState?.questions.findIndex((q: Question) => q.uid === currentTournamentQuestion?.uid) ?? 0}
+                                            totalQuestions={gameState?.questions.length ?? 0}
                                             isMultipleChoice={currentTournamentQuestion?.type === 'choix_multiple'}
                                             selectedAnswer={null}
                                             setSelectedAnswer={noopSetState}

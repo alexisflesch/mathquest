@@ -36,7 +36,7 @@
                 "../shared/logger.ts"
             ],
             "@db": [
-                "../backend/db/index.ts"
+                "../backend-backup/db/index.ts"
             ],
             "@prisma/client": [
                 "../shared/prisma-client"
@@ -55,7 +55,7 @@
         ".next/types/**/*.ts",
         "../shared/types/**/*.ts",
         "../shared/logger.ts",
-        "../backend/db/index.ts",
+        "../backend-backup/db/index.ts",
         "next.config.ts"
     ],
     "exclude": [

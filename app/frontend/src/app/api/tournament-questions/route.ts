@@ -13,14 +13,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 // Import the server-side logger from the root directory
 import createLogger from '@logger';
 import { Logger } from '@/types';
+import { Question } from '@shared/types/quiz/question';
 
 const logger = createLogger('API:GameQuestions') as Logger;
-
-const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -30,44 +28,47 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: 'Code manquant.' }, { status: 400 });
     }
 
-    // Find the game instance by access code
-    const gameInstance = await prisma.gameInstance.findUnique({
-        where: { accessCode: code },
-        include: {
-            quizTemplate: {
-                include: {
-                    questions: {
-                        include: {
-                            question: true
-                        },
-                        orderBy: {
-                            sequence: 'asc'
-                        }
-                    }
-                }
-            }
-        }
-    });
+    // TODO: Replace this with a call to the backend API endpoint for tournament questions
+    // Example: return fetch('http://localhost:PORT/api/tournament-questions?...')
+    return NextResponse.json({ error: 'Not implemented. Use backend API.' }, { status: 501 });
 
-    logger.debug('Game instance found:', {
-        id: gameInstance?.id,
-        code: gameInstance?.accessCode,
-        status: gameInstance?.status,
-        questionCount: gameInstance?.quizTemplate?.questions?.length || 0
-    });
+    // REMOVE: const gameInstance = await prisma.gameInstance.findUnique({
+    //     where: { accessCode: code },
+    //     include: {
+    //         quizTemplate: {
+    //             include: {
+    //                 questions: {
+    //                     include: {
+    //                         question: true
+    //                     },
+    //                     orderBy: {
+    //                         sequence: 'asc'
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // });
 
-    if (!gameInstance) {
-        return NextResponse.json({ message: 'Instance de jeu introuvable.' }, { status: 404 });
-    }
+    // logger.debug('Game instance found:', {
+    //     id: gameInstance?.id,
+    //     code: gameInstance?.accessCode,
+    //     status: gameInstance?.status,
+    //     questionCount: gameInstance?.quizTemplate?.questions?.length || 0
+    // });
+
+    // if (!gameInstance) {
+    //     return NextResponse.json({ message: 'Instance de jeu introuvable.' }, { status: 404 });
+    // }
 
     // Extract questions from the QuizTemplate in the correct order
-    const questions = gameInstance.quizTemplate.questions.map(q => q.question);
+    // const questions = gameInstance.quizTemplate.questions.map((q: { question: Question }) => q.question);
 
-    logger.info('Game questions retrieved:', {
-        gameInstanceId: gameInstance.id,
-        accessCode: code,
-        questionCount: questions.length
-    });
+    // logger.info('Game questions retrieved:', {
+    //     gameInstanceId: gameInstance.id,
+    //     accessCode: code,
+    //     questionCount: questions.length
+    // });
 
-    return NextResponse.json(questions);
+    // return NextResponse.json(questions);
 }

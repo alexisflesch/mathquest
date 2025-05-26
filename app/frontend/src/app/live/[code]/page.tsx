@@ -204,18 +204,18 @@ export default function TournamentSessionPage() {
             logger.error('Socket.IO error:', error);
         });
 
-        // Helper to emit join_tournament
+        // Helper to emit join_tournament using new backend API
         const emitJoinTournament = () => {
-            let cookie_id = null;
+            let userId = null;
             let username = null;
-            let avatar = null;
+            let avatarUrl = null;
             if (typeof window !== 'undefined') {
-                cookie_id = localStorage.getItem('mathquest_cookie_id');
+                userId = localStorage.getItem('mathquest_cookie_id'); // Using cookie_id as userId
                 username = localStorage.getItem('mathquest_username');
-                avatar = localStorage.getItem('mathquest_avatar');
+                avatarUrl = localStorage.getItem('mathquest_avatar');
             }
-            logger.info(`Joining tournament ${code}`, { cookie_id, username, avatar, isDiffered });
-            s.emit("join_tournament", { code, cookie_id, username, avatar, isDiffered });
+            logger.info(`Joining tournament ${code}`, { userId, username, avatarUrl, isDiffered });
+            s.emit("join_tournament", { accessCode: code, userId, username, avatarUrl });
 
             // Also verify tournament status when joining to ensure we have the latest state
             // This helps with cases where we missed earlier events
@@ -262,23 +262,23 @@ export default function TournamentSessionPage() {
         emitJoinTournament();
 
         // Receive a new question
-        s.on("live_question", (payload: TournamentQuestion) => {
+        s.on("game_question", (payload: TournamentQuestion) => {
             // Round timer down to nearest second
-            const roundedTime = payload.remainingTime != null ? Math.floor(payload.remainingTime) : 20;
-            logger.debug('live_question RECEIVED (full payload):', payload);
-            logger.debug('live_question RECEIVED (questionIndex):', payload.questionIndex); // Changed from payload.index
-            logger.debug('live_question RECEIVED (totalQuestions):', payload.totalQuestions); // Changed from payload.total
+            const roundedTime = payload.timer != null ? Math.floor(payload.timer) : 20;
+            logger.debug('game_question RECEIVED (full payload):', payload);
+            logger.debug('game_question RECEIVED (questionIndex):', payload.questionIndex);
+            logger.debug('game_question RECEIVED (totalQuestions):', payload.totalQuestions);
             setCurrentQuestion(payload); // Pass the full payload, not just payload.question
 
             if (!payload.question) {
-                logger.error('Received tournament_question event with no question data');
+                logger.error('Received game_question event with no question data');
                 setWaiting(false); // Allow potential recovery or display of error
                 return;
             }
 
             // Set index and total, assuming they are always numbers from backend.
-            setQuestionIndex(typeof payload.questionIndex === 'number' ? payload.questionIndex : 0); // Changed from payload.index
-            setTotalQuestions(typeof payload.totalQuestions === 'number' ? payload.totalQuestions : 0); // Changed from payload.total
+            setQuestionIndex(typeof payload.questionIndex === 'number' ? payload.questionIndex : 0);
+            setTotalQuestions(typeof payload.totalQuestions === 'number' ? payload.totalQuestions : 0);
 
             // Reset states for the new question
             setAnswered(false);
@@ -293,8 +293,8 @@ export default function TournamentSessionPage() {
                 questionSet: !!payload,
                 timer: roundedTime,
                 paused: payload.questionState === "paused",
-                questionIndex: payload.questionIndex, // Changed from payload.index
-                totalQuestions: payload.totalQuestions // Changed from payload.total
+                questionIndex: payload.questionIndex,
+                totalQuestions: payload.totalQuestions
             });
 
             if (timerRef.current) {
@@ -331,22 +331,20 @@ export default function TournamentSessionPage() {
             }, 1000);
         });
 
-        // Handle tournament_timer_update events from server
-        s.on("tournament_timer_update", (data) => {
-            logger.debug('tournament_timer_update', data);
+        // Handle timer updates from server (new backend API structure)
+        s.on("timer_update", (data) => {
+            logger.debug('timer_update', data);
 
-            if (!data || !data[0]) {
-                logger.warn('Empty tournament_timer_update data');
+            if (!data || typeof data.timeLeft !== 'number') {
+                logger.warn('Invalid timer_update data');
                 return;
             }
 
-            const update = data[0];
-
             // Update timer with the server's timeLeft value
-            setTimer(update.timeLeft);
+            setTimer(data.timeLeft);
 
             // Handle paused state
-            if (update.status === 'pause') {
+            if (data.status === 'paused') {
                 if (timerRef.current) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
@@ -357,7 +355,7 @@ export default function TournamentSessionPage() {
             }
 
             // Set waiting state if timer is at 0
-            if (update.timeLeft === 0) {
+            if (data.timeLeft === 0) {
                 if (timerRef.current) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
@@ -367,13 +365,13 @@ export default function TournamentSessionPage() {
             }
         });
 
-        // Handle quiz_update events from server (teacher dashboard actions)
-        s.on("quiz_update", (data) => {
-            logger.debug('quiz_update', data);
+        // Handle game updates from server (teacher dashboard actions)
+        s.on("game_update", (data) => {
+            logger.debug('game_update', data);
 
             // The data is directly an object, not an array
             if (!data) {
-                logger.warn('Empty quiz_update data');
+                logger.warn('Empty game_update data');
                 return;
             }
 
@@ -386,21 +384,21 @@ export default function TournamentSessionPage() {
             }
 
             // Handle different status types
-            if (update.status === 'pause') {
+            if (update.status === 'paused') {
                 if (timerRef.current) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
                 }
                 setPaused(true);
                 pausedRef.current = true;
-                logger.debug('Timer paused from quiz_update event');
+                logger.debug('Timer paused from game_update event');
             } else if (update.status === 'play') {
                 setPaused(false);
                 pausedRef.current = false;
 
                 // Restart timer if not already running
                 if (!timerRef.current && timer !== null && timer > 0) {
-                    logger.debug('Restarting timer from quiz_update event');
+                    logger.debug('Restarting timer from game_update event');
                     timerRef.current = setInterval(() => {
                         setTimer((prev) => {
                             if (prev === null) return null;
@@ -420,13 +418,13 @@ export default function TournamentSessionPage() {
                 }
                 setTimer(0);
                 setWaiting(true);
-                logger.debug('Timer stopped from quiz_update event');
+                logger.debug('Timer stopped from game_update event');
             }
         });
 
-        // Handle set timer to 0 from server (stop button)
-        s.on("tournament_set_timer", ({ timeLeft, questionState }) => {
-            logger.debug('tournament_set_timer', { timeLeft, questionState, paused: pausedRef.current });
+        // Handle set timer events from server (stop button)
+        s.on("timer_set", ({ timeLeft, questionState }) => {
+            logger.debug('timer_set', { timeLeft, questionState, paused: pausedRef.current });
             if (questionState === "stopped") {
                 logger.info('Setting timer to 0 because questionState="stopped"');
                 setTimer(0);
@@ -476,8 +474,8 @@ export default function TournamentSessionPage() {
         });
 
         // Receive answer result
-        s.on("tournament_answer_result", (payload: { rejected?: boolean; received?: boolean; message?: string }) => {
-            logger.debug("RECEIVED tournament_answer_result", payload);
+        s.on("answer_received", (payload: { rejected?: boolean; received?: boolean; message?: string; correct?: boolean }) => {
+            logger.debug("RECEIVED answer_received", payload);
 
             if (payload.rejected) {
                 setSnackbarType("error");
@@ -497,22 +495,42 @@ export default function TournamentSessionPage() {
         });
 
         // Receive question results (correct answers)
-        s.on("question_results", (payload: { questionUid: string; correctAnswers: number[] }) => {
-            logger.debug("RECEIVED question_results", payload);
+        s.on("correct_answers", (payload: { questionId: string }) => {
+            logger.debug("RECEIVED correct_answers", payload);
+            // Note: Backend sends correct_answers event but actual correct answers are derived from the question
             // Ensure currentQuestion and its nested question object are not null
-            if (currentQuestion && typeof currentQuestion.question === 'object' && currentQuestion.question.uid === payload.questionUid) {
-                setCurrentCorrectAnswers(payload.correctAnswers);
+            if (currentQuestion && typeof currentQuestion.question === 'object' && currentQuestion.question.uid === payload.questionId) {
+                // Extract correct answers from the question object
+                const question = currentQuestion.question as any;
+                let correctIndices: number[] = [];
+
+                if (question.correctAnswers && Array.isArray(question.correctAnswers)) {
+                    // New backend structure with correctAnswers boolean array
+                    correctIndices = question.correctAnswers
+                        .map((isCorrect: boolean, index: number) => isCorrect ? index : -1)
+                        .filter((index: number) => index !== -1);
+                } else if (question.responses && Array.isArray(question.responses)) {
+                    // Old structure with responses array
+                    correctIndices = question.responses
+                        .map((response: any, index: number) => response.correct ? index : -1)
+                        .filter((index: number) => index !== -1);
+                }
+
+                setCurrentCorrectAnswers(correctIndices);
                 setShowQuestionResults(true);
                 // setWaiting(true) should already be true from timer expiry or answer submission.
                 // The card becomes readonly via showQuestionResults prop.
-                logger.info('Displaying correct answers for question:', payload.questionUid);
+                logger.info('Displaying correct answers for question:', payload.questionId);
             } else {
-                logger.warn("Received question_results for a different or non-object question", { currentUid: currentQuestion?.question && typeof currentQuestion.question === 'object' ? currentQuestion.question.uid : 'N/A', receivedUid: payload.questionUid });
+                logger.warn("Received correct_answers for a different or non-object question", {
+                    currentUid: currentQuestion?.question && typeof currentQuestion.question === 'object' ? currentQuestion.question.uid : 'N/A',
+                    receivedUid: payload.questionId
+                });
             }
         });
 
         // Receive tournament end
-        s.on("tournament_end", () => {
+        s.on("game_ended", () => {
             setCurrentQuestion(null);
             setWaiting(false);
             if (timerRef.current) clearInterval(timerRef.current);
@@ -527,30 +545,29 @@ export default function TournamentSessionPage() {
         }
 
         // Handle tournament code updates
-        s.on("tournament_code_updated", ({ oldCode, newCode }) => {
-            logger.info(`Received tournament_code_updated: ${oldCode} -> ${newCode}`);
+        s.on("game_code_updated", ({ oldCode, newCode }) => {
+            logger.info(`Received game_code_updated: ${oldCode} -> ${newCode}`);
 
             // If this is our tournament, update our rooms and state
             if (oldCode === code) {
                 logger.info(`Our tournament code changed, joining new room: live_${newCode}`);
 
                 // Fetch user details from localStorage for the new join emission
-                let user_cookie_id = null;
-                let user_username = null;
-                let user_avatar = null;
+                let userId = null;
+                let username = null;
+                let avatarUrl = null;
                 if (typeof window !== 'undefined') {
-                    user_cookie_id = localStorage.getItem('mathquest_cookie_id');
-                    user_username = localStorage.getItem('mathquest_username');
-                    user_avatar = localStorage.getItem('mathquest_avatar');
+                    userId = localStorage.getItem('mathquest_cookie_id');
+                    username = localStorage.getItem('mathquest_username');
+                    avatarUrl = localStorage.getItem('mathquest_avatar');
                 }
 
                 // Join the new tournament room
                 s.emit("join_tournament", {
-                    code: newCode,
-                    cookie_id: user_cookie_id, // Use fetched value
-                    username: user_username,       // Use fetched value
-                    avatar: user_avatar,       // Use fetched value
-                    isDiffered
+                    accessCode: newCode,
+                    userId: userId,
+                    username: username,
+                    avatarUrl: avatarUrl
                 });
 
                 // Redirect after code change.
@@ -562,7 +579,7 @@ export default function TournamentSessionPage() {
 
         return () => {
             s.off("connect", emitJoinTournament);
-            s.off("live_question"); // Make sure to turn off the listener
+            s.off("game_question"); // Make sure to turn off the listener
             s.disconnect();
             if (timerRef.current) clearInterval(timerRef.current);
         };
@@ -580,32 +597,32 @@ export default function TournamentSessionPage() {
             logger.debug(`socket event: ${event}`, args);
         });
         // Log live_question
-        socket.on("live_question", (payload) => {
-            logger.debug("RECEIVED live_question", payload);
+        socket.on("game_question", (payload) => {
+            logger.debug("RECEIVED game_question", payload);
         });
         // Log answer result
-        socket.on("tournament_answer_result", (payload) => {
-            logger.debug("RECEIVED tournament_answer_result", payload);
+        socket.on("answer_received", (payload) => {
+            logger.debug("RECEIVED answer_received", payload);
         });
         // Log tournament_end
-        socket.on("tournament_end", (payload) => {
-            logger.info("RECEIVED tournament_end", payload);
+        socket.on("game_ended", (payload) => {
+            logger.info("RECEIVED game_ended", payload);
         });
         // Log errors
-        socket.on("tournament_error", (payload) => {
-            logger.error("RECEIVED tournament_error", payload);
+        socket.on("game_error", (payload) => {
+            logger.error("RECEIVED game_error", payload);
         });
         // Log finished redirect
-        socket.on("tournament_finished_redirect", (payload) => {
-            logger.info("RECEIVED tournament_finished_redirect", payload);
+        socket.on("game_finished_redirect", (payload) => {
+            logger.info("RECEIVED game_finished_redirect", payload);
         });
         return () => {
             socket.offAny();
-            socket.off("live_question");
-            socket.off("tournament_answer_result");
-            socket.off("tournament_end");
-            socket.off("tournament_error");
-            socket.off("tournament_finished_redirect");
+            socket.off("game_question");
+            socket.off("answer_received");
+            socket.off("game_ended");
+            socket.off("game_error");
+            socket.off("game_finished_redirect");
         };
     }, [socket]);
 
@@ -642,37 +659,37 @@ export default function TournamentSessionPage() {
         if (devMode) return; // In dev mode, skip socket logic
         if (!socket) return;
         // Listen for tournament finished redirect
-        socket.on("tournament_finished_redirect", ({ code }) => {
-            router.replace(`/leaderboard/${code}`);
+        socket.on("game_finished_redirect", ({ accessCode }) => {
+            router.replace(`/leaderboard/${accessCode}`);
         });
         return () => {
-            socket.off("tournament_finished_redirect");
+            socket.off("game_finished_redirect");
         };
     }, [socket, router, devMode]);
 
     useEffect(() => {
         if (!socket) return;
         // Listen for tournament_already_played event
-        socket.on("tournament_already_played", ({ code }) => {
+        socket.on("game_already_played", ({ accessCode }) => {
             // Redirect to leaderboard if already played
-            router.replace(`/leaderboard/${code}`);
+            router.replace(`/leaderboard/${accessCode}`);
         });
 
         // Handle redirect to lobby if tournament hasn't started yet,
         // but ONLY if we don't have a current question (meaning we're not already playing)
-        socket.on("tournament_redirect_to_lobby", ({ code }) => {
+        socket.on("game_redirect_to_lobby", ({ accessCode }) => {
             // Only redirect if we don't already have a question
             if (!currentQuestion) {
-                logger.info("Received tournament_redirect_to_lobby, redirecting to lobby");
-                router.replace(`/lobby/${code}`);
+                logger.info("Received game_redirect_to_lobby, redirecting to lobby");
+                router.replace(`/lobby/${accessCode}`);
             } else {
-                logger.info("Received tournament_redirect_to_lobby but ignored - already have question");
+                logger.info("Received game_redirect_to_lobby but ignored - already have question");
             }
         });
 
         return () => {
-            socket.off("tournament_already_played");
-            socket.off("tournament_redirect_to_lobby");
+            socket.off("game_already_played");
+            socket.off("game_redirect_to_lobby");
         };
     }, [socket, router, currentQuestion]);
 
@@ -717,20 +734,22 @@ export default function TournamentSessionPage() {
             return;
         }
         const clientTimestamp = Date.now();
-        // const questionData = currentQuestion.question; // Not needed due to currentQuestionUid
-        // const questionUidForAnswer = (questionData && typeof questionData === 'object') ? (questionData as any).uid : undefined; // Replaced by currentQuestionUid
 
-        logger.debug('Emitting tournament_answer', {
-            code,
-            questionUid: currentQuestionUid, // Use derived UID
-            answerIdx: idx,
+        logger.debug('Emitting game_answer', {
+            accessCode: code,
+            questionId: currentQuestionUid,
+            answer: currentQuestion.question && typeof currentQuestion.question === 'object' && 'answerOptions' in currentQuestion.question
+                ? (currentQuestion.question as any).answerOptions[idx]
+                : idx.toString(),
             clientTimestamp,
             isDiffered,
         });
-        socket.emit("tournament_answer", {
-            code,
-            questionUid: currentQuestionUid, // Use derived UID
-            answerIdx: idx,
+        socket.emit("game_answer", {
+            accessCode: code,
+            questionId: currentQuestionUid,
+            answer: currentQuestion.question && typeof currentQuestion.question === 'object' && 'answerOptions' in currentQuestion.question
+                ? (currentQuestion.question as any).answerOptions[idx]
+                : idx.toString(),
             clientTimestamp,
             isDiffered,
         });
@@ -763,72 +782,32 @@ export default function TournamentSessionPage() {
         // const questionData = currentQuestion.question; // Not needed due to currentQuestionUid
         // const questionUidForAnswer = (questionData && typeof questionData === 'object') ? (questionData as any).uid : undefined; // Replaced by currentQuestionUid
 
-        logger.debug('Emitting tournament_answer', {
-            code,
-            questionUid: currentQuestionUid, // Use derived UID
-            answerIdx: selectedAnswers,
+        logger.debug('Emitting game_answer', {
+            accessCode: code,
+            questionId: currentQuestionUid,
+            answer: selectedAnswers.map(idx =>
+                currentQuestion.question && typeof currentQuestion.question === 'object' && 'answerOptions' in currentQuestion.question
+                    ? (currentQuestion.question as any).answerOptions[idx]
+                    : idx.toString()
+            ),
             clientTimestamp,
             isDiffered,
         });
-        socket.emit("tournament_answer", {
-            code,
-            questionUid: currentQuestionUid, // Use derived UID
-            answerIdx: selectedAnswers,
+        socket.emit("game_answer", {
+            accessCode: code,
+            questionId: currentQuestionUid,
+            answer: selectedAnswers.map(idx =>
+                currentQuestion.question && typeof currentQuestion.question === 'object' && 'answerOptions' in currentQuestion.question
+                    ? (currentQuestion.question as any).answerOptions[idx]
+                    : idx.toString()
+            ),
             clientTimestamp,
             isDiffered,
         });
         // Do not setAnswered(true) here; allow resubmission until timer/lock
     };
 
-    useEffect(() => {
-        logger.info('Attaching tournament_question_state_update listener, socket:', !!socket);
-        if (!socket) return;
-        socket.on("tournament_question_state_update", (updates) => {
-            logger.info('Handler called for tournament_question_state_update', updates);
-            // PATCH: handle both array and object
-            const update = Array.isArray(updates) ? updates[0] : updates;
-            if (!update) return;
-            logger.info('tournament_question_state_update received, questionState:', update.questionState);
-            if (typeof update.remainingTime === 'number') {
-                setTimer(Math.floor(update.remainingTime));
-            }
-            if (update.questionState === 'paused') {
-                logger.info('PAUSE branch entered');
-                if (timerRef.current) {
-                    clearInterval(timerRef.current);
-                    timerRef.current = null;
-                }
-                setPaused(true);
-                pausedRef.current = true;
-                setWaiting(true);
-                logger.debug('paused set to true from tournament_question_state_update');
-                logger.info('UI: Timer PAUSED by tournament_question_state_update, timer value:', timer);
-            } else if (update.questionState === 'active') {
-                logger.info('ACTIVE branch entered');
-                setPaused(false);
-                pausedRef.current = false;
-                setWaiting(false);
-                if (!timerRef.current && typeof update.remainingTime === 'number' && update.remainingTime > 0) {
-                    timerRef.current = setInterval(() => {
-                        setTimer((prev) => {
-                            if (prev === null) return null;
-                            if (prev <= 1) {
-                                if (timerRef.current) clearInterval(timerRef.current);
-                                setWaiting(true);
-                                return 0;
-                            }
-                            return prev - 1;
-                        });
-                    }, 1000);
-                }
-            } else {
-                logger.info('Other state branch entered:', update.questionState);
-            }
-        });
-        return () => {
-            if (socket) socket.off("tournament_question_state_update");
-        };
-    }, [socket]);
+    // Note: Removed old tournament_question_state_update handler as it's replaced by the new backend events
 
     // --- Trophy/correctAnswers logic for LIVE PAGE ---
     // State for correct answers to show trophy

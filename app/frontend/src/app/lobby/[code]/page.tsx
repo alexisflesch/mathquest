@@ -188,11 +188,12 @@ export default function LobbyPage() {
             // Re-join room after reconnection
             const identity = getCurrentIdentity();
             if (identity) {
+                const userId = localStorage.getItem('mathquest_cookie_id') || `temp_${socket.id}`;
                 socket.emit("join_lobby", {
-                    code,
+                    accessCode: code,
+                    userId,
                     username: identity.username,
-                    avatar: identity.avatar,
-                    cookie_id: localStorage.getItem('mathquest_cookie_id')
+                    avatarUrl: identity.avatar,
                 });
                 // Check tournament status after reconnect
                 checkTournamentStatus();
@@ -202,24 +203,24 @@ export default function LobbyPage() {
         // Join the lobby room with correct identity
         const identity = getCurrentIdentity();
         if (!identity) return;
-        // Get cookie_id from localStorage
-        let cookie_id = null;
+        // Get userId from localStorage (using cookie_id as userId for compatibility)
+        let userId = null;
         if (typeof window !== 'undefined') {
-            cookie_id = localStorage.getItem('mathquest_cookie_id');
-            logger.debug('cookie_id before join_lobby', { cookie_id });
+            userId = localStorage.getItem('mathquest_cookie_id') || `temp_${socket.id}`;
+            logger.debug('userId before join_lobby', { userId });
         }
         socket.emit("join_lobby", {
-            code,
+            accessCode: code,
+            userId,
             username: identity.username,
-            avatar: identity.avatar,
-            cookie_id,
+            avatarUrl: identity.avatar,
         });
 
         // Debug: log after join_lobby
         logger.info("Joined lobby", { code });
 
         // Request the current participants list
-        socket.emit("get_participants", { code });
+        socket.emit("get_participants", { accessCode: code });
 
         // Listen for the full participants list
         socket.on("participants_list", (data) => {
@@ -246,7 +247,63 @@ export default function LobbyPage() {
             logger.debug("Participant left", { id: participant.id, username: participant.username });
         });
 
-        // Listen for redirect_to_tournament event (immediate redirect for quiz-triggered tournaments)
+        // Listen for redirect_to_game event (new backend event for game start)
+        socket.on("redirect_to_game", ({ accessCode, gameId }) => {
+            const targetCode = accessCode || code;
+            logger.info(`Received redirect_to_game event, redirecting immediately to ${targetCode}`);
+
+            // Add direct console.log for visibility in browser console
+            console.log(`%c⚠️ REDIRECT TO GAME EVENT RECEIVED! Redirecting to /live/${targetCode}`, 'background: #ff0000; color: white; font-size: 16px; padding: 5px;');
+
+            // Force-leave the lobby room before redirecting
+            socket.emit("leave_lobby", { accessCode: targetCode });
+
+            // Use immediate window.location navigation instead of Next.js router to ensure redirection
+            console.log('Executing window.location navigation now...');
+            window.location.href = `/live/${targetCode}`;
+
+            // Also try the Next.js router as a fallback
+            try {
+                router.replace(`/live/${targetCode}`);
+            } catch (err) {
+                logger.error(`Router redirect error: ${err}`);
+            }
+        });
+
+        // Listen for game_started event (new backend event)
+        socket.on("game_started", ({ accessCode, gameId }) => {
+            const targetCode = accessCode || code;
+            logger.info(`Game started (code: ${targetCode}), beginning countdown`);
+            setCountdown(5);
+            const interval = setInterval(() => {
+                setCountdown((prev) => {
+                    if (prev === null) return null;
+                    if (prev <= 1) {
+                        clearInterval(interval);
+                        logger.info(`Countdown complete, will redirect to /live/${targetCode}`);
+
+                        // Force-leave the lobby room before redirecting
+                        socket.emit("leave_lobby", { accessCode: targetCode });
+
+                        // Use immediate window.location navigation for more reliable redirects
+                        window.location.href = `/live/${targetCode}`;
+
+                        // Also try router as fallback
+                        try {
+                            router.replace(`/live/${targetCode}`);
+                        } catch (err) {
+                            logger.error(`Router redirect error: ${err}`);
+                        }
+
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        });
+
+        // Keep legacy support for old events during transition
+        // Listen for redirect_to_tournament event (legacy support - immediate redirect for quiz-triggered tournaments)
         socket.on("redirect_to_tournament", ({ code: redirectCode }) => {
             const targetCode = redirectCode || code;
             logger.info(`Received redirect_to_tournament event, redirecting immediately to ${targetCode}`);
@@ -255,7 +312,7 @@ export default function LobbyPage() {
             console.log(`%c⚠️ REDIRECT EVENT RECEIVED! Redirecting to /live/${targetCode}`, 'background: #ff0000; color: white; font-size: 16px; padding: 5px;');
 
             // Force-leave the lobby room before redirecting
-            socket.emit("leave_lobby", { code: targetCode });
+            socket.emit("leave_lobby", { accessCode: targetCode });
 
             // Use immediate window.location navigation instead of Next.js router to ensure redirection
             console.log('Executing window.location navigation now...');
@@ -275,7 +332,7 @@ export default function LobbyPage() {
         // Check status initially
         checkTournamentStatus();
 
-        // Listen for tournament_started event from server (normal tournaments with countdown)
+        // Listen for tournament_started event from server (legacy - normal tournaments with countdown)
         socket.on("tournament_started", (data) => {
             const tournamentCode = data?.code || code; // Use provided code or current code
             logger.info(`Tournament started (code: ${tournamentCode}), beginning countdown`);
@@ -288,7 +345,7 @@ export default function LobbyPage() {
                         logger.info(`Countdown complete, will redirect to /live/${tournamentCode}`);
 
                         // Force-leave the lobby room before redirecting
-                        socket.emit("leave_lobby", { code: tournamentCode });
+                        socket.emit("leave_lobby", { accessCode: tournamentCode });
 
                         // Use immediate window.location navigation for more reliable redirects
                         window.location.href = `/live/${tournamentCode}`;
@@ -340,8 +397,8 @@ export default function LobbyPage() {
         });
 
         // Listen for potential lobby errors from the server
-        socket.on("lobby_error", ({ message }) => {
-            logger.error(`Lobby error received: ${message}`);
+        socket.on("lobby_error", ({ error, message }) => {
+            logger.error(`Lobby error received: ${message} (${error})`);
             // TODO: Display this error to the user appropriately
             alert(`Erreur: ${message}`); // Simple alert for now
             router.replace('/'); // Redirect home on error
@@ -361,7 +418,7 @@ export default function LobbyPage() {
                 if (data.isQuizMode || data.immediate) {
                     logger.info(`QUIZ MODE REDIRECT: Forcing immediate redirect to /live/${data.code}`);
                     // Force-leave the lobby first
-                    socket.emit("leave_lobby", { code });
+                    socket.emit("leave_lobby", { accessCode: code });
 
                     // Force a hard navigation (most reliable)
                     window.location.href = `/live/${data.code}`;
@@ -393,7 +450,7 @@ export default function LobbyPage() {
 
         // Clean up on unmount
         return () => {
-            socket.emit("leave_lobby", { code });
+            socket.emit("leave_lobby", { accessCode: code });
             socket.disconnect();
         };
     }, [code, isTeacher, isStudent, getCurrentIdentity, router]);
@@ -456,7 +513,8 @@ export default function LobbyPage() {
     const handleStart = () => {
         if (isCreator && socketRef.current) {
             logger.info("Starting tournament", { code, socketConnected: socketRef.current.connected });
-            socketRef.current.emit("start_tournament", { code });
+            // Updated to use new backend API payload format
+            socketRef.current.emit("start_tournament", { accessCode: code });
         } else {
             logger.warn("Cannot start tournament", { isCreator, socketReady: !!socketRef.current });
         }

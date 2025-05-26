@@ -2,32 +2,15 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
+import { createSocketConfig } from '@/utils';
 import { BaseQuestion, Answer } from '@shared/types/question'; // MODIFIED: Added Answer import
 
 const logger = createLogger('useTeacherQuizSocket');
 
 // --- Types (Consider moving to a shared types file if used elsewhere) ---
-// REMOVED local Response interface
-// interface Response {
-//     texte: string;
-//     correct: boolean;
-// }
-
 export interface Question extends BaseQuestion {
-    // These fields are now aligned with BaseQuestion.
-    // If they were intended to be different, this might need adjustment.
-    // question: string; // Now using text from BaseQuestion
-    // reponses: Response[]; // Now using responses from BaseQuestion
-    // temps?: number; // Now using time from BaseQuestion
-    // explication?: string; // Now using explanation from BaseQuestion
-
-    // If Question interface here needs to ensure certain BaseQuestion fields are non-optional,
-    // or add truly new fields, they would be listed here.
-    // For now, assuming it aligns with BaseQuestion for common properties.
-    // Example: if 'text' needed to be enforced as always present (if BaseQuestion made it optional)
-    // text: string; 
-    // Example: if 'responses' needed to be enforced
-    // responses: Answer[];
+    // Extend BaseQuestion with any frontend-specific properties if needed
+    // BaseQuestion already includes: uid, text, type, answers, time?, explanation?, tags?
 }
 
 export interface QuizState {
@@ -53,7 +36,7 @@ interface QuestionTimerState {
     initialTime?: number; // Added to store the original timer value for resetting
 }
 
-export function useTeacherQuizSocket(quizId: string | null, tournamentCode: string | null) {
+export function useTeacherQuizSocket(quizId: string | null, token: string | null) {
     const [quizSocket, setQuizSocket] = useState<Socket | null>(null);
     const [quizState, setQuizState] = useState<QuizState | null>(null);
     const [timerStatus, setTimerStatus] = useState<'play' | 'pause' | 'stop'>('stop');
@@ -99,28 +82,33 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
 
     // --- Socket Connection ---
     useEffect(() => {
-        if (!quizId) return;
+        if (!quizId || !token) return;
 
         logger.info(`Initializing socket connection for quiz: ${quizId} to ${SOCKET_CONFIG.url}`);
-        // Connect to backend using complete centralized configuration
-        const s = io(SOCKET_CONFIG.url, SOCKET_CONFIG);
-        setQuizSocket(s);
 
-        // Always get both teacherId and cookie_id from localStorage
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-        logger.info(`[DEBUG][CLIENT] Emitting join_quiz for quizId=${quizId}, teacherId=${teacherId}, cookie_id=${cookie_id}`);
-        s.emit("join_quiz", { quizId, teacherId, role: 'teacher', cookie_id });
+        // Create socket configuration with authentication
+        const socketConfig = createSocketConfig(SOCKET_CONFIG);
+        const s = io(SOCKET_CONFIG.url, socketConfig);
+
+        // Manually connect after setting up auth
+        s.connect();
+        setQuizSocket(s);
 
         s.on("connect", () => {
             logger.info(`Socket connected: ${s.id}`);
+
+            // Use new socket event to join teacher dashboard
+            logger.info(`[DEBUG][CLIENT] Emitting join_dashboard for quizId=${quizId}`);
+            s.emit("join_dashboard", { quizId, role: 'teacher' });
+
             // Request current state immediately after connecting
-            s.emit("get_quiz_state", { quizId });
+            s.emit("get_game_state", { quizId });
         });
 
         s.on("disconnect", (reason) => {
             logger.warn(`Socket disconnected: ${reason}`);
-            setQuizState(null); // Reset state on disconnect
+            // Reset state on disconnect
+            setQuizState(null);
             setTimerStatus('stop');
             setTimerQuestionId(null);
             setTimeLeft(0);
@@ -132,8 +120,8 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             logger.error("Socket connection error:", err);
         });
 
-        s.on("joined_room", ({ room, socketId }) => {
-            logger.debug("Server confirms join", { room, socketId });
+        s.on("dashboard_joined", ({ room, socketId }) => {
+            logger.debug("Server confirms dashboard join", { room, socketId });
         });
 
         return () => {
@@ -142,36 +130,72 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             setQuizSocket(null);
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [quizId]);
+    }, [quizId, token]);
 
     // --- State Synchronization with Backend ---
     useEffect(() => {
         if (!quizSocket) return;
 
-        const handleQuizState = (state: QuizState) => {
-            logger.debug('Processing quiz_state', state);
+        const handleGameControlState = (state: QuizState) => {
+            logger.debug('Processing game_control_state', state);
+
+            // Add null safety check
+            if (!state) {
+                logger.warn('Received null or undefined state in game_control_state');
+                return;
+            }
+
             setQuizState(state);
 
             // Always trust the backend state for timer values
-            if (state.timerStatus) {
+            if (state && state.timerStatus) {
                 setTimerStatus(state.timerStatus);
             }
 
-            if (state.timerQuestionId) {
+            if (state && state.timerQuestionId) {
                 setTimerQuestionId(state.timerQuestionId);
-            } else if (state.currentQuestionIdx !== null && state.questions[state.currentQuestionIdx]) {
+            } else if (state && state.currentQuestionIdx !== null && state.questions && state.questions[state.currentQuestionIdx]) {
                 setTimerQuestionId(state.questions[state.currentQuestionIdx].uid);
             }
 
-            // Update timeLeft from backend values
-            if (state.timerTimeLeft !== undefined && state.timerTimeLeft !== null) {
+            // Update timeLeft from backend values with null safety
+            if (state && state.timerTimeLeft !== undefined && state.timerTimeLeft !== null) {
                 setTimeLeft(state.timerTimeLeft);
-            } else if (state.chrono && state.chrono.timeLeft !== null) {
+            } else if (state && state.chrono && state.chrono.timeLeft !== null) {
                 setTimeLeft(state.chrono.timeLeft);
+            }
+
+            // Initialize per-question timers for all questions
+            if (state && state.questions) {
+                setQuestionTimers(prev => {
+                    const newTimers: Record<string, QuestionTimerState> = { ...prev };
+                    state.questions.forEach(q => {
+                        if (!newTimers[q.uid]) {
+                            newTimers[q.uid] = {
+                                status: state.timerStatus || 'stop',
+                                timeLeft: (q.uid === state.timerQuestionId && state.timerTimeLeft != null)
+                                    ? state.timerTimeLeft
+                                    : q.time || 0,
+                                initialTime: q.time || 0,
+                                timestamp: null
+                            };
+                        } else {
+                            if (q.uid === state.timerQuestionId && state.timerTimeLeft != null) {
+                                newTimers[q.uid] = {
+                                    ...newTimers[q.uid],
+                                    status: state.timerStatus || 'stop',
+                                    timeLeft: state.timerTimeLeft,
+                                    timestamp: null
+                                };
+                            }
+                        }
+                    });
+                    return newTimers;
+                });
             }
         };
 
-        // Ensure `event` is properly typed or checked before comparison
+        // Handle timer updates (keeping the same logic but with new event name)
         const handleTimerUpdate = (data: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number, timestamp?: number }) => {
             logger.debug('Received quiz_timer_update', data);
 
@@ -197,24 +221,15 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
                 const existingTimer = prev[data.questionId];
                 let newTimerState: QuestionTimerState;
 
-                // CRITICAL BUG FIX: Enhanced logic to handle various scenarios
-
                 // Case 1: Handle STOP action - VISUAL FIX: Always display 0 when stopped
                 if (data.status === 'stop') {
                     const question = quizState?.questions?.find(q => q.uid === data.questionId);
-
-                    // Determine the initial time to preserve - try multiple sources
-                    const initialTime = existingTimer?.initialTime ||  // Use existing stored initial time if available
-                        (existingTimer?.status === 'play' || existingTimer?.status === 'pause' ? existingTimer.timeLeft : 0) || // Or use current timeLeft if running/paused
-                        question?.time || 0; // Or fall back to question default time // MODIFIED: temps -> time
-
-                    // Store the initial time in the timer state (for future reference),
-                    // but set timeLeft to 0 for visual display purposes
-                    logger.debug(`[UI TIMER FIX] Setting visual timer to 0 for STOPPED question ${data.questionId} (preserving original time: ${initialTime}s for later use)`);
+                    const initialTime = existingTimer?.initialTime || question?.time || 0;
+                    // Use backend-provided timeLeft (could be 0 or nonzero)
                     newTimerState = {
                         status: 'stop',
-                        timeLeft: 0, // Display as 0 for visual feedback
-                        initialTime: initialTime, // Store original time for later use
+                        timeLeft: data.timeLeft, // Use backend value
+                        initialTime: initialTime,
                         timestamp: null
                     };
                 }
@@ -290,25 +305,94 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
             logger.debug(`[useTeacherQuizSocket] Updated questionTimers: ${JSON.stringify(questionTimers)}`);
         };
 
-        quizSocket.on("quiz_state", handleQuizState);
+        // Handle backend error events
+        const handleErrorDashboard = (error: { code?: string; message?: string; details?: string; error?: string; questionId?: string }) => {
+            logger.error('Dashboard error received:', error);
+
+            // You can add UI notification logic here
+            // For example, show a toast notification or update error state
+
+            // If the error is authentication-related, you might want to redirect to login
+            if (error.code === 'AUTHENTICATION_REQUIRED' || error.code === 'NOT_AUTHORIZED') {
+                logger.warn('Authentication error - may need to re-authenticate');
+                // Could emit a custom event or update local state to handle auth errors
+            }
+
+            // For timer-related errors, reset timer state and log specific message
+            if (error.code === 'TIMER_ERROR' && error.questionId) {
+                logger.error(`Timer error for question ${error.questionId}`);
+                setTimerStatus('stop');
+                setTimeLeft(0);
+                setLocalTimeLeft(0);
+            }
+        };
+
+        const handleGameError = (error: { message?: string; code?: string; details?: any; error?: string }) => {
+            logger.error('Game error received:', error);
+
+            // Handle specific game errors
+            if (error.code === 'INVALID_PAYLOAD') {
+                logger.error('Payload validation error');
+            }
+        };
+
+        const handleLobbyError = (error: { error: string; message?: string }) => {
+            logger.error('Lobby error received:', error);
+        };
+
+        // Enhanced connection error handling
+        const handleConnectError = (error: Error) => {
+            logger.error('Socket connection error:', error);
+            // Reset state on connection errors
+            setQuizState(null);
+            setTimerStatus('stop');
+            setTimeLeft(0);
+            setLocalTimeLeft(null);
+        };
+
+        const handleDisconnect = (reason: string) => {
+            logger.warn('Socket disconnected:', reason);
+            // Reset state on disconnect
+            setQuizState(null);
+            setTimerStatus('stop');
+            setTimerQuestionId(null);
+            setTimeLeft(0);
+            setLocalTimeLeft(null);
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+
+        // Register event handlers
+        quizSocket.on("game_control_state", handleGameControlState);
         quizSocket.on("quiz_timer_update", handleTimerUpdate);
         quizSocket.on("quiz_connected_count", (data: { count: number }) => {
             logger.debug('Received quiz_connected_count', data);
             setConnectedCount(data.count);
         });
 
+        // Error event handlers
+        quizSocket.on("error_dashboard", handleErrorDashboard);
+        quizSocket.on("game_error", handleGameError);
+        quizSocket.on("lobby_error", handleLobbyError);
+        quizSocket.on("connect_error", handleConnectError);
+        quizSocket.on("disconnect", handleDisconnect);
+
         // Request state again if socket reconnects (e.g., after server restart)
         quizSocket.on("connect", () => {
-            logger.info("Reconnected, requesting quiz state again.");
-            quizSocket.emit("get_quiz_state", { quizId });
+            logger.info("Reconnected, requesting game state again.");
+            quizSocket.emit("get_game_state", { quizId });
         });
 
         return () => {
-            quizSocket.off("quiz_state", handleQuizState);
+            // Cleanup all event listeners
+            quizSocket.off("game_control_state", handleGameControlState);
             quizSocket.off("quiz_timer_update", handleTimerUpdate);
             quizSocket.off("quiz_connected_count");
+            quizSocket.off("error_dashboard", handleErrorDashboard);
+            quizSocket.off("game_error", handleGameError);
+            quizSocket.off("lobby_error", handleLobbyError);
+            quizSocket.off("connect_error", handleConnectError);
+            quizSocket.off("disconnect", handleDisconnect);
             quizSocket.off("connect");
-            quizSocket.offAny();
         };
     }, [quizSocket, quizId, timerStatus, timerQuestionId, quizState]);
 
@@ -559,12 +643,8 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
     // --- Emitter Functions ---
     const getTeacherId = () => (typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null);
 
-    // ENHANCED: Uses UID to set active question and preserves timer values
+    // Updated emitSetQuestion to use new backend event format
     const emitSetQuestion = useCallback((questionUid: string, startTime?: number) => {
-        const code = tournamentCode;
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-
         // ENHANCED: Check if we have a preserved timer value for this question
         let effectiveStartTime = startTime;
 
@@ -580,50 +660,36 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
                 effectiveStartTime = questionTimers[questionUid].timeLeft;
                 logger.info(`[UI TIMER FIX] Using stored timer value (${effectiveStartTime}s) for previously playing question ${questionUid}`);
             }
-            // Otherwise, the timer might have the initial/stop value which should match the question default
         }
 
-        // Log with effective startTime information
-        logger.info(`Emitting quiz_set_question`, {
-            quizId,
-            questionUid,
-            code,
-            teacherId,
-            cookie_id,
-            startTime: effectiveStartTime !== undefined ? effectiveStartTime : 'using default from backend',
-            source: effectiveStartTime === startTime ? 'provided' : (effectiveStartTime !== undefined ? 'preserved' : 'default')
-        });
+        // Use new backend event format - simplified payload structure
+        logger.info(`Emitting set_question with gameId=${quizId}, questionUid=${questionUid}`);
 
-        // Send the startTime parameter to backend if provided or if we have a preserved value
+        const payload: any = {
+            gameId: quizId, // New backend uses gameId instead of quizId
+            questionUid
+        };
+
+        // Only include duration if we have a specific time value to preserve
         if (effectiveStartTime !== undefined) {
-            quizSocket?.emit("quiz_set_question", {
-                quizId,
-                questionUid,
-                code,
-                teacherId,
-                cookie_id,
-                startTime: effectiveStartTime,
-                preserveTimer: true // Signal to backend that we're sending a preserved timer value
-            });
+            payload.duration = effectiveStartTime;
+            logger.info(`[UI TIMER FIX] Including preserved timer duration: ${effectiveStartTime}s`);
+        }
 
-            // Also update our local state immediately for a smoother UI experience
-            if (quizState && quizState.questions) {
-                const question = quizState.questions.find(q => q.uid === questionUid);
-                if (question) {
-                    setTimeLeft(effectiveStartTime);
-                    setLocalTimeLeft(effectiveStartTime);
-                }
-            }
-        } else {
-            quizSocket?.emit("quiz_set_question", { quizId, questionUid, code, teacherId, cookie_id });
+        quizSocket?.emit("set_question", payload);
 
-            // Use question default time
-            if (quizState && quizState.questions) {
-                const question = quizState.questions.find(q => q.uid === questionUid);
-                if (question && question.time !== undefined) {
-                    setTimeLeft(question.time);
-                    setLocalTimeLeft(question.time);
-                }
+        // Also emit using legacy event name for backward compatibility during transition
+        quizSocket?.emit("quiz_set_question", payload);
+
+        // Update local state immediately for smoother UI experience
+        if (effectiveStartTime !== undefined) {
+            setTimeLeft(effectiveStartTime);
+            setLocalTimeLeft(effectiveStartTime);
+        } else if (quizState && quizState.questions) {
+            const question = quizState.questions.find(q => q.uid === questionUid);
+            if (question && question.time !== undefined) {
+                setTimeLeft(question.time);
+                setLocalTimeLeft(question.time);
             }
         }
 
@@ -631,98 +697,78 @@ export function useTeacherQuizSocket(quizId: string | null, tournamentCode: stri
         setTimerQuestionId(questionUid);
 
         logger.info(`Waiting for backend confirmation of question ${questionUid}`);
-    }, [quizSocket, quizId, tournamentCode, questionTimers, quizState]);
+    }, [quizSocket, quizId, questionTimers, quizState]);
 
+    // Updated emitEndQuiz to use new backend event format
     const emitEndQuiz = useCallback(() => {
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-        logger.info('Emitting quiz_end', { quizId, teacherId, cookie_id, tournamentCode });
-        quizSocket?.emit("quiz_end", { quizId, teacherId, cookie_id, tournamentCode });
-    }, [quizSocket, quizId, tournamentCode]);
+        logger.info('Emitting end_game', { gameId: quizId });
+        quizSocket?.emit("end_game", { gameId: quizId });
+    }, [quizSocket, quizId]);
 
+    // Updated emitPauseQuiz to use new timer action system
     const emitPauseQuiz = useCallback(() => {
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-        logger.info('Emitting quiz_pause', { quizId, teacherId, cookie_id, tournamentCode });
-        quizSocket?.emit("quiz_pause", { quizId, teacherId, cookie_id, tournamentCode });
-    }, [quizSocket, quizId, tournamentCode]);
+        logger.info('Emitting quiz_timer_action with action=pause', { gameId: quizId });
+        quizSocket?.emit("quiz_timer_action", { gameId: quizId, action: 'pause' });
+    }, [quizSocket, quizId]);
 
+    // Updated emitResumeQuiz to use new timer action system  
     const emitResumeQuiz = useCallback(() => {
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-        logger.info('Emitting quiz_resume', { quizId, teacherId, cookie_id, tournamentCode });
-        quizSocket?.emit("quiz_resume", { quizId, teacherId, cookie_id, tournamentCode });
-    }, [quizSocket, quizId, tournamentCode]);
+        logger.info('Emitting quiz_timer_action with action=resume', { gameId: quizId });
+        quizSocket?.emit("quiz_timer_action", { gameId: quizId, action: 'resume' });
+    }, [quizSocket, quizId]);
 
+    // Updated emitSetTimer to use new backend event format with set_duration action
     const emitSetTimer = useCallback((newTime: number, questionUid?: string) => {
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-        logger.info('Emitting quiz_set_timer', { quizId, timeLeft: newTime, teacherId, cookie_id, tournamentCode, questionUid });
-        quizSocket?.emit("quiz_set_timer", { quizId, timeLeft: newTime, teacherId, cookie_id, tournamentCode, questionUid });
-    }, [quizSocket, quizId, tournamentCode]);
+        logger.info('Emitting quiz_timer_action with action=set_duration', {
+            gameId: quizId,
+            duration: newTime
+        });
+        quizSocket?.emit("quiz_timer_action", {
+            gameId: quizId,
+            action: 'set_duration',
+            duration: newTime
+        });
+    }, [quizSocket, quizId]);
 
-    // Refactor emitTimerAction to send clear and consistent messages to the backend
+    // Updated emitTimerAction to use new backend event format with gameId
     const emitTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft?: number }) => {
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-
-        // For play and pause actions, don't send timeLeft - let the backend calculate it
-        // This ensures we use the backend as the source of truth
-        if (action.status === 'play' || action.status === 'pause') {
-            logger.info(`Emitting quiz_timer_action for ${action.status} without timeLeft`);
-            quizSocket?.emit("quiz_timer_action", {
-                status: action.status,
-                questionId: action.questionId,
-                quizId,
-                teacherId: getTeacherId(),
-                cookie_id: typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null,
-                tournamentCode
-            });
-            return;
-        }
-
         // For stop actions, immediately update UI to show 0
         if (action.status === 'stop') {
-            // Store current timer state before stopping (for potential restoration later)
-            const questionTimer = questionTimers[action.questionId];
-            const question = quizState?.questions?.find(q => q.uid === action.questionId);
-
-            // Get the initial time to preserve for later
-            const initialTime = question?.time ||
-                (questionTimer?.initialTime ||
-                    (questionTimer?.timeLeft > 0 ? questionTimer.timeLeft : 0));
-
-            logger.info(`[STOP ACTION] Immediate visual update - setting ${action.questionId} timer to 0 (preserving initial: ${initialTime}s)`);
-
-            // Update UI immediately to show 0
-            if (timerQuestionId === action.questionId) {
-                setLocalTimeLeft(0);
-                setTimeLeft(0);
-            }
-
-            // Store in timer state with initialTime preserved
-            setQuestionTimers(prev => ({
-                ...prev,
-                [action.questionId]: {
-                    status: 'stop',
-                    timeLeft: 0, // Display 0 for immediate visual feedback
-                    initialTime: initialTime,
-                    timestamp: null
-                }
-            }));
+            // Do not update local state here; wait for backend confirmation
         }
 
-        // For stop and other actions, include any provided timeLeft
-        logger.info('Emitting quiz_timer_action', { ...action, quizId, teacherId, cookie_id, tournamentCode });
-        quizSocket?.emit("quiz_timer_action", { ...action, quizId, teacherId, cookie_id, tournamentCode });
-    }, [quizSocket, quizId, tournamentCode]);
+        // Map old status names to new backend action names
+        let backendAction: 'start' | 'pause' | 'resume' | 'stop';
+        switch (action.status) {
+            case 'play':
+                backendAction = 'start';
+                break;
+            case 'pause':
+                backendAction = 'pause';
+                break;
+            case 'stop':
+                backendAction = 'stop';
+                break;
+            default:
+                backendAction = 'stop';
+        }
 
+        // Use new backend event format with gameId instead of quizId
+        logger.info(`Emitting quiz_timer_action with gameId=${quizId}, action=${backendAction}`);
+        quizSocket?.emit("quiz_timer_action", {
+            gameId: quizId, // New backend uses gameId instead of quizId
+            action: backendAction,
+            duration: action.timeLeft // Include duration for set_duration actions
+        });
+    }, [quizSocket, quizId, timerQuestionId]);
+
+    // NOTE: Tournament code functionality removed as it's not supported in the new backend architecture
+    // The new backend uses accessCode system instead of tournament codes
     const emitUpdateTournamentCode = useCallback((newCode: string) => {
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
-        logger.info('Emitting update_tournament_code', { quizId, tournamentCode: newCode, teacherId, cookie_id });
-        quizSocket?.emit("update_tournament_code", { quizId, tournamentCode: newCode, teacherId, cookie_id });
-    }, [quizSocket, quizId]);
+        logger.warn('emitUpdateTournamentCode called but this functionality is deprecated in the new backend architecture');
+        logger.info('Use the new accessCode system instead of tournament codes');
+        // No longer emit anything as this functionality is not supported
+    }, []);
 
     // Expose the updated methods
     return {

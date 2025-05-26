@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { getFullGameState } from '@/core/gameStateService';
+import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 
 const logger = createLogger('ProjectorHandler');
@@ -17,9 +18,22 @@ export function projectorHandler(io: Server, socket: Socket) {
         const room = `projector_${gameId}`;
         await socket.join(room);
         logger.info(`Projector joined room: ${room}`);
+
         // Send initial state
         try {
-            const gameState = await getFullGameState(gameId);
+            // First, get the accessCode from the gameId
+            const gameInstance = await prisma.gameInstance.findUnique({
+                where: { id: gameId },
+                select: { accessCode: true }
+            });
+
+            if (!gameInstance) {
+                logger.error(`Game instance not found for gameId: ${gameId}`);
+                socket.emit('projector_error', { message: 'Game not found.' });
+                return;
+            }
+
+            const gameState = await getFullGameState(gameInstance.accessCode);
             socket.emit('projector_state', gameState);
         } catch (err) {
             logger.error('Error fetching game state for projector', err);
@@ -46,7 +60,18 @@ export function projectorHandler(io: Server, socket: Socket) {
 export async function broadcastProjectorState(io: Server, gameId: string) {
     const room = `projector_${gameId}`;
     try {
-        const gameState = await getFullGameState(gameId);
+        // First, get the accessCode from the gameId
+        const gameInstance = await prisma.gameInstance.findUnique({
+            where: { id: gameId },
+            select: { accessCode: true }
+        });
+
+        if (!gameInstance) {
+            logger.error(`Game instance not found for gameId: ${gameId}`);
+            return;
+        }
+
+        const gameState = await getFullGameState(gameInstance.accessCode);
         io.to(room).emit('projector_state', gameState);
     } catch (err) {
         logger.error('Error broadcasting projector state', err);
