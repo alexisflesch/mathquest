@@ -162,7 +162,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
             });
 
             // Also broadcast to the live room (for players)
-            const liveRoom = `live_${gameInstance.accessCode}`;
+            const liveRoom = `game_${gameInstance.accessCode}`;
 
             // Get the question data to send to players (without correct answers)
             if (question) {

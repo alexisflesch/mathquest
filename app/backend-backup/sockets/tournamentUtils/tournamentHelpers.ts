@@ -51,7 +51,7 @@ function calculateRanks(participants: TournamentParticipant[]): Map<string, numb
  * @returns The Socket.IO broadcast target
  */
 function getEmitTarget(io: Server, code: string, targetRoom: string | null = null, isDiffered: boolean = false) {
-    return targetRoom ? io.to(targetRoom) : io.to(isDiffered ? `differed_${code}` : `live_${code}`);
+    return targetRoom ? io.to(targetRoom) : io.to(isDiffered ? `differed_${code}` : `game_${code}`);
 }
 
 /**
@@ -237,8 +237,8 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
 
         // Convert the room target to the appropriate type
         const roomTarget = targetRoom ?
-            (targetRoom.startsWith('live_') ? targetRoom as TournamentRoomName : targetRoom as QuizRoomName) :
-            `live_${code}` as TournamentRoomName;
+            (targetRoom.startsWith('game_') ? targetRoom as TournamentRoomName : targetRoom as QuizRoomName) :
+            `game_${code}` as TournamentRoomName;
 
         // Emit the results using the updated signature
         emitQuestionResults(io, roomTarget, resultsParams);
@@ -257,7 +257,7 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
         state.stopped = true;
 
         // Emit a special event to mark the end of the tournament
-        io.to(`live_${code}`).emit('tournament_finished', {
+        io.to(`game_${code}`).emit('tournament_finished', {
             message: 'Le tournoi est terminé !'
         });
 
@@ -316,7 +316,7 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
         logger.info(`[handleTimerExpiration] No more questions to show for tournament ${code}. Stopping...`);
         state.stopped = true;
 
-        io.to(`live_${code}`).emit('tournament_finished', {
+        io.to(`game_${code}`).emit('tournament_finished', {
             message: 'Le tournoi est terminé !'
         });
     }
@@ -386,7 +386,7 @@ function sendQuestionWithState(
     };
 
     // Determine the room name for the shared sendQuestion function
-    const roomName = targetRoom ?? (isDiffered ? `differed_${code}` : `live_${code}`);
+    const roomName = targetRoom ?? (isDiffered ? `differed_${code}` : `game_${code}`);
 
     // Prepare mode-specific data
     const modeSpecificData = {

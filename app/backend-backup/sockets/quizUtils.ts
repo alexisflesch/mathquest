@@ -42,7 +42,7 @@ export async function emitQuizConnectedCount(
     if (!quizId) return;
 
     // Count sockets in both the live tournament room and the lobby rooms
-    const liveRoom = io.sockets.adapter.rooms.get(`live_${code}`) || new Set<string>();
+    const liveRoom = io.sockets.adapter.rooms.get(`game_${code}`) || new Set<string>();
     const lobbyRoom = io.sockets.adapter.rooms.get(`${code}`) || new Set<string>();
     const lobbyRoomAlt = io.sockets.adapter.rooms.get(`lobby_${code}`) || new Set<string>();
 

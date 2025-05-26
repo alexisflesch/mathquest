@@ -173,7 +173,7 @@ export function startTimerHandler(io: SocketIOServer, socket: Socket) {
             gameState.timer = timer;
             await gameStateService.updateGameState(accessCodeStr, gameState);
             // Broadcast to all relevant rooms
-            const gameRoom = `live_${accessCodeStr}`;
+            const gameRoom = `game_${accessCodeStr}`;
             const dashboardRoom = `dashboard_${gameInstance.id}`;
             const projectionRoom = `projection_${gameInstance.id}`;
             // Broadcast to game room

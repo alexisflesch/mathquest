@@ -76,7 +76,7 @@ function gameAnswerHandler(io, socket) {
                     where: { gameInstanceId: gameInstance.id },
                     orderBy: [{ score: 'desc' }, { timeTakenMs: 'asc' }]
                 });
-                io.to(`live_${accessCode}`).emit('leaderboard_update', { leaderboard: allParticipants });
+                io.to(`game_${accessCode}`).emit('leaderboard_update', { leaderboard: allParticipants });
             }
             socket.emit('answer_received', { questionId, timeSpent });
         }

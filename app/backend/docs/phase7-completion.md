@@ -9,7 +9,7 @@
      - ✅ `request_participants`: Implemented and tested
      - ✅ `disconnect`: Implemented and tested
    - Room Management:
-     - ✅ Using `live_${accessCode}` room structure
+     - ✅ Using `game_${accessCode}` room structure
      - ✅ Player joining/leaving management
 
 2. ✅ **Game Logic Implementation**

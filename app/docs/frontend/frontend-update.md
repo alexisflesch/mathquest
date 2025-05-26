@@ -182,7 +182,7 @@ During analysis, discovered that the Live Tournament Page (`/app/live/[code]/pag
 
 ### 🚨 Key Integration Notes Discovered
 - Backend uses `gameId` parameters instead of `quizId` in many contexts
-- New room naming: `projector_${gameId}`, `live_${accessCode}`, `lobby_${code}`
+- New room naming: `projector_${gameId}`, `game_${accessCode}`, `lobby_${code}`
 - Authentication flow changed to use `join_dashboard` events with `userId`
 - Event payload structures significantly different from legacy system
 - Backend requires `accessCode` instead of tournament codes in many flows

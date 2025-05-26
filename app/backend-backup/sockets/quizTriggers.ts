@@ -77,7 +77,7 @@ export function sendQuestionToTournament(io: Server, quizId: string, questionId:
         triggerTournamentQuestion(io, code, index, quizId, timeLeft, questionId); // Pass index, it might be used or ignored if questionId is primary
 
         // Then also directly send to ensure immediate update
-        const targetEmitter = io.to(`live_${code}`);
+        const targetEmitter = io.to(`game_${code}`);
         const tournoiStateFromQuiz = questionStateStatus === 'active' ? 'running' : questionStateStatus as 'paused' | 'stopped';
 
         const payload: TournamentQuestionPayload = {

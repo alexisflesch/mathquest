@@ -102,7 +102,7 @@ function triggerTournamentQuestion(
     };
 
     // Call sendTournamentQuestion with the constructed payload
-    sendTournamentQuestion(io.to(`live_${code}`), payload);
+    sendTournamentQuestion(io.to(`game_${code}`), payload);
 
     // Update the timer display for linked quizzes if initialTime is provided
     if (linkedQuizId && initialTime !== null) {
@@ -202,7 +202,7 @@ function triggerTournamentTimerSet(
     }
 
     // Emit timer update to all participants
-    io.to(`live_${code}`).emit('tournament_set_timer', {
+    io.to(`game_${code}`).emit('tournament_set_timer', {
         timeLeft,
         questionState
     });

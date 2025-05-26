@@ -63,7 +63,7 @@ async function handleDisconnecting(
 
     // Call emitQuizConnectedCount after a student disconnects
     const rooms = Array.from(socket.rooms);
-    const tournamentRoom = rooms.find((room) => room.startsWith('lobby_') || room.startsWith('tournament_'));
+    const tournamentRoom = rooms.find((room) => room.startsWith('lobby_') || room.startsWith('game_'));
 
     if (tournamentRoom) {
         const cleanCode = tournamentRoom.replace(/^(lobby_|tournament_)/, '');

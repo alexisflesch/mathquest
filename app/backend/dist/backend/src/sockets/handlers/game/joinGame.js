@@ -76,10 +76,10 @@ function joinGameHandler(io, socket) {
             else {
                 let roomName = accessCode;
                 if (gameInstance.playMode === 'quiz') {
-                    roomName = `live_${accessCode}`;
+                    roomName = `game_${accessCode}`;
                 }
                 else if (gameInstance.playMode === 'tournament') {
-                    roomName = `tournament_${accessCode}`;
+                    roomName = `game_${accessCode}`;
                 }
                 logger.debug({ roomName, socketId: socket.id }, '[DEBUG] Player joining room');
                 await socket.join(roomName);

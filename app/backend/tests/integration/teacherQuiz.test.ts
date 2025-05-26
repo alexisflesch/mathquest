@@ -162,7 +162,7 @@ describe('Teacher-driven Quiz Flow', () => {
         await new Promise<void>((resolve) => player1Socket.on('connect', () => resolve()));
         // Player joins the game instance (quiz) using accessCode
         // The event might be 'join_game' or 'join_lobby' depending on your setup
-        // README mentions `live_${code}` for live tournament, `${code}` or `lobby_${code}` for lobby.
+        // README mentions `game_${code}` for live tournament, `${code}` or `lobby_${code}` for lobby.
         // Let's use a generic 'join_game' and expect 'game_joined'.
         player1Socket.emit('join_game', { accessCode: accessCode, userId: player1User.id, username: player1User.username });
         await waitForEvent(player1Socket, 'game_joined');

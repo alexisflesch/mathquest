@@ -46,7 +46,7 @@ function handleTournamentPause(
         }
 
         logger.info(`Paused tournament ${code}. Remaining time: ${state.pausedRemainingTime.toFixed(1)}s`);
-        io.to(`live_${code}`).emit("tournament_question_state_update", {
+        io.to(`game_${code}`).emit("tournament_question_state_update", {
             questionState: "paused",
             remainingTime: state.pausedRemainingTime
         });

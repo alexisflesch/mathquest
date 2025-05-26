@@ -45,7 +45,7 @@ This document provides a comprehensive technical reference for MathQuest's backe
 
 - `/sockets/sharedLiveLogic/` - Directory for logic shared between quiz and tournament modes.
   - `emitQuestionResults.ts` - Shared function to emit standardized `question_results` events.
-  - `sendQuestion.ts` - Shared function to emit standardized `live_question` events to clients.
+  - `sendQuestion.ts` - Shared function to emit standardized `game_question` events to clients.
   - `emitParticipantScoreUpdate.ts` - Shared function to emit `participant_score_update` events with detailed scoring information to individual participants.
 
 ---
@@ -122,7 +122,7 @@ This document provides a comprehensive technical reference for MathQuest's backe
 
 ### 5.2. Tournament (Student Gameplay)
 - `start_tournament` → Initializes tournamentState, emits `tournament_started` to lobby.
-- `join_tournament` → Finds/creates Joueur, joins `live_${code}` room, sends current question.
+- `join_tournament` → Finds/creates Joueur, joins `game_${code}` room, sends current question.
 - `tournament_answer` → Validates and records answer, computes score, emits result.
 - `tournament_pause` / `tournament_resume` → Pauses/resumes timer.
 - `disconnecting` → Cleans up socket-to-joueur mapping.
@@ -202,7 +202,7 @@ Reduce code duplication and improve maintainability by consolidating shared logi
 - Tournament and quiz flows both use these shared functions for result emission.
 
 #### 2. Sending Questions
-- `sendQuestion.ts` standardizes the `live_question` event payload for both modes.
+- `sendQuestion.ts` standardizes the `game_question` event payload for both modes.
 
 #### 3. Handling Answers
 - Tournament answer handlers ensure answers are only registered if the question is active.

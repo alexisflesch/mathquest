@@ -44,7 +44,7 @@ function handleTournamentResume(
         state.pausedRemainingTime = undefined; // Use undefined instead of null
 
         logger.info(`Resuming tournament ${code}. Remaining time: ${remaining.toFixed(1)}s`);
-        io.to(`live_${code}`).emit("tournament_question_state_update", {
+        io.to(`game_${code}`).emit("tournament_question_state_update", {
             questionState: "active",
             remainingTime: remaining
         });
@@ -126,7 +126,7 @@ function handleTournamentResume(
                     })).sort((a, b) => (b.score || 0) - (a.score || 0))
                     : [];
 
-                io.to(`live_${code}`).emit("tournament_end", { leaderboard });
+                io.to(`game_${code}`).emit("tournament_end", { leaderboard });
                 try {
                     const tournoi = await prisma.tournoi.findUnique({ where: { code } });
                     if (tournoi && state.participants && Array.isArray(state.participants)) {
@@ -174,7 +174,7 @@ function handleTournamentResume(
                 } catch (err) {
                     logger.error(`Error saving scores/updating tournament ${code} after resume:`, err);
                 }
-                io.to(`live_${code}`).emit("tournament_finished_redirect", { code });
+                io.to(`game_${code}`).emit("tournament_finished_redirect", { code });
                 delete tournamentState[code];
             }
             // --- End of duplicated logic ---

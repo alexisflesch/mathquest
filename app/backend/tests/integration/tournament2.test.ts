@@ -31,7 +31,7 @@ const waitForEvent = (socket: ClientSocket, eventName: string, timeout = 10000):
     });
 };
 
-describe('Minimal Tournament Flow', () => {
+describe('Tournament Flow - Extended Tests', () => {
     let app: express.Express; // Use express.Express type
     let httpServer: HttpServer;
     let io: SocketIOServer;
@@ -49,12 +49,12 @@ describe('Minimal Tournament Flow', () => {
         const port = (httpServer.address() as AddressInfo).port;
         address = `http://localhost:${port}`;
 
-        // Create users
-        player1 = await prisma.user.create({ data: { username: 'p1', role: 'STUDENT', studentProfile: { create: { cookieId: 'cookie-p1' } } } });
-        player2 = await prisma.user.create({ data: { username: 'p2', role: 'STUDENT', studentProfile: { create: { cookieId: 'cookie-p2' } } } });
+        // Create users with unique identifiers to avoid conflicts
+        player1 = await prisma.user.create({ data: { username: 'p1-extended', role: 'STUDENT', studentProfile: { create: { cookieId: 'cookie-p1-extended' } } } });
+        player2 = await prisma.user.create({ data: { username: 'p2-extended', role: 'STUDENT', studentProfile: { create: { cookieId: 'cookie-p2-extended' } } } });
 
-        // Ensure test question exists
-        for (const tq of testQuestions.slice(0, 1)) {
+        // Ensure all test questions exist (use upsert to avoid conflicts with tournament.test.ts)
+        for (const tq of testQuestions) {
             await prisma.question.upsert({
                 where: { uid: tq.uid },
                 update: { ...tq, answerOptions: tq.answerOptions as any, correctAnswers: tq.correctAnswers as any },
@@ -208,7 +208,7 @@ describe('Minimal Tournament Flow', () => {
             await prisma.gameTemplate.deleteMany();
             // Delete StudentProfiles before Users to avoid foreign key constraint errors
             await prisma.studentProfile.deleteMany({ where: { id: { in: [player1?.id, player2?.id].filter(Boolean) } } });
-            await prisma.user.deleteMany({ where: { username: { in: ['p1', 'p2'] } } });
+            await prisma.user.deleteMany({ where: { username: { in: ['p1-extended', 'p2-extended'] } } });
             console.log('Database cleanup successful.');
         } catch (e: any) { // Added type for e
             console.error('Error during database cleanup:', e.message || e);
@@ -232,7 +232,7 @@ describe('Minimal Tournament Flow', () => {
         // Create template and game
         const gameTemplate = await prisma.gameTemplate.create({
             data: {
-                name: 'Minimal Tournament',
+                name: 'Extended Tournament Test 1',
                 creatorId: player1.id,
                 themes: ['algebra'],
                 discipline: 'math',
@@ -337,7 +337,7 @@ describe('Minimal Tournament Flow', () => {
         // Create template and game
         const gameTemplate = await prisma.gameTemplate.create({
             data: {
-                name: 'Minimal Tournament',
+                name: 'Extended Tournament Test 2',
                 creatorId: player1.id,
                 themes: ['algebra'],
                 discipline: 'math',
@@ -452,7 +452,7 @@ describe('Minimal Tournament Flow', () => {
         // Create template and game with two questions
         const gameTemplate = await prisma.gameTemplate.create({
             data: {
-                name: 'Two Question Tournament',
+                name: 'Extended Tournament Test 3 - Two Questions',
                 creatorId: player1.id,
                 themes: ['algebra'],
                 discipline: 'math',

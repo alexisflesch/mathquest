@@ -52,7 +52,7 @@ function lockAnswersHandler(io, socket) {
             await gameStateService_1.default.updateGameState(gameInstance.accessCode, gameState);
             // Broadcast to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;
-            const gameRoom = `live_${gameInstance.accessCode}`;
+            const gameRoom = `game_${gameInstance.accessCode}`;
             const projectionRoom = `projection_${gameId}`;
             // To dashboard
             io.to(dashboardRoom).emit('dashboard_answers_lock_changed', {

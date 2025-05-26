@@ -17,7 +17,7 @@ const logger = createLogger('SendQuestionShared');
  * Sends a filtered question to the specified room using a pre-configured emitter.
  *
  * @param io - Socket.IO Server instance
- * @param roomName - The name of the room to emit to (e.g., `live_${code}`, `projection_${quizId}`)
+ * @param roomName - The name of the room to emit to (e.g., `game_${code}`, `projection_${quizId}`)
  * @param questionObject - The full question object
  * @param timer - Optional timer duration for this question
  * @param questionIndex - Optional index of the current question
@@ -66,7 +66,7 @@ function exampleUsage(io: Server, code: string, question: Question, state: any) 
     // For students in a tournament
     sendQuestion(
         io,
-        `live_${code}`,
+        `game_${code}`,
         question,
         state.currentTimerValue,
         state.currentQuestionIndex,

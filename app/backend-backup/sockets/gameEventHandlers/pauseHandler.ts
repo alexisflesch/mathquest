@@ -46,7 +46,7 @@ function handleGamePause(
         }
 
         logger.info(`Paused game ${accessCode} by teacher ${teacherId}. Remaining time: ${state.pausedRemainingTime.toFixed(1)}s`);
-        io.to(`live_${accessCode}`).emit("game_question_state_update", {
+        io.to(`game_${accessCode}`).emit("game_question_state_update", {
             questionState: "paused",
             remainingTime: state.pausedRemainingTime
         });

@@ -41,13 +41,13 @@ async function runGameFlow(io, accessCode, questions, options) {
             await gameStateService_1.default.updateGameState(accessCode, updatedState);
         }
         if (i === 0) {
-            const room = io.sockets.adapter.rooms.get(`live_${accessCode}`);
+            const room = io.sockets.adapter.rooms.get(`game_${accessCode}`);
             const socketIds = room ? Array.from(room) : [];
-            logger.info({ accessCode, room: `live_${accessCode}`, socketIds }, '[DEBUG] Sockets in live room before emitting first game_question');
+            logger.info({ accessCode, room: `game_${accessCode}`, socketIds }, '[DEBUG] Sockets in live room before emitting first game_question');
         }
         logger.info({ accessCode, questionIndex: i, questionUid: questions[i].uid }, '[DEBUG] Preparing to emit game_question');
-        logger.info({ room: `live_${accessCode}`, event: 'game_question', payload: { question: questions[i], index: i, feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1) } }, '[DEBUG] Emitting game_question');
-        io.to(`live_${accessCode}`).emit('game_question', {
+        logger.info({ room: `game_${accessCode}`, event: 'game_question', payload: { question: questions[i], index: i, feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1) } }, '[DEBUG] Emitting game_question');
+        io.to(`game_${accessCode}`).emit('game_question', {
             question: questions[i],
             index: i,
             feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1)
@@ -55,8 +55,8 @@ async function runGameFlow(io, accessCode, questions, options) {
         logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
         options.onQuestionStart?.(i);
         await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
-        logger.info({ room: `live_${accessCode}`, event: 'correct_answers', questionId: questions[i].uid }, '[DEBUG] Emitting correct_answers');
-        io.to(`live_${accessCode}`).emit('correct_answers', { questionId: questions[i].uid });
+        logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionId: questions[i].uid }, '[DEBUG] Emitting correct_answers');
+        io.to(`game_${accessCode}`).emit('correct_answers', { questionId: questions[i].uid });
         logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid }, '[TRACE] Emitted correct_answers');
         options.onQuestionEnd?.(i);
         if (questions[i] && questions[i].uid) {
@@ -75,13 +75,13 @@ async function runGameFlow(io, accessCode, questions, options) {
         const feedbackEnd = feedbackStart + feedbackWait * 1000;
         const feedbackRemaining = Math.max(0, Math.round((feedbackEnd - Date.now()) / 1000));
         await new Promise((resolve) => setTimeout(resolve, feedbackWait * 1000));
-        logger.info({ room: `live_${accessCode}`, event: 'feedback', questionId: questions[i].uid }, '[DEBUG] Emitting feedback');
-        io.to(`live_${accessCode}`).emit('feedback', { questionId: questions[i].uid, feedbackRemaining });
+        logger.info({ room: `game_${accessCode}`, event: 'feedback', questionId: questions[i].uid }, '[DEBUG] Emitting feedback');
+        io.to(`game_${accessCode}`).emit('feedback', { questionId: questions[i].uid, feedbackRemaining });
         logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid }, '[TRACE] Emitted feedback');
         options.onFeedback?.(i);
     }
-    logger.info({ room: `live_${accessCode}`, event: 'game_end' }, '[DEBUG] Emitting game_end');
-    io.to(`live_${accessCode}`).emit('game_end');
+    logger.info({ room: `game_${accessCode}`, event: 'game_end' }, '[DEBUG] Emitting game_end');
+    io.to(`game_${accessCode}`).emit('game_end');
     logger.info({ accessCode, event: 'game_end' }, '[TRACE] Emitted game_end');
     options.onGameEnd?.();
 }

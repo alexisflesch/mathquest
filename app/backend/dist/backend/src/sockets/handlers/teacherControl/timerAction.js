@@ -125,7 +125,7 @@ function timerActionHandler(io, socket) {
             await gameStateService_1.default.updateGameState(gameInstance.accessCode, gameState);
             // Broadcast timer update to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;
-            const liveRoom = `live_${gameInstance.accessCode}`; // Ensure gameInstance.accessCode is correct
+            const liveRoom = `game_${gameInstance.accessCode}`; // Ensure gameInstance.accessCode is correct
             const projectionRoom = `projection_${gameId}`;
             logger.info({ gameId, action, dashboardRoom, liveRoom, projectionRoom, timer }, '[TIMER_ACTION] Emitting timer updates to rooms');
             // To dashboard

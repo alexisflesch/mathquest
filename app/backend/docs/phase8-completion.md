@@ -20,7 +20,7 @@ Phase 8 focused on implementing the Teacher Dashboard & Game Control functionali
 ### 2. Real-time Communication
 - **Room Structure**:
   - `dashboard_${gameId}` - For teacher dashboard communications 
-  - `live_${accessCode}` - For player communications
+  - `game_${accessCode}` - For player communications
   - `projection_${gameId}` - For classroom display communications
 
 - **Dashboard-to-Server Events**:

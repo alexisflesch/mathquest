@@ -30,7 +30,7 @@ async function handleJoinGame(
 
     try {
         // Join the room for this game
-        const roomName = `live_${accessCode}`;
+        const roomName = `game_${accessCode}`;
         socket.join(roomName);
 
         // Add participant to game state if not already there

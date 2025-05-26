@@ -61,7 +61,7 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
 
         // Emit redirect_to_game to the correct tournament room BEFORE activating game state
         // This gives clients a head start to navigate.
-        const tournamentRoom = `tournament_${accessCode}`;
+        const tournamentRoom = `game_${accessCode}`;
         logger.debug({ accessCode, room: tournamentRoom, socketId: socket.id }, '[DEBUG] Emitting redirect_to_game to tournament room FIRST');
         io.to(tournamentRoom).emit('redirect_to_game');
 
@@ -125,7 +125,7 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
         };
 
         await gameInstanceService.updateGameStatus(gameInstance.id, { status: 'active', currentQuestionIndex: -1 }); // currentQuestionIndex to -1 for countdown phase
-        const liveRoom = `live_${accessCode}`;
+        const liveRoom = `game_${accessCode}`;
         const countdownDuration = 5; // 5 seconds
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, '[DEBUG] Updated game status to active (countdown phase)');
         logger.info({ room: liveRoom, duration: countdownDuration, accessCode, socketId: socket.id }, `[TournamentHandler] Emitting tournament_starting and waiting ${countdownDuration}s before starting game.`);

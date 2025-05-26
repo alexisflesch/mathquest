@@ -208,7 +208,7 @@ function gameAnswerHandler(io, socket) {
                     roomName = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
                 }
                 else if (gameInstance.playMode === 'tournament') {
-                    roomName = `tournament_${accessCode}`;
+                    roomName = `game_${accessCode}`;
                 }
                 logger.info({ leaderboard, roomName }, 'Emitting leaderboard_update to room');
                 io.to(roomName).emit('leaderboard_update', { leaderboard });

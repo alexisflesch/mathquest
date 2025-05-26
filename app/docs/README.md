@@ -8,7 +8,7 @@ The documentation is organized into logical categories to help you quickly find 
 
 ### Core Documentation
 - [Overview](./overview/README.md): High-level overview of the MathQuest project
-- [Setup Guide](./setup/README.md): How to set up the development environment
+- [Setup Guide](./setup/README| `game_${code}`     | Live tournament participants     | game_123456      | Students (live), server  |md): How to set up the development environment
 - [Architecture](./architecture/README.md): System architecture and design decisions
 
 ### Technical Documentation
@@ -493,20 +493,20 @@ MathQuest uses Socket.IO rooms to organize real-time communication between diffe
 
 | Room Name                | Used For                        | Example                | Who Joins/Sends?         |
 |--------------------------|----------------------------------|------------------------|--------------------------|
-| `live_${code}`     | Live tournament participants     | tournament_123456      | Students (live), server  |
+| `game_${code}`     | Live tournament participants     | tournament_123456      | Students (live), server  |
 | `dashboard_${quizId}`         | Teacher dashboard (quiz control) | quiz_abc123            | Teacher dashboard, server|
 | `projection_${quizId}`   | Projector/classroom display      | projection_abc123      | Projector view, server   |
 | `${code}`                | Lobby waiting room               | 123456                 | Students (lobby), server |
 | `lobby_${code}`          | Quiz-linked tournament lobby     | lobby_123456           | Students (lobby), server |
 
 **Guidelines:**
-- All live gameplay events for students (questions, timer, results, etc.) are sent to `live_${code}`.
+- All live gameplay events for students (questions, timer, results, etc.) are sent to `game_${code}`.
 - Teacher dashboard events (state, timer, lock/unlock, etc.) are sent to `dashboard_${quizId}`.
 - Projector events are sent to `projection_${quizId}`.
 - Lobby events are sent to `${code}` or `lobby_${code}` depending on context.
 
 **Example:**
-- When a student joins a live tournament, they join `live_${code}`.
+- When a student joins a live tournament, they join `game_${code}`.
 - When a teacher controls a quiz, their dashboard joins `dashboard_${quizId}`.
 - When showing the projector view, it joins `projection_${quizId}`.
 
@@ -556,7 +556,7 @@ When a tournament question timer expires, if the question has an `explication` f
 ### Backend Changes
 - In `handleTimerExpiration` (tournamentHelpers.js):
   - After scoring and emitting the `tournament_question_state_update`, the server checks if the current question has an `explication`.
-  - If so, emits an `explication` event: `{ questionUid, explication }` to `live_${code}`.
+  - If so, emits an `explication` event: `{ questionUid, explication }` to `game_${code}`.
   - Waits 5 seconds before sending the next question or ending the tournament.
   - If no explication, proceeds as before.
 

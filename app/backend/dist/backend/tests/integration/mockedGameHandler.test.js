@@ -313,8 +313,8 @@ describe('Mocked Game Handler', () => {
         // Find the test game instance to get the initiatorUserId
         const gameInstance = await prisma_1.prisma.gameInstance.findUnique({ where: { accessCode: TEST_ACCESS_CODE } });
         // Update this line to match the backend's room naming logic
-        // Backend joinGameHandler uses 'live_' + accessCode for quiz mode, 'tournament_' + accessCode for tournament mode
-        expect(socket.to).toHaveBeenCalledWith(`live_${TEST_ACCESS_CODE}`);
+        // Backend joinGameHandler uses 'game_' + accessCode for quiz mode, 'game_' + accessCode for tournament mode
+        expect(socket.to).toHaveBeenCalledWith(`game_${TEST_ACCESS_CODE}`);
     });
     // Test 2: Test the request_participants event
     test('Player can request participants list', async () => {
@@ -498,7 +498,7 @@ describe('Mocked Game Handler', () => {
         // Register game handlers
         (0, game_1.registerGameHandlers)(io, socket);
         // Set up room
-        socket.rooms.add(`live_${TEST_ACCESS_CODE}`);
+        socket.rooms.add(`game_${TEST_ACCESS_CODE}`);
         // Clear any existing participants
         const keys = await redis_1.redisClient.keys(`${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`);
         if (keys.length > 0) {

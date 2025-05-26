@@ -1,5 +1,5 @@
-import { redisClient } from '../src/config/redis';
-import { closeSocketIORedisClients } from '../src/sockets';
+import { redisClient } from '@/config/redis';
+import { closeSocketIORedisClients } from '@/sockets';
 import { stopAllTestServers } from './testSetup';
 
 export default async function globalTeardown() {

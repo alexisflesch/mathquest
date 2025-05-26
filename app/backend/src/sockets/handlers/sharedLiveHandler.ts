@@ -52,7 +52,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
             }
         }
 
-        const room = `live_${accessCode}`;
+        const room = `game_${accessCode}`;
         const participantUsername = typeof username === 'string' ? username : 'Anonymous';
         const participantAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl : undefined;
 
@@ -278,7 +278,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                     liveQuestionPayload.feedbackRemaining = safeFeedbackRemaining;
                 }
 
-                const liveRoom = `live_${accessCode}`;
+                const liveRoom = `game_${accessCode}`;
                 const roomMembers = io.sockets.adapter.rooms.get(liveRoom);
                 const socketIds = roomMembers ? Array.from(roomMembers) : [];
                 logger.info({ accessCode, userId, socketId: socket.id, liveRoom, socketIds }, '[DEBUG] Late joiner socket and current live room members before emitting game_question');
@@ -331,7 +331,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         logger.info({ accessCode, userId, questionId, answer, timeSpent, finalPlayMode: playMode, socketId: socket.id }, '[SHARED_LIVE_HANDLER] Processing game_answer with playMode');
 
         const currentPlayMode = playMode || 'quiz';
-        const room = `live_${accessCode}`;
+        const room = `game_${accessCode}`;
 
         const fullGameState = await getFullGameState(accessCode);
         if (!fullGameState || !fullGameState.gameState) {

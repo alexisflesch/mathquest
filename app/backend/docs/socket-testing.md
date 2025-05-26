@@ -75,7 +75,7 @@ test('Player can join a game', async () => {
     registerGameHandlers(io as any, socket as any);
 
     // Set up room to simulate socket.io room functionality
-    socket.rooms.add(`live_${TEST_ACCESS_CODE}`);
+    socket.rooms.add(`game_${TEST_ACCESS_CODE}`);
 
     // Trigger the join_game event with our payload
     await socket.triggerEvent('join_game', {

@@ -550,7 +550,7 @@ export default function TournamentSessionPage() {
 
             // If this is our tournament, update our rooms and state
             if (oldCode === code) {
-                logger.info(`Our tournament code changed, joining new room: live_${newCode}`);
+                logger.info(`Our tournament code changed, joining new room: game_${newCode}`);
 
                 // Fetch user details from localStorage for the new join emission
                 let userId = null;

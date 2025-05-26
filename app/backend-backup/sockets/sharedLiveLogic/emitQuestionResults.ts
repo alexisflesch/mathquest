@@ -19,7 +19,7 @@ export interface QuestionResultsParams {
 }
 
 // Define types for room names to help with type safety
-export type TournamentRoomName = `live_${string}` | `differed_${string}` | `live_${string}_${string}`;
+export type TournamentRoomName = `game_${string}` | `differed_${string}` | `game_${string}_${string}`;
 export type QuizRoomName = `dashboard_${string}` | `quiz_${string}` | `quiz_projector_${string}`;
 
 /**

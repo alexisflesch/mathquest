@@ -42,7 +42,7 @@ async function handleDisconnecting(
                     username: p.username,  // Updated from username/username to username
                     avatar: p.avatar,
                 }));
-                io.to(`live_${stateKey}`).emit("tournament_participants_update", {
+                io.to(`game_${stateKey}`).emit("tournament_participants_update", {
                     participants: participantsList,
                     playerCount: participantsList.length
                 });

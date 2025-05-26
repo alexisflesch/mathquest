@@ -174,7 +174,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             await gameStateService.updateGameState(accessCodeStr, gameState);
 
             // Broadcast to all relevant rooms
-            const gameRoom = `live_${accessCodeStr}`;
+            const gameRoom = `game_${accessCodeStr}`;
             const dashboardRoom = `dashboard_${gameInstance.id}`;
             const projectionRoom = `projection_${gameInstance.id}`;
 

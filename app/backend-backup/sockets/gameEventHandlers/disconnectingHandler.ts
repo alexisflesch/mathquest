@@ -44,7 +44,7 @@ async function handleDisconnecting(
                     avatar: p.avatar,
                 }));
 
-                io.to(`live_${accessCode}`).emit("game_participants_update", {
+                io.to(`game_${accessCode}`).emit("game_participants_update", {
                     participants: participantsList,
                     playerCount: participantsList.length
                 });

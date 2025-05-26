@@ -47,12 +47,12 @@ function joinGameHandler(io, socket) {
                     return;
                 }
                 // Join per-user room for differed mode
-                const room = `live_${accessCode}_${playerId}`;
+                const room = `game_${accessCode}_${playerId}`;
                 await socket.join(room);
             }
             else {
                 // Join shared room for live/classic mode
-                await socket.join(`live_${accessCode}`);
+                await socket.join(`game_${accessCode}`);
             }
             // Register participant (creates if not exists)
             const participantService = new gameParticipantService_1.GameParticipantService();
@@ -77,7 +77,7 @@ function joinGameHandler(io, socket) {
             socket.emit('game_joined', { accessCode, participant: joinResult.participant });
             // Optionally emit to room for others
             if (!gameInstance.isDiffered) {
-                socket.to(`live_${accessCode}`).emit('player_joined_game', { playerId, username, avatarUrl });
+                socket.to(`game_${accessCode}`).emit('player_joined_game', { playerId, username, avatarUrl });
             }
         }
         catch (err) {

@@ -299,7 +299,7 @@ describe('Mocked Game Handler Tests', () => {
             accessCode: TEST_ACCESS_CODE
         }));
         // Verify socket.to().emit was called with player_joined_game
-        expect(socket.to).toHaveBeenCalledWith(`live_${TEST_ACCESS_CODE}`);
+        expect(socket.to).toHaveBeenCalledWith(`game_${TEST_ACCESS_CODE}`);
     });
     // Test 2: Test the request_participants event
     test('Player can request participants list', async () => {
@@ -487,7 +487,7 @@ describe('Mocked Game Handler Tests', () => {
         // Register game handlers
         (0, game_1.registerGameHandlers)(io, socket);
         // Set up room
-        socket.rooms.add(`live_${TEST_ACCESS_CODE}`);
+        socket.rooms.add(`game_${TEST_ACCESS_CODE}`);
         // Clear any existing participants
         const keys = await redis_1.redisClient.keys(`${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`);
         if (keys.length > 0) {

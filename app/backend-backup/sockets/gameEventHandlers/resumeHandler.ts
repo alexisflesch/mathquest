@@ -45,7 +45,7 @@ function handleGameResume(
         state.pausedRemainingTime = undefined;
 
         logger.info(`Resuming game ${accessCode} by teacher ${teacherId}. Remaining time: ${remaining.toFixed(1)}s`);
-        io.to(`live_${accessCode}`).emit("game_question_state_update", {
+        io.to(`game_${accessCode}`).emit("game_question_state_update", {
             questionState: "active",
             remainingTime: remaining
         });
