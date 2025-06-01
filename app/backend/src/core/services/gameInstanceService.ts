@@ -114,7 +114,7 @@ export class GameInstanceService {
      */
     async getGameInstanceByAccessCode(accessCode: string, includeParticipants: boolean = false) {
         try {
-            return await prisma.gameInstance.findUnique({
+            const result = await prisma.gameInstance.findUnique({
                 where: { accessCode },
                 include: {
                     gameTemplate: {
@@ -144,6 +144,8 @@ export class GameInstanceService {
                     } : false
                 }
             });
+
+            return result;
         } catch (error) {
             logger.error({ error }, `Error fetching game instance with access code ${accessCode}`);
             throw error;

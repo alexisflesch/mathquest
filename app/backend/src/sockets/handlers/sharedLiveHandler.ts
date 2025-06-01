@@ -6,6 +6,7 @@ import { calculateScore } from './sharedScore';
 import createLogger from '@/utils/logger';
 import { getFullGameState, GameState } from '@/core/gameStateService'; // Ensure GameState is imported
 import { redisClient as redis } from '@/config/redis'; // Import redisClient
+import { GAME_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('SharedLiveHandler');
 
@@ -479,25 +480,25 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         }
     };
 
-    socket.on('request_participants', async (payload: { accessCode: string }) => {
+    socket.on(GAME_EVENTS.REQUEST_PARTICIPANTS, async (payload: { accessCode: string }) => {
         try {
             const participants = await redis.hvals(`mathquest:game:participants:${payload.accessCode}`);
-            socket.emit('game_participants', { participants: participants.map(p => JSON.parse(p)) });
+            socket.emit(GAME_EVENTS.GAME_PARTICIPANTS, { participants: participants.map(p => JSON.parse(p)) });
         } catch (error) {
             logger.error({ accessCode: payload.accessCode, error }, 'Error fetching participants');
-            socket.emit('game_participants', { participants: [] });
+            socket.emit(GAME_EVENTS.GAME_PARTICIPANTS, { participants: [] });
         }
     });
 
-    socket.on('join_game', (payload: JoinPayload) => joinHandler(payload));
-    socket.on('join_tournament', (payload: JoinPayload) => joinHandler({ ...payload, playMode: 'tournament' }));
+    socket.on(GAME_EVENTS.JOIN_GAME, (payload: JoinPayload) => joinHandler(payload));
+    socket.on(TOURNAMENT_EVENTS.JOIN_TOURNAMENT, (payload: JoinPayload) => joinHandler({ ...payload, playMode: 'tournament' }));
 
     // Ensure game_answer is handled by answerHandler if not practice mode
     // For practice mode, gameAnswer.ts (registered in game/index.ts) should take precedence.
-    socket.on('game_answer', (payload: AnswerPayload) => {
+    socket.on(GAME_EVENTS.GAME_ANSWER, (payload: AnswerPayload) => {
         // This registration will be called if gameAnswer.ts doesn't stop propagation or if it's not practice.
         // The logic inside answerHandler now checks for playMode === 'practice' and returns early.
         answerHandler(payload);
     });
-    socket.on('tournament_answer', (payload: AnswerPayload) => answerHandler({ ...payload, playMode: 'tournament' }));
+    socket.on(TOURNAMENT_EVENTS.TOURNAMENT_ANSWER, (payload: AnswerPayload) => answerHandler({ ...payload, playMode: 'tournament' }));
 }

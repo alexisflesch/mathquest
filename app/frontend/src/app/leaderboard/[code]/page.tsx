@@ -17,6 +17,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Share2 } from "lucide-react";
+import { makeApiRequest } from '@/config/api';
 
 type LeaderboardEntry = { id: string; username: string; avatar: string; score: number; isDiffered?: boolean };
 
@@ -41,25 +42,23 @@ export default function TournamentLeaderboardPage() {
     useEffect(() => {
         async function fetchLeaderboard() {
             try {
-                const res = await fetch(`/api/tournament?code=${code}`);
-                if (!res.ok) throw new Error('Tournoi introuvable');
-                const tournoi = await res.json();
+                const tournoi = await makeApiRequest<{ id: string }>(`tournament?code=${code}`);
                 if (!tournoi || !tournoi.id) throw new Error('Tournoi introuvable');
-                const lbRes = await fetch(`/api/tournament-leaderboard?code=${code}`);
-                if (!lbRes.ok) throw new Error('Impossible de charger le classement');
-                const lb = await lbRes.json();
+
+                const lb = await makeApiRequest<{ leaderboard: LeaderboardEntry[] }>(`tournament-leaderboard?code=${code}`);
                 setLeaderboard(lb.leaderboard || []);
+
                 // Vérifier si l'utilisateur peut jouer en différé
                 let userId = null;
                 if (typeof window !== 'undefined') {
                     userId = localStorage.getItem('mathquest_cookie_id');
                 }
                 if (userId) {
-                    const canPlayRes = await fetch(`/api/can-play-differed?code=${code}&userId=${encodeURIComponent(userId)}`);
-                    if (canPlayRes.ok) {
-                        const { canPlay } = await canPlayRes.json();
+                    try {
+                        const { canPlay } = await makeApiRequest<{ canPlay: boolean }>(`can-play-differed?code=${code}&userId=${encodeURIComponent(userId)}`);
                         setCanPlayDiffered(!!canPlay);
-                    } else {
+                    } catch (err) {
+                        console.error('Error checking differed play availability:', err);
                         setCanPlayDiffered(false);
                     }
                 } else {

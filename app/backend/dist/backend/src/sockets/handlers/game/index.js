@@ -43,18 +43,19 @@ const gameAnswer_1 = require("./gameAnswer");
 const requestParticipants_1 = require("./requestParticipants");
 const disconnect_1 = require("./disconnect");
 const requestNextQuestion_1 = require("./requestNextQuestion");
+const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const logger = (0, logger_1.default)('GameHandlers');
 function registerGameHandlers(io, socket) {
     logger.info({ socketId: socket.id }, 'Registering game handlers');
-    // Register direct handlers on socket instance
-    socket.on('join_game', (0, joinGame_1.joinGameHandler)(io, socket));
-    socket.on('game_answer', (0, gameAnswer_1.gameAnswerHandler)(io, socket));
-    socket.on('request_participants', (0, requestParticipants_1.requestParticipantsHandler)(io, socket));
-    socket.on('request_next_question', (0, requestNextQuestion_1.requestNextQuestionHandler)(io, socket));
+    // Register direct handlers on socket instance using shared constants
+    socket.on(events_1.GAME_EVENTS.JOIN_GAME, (0, joinGame_1.joinGameHandler)(io, socket));
+    socket.on(events_1.GAME_EVENTS.GAME_ANSWER, (0, gameAnswer_1.gameAnswerHandler)(io, socket));
+    socket.on(events_1.GAME_EVENTS.REQUEST_PARTICIPANTS, (0, requestParticipants_1.requestParticipantsHandler)(io, socket));
+    socket.on(events_1.GAME_EVENTS.REQUEST_NEXT_QUESTION, (0, requestNextQuestion_1.requestNextQuestionHandler)(io, socket));
     socket.on('disconnect', (0, disconnect_1.disconnectHandler)(io, socket));
     // Direct handler for start_game in practice mode
-    socket.on('start_game', async (payload) => {
+    socket.on(events_1.GAME_EVENTS.START_GAME, async (payload) => {
         logger.info({ socketId: socket.id, payload }, 'Start game event received');
         try {
             const { accessCode, userId } = payload;
@@ -74,12 +75,12 @@ function registerGameHandlers(io, socket) {
             });
             if (!gameInstance || !gameInstance.gameTemplate) {
                 logger.warn({ socketId: socket.id, accessCode }, 'Game instance or template not found');
-                socket.emit('game_error', { message: 'Game not found or template missing.' });
+                socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Game not found or template missing.' });
                 return;
             }
             if (gameInstance.playMode !== 'practice') {
                 logger.warn({ socketId: socket.id, playMode: gameInstance.playMode }, 'start_game is only for practice mode');
-                socket.emit('game_error', { message: 'start_game only allowed in practice mode.' });
+                socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'start_game only allowed in practice mode.' });
                 return;
             }
             // Update game status
@@ -90,7 +91,7 @@ function registerGameHandlers(io, socket) {
             // Check if we have questions
             if (gameInstance.gameTemplate.questions.length === 0) {
                 logger.warn({ socketId: socket.id, accessCode }, 'No questions in template');
-                socket.emit('game_error', { message: 'No questions available in this game.' });
+                socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'No questions available in this game.' });
                 return;
             }
             // Get first question
@@ -99,7 +100,7 @@ function registerGameHandlers(io, socket) {
             // Send first question
             logger.info({ socketId: socket.id, questionId: firstQuestion.uid }, 'Sending first question');
             // Send first question data directly as per QuestionData type
-            socket.emit('game_question', {
+            socket.emit(events_1.GAME_EVENTS.GAME_QUESTION, {
                 uid: firstQuestion.uid,
                 text: firstQuestion.text,
                 answerOptions: firstQuestion.answerOptions,
@@ -116,7 +117,7 @@ function registerGameHandlers(io, socket) {
         }
         catch (err) {
             logger.error({ socketId: socket.id, error: err }, 'Error in start_game handler');
-            socket.emit('game_error', { message: 'Failed to start game: ' + err.message });
+            socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Failed to start game: ' + err.message });
         }
     });
 }

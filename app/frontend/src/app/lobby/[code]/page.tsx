@@ -25,6 +25,8 @@ import Image from 'next/image';
 import { Share2 } from "lucide-react";
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { makeApiRequest } from '@/config/api';
 
 // Create a logger for this component
 const logger = createLogger('Lobby');
@@ -41,9 +43,13 @@ export default function LobbyPage() {
     const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);    // Function to check tournament status and redirect if needed
     const checkTournamentStatus = useCallback(async () => {
         try {
-            const res = await fetch(`/api/tournament-status?code=${code}`);
-            if (!res.ok) return;
-            const status = await res.json();
+            const status = await makeApiRequest<{
+                status: string;
+                statut: string;
+                currentQuestionIndex?: number;
+                isLive?: boolean;
+                gameState?: any;
+            }>(`games/${code}/state`);
 
             if (status.statut === 'terminé') {
                 logger.info(`Tournament ${code} is finished, redirecting to leaderboard`);
@@ -51,24 +57,11 @@ export default function LobbyPage() {
             } else if (status.statut === 'en cours') {
                 logger.info(`Tournament ${code} is already in progress, redirecting`);
                 if (socketRef.current) {
-                    socketRef.current.emit("leave_lobby", { code });
+                    socketRef.current.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { code });
                 }
 
-                // Check if this is a quiz-linked tournament
-                try {
-                    const quizRes = await fetch(`/api/quiz?tournament_code=${code}`);
-                    if (quizRes.ok) {
-                        const quizData = await quizRes.json();
-                        if (quizData && quizData.id) {
-                            logger.info(`Tournament ${code} is linked to quiz ${quizData.id}, forcing immediate redirect`);
-                            window.location.href = `/live/${code}`;
-                            return; // Skip router.replace after forcing navigation
-                        }
-                    }
-                } catch (quizErr) {
-                    logger.error(`Error checking if tournament is quiz-linked: ${quizErr}`);
-                }
-
+                // For games in progress, redirect immediately to live page
+                // The game state data already provides all needed information
                 router.replace(`/live/${code}`);
             }
         } catch (err) {
@@ -101,53 +94,66 @@ export default function LobbyPage() {
     // Fetch tournament and creator info
     useEffect(() => {
         async function fetchCreator() {
-            const res = await fetch(`/api/tournament-status?code=${code}`);
-            if (!res.ok) return;
-            const status = await res.json();
-            if (status.statut === 'terminé') {
-                router.replace(`/leaderboard/${code}`);
-                return;
-            }
-            if (status.statut === 'en cours') {
-                router.replace(`/live/${code}`);
-                return;
-            }
-            const tournoiRes = await fetch(`/api/tournament?code=${code}`);
-            if (!tournoiRes.ok) return;
-            const tournoi = await tournoiRes.json();
-            logger.debug("Tournament fetched", { id: tournoi.id, code: tournoi.code, statut: tournoi.statut });
-            // If the tournament is already started, redirect to tournament page
-            if (tournoi.statut && tournoi.statut !== 'en préparation') {
-                router.replace(`/live/${code}`);
-                return;
-            }
-            let creatorData = null;
-            if (tournoi.cree_par_joueur_id) {
-                // Fetch student creator
-                logger.debug("Fetching student creator", { id: tournoi.cree_par_joueur_id });
-                const resJ = await fetch(`/api/joueur?id=${tournoi.cree_par_joueur_id}`);
-                logger.debug("Joueur fetch status", { status: resJ.status });
-                if (resJ.ok) {
-                    const joueur = await resJ.json();
-                    logger.debug("Joueur fetched", { id: joueur.id, username: joueur.username });
-                    creatorData = { username: joueur.username, avatar: `/avatars/${joueur.avatar || "cat-face.svg"}` };
+            try {
+                const status = await makeApiRequest<{
+                    status: string;
+                    statut: string;
+                    currentQuestionIndex?: number;
+                    isLive?: boolean;
+                    gameState?: any;
+                }>(`games/${code}/state`);
+                if (status.statut === 'terminé') {
+                    router.replace(`/leaderboard/${code}`);
+                    return;
                 }
-            } else if (tournoi.cree_par_enseignant_id) {
-                // Fetch teacher creator
-                logger.debug("Fetching teacher creator", { id: tournoi.cree_par_enseignant_id });
-                const resE = await fetch(`/api/enseignant?id=${tournoi.cree_par_enseignant_id}`);
-                logger.debug("Enseignant fetch status", { status: resE.status });
-                if (resE.ok) {
-                    const enseignant = await resE.json();
-                    logger.debug("Enseignant fetched", { id: enseignant.id, username: enseignant.username });
-                    creatorData = { username: enseignant.username, avatar: `/avatars/${enseignant.avatar || "cat-face.svg"}` };
+                if (status.statut === 'en cours') {
+                    router.replace(`/live/${code}`);
+                    return;
                 }
-            } else {
-                // No creator found
-                logger.warn("No creator found in tournament");
-                creatorData = { username: "Inconnu", avatar: "/avatars/cat-face.svg" };
+
+                // Get the game instance details instead of tournament
+                const gameInstance = await makeApiRequest<{
+                    gameInstance: {
+                        id: string;
+                        accessCode: string;
+                        status?: string;
+                        initiatorUserId?: string;
+                        name: string;
+                    }
+                }>(`games/${code}`);
+                logger.debug("Game instance fetched", {
+                    id: gameInstance.gameInstance.id,
+                    accessCode: gameInstance.gameInstance.accessCode,
+                    status: gameInstance.gameInstance.status
+                });
+
+                // If the game is already started, redirect to game page
+                if (gameInstance.gameInstance.status && gameInstance.gameInstance.status !== 'pending') {
+                    router.replace(`/live/${code}`);
+                    return;
+                }
+
+                let creatorData = null;
+                if (gameInstance.gameInstance.initiatorUserId) {
+                    // Try to fetch user info - this might need adjustment based on your user API
+                    logger.debug("Fetching game creator", { id: gameInstance.gameInstance.initiatorUserId });
+                    try {
+                        // For now, use a placeholder since we don't know the exact user API structure
+                        // This can be updated when the user API is available
+                        creatorData = { username: "Creator", avatar: "/avatars/cat-face.svg" };
+                    } catch (error) {
+                        logger.error("Error fetching game creator:", error);
+                        creatorData = { username: "Unknown", avatar: "/avatars/cat-face.svg" };
+                    }
+                } else {
+                    // No creator found
+                    logger.warn("No creator found in game instance");
+                    creatorData = { username: "Unknown", avatar: "/avatars/cat-face.svg" };
+                }
+                if (creatorData) setCreator(creatorData);
+            } catch (error) {
+                logger.error("Error fetching tournament info:", error);
             }
-            if (creatorData) setCreator(creatorData);
         }
         fetchCreator();
     }, [code, router]);
@@ -173,23 +179,23 @@ export default function LobbyPage() {
         socketRef.current = socket;
 
         // Handle connection errors and reconnection
-        socket.on('connect_error', (err) => {
+        socket.on(SOCKET_EVENTS.CONNECT_ERROR, (err) => {
             logger.error(`Socket connection error: ${err.message}`);
         });
 
-        socket.on('disconnect', (reason) => {
+        socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
             logger.warn(`Socket disconnected: ${reason}`);
             // Check tournament status on disconnect to ensure we don't miss redirection
             setTimeout(checkTournamentStatus, 1000);
         });
 
-        socket.on('reconnect', (attemptNumber) => {
+        socket.on(SOCKET_EVENTS.GAME.RECONNECT, (attemptNumber) => {
             logger.info(`Socket reconnected after ${attemptNumber} attempts`);
             // Re-join room after reconnection
             const identity = getCurrentIdentity();
             if (identity) {
                 const userId = localStorage.getItem('mathquest_cookie_id') || `temp_${socket.id}`;
-                socket.emit("join_lobby", {
+                socket.emit(SOCKET_EVENTS.LOBBY.JOIN_LOBBY, {
                     accessCode: code,
                     userId,
                     username: identity.username,
@@ -209,7 +215,7 @@ export default function LobbyPage() {
             userId = localStorage.getItem('mathquest_cookie_id') || `temp_${socket.id}`;
             logger.debug('userId before join_lobby', { userId });
         }
-        socket.emit("join_lobby", {
+        socket.emit(SOCKET_EVENTS.LOBBY.JOIN_LOBBY, {
             accessCode: code,
             userId,
             username: identity.username,
@@ -220,10 +226,10 @@ export default function LobbyPage() {
         logger.info("Joined lobby", { code });
 
         // Request the current participants list
-        socket.emit("get_participants", { accessCode: code });
+        socket.emit(SOCKET_EVENTS.LOBBY.GET_PARTICIPANTS, { accessCode: code });
 
         // Listen for the full participants list
-        socket.on("participants_list", (data) => {
+        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST, (data) => {
             if (Array.isArray(data)) {
                 setParticipants(data);
                 setIsQuizLinked(false); // fallback for old format
@@ -234,7 +240,7 @@ export default function LobbyPage() {
         });
 
         // Listen for participant join/leave events
-        socket.on("participant_joined", (participant) => {
+        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANT_JOINED, (participant) => {
             setParticipants((prev) => {
                 if (prev.some((p) => p.id === participant.id)) return prev;
                 return [...prev, participant];
@@ -242,13 +248,13 @@ export default function LobbyPage() {
             logger.debug("Participant joined", { id: participant.id, username: participant.username });
         });
 
-        socket.on("participant_left", (participant) => {
+        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANT_LEFT, (participant) => {
             setParticipants((prev) => prev.filter((p) => p.id !== participant.id));
             logger.debug("Participant left", { id: participant.id, username: participant.username });
         });
 
         // Listen for redirect_to_game event (new backend event for game start)
-        socket.on("redirect_to_game", ({ accessCode, gameId }) => {
+        socket.on(SOCKET_EVENTS.LOBBY.REDIRECT_TO_GAME, ({ accessCode, gameId }) => {
             const targetCode = accessCode || code;
             logger.info(`Received redirect_to_game event, redirecting immediately to ${targetCode}`);
 
@@ -256,7 +262,7 @@ export default function LobbyPage() {
             console.log(`%c⚠️ REDIRECT TO GAME EVENT RECEIVED! Redirecting to /live/${targetCode}`, 'background: #ff0000; color: white; font-size: 16px; padding: 5px;');
 
             // Force-leave the lobby room before redirecting
-            socket.emit("leave_lobby", { accessCode: targetCode });
+            socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: targetCode });
 
             // Use immediate window.location navigation instead of Next.js router to ensure redirection
             console.log('Executing window.location navigation now...');
@@ -271,7 +277,7 @@ export default function LobbyPage() {
         });
 
         // Listen for game_started event (new backend event)
-        socket.on("game_started", ({ accessCode, gameId }) => {
+        socket.on(SOCKET_EVENTS.LOBBY.GAME_STARTED, ({ accessCode, gameId }) => {
             const targetCode = accessCode || code;
             logger.info(`Game started (code: ${targetCode}), beginning countdown`);
             setCountdown(5);
@@ -283,7 +289,7 @@ export default function LobbyPage() {
                         logger.info(`Countdown complete, will redirect to /live/${targetCode}`);
 
                         // Force-leave the lobby room before redirecting
-                        socket.emit("leave_lobby", { accessCode: targetCode });
+                        socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: targetCode });
 
                         // Use immediate window.location navigation for more reliable redirects
                         window.location.href = `/live/${targetCode}`;
@@ -304,7 +310,7 @@ export default function LobbyPage() {
 
         // Keep legacy support for old events during transition
         // Listen for redirect_to_tournament event (legacy support - immediate redirect for quiz-triggered tournaments)
-        socket.on("redirect_to_tournament", ({ code: redirectCode }) => {
+        socket.on(SOCKET_EVENTS.TOURNAMENT.REDIRECT_TO_TOURNAMENT, ({ code: redirectCode }) => {
             const targetCode = redirectCode || code;
             logger.info(`Received redirect_to_tournament event, redirecting immediately to ${targetCode}`);
 
@@ -312,7 +318,7 @@ export default function LobbyPage() {
             console.log(`%c⚠️ REDIRECT EVENT RECEIVED! Redirecting to /live/${targetCode}`, 'background: #ff0000; color: white; font-size: 16px; padding: 5px;');
 
             // Force-leave the lobby room before redirecting
-            socket.emit("leave_lobby", { accessCode: targetCode });
+            socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: targetCode });
 
             // Use immediate window.location navigation instead of Next.js router to ensure redirection
             console.log('Executing window.location navigation now...');
@@ -333,7 +339,7 @@ export default function LobbyPage() {
         checkTournamentStatus();
 
         // Listen for tournament_started event from server (legacy - normal tournaments with countdown)
-        socket.on("tournament_started", (data) => {
+        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_STARTED, (data) => {
             const tournamentCode = data?.code || code; // Use provided code or current code
             logger.info(`Tournament started (code: ${tournamentCode}), beginning countdown`);
             setCountdown(5);
@@ -345,7 +351,7 @@ export default function LobbyPage() {
                         logger.info(`Countdown complete, will redirect to /live/${tournamentCode}`);
 
                         // Force-leave the lobby room before redirecting
-                        socket.emit("leave_lobby", { accessCode: tournamentCode });
+                        socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: tournamentCode });
 
                         // Use immediate window.location navigation for more reliable redirects
                         window.location.href = `/live/${tournamentCode}`;
@@ -365,7 +371,7 @@ export default function LobbyPage() {
         });
 
         // Listen for the event indicating the tournament already started
-        socket.on("tournament_already_started", ({ code: tournamentCode, status }) => {
+        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_ALREADY_STARTED, ({ code: tournamentCode, status }) => {
             logger.info(`Received tournament_already_started event for code ${tournamentCode} with status ${status}. Redirecting...`);
 
             if (status === 'en cours') {
@@ -397,7 +403,7 @@ export default function LobbyPage() {
         });
 
         // Listen for potential lobby errors from the server
-        socket.on("lobby_error", ({ error, message }) => {
+        socket.on(SOCKET_EVENTS.LOBBY.LOBBY_ERROR, ({ error, message }) => {
             logger.error(`Lobby error received: ${message} (${error})`);
             // TODO: Display this error to the user appropriately
             alert(`Erreur: ${message}`); // Simple alert for now
@@ -408,7 +414,7 @@ export default function LobbyPage() {
         });
 
         // Add global notification handler to catch tournament notifications
-        socket.on("tournament_notification", (data) => {
+        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_NOTIFICATION, (data) => {
             logger.info(`Received tournament_notification: ${JSON.stringify(data)}`);
 
             if (data.type === "redirect" && data.code === code) {
@@ -418,7 +424,7 @@ export default function LobbyPage() {
                 if (data.isQuizMode || data.immediate) {
                     logger.info(`QUIZ MODE REDIRECT: Forcing immediate redirect to /live/${data.code}`);
                     // Force-leave the lobby first
-                    socket.emit("leave_lobby", { accessCode: code });
+                    socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: code });
 
                     // Force a hard navigation (most reliable)
                     window.location.href = `/live/${data.code}`;
@@ -438,19 +444,19 @@ export default function LobbyPage() {
 
         // Add safeguards to explicitly ignore live tournament-specific events
         // that should not be processed in the lobby context
-        socket.on("tournament_question", () => {
+        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_QUESTION, () => {
             // Explicitly ignore - these events should be handled in the live tournament page
             logger.warn("Received tournament_question event in lobby - ignoring");
         });
 
-        socket.on("tournament_set_timer", () => {
+        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_SET_TIMER, () => {
             // Explicitly ignore - these events should be handled in the live tournament page
             logger.warn("Received tournament_set_timer event in lobby - ignoring");
         });
 
         // Clean up on unmount
         return () => {
-            socket.emit("leave_lobby", { accessCode: code });
+            socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: code });
             socket.disconnect();
         };
     }, [code, isTeacher, isStudent, getCurrentIdentity, router]);
@@ -480,14 +486,14 @@ export default function LobbyPage() {
         const socket = socketRef.current;
 
         // Listen for redirect_to_quiz event
-        socket.on('redirect_to_quiz', ({ quizId }) => {
+        socket.on(SOCKET_EVENTS.LOBBY.REDIRECT_TO_QUIZ, ({ quizId }) => {
             logger.info(`Received redirect_to_quiz for quiz ${quizId}, redirecting...`);
             router.push(`/quiz/${quizId}`);
         });
 
         return () => {
             if (socket) {
-                socket.off('redirect_to_quiz');
+                socket.off(SOCKET_EVENTS.LOBBY.REDIRECT_TO_QUIZ);
             }
         };
     }, [router]);
@@ -514,7 +520,7 @@ export default function LobbyPage() {
         if (isCreator && socketRef.current) {
             logger.info("Starting tournament", { code, socketConnected: socketRef.current.connected });
             // Updated to use new backend API payload format
-            socketRef.current.emit("start_tournament", { accessCode: code });
+            socketRef.current.emit(SOCKET_EVENTS.TOURNAMENT.START_TOURNAMENT, { accessCode: code });
         } else {
             logger.warn("Cannot start tournament", { isCreator, socketReady: !!socketRef.current });
         }

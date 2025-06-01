@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
+import { makeApiRequest } from '@/config/api';
 
 // Local interface for questions on this page, compatible with QuestionDisplayProps
 interface QuestionForCreatePage {
@@ -44,14 +45,21 @@ export default function CreateQuizPage() {
     const [tagSearch, setTagSearch] = useState('');
 
     useEffect(() => {
-        fetch('/api/questions/filters')
-            .then(res => res.json())
+        makeApiRequest<{
+            levels?: string[];
+            niveaux?: string[];
+            disciplines?: string[];
+            themes?: string[];
+        }>('questions/filters')
             .then(data => {
                 setFilters({
                     levels: data.levels || data.niveaux || [], // Prefer 'levels', fallback to 'niveaux'
                     disciplines: data.disciplines || [],
                     themes: data.themes || []
                 });
+            })
+            .catch(error => {
+                console.error('Error fetching filters:', error);
             });
     }, []);
 
@@ -62,7 +70,7 @@ export default function CreateQuizPage() {
             setOffset(0); // Reset offset for new filter/initial load
         }
 
-        let url = '/api/questions?';
+        let url = 'questions?';
         const params = [];
         if (selectedLevel) params.push(`level=${encodeURIComponent(selectedLevel)}`); // Use selectedLevel
         if (selectedDiscipline) params.push(`discipline=${encodeURIComponent(selectedDiscipline)}`);
@@ -72,8 +80,7 @@ export default function CreateQuizPage() {
         params.push('shuffle=false');
         if (params.length > 0) url += params.join('&');
 
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await makeApiRequest<SharedQuestion[] | { questions: SharedQuestion[] }>(url);
 
         const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as SharedQuestion[];
 
@@ -158,7 +165,7 @@ export default function CreateQuizPage() {
                 setSavingQuiz(false);
                 return;
             }
-            const response = await fetch('/api/quiz', {
+            const result = await makeApiRequest<{ message?: string }>('quiz', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -170,8 +177,6 @@ export default function CreateQuizPage() {
                     type: 'direct',
                 }),
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Erreur lors de la sauvegarde du quiz.');
             setQuizSaveSuccess('Quiz sauvegardé avec succès !');
             setQuizName('');
             setSelectedQuestions([]);

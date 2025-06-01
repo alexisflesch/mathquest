@@ -29,7 +29,7 @@ exports.__setUserServiceForTesting = __setUserServiceForTesting;
  */
 router.post('/register', async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, cookie_id } = req.body;
         // Basic validation
         if (!username) {
             res.status(400).json({ error: 'Username is required' });
@@ -46,6 +46,7 @@ router.post('/register', async (req, res) => {
             email,
             password,
             role: 'STUDENT', // Use string literal instead of UserRole enum
+            cookieId: cookie_id, // Pass the frontend-generated cookie_id
         });
         res.status(201).json(result);
     }

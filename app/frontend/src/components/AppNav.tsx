@@ -21,6 +21,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from './AuthProvider'; // Corrected import path
 import Image from 'next/image';
+import { makeApiRequest } from '@/config/api';
 import {
     Home,
     Users,
@@ -82,14 +83,14 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
     useEffect(() => {
         async function fetchTeacherProfile(teacherId: string) {
             try {
-                const res = await fetch(`/api/teacher/profile?id=${teacherId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setusername(data.username || null);
-                    setAvatar(data.avatar || null);
-                    localStorage.setItem('mathquest_username', data.username || '');
-                    localStorage.setItem('mathquest_avatar', data.avatar || '');
-                }
+                const data = await makeApiRequest<{
+                    username?: string;
+                    avatar?: string;
+                }>(`teacher/profile?id=${teacherId}`);
+                setusername(data.username || null);
+                setAvatar(data.avatar || null);
+                localStorage.setItem('mathquest_username', data.username || '');
+                localStorage.setItem('mathquest_avatar', data.avatar || '');
             } catch (e) {
                 setusername(null);
                 setAvatar(null);
@@ -127,7 +128,11 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         localStorage.removeItem('mathquest_teacher_id');
         localStorage.removeItem('mathquest_cookie_id');
         // Optionally call logout API
-        await fetch('/api/auth/logout', { method: 'POST' });
+        try {
+            await makeApiRequest('auth/logout', { method: 'POST' });
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
         window.location.href = '/';
     };
 
@@ -159,9 +164,9 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         if (isTeacher) {
             return [
                 { label: 'Accueil', href: '/' },
-                { label: 'Entraînement libre', href: '/student/create-tournament?training=true' },
+                { label: 'Entraînement libre', href: '/student/create-game?training=true' },
                 { label: 'Rejoindre un tournoi', href: '/student/join' },
-                { label: 'Créer un tournoi', href: '/student/create-tournament' },
+                { label: 'Créer un tournoi', href: '/student/create-game' },
                 { label: 'Mes tournois', href: '/my-tournaments' },
                 {
                     label: 'Espace enseignant',
@@ -178,9 +183,9 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         if (isStudent) {
             return [
                 { label: 'Accueil', href: '/' },
-                { label: 'Entraînement libre', href: '/student/create-tournament?training=true' },
+                { label: 'Entraînement libre', href: '/student/create-game?training=true' },
                 { label: 'Rejoindre un tournoi', href: '/student/join' },
-                { label: 'Créer un tournoi', href: '/student/create-tournament' },
+                { label: 'Créer un tournoi', href: '/student/create-game' },
                 { label: 'Mes tournois', href: '/my-tournaments' },
                 { label: 'Espace enseignant', href: '/teacher/login' },
                 { label: 'Déconnexion', action: handleDisconnect },

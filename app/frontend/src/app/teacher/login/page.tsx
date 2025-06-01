@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
 import { createLogger } from '@/clientLogger';
+import { makeApiRequest } from '@/config/api';
 
 // Create a logger for this component
 const logger = createLogger('TeacherLogin');
@@ -37,17 +38,18 @@ export default function TeacherLoginPage() {
         setError(null);
         setIsLoading(true);
         try {
-            const response = await fetch('/api/auth', {
+            const result = await makeApiRequest<{
+                message?: string;
+                enseignant?: { id: string; username: string };
+                enseignantId?: string;
+                cookie_id?: string;
+                username?: string;
+                avatar?: string;
+            }>('auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'teacher_login', email, password }),
             });
-            const result = await response.json();
-            if (!response.ok) {
-                setError(result.message || 'Erreur lors de la connexion.');
-                setIsLoading(false);
-                return;
-            }
             logger.debug('Login response', result);
             // Store teacher id in localStorage for frontend profile fetch
             if (result.enseignantId) {
@@ -61,7 +63,7 @@ export default function TeacherLoginPage() {
                     logger.debug('Set mathquest_cookie_id', { cookie_id });
                 } else {
                     // fallback for legacy/old backend
-                    cookie_id = localStorage.getItem('mathquest_cookie_id');
+                    cookie_id = localStorage.getItem('mathquest_cookie_id') || undefined;
                     if (!cookie_id) {
                         cookie_id = Math.random().toString(36).substring(2) + Date.now();
                         localStorage.setItem('mathquest_cookie_id', cookie_id);

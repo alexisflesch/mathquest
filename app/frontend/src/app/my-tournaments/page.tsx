@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { SquareArrowRight } from "lucide-react"; // Ajout de l'icône
+import { makeApiRequest } from '@/config/api';
 
 interface Tournament {
     id: string;
@@ -36,8 +37,7 @@ export default function MyTournamentsPage() {
             return;
         }
         // Appel API renommée my-tournaments
-        fetch(`/api/my-tournaments?cookie_id=${cookie_id}`)
-            .then((res) => res.json())
+        makeApiRequest<{ created: Tournament[]; played: PlayedTournament[] }>(`my-tournaments?cookie_id=${cookie_id}`)
             .then((data) => {
                 setCreated(data.created || []);
                 setPlayed(data.played || []);

@@ -5,6 +5,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
 import dotenv from 'dotenv';
 import path from 'path';
+import cors from 'cors';
 import apiRouter from '@/api';
 import createLogger from '@/utils/logger';
 import { initializeSocketIO, getIO } from '@/sockets'; // Import getIO
@@ -24,6 +25,16 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 const port = process.env.PORT || 3007; // Default to 3007 if PORT not in .env
+
+// Configure CORS for API requests
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL || 'https://mathquest.example.com'
+        : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3008'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 

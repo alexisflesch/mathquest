@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
+import { GAME_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('RequestNextQuestionHandler');
 

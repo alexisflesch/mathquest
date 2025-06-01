@@ -1537,15 +1537,15 @@ export namespace Prisma {
    */
 
   export type UserCountOutputType = {
-    createdGameTemplates: number
     initiatedGameInstances: number
     gameParticipations: number
+    createdGameTemplates: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    createdGameTemplates?: boolean | UserCountOutputTypeCountCreatedGameTemplatesArgs
     initiatedGameInstances?: boolean | UserCountOutputTypeCountInitiatedGameInstancesArgs
     gameParticipations?: boolean | UserCountOutputTypeCountGameParticipationsArgs
+    createdGameTemplates?: boolean | UserCountOutputTypeCountCreatedGameTemplatesArgs
   }
 
   // Custom InputTypes
@@ -1562,13 +1562,6 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountCreatedGameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: GameTemplateWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
   export type UserCountOutputTypeCountInitiatedGameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: GameInstanceWhereInput
   }
@@ -1578,6 +1571,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountGameParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: GameParticipantWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCreatedGameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GameTemplateWhereInput
   }
 
 
@@ -1617,13 +1617,13 @@ export namespace Prisma {
    */
 
   export type GameTemplateCountOutputType = {
-    questions: number
     gameInstances: number
+    questions: number
   }
 
   export type GameTemplateCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    questions?: boolean | GameTemplateCountOutputTypeCountQuestionsArgs
     gameInstances?: boolean | GameTemplateCountOutputTypeCountGameInstancesArgs
+    questions?: boolean | GameTemplateCountOutputTypeCountQuestionsArgs
   }
 
   // Custom InputTypes
@@ -1640,15 +1640,15 @@ export namespace Prisma {
   /**
    * GameTemplateCountOutputType without action
    */
-  export type GameTemplateCountOutputTypeCountQuestionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: QuestionsInGameTemplateWhereInput
+  export type GameTemplateCountOutputTypeCountGameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GameInstanceWhereInput
   }
 
   /**
    * GameTemplateCountOutputType without action
    */
-  export type GameTemplateCountOutputTypeCountGameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: GameInstanceWhereInput
+  export type GameTemplateCountOutputTypeCountQuestionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuestionsInGameTemplateWhereInput
   }
 
 
@@ -1867,11 +1867,11 @@ export namespace Prisma {
     avatarUrl?: boolean
     createdAt?: boolean
     role?: boolean
-    createdGameTemplates?: boolean | User$createdGameTemplatesArgs<ExtArgs>
+    studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
+    teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
     initiatedGameInstances?: boolean | User$initiatedGameInstancesArgs<ExtArgs>
     gameParticipations?: boolean | User$gameParticipationsArgs<ExtArgs>
-    teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
-    studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
+    createdGameTemplates?: boolean | User$createdGameTemplatesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1907,11 +1907,11 @@ export namespace Prisma {
 
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "avatarUrl" | "createdAt" | "role", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    createdGameTemplates?: boolean | User$createdGameTemplatesArgs<ExtArgs>
+    studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
+    teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
     initiatedGameInstances?: boolean | User$initiatedGameInstancesArgs<ExtArgs>
     gameParticipations?: boolean | User$gameParticipationsArgs<ExtArgs>
-    teacherProfile?: boolean | User$teacherProfileArgs<ExtArgs>
-    studentProfile?: boolean | User$studentProfileArgs<ExtArgs>
+    createdGameTemplates?: boolean | User$createdGameTemplatesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1920,11 +1920,11 @@ export namespace Prisma {
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
-      createdGameTemplates: Prisma.$GameTemplatePayload<ExtArgs>[]
+      studentProfile: Prisma.$StudentProfilePayload<ExtArgs> | null
+      teacherProfile: Prisma.$TeacherProfilePayload<ExtArgs> | null
       initiatedGameInstances: Prisma.$GameInstancePayload<ExtArgs>[]
       gameParticipations: Prisma.$GameParticipantPayload<ExtArgs>[]
-      teacherProfile: Prisma.$TeacherProfilePayload<ExtArgs> | null
-      studentProfile: Prisma.$StudentProfilePayload<ExtArgs> | null
+      createdGameTemplates: Prisma.$GameTemplatePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2328,11 +2328,11 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    createdGameTemplates<T extends User$createdGameTemplatesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdGameTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    studentProfile<T extends User$studentProfileArgs<ExtArgs> = {}>(args?: Subset<T, User$studentProfileArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    teacherProfile<T extends User$teacherProfileArgs<ExtArgs> = {}>(args?: Subset<T, User$teacherProfileArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     initiatedGameInstances<T extends User$initiatedGameInstancesArgs<ExtArgs> = {}>(args?: Subset<T, User$initiatedGameInstancesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameInstancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     gameParticipations<T extends User$gameParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, User$gameParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    teacherProfile<T extends User$teacherProfileArgs<ExtArgs> = {}>(args?: Subset<T, User$teacherProfileArgs<ExtArgs>>): Prisma__TeacherProfileClient<$Result.GetResult<Prisma.$TeacherProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    studentProfile<T extends User$studentProfileArgs<ExtArgs> = {}>(args?: Subset<T, User$studentProfileArgs<ExtArgs>>): Prisma__StudentProfileClient<$Result.GetResult<Prisma.$StudentProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    createdGameTemplates<T extends User$createdGameTemplatesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdGameTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2757,27 +2757,41 @@ export namespace Prisma {
   }
 
   /**
-   * User.createdGameTemplates
+   * User.studentProfile
    */
-  export type User$createdGameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$studentProfileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the GameTemplate
+     * Select specific fields to fetch from the StudentProfile
      */
-    select?: GameTemplateSelect<ExtArgs> | null
+    select?: StudentProfileSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the GameTemplate
+     * Omit specific fields from the StudentProfile
      */
-    omit?: GameTemplateOmit<ExtArgs> | null
+    omit?: StudentProfileOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: GameTemplateInclude<ExtArgs> | null
-    where?: GameTemplateWhereInput
-    orderBy?: GameTemplateOrderByWithRelationInput | GameTemplateOrderByWithRelationInput[]
-    cursor?: GameTemplateWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: GameTemplateScalarFieldEnum | GameTemplateScalarFieldEnum[]
+    include?: StudentProfileInclude<ExtArgs> | null
+    where?: StudentProfileWhereInput
+  }
+
+  /**
+   * User.teacherProfile
+   */
+  export type User$teacherProfileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeacherProfile
+     */
+    select?: TeacherProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeacherProfile
+     */
+    omit?: TeacherProfileOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeacherProfileInclude<ExtArgs> | null
+    where?: TeacherProfileWhereInput
   }
 
   /**
@@ -2829,41 +2843,27 @@ export namespace Prisma {
   }
 
   /**
-   * User.teacherProfile
+   * User.createdGameTemplates
    */
-  export type User$teacherProfileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$createdGameTemplatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TeacherProfile
+     * Select specific fields to fetch from the GameTemplate
      */
-    select?: TeacherProfileSelect<ExtArgs> | null
+    select?: GameTemplateSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TeacherProfile
+     * Omit specific fields from the GameTemplate
      */
-    omit?: TeacherProfileOmit<ExtArgs> | null
+    omit?: GameTemplateOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TeacherProfileInclude<ExtArgs> | null
-    where?: TeacherProfileWhereInput
-  }
-
-  /**
-   * User.studentProfile
-   */
-  export type User$studentProfileArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the StudentProfile
-     */
-    select?: StudentProfileSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the StudentProfile
-     */
-    omit?: StudentProfileOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StudentProfileInclude<ExtArgs> | null
-    where?: StudentProfileWhereInput
+    include?: GameTemplateInclude<ExtArgs> | null
+    where?: GameTemplateWhereInput
+    orderBy?: GameTemplateOrderByWithRelationInput | GameTemplateOrderByWithRelationInput[]
+    cursor?: GameTemplateWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: GameTemplateScalarFieldEnum | GameTemplateScalarFieldEnum[]
   }
 
   /**
@@ -4946,9 +4946,9 @@ export namespace Prisma {
     explanation: string | null
     timeLimit: number | null
     isHidden: boolean | null
-    feedbackWaitTime: number | null
     createdAt: Date | null
     updatedAt: Date | null
+    feedbackWaitTime: number | null
   }
 
   export type QuestionMaxAggregateOutputType = {
@@ -4963,17 +4963,15 @@ export namespace Prisma {
     explanation: string | null
     timeLimit: number | null
     isHidden: boolean | null
-    feedbackWaitTime: number | null
     createdAt: Date | null
     updatedAt: Date | null
+    feedbackWaitTime: number | null
   }
 
   export type QuestionCountAggregateOutputType = {
     uid: number
     title: number
     text: number
-    answerOptions: number
-    correctAnswers: number
     questionType: number
     discipline: number
     themes: number
@@ -4984,9 +4982,11 @@ export namespace Prisma {
     tags: number
     timeLimit: number
     isHidden: number
-    feedbackWaitTime: number
     createdAt: number
     updatedAt: number
+    answerOptions: number
+    correctAnswers: number
+    feedbackWaitTime: number
     _all: number
   }
 
@@ -5015,9 +5015,9 @@ export namespace Prisma {
     explanation?: true
     timeLimit?: true
     isHidden?: true
-    feedbackWaitTime?: true
     createdAt?: true
     updatedAt?: true
+    feedbackWaitTime?: true
   }
 
   export type QuestionMaxAggregateInputType = {
@@ -5032,17 +5032,15 @@ export namespace Prisma {
     explanation?: true
     timeLimit?: true
     isHidden?: true
-    feedbackWaitTime?: true
     createdAt?: true
     updatedAt?: true
+    feedbackWaitTime?: true
   }
 
   export type QuestionCountAggregateInputType = {
     uid?: true
     title?: true
     text?: true
-    answerOptions?: true
-    correctAnswers?: true
     questionType?: true
     discipline?: true
     themes?: true
@@ -5053,9 +5051,11 @@ export namespace Prisma {
     tags?: true
     timeLimit?: true
     isHidden?: true
-    feedbackWaitTime?: true
     createdAt?: true
     updatedAt?: true
+    answerOptions?: true
+    correctAnswers?: true
+    feedbackWaitTime?: true
     _all?: true
   }
 
@@ -5149,8 +5149,6 @@ export namespace Prisma {
     uid: string
     title: string | null
     text: string
-    answerOptions: string[]
-    correctAnswers: boolean[]
     questionType: string
     discipline: string
     themes: string[]
@@ -5161,9 +5159,11 @@ export namespace Prisma {
     tags: string[]
     timeLimit: number | null
     isHidden: boolean | null
-    feedbackWaitTime: number | null
     createdAt: Date
     updatedAt: Date
+    answerOptions: string[]
+    correctAnswers: boolean[]
+    feedbackWaitTime: number | null
     _count: QuestionCountAggregateOutputType | null
     _avg: QuestionAvgAggregateOutputType | null
     _sum: QuestionSumAggregateOutputType | null
@@ -5189,8 +5189,6 @@ export namespace Prisma {
     uid?: boolean
     title?: boolean
     text?: boolean
-    answerOptions?: boolean
-    correctAnswers?: boolean
     questionType?: boolean
     discipline?: boolean
     themes?: boolean
@@ -5201,9 +5199,11 @@ export namespace Prisma {
     tags?: boolean
     timeLimit?: boolean
     isHidden?: boolean
-    feedbackWaitTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
+    feedbackWaitTime?: boolean
     gameTemplates?: boolean | Question$gameTemplatesArgs<ExtArgs>
     _count?: boolean | QuestionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["question"]>
@@ -5212,8 +5212,6 @@ export namespace Prisma {
     uid?: boolean
     title?: boolean
     text?: boolean
-    answerOptions?: boolean
-    correctAnswers?: boolean
     questionType?: boolean
     discipline?: boolean
     themes?: boolean
@@ -5224,17 +5222,17 @@ export namespace Prisma {
     tags?: boolean
     timeLimit?: boolean
     isHidden?: boolean
-    feedbackWaitTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
+    feedbackWaitTime?: boolean
   }, ExtArgs["result"]["question"]>
 
   export type QuestionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     uid?: boolean
     title?: boolean
     text?: boolean
-    answerOptions?: boolean
-    correctAnswers?: boolean
     questionType?: boolean
     discipline?: boolean
     themes?: boolean
@@ -5245,17 +5243,17 @@ export namespace Prisma {
     tags?: boolean
     timeLimit?: boolean
     isHidden?: boolean
-    feedbackWaitTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
+    feedbackWaitTime?: boolean
   }, ExtArgs["result"]["question"]>
 
   export type QuestionSelectScalar = {
     uid?: boolean
     title?: boolean
     text?: boolean
-    answerOptions?: boolean
-    correctAnswers?: boolean
     questionType?: boolean
     discipline?: boolean
     themes?: boolean
@@ -5266,12 +5264,14 @@ export namespace Prisma {
     tags?: boolean
     timeLimit?: boolean
     isHidden?: boolean
-    feedbackWaitTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    answerOptions?: boolean
+    correctAnswers?: boolean
+    feedbackWaitTime?: boolean
   }
 
-  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "title" | "text" | "answerOptions" | "correctAnswers" | "questionType" | "discipline" | "themes" | "difficulty" | "gradeLevel" | "author" | "explanation" | "tags" | "timeLimit" | "isHidden" | "feedbackWaitTime" | "createdAt" | "updatedAt", ExtArgs["result"]["question"]>
+  export type QuestionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"uid" | "title" | "text" | "questionType" | "discipline" | "themes" | "difficulty" | "gradeLevel" | "author" | "explanation" | "tags" | "timeLimit" | "isHidden" | "createdAt" | "updatedAt" | "answerOptions" | "correctAnswers" | "feedbackWaitTime", ExtArgs["result"]["question"]>
   export type QuestionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameTemplates?: boolean | Question$gameTemplatesArgs<ExtArgs>
     _count?: boolean | QuestionCountOutputTypeDefaultArgs<ExtArgs>
@@ -5288,8 +5288,6 @@ export namespace Prisma {
       uid: string
       title: string | null
       text: string
-      answerOptions: string[]
-      correctAnswers: boolean[]
       questionType: string
       discipline: string
       themes: string[]
@@ -5300,9 +5298,11 @@ export namespace Prisma {
       tags: string[]
       timeLimit: number | null
       isHidden: boolean | null
-      feedbackWaitTime: number | null
       createdAt: Date
       updatedAt: Date
+      answerOptions: string[]
+      correctAnswers: boolean[]
+      feedbackWaitTime: number | null
     }, ExtArgs["result"]["question"]>
     composites: {}
   }
@@ -5730,8 +5730,6 @@ export namespace Prisma {
     readonly uid: FieldRef<"Question", 'String'>
     readonly title: FieldRef<"Question", 'String'>
     readonly text: FieldRef<"Question", 'String'>
-    readonly answerOptions: FieldRef<"Question", 'String[]'>
-    readonly correctAnswers: FieldRef<"Question", 'Boolean[]'>
     readonly questionType: FieldRef<"Question", 'String'>
     readonly discipline: FieldRef<"Question", 'String'>
     readonly themes: FieldRef<"Question", 'String[]'>
@@ -5742,9 +5740,11 @@ export namespace Prisma {
     readonly tags: FieldRef<"Question", 'String[]'>
     readonly timeLimit: FieldRef<"Question", 'Int'>
     readonly isHidden: FieldRef<"Question", 'Boolean'>
-    readonly feedbackWaitTime: FieldRef<"Question", 'Int'>
     readonly createdAt: FieldRef<"Question", 'DateTime'>
     readonly updatedAt: FieldRef<"Question", 'DateTime'>
+    readonly answerOptions: FieldRef<"Question", 'String[]'>
+    readonly correctAnswers: FieldRef<"Question", 'Boolean[]'>
+    readonly feedbackWaitTime: FieldRef<"Question", 'Int'>
   }
     
 
@@ -6188,31 +6188,30 @@ export namespace Prisma {
   export type GameTemplateMinAggregateOutputType = {
     id: string | null
     name: string | null
-    creatorId: string | null
     gradeLevel: string | null
     discipline: string | null
     description: string | null
     defaultMode: $Enums.PlayMode | null
     createdAt: Date | null
     updatedAt: Date | null
+    creatorId: string | null
   }
 
   export type GameTemplateMaxAggregateOutputType = {
     id: string | null
     name: string | null
-    creatorId: string | null
     gradeLevel: string | null
     discipline: string | null
     description: string | null
     defaultMode: $Enums.PlayMode | null
     createdAt: Date | null
     updatedAt: Date | null
+    creatorId: string | null
   }
 
   export type GameTemplateCountAggregateOutputType = {
     id: number
     name: number
-    creatorId: number
     gradeLevel: number
     themes: number
     discipline: number
@@ -6220,6 +6219,7 @@ export namespace Prisma {
     defaultMode: number
     createdAt: number
     updatedAt: number
+    creatorId: number
     _all: number
   }
 
@@ -6227,31 +6227,30 @@ export namespace Prisma {
   export type GameTemplateMinAggregateInputType = {
     id?: true
     name?: true
-    creatorId?: true
     gradeLevel?: true
     discipline?: true
     description?: true
     defaultMode?: true
     createdAt?: true
     updatedAt?: true
+    creatorId?: true
   }
 
   export type GameTemplateMaxAggregateInputType = {
     id?: true
     name?: true
-    creatorId?: true
     gradeLevel?: true
     discipline?: true
     description?: true
     defaultMode?: true
     createdAt?: true
     updatedAt?: true
+    creatorId?: true
   }
 
   export type GameTemplateCountAggregateInputType = {
     id?: true
     name?: true
-    creatorId?: true
     gradeLevel?: true
     themes?: true
     discipline?: true
@@ -6259,6 +6258,7 @@ export namespace Prisma {
     defaultMode?: true
     createdAt?: true
     updatedAt?: true
+    creatorId?: true
     _all?: true
   }
 
@@ -6337,7 +6337,6 @@ export namespace Prisma {
   export type GameTemplateGroupByOutputType = {
     id: string
     name: string
-    creatorId: string
     gradeLevel: string | null
     themes: string[]
     discipline: string | null
@@ -6345,6 +6344,7 @@ export namespace Prisma {
     defaultMode: $Enums.PlayMode | null
     createdAt: Date
     updatedAt: Date
+    creatorId: string
     _count: GameTemplateCountAggregateOutputType | null
     _min: GameTemplateMinAggregateOutputType | null
     _max: GameTemplateMaxAggregateOutputType | null
@@ -6367,7 +6367,6 @@ export namespace Prisma {
   export type GameTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    creatorId?: boolean
     gradeLevel?: boolean
     themes?: boolean
     discipline?: boolean
@@ -6375,16 +6374,16 @@ export namespace Prisma {
     defaultMode?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    creatorId?: boolean
+    gameInstances?: boolean | GameTemplate$gameInstancesArgs<ExtArgs>
     creator?: boolean | UserDefaultArgs<ExtArgs>
     questions?: boolean | GameTemplate$questionsArgs<ExtArgs>
-    gameInstances?: boolean | GameTemplate$gameInstancesArgs<ExtArgs>
     _count?: boolean | GameTemplateCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameTemplate"]>
 
   export type GameTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    creatorId?: boolean
     gradeLevel?: boolean
     themes?: boolean
     discipline?: boolean
@@ -6392,13 +6391,13 @@ export namespace Prisma {
     defaultMode?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    creatorId?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameTemplate"]>
 
   export type GameTemplateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    creatorId?: boolean
     gradeLevel?: boolean
     themes?: boolean
     discipline?: boolean
@@ -6406,13 +6405,13 @@ export namespace Prisma {
     defaultMode?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    creatorId?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameTemplate"]>
 
   export type GameTemplateSelectScalar = {
     id?: boolean
     name?: boolean
-    creatorId?: boolean
     gradeLevel?: boolean
     themes?: boolean
     discipline?: boolean
@@ -6420,13 +6419,14 @@ export namespace Prisma {
     defaultMode?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    creatorId?: boolean
   }
 
-  export type GameTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "creatorId" | "gradeLevel" | "themes" | "discipline" | "description" | "defaultMode" | "createdAt" | "updatedAt", ExtArgs["result"]["gameTemplate"]>
+  export type GameTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "gradeLevel" | "themes" | "discipline" | "description" | "defaultMode" | "createdAt" | "updatedAt" | "creatorId", ExtArgs["result"]["gameTemplate"]>
   export type GameTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    gameInstances?: boolean | GameTemplate$gameInstancesArgs<ExtArgs>
     creator?: boolean | UserDefaultArgs<ExtArgs>
     questions?: boolean | GameTemplate$questionsArgs<ExtArgs>
-    gameInstances?: boolean | GameTemplate$gameInstancesArgs<ExtArgs>
     _count?: boolean | GameTemplateCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type GameTemplateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6439,14 +6439,13 @@ export namespace Prisma {
   export type $GameTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "GameTemplate"
     objects: {
+      gameInstances: Prisma.$GameInstancePayload<ExtArgs>[]
       creator: Prisma.$UserPayload<ExtArgs>
       questions: Prisma.$QuestionsInGameTemplatePayload<ExtArgs>[]
-      gameInstances: Prisma.$GameInstancePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string
-      creatorId: string
       gradeLevel: string | null
       themes: string[]
       discipline: string | null
@@ -6454,6 +6453,7 @@ export namespace Prisma {
       defaultMode: $Enums.PlayMode | null
       createdAt: Date
       updatedAt: Date
+      creatorId: string
     }, ExtArgs["result"]["gameTemplate"]>
     composites: {}
   }
@@ -6848,9 +6848,9 @@ export namespace Prisma {
    */
   export interface Prisma__GameTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    gameInstances<T extends GameTemplate$gameInstancesArgs<ExtArgs> = {}>(args?: Subset<T, GameTemplate$gameInstancesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameInstancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     creator<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     questions<T extends GameTemplate$questionsArgs<ExtArgs> = {}>(args?: Subset<T, GameTemplate$questionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuestionsInGameTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    gameInstances<T extends GameTemplate$gameInstancesArgs<ExtArgs> = {}>(args?: Subset<T, GameTemplate$gameInstancesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameInstancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6882,7 +6882,6 @@ export namespace Prisma {
   interface GameTemplateFieldRefs {
     readonly id: FieldRef<"GameTemplate", 'String'>
     readonly name: FieldRef<"GameTemplate", 'String'>
-    readonly creatorId: FieldRef<"GameTemplate", 'String'>
     readonly gradeLevel: FieldRef<"GameTemplate", 'String'>
     readonly themes: FieldRef<"GameTemplate", 'String[]'>
     readonly discipline: FieldRef<"GameTemplate", 'String'>
@@ -6890,6 +6889,7 @@ export namespace Prisma {
     readonly defaultMode: FieldRef<"GameTemplate", 'PlayMode'>
     readonly createdAt: FieldRef<"GameTemplate", 'DateTime'>
     readonly updatedAt: FieldRef<"GameTemplate", 'DateTime'>
+    readonly creatorId: FieldRef<"GameTemplate", 'String'>
   }
     
 
@@ -7286,30 +7286,6 @@ export namespace Prisma {
   }
 
   /**
-   * GameTemplate.questions
-   */
-  export type GameTemplate$questionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the QuestionsInGameTemplate
-     */
-    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the QuestionsInGameTemplate
-     */
-    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
-    where?: QuestionsInGameTemplateWhereInput
-    orderBy?: QuestionsInGameTemplateOrderByWithRelationInput | QuestionsInGameTemplateOrderByWithRelationInput[]
-    cursor?: QuestionsInGameTemplateWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: QuestionsInGameTemplateScalarFieldEnum | QuestionsInGameTemplateScalarFieldEnum[]
-  }
-
-  /**
    * GameTemplate.gameInstances
    */
   export type GameTemplate$gameInstancesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7331,6 +7307,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: GameInstanceScalarFieldEnum | GameInstanceScalarFieldEnum[]
+  }
+
+  /**
+   * GameTemplate.questions
+   */
+  export type GameTemplate$questionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuestionsInGameTemplate
+     */
+    select?: QuestionsInGameTemplateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuestionsInGameTemplate
+     */
+    omit?: QuestionsInGameTemplateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuestionsInGameTemplateInclude<ExtArgs> | null
+    where?: QuestionsInGameTemplateWhereInput
+    orderBy?: QuestionsInGameTemplateOrderByWithRelationInput | QuestionsInGameTemplateOrderByWithRelationInput[]
+    cursor?: QuestionsInGameTemplateWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: QuestionsInGameTemplateScalarFieldEnum | QuestionsInGameTemplateScalarFieldEnum[]
   }
 
   /**
@@ -8462,8 +8462,6 @@ export namespace Prisma {
   export type GameInstanceMinAggregateOutputType = {
     id: string | null
     name: string | null
-    gameTemplateId: string | null
-    initiatorUserId: string | null
     accessCode: string | null
     status: string | null
     playMode: $Enums.PlayMode | null
@@ -8471,16 +8469,16 @@ export namespace Prisma {
     createdAt: Date | null
     startedAt: Date | null
     endedAt: Date | null
-    isDiffered: boolean | null
     differedAvailableFrom: Date | null
     differedAvailableTo: Date | null
+    isDiffered: boolean | null
+    gameTemplateId: string | null
+    initiatorUserId: string | null
   }
 
   export type GameInstanceMaxAggregateOutputType = {
     id: string | null
     name: string | null
-    gameTemplateId: string | null
-    initiatorUserId: string | null
     accessCode: string | null
     status: string | null
     playMode: $Enums.PlayMode | null
@@ -8488,16 +8486,16 @@ export namespace Prisma {
     createdAt: Date | null
     startedAt: Date | null
     endedAt: Date | null
-    isDiffered: boolean | null
     differedAvailableFrom: Date | null
     differedAvailableTo: Date | null
+    isDiffered: boolean | null
+    gameTemplateId: string | null
+    initiatorUserId: string | null
   }
 
   export type GameInstanceCountAggregateOutputType = {
     id: number
     name: number
-    gameTemplateId: number
-    initiatorUserId: number
     accessCode: number
     status: number
     playMode: number
@@ -8507,9 +8505,11 @@ export namespace Prisma {
     createdAt: number
     startedAt: number
     endedAt: number
-    isDiffered: number
     differedAvailableFrom: number
     differedAvailableTo: number
+    isDiffered: number
+    gameTemplateId: number
+    initiatorUserId: number
     _all: number
   }
 
@@ -8525,8 +8525,6 @@ export namespace Prisma {
   export type GameInstanceMinAggregateInputType = {
     id?: true
     name?: true
-    gameTemplateId?: true
-    initiatorUserId?: true
     accessCode?: true
     status?: true
     playMode?: true
@@ -8534,16 +8532,16 @@ export namespace Prisma {
     createdAt?: true
     startedAt?: true
     endedAt?: true
-    isDiffered?: true
     differedAvailableFrom?: true
     differedAvailableTo?: true
+    isDiffered?: true
+    gameTemplateId?: true
+    initiatorUserId?: true
   }
 
   export type GameInstanceMaxAggregateInputType = {
     id?: true
     name?: true
-    gameTemplateId?: true
-    initiatorUserId?: true
     accessCode?: true
     status?: true
     playMode?: true
@@ -8551,16 +8549,16 @@ export namespace Prisma {
     createdAt?: true
     startedAt?: true
     endedAt?: true
-    isDiffered?: true
     differedAvailableFrom?: true
     differedAvailableTo?: true
+    isDiffered?: true
+    gameTemplateId?: true
+    initiatorUserId?: true
   }
 
   export type GameInstanceCountAggregateInputType = {
     id?: true
     name?: true
-    gameTemplateId?: true
-    initiatorUserId?: true
     accessCode?: true
     status?: true
     playMode?: true
@@ -8570,9 +8568,11 @@ export namespace Prisma {
     createdAt?: true
     startedAt?: true
     endedAt?: true
-    isDiffered?: true
     differedAvailableFrom?: true
     differedAvailableTo?: true
+    isDiffered?: true
+    gameTemplateId?: true
+    initiatorUserId?: true
     _all?: true
   }
 
@@ -8665,8 +8665,6 @@ export namespace Prisma {
   export type GameInstanceGroupByOutputType = {
     id: string
     name: string
-    gameTemplateId: string
-    initiatorUserId: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -8676,9 +8674,11 @@ export namespace Prisma {
     createdAt: Date
     startedAt: Date | null
     endedAt: Date | null
-    isDiffered: boolean
     differedAvailableFrom: Date | null
     differedAvailableTo: Date | null
+    isDiffered: boolean
+    gameTemplateId: string
+    initiatorUserId: string | null
     _count: GameInstanceCountAggregateOutputType | null
     _avg: GameInstanceAvgAggregateOutputType | null
     _sum: GameInstanceSumAggregateOutputType | null
@@ -8703,8 +8703,6 @@ export namespace Prisma {
   export type GameInstanceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    gameTemplateId?: boolean
-    initiatorUserId?: boolean
     accessCode?: boolean
     status?: boolean
     playMode?: boolean
@@ -8714,9 +8712,11 @@ export namespace Prisma {
     createdAt?: boolean
     startedAt?: boolean
     endedAt?: boolean
-    isDiffered?: boolean
     differedAvailableFrom?: boolean
     differedAvailableTo?: boolean
+    isDiffered?: boolean
+    gameTemplateId?: boolean
+    initiatorUserId?: boolean
     gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
     participants?: boolean | GameInstance$participantsArgs<ExtArgs>
@@ -8726,8 +8726,6 @@ export namespace Prisma {
   export type GameInstanceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    gameTemplateId?: boolean
-    initiatorUserId?: boolean
     accessCode?: boolean
     status?: boolean
     playMode?: boolean
@@ -8737,9 +8735,11 @@ export namespace Prisma {
     createdAt?: boolean
     startedAt?: boolean
     endedAt?: boolean
-    isDiffered?: boolean
     differedAvailableFrom?: boolean
     differedAvailableTo?: boolean
+    isDiffered?: boolean
+    gameTemplateId?: boolean
+    initiatorUserId?: boolean
     gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
   }, ExtArgs["result"]["gameInstance"]>
@@ -8747,8 +8747,6 @@ export namespace Prisma {
   export type GameInstanceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
-    gameTemplateId?: boolean
-    initiatorUserId?: boolean
     accessCode?: boolean
     status?: boolean
     playMode?: boolean
@@ -8758,9 +8756,11 @@ export namespace Prisma {
     createdAt?: boolean
     startedAt?: boolean
     endedAt?: boolean
-    isDiffered?: boolean
     differedAvailableFrom?: boolean
     differedAvailableTo?: boolean
+    isDiffered?: boolean
+    gameTemplateId?: boolean
+    initiatorUserId?: boolean
     gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
   }, ExtArgs["result"]["gameInstance"]>
@@ -8768,8 +8768,6 @@ export namespace Prisma {
   export type GameInstanceSelectScalar = {
     id?: boolean
     name?: boolean
-    gameTemplateId?: boolean
-    initiatorUserId?: boolean
     accessCode?: boolean
     status?: boolean
     playMode?: boolean
@@ -8779,12 +8777,14 @@ export namespace Prisma {
     createdAt?: boolean
     startedAt?: boolean
     endedAt?: boolean
-    isDiffered?: boolean
     differedAvailableFrom?: boolean
     differedAvailableTo?: boolean
+    isDiffered?: boolean
+    gameTemplateId?: boolean
+    initiatorUserId?: boolean
   }
 
-  export type GameInstanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "gameTemplateId" | "initiatorUserId" | "accessCode" | "status" | "playMode" | "leaderboard" | "currentQuestionIndex" | "settings" | "createdAt" | "startedAt" | "endedAt" | "isDiffered" | "differedAvailableFrom" | "differedAvailableTo", ExtArgs["result"]["gameInstance"]>
+  export type GameInstanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "accessCode" | "status" | "playMode" | "leaderboard" | "currentQuestionIndex" | "settings" | "createdAt" | "startedAt" | "endedAt" | "differedAvailableFrom" | "differedAvailableTo" | "isDiffered" | "gameTemplateId" | "initiatorUserId", ExtArgs["result"]["gameInstance"]>
   export type GameInstanceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameTemplate?: boolean | GameTemplateDefaultArgs<ExtArgs>
     initiatorUser?: boolean | GameInstance$initiatorUserArgs<ExtArgs>
@@ -8810,8 +8810,6 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string
-      gameTemplateId: string
-      initiatorUserId: string | null
       accessCode: string
       status: string
       playMode: $Enums.PlayMode
@@ -8821,9 +8819,11 @@ export namespace Prisma {
       createdAt: Date
       startedAt: Date | null
       endedAt: Date | null
-      isDiffered: boolean
       differedAvailableFrom: Date | null
       differedAvailableTo: Date | null
+      isDiffered: boolean
+      gameTemplateId: string
+      initiatorUserId: string | null
     }, ExtArgs["result"]["gameInstance"]>
     composites: {}
   }
@@ -9252,8 +9252,6 @@ export namespace Prisma {
   interface GameInstanceFieldRefs {
     readonly id: FieldRef<"GameInstance", 'String'>
     readonly name: FieldRef<"GameInstance", 'String'>
-    readonly gameTemplateId: FieldRef<"GameInstance", 'String'>
-    readonly initiatorUserId: FieldRef<"GameInstance", 'String'>
     readonly accessCode: FieldRef<"GameInstance", 'String'>
     readonly status: FieldRef<"GameInstance", 'String'>
     readonly playMode: FieldRef<"GameInstance", 'PlayMode'>
@@ -9263,9 +9261,11 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"GameInstance", 'DateTime'>
     readonly startedAt: FieldRef<"GameInstance", 'DateTime'>
     readonly endedAt: FieldRef<"GameInstance", 'DateTime'>
-    readonly isDiffered: FieldRef<"GameInstance", 'Boolean'>
     readonly differedAvailableFrom: FieldRef<"GameInstance", 'DateTime'>
     readonly differedAvailableTo: FieldRef<"GameInstance", 'DateTime'>
+    readonly isDiffered: FieldRef<"GameInstance", 'Boolean'>
+    readonly gameTemplateId: FieldRef<"GameInstance", 'String'>
+    readonly initiatorUserId: FieldRef<"GameInstance", 'String'>
   }
     
 
@@ -9750,7 +9750,6 @@ export namespace Prisma {
   export type GameParticipantMinAggregateOutputType = {
     id: string | null
     gameInstanceId: string | null
-    userId: string | null
     score: number | null
     rank: number | null
     timeTakenMs: number | null
@@ -9758,12 +9757,12 @@ export namespace Prisma {
     completedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
+    userId: string | null
   }
 
   export type GameParticipantMaxAggregateOutputType = {
     id: string | null
     gameInstanceId: string | null
-    userId: string | null
     score: number | null
     rank: number | null
     timeTakenMs: number | null
@@ -9771,12 +9770,12 @@ export namespace Prisma {
     completedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
+    userId: string | null
   }
 
   export type GameParticipantCountAggregateOutputType = {
     id: number
     gameInstanceId: number
-    userId: number
     score: number
     rank: number
     timeTakenMs: number
@@ -9785,6 +9784,7 @@ export namespace Prisma {
     answers: number
     createdAt: number
     updatedAt: number
+    userId: number
     _all: number
   }
 
@@ -9804,7 +9804,6 @@ export namespace Prisma {
   export type GameParticipantMinAggregateInputType = {
     id?: true
     gameInstanceId?: true
-    userId?: true
     score?: true
     rank?: true
     timeTakenMs?: true
@@ -9812,12 +9811,12 @@ export namespace Prisma {
     completedAt?: true
     createdAt?: true
     updatedAt?: true
+    userId?: true
   }
 
   export type GameParticipantMaxAggregateInputType = {
     id?: true
     gameInstanceId?: true
-    userId?: true
     score?: true
     rank?: true
     timeTakenMs?: true
@@ -9825,12 +9824,12 @@ export namespace Prisma {
     completedAt?: true
     createdAt?: true
     updatedAt?: true
+    userId?: true
   }
 
   export type GameParticipantCountAggregateInputType = {
     id?: true
     gameInstanceId?: true
-    userId?: true
     score?: true
     rank?: true
     timeTakenMs?: true
@@ -9839,6 +9838,7 @@ export namespace Prisma {
     answers?: true
     createdAt?: true
     updatedAt?: true
+    userId?: true
     _all?: true
   }
 
@@ -9931,7 +9931,6 @@ export namespace Prisma {
   export type GameParticipantGroupByOutputType = {
     id: string
     gameInstanceId: string
-    userId: string
     score: number
     rank: number | null
     timeTakenMs: number | null
@@ -9940,6 +9939,7 @@ export namespace Prisma {
     answers: JsonValue | null
     createdAt: Date
     updatedAt: Date
+    userId: string
     _count: GameParticipantCountAggregateOutputType | null
     _avg: GameParticipantAvgAggregateOutputType | null
     _sum: GameParticipantSumAggregateOutputType | null
@@ -9964,7 +9964,6 @@ export namespace Prisma {
   export type GameParticipantSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     gameInstanceId?: boolean
-    userId?: boolean
     score?: boolean
     rank?: boolean
     timeTakenMs?: boolean
@@ -9973,6 +9972,7 @@ export namespace Prisma {
     answers?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    userId?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
@@ -9980,7 +9980,6 @@ export namespace Prisma {
   export type GameParticipantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     gameInstanceId?: boolean
-    userId?: boolean
     score?: boolean
     rank?: boolean
     timeTakenMs?: boolean
@@ -9989,6 +9988,7 @@ export namespace Prisma {
     answers?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    userId?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
@@ -9996,7 +9996,6 @@ export namespace Prisma {
   export type GameParticipantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     gameInstanceId?: boolean
-    userId?: boolean
     score?: boolean
     rank?: boolean
     timeTakenMs?: boolean
@@ -10005,6 +10004,7 @@ export namespace Prisma {
     answers?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    userId?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
@@ -10012,7 +10012,6 @@ export namespace Prisma {
   export type GameParticipantSelectScalar = {
     id?: boolean
     gameInstanceId?: boolean
-    userId?: boolean
     score?: boolean
     rank?: boolean
     timeTakenMs?: boolean
@@ -10021,9 +10020,10 @@ export namespace Prisma {
     answers?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    userId?: boolean
   }
 
-  export type GameParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "gameInstanceId" | "userId" | "score" | "rank" | "timeTakenMs" | "joinedAt" | "completedAt" | "answers" | "createdAt" | "updatedAt", ExtArgs["result"]["gameParticipant"]>
+  export type GameParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "gameInstanceId" | "score" | "rank" | "timeTakenMs" | "joinedAt" | "completedAt" | "answers" | "createdAt" | "updatedAt" | "userId", ExtArgs["result"]["gameParticipant"]>
   export type GameParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -10046,7 +10046,6 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       gameInstanceId: string
-      userId: string
       score: number
       rank: number | null
       timeTakenMs: number | null
@@ -10055,6 +10054,7 @@ export namespace Prisma {
       answers: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
+      userId: string
     }, ExtArgs["result"]["gameParticipant"]>
     composites: {}
   }
@@ -10482,7 +10482,6 @@ export namespace Prisma {
   interface GameParticipantFieldRefs {
     readonly id: FieldRef<"GameParticipant", 'String'>
     readonly gameInstanceId: FieldRef<"GameParticipant", 'String'>
-    readonly userId: FieldRef<"GameParticipant", 'String'>
     readonly score: FieldRef<"GameParticipant", 'Int'>
     readonly rank: FieldRef<"GameParticipant", 'Int'>
     readonly timeTakenMs: FieldRef<"GameParticipant", 'Int'>
@@ -10491,6 +10490,7 @@ export namespace Prisma {
     readonly answers: FieldRef<"GameParticipant", 'Json'>
     readonly createdAt: FieldRef<"GameParticipant", 'DateTime'>
     readonly updatedAt: FieldRef<"GameParticipant", 'DateTime'>
+    readonly userId: FieldRef<"GameParticipant", 'String'>
   }
     
 
@@ -10951,8 +10951,6 @@ export namespace Prisma {
     uid: 'uid',
     title: 'title',
     text: 'text',
-    answerOptions: 'answerOptions',
-    correctAnswers: 'correctAnswers',
     questionType: 'questionType',
     discipline: 'discipline',
     themes: 'themes',
@@ -10963,9 +10961,11 @@ export namespace Prisma {
     tags: 'tags',
     timeLimit: 'timeLimit',
     isHidden: 'isHidden',
-    feedbackWaitTime: 'feedbackWaitTime',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    answerOptions: 'answerOptions',
+    correctAnswers: 'correctAnswers',
+    feedbackWaitTime: 'feedbackWaitTime'
   };
 
   export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
@@ -10974,14 +10974,14 @@ export namespace Prisma {
   export const GameTemplateScalarFieldEnum: {
     id: 'id',
     name: 'name',
-    creatorId: 'creatorId',
     gradeLevel: 'gradeLevel',
     themes: 'themes',
     discipline: 'discipline',
     description: 'description',
     defaultMode: 'defaultMode',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    creatorId: 'creatorId'
   };
 
   export type GameTemplateScalarFieldEnum = (typeof GameTemplateScalarFieldEnum)[keyof typeof GameTemplateScalarFieldEnum]
@@ -11000,8 +11000,6 @@ export namespace Prisma {
   export const GameInstanceScalarFieldEnum: {
     id: 'id',
     name: 'name',
-    gameTemplateId: 'gameTemplateId',
-    initiatorUserId: 'initiatorUserId',
     accessCode: 'accessCode',
     status: 'status',
     playMode: 'playMode',
@@ -11011,9 +11009,11 @@ export namespace Prisma {
     createdAt: 'createdAt',
     startedAt: 'startedAt',
     endedAt: 'endedAt',
-    isDiffered: 'isDiffered',
     differedAvailableFrom: 'differedAvailableFrom',
-    differedAvailableTo: 'differedAvailableTo'
+    differedAvailableTo: 'differedAvailableTo',
+    isDiffered: 'isDiffered',
+    gameTemplateId: 'gameTemplateId',
+    initiatorUserId: 'initiatorUserId'
   };
 
   export type GameInstanceScalarFieldEnum = (typeof GameInstanceScalarFieldEnum)[keyof typeof GameInstanceScalarFieldEnum]
@@ -11022,7 +11022,6 @@ export namespace Prisma {
   export const GameParticipantScalarFieldEnum: {
     id: 'id',
     gameInstanceId: 'gameInstanceId',
-    userId: 'userId',
     score: 'score',
     rank: 'rank',
     timeTakenMs: 'timeTakenMs',
@@ -11030,7 +11029,8 @@ export namespace Prisma {
     completedAt: 'completedAt',
     answers: 'answers',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    userId: 'userId'
   };
 
   export type GameParticipantScalarFieldEnum = (typeof GameParticipantScalarFieldEnum)[keyof typeof GameParticipantScalarFieldEnum]
@@ -11125,9 +11125,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Boolean[]'
+   * Reference to a field of type 'Int'
    */
-  export type ListBooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean[]'>
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -11139,16 +11146,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Int'
+   * Reference to a field of type 'Boolean[]'
    */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+  export type ListBooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean[]'>
     
 
 
@@ -11208,11 +11208,11 @@ export namespace Prisma {
     avatarUrl?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
-    createdGameTemplates?: GameTemplateListRelationFilter
+    studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
+    teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
     initiatedGameInstances?: GameInstanceListRelationFilter
     gameParticipations?: GameParticipantListRelationFilter
-    teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
-    studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
+    createdGameTemplates?: GameTemplateListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -11223,11 +11223,11 @@ export namespace Prisma {
     avatarUrl?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     role?: SortOrder
-    createdGameTemplates?: GameTemplateOrderByRelationAggregateInput
+    studentProfile?: StudentProfileOrderByWithRelationInput
+    teacherProfile?: TeacherProfileOrderByWithRelationInput
     initiatedGameInstances?: GameInstanceOrderByRelationAggregateInput
     gameParticipations?: GameParticipantOrderByRelationAggregateInput
-    teacherProfile?: TeacherProfileOrderByWithRelationInput
-    studentProfile?: StudentProfileOrderByWithRelationInput
+    createdGameTemplates?: GameTemplateOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -11241,11 +11241,11 @@ export namespace Prisma {
     avatarUrl?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
-    createdGameTemplates?: GameTemplateListRelationFilter
+    studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
+    teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
     initiatedGameInstances?: GameInstanceListRelationFilter
     gameParticipations?: GameParticipantListRelationFilter
-    teacherProfile?: XOR<TeacherProfileNullableScalarRelationFilter, TeacherProfileWhereInput> | null
-    studentProfile?: XOR<StudentProfileNullableScalarRelationFilter, StudentProfileWhereInput> | null
+    createdGameTemplates?: GameTemplateListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -11356,8 +11356,6 @@ export namespace Prisma {
     uid?: StringFilter<"Question"> | string
     title?: StringNullableFilter<"Question"> | string | null
     text?: StringFilter<"Question"> | string
-    answerOptions?: StringNullableListFilter<"Question">
-    correctAnswers?: BoolNullableListFilter<"Question">
     questionType?: StringFilter<"Question"> | string
     discipline?: StringFilter<"Question"> | string
     themes?: StringNullableListFilter<"Question">
@@ -11368,9 +11366,11 @@ export namespace Prisma {
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntNullableFilter<"Question"> | number | null
     isHidden?: BoolNullableFilter<"Question"> | boolean | null
-    feedbackWaitTime?: IntNullableFilter<"Question"> | number | null
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
+    answerOptions?: StringNullableListFilter<"Question">
+    correctAnswers?: BoolNullableListFilter<"Question">
+    feedbackWaitTime?: IntNullableFilter<"Question"> | number | null
     gameTemplates?: QuestionsInGameTemplateListRelationFilter
   }
 
@@ -11378,8 +11378,6 @@ export namespace Prisma {
     uid?: SortOrder
     title?: SortOrderInput | SortOrder
     text?: SortOrder
-    answerOptions?: SortOrder
-    correctAnswers?: SortOrder
     questionType?: SortOrder
     discipline?: SortOrder
     themes?: SortOrder
@@ -11390,9 +11388,11 @@ export namespace Prisma {
     tags?: SortOrder
     timeLimit?: SortOrderInput | SortOrder
     isHidden?: SortOrderInput | SortOrder
-    feedbackWaitTime?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
+    feedbackWaitTime?: SortOrderInput | SortOrder
     gameTemplates?: QuestionsInGameTemplateOrderByRelationAggregateInput
   }
 
@@ -11403,8 +11403,6 @@ export namespace Prisma {
     NOT?: QuestionWhereInput | QuestionWhereInput[]
     title?: StringNullableFilter<"Question"> | string | null
     text?: StringFilter<"Question"> | string
-    answerOptions?: StringNullableListFilter<"Question">
-    correctAnswers?: BoolNullableListFilter<"Question">
     questionType?: StringFilter<"Question"> | string
     discipline?: StringFilter<"Question"> | string
     themes?: StringNullableListFilter<"Question">
@@ -11415,9 +11413,11 @@ export namespace Prisma {
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntNullableFilter<"Question"> | number | null
     isHidden?: BoolNullableFilter<"Question"> | boolean | null
-    feedbackWaitTime?: IntNullableFilter<"Question"> | number | null
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
+    answerOptions?: StringNullableListFilter<"Question">
+    correctAnswers?: BoolNullableListFilter<"Question">
+    feedbackWaitTime?: IntNullableFilter<"Question"> | number | null
     gameTemplates?: QuestionsInGameTemplateListRelationFilter
   }, "uid">
 
@@ -11425,8 +11425,6 @@ export namespace Prisma {
     uid?: SortOrder
     title?: SortOrderInput | SortOrder
     text?: SortOrder
-    answerOptions?: SortOrder
-    correctAnswers?: SortOrder
     questionType?: SortOrder
     discipline?: SortOrder
     themes?: SortOrder
@@ -11437,9 +11435,11 @@ export namespace Prisma {
     tags?: SortOrder
     timeLimit?: SortOrderInput | SortOrder
     isHidden?: SortOrderInput | SortOrder
-    feedbackWaitTime?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
+    feedbackWaitTime?: SortOrderInput | SortOrder
     _count?: QuestionCountOrderByAggregateInput
     _avg?: QuestionAvgOrderByAggregateInput
     _max?: QuestionMaxOrderByAggregateInput
@@ -11454,8 +11454,6 @@ export namespace Prisma {
     uid?: StringWithAggregatesFilter<"Question"> | string
     title?: StringNullableWithAggregatesFilter<"Question"> | string | null
     text?: StringWithAggregatesFilter<"Question"> | string
-    answerOptions?: StringNullableListFilter<"Question">
-    correctAnswers?: BoolNullableListFilter<"Question">
     questionType?: StringWithAggregatesFilter<"Question"> | string
     discipline?: StringWithAggregatesFilter<"Question"> | string
     themes?: StringNullableListFilter<"Question">
@@ -11466,9 +11464,11 @@ export namespace Prisma {
     tags?: StringNullableListFilter<"Question">
     timeLimit?: IntNullableWithAggregatesFilter<"Question"> | number | null
     isHidden?: BoolNullableWithAggregatesFilter<"Question"> | boolean | null
-    feedbackWaitTime?: IntNullableWithAggregatesFilter<"Question"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
+    answerOptions?: StringNullableListFilter<"Question">
+    correctAnswers?: BoolNullableListFilter<"Question">
+    feedbackWaitTime?: IntNullableWithAggregatesFilter<"Question"> | number | null
   }
 
   export type GameTemplateWhereInput = {
@@ -11477,7 +11477,6 @@ export namespace Prisma {
     NOT?: GameTemplateWhereInput | GameTemplateWhereInput[]
     id?: StringFilter<"GameTemplate"> | string
     name?: StringFilter<"GameTemplate"> | string
-    creatorId?: StringFilter<"GameTemplate"> | string
     gradeLevel?: StringNullableFilter<"GameTemplate"> | string | null
     themes?: StringNullableListFilter<"GameTemplate">
     discipline?: StringNullableFilter<"GameTemplate"> | string | null
@@ -11485,15 +11484,15 @@ export namespace Prisma {
     defaultMode?: EnumPlayModeNullableFilter<"GameTemplate"> | $Enums.PlayMode | null
     createdAt?: DateTimeFilter<"GameTemplate"> | Date | string
     updatedAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    creatorId?: StringFilter<"GameTemplate"> | string
+    gameInstances?: GameInstanceListRelationFilter
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     questions?: QuestionsInGameTemplateListRelationFilter
-    gameInstances?: GameInstanceListRelationFilter
   }
 
   export type GameTemplateOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorId?: SortOrder
     gradeLevel?: SortOrderInput | SortOrder
     themes?: SortOrder
     discipline?: SortOrderInput | SortOrder
@@ -11501,9 +11500,10 @@ export namespace Prisma {
     defaultMode?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    creatorId?: SortOrder
+    gameInstances?: GameInstanceOrderByRelationAggregateInput
     creator?: UserOrderByWithRelationInput
     questions?: QuestionsInGameTemplateOrderByRelationAggregateInput
-    gameInstances?: GameInstanceOrderByRelationAggregateInput
   }
 
   export type GameTemplateWhereUniqueInput = Prisma.AtLeast<{
@@ -11512,7 +11512,6 @@ export namespace Prisma {
     OR?: GameTemplateWhereInput[]
     NOT?: GameTemplateWhereInput | GameTemplateWhereInput[]
     name?: StringFilter<"GameTemplate"> | string
-    creatorId?: StringFilter<"GameTemplate"> | string
     gradeLevel?: StringNullableFilter<"GameTemplate"> | string | null
     themes?: StringNullableListFilter<"GameTemplate">
     discipline?: StringNullableFilter<"GameTemplate"> | string | null
@@ -11520,15 +11519,15 @@ export namespace Prisma {
     defaultMode?: EnumPlayModeNullableFilter<"GameTemplate"> | $Enums.PlayMode | null
     createdAt?: DateTimeFilter<"GameTemplate"> | Date | string
     updatedAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    creatorId?: StringFilter<"GameTemplate"> | string
+    gameInstances?: GameInstanceListRelationFilter
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     questions?: QuestionsInGameTemplateListRelationFilter
-    gameInstances?: GameInstanceListRelationFilter
   }, "id">
 
   export type GameTemplateOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorId?: SortOrder
     gradeLevel?: SortOrderInput | SortOrder
     themes?: SortOrder
     discipline?: SortOrderInput | SortOrder
@@ -11536,6 +11535,7 @@ export namespace Prisma {
     defaultMode?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    creatorId?: SortOrder
     _count?: GameTemplateCountOrderByAggregateInput
     _max?: GameTemplateMaxOrderByAggregateInput
     _min?: GameTemplateMinOrderByAggregateInput
@@ -11547,7 +11547,6 @@ export namespace Prisma {
     NOT?: GameTemplateScalarWhereWithAggregatesInput | GameTemplateScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"GameTemplate"> | string
     name?: StringWithAggregatesFilter<"GameTemplate"> | string
-    creatorId?: StringWithAggregatesFilter<"GameTemplate"> | string
     gradeLevel?: StringNullableWithAggregatesFilter<"GameTemplate"> | string | null
     themes?: StringNullableListFilter<"GameTemplate">
     discipline?: StringNullableWithAggregatesFilter<"GameTemplate"> | string | null
@@ -11555,6 +11554,7 @@ export namespace Prisma {
     defaultMode?: EnumPlayModeNullableWithAggregatesFilter<"GameTemplate"> | $Enums.PlayMode | null
     createdAt?: DateTimeWithAggregatesFilter<"GameTemplate"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"GameTemplate"> | Date | string
+    creatorId?: StringWithAggregatesFilter<"GameTemplate"> | string
   }
 
   export type QuestionsInGameTemplateWhereInput = {
@@ -11620,8 +11620,6 @@ export namespace Prisma {
     NOT?: GameInstanceWhereInput | GameInstanceWhereInput[]
     id?: StringFilter<"GameInstance"> | string
     name?: StringFilter<"GameInstance"> | string
-    gameTemplateId?: StringFilter<"GameInstance"> | string
-    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     accessCode?: StringFilter<"GameInstance"> | string
     status?: StringFilter<"GameInstance"> | string
     playMode?: EnumPlayModeFilter<"GameInstance"> | $Enums.PlayMode
@@ -11631,9 +11629,11 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"GameInstance"> | Date | string
     startedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    isDiffered?: BoolFilter<"GameInstance"> | boolean
     differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    isDiffered?: BoolFilter<"GameInstance"> | boolean
+    gameTemplateId?: StringFilter<"GameInstance"> | string
+    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     gameTemplate?: XOR<GameTemplateScalarRelationFilter, GameTemplateWhereInput>
     initiatorUser?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     participants?: GameParticipantListRelationFilter
@@ -11642,8 +11642,6 @@ export namespace Prisma {
   export type GameInstanceOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
-    gameTemplateId?: SortOrder
-    initiatorUserId?: SortOrderInput | SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -11653,9 +11651,11 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrderInput | SortOrder
     endedAt?: SortOrderInput | SortOrder
-    isDiffered?: SortOrder
     differedAvailableFrom?: SortOrderInput | SortOrder
     differedAvailableTo?: SortOrderInput | SortOrder
+    isDiffered?: SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrderInput | SortOrder
     gameTemplate?: GameTemplateOrderByWithRelationInput
     initiatorUser?: UserOrderByWithRelationInput
     participants?: GameParticipantOrderByRelationAggregateInput
@@ -11668,8 +11668,6 @@ export namespace Prisma {
     OR?: GameInstanceWhereInput[]
     NOT?: GameInstanceWhereInput | GameInstanceWhereInput[]
     name?: StringFilter<"GameInstance"> | string
-    gameTemplateId?: StringFilter<"GameInstance"> | string
-    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     status?: StringFilter<"GameInstance"> | string
     playMode?: EnumPlayModeFilter<"GameInstance"> | $Enums.PlayMode
     leaderboard?: JsonNullableFilter<"GameInstance">
@@ -11678,9 +11676,11 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"GameInstance"> | Date | string
     startedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    isDiffered?: BoolFilter<"GameInstance"> | boolean
     differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    isDiffered?: BoolFilter<"GameInstance"> | boolean
+    gameTemplateId?: StringFilter<"GameInstance"> | string
+    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     gameTemplate?: XOR<GameTemplateScalarRelationFilter, GameTemplateWhereInput>
     initiatorUser?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     participants?: GameParticipantListRelationFilter
@@ -11689,8 +11689,6 @@ export namespace Prisma {
   export type GameInstanceOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
-    gameTemplateId?: SortOrder
-    initiatorUserId?: SortOrderInput | SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -11700,9 +11698,11 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrderInput | SortOrder
     endedAt?: SortOrderInput | SortOrder
-    isDiffered?: SortOrder
     differedAvailableFrom?: SortOrderInput | SortOrder
     differedAvailableTo?: SortOrderInput | SortOrder
+    isDiffered?: SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrderInput | SortOrder
     _count?: GameInstanceCountOrderByAggregateInput
     _avg?: GameInstanceAvgOrderByAggregateInput
     _max?: GameInstanceMaxOrderByAggregateInput
@@ -11716,8 +11716,6 @@ export namespace Prisma {
     NOT?: GameInstanceScalarWhereWithAggregatesInput | GameInstanceScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"GameInstance"> | string
     name?: StringWithAggregatesFilter<"GameInstance"> | string
-    gameTemplateId?: StringWithAggregatesFilter<"GameInstance"> | string
-    initiatorUserId?: StringNullableWithAggregatesFilter<"GameInstance"> | string | null
     accessCode?: StringWithAggregatesFilter<"GameInstance"> | string
     status?: StringWithAggregatesFilter<"GameInstance"> | string
     playMode?: EnumPlayModeWithAggregatesFilter<"GameInstance"> | $Enums.PlayMode
@@ -11727,9 +11725,11 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"GameInstance"> | Date | string
     startedAt?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
     endedAt?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
-    isDiffered?: BoolWithAggregatesFilter<"GameInstance"> | boolean
     differedAvailableFrom?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
     differedAvailableTo?: DateTimeNullableWithAggregatesFilter<"GameInstance"> | Date | string | null
+    isDiffered?: BoolWithAggregatesFilter<"GameInstance"> | boolean
+    gameTemplateId?: StringWithAggregatesFilter<"GameInstance"> | string
+    initiatorUserId?: StringNullableWithAggregatesFilter<"GameInstance"> | string | null
   }
 
   export type GameParticipantWhereInput = {
@@ -11738,7 +11738,6 @@ export namespace Prisma {
     NOT?: GameParticipantWhereInput | GameParticipantWhereInput[]
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
-    userId?: StringFilter<"GameParticipant"> | string
     score?: IntFilter<"GameParticipant"> | number
     rank?: IntNullableFilter<"GameParticipant"> | number | null
     timeTakenMs?: IntNullableFilter<"GameParticipant"> | number | null
@@ -11747,6 +11746,7 @@ export namespace Prisma {
     answers?: JsonNullableFilter<"GameParticipant">
     createdAt?: DateTimeFilter<"GameParticipant"> | Date | string
     updatedAt?: DateTimeFilter<"GameParticipant"> | Date | string
+    userId?: StringFilter<"GameParticipant"> | string
     gameInstance?: XOR<GameInstanceScalarRelationFilter, GameInstanceWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
@@ -11754,7 +11754,6 @@ export namespace Prisma {
   export type GameParticipantOrderByWithRelationInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrderInput | SortOrder
     timeTakenMs?: SortOrderInput | SortOrder
@@ -11763,6 +11762,7 @@ export namespace Prisma {
     answers?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    userId?: SortOrder
     gameInstance?: GameInstanceOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
   }
@@ -11774,7 +11774,6 @@ export namespace Prisma {
     OR?: GameParticipantWhereInput[]
     NOT?: GameParticipantWhereInput | GameParticipantWhereInput[]
     gameInstanceId?: StringFilter<"GameParticipant"> | string
-    userId?: StringFilter<"GameParticipant"> | string
     score?: IntFilter<"GameParticipant"> | number
     rank?: IntNullableFilter<"GameParticipant"> | number | null
     timeTakenMs?: IntNullableFilter<"GameParticipant"> | number | null
@@ -11783,6 +11782,7 @@ export namespace Prisma {
     answers?: JsonNullableFilter<"GameParticipant">
     createdAt?: DateTimeFilter<"GameParticipant"> | Date | string
     updatedAt?: DateTimeFilter<"GameParticipant"> | Date | string
+    userId?: StringFilter<"GameParticipant"> | string
     gameInstance?: XOR<GameInstanceScalarRelationFilter, GameInstanceWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id" | "gameInstanceId_userId">
@@ -11790,7 +11790,6 @@ export namespace Prisma {
   export type GameParticipantOrderByWithAggregationInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrderInput | SortOrder
     timeTakenMs?: SortOrderInput | SortOrder
@@ -11799,6 +11798,7 @@ export namespace Prisma {
     answers?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    userId?: SortOrder
     _count?: GameParticipantCountOrderByAggregateInput
     _avg?: GameParticipantAvgOrderByAggregateInput
     _max?: GameParticipantMaxOrderByAggregateInput
@@ -11812,7 +11812,6 @@ export namespace Prisma {
     NOT?: GameParticipantScalarWhereWithAggregatesInput | GameParticipantScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"GameParticipant"> | string
     gameInstanceId?: StringWithAggregatesFilter<"GameParticipant"> | string
-    userId?: StringWithAggregatesFilter<"GameParticipant"> | string
     score?: IntWithAggregatesFilter<"GameParticipant"> | number
     rank?: IntNullableWithAggregatesFilter<"GameParticipant"> | number | null
     timeTakenMs?: IntNullableWithAggregatesFilter<"GameParticipant"> | number | null
@@ -11821,6 +11820,7 @@ export namespace Prisma {
     answers?: JsonNullableWithAggregatesFilter<"GameParticipant">
     createdAt?: DateTimeWithAggregatesFilter<"GameParticipant"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"GameParticipant"> | Date | string
+    userId?: StringWithAggregatesFilter<"GameParticipant"> | string
   }
 
   export type UserCreateInput = {
@@ -11831,11 +11831,11 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
+    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
-    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
-    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -11846,11 +11846,11 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
+    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
-    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
-    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUpdateInput = {
@@ -11861,11 +11861,11 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
+    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
-    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
-    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -11876,11 +11876,11 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
-    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
-    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -11979,8 +11979,6 @@ export namespace Prisma {
     uid?: string
     title?: string | null
     text: string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -11991,9 +11989,11 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
-    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: number | null
     gameTemplates?: QuestionsInGameTemplateCreateNestedManyWithoutQuestionInput
   }
 
@@ -12001,8 +12001,6 @@ export namespace Prisma {
     uid?: string
     title?: string | null
     text: string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -12013,9 +12011,11 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
-    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: number | null
     gameTemplates?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutQuestionInput
   }
 
@@ -12023,8 +12023,6 @@ export namespace Prisma {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -12035,9 +12033,11 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     gameTemplates?: QuestionsInGameTemplateUpdateManyWithoutQuestionNestedInput
   }
 
@@ -12045,8 +12045,6 @@ export namespace Prisma {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -12057,9 +12055,11 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     gameTemplates?: QuestionsInGameTemplateUncheckedUpdateManyWithoutQuestionNestedInput
   }
 
@@ -12067,8 +12067,6 @@ export namespace Prisma {
     uid?: string
     title?: string | null
     text: string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -12079,17 +12077,17 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
-    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: number | null
   }
 
   export type QuestionUpdateManyMutationInput = {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -12100,17 +12098,17 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type QuestionUncheckedUpdateManyInput = {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -12121,9 +12119,11 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type GameTemplateCreateInput = {
@@ -12136,15 +12136,14 @@ export namespace Prisma {
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    gameInstances?: GameInstanceCreateNestedManyWithoutGameTemplateInput
     creator: UserCreateNestedOneWithoutCreatedGameTemplatesInput
     questions?: QuestionsInGameTemplateCreateNestedManyWithoutGameTemplateInput
-    gameInstances?: GameInstanceCreateNestedManyWithoutGameTemplateInput
   }
 
   export type GameTemplateUncheckedCreateInput = {
     id?: string
     name: string
-    creatorId: string
     gradeLevel?: string | null
     themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
@@ -12152,8 +12151,9 @@ export namespace Prisma {
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    questions?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput
+    creatorId: string
     gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput
+    questions?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput
   }
 
   export type GameTemplateUpdateInput = {
@@ -12166,15 +12166,14 @@ export namespace Prisma {
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    gameInstances?: GameInstanceUpdateManyWithoutGameTemplateNestedInput
     creator?: UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput
     questions?: QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput
-    gameInstances?: GameInstanceUpdateManyWithoutGameTemplateNestedInput
   }
 
   export type GameTemplateUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    creatorId?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
     themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
@@ -12182,14 +12181,14 @@ export namespace Prisma {
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    questions?: QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput
+    creatorId?: StringFieldUpdateOperationsInput | string
     gameInstances?: GameInstanceUncheckedUpdateManyWithoutGameTemplateNestedInput
+    questions?: QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput
   }
 
   export type GameTemplateCreateManyInput = {
     id?: string
     name: string
-    creatorId: string
     gradeLevel?: string | null
     themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
@@ -12197,6 +12196,7 @@ export namespace Prisma {
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    creatorId: string
   }
 
   export type GameTemplateUpdateManyMutationInput = {
@@ -12214,7 +12214,6 @@ export namespace Prisma {
   export type GameTemplateUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    creatorId?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
     themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
@@ -12222,6 +12221,7 @@ export namespace Prisma {
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creatorId?: StringFieldUpdateOperationsInput | string
   }
 
   export type QuestionsInGameTemplateCreateInput = {
@@ -12283,9 +12283,9 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
     gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
     initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
     participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
@@ -12294,8 +12294,6 @@ export namespace Prisma {
   export type GameInstanceUncheckedCreateInput = {
     id?: string
     name: string
-    gameTemplateId: string
-    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -12305,9 +12303,11 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
+    gameTemplateId: string
+    initiatorUserId?: string | null
     participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
   }
 
@@ -12323,9 +12323,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
     initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
     participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
@@ -12334,8 +12334,6 @@ export namespace Prisma {
   export type GameInstanceUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    gameTemplateId?: StringFieldUpdateOperationsInput | string
-    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -12345,17 +12343,17 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
   }
 
   export type GameInstanceCreateManyInput = {
     id?: string
     name: string
-    gameTemplateId: string
-    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -12365,9 +12363,11 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
+    gameTemplateId: string
+    initiatorUserId?: string | null
   }
 
   export type GameInstanceUpdateManyMutationInput = {
@@ -12382,16 +12382,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type GameInstanceUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    gameTemplateId?: StringFieldUpdateOperationsInput | string
-    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -12401,9 +12399,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type GameParticipantCreateInput = {
@@ -12423,7 +12423,6 @@ export namespace Prisma {
   export type GameParticipantUncheckedCreateInput = {
     id?: string
     gameInstanceId: string
-    userId: string
     score?: number
     rank?: number | null
     timeTakenMs?: number | null
@@ -12432,6 +12431,7 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    userId: string
   }
 
   export type GameParticipantUpdateInput = {
@@ -12451,7 +12451,6 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
     timeTakenMs?: NullableIntFieldUpdateOperationsInput | number | null
@@ -12460,12 +12459,12 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: StringFieldUpdateOperationsInput | string
   }
 
   export type GameParticipantCreateManyInput = {
     id?: string
     gameInstanceId: string
-    userId: string
     score?: number
     rank?: number | null
     timeTakenMs?: number | null
@@ -12474,6 +12473,7 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    userId: string
   }
 
   export type GameParticipantUpdateManyMutationInput = {
@@ -12491,7 +12491,6 @@ export namespace Prisma {
   export type GameParticipantUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
     timeTakenMs?: NullableIntFieldUpdateOperationsInput | number | null
@@ -12500,6 +12499,7 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: StringFieldUpdateOperationsInput | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -12550,10 +12550,14 @@ export namespace Prisma {
     not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
-  export type GameTemplateListRelationFilter = {
-    every?: GameTemplateWhereInput
-    some?: GameTemplateWhereInput
-    none?: GameTemplateWhereInput
+  export type StudentProfileNullableScalarRelationFilter = {
+    is?: StudentProfileWhereInput | null
+    isNot?: StudentProfileWhereInput | null
+  }
+
+  export type TeacherProfileNullableScalarRelationFilter = {
+    is?: TeacherProfileWhereInput | null
+    isNot?: TeacherProfileWhereInput | null
   }
 
   export type GameInstanceListRelationFilter = {
@@ -12568,14 +12572,10 @@ export namespace Prisma {
     none?: GameParticipantWhereInput
   }
 
-  export type TeacherProfileNullableScalarRelationFilter = {
-    is?: TeacherProfileWhereInput | null
-    isNot?: TeacherProfileWhereInput | null
-  }
-
-  export type StudentProfileNullableScalarRelationFilter = {
-    is?: StudentProfileWhereInput | null
-    isNot?: StudentProfileWhereInput | null
+  export type GameTemplateListRelationFilter = {
+    every?: GameTemplateWhereInput
+    some?: GameTemplateWhereInput
+    none?: GameTemplateWhereInput
   }
 
   export type SortOrderInput = {
@@ -12583,15 +12583,15 @@ export namespace Prisma {
     nulls?: NullsOrder
   }
 
-  export type GameTemplateOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
   export type GameInstanceOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type GameParticipantOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type GameTemplateOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -12725,14 +12725,6 @@ export namespace Prisma {
     isEmpty?: boolean
   }
 
-  export type BoolNullableListFilter<$PrismaModel = never> = {
-    equals?: boolean[] | ListBooleanFieldRefInput<$PrismaModel> | null
-    has?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    hasEvery?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
-    hasSome?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
-  }
-
   export type IntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -12749,6 +12741,14 @@ export namespace Prisma {
     not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
   }
 
+  export type BoolNullableListFilter<$PrismaModel = never> = {
+    equals?: boolean[] | ListBooleanFieldRefInput<$PrismaModel> | null
+    has?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    hasEvery?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
+    hasSome?: boolean[] | ListBooleanFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
   export type QuestionsInGameTemplateListRelationFilter = {
     every?: QuestionsInGameTemplateWhereInput
     some?: QuestionsInGameTemplateWhereInput
@@ -12763,8 +12763,6 @@ export namespace Prisma {
     uid?: SortOrder
     title?: SortOrder
     text?: SortOrder
-    answerOptions?: SortOrder
-    correctAnswers?: SortOrder
     questionType?: SortOrder
     discipline?: SortOrder
     themes?: SortOrder
@@ -12775,9 +12773,11 @@ export namespace Prisma {
     tags?: SortOrder
     timeLimit?: SortOrder
     isHidden?: SortOrder
-    feedbackWaitTime?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    answerOptions?: SortOrder
+    correctAnswers?: SortOrder
+    feedbackWaitTime?: SortOrder
   }
 
   export type QuestionAvgOrderByAggregateInput = {
@@ -12798,9 +12798,9 @@ export namespace Prisma {
     explanation?: SortOrder
     timeLimit?: SortOrder
     isHidden?: SortOrder
-    feedbackWaitTime?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    feedbackWaitTime?: SortOrder
   }
 
   export type QuestionMinOrderByAggregateInput = {
@@ -12815,9 +12815,9 @@ export namespace Prisma {
     explanation?: SortOrder
     timeLimit?: SortOrder
     isHidden?: SortOrder
-    feedbackWaitTime?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    feedbackWaitTime?: SortOrder
   }
 
   export type QuestionSumOrderByAggregateInput = {
@@ -12860,7 +12860,6 @@ export namespace Prisma {
   export type GameTemplateCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorId?: SortOrder
     gradeLevel?: SortOrder
     themes?: SortOrder
     discipline?: SortOrder
@@ -12868,30 +12867,31 @@ export namespace Prisma {
     defaultMode?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    creatorId?: SortOrder
   }
 
   export type GameTemplateMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorId?: SortOrder
     gradeLevel?: SortOrder
     discipline?: SortOrder
     description?: SortOrder
     defaultMode?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    creatorId?: SortOrder
   }
 
   export type GameTemplateMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    creatorId?: SortOrder
     gradeLevel?: SortOrder
     discipline?: SortOrder
     description?: SortOrder
     defaultMode?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    creatorId?: SortOrder
   }
 
   export type EnumPlayModeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -13034,8 +13034,6 @@ export namespace Prisma {
   export type GameInstanceCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    gameTemplateId?: SortOrder
-    initiatorUserId?: SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -13045,9 +13043,11 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrder
     endedAt?: SortOrder
-    isDiffered?: SortOrder
     differedAvailableFrom?: SortOrder
     differedAvailableTo?: SortOrder
+    isDiffered?: SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrder
   }
 
   export type GameInstanceAvgOrderByAggregateInput = {
@@ -13057,8 +13057,6 @@ export namespace Prisma {
   export type GameInstanceMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    gameTemplateId?: SortOrder
-    initiatorUserId?: SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -13066,16 +13064,16 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrder
     endedAt?: SortOrder
-    isDiffered?: SortOrder
     differedAvailableFrom?: SortOrder
     differedAvailableTo?: SortOrder
+    isDiffered?: SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrder
   }
 
   export type GameInstanceMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
-    gameTemplateId?: SortOrder
-    initiatorUserId?: SortOrder
     accessCode?: SortOrder
     status?: SortOrder
     playMode?: SortOrder
@@ -13083,9 +13081,11 @@ export namespace Prisma {
     createdAt?: SortOrder
     startedAt?: SortOrder
     endedAt?: SortOrder
-    isDiffered?: SortOrder
     differedAvailableFrom?: SortOrder
     differedAvailableTo?: SortOrder
+    isDiffered?: SortOrder
+    gameTemplateId?: SortOrder
+    initiatorUserId?: SortOrder
   }
 
   export type GameInstanceSumOrderByAggregateInput = {
@@ -13163,7 +13163,6 @@ export namespace Prisma {
   export type GameParticipantCountOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrder
     timeTakenMs?: SortOrder
@@ -13172,6 +13171,7 @@ export namespace Prisma {
     answers?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    userId?: SortOrder
   }
 
   export type GameParticipantAvgOrderByAggregateInput = {
@@ -13183,7 +13183,6 @@ export namespace Prisma {
   export type GameParticipantMaxOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrder
     timeTakenMs?: SortOrder
@@ -13191,12 +13190,12 @@ export namespace Prisma {
     completedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    userId?: SortOrder
   }
 
   export type GameParticipantMinOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
-    userId?: SortOrder
     score?: SortOrder
     rank?: SortOrder
     timeTakenMs?: SortOrder
@@ -13204,6 +13203,7 @@ export namespace Prisma {
     completedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    userId?: SortOrder
   }
 
   export type GameParticipantSumOrderByAggregateInput = {
@@ -13212,11 +13212,16 @@ export namespace Prisma {
     timeTakenMs?: SortOrder
   }
 
-  export type GameTemplateCreateNestedManyWithoutCreatorInput = {
-    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
-    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
-    createMany?: GameTemplateCreateManyCreatorInputEnvelope
-    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+  export type StudentProfileCreateNestedOneWithoutUserInput = {
+    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
+    connect?: StudentProfileWhereUniqueInput
+  }
+
+  export type TeacherProfileCreateNestedOneWithoutUserInput = {
+    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
+    connect?: TeacherProfileWhereUniqueInput
   }
 
   export type GameInstanceCreateNestedManyWithoutInitiatorUserInput = {
@@ -13233,23 +13238,23 @@ export namespace Prisma {
     connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
   }
 
-  export type TeacherProfileCreateNestedOneWithoutUserInput = {
-    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
-    connect?: TeacherProfileWhereUniqueInput
+  export type GameTemplateCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
+    createMany?: GameTemplateCreateManyCreatorInputEnvelope
+    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
   }
 
-  export type StudentProfileCreateNestedOneWithoutUserInput = {
+  export type StudentProfileUncheckedCreateNestedOneWithoutUserInput = {
     create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
     connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
     connect?: StudentProfileWhereUniqueInput
   }
 
-  export type GameTemplateUncheckedCreateNestedManyWithoutCreatorInput = {
-    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
-    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
-    createMany?: GameTemplateCreateManyCreatorInputEnvelope
-    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+  export type TeacherProfileUncheckedCreateNestedOneWithoutUserInput = {
+    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
+    connect?: TeacherProfileWhereUniqueInput
   }
 
   export type GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput = {
@@ -13266,16 +13271,11 @@ export namespace Prisma {
     connect?: GameParticipantWhereUniqueInput | GameParticipantWhereUniqueInput[]
   }
 
-  export type TeacherProfileUncheckedCreateNestedOneWithoutUserInput = {
-    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
-    connect?: TeacherProfileWhereUniqueInput
-  }
-
-  export type StudentProfileUncheckedCreateNestedOneWithoutUserInput = {
-    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
-    connect?: StudentProfileWhereUniqueInput
+  export type GameTemplateUncheckedCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
+    createMany?: GameTemplateCreateManyCreatorInputEnvelope
+    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -13294,18 +13294,24 @@ export namespace Prisma {
     set?: $Enums.UserRole
   }
 
-  export type GameTemplateUpdateManyWithoutCreatorNestedInput = {
-    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
-    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
-    upsert?: GameTemplateUpsertWithWhereUniqueWithoutCreatorInput | GameTemplateUpsertWithWhereUniqueWithoutCreatorInput[]
-    createMany?: GameTemplateCreateManyCreatorInputEnvelope
-    set?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
-    disconnect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
-    delete?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
-    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
-    update?: GameTemplateUpdateWithWhereUniqueWithoutCreatorInput | GameTemplateUpdateWithWhereUniqueWithoutCreatorInput[]
-    updateMany?: GameTemplateUpdateManyWithWhereWithoutCreatorInput | GameTemplateUpdateManyWithWhereWithoutCreatorInput[]
-    deleteMany?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
+  export type StudentProfileUpdateOneWithoutUserNestedInput = {
+    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
+    upsert?: StudentProfileUpsertWithoutUserInput
+    disconnect?: StudentProfileWhereInput | boolean
+    delete?: StudentProfileWhereInput | boolean
+    connect?: StudentProfileWhereUniqueInput
+    update?: XOR<XOR<StudentProfileUpdateToOneWithWhereWithoutUserInput, StudentProfileUpdateWithoutUserInput>, StudentProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type TeacherProfileUpdateOneWithoutUserNestedInput = {
+    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
+    upsert?: TeacherProfileUpsertWithoutUserInput
+    disconnect?: TeacherProfileWhereInput | boolean
+    delete?: TeacherProfileWhereInput | boolean
+    connect?: TeacherProfileWhereUniqueInput
+    update?: XOR<XOR<TeacherProfileUpdateToOneWithWhereWithoutUserInput, TeacherProfileUpdateWithoutUserInput>, TeacherProfileUncheckedUpdateWithoutUserInput>
   }
 
   export type GameInstanceUpdateManyWithoutInitiatorUserNestedInput = {
@@ -13336,27 +13342,7 @@ export namespace Prisma {
     deleteMany?: GameParticipantScalarWhereInput | GameParticipantScalarWhereInput[]
   }
 
-  export type TeacherProfileUpdateOneWithoutUserNestedInput = {
-    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
-    upsert?: TeacherProfileUpsertWithoutUserInput
-    disconnect?: TeacherProfileWhereInput | boolean
-    delete?: TeacherProfileWhereInput | boolean
-    connect?: TeacherProfileWhereUniqueInput
-    update?: XOR<XOR<TeacherProfileUpdateToOneWithWhereWithoutUserInput, TeacherProfileUpdateWithoutUserInput>, TeacherProfileUncheckedUpdateWithoutUserInput>
-  }
-
-  export type StudentProfileUpdateOneWithoutUserNestedInput = {
-    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
-    upsert?: StudentProfileUpsertWithoutUserInput
-    disconnect?: StudentProfileWhereInput | boolean
-    delete?: StudentProfileWhereInput | boolean
-    connect?: StudentProfileWhereUniqueInput
-    update?: XOR<XOR<StudentProfileUpdateToOneWithWhereWithoutUserInput, StudentProfileUpdateWithoutUserInput>, StudentProfileUncheckedUpdateWithoutUserInput>
-  }
-
-  export type GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput = {
+  export type GameTemplateUpdateManyWithoutCreatorNestedInput = {
     create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
     connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
     upsert?: GameTemplateUpsertWithWhereUniqueWithoutCreatorInput | GameTemplateUpsertWithWhereUniqueWithoutCreatorInput[]
@@ -13368,6 +13354,26 @@ export namespace Prisma {
     update?: GameTemplateUpdateWithWhereUniqueWithoutCreatorInput | GameTemplateUpdateWithWhereUniqueWithoutCreatorInput[]
     updateMany?: GameTemplateUpdateManyWithWhereWithoutCreatorInput | GameTemplateUpdateManyWithWhereWithoutCreatorInput[]
     deleteMany?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
+  }
+
+  export type StudentProfileUncheckedUpdateOneWithoutUserNestedInput = {
+    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
+    upsert?: StudentProfileUpsertWithoutUserInput
+    disconnect?: StudentProfileWhereInput | boolean
+    delete?: StudentProfileWhereInput | boolean
+    connect?: StudentProfileWhereUniqueInput
+    update?: XOR<XOR<StudentProfileUpdateToOneWithWhereWithoutUserInput, StudentProfileUpdateWithoutUserInput>, StudentProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type TeacherProfileUncheckedUpdateOneWithoutUserNestedInput = {
+    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
+    upsert?: TeacherProfileUpsertWithoutUserInput
+    disconnect?: TeacherProfileWhereInput | boolean
+    delete?: TeacherProfileWhereInput | boolean
+    connect?: TeacherProfileWhereUniqueInput
+    update?: XOR<XOR<TeacherProfileUpdateToOneWithWhereWithoutUserInput, TeacherProfileUpdateWithoutUserInput>, TeacherProfileUncheckedUpdateWithoutUserInput>
   }
 
   export type GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput = {
@@ -13398,24 +13404,18 @@ export namespace Prisma {
     deleteMany?: GameParticipantScalarWhereInput | GameParticipantScalarWhereInput[]
   }
 
-  export type TeacherProfileUncheckedUpdateOneWithoutUserNestedInput = {
-    create?: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: TeacherProfileCreateOrConnectWithoutUserInput
-    upsert?: TeacherProfileUpsertWithoutUserInput
-    disconnect?: TeacherProfileWhereInput | boolean
-    delete?: TeacherProfileWhereInput | boolean
-    connect?: TeacherProfileWhereUniqueInput
-    update?: XOR<XOR<TeacherProfileUpdateToOneWithWhereWithoutUserInput, TeacherProfileUpdateWithoutUserInput>, TeacherProfileUncheckedUpdateWithoutUserInput>
-  }
-
-  export type StudentProfileUncheckedUpdateOneWithoutUserNestedInput = {
-    create?: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
-    connectOrCreate?: StudentProfileCreateOrConnectWithoutUserInput
-    upsert?: StudentProfileUpsertWithoutUserInput
-    disconnect?: StudentProfileWhereInput | boolean
-    delete?: StudentProfileWhereInput | boolean
-    connect?: StudentProfileWhereUniqueInput
-    update?: XOR<XOR<StudentProfileUpdateToOneWithWhereWithoutUserInput, StudentProfileUpdateWithoutUserInput>, StudentProfileUncheckedUpdateWithoutUserInput>
+  export type GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput> | GameTemplateCreateWithoutCreatorInput[] | GameTemplateUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: GameTemplateCreateOrConnectWithoutCreatorInput | GameTemplateCreateOrConnectWithoutCreatorInput[]
+    upsert?: GameTemplateUpsertWithWhereUniqueWithoutCreatorInput | GameTemplateUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: GameTemplateCreateManyCreatorInputEnvelope
+    set?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    disconnect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    delete?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    connect?: GameTemplateWhereUniqueInput | GameTemplateWhereUniqueInput[]
+    update?: GameTemplateUpdateWithWhereUniqueWithoutCreatorInput | GameTemplateUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: GameTemplateUpdateManyWithWhereWithoutCreatorInput | GameTemplateUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutTeacherProfileInput = {
@@ -13446,20 +13446,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutStudentProfileInput, UserUpdateWithoutStudentProfileInput>, UserUncheckedUpdateWithoutStudentProfileInput>
   }
 
-  export type QuestionCreateanswerOptionsInput = {
-    set: string[]
-  }
-
-  export type QuestionCreatecorrectAnswersInput = {
-    set: boolean[]
-  }
-
   export type QuestionCreatethemesInput = {
     set: string[]
   }
 
   export type QuestionCreatetagsInput = {
     set: string[]
+  }
+
+  export type QuestionCreateanswerOptionsInput = {
+    set: string[]
+  }
+
+  export type QuestionCreatecorrectAnswersInput = {
+    set: boolean[]
   }
 
   export type QuestionsInGameTemplateCreateNestedManyWithoutQuestionInput = {
@@ -13474,16 +13474,6 @@ export namespace Prisma {
     connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput | QuestionsInGameTemplateCreateOrConnectWithoutQuestionInput[]
     createMany?: QuestionsInGameTemplateCreateManyQuestionInputEnvelope
     connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
-  }
-
-  export type QuestionUpdateanswerOptionsInput = {
-    set?: string[]
-    push?: string | string[]
-  }
-
-  export type QuestionUpdatecorrectAnswersInput = {
-    set?: boolean[]
-    push?: boolean | boolean[]
   }
 
   export type QuestionUpdatethemesInput = {
@@ -13506,6 +13496,16 @@ export namespace Prisma {
 
   export type NullableBoolFieldUpdateOperationsInput = {
     set?: boolean | null
+  }
+
+  export type QuestionUpdateanswerOptionsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type QuestionUpdatecorrectAnswersInput = {
+    set?: boolean[]
+    push?: boolean | boolean[]
   }
 
   export type QuestionsInGameTemplateUpdateManyWithoutQuestionNestedInput = {
@@ -13540,6 +13540,13 @@ export namespace Prisma {
     set: string[]
   }
 
+  export type GameInstanceCreateNestedManyWithoutGameTemplateInput = {
+    create?: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput> | GameInstanceCreateWithoutGameTemplateInput[] | GameInstanceUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: GameInstanceCreateOrConnectWithoutGameTemplateInput | GameInstanceCreateOrConnectWithoutGameTemplateInput[]
+    createMany?: GameInstanceCreateManyGameTemplateInputEnvelope
+    connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
+  }
+
   export type UserCreateNestedOneWithoutCreatedGameTemplatesInput = {
     create?: XOR<UserCreateWithoutCreatedGameTemplatesInput, UserUncheckedCreateWithoutCreatedGameTemplatesInput>
     connectOrCreate?: UserCreateOrConnectWithoutCreatedGameTemplatesInput
@@ -13553,7 +13560,7 @@ export namespace Prisma {
     connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
   }
 
-  export type GameInstanceCreateNestedManyWithoutGameTemplateInput = {
+  export type GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput = {
     create?: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput> | GameInstanceCreateWithoutGameTemplateInput[] | GameInstanceUncheckedCreateWithoutGameTemplateInput[]
     connectOrCreate?: GameInstanceCreateOrConnectWithoutGameTemplateInput | GameInstanceCreateOrConnectWithoutGameTemplateInput[]
     createMany?: GameInstanceCreateManyGameTemplateInputEnvelope
@@ -13567,13 +13574,6 @@ export namespace Prisma {
     connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
   }
 
-  export type GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput = {
-    create?: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput> | GameInstanceCreateWithoutGameTemplateInput[] | GameInstanceUncheckedCreateWithoutGameTemplateInput[]
-    connectOrCreate?: GameInstanceCreateOrConnectWithoutGameTemplateInput | GameInstanceCreateOrConnectWithoutGameTemplateInput[]
-    createMany?: GameInstanceCreateManyGameTemplateInputEnvelope
-    connect?: GameInstanceWhereUniqueInput | GameInstanceWhereUniqueInput[]
-  }
-
   export type GameTemplateUpdatethemesInput = {
     set?: string[]
     push?: string | string[]
@@ -13581,28 +13581,6 @@ export namespace Prisma {
 
   export type NullableEnumPlayModeFieldUpdateOperationsInput = {
     set?: $Enums.PlayMode | null
-  }
-
-  export type UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput = {
-    create?: XOR<UserCreateWithoutCreatedGameTemplatesInput, UserUncheckedCreateWithoutCreatedGameTemplatesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutCreatedGameTemplatesInput
-    upsert?: UserUpsertWithoutCreatedGameTemplatesInput
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCreatedGameTemplatesInput, UserUpdateWithoutCreatedGameTemplatesInput>, UserUncheckedUpdateWithoutCreatedGameTemplatesInput>
-  }
-
-  export type QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput = {
-    create?: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput> | QuestionsInGameTemplateCreateWithoutGameTemplateInput[] | QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput[]
-    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput | QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput[]
-    upsert?: QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput[]
-    createMany?: QuestionsInGameTemplateCreateManyGameTemplateInputEnvelope
-    set?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
-    disconnect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
-    delete?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
-    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
-    update?: QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput[]
-    updateMany?: QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput | QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput[]
-    deleteMany?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
   }
 
   export type GameInstanceUpdateManyWithoutGameTemplateNestedInput = {
@@ -13619,7 +13597,15 @@ export namespace Prisma {
     deleteMany?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
   }
 
-  export type QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput = {
+  export type UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput = {
+    create?: XOR<UserCreateWithoutCreatedGameTemplatesInput, UserUncheckedCreateWithoutCreatedGameTemplatesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCreatedGameTemplatesInput
+    upsert?: UserUpsertWithoutCreatedGameTemplatesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCreatedGameTemplatesInput, UserUpdateWithoutCreatedGameTemplatesInput>, UserUncheckedUpdateWithoutCreatedGameTemplatesInput>
+  }
+
+  export type QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput = {
     create?: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput> | QuestionsInGameTemplateCreateWithoutGameTemplateInput[] | QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput[]
     connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput | QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput[]
     upsert?: QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput[]
@@ -13645,6 +13631,20 @@ export namespace Prisma {
     update?: GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput | GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput[]
     updateMany?: GameInstanceUpdateManyWithWhereWithoutGameTemplateInput | GameInstanceUpdateManyWithWhereWithoutGameTemplateInput[]
     deleteMany?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
+  }
+
+  export type QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput = {
+    create?: XOR<QuestionsInGameTemplateCreateWithoutGameTemplateInput, QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput> | QuestionsInGameTemplateCreateWithoutGameTemplateInput[] | QuestionsInGameTemplateUncheckedCreateWithoutGameTemplateInput[]
+    connectOrCreate?: QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput | QuestionsInGameTemplateCreateOrConnectWithoutGameTemplateInput[]
+    upsert?: QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput[]
+    createMany?: QuestionsInGameTemplateCreateManyGameTemplateInputEnvelope
+    set?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    disconnect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    delete?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    connect?: QuestionsInGameTemplateWhereUniqueInput | QuestionsInGameTemplateWhereUniqueInput[]
+    update?: QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput | QuestionsInGameTemplateUpdateWithWhereUniqueWithoutGameTemplateInput[]
+    updateMany?: QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput | QuestionsInGameTemplateUpdateManyWithWhereWithoutGameTemplateInput[]
+    deleteMany?: QuestionsInGameTemplateScalarWhereInput | QuestionsInGameTemplateScalarWhereInput[]
   }
 
   export type GameTemplateCreateNestedOneWithoutQuestionsInput = {
@@ -14083,42 +14083,30 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
-  export type GameTemplateCreateWithoutCreatorInput = {
-    id?: string
-    name: string
-    gradeLevel?: string | null
-    themes?: GameTemplateCreatethemesInput | string[]
-    discipline?: string | null
-    description?: string | null
-    defaultMode?: $Enums.PlayMode | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    questions?: QuestionsInGameTemplateCreateNestedManyWithoutGameTemplateInput
-    gameInstances?: GameInstanceCreateNestedManyWithoutGameTemplateInput
+  export type StudentProfileCreateWithoutUserInput = {
+    cookieId?: string | null
   }
 
-  export type GameTemplateUncheckedCreateWithoutCreatorInput = {
-    id?: string
-    name: string
-    gradeLevel?: string | null
-    themes?: GameTemplateCreatethemesInput | string[]
-    discipline?: string | null
-    description?: string | null
-    defaultMode?: $Enums.PlayMode | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    questions?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput
-    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput
+  export type StudentProfileUncheckedCreateWithoutUserInput = {
+    cookieId?: string | null
   }
 
-  export type GameTemplateCreateOrConnectWithoutCreatorInput = {
-    where: GameTemplateWhereUniqueInput
-    create: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput>
+  export type StudentProfileCreateOrConnectWithoutUserInput = {
+    where: StudentProfileWhereUniqueInput
+    create: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
   }
 
-  export type GameTemplateCreateManyCreatorInputEnvelope = {
-    data: GameTemplateCreateManyCreatorInput | GameTemplateCreateManyCreatorInput[]
-    skipDuplicates?: boolean
+  export type TeacherProfileCreateWithoutUserInput = {
+
+  }
+
+  export type TeacherProfileUncheckedCreateWithoutUserInput = {
+
+  }
+
+  export type TeacherProfileCreateOrConnectWithoutUserInput = {
+    where: TeacherProfileWhereUniqueInput
+    create: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
   }
 
   export type GameInstanceCreateWithoutInitiatorUserInput = {
@@ -14133,9 +14121,9 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
     gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
     participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
   }
@@ -14143,7 +14131,6 @@ export namespace Prisma {
   export type GameInstanceUncheckedCreateWithoutInitiatorUserInput = {
     id?: string
     name: string
-    gameTemplateId: string
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -14153,9 +14140,10 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
+    gameTemplateId: string
     participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
   }
 
@@ -14205,62 +14193,80 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type TeacherProfileCreateWithoutUserInput = {
-
+  export type GameTemplateCreateWithoutCreatorInput = {
+    id?: string
+    name: string
+    gradeLevel?: string | null
+    themes?: GameTemplateCreatethemesInput | string[]
+    discipline?: string | null
+    description?: string | null
+    defaultMode?: $Enums.PlayMode | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    gameInstances?: GameInstanceCreateNestedManyWithoutGameTemplateInput
+    questions?: QuestionsInGameTemplateCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type TeacherProfileUncheckedCreateWithoutUserInput = {
-
+  export type GameTemplateUncheckedCreateWithoutCreatorInput = {
+    id?: string
+    name: string
+    gradeLevel?: string | null
+    themes?: GameTemplateCreatethemesInput | string[]
+    discipline?: string | null
+    description?: string | null
+    defaultMode?: $Enums.PlayMode | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput
+    questions?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput
   }
 
-  export type TeacherProfileCreateOrConnectWithoutUserInput = {
-    where: TeacherProfileWhereUniqueInput
-    create: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
-  }
-
-  export type StudentProfileCreateWithoutUserInput = {
-    cookieId?: string | null
-  }
-
-  export type StudentProfileUncheckedCreateWithoutUserInput = {
-    cookieId?: string | null
-  }
-
-  export type StudentProfileCreateOrConnectWithoutUserInput = {
-    where: StudentProfileWhereUniqueInput
-    create: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
-  }
-
-  export type GameTemplateUpsertWithWhereUniqueWithoutCreatorInput = {
+  export type GameTemplateCreateOrConnectWithoutCreatorInput = {
     where: GameTemplateWhereUniqueInput
-    update: XOR<GameTemplateUpdateWithoutCreatorInput, GameTemplateUncheckedUpdateWithoutCreatorInput>
     create: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput>
   }
 
-  export type GameTemplateUpdateWithWhereUniqueWithoutCreatorInput = {
-    where: GameTemplateWhereUniqueInput
-    data: XOR<GameTemplateUpdateWithoutCreatorInput, GameTemplateUncheckedUpdateWithoutCreatorInput>
+  export type GameTemplateCreateManyCreatorInputEnvelope = {
+    data: GameTemplateCreateManyCreatorInput | GameTemplateCreateManyCreatorInput[]
+    skipDuplicates?: boolean
   }
 
-  export type GameTemplateUpdateManyWithWhereWithoutCreatorInput = {
-    where: GameTemplateScalarWhereInput
-    data: XOR<GameTemplateUpdateManyMutationInput, GameTemplateUncheckedUpdateManyWithoutCreatorInput>
+  export type StudentProfileUpsertWithoutUserInput = {
+    update: XOR<StudentProfileUpdateWithoutUserInput, StudentProfileUncheckedUpdateWithoutUserInput>
+    create: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
+    where?: StudentProfileWhereInput
   }
 
-  export type GameTemplateScalarWhereInput = {
-    AND?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
-    OR?: GameTemplateScalarWhereInput[]
-    NOT?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
-    id?: StringFilter<"GameTemplate"> | string
-    name?: StringFilter<"GameTemplate"> | string
-    creatorId?: StringFilter<"GameTemplate"> | string
-    gradeLevel?: StringNullableFilter<"GameTemplate"> | string | null
-    themes?: StringNullableListFilter<"GameTemplate">
-    discipline?: StringNullableFilter<"GameTemplate"> | string | null
-    description?: StringNullableFilter<"GameTemplate"> | string | null
-    defaultMode?: EnumPlayModeNullableFilter<"GameTemplate"> | $Enums.PlayMode | null
-    createdAt?: DateTimeFilter<"GameTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"GameTemplate"> | Date | string
+  export type StudentProfileUpdateToOneWithWhereWithoutUserInput = {
+    where?: StudentProfileWhereInput
+    data: XOR<StudentProfileUpdateWithoutUserInput, StudentProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type StudentProfileUpdateWithoutUserInput = {
+    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type StudentProfileUncheckedUpdateWithoutUserInput = {
+    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type TeacherProfileUpsertWithoutUserInput = {
+    update: XOR<TeacherProfileUpdateWithoutUserInput, TeacherProfileUncheckedUpdateWithoutUserInput>
+    create: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
+    where?: TeacherProfileWhereInput
+  }
+
+  export type TeacherProfileUpdateToOneWithWhereWithoutUserInput = {
+    where?: TeacherProfileWhereInput
+    data: XOR<TeacherProfileUpdateWithoutUserInput, TeacherProfileUncheckedUpdateWithoutUserInput>
+  }
+
+  export type TeacherProfileUpdateWithoutUserInput = {
+
+  }
+
+  export type TeacherProfileUncheckedUpdateWithoutUserInput = {
+
   }
 
   export type GameInstanceUpsertWithWhereUniqueWithoutInitiatorUserInput = {
@@ -14285,8 +14291,6 @@ export namespace Prisma {
     NOT?: GameInstanceScalarWhereInput | GameInstanceScalarWhereInput[]
     id?: StringFilter<"GameInstance"> | string
     name?: StringFilter<"GameInstance"> | string
-    gameTemplateId?: StringFilter<"GameInstance"> | string
-    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
     accessCode?: StringFilter<"GameInstance"> | string
     status?: StringFilter<"GameInstance"> | string
     playMode?: EnumPlayModeFilter<"GameInstance"> | $Enums.PlayMode
@@ -14296,9 +14300,11 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"GameInstance"> | Date | string
     startedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     endedAt?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
-    isDiffered?: BoolFilter<"GameInstance"> | boolean
     differedAvailableFrom?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
     differedAvailableTo?: DateTimeNullableFilter<"GameInstance"> | Date | string | null
+    isDiffered?: BoolFilter<"GameInstance"> | boolean
+    gameTemplateId?: StringFilter<"GameInstance"> | string
+    initiatorUserId?: StringNullableFilter<"GameInstance"> | string | null
   }
 
   export type GameParticipantUpsertWithWhereUniqueWithoutUserInput = {
@@ -14323,7 +14329,6 @@ export namespace Prisma {
     NOT?: GameParticipantScalarWhereInput | GameParticipantScalarWhereInput[]
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
-    userId?: StringFilter<"GameParticipant"> | string
     score?: IntFilter<"GameParticipant"> | number
     rank?: IntNullableFilter<"GameParticipant"> | number | null
     timeTakenMs?: IntNullableFilter<"GameParticipant"> | number | null
@@ -14332,44 +14337,39 @@ export namespace Prisma {
     answers?: JsonNullableFilter<"GameParticipant">
     createdAt?: DateTimeFilter<"GameParticipant"> | Date | string
     updatedAt?: DateTimeFilter<"GameParticipant"> | Date | string
+    userId?: StringFilter<"GameParticipant"> | string
   }
 
-  export type TeacherProfileUpsertWithoutUserInput = {
-    update: XOR<TeacherProfileUpdateWithoutUserInput, TeacherProfileUncheckedUpdateWithoutUserInput>
-    create: XOR<TeacherProfileCreateWithoutUserInput, TeacherProfileUncheckedCreateWithoutUserInput>
-    where?: TeacherProfileWhereInput
+  export type GameTemplateUpsertWithWhereUniqueWithoutCreatorInput = {
+    where: GameTemplateWhereUniqueInput
+    update: XOR<GameTemplateUpdateWithoutCreatorInput, GameTemplateUncheckedUpdateWithoutCreatorInput>
+    create: XOR<GameTemplateCreateWithoutCreatorInput, GameTemplateUncheckedCreateWithoutCreatorInput>
   }
 
-  export type TeacherProfileUpdateToOneWithWhereWithoutUserInput = {
-    where?: TeacherProfileWhereInput
-    data: XOR<TeacherProfileUpdateWithoutUserInput, TeacherProfileUncheckedUpdateWithoutUserInput>
+  export type GameTemplateUpdateWithWhereUniqueWithoutCreatorInput = {
+    where: GameTemplateWhereUniqueInput
+    data: XOR<GameTemplateUpdateWithoutCreatorInput, GameTemplateUncheckedUpdateWithoutCreatorInput>
   }
 
-  export type TeacherProfileUpdateWithoutUserInput = {
-
+  export type GameTemplateUpdateManyWithWhereWithoutCreatorInput = {
+    where: GameTemplateScalarWhereInput
+    data: XOR<GameTemplateUpdateManyMutationInput, GameTemplateUncheckedUpdateManyWithoutCreatorInput>
   }
 
-  export type TeacherProfileUncheckedUpdateWithoutUserInput = {
-
-  }
-
-  export type StudentProfileUpsertWithoutUserInput = {
-    update: XOR<StudentProfileUpdateWithoutUserInput, StudentProfileUncheckedUpdateWithoutUserInput>
-    create: XOR<StudentProfileCreateWithoutUserInput, StudentProfileUncheckedCreateWithoutUserInput>
-    where?: StudentProfileWhereInput
-  }
-
-  export type StudentProfileUpdateToOneWithWhereWithoutUserInput = {
-    where?: StudentProfileWhereInput
-    data: XOR<StudentProfileUpdateWithoutUserInput, StudentProfileUncheckedUpdateWithoutUserInput>
-  }
-
-  export type StudentProfileUpdateWithoutUserInput = {
-    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type StudentProfileUncheckedUpdateWithoutUserInput = {
-    cookieId?: NullableStringFieldUpdateOperationsInput | string | null
+  export type GameTemplateScalarWhereInput = {
+    AND?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
+    OR?: GameTemplateScalarWhereInput[]
+    NOT?: GameTemplateScalarWhereInput | GameTemplateScalarWhereInput[]
+    id?: StringFilter<"GameTemplate"> | string
+    name?: StringFilter<"GameTemplate"> | string
+    gradeLevel?: StringNullableFilter<"GameTemplate"> | string | null
+    themes?: StringNullableListFilter<"GameTemplate">
+    discipline?: StringNullableFilter<"GameTemplate"> | string | null
+    description?: StringNullableFilter<"GameTemplate"> | string | null
+    defaultMode?: EnumPlayModeNullableFilter<"GameTemplate"> | $Enums.PlayMode | null
+    createdAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"GameTemplate"> | Date | string
+    creatorId?: StringFilter<"GameTemplate"> | string
   }
 
   export type UserCreateWithoutTeacherProfileInput = {
@@ -14380,10 +14380,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
+    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
-    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateWithoutTeacherProfileInput = {
@@ -14394,10 +14394,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
+    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
-    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserCreateOrConnectWithoutTeacherProfileInput = {
@@ -14424,10 +14424,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
+    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
-    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeacherProfileInput = {
@@ -14438,10 +14438,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
-    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserCreateWithoutStudentProfileInput = {
@@ -14452,10 +14452,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
-    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateWithoutStudentProfileInput = {
@@ -14466,10 +14466,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
-    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserCreateOrConnectWithoutStudentProfileInput = {
@@ -14496,10 +14496,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
-    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutStudentProfileInput = {
@@ -14510,10 +14510,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
-    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type QuestionsInGameTemplateCreateWithoutQuestionInput = {
@@ -14564,6 +14564,54 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"QuestionsInGameTemplate"> | Date | string
   }
 
+  export type GameInstanceCreateWithoutGameTemplateInput = {
+    id?: string
+    name: string
+    accessCode: string
+    status: string
+    playMode: $Enums.PlayMode
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    currentQuestionIndex?: number | null
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    startedAt?: Date | string | null
+    endedAt?: Date | string | null
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
+    initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
+    participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
+  }
+
+  export type GameInstanceUncheckedCreateWithoutGameTemplateInput = {
+    id?: string
+    name: string
+    accessCode: string
+    status: string
+    playMode: $Enums.PlayMode
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    currentQuestionIndex?: number | null
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    startedAt?: Date | string | null
+    endedAt?: Date | string | null
+    differedAvailableFrom?: Date | string | null
+    differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
+    initiatorUserId?: string | null
+    participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
+  }
+
+  export type GameInstanceCreateOrConnectWithoutGameTemplateInput = {
+    where: GameInstanceWhereUniqueInput
+    create: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput>
+  }
+
+  export type GameInstanceCreateManyGameTemplateInputEnvelope = {
+    data: GameInstanceCreateManyGameTemplateInput | GameInstanceCreateManyGameTemplateInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserCreateWithoutCreatedGameTemplatesInput = {
     id?: string
     username: string
@@ -14572,10 +14620,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
+    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
-    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
-    studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedGameTemplatesInput = {
@@ -14586,10 +14634,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
+    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
     gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
-    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
-    studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedGameTemplatesInput = {
@@ -14619,52 +14667,20 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type GameInstanceCreateWithoutGameTemplateInput = {
-    id?: string
-    name: string
-    accessCode: string
-    status: string
-    playMode: $Enums.PlayMode
-    leaderboard?: NullableJsonNullValueInput | InputJsonValue
-    currentQuestionIndex?: number | null
-    settings?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    startedAt?: Date | string | null
-    endedAt?: Date | string | null
-    isDiffered?: boolean
-    differedAvailableFrom?: Date | string | null
-    differedAvailableTo?: Date | string | null
-    initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
-    participants?: GameParticipantCreateNestedManyWithoutGameInstanceInput
-  }
-
-  export type GameInstanceUncheckedCreateWithoutGameTemplateInput = {
-    id?: string
-    name: string
-    initiatorUserId?: string | null
-    accessCode: string
-    status: string
-    playMode: $Enums.PlayMode
-    leaderboard?: NullableJsonNullValueInput | InputJsonValue
-    currentQuestionIndex?: number | null
-    settings?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    startedAt?: Date | string | null
-    endedAt?: Date | string | null
-    isDiffered?: boolean
-    differedAvailableFrom?: Date | string | null
-    differedAvailableTo?: Date | string | null
-    participants?: GameParticipantUncheckedCreateNestedManyWithoutGameInstanceInput
-  }
-
-  export type GameInstanceCreateOrConnectWithoutGameTemplateInput = {
+  export type GameInstanceUpsertWithWhereUniqueWithoutGameTemplateInput = {
     where: GameInstanceWhereUniqueInput
+    update: XOR<GameInstanceUpdateWithoutGameTemplateInput, GameInstanceUncheckedUpdateWithoutGameTemplateInput>
     create: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput>
   }
 
-  export type GameInstanceCreateManyGameTemplateInputEnvelope = {
-    data: GameInstanceCreateManyGameTemplateInput | GameInstanceCreateManyGameTemplateInput[]
-    skipDuplicates?: boolean
+  export type GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput = {
+    where: GameInstanceWhereUniqueInput
+    data: XOR<GameInstanceUpdateWithoutGameTemplateInput, GameInstanceUncheckedUpdateWithoutGameTemplateInput>
+  }
+
+  export type GameInstanceUpdateManyWithWhereWithoutGameTemplateInput = {
+    where: GameInstanceScalarWhereInput
+    data: XOR<GameInstanceUpdateManyMutationInput, GameInstanceUncheckedUpdateManyWithoutGameTemplateInput>
   }
 
   export type UserUpsertWithoutCreatedGameTemplatesInput = {
@@ -14686,10 +14702,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
-    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
-    studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedGameTemplatesInput = {
@@ -14700,10 +14716,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
     gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
-    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
-    studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type QuestionsInGameTemplateUpsertWithWhereUniqueWithoutGameTemplateInput = {
@@ -14722,22 +14738,6 @@ export namespace Prisma {
     data: XOR<QuestionsInGameTemplateUpdateManyMutationInput, QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateInput>
   }
 
-  export type GameInstanceUpsertWithWhereUniqueWithoutGameTemplateInput = {
-    where: GameInstanceWhereUniqueInput
-    update: XOR<GameInstanceUpdateWithoutGameTemplateInput, GameInstanceUncheckedUpdateWithoutGameTemplateInput>
-    create: XOR<GameInstanceCreateWithoutGameTemplateInput, GameInstanceUncheckedCreateWithoutGameTemplateInput>
-  }
-
-  export type GameInstanceUpdateWithWhereUniqueWithoutGameTemplateInput = {
-    where: GameInstanceWhereUniqueInput
-    data: XOR<GameInstanceUpdateWithoutGameTemplateInput, GameInstanceUncheckedUpdateWithoutGameTemplateInput>
-  }
-
-  export type GameInstanceUpdateManyWithWhereWithoutGameTemplateInput = {
-    where: GameInstanceScalarWhereInput
-    data: XOR<GameInstanceUpdateManyMutationInput, GameInstanceUncheckedUpdateManyWithoutGameTemplateInput>
-  }
-
   export type GameTemplateCreateWithoutQuestionsInput = {
     id?: string
     name: string
@@ -14748,14 +14748,13 @@ export namespace Prisma {
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    creator: UserCreateNestedOneWithoutCreatedGameTemplatesInput
     gameInstances?: GameInstanceCreateNestedManyWithoutGameTemplateInput
+    creator: UserCreateNestedOneWithoutCreatedGameTemplatesInput
   }
 
   export type GameTemplateUncheckedCreateWithoutQuestionsInput = {
     id?: string
     name: string
-    creatorId: string
     gradeLevel?: string | null
     themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
@@ -14763,6 +14762,7 @@ export namespace Prisma {
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    creatorId: string
     gameInstances?: GameInstanceUncheckedCreateNestedManyWithoutGameTemplateInput
   }
 
@@ -14775,8 +14775,6 @@ export namespace Prisma {
     uid?: string
     title?: string | null
     text: string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -14787,17 +14785,17 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
-    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: number | null
   }
 
   export type QuestionUncheckedCreateWithoutGameTemplatesInput = {
     uid?: string
     title?: string | null
     text: string
-    answerOptions?: QuestionCreateanswerOptionsInput | string[]
-    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
     questionType: string
     discipline: string
     themes?: QuestionCreatethemesInput | string[]
@@ -14808,9 +14806,11 @@ export namespace Prisma {
     tags?: QuestionCreatetagsInput | string[]
     timeLimit?: number | null
     isHidden?: boolean | null
-    feedbackWaitTime?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    answerOptions?: QuestionCreateanswerOptionsInput | string[]
+    correctAnswers?: QuestionCreatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: number | null
   }
 
   export type QuestionCreateOrConnectWithoutGameTemplatesInput = {
@@ -14839,14 +14839,13 @@ export namespace Prisma {
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    creator?: UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput
     gameInstances?: GameInstanceUpdateManyWithoutGameTemplateNestedInput
+    creator?: UserUpdateOneRequiredWithoutCreatedGameTemplatesNestedInput
   }
 
   export type GameTemplateUncheckedUpdateWithoutQuestionsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    creatorId?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
     themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14854,6 +14853,7 @@ export namespace Prisma {
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creatorId?: StringFieldUpdateOperationsInput | string
     gameInstances?: GameInstanceUncheckedUpdateManyWithoutGameTemplateNestedInput
   }
 
@@ -14872,8 +14872,6 @@ export namespace Prisma {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -14884,17 +14882,17 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type QuestionUncheckedUpdateWithoutGameTemplatesInput = {
     uid?: StringFieldUpdateOperationsInput | string
     title?: NullableStringFieldUpdateOperationsInput | string | null
     text?: StringFieldUpdateOperationsInput | string
-    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
-    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
     questionType?: StringFieldUpdateOperationsInput | string
     discipline?: StringFieldUpdateOperationsInput | string
     themes?: QuestionUpdatethemesInput | string[]
@@ -14905,9 +14903,11 @@ export namespace Prisma {
     tags?: QuestionUpdatetagsInput | string[]
     timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    answerOptions?: QuestionUpdateanswerOptionsInput | string[]
+    correctAnswers?: QuestionUpdatecorrectAnswersInput | boolean[]
+    feedbackWaitTime?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type GameTemplateCreateWithoutGameInstancesInput = {
@@ -14927,7 +14927,6 @@ export namespace Prisma {
   export type GameTemplateUncheckedCreateWithoutGameInstancesInput = {
     id?: string
     name: string
-    creatorId: string
     gradeLevel?: string | null
     themes?: GameTemplateCreatethemesInput | string[]
     discipline?: string | null
@@ -14935,6 +14934,7 @@ export namespace Prisma {
     defaultMode?: $Enums.PlayMode | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    creatorId: string
     questions?: QuestionsInGameTemplateUncheckedCreateNestedManyWithoutGameTemplateInput
   }
 
@@ -14951,10 +14951,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
-    gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
-    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
+    gameParticipations?: GameParticipantCreateNestedManyWithoutUserInput
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateWithoutInitiatedGameInstancesInput = {
@@ -14965,10 +14965,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
-    gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
-    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
+    gameParticipations?: GameParticipantUncheckedCreateNestedManyWithoutUserInput
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserCreateOrConnectWithoutInitiatedGameInstancesInput = {
@@ -14991,7 +14991,6 @@ export namespace Prisma {
 
   export type GameParticipantUncheckedCreateWithoutGameInstanceInput = {
     id?: string
-    userId: string
     score?: number
     rank?: number | null
     timeTakenMs?: number | null
@@ -15000,6 +14999,7 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    userId: string
   }
 
   export type GameParticipantCreateOrConnectWithoutGameInstanceInput = {
@@ -15040,7 +15040,6 @@ export namespace Prisma {
   export type GameTemplateUncheckedUpdateWithoutGameInstancesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    creatorId?: StringFieldUpdateOperationsInput | string
     gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
     themes?: GameTemplateUpdatethemesInput | string[]
     discipline?: NullableStringFieldUpdateOperationsInput | string | null
@@ -15048,6 +15047,7 @@ export namespace Prisma {
     defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creatorId?: StringFieldUpdateOperationsInput | string
     questions?: QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput
   }
 
@@ -15070,10 +15070,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
-    gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
-    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
+    gameParticipations?: GameParticipantUpdateManyWithoutUserNestedInput
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInitiatedGameInstancesInput = {
@@ -15084,10 +15084,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
-    gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
-    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
+    gameParticipations?: GameParticipantUncheckedUpdateManyWithoutUserNestedInput
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type GameParticipantUpsertWithWhereUniqueWithoutGameInstanceInput = {
@@ -15118,9 +15118,9 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
     gameTemplate: GameTemplateCreateNestedOneWithoutGameInstancesInput
     initiatorUser?: UserCreateNestedOneWithoutInitiatedGameInstancesInput
   }
@@ -15128,8 +15128,6 @@ export namespace Prisma {
   export type GameInstanceUncheckedCreateWithoutParticipantsInput = {
     id?: string
     name: string
-    gameTemplateId: string
-    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -15139,9 +15137,11 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
+    gameTemplateId: string
+    initiatorUserId?: string | null
   }
 
   export type GameInstanceCreateOrConnectWithoutParticipantsInput = {
@@ -15157,10 +15157,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
-    initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
-    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
     studentProfile?: StudentProfileCreateNestedOneWithoutUserInput
+    teacherProfile?: TeacherProfileCreateNestedOneWithoutUserInput
+    initiatedGameInstances?: GameInstanceCreateNestedManyWithoutInitiatorUserInput
+    createdGameTemplates?: GameTemplateCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateWithoutGameParticipationsInput = {
@@ -15171,10 +15171,10 @@ export namespace Prisma {
     avatarUrl?: string | null
     createdAt?: Date | string
     role: $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
-    initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
-    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
     studentProfile?: StudentProfileUncheckedCreateNestedOneWithoutUserInput
+    teacherProfile?: TeacherProfileUncheckedCreateNestedOneWithoutUserInput
+    initiatedGameInstances?: GameInstanceUncheckedCreateNestedManyWithoutInitiatorUserInput
+    createdGameTemplates?: GameTemplateUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserCreateOrConnectWithoutGameParticipationsInput = {
@@ -15205,9 +15205,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
     initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
   }
@@ -15215,8 +15215,6 @@ export namespace Prisma {
   export type GameInstanceUncheckedUpdateWithoutParticipantsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    gameTemplateId?: StringFieldUpdateOperationsInput | string
-    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -15226,9 +15224,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUpsertWithoutGameParticipationsInput = {
@@ -15250,10 +15250,10 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
-    initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
-    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
     studentProfile?: StudentProfileUpdateOneWithoutUserNestedInput
+    teacherProfile?: TeacherProfileUpdateOneWithoutUserNestedInput
+    initiatedGameInstances?: GameInstanceUpdateManyWithoutInitiatorUserNestedInput
+    createdGameTemplates?: GameTemplateUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGameParticipationsInput = {
@@ -15264,28 +15264,15 @@ export namespace Prisma {
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
-    initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
-    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
     studentProfile?: StudentProfileUncheckedUpdateOneWithoutUserNestedInput
-  }
-
-  export type GameTemplateCreateManyCreatorInput = {
-    id?: string
-    name: string
-    gradeLevel?: string | null
-    themes?: GameTemplateCreatethemesInput | string[]
-    discipline?: string | null
-    description?: string | null
-    defaultMode?: $Enums.PlayMode | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
+    teacherProfile?: TeacherProfileUncheckedUpdateOneWithoutUserNestedInput
+    initiatedGameInstances?: GameInstanceUncheckedUpdateManyWithoutInitiatorUserNestedInput
+    createdGameTemplates?: GameTemplateUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type GameInstanceCreateManyInitiatorUserInput = {
     id?: string
     name: string
-    gameTemplateId: string
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -15295,9 +15282,10 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
+    gameTemplateId: string
   }
 
   export type GameParticipantCreateManyUserInput = {
@@ -15313,44 +15301,16 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type GameTemplateUpdateWithoutCreatorInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: GameTemplateUpdatethemesInput | string[]
-    discipline?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    questions?: QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput
-    gameInstances?: GameInstanceUpdateManyWithoutGameTemplateNestedInput
-  }
-
-  export type GameTemplateUncheckedUpdateWithoutCreatorInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: GameTemplateUpdatethemesInput | string[]
-    discipline?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    questions?: QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput
-    gameInstances?: GameInstanceUncheckedUpdateManyWithoutGameTemplateNestedInput
-  }
-
-  export type GameTemplateUncheckedUpdateManyWithoutCreatorInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
-    themes?: GameTemplateUpdatethemesInput | string[]
-    discipline?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  export type GameTemplateCreateManyCreatorInput = {
+    id?: string
+    name: string
+    gradeLevel?: string | null
+    themes?: GameTemplateCreatethemesInput | string[]
+    discipline?: string | null
+    description?: string | null
+    defaultMode?: $Enums.PlayMode | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type GameInstanceUpdateWithoutInitiatorUserInput = {
@@ -15365,9 +15325,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     gameTemplate?: GameTemplateUpdateOneRequiredWithoutGameInstancesNestedInput
     participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
   }
@@ -15375,7 +15335,6 @@ export namespace Prisma {
   export type GameInstanceUncheckedUpdateWithoutInitiatorUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    gameTemplateId?: StringFieldUpdateOperationsInput | string
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -15385,16 +15344,16 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
     participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
   }
 
   export type GameInstanceUncheckedUpdateManyWithoutInitiatorUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    gameTemplateId?: StringFieldUpdateOperationsInput | string
     accessCode?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
@@ -15404,9 +15363,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
     differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    gameTemplateId?: StringFieldUpdateOperationsInput | string
   }
 
   export type GameParticipantUpdateWithoutUserInput = {
@@ -15448,6 +15408,46 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type GameTemplateUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: GameTemplateUpdatethemesInput | string[]
+    discipline?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    gameInstances?: GameInstanceUpdateManyWithoutGameTemplateNestedInput
+    questions?: QuestionsInGameTemplateUpdateManyWithoutGameTemplateNestedInput
+  }
+
+  export type GameTemplateUncheckedUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: GameTemplateUpdatethemesInput | string[]
+    discipline?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    gameInstances?: GameInstanceUncheckedUpdateManyWithoutGameTemplateNestedInput
+    questions?: QuestionsInGameTemplateUncheckedUpdateManyWithoutGameTemplateNestedInput
+  }
+
+  export type GameTemplateUncheckedUpdateManyWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    gradeLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    themes?: GameTemplateUpdatethemesInput | string[]
+    discipline?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultMode?: NullableEnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type QuestionsInGameTemplateCreateManyQuestionInput = {
     gameTemplateId: string
     sequence: number
@@ -15472,16 +15472,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type QuestionsInGameTemplateCreateManyGameTemplateInput = {
-    questionUid: string
-    sequence: number
-    createdAt?: Date | string
-  }
-
   export type GameInstanceCreateManyGameTemplateInput = {
     id?: string
     name: string
-    initiatorUserId?: string | null
     accessCode: string
     status: string
     playMode: $Enums.PlayMode
@@ -15491,9 +15484,72 @@ export namespace Prisma {
     createdAt?: Date | string
     startedAt?: Date | string | null
     endedAt?: Date | string | null
-    isDiffered?: boolean
     differedAvailableFrom?: Date | string | null
     differedAvailableTo?: Date | string | null
+    isDiffered?: boolean
+    initiatorUserId?: string | null
+  }
+
+  export type QuestionsInGameTemplateCreateManyGameTemplateInput = {
+    questionUid: string
+    sequence: number
+    createdAt?: Date | string
+  }
+
+  export type GameInstanceUpdateWithoutGameTemplateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    accessCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
+    participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
+  }
+
+  export type GameInstanceUncheckedUpdateWithoutGameTemplateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    accessCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
+  }
+
+  export type GameInstanceUncheckedUpdateManyWithoutGameTemplateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    accessCode?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
+    leaderboard?: NullableJsonNullValueInput | InputJsonValue
+    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDiffered?: BoolFieldUpdateOperationsInput | boolean
+    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type QuestionsInGameTemplateUpdateWithoutGameTemplateInput = {
@@ -15514,65 +15570,8 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type GameInstanceUpdateWithoutGameTemplateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    accessCode?: StringFieldUpdateOperationsInput | string
-    status?: StringFieldUpdateOperationsInput | string
-    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
-    leaderboard?: NullableJsonNullValueInput | InputJsonValue
-    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
-    settings?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
-    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    initiatorUser?: UserUpdateOneWithoutInitiatedGameInstancesNestedInput
-    participants?: GameParticipantUpdateManyWithoutGameInstanceNestedInput
-  }
-
-  export type GameInstanceUncheckedUpdateWithoutGameTemplateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
-    accessCode?: StringFieldUpdateOperationsInput | string
-    status?: StringFieldUpdateOperationsInput | string
-    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
-    leaderboard?: NullableJsonNullValueInput | InputJsonValue
-    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
-    settings?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
-    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    participants?: GameParticipantUncheckedUpdateManyWithoutGameInstanceNestedInput
-  }
-
-  export type GameInstanceUncheckedUpdateManyWithoutGameTemplateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    initiatorUserId?: NullableStringFieldUpdateOperationsInput | string | null
-    accessCode?: StringFieldUpdateOperationsInput | string
-    status?: StringFieldUpdateOperationsInput | string
-    playMode?: EnumPlayModeFieldUpdateOperationsInput | $Enums.PlayMode
-    leaderboard?: NullableJsonNullValueInput | InputJsonValue
-    currentQuestionIndex?: NullableIntFieldUpdateOperationsInput | number | null
-    settings?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    isDiffered?: BoolFieldUpdateOperationsInput | boolean
-    differedAvailableFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    differedAvailableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
   export type GameParticipantCreateManyGameInstanceInput = {
     id?: string
-    userId: string
     score?: number
     rank?: number | null
     timeTakenMs?: number | null
@@ -15581,6 +15580,7 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    userId: string
   }
 
   export type GameParticipantUpdateWithoutGameInstanceInput = {
@@ -15598,7 +15598,6 @@ export namespace Prisma {
 
   export type GameParticipantUncheckedUpdateWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
     timeTakenMs?: NullableIntFieldUpdateOperationsInput | number | null
@@ -15607,11 +15606,11 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: StringFieldUpdateOperationsInput | string
   }
 
   export type GameParticipantUncheckedUpdateManyWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
     score?: IntFieldUpdateOperationsInput | number
     rank?: NullableIntFieldUpdateOperationsInput | number | null
     timeTakenMs?: NullableIntFieldUpdateOperationsInput | number | null
@@ -15620,6 +15619,7 @@ export namespace Prisma {
     answers?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: StringFieldUpdateOperationsInput | string
   }
 
 

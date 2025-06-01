@@ -1,21 +1,11 @@
-// --- Define MockLogger interface and instance first ---
-interface MockLogger {
-    debug: jest.Mock;
-    info: jest.Mock;
-    warn: jest.Mock;
-    error: jest.Mock;
-}
-
-const mockLoggerInstance: MockLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-};
-
 // --- Mock logger ---
 jest.mock('@/clientLogger', () => ({
-    createLogger: jest.fn(() => mockLoggerInstance),
+    createLogger: jest.fn(() => ({
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+    })),
 }));
 
 // --- Mock socket.io-client ---
@@ -59,10 +49,10 @@ describe('useTeacherQuizSocket Timer Functionality', () => {
     beforeEach(() => {
         jest.useFakeTimers(); // Use fake timers for timer tests
         jest.clearAllMocks();
-        mockLoggerInstance.debug.mockClear();
-        mockLoggerInstance.info.mockClear();
-        mockLoggerInstance.warn.mockClear();
-        mockLoggerInstance.error.mockClear();
+
+
+
+
         mockSocket.emit.mockClear();
         mockSocket.on.mockClear();
         mockSocket.off.mockClear();

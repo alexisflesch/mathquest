@@ -8,6 +8,7 @@ import { gameAnswerPayloadSchema, errorPayloadSchema } from '@shared/types/socke
 import { calculateLeaderboard } from '../sharedLeaderboard';
 import { collectAnswers } from '../sharedAnswers';
 import { calculateScore } from '../sharedScore';
+import { GAME_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('GameAnswerHandler');
 

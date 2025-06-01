@@ -4,6 +4,7 @@ import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import { JoinDashboardPayload } from './types';
 import { DASHBOARD_PREFIX, getGameControlState } from './helpers';
+import { TEACHER_EVENTS } from '@shared/types/socket/events';
 
 // Create a handler-specific logger
 const logger = createLogger('JoinDashboardHandler');
@@ -37,7 +38,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                 effectiveUserId = testUserId;
             } else {
                 // No userId found anywhere, return error
-                socket.emit('error_dashboard', {
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'AUTHENTICATION_REQUIRED',
                     message: 'Authentication required to join dashboard',
                 });
@@ -68,7 +69,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                 });
             } else {
                 logger.warn({ socketId: socket.id }, 'No gameId or accessCode provided');
-                socket.emit('error_dashboard', {
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'MISSING_PARAMS',
                     message: 'Game ID or access code is required',
                 });
@@ -77,7 +78,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
 
             if (!gameInstance) {
                 logger.warn({ gameId, accessCode }, 'Game not found');
-                socket.emit('error_dashboard', {
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'GAME_NOT_FOUND',
                     message: 'Game not found with the provided ID or access code',
                 });
@@ -92,7 +93,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
 
                 // If we're in a test environment and both IDs exist, we'll allow it
                 if (!isTestEnvironment) {
-                    socket.emit('error_dashboard', {
+                    socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                         code: 'NOT_AUTHORIZED',
                         message: 'You are not authorized to control this game',
                     });
@@ -172,7 +173,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                         });
                     }
                 } else {
-                    socket.emit('error_dashboard', {
+                    socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                         code: 'STATE_ERROR',
                         message: 'Could not retrieve game state',
                     });
@@ -187,7 +188,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                 return;
             }
             // Send the comprehensive initial state
-            socket.emit('game_control_state', controlState);
+            socket.emit(TEACHER_EVENTS.GAME_CONTROL_STATE, controlState);
 
             logger.info({ gameId, userId: effectiveUserId, socketId: socket.id }, 'User joined dashboard successfully');
 
@@ -215,7 +216,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             }
         } catch (error) {
             logger.error({ gameId, userId: effectiveUserId, error }, 'Error handling join_dashboard event');
-            socket.emit('error_dashboard', {
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'JOIN_ERROR',
                 message: 'Failed to join dashboard',
                 details: error instanceof Error ? error.message : String(error),

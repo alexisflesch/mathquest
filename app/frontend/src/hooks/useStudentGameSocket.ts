@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
@@ -6,6 +5,7 @@ import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
 import { Question } from '@shared/types/quiz/question';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('useStudentGameSocket');
 
@@ -33,6 +33,8 @@ export interface GameQuestionPayload {
     totalQuestions: number;
     tournoiState?: 'running' | 'paused' | 'finished';
     questionState?: 'active' | 'paused' | 'stopped';
+    phase?: 'question' | 'feedback' | 'show_answers';
+    feedbackRemaining?: number;
 }
 
 export interface TimerUpdate {
@@ -58,6 +60,24 @@ export interface AnswerReceived {
     explanation?: string;
 }
 
+export interface FeedbackEvent {
+    questionId: string;
+    feedbackRemaining: number;
+}
+
+export interface CorrectAnswersEvent {
+    questionId: string;
+}
+
+export interface TournamentAnswerResult {
+    questionUid: string;
+    rejected?: boolean;
+    reason?: string;
+    message?: string;
+    registered?: boolean;
+    updated?: boolean;
+}
+
 export interface GameState {
     currentQuestion: StudentGameQuestion | null;
     questionIndex: number;
@@ -67,6 +87,12 @@ export interface GameState {
     gameStatus: 'waiting' | 'active' | 'paused' | 'finished';
     answered: boolean;
     connectedToRoom: boolean;
+    phase: 'question' | 'feedback' | 'show_answers';
+    feedbackRemaining: number | null;
+    correctAnswers: number[] | null;
+    gameMode?: 'tournament' | 'quiz' | 'practice';
+    linkedQuizId?: string | null;
+    lastAnswerFeedback?: AnswerReceived | null;
 }
 
 export interface StudentGameSocketHookProps {
@@ -94,6 +120,8 @@ export interface StudentGameSocketHook {
     // Event handlers (optional callbacks)
     onQuestionReceived?: (question: GameQuestionPayload) => void;
     onAnswerReceived?: (result: AnswerReceived) => void;
+    onFeedbackReceived?: (feedback: FeedbackEvent) => void;
+    onCorrectAnswersReceived?: (correctAnswers: CorrectAnswersEvent) => void;
     onGameEnded?: (results: any) => void;
     onGameError?: (error: any) => void;
     onCorrectAnswers?: (payload: { questionId: string, correctAnswers: number[] }) => void;
@@ -120,15 +148,22 @@ export function useStudentGameSocket({
         timerStatus: 'stop',
         gameStatus: 'waiting',
         answered: false,
-        connectedToRoom: false
+        connectedToRoom: false,
+        phase: 'question',
+        feedbackRemaining: null,
+        correctAnswers: null,
+        gameMode: isDiffered ? 'practice' : 'tournament',
+        linkedQuizId: null,
+        lastAnswerFeedback: null
     });
 
-    // Refs for timer management
+    // TIMER MANAGEMENT OVERHAUL: Local countdown timer refs for smooth UI
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastUpdateTimeRef = useRef<number>(0);
     const UI_UPDATE_THRESHOLD = 200; // Only update UI state every 200ms
 
-    // Update timer with throttling to avoid unnecessary re-renders
+    // Update timer display with throttling
     const updateTimer = useCallback((newTimeLeft: number) => {
         const roundedTimeLeft = Math.floor(newTimeLeft);
         const now = Date.now();
@@ -142,57 +177,90 @@ export function useStudentGameSocket({
         }
     }, []);
 
-    // Clear timer function
-    const clearTimer = useCallback(() => {
+    // Local countdown timer management
+    const startLocalTimer = useCallback((initialTime: number) => {
+        // Clear any existing timer
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
         }
-    }, []);
 
-    // Start timer countdown
-    const startTimer = useCallback((initialTime: number) => {
-        clearTimer();
+        if (initialTime <= 0) return;
 
-        if (initialTime <= 0) {
-            setGameState(prev => ({
-                ...prev,
-                timer: 0,
-                gameStatus: 'waiting'
-            }));
-            return;
-        }
-
-        setGameState(prev => ({
-            ...prev,
-            timer: initialTime,
-            timerStatus: 'play'
-        }));
-
+        // Start new countdown timer
         timerRef.current = setInterval(() => {
             setGameState(prev => {
-                if (prev.timerStatus === 'pause') {
-                    return prev;
-                }
+                const newTimer = Math.max((prev.timer || 0) - 1, 0);
 
-                const newTime = (prev.timer || 0) - 1;
-
-                if (newTime <= 0) {
-                    clearTimer();
+                // Stop timer when reaching zero
+                if (newTimer === 0 && timerRef.current) {
+                    clearInterval(timerRef.current);
+                    timerRef.current = null;
                     return {
                         ...prev,
                         timer: 0,
+                        timerStatus: 'stop',
                         gameStatus: 'waiting'
                     };
                 }
 
                 return {
                     ...prev,
-                    timer: newTime
+                    timer: newTimer
                 };
             });
         }, 1000);
-    }, [clearTimer]);
+    }, []);
+
+    // Stop local countdown timer
+    const stopLocalTimer = useCallback(() => {
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+    }, []);
+
+    // Start local feedback countdown timer
+    const startFeedbackTimer = useCallback((initialTime: number) => {
+        // Clear any existing feedback timer
+        if (feedbackTimerRef.current) {
+            clearInterval(feedbackTimerRef.current);
+            feedbackTimerRef.current = null;
+        }
+
+        if (initialTime <= 0) return;
+
+        // Start new feedback countdown timer
+        feedbackTimerRef.current = setInterval(() => {
+            setGameState(prev => {
+                const newFeedbackRemaining = Math.max((prev.feedbackRemaining || 0) - 1, 0);
+
+                // Stop timer when reaching zero
+                if (newFeedbackRemaining === 0 && feedbackTimerRef.current) {
+                    clearInterval(feedbackTimerRef.current);
+                    feedbackTimerRef.current = null;
+                    return {
+                        ...prev,
+                        feedbackRemaining: 0,
+                        phase: 'show_answers'
+                    };
+                }
+
+                return {
+                    ...prev,
+                    feedbackRemaining: newFeedbackRemaining
+                };
+            });
+        }, 1000);
+    }, []);
+
+    // Stop local feedback countdown timer
+    const stopFeedbackTimer = useCallback(() => {
+        if (feedbackTimerRef.current) {
+            clearInterval(feedbackTimerRef.current);
+            feedbackTimerRef.current = null;
+        }
+    }, []);
 
     // --- Socket Connection ---
     useEffect(() => {
@@ -219,36 +287,35 @@ export function useStudentGameSocket({
         setSocket(s);
 
         // Connection event handlers
-        s.on("connect", () => {
+        s.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info(`Student socket connected: ${s.id}`);
             setConnected(true);
             setConnecting(false);
             setError(null);
         });
 
-        s.on("disconnect", (reason) => {
+        s.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
             logger.warn(`Student socket disconnected: ${reason}`);
             setConnected(false);
             setGameState(prev => ({
                 ...prev,
                 connectedToRoom: false
             }));
-            clearTimer();
         });
 
-        s.on("connect_error", (err) => {
+        s.on(SOCKET_EVENTS.CONNECT_ERROR, (err) => {
             logger.error("Student socket connection error:", err);
             setConnecting(false);
             setError(`Connection error: ${err.message}`);
         });
 
-        s.on("reconnect", (attemptNumber) => {
+        s.on(SOCKET_EVENTS.GAME.RECONNECT, (attemptNumber) => {
             logger.info(`Student socket reconnected after ${attemptNumber} attempts`);
             setConnected(true);
             setError(null);
             // Auto-rejoin game after reconnection
             if (accessCode && userId && username) {
-                s.emit("join_game", {
+                s.emit(SOCKET_EVENTS.GAME.JOIN_GAME, {
                     accessCode,
                     userId,
                     username,
@@ -260,20 +327,28 @@ export function useStudentGameSocket({
 
         return () => {
             logger.info(`Disconnecting student socket for game: ${accessCode}`);
-            clearTimer();
+            // TIMER MANAGEMENT OVERHAUL: Clean up local timer on disconnect
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+            if (feedbackTimerRef.current) {
+                clearInterval(feedbackTimerRef.current);
+                feedbackTimerRef.current = null;
+            }
             s.disconnect();
             setSocket(null);
             setConnected(false);
             setConnecting(false);
         };
-    }, [accessCode, userId, username, avatarUrl, isDiffered, clearTimer]);
+    }, [accessCode, userId, username, avatarUrl, isDiffered]);
 
     // --- Game Event Handlers ---
     useEffect(() => {
         if (!socket) return;
 
         // Handle successful game join
-        socket.on("game_joined", (payload) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_JOINED, (payload) => {
             logger.debug("Game joined successfully", payload);
             setGameState(prev => ({
                 ...prev,
@@ -283,7 +358,7 @@ export function useStudentGameSocket({
         });
 
         // Handle game questions
-        socket.on("game_question", (payload: GameQuestionPayload) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_QUESTION, (payload: GameQuestionPayload) => {
             logger.debug("Received game_question", payload);
 
             const roundedTime = payload.timer != null ? Math.floor(payload.timer) : 30;
@@ -298,6 +373,10 @@ export function useStudentGameSocket({
                 gameStatus = 'active';
             }
 
+            // Determine phase from payload or infer from game state
+            const phase = payload.phase || 'question';
+            const feedbackRemaining = payload.feedbackRemaining || null;
+
             setGameState(prev => ({
                 ...prev,
                 currentQuestion: payload.question,
@@ -305,17 +384,36 @@ export function useStudentGameSocket({
                 totalQuestions: payload.totalQuestions || 0,
                 timer: roundedTime,
                 answered: false,
-                gameStatus
+                gameStatus,
+                phase,
+                feedbackRemaining,
+                correctAnswers: null // Reset correct answers for new question
             }));
 
-            // Start timer if not paused and timer > 0
+            // TIMER MANAGEMENT OVERHAUL: Start local countdown timer
+            const timerStatus = payload.questionState === 'paused' ? 'pause' : 'play';
+            setGameState(prev => ({
+                ...prev,
+                timerStatus
+            }));
+
+            // Start local countdown if not paused and timer > 0
             if (payload.questionState !== 'paused' && roundedTime > 0) {
-                startTimer(roundedTime);
+                startLocalTimer(roundedTime);
+            } else {
+                stopLocalTimer();
+            }
+
+            // Start feedback timer if in feedback phase
+            if (phase === 'feedback' && feedbackRemaining && feedbackRemaining > 0) {
+                startFeedbackTimer(feedbackRemaining);
+            } else {
+                stopFeedbackTimer();
             }
         });
 
         // Handle timer updates
-        socket.on("timer_update", (data: TimerUpdate) => {
+        socket.on(SOCKET_EVENTS.GAME.TIMER_UPDATE, (data: TimerUpdate) => {
             logger.debug("Received timer_update", data);
 
             if (typeof data.timeLeft === 'number') {
@@ -325,20 +423,69 @@ export function useStudentGameSocket({
                     timerStatus: data.status || prev.timerStatus
                 }));
 
+                // TIMER MANAGEMENT OVERHAUL: Manage local countdown based on status
                 if (data.status === 'pause') {
-                    clearTimer();
+                    stopLocalTimer();
                     setGameState(prev => ({
                         ...prev,
                         gameStatus: 'paused'
                     }));
                 } else if (data.status === 'play' && data.timeLeft > 0) {
-                    startTimer(data.timeLeft);
+                    startLocalTimer(data.timeLeft);
                     setGameState(prev => ({
                         ...prev,
                         gameStatus: 'active'
                     }));
                 } else if (data.timeLeft === 0) {
-                    clearTimer();
+                    stopLocalTimer();
+                    setGameState(prev => ({
+                        ...prev,
+                        gameStatus: 'waiting'
+                    }));
+                }
+            }
+        });
+
+        // Handle backend timer updates (new backend event)
+        socket.on(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED, (data: { timer: any }) => {
+            logger.debug("Received game_timer_updated", data);
+
+            if (data.timer) {
+                const timerObj = data.timer;
+                let timeLeft = 0;
+                let status: 'play' | 'pause' | 'stop' = 'stop';
+
+                if (timerObj.isPaused) {
+                    status = 'pause';
+                    timeLeft = typeof timerObj.timeRemaining === 'number' ? Math.ceil(timerObj.timeRemaining / 1000) : 0;
+                } else if (typeof timerObj.startedAt === 'number' && typeof timerObj.duration === 'number') {
+                    const elapsed = Date.now() - timerObj.startedAt;
+                    const remaining = Math.max(0, timerObj.duration - elapsed);
+                    timeLeft = Math.ceil(remaining / 1000);
+                    status = 'play';
+                }
+
+                setGameState(prev => ({
+                    ...prev,
+                    timer: timeLeft,
+                    timerStatus: status
+                }));
+
+                // TIMER MANAGEMENT OVERHAUL: Manage local countdown based on status
+                if (status === 'pause') {
+                    stopLocalTimer();
+                    setGameState(prev => ({
+                        ...prev,
+                        gameStatus: 'paused'
+                    }));
+                } else if (status === 'play' && timeLeft > 0) {
+                    startLocalTimer(timeLeft);
+                    setGameState(prev => ({
+                        ...prev,
+                        gameStatus: 'active'
+                    }));
+                } else if (timeLeft === 0) {
+                    stopLocalTimer();
                     setGameState(prev => ({
                         ...prev,
                         gameStatus: 'waiting'
@@ -348,7 +495,7 @@ export function useStudentGameSocket({
         });
 
         // Handle game updates
-        socket.on("game_update", (data: GameUpdate) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_UPDATE, (data: GameUpdate) => {
             logger.debug("Received game_update", data);
 
             setGameState(prev => {
@@ -362,13 +509,10 @@ export function useStudentGameSocket({
                     updates.timerStatus = data.status;
 
                     if (data.status === 'pause') {
-                        clearTimer();
                         updates.gameStatus = 'paused';
                     } else if (data.status === 'play' && (data.timeLeft || prev.timer || 0) > 0) {
-                        startTimer(data.timeLeft || prev.timer || 0);
                         updates.gameStatus = 'active';
                     } else if (data.status === 'stop') {
-                        clearTimer();
                         updates.timer = 0;
                         updates.gameStatus = 'waiting';
                     }
@@ -379,11 +523,11 @@ export function useStudentGameSocket({
         });
 
         // Handle timer set events
-        socket.on("timer_set", ({ timeLeft, questionState }) => {
+        socket.on(SOCKET_EVENTS.GAME.TIMER_SET, ({ timeLeft, questionState }) => {
             logger.debug("Received timer_set", { timeLeft, questionState });
 
             if (questionState === "stopped") {
-                clearTimer();
+                stopLocalTimer();
                 setGameState(prev => ({
                     ...prev,
                     timer: 0,
@@ -393,7 +537,7 @@ export function useStudentGameSocket({
             }
 
             if (questionState === "paused") {
-                clearTimer();
+                stopLocalTimer();
                 setGameState(prev => ({
                     ...prev,
                     timer: timeLeft,
@@ -403,16 +547,21 @@ export function useStudentGameSocket({
                 return;
             }
 
-            // Active state
+            // Active state - start local countdown
             setGameState(prev => ({
                 ...prev,
                 timer: timeLeft
             }));
 
             if (timeLeft > 0) {
-                startTimer(timeLeft);
+                startLocalTimer(timeLeft);
+                setGameState(prev => ({
+                    ...prev,
+                    timerStatus: 'play',
+                    gameStatus: 'active'
+                }));
             } else {
-                clearTimer();
+                stopLocalTimer();
                 setGameState(prev => ({
                     ...prev,
                     gameStatus: 'waiting'
@@ -421,7 +570,7 @@ export function useStudentGameSocket({
         });
 
         // Handle answer responses
-        socket.on("answer_received", (payload: AnswerReceived) => {
+        socket.on(SOCKET_EVENTS.GAME.ANSWER_RECEIVED, (payload: AnswerReceived) => {
             logger.debug("Received answer_received", payload);
 
             setGameState(prev => ({
@@ -436,17 +585,82 @@ export function useStudentGameSocket({
             }
         });
 
+        // Handle feedback events with backend timing
+        socket.on(SOCKET_EVENTS.GAME.FEEDBACK, (payload: FeedbackEvent) => {
+            logger.debug("Received feedback event", payload);
+
+            const { questionId, feedbackRemaining } = payload;
+
+            setGameState(prev => ({
+                ...prev,
+                phase: 'feedback',
+                feedbackRemaining: feedbackRemaining
+            }));
+
+            // Start feedback countdown timer
+            if (feedbackRemaining > 0) {
+                startFeedbackTimer(feedbackRemaining);
+            }
+        });
+
         // Handle correct answers display
-        socket.on("correct_answers", (payload: { questionId: string }) => {
+        socket.on(SOCKET_EVENTS.GAME.CORRECT_ANSWERS, (payload: CorrectAnswersEvent) => {
             logger.debug("Received correct_answers", payload);
-            // This event signals that the correct answers should be displayed
-            // The actual correct answers are typically derived from the question object
+
+            const { questionId } = payload;
+
+            // Extract correct answers from current question if available
+            let correctAnswers: number[] = [];
+
+            setGameState(prev => {
+                if (prev.currentQuestion && prev.currentQuestion.responses) {
+                    correctAnswers = prev.currentQuestion.responses
+                        .map((response, index) => response.correct ? index : -1)
+                        .filter(index => index !== -1);
+                } else if (prev.currentQuestion && prev.currentQuestion.correctAnswers) {
+                    correctAnswers = prev.currentQuestion.correctAnswers
+                        .map((isCorrect, index) => isCorrect ? index : -1)
+                        .filter(index => index !== -1);
+                }
+
+                return {
+                    ...prev,
+                    correctAnswers,
+                    phase: 'show_answers'
+                };
+            });
+        });
+
+        // Handle tournament answer results
+        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_ANSWER_RESULT, (payload: TournamentAnswerResult) => {
+            logger.debug("Received tournament_answer_result", payload);
+
+            const { questionUid, rejected, reason, message, registered, updated } = payload;
+
+            // Create feedback object compatible with existing AnswerReceived interface
+            const answerFeedback: AnswerReceived = {
+                rejected: rejected || false,
+                received: registered || false,
+                message: message || '',
+                questionId: questionUid
+            };
+
+            setGameState(prev => ({
+                ...prev,
+                answered: registered || false,
+                lastAnswerFeedback: answerFeedback
+            }));
+
+            if (rejected) {
+                logger.warn("Tournament answer was rejected", { reason, message });
+            } else if (registered) {
+                logger.info("Tournament answer was registered", { updated, message });
+            }
         });
 
         // Handle game end
-        socket.on("game_ended", (results) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_ENDED, (results) => {
             logger.debug("Game ended", results);
-            clearTimer();
             setGameState(prev => ({
                 ...prev,
                 gameStatus: 'finished',
@@ -455,19 +669,19 @@ export function useStudentGameSocket({
         });
 
         // Handle errors
-        socket.on("game_error", (error) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_ERROR, (error) => {
             logger.error("Game error received", error);
             setError(error.message || 'Unknown game error');
         });
 
         // Handle already played
-        socket.on("game_already_played", (payload) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED, (payload) => {
             logger.info("Player has already played this game", payload);
             setError("You have already played this game");
         });
 
         // Handle redirect to lobby
-        socket.on("game_redirect_to_lobby", (payload) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_REDIRECT_TO_LOBBY, (payload) => {
             logger.info("Redirected to lobby", payload);
             setGameState(prev => ({
                 ...prev,
@@ -476,19 +690,31 @@ export function useStudentGameSocket({
         });
 
         return () => {
-            socket.off("game_joined");
-            socket.off("game_question");
-            socket.off("timer_update");
-            socket.off("game_update");
-            socket.off("timer_set");
-            socket.off("answer_received");
-            socket.off("correct_answers");
-            socket.off("game_ended");
-            socket.off("game_error");
-            socket.off("game_already_played");
-            socket.off("game_redirect_to_lobby");
+            // TIMER MANAGEMENT OVERHAUL: Clean up local timer on unmount
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+            if (feedbackTimerRef.current) {
+                clearInterval(feedbackTimerRef.current);
+                feedbackTimerRef.current = null;
+            }
+            socket.off(SOCKET_EVENTS.GAME.GAME_JOINED);
+            socket.off(SOCKET_EVENTS.GAME.GAME_QUESTION);
+            socket.off(SOCKET_EVENTS.GAME.TIMER_UPDATE);
+            socket.off(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED);
+            socket.off(SOCKET_EVENTS.GAME.GAME_UPDATE);
+            socket.off(SOCKET_EVENTS.GAME.TIMER_SET);
+            socket.off(SOCKET_EVENTS.GAME.ANSWER_RECEIVED);
+            socket.off(SOCKET_EVENTS.GAME.FEEDBACK);
+            socket.off(SOCKET_EVENTS.GAME.CORRECT_ANSWERS);
+            socket.off(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_ANSWER_RESULT);
+            socket.off(SOCKET_EVENTS.GAME.GAME_ENDED);
+            socket.off(SOCKET_EVENTS.GAME.GAME_ERROR);
+            socket.off(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED);
+            socket.off(SOCKET_EVENTS.GAME.GAME_REDIRECT_TO_LOBBY);
         };
-    }, [socket, startTimer, clearTimer]);
+    }, [socket]);
 
     // --- Action Functions ---
     const joinGame = useCallback(() => {
@@ -499,7 +725,7 @@ export function useStudentGameSocket({
 
         logger.info(`Joining game ${accessCode}`, { userId, username, isDiffered });
 
-        socket.emit("join_game", {
+        socket.emit(SOCKET_EVENTS.GAME.JOIN_GAME, {
             accessCode,
             userId,
             username,
@@ -516,7 +742,7 @@ export function useStudentGameSocket({
 
         logger.info("Submitting answer", { questionId, answer, timeSpent });
 
-        socket.emit("game_answer", {
+        socket.emit(SOCKET_EVENTS.GAME.GAME_ANSWER, {
             accessCode,
             userId,
             questionId,
@@ -533,7 +759,7 @@ export function useStudentGameSocket({
 
         logger.info("Requesting next question", { currentQuestionId });
 
-        socket.emit("request_next_question", {
+        socket.emit(SOCKET_EVENTS.GAME.REQUEST_NEXT_QUESTION, {
             accessCode,
             userId,
             currentQuestionId

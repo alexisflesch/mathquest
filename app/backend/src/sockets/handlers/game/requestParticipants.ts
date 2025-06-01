@@ -1,6 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { redisClient } from '@/config/redis';
 import { z } from 'zod';
+import { GAME_EVENTS } from '@shared/types/socket/events';
 
 // Inline schema for request_participants event
 const requestParticipantsPayloadSchema = z.object({ accessCode: z.string().min(1) });

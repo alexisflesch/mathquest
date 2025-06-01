@@ -45,15 +45,21 @@ export class GameTemplateService {
             where: {
                 gradeLevel: data.gradeLevel,
                 discipline: data.discipline,
-                tags: { hasSome: data.themes },
+                themes: { hasSome: data.themes },
                 isHidden: false
             },
             orderBy: { updatedAt: 'desc' }, // fallback order
             take: data.nbOfQuestions
         });
-        if (questions.length < data.nbOfQuestions) {
-            throw new Error('Not enough questions available for the selected filters');
+
+        // Only check that we have at least one question
+        if (questions.length === 0) {
+            throw new Error('No questions found for the selected filters');
         }
+
+        // Use whatever questions we found (even if less than requested)
+        const actualNbOfQuestions = Math.min(questions.length, data.nbOfQuestions);
+
         // 2. Create the GameTemplate
         const gameTemplate = await prisma.gameTemplate.create({
             data: {

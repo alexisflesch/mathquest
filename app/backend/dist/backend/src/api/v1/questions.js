@@ -56,6 +56,20 @@ router.post('/', auth_1.teacherAuth, async (req, res) => {
     }
 });
 /**
+ * Get available filter values (unique disciplines, grade levels, themes)
+ * GET /api/v1/questions/filters
+ */
+router.get('/filters', async (req, res) => {
+    try {
+        const filters = await getQuestionService().getAvailableFilters();
+        res.status(200).json(filters);
+    }
+    catch (error) {
+        logger.error({ error }, 'Error fetching filters');
+        res.status(500).json({ error: 'An error occurred while fetching filters' });
+    }
+});
+/**
  * Get a question by ID
  * GET /api/v1/questions/:uid
  */

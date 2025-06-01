@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation'; // Use navigation for redirect after signup
 import Link from 'next/link';
 import AvatarSelector from '@/components/AvatarSelector';
+import { makeApiRequest } from '@/config/api';
 
 export default function TeacherSignupPage() {
     const [formData, setFormData] = useState({
@@ -48,7 +49,10 @@ export default function TeacherSignupPage() {
         }
         setIsLoading(true);
         try {
-            const response = await fetch('/api/auth', {
+            const result = await makeApiRequest<{
+                message?: string;
+                enseignantId?: string;
+            }>('auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -62,10 +66,6 @@ export default function TeacherSignupPage() {
                     avatar: formData.avatar,
                 }),
             });
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.message || 'Erreur lors de la création du compte.');
-            }
             // Store teacher id in localStorage for frontend profile fetch
             if (result.enseignantId) {
                 localStorage.setItem('mathquest_teacher_id', result.enseignantId);

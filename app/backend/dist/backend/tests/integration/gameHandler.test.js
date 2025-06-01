@@ -196,35 +196,53 @@ describe('Game Handler', () => {
     afterAll(async () => {
         // Clean up server and databases
         await serverCleanup();
-        // Clean up test game instance and related data
-        await prisma_1.prisma.gameInstance.deleteMany({
-            where: { accessCode: TEST_ACCESS_CODE }
-        });
-        // Clean up the quiz template we created (must be after gameInstance)
-        await prisma_1.prisma.gameTemplate.deleteMany({
-            where: { name: 'Test Quiz Template' }
-        });
-        // Clean up questions
-        await prisma_1.prisma.question.deleteMany({
-            where: { text: { in: ['What is 2+2?', 'What is 3×3?'] } }
-        });
-        // Clean up GameParticipant records for test users (must be before deleting users)
+        // Clean up in proper order to respect foreign key constraints
+        // 1. Clean up GameParticipant records first (references users)
         await prisma_1.prisma.gameParticipant.deleteMany({
             where: {
                 userId: { in: ['player-123', 'player-1', 'player-2'] }
             }
         });
-        // Clean up test player dependencies first
+        // 3. Clean up test game instance (references gameTemplate and user)
+        await prisma_1.prisma.gameInstance.deleteMany({
+            where: { accessCode: TEST_ACCESS_CODE }
+        });
+        // 4. Clean up questionsInGameTemplate (references gameTemplate and questions)
+        await prisma_1.prisma.questionsInGameTemplate.deleteMany({
+            where: {
+                gameTemplate: { name: 'Test Quiz Template' }
+            }
+        });
+        // 5. Clean up the quiz template (references user)
+        await prisma_1.prisma.gameTemplate.deleteMany({
+            where: { name: 'Test Quiz Template' }
+        });
+        // 6. Clean up questions
+        await prisma_1.prisma.question.deleteMany({
+            where: { text: { in: ['What is 2+2?', 'What is 3×3?'] } }
+        });
+        // 7. Clean up student profiles first (referenced by users)
         await prisma_1.prisma.studentProfile.deleteMany({
             where: {
                 id: { in: ['player-123', 'player-1', 'player-2'] }
             }
         });
-        // Clean up test players
+        // 8. Clean up test student users
         await prisma_1.prisma.user.deleteMany({
-            where: { role: 'STUDENT' }
+            where: {
+                id: { in: ['player-123', 'player-1', 'player-2'] }
+            }
         });
-        // Clean up Redis
+        // 9. Clean up teacher profile and teacher user
+        await prisma_1.prisma.teacherProfile.deleteMany({
+            where: {
+                user: { email: 'test@example.com' }
+            }
+        });
+        await prisma_1.prisma.user.deleteMany({
+            where: { email: 'test@example.com' }
+        });
+        // 10. Clean up Redis
         const keys = await redis_1.redisClient.keys(`mathquest:game:*${TEST_ACCESS_CODE}*`);
         if (keys.length > 0) {
             await redis_1.redisClient.del(keys);

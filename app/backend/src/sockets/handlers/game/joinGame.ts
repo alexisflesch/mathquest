@@ -19,6 +19,7 @@ import {
     errorPayloadSchema,
     gameAlreadyPlayedPayloadSchema
 } from '@shared/types/socketEvents.zod';
+import { GAME_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('JoinGameHandler');
 

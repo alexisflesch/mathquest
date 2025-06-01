@@ -17,6 +17,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { makeApiRequest } from '@/config/api';
 
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");
@@ -31,12 +32,11 @@ export default function StudentJoinPage() {
             return;
         }
         try {
-            const res = await fetch(`/api/tournament/status?code=${code}`);
-            if (!res.ok) {
-                setError("Code erroné");
-                return;
-            }
-            const data = await res.json();
+            const data = await makeApiRequest<{
+                code: string;
+                type: string;
+                statut: string;
+            }>(`tournament/status?code=${code}`);
             const tournoiCode = data.code || code; // prefer code over id
             if (data.type === 'differé' || data.type === 'différé') {
                 router.push(`/live/${tournoiCode}`);

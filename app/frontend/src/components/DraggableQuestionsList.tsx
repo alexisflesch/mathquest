@@ -36,6 +36,7 @@ import { createLogger } from '@/clientLogger';
 import { SortableQuestion } from './SortableQuestion';
 import { Socket } from 'socket.io-client';
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Create a logger for this component
 const logger = createLogger('DraggableQuestions');
@@ -413,10 +414,10 @@ export default function DraggableQuestionsList({
             }
         };
 
-        quizSocket.on('quiz_action_response', handleQuizActionResponse);
+        quizSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ACTION_RESPONSE, handleQuizActionResponse);
 
         return () => {
-            quizSocket.off('quiz_action_response', handleQuizActionResponse);
+            quizSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ACTION_RESPONSE, handleQuizActionResponse);
         };
     }, [quizSocket]);
 

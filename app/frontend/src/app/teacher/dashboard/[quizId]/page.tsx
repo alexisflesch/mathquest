@@ -14,8 +14,10 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
 import CodeManager from '@/components/CodeManager'; // Import new component
 import { useTeacherQuizSocket, Question } from '@/hooks/useTeacherQuizSocket'; // Remove unused QuizState
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { UsersRound } from "lucide-react";
 import { log } from "console";
+import { makeApiRequest } from '@/config/api';
 
 // Create a logger for this component
 const logger = createLogger('TeacherDashboardPage');
@@ -67,9 +69,9 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
             setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
         };
-        quizSocket.on('quiz_answer_stats_update', handleStatsUpdate);
+        quizSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
         return () => {
-            quizSocket.off('quiz_answer_stats_update', handleStatsUpdate);
+            quizSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
         };
     }, [quizSocket]);
 
@@ -81,10 +83,10 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             setSnackbarMessage(data.message);
         };
 
-        quizSocket.on('quiz_action_response', handleActionResponse);
+        quizSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ACTION_RESPONSE, handleActionResponse);
 
         return () => {
-            quizSocket.off('quiz_action_response', handleActionResponse);
+            quizSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ACTION_RESPONSE, handleActionResponse);
         };
     }, [quizSocket]);
 
@@ -112,21 +114,17 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             try {
                 // Fetch quiz name
                 const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-                let quizListRes;
+                let quizzes: { id: string; nom: string }[];
                 if (teacherId) {
-                    quizListRes = await fetch(`/api/quiz?enseignant_id=${teacherId}`);
+                    quizzes = await makeApiRequest<{ id: string; nom: string }[]>(`quiz?enseignant_id=${teacherId}`);
                 } else {
-                    quizListRes = await fetch(`/api/quiz`); // Will return error, but keeps logic safe
+                    quizzes = await makeApiRequest<{ id: string; nom: string }[]>('quiz'); // Will return error, but keeps logic safe
                 }
-                if (!quizListRes.ok) throw new Error("Erreur lors du chargement des quiz");
-                const quizzes: { id: string; nom: string }[] = await quizListRes.json();
                 const found = Array.isArray(quizzes) ? quizzes.find((q) => q.id === quizId) : null;
                 if (isMounted) setQuizName(found?.nom || "Quiz");
 
                 // Fetch questions
-                const questionsRes = await fetch(`/api/teacher/quiz/${quizId}/questions`);
-                if (!questionsRes.ok) throw new Error("Erreur lors du chargement des questions");
-                const questionsData = await questionsRes.json();
+                const questionsData = await makeApiRequest<{ questions: Question[] }>(`teacher/quiz/${quizId}/questions`);
                 // Initialize local question state, ensuring 'temps' exists
                 const initialQuestions = (questionsData.questions || []).map((q: Question) => ({
                     ...q,
@@ -134,31 +132,23 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 }));
                 if (isMounted) setQuestions(initialQuestions);
 
-
                 // Fetch initial tournament code
-                const codeRes = await fetch(`/api/quiz/${quizId}/tournament-code`);
-                if (!codeRes.ok && codeRes.status !== 404) { // Allow 404 (no code exists)
-                    logger.warn(`Failed to fetch initial tournament code: ${codeRes.status}`);
-                    // Don't throw, just proceed without an initial code
-                } else if (codeRes.ok) {
-                    const codeData = await codeRes.json();
+                try {
+                    const codeData = await makeApiRequest<{ tournament_code: string }>(`quiz/${quizId}/tournament-code`);
                     if (codeData && codeData.tournament_code) {
                         // Verify the tournament exists before setting the code
                         try {
-                            const tournoiRes = await fetch(`/api/tournament?code=${codeData.tournament_code}`);
-                            if (tournoiRes.ok && isMounted) {
+                            await makeApiRequest(`tournament?code=${codeData.tournament_code}`);
+                            if (isMounted) {
                                 logger.info(`Fetched initial tournament code: ${codeData.tournament_code}`);
                                 setInitialTournamentCode(codeData.tournament_code);
                                 setCurrentTournamentCode(codeData.tournament_code); // Set current code
-                            } else if (isMounted) {
-                                logger.warn(`Fetched tournament code ${codeData.tournament_code}, but tournament not found or component unmounted.`);
-                                setInitialTournamentCode(null); // Treat as no code if tournament doesn't exist
-                                setCurrentTournamentCode(null);
                             }
                         } catch (tournoiErr) {
                             logger.error("Error verifying tournament existence:", tournoiErr);
                             if (isMounted) {
-                                setInitialTournamentCode(null);
+                                logger.warn(`Fetched tournament code ${codeData.tournament_code}, but tournament not found or component unmounted.`);
+                                setInitialTournamentCode(null); // Treat as no code if tournament doesn't exist
                                 setCurrentTournamentCode(null);
                             }
                         }
@@ -166,11 +156,13 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                         setInitialTournamentCode(null); // No code found
                         setCurrentTournamentCode(null);
                     }
-                } else if (isMounted) {
-                    // Handle 404 explicitly - no code exists yet
-                    logger.info("No initial tournament code found (404).");
-                    setInitialTournamentCode(null);
-                    setCurrentTournamentCode(null);
+                } catch (codeErr) {
+                    if (isMounted) {
+                        // Handle 404 explicitly - no code exists yet
+                        logger.info("No initial tournament code found (404).");
+                        setInitialTournamentCode(null);
+                        setCurrentTournamentCode(null);
+                    }
                 }
 
             } catch (err: unknown) {
@@ -272,7 +264,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
         // Force synchronization after emitting the action
         if (action.status === 'play') {
-            quizSocket?.emit('quiz_get_timer', { quizId: action.questionId }, (response: { timeLeft: number }) => {
+            quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.GET_TIMER, { quizId: action.questionId }, (response: { timeLeft: number }) => {
                 logger.info(`[DASHBOARD] Timer synchronized after play action:`, response);
                 setQuestions(prev => prev.map(q => q.uid === action.questionId ? { ...q, temps: response.timeLeft } : q));
             });
@@ -281,7 +273,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
     const handleShowResults = useCallback((uid: string) => {
         emitTimerAction({ status: 'stop', questionId: uid, timeLeft: 0 });
-        quizSocket?.emit('quiz_close_question', { quizId, tournamentCode: currentTournamentCode, questionUid: uid });
+        quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.CLOSE_QUESTION, { quizId, tournamentCode: currentTournamentCode, questionUid: uid });
     }, [emitTimerAction, quizSocket, quizId, currentTournamentCode]);
 
     // Callback from CodeManager when a new code is generated
@@ -444,7 +436,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 onStatsToggle={(uid, show) => {
                                     logger.info(`[DASHBOARD] Emitting quiz_toggle_stats`, { quizId, questionUid: uid, show });
                                     if (quizSocket && quizId) {
-                                        quizSocket.emit('quiz_toggle_stats', {
+                                        quizSocket.emit(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, {
                                             quizId,
                                             questionUid: uid,
                                             show

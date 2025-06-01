@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { makeApiRequest } from '@/config/api';
 
 export default function TeacherResetPasswordRequestPage() {
     const [email, setEmail] = useState('');
@@ -13,13 +14,11 @@ export default function TeacherResetPasswordRequestPage() {
         setSuccess(null);
         setIsLoading(true);
         try {
-            const res = await fetch('/api/auth/reset-password', {
+            const result = await makeApiRequest<{ message?: string }>('auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
             });
-            const result = await res.json();
-            if (!res.ok) throw new Error(result.message || 'Erreur');
             setSuccess('Un email de réinitialisation a été envoyé si ce compte existe.');
         } catch (err: unknown) {
             setError((err as Error).message || 'Erreur lors de la demande.');

@@ -16,9 +16,9 @@
         const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
             setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
         };
-        gameSocket.on('quiz_toggle_stats', handleToggleStats);
+        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
         return () => {
-            gameSocket.off('quiz_toggle_stats', handleToggleStats);
+            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
         };
     }, [gameSocket]);nts on a larger screen (projector, interactive whiteboard, etc.)
  * Features:
@@ -45,6 +45,7 @@ import ClassementPodium from '@/components/ClassementPodium';
 import ZoomControls from '@/components/ZoomControls'; // Import du nouveau composant
 import { Question } from '@/types'; // Remove unused QuizState import
 import type { TournamentQuestion } from '@/components/QuestionCard';
+import { makeApiRequest } from '@/config/api';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const logger = createLogger('ProjectionPage');
@@ -58,6 +59,8 @@ function formatTimer(val: number | null) {
     }
     return val.toString();
 }
+
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function ProjectionPage({ params }: { params: Promise<{ quizId: string }> }) { // Update params type to Promise
     const resolvedParams = use(params); // Use React.use() to resolve the params Promise
@@ -109,9 +112,9 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
             debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_results');
             setPodiumKey(k => k + 1); // Remount ClassementPodium for animation
         };
-        gameSocket.on('quiz_question_results', handleResults);
+        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_RESULTS, handleResults);
         return () => {
-            gameSocket.off('quiz_question_results', handleResults);
+            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_RESULTS, handleResults);
         };
     }, [gameSocket]);
 
@@ -122,9 +125,9 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
             setLeaderboard(data.leaderboard || []);
             debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_closed');
         };
-        gameSocket.on('quiz_question_closed', handleClosed);
+        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_CLOSED, handleClosed);
         return () => {
-            gameSocket.off('quiz_question_closed', handleClosed);
+            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_CLOSED, handleClosed);
         };
     }, [gameSocket]);
 
@@ -134,9 +137,9 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
         const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
             setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
         };
-        gameSocket.on('quiz_answer_stats_update', handleStatsUpdate);
+        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
         return () => {
-            gameSocket.off('quiz_answer_stats_update', handleStatsUpdate);
+            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
         };
     }, [gameSocket]);
 
@@ -146,9 +149,9 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
         const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
             setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
         };
-        gameSocket.on('quiz_toggle_stats', handleToggleStats);
+        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
         return () => {
-            gameSocket.off('quiz_toggle_stats', handleToggleStats);
+            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
         };
     }, [gameSocket]);
 
@@ -238,10 +241,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                 }
 
                 // Fetch quiz name and tournament code
-                const quizListRes = await fetch(`/api/quiz?enseignant_id=${teacherId}`);
-                if (!quizListRes.ok) throw new Error("Erreur lors du chargement des quiz");
-
-                const quizzes: { id: string; nom: string }[] = await quizListRes.json();
+                const quizzes: { id: string; nom: string }[] = await makeApiRequest(`quiz?enseignant_id=${teacherId}`);
                 const found = Array.isArray(quizzes) ? quizzes.find((q) => q.id === quizId) : null;
 
                 if (!found) {
@@ -253,12 +253,13 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                 // setQuizName(found.nom || "Quiz");
 
                 // Fetch tournament code
-                const codeRes = await fetch(`/api/quiz/${quizId}/tournament-code`);
-                if (codeRes.ok) {
-                    const codeData = await codeRes.json();
+                try {
+                    const codeData = await makeApiRequest<{ tournament_code?: string }>(`quiz/${quizId}/tournament-code`);
                     if (codeData && codeData.tournament_code) {
                         setCurrentTournamentCode(codeData.tournament_code);
                     }
+                } catch (codeErr) {
+                    logger.error("Error fetching tournament code:", codeErr);
                 }
 
                 setLoading(false);

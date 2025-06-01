@@ -1,5 +1,6 @@
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
+import { GAME_EVENTS } from '@shared/types/socket/events';
 
 // Create a helper-specific logger
 const logger = createLogger('GameHelpers');

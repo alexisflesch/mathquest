@@ -1,25 +1,26 @@
-# Changement de nom de l'application
-ARQOS : Advanced Realtime Quiz(zing) Online System
-IRQOS : Interactive Real-time Quiz(zing) Online System
-ASTOR — Advanced System for Trivia, Open-source, and Real-time
-Brainzorn, Zornigma, Zornify, Axorn, Zornium (dérivé du lemme de Zorn)
+# MathQuest - Zornium
 
-# MathQuest
+MathQuest est une application de quiz en temps réel inspirée de Kahoot, conçue pour les enseignants et leurs élèves. Elle permet :
+- d'accéder à une base de données partagée d'exercices, avec ajout facile de nouveaux contenus.
+- aux élèves de s'exercer seuls ou en groupe (mode tournoi).
+- aux enseignants d'organiser des sessions en classe, avec affichage sur projecteur et suivi des résultats en temps réel.
 
-MathQuest est une application inspirée de Kahoot, destinée aux enseignants. Son but est de :
-- proposer une base de données partagée d'exercices avec la possibilité d'en ajouter facilement.
-- permettre aux élèves/étudiant(e)s de s'exercer sur ces exercices, soit seul(e)s soit en groupe (mode "tournoi").
-- permettre aux enseignant(e)s d'organiser des sessions en classe, avec un affichage sur un écran de projection, en suivant les résultats en temps réel.
+---
 
-## Installation et démarrage
+## 🚀 Installation rapide
+
+### Prérequis
+- **Node.js** v18+ recommandé ([télécharger](https://nodejs.org/))
+- **npm** (installé avec Node.js)
+- **PostgreSQL** (base de données)
+- **Redis** (sessions et Socket.IO)
 
 ### 1. Installer PostgreSQL et Redis
 
 #### PostgreSQL
 - **Linux (Debian/Ubuntu)** :
   ```bash
-  sudo apt update
-  sudo apt install postgresql postgresql-contrib
+  sudo apt update && sudo apt install postgresql postgresql-contrib
   ```
 - **macOS (Homebrew)** :
   ```bash
@@ -29,23 +30,20 @@ MathQuest est une application inspirée de Kahoot, destinée aux enseignants. So
 - **Windows** :
   Télécharger et installer depuis https://www.postgresql.org/download/
 
-Créez une base de données et un utilisateur si besoin :
+Créer la base et l'utilisateur :
 ```bash
 sudo -u postgres psql
 CREATE DATABASE mathquest;
-CREATE USER postgre WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE mathquest TO postgre;
+CREATE USER mathquest WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE mathquest TO mathquest;
 \q
 ```
 
 #### Redis
-Redis est nécessaire pour la gestion des sessions et la communication temps réel via Socket.IO.
-
 - **Linux (Debian/Ubuntu)** :
   ```bash
-  sudo apt update
-  sudo apt install redis-server
-  sudo systemctl enable redis-server
+  sudo apt update && sudo apt install redis-server
+  sudo systemctl enable redis-server --now
   ```
 - **macOS (Homebrew)** :
   ```bash
@@ -53,22 +51,22 @@ Redis est nécessaire pour la gestion des sessions et la communication temps ré
   brew services start redis
   ```
 - **Windows** :
-  Télécharger et installer Redis Stack depuis https://redis.io/download
-  
-Vérifiez que Redis fonctionne :
+  Télécharger Redis Stack : https://redis.io/download
+
+Vérifier le fonctionnement :
 ```bash
 redis-cli ping
+# Réponse attendue : PONG
 ```
-La réponse devrait être `PONG`.
 
 ### 2. Configurer les variables d'environnement
 
-- Copiez `example.env` à la racine du projet en `.env` et éditez-le avec vos informations PostgreSQL et Redis :
+- Copier `example.env` en `.env` à la racine du projet et adapter les valeurs (PostgreSQL, Redis, etc) :
   ```bash
   cp example.env .env
   nano .env
   ```
-- Faites de même dans le dossier `script/` :
+- Faire de même dans `script/` si besoin de scripts d'import :
   ```bash
   cp script/example.env script/.env
   nano script/.env
@@ -82,35 +80,57 @@ npm install
 
 ### 4. Initialiser la base de données avec Prisma
 
-- Appliquez les migrations :
+- Appliquer les migrations :
   ```bash
   npx prisma migrate deploy
   ```
-- Générez le client Prisma :
+- Générer le client Prisma :
   ```bash
   npx prisma generate
   ```
 
-### 5. Importer les questions (optionnel)
+### 5. (Optionnel) Importer des questions
 
-- Utilisez le script Python pour importer les questions YAML :
+- Utiliser le script Python pour importer des questions YAML :
   ```bash
   cd script
   python3 import_questions.py
   ```
 
-### 6. Lancer l'application en développement
+### 6. Lancer l'application
 
+#### En développement
 ```bash
 npm run dev
 ```
 
-### 7. Lancer en production
-
+#### En production
 ```bash
 npm run build
 npm start
 ```
+
+### 7. Lancer le frontend (si séparé)
+- Le frontend Next.js est inclus dans ce repo. Pour le développement :
+  ```bash
+  cd frontend
+  npm install
+  npm run dev
+  ```
+- Pour la production :
+  ```bash
+  npm run build
+  npm start
+  ```
+
+---
+
+## 🛠️ Dépannage & Conseils
+- Vérifiez que PostgreSQL et Redis tournent (`systemctl status ...`).
+- Les ports par défaut sont configurables dans `.env`.
+- Pour réinitialiser la base : `npx prisma migrate reset` (⚠️ efface les données).
+- Pour tester les sockets : voir `/docs/sockets/` et `/backend/tests/`.
+- Documentation technique détaillée : `/docs/`
 
 ---
 

@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import type { QuizState, Question } from './useTeacherQuizSocket';
 import { SOCKET_CONFIG } from '@/config';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('useProjectionQuizSocket');
 
@@ -14,10 +15,24 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [localTimeLeft, setLocalTimeLeft] = useState<number | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(1);
+
+    // TIMER MANAGEMENT OVERHAUL: Internal UI timer for smooth countdown display
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number | null>(null);
     const initialDurationRef = useRef<number | null>(null);
     const animationFrameRef = useRef<number | null>(null);
+
+    // Throttled update function for smooth display
+    const lastUpdateTimeRef = useRef<number>(0);
+    const UI_UPDATE_THRESHOLD = 200; // Only update UI state every 200ms
+
+    const updateLocalTimeLeft = useCallback((newTimeLeft: number) => {
+        const now = Date.now();
+        if (now - lastUpdateTimeRef.current > UI_UPDATE_THRESHOLD) {
+            lastUpdateTimeRef.current = now;
+            setLocalTimeLeft(newTimeLeft);
+        }
+    }, []);
 
     useEffect(() => {
         if (!gameId) return;
@@ -28,24 +43,23 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
         const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
         const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
         logger.info(`[DEBUG][CLIENT] Emitting join_projector for gameId=${gameId}, teacherId=${teacherId}, cookie_id=${cookie_id}`);
-        s.emit("join_projector", gameId);
-        s.on("connect", () => {
+        s.emit(SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTOR, gameId);
+        s.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info(`Socket connected: ${s.id}`);
             // Note: The initial state is sent automatically upon joining the projector room
         });
-        s.on("disconnect", (reason) => {
+        s.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
             logger.warn(`Socket disconnected: ${reason}`);
             setGameState(null);
             setTimerStatus('stop');
             setTimerQuestionId(null);
             setTimeLeft(0);
             setLocalTimeLeft(null);
-            if (timerRef.current) clearInterval(timerRef.current);
         });
-        s.on("connect_error", (err) => {
+        s.on(SOCKET_EVENTS.CONNECT_ERROR, (err) => {
             logger.error("Socket connection error:", err);
         });
-        s.on("joined_room", ({ room, socketId }) => {
+        s.on(SOCKET_EVENTS.PROJECTOR.JOINED_ROOM, ({ room, socketId }) => {
             logger.debug("Server confirms join", { room, socketId });
         });
         s.onAny((event, ...args) => {
@@ -62,7 +76,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
     useEffect(() => {
         if (!gameSocket) return;
         logger.info('Socket info', { id: gameSocket.id });
-        gameSocket.on("joined_room", ({ room, socketId }) => {
+        gameSocket.on(SOCKET_EVENTS.PROJECTOR.JOINED_ROOM, ({ room, socketId }) => {
             logger.info('joined_room', { room, socketId });
         });
         gameSocket.onAny((event, ...args) => {
@@ -115,6 +129,37 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                 setLocalTimeLeft(null);
             }
         };
+        // TIMER MANAGEMENT OVERHAUL: Handle quiz timer events from backend
+        const handleQuizTimerUpdate = (data: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number, timestamp: number }) => {
+            logger.debug('Received quiz_timer_update', data);
+
+            // Update timer state based on backend authority
+            setTimerStatus(data.status);
+            setTimerQuestionId(data.questionId);
+            setTimeLeft(data.timeLeft);
+            setLocalTimeLeft(data.timeLeft);
+
+            // Reset internal timer state for new backend event
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
+            }
+
+            if (data.status === 'play' && data.timeLeft > 0) {
+                // Start internal countdown from backend value
+                startTimeRef.current = Date.now();
+                initialDurationRef.current = data.timeLeft;
+            } else if (data.status === 'pause') {
+                // Preserve paused time
+                startTimeRef.current = null;
+                initialDurationRef.current = data.timeLeft;
+            } else if (data.status === 'stop') {
+                // Reset everything
+                startTimeRef.current = null;
+                initialDurationRef.current = null;
+            }
+        };
+
         const handleTimerUpdate = (data: { timer?: { startedAt: number, duration: number, isPaused: boolean } }) => {
             logger.debug('Received projection_timer_updated', data);
 
@@ -143,20 +188,22 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                 setLocalTimeLeft(0);
             }
         };
-        gameSocket.on("projector_state", handleGameState);
-        gameSocket.on("projection_timer_updated", handleTimerUpdate);
-        gameSocket.on("projector_connected_count", (data: { count: number }) => {
+        gameSocket.on(SOCKET_EVENTS.PROJECTOR.PROJECTOR_STATE, handleGameState);
+        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.TIMER_UPDATE, handleQuizTimerUpdate);
+        gameSocket.on(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, handleTimerUpdate);
+        gameSocket.on(SOCKET_EVENTS.PROJECTOR.PROJECTOR_CONNECTED_COUNT, (data: { count: number }) => {
             logger.debug('Received projector_connected_count', data);
             setConnectedCount(data.count);
         });
-        gameSocket.on("connect", () => {
+        gameSocket.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info("Reconnected, projector state will be sent automatically.");
         });
         return () => {
-            gameSocket.off("projector_state", handleGameState);
-            gameSocket.off("projection_timer_updated", handleTimerUpdate);
-            gameSocket.off("projector_connected_count");
-            gameSocket.off("connect");
+            gameSocket.off(SOCKET_EVENTS.PROJECTOR.PROJECTOR_STATE, handleGameState);
+            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.TIMER_UPDATE, handleQuizTimerUpdate);
+            gameSocket.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, handleTimerUpdate);
+            gameSocket.off(SOCKET_EVENTS.PROJECTOR.PROJECTOR_CONNECTED_COUNT);
+            gameSocket.off(SOCKET_EVENTS.CONNECT);
             gameSocket.offAny();
         };
     }, [gameSocket, gameId]);
@@ -178,7 +225,10 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                 const elapsed = (now - startTimeRef.current) / 1000;
                 const remaining = Math.max(initialDurationRef.current - elapsed, 0);
                 const roundedRemaining = Math.ceil(remaining);
-                setLocalTimeLeft(roundedRemaining);
+
+                // Use throttled update for better performance
+                updateLocalTimeLeft(roundedRemaining);
+
                 if (remaining <= 0) {
                     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
                 } else {
@@ -197,7 +247,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
             if (timerRef.current) clearInterval(timerRef.current);
             if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
         };
-    }, [timerStatus, timeLeft]);
+    }, [timerStatus, timeLeft, updateLocalTimeLeft]);
 
     return {
         gameSocket,

@@ -1,97 +1,83 @@
-# MathQuest Backend Overview
+# MathQuest Backend - AI Agent Reference
 
-This document provides a comprehensive technical reference for the MathQuest backend, focusing on real-time game logic, state management, and event-driven architecture. It is intended for developers and agents who need to understand, debug, or extend the backend logic.
-
----
-
-## 1. Architecture & Main Concepts
-
-- **Node.js + TypeScript**: The backend is built with Node.js and TypeScript for type safety and maintainability.
-- **Prisma ORM**: Used for all database access (PostgreSQL).
-- **Socket.IO**: Handles all real-time communication (quizzes, tournaments, dashboards, projectors).
-- **Redis**: Used for horizontal scaling and as a fast in-memory store for game state, participants, answers, and leaderboards.
-- **Express**: Serves the REST API (see `/docs/api/` for details).
+This document is the canonical reference for the MathQuest backend, designed for AI agents and developers. It covers architecture, real-time logic, state models, event flow, and best practices for automated reasoning, debugging, and extension.
 
 ---
 
-## 2. Key Backend Components
+## 1. Overview & Main Concepts
 
-- **server.ts**: Main entry point. Sets up Express, loads environment, mounts API, and initializes Socket.IO with Redis adapter.
-- **sockets/**: All real-time logic, event handlers, and state management for quizzes, tournaments, lobbies, and teacher dashboards.
-- **core/services/**: Business logic for users, questions, game templates, game instances, and participants. All DB access is via Prisma.
-- **db/prisma.ts**: Prisma client setup.
-- **utils/logger.ts**: Centralized logging utility.
+- **Node.js + TypeScript**: Type-safe, event-driven backend.
+- **Prisma ORM**: PostgreSQL database access.
+- **Socket.IO**: Real-time communication for quizzes, tournaments, dashboards, and projectors.
+- **Redis**: Fast in-memory store for state, horizontal scaling, and failover.
+- **Express**: REST API (see `/docs/api/`).
 
 ---
 
-## 3. Real-Time State & Event Flow
+## 2. Architecture & Real-Time Engine
 
-### State Management
-- **Redis** is used to store transient game state (active games, participants, answers, leaderboards) for fast access and multi-server support.
-- **In-memory state** is used for per-process logic, but all critical state is mirrored in Redis.
+- **Socket.IO** is the backbone for all real-time events.
+- **Handler Domains**:
+  - **Quiz**: Teacher dashboard, quiz control, projector view.
+  - **Tournament**: Student gameplay, scoring, answer submission.
+  - **Lobby**: Waiting room before tournaments start.
+- **In-Memory State**: All critical state is mirrored in Redis for recovery and multi-instance support.
+- **Event-Driven**: Each handler registers listeners for specific socket events, updates state, interacts with the DB, and emits events to clients/rooms.
 
-### Event Flow
-1. **Client emits event** (e.g., join_game, game_answer, join_dashboard)
-2. **Socket.IO handler** validates and processes the event
-3. **State is updated** in Redis and/or the database
+---
+
+## 3. State Models
+
+- **quizState**: Per-quiz, in-memory + Redis. Tracks quiz sessions, participants, questions, answers, leaderboard, status.
+- **tournamentState**: Per-tournament, in-memory + Redis. Tracks tournament sessions, participants, rounds, leaderboard, status.
+- **lobbyParticipants**: Per-lobby, in-memory only. Tracks participants in each lobby room.
+
+See [`state-models.md`](./state-models.md) for full structure diagrams and field lists.
+
+---
+
+## 4. Socket Event Flow
+
+1. **Client emits event** (e.g., `join_game`, `game_answer`, `join_dashboard`)
+2. **Socket.IO handler** validates/processes the event
+3. **State is updated** in Redis and/or DB
 4. **Server emits events** to relevant clients/rooms (e.g., game state, leaderboard, question, results)
 5. **Clients update UI** based on received events
 
----
-
-## 4. Main Socket Domains & Handlers
-
-- **Lobby**: Handles joining/leaving game lobbies, tracks participants in Redis, emits participant lists.
-- **Game**: Handles joining games, submitting answers, requesting participants, and disconnects. Manages per-game state, answer collection, and scoring.
-- **Teacher Control**: Handles teacher dashboard events (set question, timer actions, lock/unlock answers, end game). Controls game flow and emits state to students/projectors.
-- **Tournament**: Handles tournament-specific events, including differed (asynchronous) mode.
-- **Projector**: Handles real-time display for classroom projectors (read-only view of game state, leaderboard, etc).
+See `/docs/sockets/event-reference.md` for a full event list and payloads.
 
 ---
 
-## 5. Core Services (Business Logic)
+## 5. File & Folder Structure
 
-- **UserService**: Registration, authentication (JWT), and user management.
-- **QuestionService**: CRUD for questions, filtering, and search.
-- **GameTemplateService / QuizTemplateService**: Creation, update, and management of game/quiz templates (ordered questions, metadata, etc).
-- **GameInstanceService**: Creation and management of game instances (live or differed), access code generation, status updates.
-- **GameParticipantService**: Handles joining games, answer submission, and participant state.
-- **GameStateService**: Manages per-game state in Redis (current question, timer, participants, answers, leaderboard).
-
----
-
-## 6. Game State & Flow
-
-- **Game Lifecycle**: Teacher creates a game template → launches a game instance → students join via access code → teacher controls flow (questions, timer, lock/unlock) → answers are collected and scored → leaderboard is updated in real time.
-- **Differed Mode**: Games can be set as self-paced (differed), allowing students to join and complete at their own pace within a time window.
-- **Leaderboard**: Calculated in real time using Redis sorted sets, updated after each question.
-- **Timer**: Per-question timers managed in Redis, with support for pause/resume and per-question time limits.
+- `/sockets/quizHandler.js` - Registers all quiz events, manages quizState.
+- `/sockets/quizEventHandlers/` - Individual files for each quiz event (setQuestion, timerAction, lock, unlock, etc).
+- `/sockets/tournamentHandler.js` - Registers all tournament events, manages tournamentState.
+- `/sockets/tournamentEventHandlers/` - Individual files for each tournament event (join, answer, pause, resume, etc).
+- `/sockets/lobbyHandler.js` - Handles lobby join/leave, participant tracking, and lobby events.
+- `/sockets/sharedLiveLogic/` - Logic shared between quiz and tournament modes (e.g., emitQuestionResults, sendQuestion).
+- `/core/services/` - Business logic for users, questions, game templates, game instances, and participants (all DB access via Prisma).
+- `/db/prisma.ts` - Prisma client setup.
+- `/utils/logger.ts` - Centralized logging utility.
 
 ---
 
-## 7. Error Handling & Logging
+## 6. Best Practices for AI Agents
 
-- All errors are logged with context using the logger utility.
-- Socket events and REST endpoints validate payloads (Zod schemas for socket events).
-- Global error handler for Express ensures consistent error responses.
-
----
-
-## 8. Extensibility & Best Practices
-
-- All business logic is in service classes for testability and separation of concerns.
-- Socket event handlers are modular and grouped by domain.
-- Shared types are imported from `@shared/types` for consistency across backend and frontend.
-- All real-time state is mirrored in Redis for reliability and scaling.
+- **Type Safety**: Use shared TypeScript types for all state and event payloads.
+- **Event Constants**: Use shared event constants from `/shared/types/socket/events.ts` for all socket event names.
+- **State Consistency**: Always update both in-memory and Redis state for critical game/session data.
+- **Room Naming**: Follow the naming conventions: `dashboard_${gameId}`, `game_${accessCode}`, `projection_${gameId}`, `lobby_${code}`.
+- **Error Handling**: Use structured error objects (`{ error, message }`).
+- **Timer Management**: Backend is the single source of truth for all timer values and status.
+- **Self-Paced Modes**: Practice mode uses `isDiffered: true` and manual progression.
 
 ---
 
-## 9. Related Documentation
-- [Backend Architecture](backend-architecture.md)
-- [State Models](state-models.md)
+## 7. Historical Notes
 
-This directory contains documentation for the MathQuest backend, including architecture, state management, and real-time logic.
+- **Socket Event Alignment (2025-05-27)**: All hardcoded socket event strings replaced with shared constants. See `backend-socket-alignment-completion.md` (archived).
 
 ---
 
-_Last updated: 2025-05-20_
+*For detailed type definitions, see `/shared/types/`. For API details, see `/docs/api/`. For event flows, see `/docs/sockets/`.*

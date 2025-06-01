@@ -143,8 +143,6 @@ exports.Prisma.QuestionScalarFieldEnum = {
   uid: 'uid',
   title: 'title',
   text: 'text',
-  answerOptions: 'answerOptions',
-  correctAnswers: 'correctAnswers',
   questionType: 'questionType',
   discipline: 'discipline',
   themes: 'themes',
@@ -155,22 +153,24 @@ exports.Prisma.QuestionScalarFieldEnum = {
   tags: 'tags',
   timeLimit: 'timeLimit',
   isHidden: 'isHidden',
-  feedbackWaitTime: 'feedbackWaitTime',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  answerOptions: 'answerOptions',
+  correctAnswers: 'correctAnswers',
+  feedbackWaitTime: 'feedbackWaitTime'
 };
 
 exports.Prisma.GameTemplateScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  creatorId: 'creatorId',
   gradeLevel: 'gradeLevel',
   themes: 'themes',
   discipline: 'discipline',
   description: 'description',
   defaultMode: 'defaultMode',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  creatorId: 'creatorId'
 };
 
 exports.Prisma.QuestionsInGameTemplateScalarFieldEnum = {
@@ -183,8 +183,6 @@ exports.Prisma.QuestionsInGameTemplateScalarFieldEnum = {
 exports.Prisma.GameInstanceScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  gameTemplateId: 'gameTemplateId',
-  initiatorUserId: 'initiatorUserId',
   accessCode: 'accessCode',
   status: 'status',
   playMode: 'playMode',
@@ -194,15 +192,16 @@ exports.Prisma.GameInstanceScalarFieldEnum = {
   createdAt: 'createdAt',
   startedAt: 'startedAt',
   endedAt: 'endedAt',
-  isDiffered: 'isDiffered',
   differedAvailableFrom: 'differedAvailableFrom',
-  differedAvailableTo: 'differedAvailableTo'
+  differedAvailableTo: 'differedAvailableTo',
+  isDiffered: 'isDiffered',
+  gameTemplateId: 'gameTemplateId',
+  initiatorUserId: 'initiatorUserId'
 };
 
 exports.Prisma.GameParticipantScalarFieldEnum = {
   id: 'id',
   gameInstanceId: 'gameInstanceId',
-  userId: 'userId',
   score: 'score',
   rank: 'rank',
   timeTakenMs: 'timeTakenMs',
@@ -210,7 +209,8 @@ exports.Prisma.GameParticipantScalarFieldEnum = {
   completedAt: 'completedAt',
   answers: 'answers',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  userId: 'userId'
 };
 
 exports.Prisma.SortOrder = {

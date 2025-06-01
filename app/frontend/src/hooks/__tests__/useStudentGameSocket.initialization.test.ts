@@ -74,7 +74,13 @@ describe('useStudentGameSocket - Initialization', () => {
             timerStatus: 'stop',
             gameStatus: 'waiting',
             answered: false,
-            connectedToRoom: false
+            connectedToRoom: false,
+            phase: 'question',
+            feedbackRemaining: null,
+            correctAnswers: null,
+            gameMode: 'tournament',
+            linkedQuizId: null,
+            lastAnswerFeedback: null
         });
     });
 

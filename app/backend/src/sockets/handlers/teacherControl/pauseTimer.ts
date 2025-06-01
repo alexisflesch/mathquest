@@ -4,6 +4,7 @@ import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/gameStateService';
 import createLogger from '@/utils/logger';
 import { PauseTimerPayload } from './types';
+import { TEACHER_EVENTS } from '@shared/types/socket/events';
 
 // Create a handler-specific logger
 const logger = createLogger('PauseTimerHandler');

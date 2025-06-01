@@ -80,6 +80,32 @@ In self-paced (practice/differed) mode:
 
 > **Note:** Events like `quiz_state` and `game_state` are not used in the current backend. Use the above events for dashboard and live quiz flows.
 
+## Projector Events
+
+| Event Name         | Direction         | Payload Example                                                                 | Description                                                      |
+|-------------------|-------------------|-------------------------------------------------------------------------------|------------------------------------------------------------------|
+| `projector_state` | server → projector| `{ accessCode, gameState, participants, answers, leaderboard }`               | Sent to projector clients in the projector room. Contains the full game state, including the access code, current game state, participants, answers, and leaderboard. |
+
+**Payload Structure:**
+```json
+{
+  "accessCode": "PROJ123",
+  "gameState": { /* see GameState type */ },
+  "participants": [ /* array of participant objects */ ],
+  "answers": { /* answers keyed by questionId */ },
+  "leaderboard": [ /* array of leaderboard entries */ ]
+}
+```
+- `accessCode`: The access code for the game (string, top-level property).
+- `gameState`: The current game state object (see backend `GameState` type for details).
+- `participants`: Array of participant objects.
+- `answers`: Object mapping question IDs to arrays of answers.
+- `leaderboard`: Array of leaderboard entries.
+
+> **Note:** As of May 2025, the `projector_state` payload always includes `accessCode` as a top-level property.
+
+---
+
 ## General/Error Events
 
 | Event Name             | Direction      | Payload Example                | Description                                 |

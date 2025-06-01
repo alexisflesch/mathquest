@@ -20,6 +20,7 @@ import React, { useEffect, useState } from 'react';
 import type { Question as BaseQuestion } from '../types';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { Check, X } from 'lucide-react';
+import { makeApiRequest } from '@/config/api';
 
 
 // Extend the shared Question interface with additional fields for this component
@@ -55,15 +56,17 @@ export default function QuestionSelector({
     onTimerAction
 }: QuestionSelectorProps) {
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [filters, setFilters] = useState({ disciplines: [], niveaux: [], themes: [] });
+    const [filters, setFilters] = useState<{ disciplines: string[]; niveaux: string[]; themes: string[] }>({ disciplines: [], niveaux: [], themes: [] });
     const [filter, setFilter] = useState({ discipline: '', niveau: '', themes: [] as string[], tag: '' }); // New filter state with themes array
     const [selectedQuestionsMap, setSelectedQuestionsMap] = useState<{ [uid: string]: Question }>({});
     const [expanded, setExpanded] = useState<{ [uid: string]: boolean }>({});
 
     useEffect(() => {
-        fetch('/api/questions/filters')
-            .then(res => res.json())
-            .then(setFilters);
+        makeApiRequest<{ disciplines: string[]; niveaux: string[]; themes: string[] }>('questions/filters')
+            .then(setFilters)
+            .catch(error => {
+                console.error('Error fetching filters:', error);
+            });
     }, []);
 
     const effectiveFilter = externalFilter ? {
@@ -72,7 +75,7 @@ export default function QuestionSelector({
     } : filter;
 
     useEffect(() => {
-        let url = '/api/questions';
+        let url = 'questions';
         const params = [];
         if (effectiveFilter.discipline) params.push(`discipline=${encodeURIComponent(effectiveFilter.discipline)}`);
         if (effectiveFilter.niveau) params.push(`niveau=${encodeURIComponent(effectiveFilter.niveau)}`);
@@ -89,9 +92,11 @@ export default function QuestionSelector({
         params.push('limit=100');
         if (params.length) url += '?' + params.join('&');
 
-        fetch(url)
-            .then(res => res.json())
-            .then(setQuestions);
+        makeApiRequest<Question[]>(url)
+            .then(setQuestions)
+            .catch(error => {
+                console.error('Error fetching questions:', error);
+            });
     }, [effectiveFilter.discipline, effectiveFilter.niveau,
     // Use JSON.stringify for array comparison to ensure changes are detected
     JSON.stringify(effectiveFilter.themes) // New themes dependency
@@ -125,10 +130,13 @@ export default function QuestionSelector({
                 updatedMap[uid] = found;
             } else {
                 // Fetch from API
-                const res = await fetch(`/api/questions?uid=${uid}`);
-                const arr = await res.json();
-                if (Array.isArray(arr) && arr.length > 0) {
-                    updatedMap[uid] = arr[0];
+                try {
+                    const arr = await makeApiRequest<Question[]>(`questions?uid=${uid}`);
+                    if (Array.isArray(arr) && arr.length > 0) {
+                        updatedMap[uid] = arr[0];
+                    }
+                } catch (error) {
+                    console.error('Error fetching question:', error);
                 }
             }
         }

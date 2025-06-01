@@ -20,6 +20,7 @@
 "use client";
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { createLogger } from '@/clientLogger';
+import { makeApiRequest } from '@/config/api';
 
 // Create a logger for this component
 const logger = createLogger('Auth');
@@ -65,15 +66,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Check teacher status by calling the API route
         try {
-            const response = await fetch('/api/auth/status');
-            if (response.ok) {
-                const data = await response.json();
-                teacherLoggedIn = data.isTeacher;
-                if (teacherLoggedIn && data.teacherId) {
-                    fetchedTeacherId = data.teacherId;
-                }
-            } else {
-                logger.error('Failed to fetch auth status');
+            const data = await makeApiRequest<{
+                isTeacher: boolean;
+                teacherId?: string;
+            }>('auth/status');
+            teacherLoggedIn = data.isTeacher;
+            if (teacherLoggedIn && data.teacherId) {
+                fetchedTeacherId = data.teacherId;
             }
         } catch (error) {
             logger.error('Error fetching auth status:', error);

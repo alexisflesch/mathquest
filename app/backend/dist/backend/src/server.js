@@ -11,6 +11,7 @@ const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
+const cors_1 = __importDefault(require("cors"));
 const api_1 = __importDefault(require("@/api"));
 const logger_1 = __importDefault(require("@/utils/logger"));
 const sockets_1 = require("@/sockets"); // Import getIO
@@ -25,6 +26,15 @@ if (!process.env.JWT_SECRET) {
 const app = (0, express_1.default)();
 exports.app = app;
 const port = process.env.PORT || 3007; // Default to 3007 if PORT not in .env
+// Configure CORS for API requests
+app.use((0, cors_1.default)({
+    origin: process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL || 'https://mathquest.example.com'
+        : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3008'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express_1.default.json());
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.tournamentHandler = tournamentHandler;
 const sharedGameFlow_1 = require("./sharedGameFlow");
+const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
@@ -20,7 +21,7 @@ function tournamentHandler(io, socket) {
     // Register shared live handlers for join/answer
     (0, sharedLiveHandler_1.registerSharedLiveHandlers)(io, socket);
     // Start tournament event (student-creator only)
-    socket.on('start_tournament', async (payload) => {
+    socket.on(events_1.TOURNAMENT_EVENTS.START_TOURNAMENT, async (payload) => {
         logger.debug({ payload, socketId: socket.id }, '[DEBUG] Received start_tournament event');
         const { accessCode } = payload;
         logger.debug({ accessCode, socketId: socket.id }, '[DEBUG] Handling start_tournament for accessCode');
@@ -30,7 +31,7 @@ function tournamentHandler(io, socket) {
         logger.debug({ accessCode, socketId: socket.id, found: !!gameInstance }, '[DEBUG] getGameInstanceByAccessCode result');
         if (!gameInstance) {
             logger.warn({ accessCode, socketId: socket.id }, '[DEBUG] Tournament not found');
-            socket.emit('game_error', { message: 'Tournament not found' });
+            socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Tournament not found' });
             return;
         }
         logger.info({
@@ -47,7 +48,7 @@ function tournamentHandler(io, socket) {
         logger.debug({ accessCode, socketId: socket.id, authenticatedUserId, initiatorUserId: gameInstance.initiatorUserId }, '[DEBUG] Checking authorization for start_tournament');
         if (!authenticatedUserId || gameInstance.initiatorUserId !== authenticatedUserId) {
             logger.warn({ authenticatedUserId, initiatorUserId: gameInstance.initiatorUserId, accessCode, socketId: socket.id }, '[DEBUG] Not authorized to start tournament');
-            socket.emit('game_error', { message: 'Not authorized to start this tournament' });
+            socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Not authorized to start this tournament' });
             return;
         }
         // Emit redirect_to_game to the correct tournament room BEFORE activating game state
@@ -59,7 +60,7 @@ function tournamentHandler(io, socket) {
         await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
         if (!gameInstance.gameTemplate || !gameInstance.gameTemplate.questions || gameInstance.gameTemplate.questions.length === 0) {
             logger.error({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, 'Game instance is missing game template or has no questions');
-            socket.emit('game_error', { message: 'Game configuration error: Missing template or no questions.' });
+            socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Game configuration error: Missing template or no questions.' });
             return;
         }
         const actualQuestions = gameInstance.gameTemplate.questions
@@ -67,7 +68,7 @@ function tournamentHandler(io, socket) {
             .filter(q => q != null); // Ensure question objects are not null
         if (actualQuestions.length === 0) {
             logger.error({ accessCode, gameInstanceId: gameInstance.id }, '[TournamentHandler] No valid questions found after mapping.');
-            socket.emit('game_error', { message: 'No questions available for this game.' });
+            socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'No questions available for this game.' });
             return;
         }
         logger.debug({ actualQuestionsCount: actualQuestions.length, firstQuestion: actualQuestions[0]?.uid, accessCode, socketId: socket.id }, '[TournamentHandler] Mapped actualQuestions for runGameFlow');
@@ -103,7 +104,7 @@ function tournamentHandler(io, socket) {
         }
         catch (error) {
             logger.error({ error, accessCode, socketId: socket.id }, '[TournamentHandler] Failed to update game state in Redis.');
-            socket.emit('game_error', { message: 'Failed to initialize game state.' });
+            socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Failed to initialize game state.' });
             return;
         }
         const gameFlowOptions = {

@@ -11,7 +11,7 @@
  * import {
  *   Question,
  *   Answer,
- *   QUIZ_EVENTS,
+ *   LEGACY_QUIZ_EVENTS,
  *   TOURNAMENT_EVENTS,
  *   isQuestion,
  *   mapToStandardQuestion,
@@ -24,7 +24,7 @@
 import {
     Question,
     Answer,
-    QUIZ_EVENTS,
+    LEGACY_QUIZ_EVENTS,
     TOURNAMENT_EVENTS,
     isQuestion,
     mapToStandardQuestion,
@@ -55,7 +55,7 @@ function exampleSocketHandler(io: Server, socket: Socket, payload: QuestionLike)
     const question = mapToStandardQuestion(payload);
 
     // Use event constants for consistency
-    io.to(`quiz:${question.uid}`).emit(QUIZ_EVENTS.STATE_UPDATE, {
+    io.to(`quiz:${question.uid}`).emit(LEGACY_QUIZ_EVENTS.STATE_UPDATE, {
         question,
         status: 'updated'
     });

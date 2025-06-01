@@ -1,3 +1,5 @@
+const React = require('react');
+
 module.exports = function NextLinkMock(props) {
-    return <a href={props.href || '#'}>{props.children}</a>;
+    return React.createElement('a', { href: props.href || '#' }, props.children);
 };

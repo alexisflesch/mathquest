@@ -16,6 +16,7 @@ export interface UserRegistrationData {
     email?: string;
     password?: string;
     role: UserRole;
+    cookieId?: string;
 }
 
 export interface UserLoginData {
@@ -39,7 +40,7 @@ export class UserService {
      */
     async registerUser(data: UserRegistrationData): Promise<AuthResponse> {
         try {
-            const { username, email, password, role } = data;
+            const { username, email, password, role, cookieId: providedCookieId } = data;
             let existingUser = null;
             if (email) {
                 existingUser = await prisma.user.findFirst({ where: { email } });
@@ -47,10 +48,10 @@ export class UserService {
             if (existingUser) {
                 throw new Error('User with this email already exists');
             }
-            // Generate a unique cookieId for students
+            // Use provided cookieId for students, or generate one if not provided
             let cookieId: string | undefined = undefined;
             if (role === 'STUDENT') {
-                cookieId = crypto.randomBytes(32).toString('hex');
+                cookieId = providedCookieId || crypto.randomBytes(32).toString('hex');
             }
             // Prepare user data
             const userData: any = {

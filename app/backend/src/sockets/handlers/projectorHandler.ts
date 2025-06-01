@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { getFullGameState } from '@/core/gameStateService';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import { PROJECTOR_EVENTS, GAME_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('ProjectorHandler');
 
@@ -14,7 +15,7 @@ export function projectorHandler(io: Server, socket: Socket) {
      * Join projector room for a specific gameId
      * @param gameId - The database ID of the GameInstance
      */
-    socket.on('join_projector', async (gameId: string) => {
+    socket.on(PROJECTOR_EVENTS.JOIN_PROJECTOR, async (gameId: string) => {
         const room = `projector_${gameId}`;
         await socket.join(room);
         logger.info(`Projector joined room: ${room}`);
@@ -29,22 +30,22 @@ export function projectorHandler(io: Server, socket: Socket) {
 
             if (!gameInstance) {
                 logger.error(`Game instance not found for gameId: ${gameId}`);
-                socket.emit('projector_error', { message: 'Game not found.' });
+                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game not found.' });
                 return;
             }
 
-            const gameState = await getFullGameState(gameInstance.accessCode);
-            socket.emit('projector_state', gameState);
+            const gameStateResult = await getFullGameState(gameInstance.accessCode);
+            socket.emit(PROJECTOR_EVENTS.PROJECTOR_STATE, { accessCode: gameInstance.accessCode, ...gameStateResult });
         } catch (err) {
             logger.error('Error fetching game state for projector', err);
-            socket.emit('projector_error', { message: 'Could not fetch game state.' });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Could not fetch game state.' });
         }
     });
 
     /**
      * Leave projector room
      */
-    socket.on('leave_projector', (gameId: string) => {
+    socket.on(PROJECTOR_EVENTS.LEAVE_PROJECTOR, (gameId: string) => {
         const room = `projector_${gameId}`;
         socket.leave(room);
         logger.info(`Projector left room: ${room}`);
@@ -71,8 +72,8 @@ export async function broadcastProjectorState(io: Server, gameId: string) {
             return;
         }
 
-        const gameState = await getFullGameState(gameInstance.accessCode);
-        io.to(room).emit('projector_state', gameState);
+        const gameStateResult = await getFullGameState(gameInstance.accessCode);
+        io.to(room).emit(PROJECTOR_EVENTS.PROJECTOR_STATE, { accessCode: gameInstance.accessCode, ...gameStateResult });
     } catch (err) {
         logger.error('Error broadcasting projector state', err);
     }

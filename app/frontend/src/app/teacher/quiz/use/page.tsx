@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from "next/navigation";
 import CustomDropdown from "@/components/CustomDropdown";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
+import { makeApiRequest } from '@/config/api';
 
 interface Quiz {
     id: string;
@@ -19,7 +20,7 @@ interface Quiz {
 
 export default function UseQuizPage() {
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-    const [filters, setFilters] = useState({ niveaux: [], disciplines: [], themes: [] });
+    const [filters, setFilters] = useState<{ niveaux: string[]; disciplines: string[]; themes: string[] }>({ niveaux: [], disciplines: [], themes: [] });
     const [selectedNiveau, setSelectedNiveau] = useState('');
     const [selectedDiscipline, setSelectedDiscipline] = useState('');
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
@@ -31,21 +32,26 @@ export default function UseQuizPage() {
     useEffect(() => {
         const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
         if (teacherId) {
-            fetch(`/api/quiz?enseignant_id=${teacherId}`)
-                .then(res => res.json())
+            makeApiRequest<Quiz[]>(`quiz?enseignant_id=${teacherId}`)
                 .then(data => {
                     if (Array.isArray(data)) {
                         setQuizzes(data);
                     } else {
                         setQuizzes([]);
                     }
+                })
+                .catch(error => {
+                    console.error('Error fetching quizzes:', error);
+                    setQuizzes([]);
                 });
         } else {
             setQuizzes([]);
         }
-        fetch('/api/questions/filters')
-            .then(res => res.json())
-            .then(setFilters);
+        makeApiRequest<{ niveaux: string[]; disciplines: string[]; themes: string[] }>('questions/filters')
+            .then(setFilters)
+            .catch(error => {
+                console.error('Error fetching filters:', error);
+            });
     }, []);
 
     useEffect(() => {

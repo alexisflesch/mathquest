@@ -163,5 +163,53 @@ class QuestionService {
             throw error;
         }
     }
+    /**
+     * Get available filter values (unique disciplines, grade levels, themes)
+     */
+    async getAvailableFilters() {
+        try {
+            const [niveaux, disciplines, themes] = await Promise.all([
+                prisma_1.prisma.question.findMany({
+                    select: { gradeLevel: true },
+                    distinct: ['gradeLevel'],
+                    where: {
+                        gradeLevel: { not: '' },
+                        isHidden: false
+                    }
+                }),
+                prisma_1.prisma.question.findMany({
+                    select: { discipline: true },
+                    distinct: ['discipline'],
+                    where: {
+                        discipline: { not: '' },
+                        isHidden: false
+                    }
+                }),
+                prisma_1.prisma.question.findMany({
+                    select: { themes: true },
+                    where: {
+                        themes: { isEmpty: false },
+                        isHidden: false
+                    }
+                })
+            ]);
+            // Extract unique themes from all questions
+            const uniqueThemes = new Set();
+            themes.forEach(q => {
+                if (Array.isArray(q.themes)) {
+                    q.themes.forEach(theme => uniqueThemes.add(theme));
+                }
+            });
+            return {
+                niveaux: niveaux.map(n => n.gradeLevel).filter(Boolean).sort(),
+                disciplines: disciplines.map(d => d.discipline).filter(Boolean).sort(),
+                themes: Array.from(uniqueThemes).sort()
+            };
+        }
+        catch (error) {
+            logger.error({ error }, 'Error fetching available filters');
+            throw error;
+        }
+    }
 }
 exports.QuestionService = QuestionService;

@@ -91,7 +91,7 @@ class GameInstanceService {
      */
     async getGameInstanceByAccessCode(accessCode, includeParticipants = false) {
         try {
-            return await prisma_1.prisma.gameInstance.findUnique({
+            const result = await prisma_1.prisma.gameInstance.findUnique({
                 where: { accessCode },
                 include: {
                     gameTemplate: {
@@ -121,6 +121,7 @@ class GameInstanceService {
                     } : false
                 }
             });
+            return result;
         }
         catch (error) {
             logger.error({ error }, `Error fetching game instance with access code ${accessCode}`);

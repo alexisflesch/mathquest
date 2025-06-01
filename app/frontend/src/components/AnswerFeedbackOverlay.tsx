@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 interface AnswerFeedbackOverlayProps {
     explanation: string;
     duration?: number; // in seconds
+    onClose?: () => void;
 }
 
 const DEFAULT_DURATION = 5;
@@ -12,6 +13,7 @@ const DEFAULT_DURATION = 5;
 const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
     explanation,
     duration = DEFAULT_DURATION,
+    onClose,
 }) => {
     const [visible, setVisible] = useState(true);
     const progressBarRef = useRef<HTMLDivElement>(null);
@@ -27,7 +29,10 @@ const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
             progressBarRef.current.style.width = '0%';
         }
         // Masquer l'overlay après la durée
-        const timeout = setTimeout(() => setVisible(false), duration * 1000);
+        const timeout = setTimeout(() => {
+            setVisible(false);
+            onClose?.();
+        }, duration * 1000);
         return () => clearTimeout(timeout);
     }, [duration]);
 

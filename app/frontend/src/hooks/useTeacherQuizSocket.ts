@@ -4,6 +4,7 @@ import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
 import { BaseQuestion, Answer } from '@shared/types/question'; // MODIFIED: Added Answer import
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('useTeacherQuizSocket');
 
@@ -45,10 +46,10 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
     const [localTimeLeft, setLocalTimeLeft] = useState<number | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(1); // 1 = prof connecté par défaut
 
-    // NEW: Store per-question timer states
+    // NEW: Store per-question timer states (simplified for backend-driven updates)
     const [questionTimers, setQuestionTimers] = useState<Record<string, QuestionTimerState>>({});
 
-    // Références pour le timer basé sur l'horloge système
+    // TIMER MANAGEMENT OVERHAUL: Internal UI timer refs for smooth countdown display
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number | null>(null);
     const initialDurationRef = useRef<number | null>(null);
@@ -66,19 +67,18 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
 
     // Update the state only when necessary and not too frequently
     const updateLocalTimeLeft = useCallback((newTimeLeft: number) => {
-        // Round to whole numbers only
-        const roundedTimeLeft = Math.floor(newTimeLeft);
-
-        // Always update the ref immediately for accurate internal state
-        localTimeLeftRef.current = roundedTimeLeft;
-
-        // Only update React state (causing re-render) if enough time has passed
         const now = Date.now();
-        if (now - lastUpdateTimeRef.current > UI_UPDATE_THRESHOLD) {
+        const previousValue = localTimeLeftRef.current;
+
+        // Always update the ref value
+        localTimeLeftRef.current = newTimeLeft;
+
+        // Only update state if enough time has passed or if the value changed significantly
+        if (now - lastUpdateTimeRef.current >= UI_UPDATE_THRESHOLD || Math.abs((previousValue || 0) - newTimeLeft) > 1) {
+            setLocalTimeLeft(newTimeLeft);
             lastUpdateTimeRef.current = now;
-            setLocalTimeLeft(roundedTimeLeft);
         }
-    }, []); // Ensure this function is stable and doesn't change on every render
+    }, []);
 
     // --- Socket Connection ---
     useEffect(() => {
@@ -94,18 +94,17 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
         s.connect();
         setQuizSocket(s);
 
-        s.on("connect", () => {
+        s.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info(`Socket connected: ${s.id}`);
 
-            // Use new socket event to join teacher dashboard
-            logger.info(`[DEBUG][CLIENT] Emitting join_dashboard for quizId=${quizId}`);
-            s.emit("join_dashboard", { quizId, role: 'teacher' });
+            // Use Phase 8 dashboard join event with gameId parameter
+            logger.info(`[DEBUG][CLIENT] Emitting join_dashboard for gameId=${quizId}`);
+            s.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { gameId: quizId });
 
-            // Request current state immediately after connecting
-            s.emit("get_game_state", { quizId });
+            // Note: No need for separate GET_GAME_STATE - join_dashboard returns comprehensive state
         });
 
-        s.on("disconnect", (reason) => {
+        s.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
             logger.warn(`Socket disconnected: ${reason}`);
             // Reset state on disconnect
             setQuizState(null);
@@ -113,14 +112,13 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
             setTimerQuestionId(null);
             setTimeLeft(0);
             setLocalTimeLeft(null);
-            if (timerRef.current) clearInterval(timerRef.current);
         });
 
-        s.on("connect_error", (err) => {
+        s.on(SOCKET_EVENTS.CONNECT_ERROR, (err) => {
             logger.error("Socket connection error:", err);
         });
 
-        s.on("dashboard_joined", ({ room, socketId }) => {
+        s.on(SOCKET_EVENTS.TEACHER.DASHBOARD_JOINED, ({ room, socketId }) => {
             logger.debug("Server confirms dashboard join", { room, socketId });
         });
 
@@ -128,7 +126,6 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
             logger.info(`Disconnecting socket for quiz: ${quizId}`);
             s.disconnect();
             setQuizSocket(null);
-            if (timerRef.current) clearInterval(timerRef.current);
         };
     }, [quizId, token]);
 
@@ -208,101 +205,25 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
                 lastLoggedTimerRef.current[questionId] = { status, intTimeLeft };
             }
 
-            // Always update status for global app state
+            // TIMER MANAGEMENT OVERHAUL: Simplified backend-driven timer updates
+            // Always trust backend values and status
             setTimerStatus(data.status);
+            setTimerQuestionId(data.questionId);
+            setTimeLeft(data.timeLeft);
+            setLocalTimeLeft(data.timeLeft);
 
-            // Set the active question ID
-            if (data.questionId) {
-                setTimerQuestionId(data.questionId);
-            }
-
-            // Update the per-question timer state with enhanced logic to preserve paused values
-            setQuestionTimers(prev => {
-                const existingTimer = prev[data.questionId];
-                let newTimerState: QuestionTimerState;
-
-                // Case 1: Handle STOP action - VISUAL FIX: Always display 0 when stopped
-                if (data.status === 'stop') {
-                    const question = quizState?.questions?.find(q => q.uid === data.questionId);
-                    const initialTime = existingTimer?.initialTime || question?.time || 0;
-                    // Use backend-provided timeLeft (could be 0 or nonzero)
-                    newTimerState = {
-                        status: 'stop',
-                        timeLeft: data.timeLeft, // Use backend value
-                        initialTime: initialTime,
-                        timestamp: null
-                    };
+            // Update the per-question timer state for UI consistency
+            setQuestionTimers(prev => ({
+                ...prev,
+                [data.questionId]: {
+                    status: data.status,
+                    timeLeft: data.timeLeft,
+                    timestamp: data.timestamp || Date.now(),
+                    initialTime: prev[data.questionId]?.initialTime || data.timeLeft
                 }
+            }));
 
-                // Case 2: If switching back to a paused question and trying to play it, keep its paused timeLeft
-                else if (data.status === 'play' &&
-                    existingTimer?.status === 'pause' &&
-                    existingTimer?.timeLeft > 0) {
-
-                    logger.debug(`[UI TIMER FIX] Resuming paused question ${data.questionId} with stored time: ${existingTimer.timeLeft}s`);
-                    newTimerState = {
-                        status: data.status,
-                        timeLeft: existingTimer.timeLeft, // Keep the paused timeLeft
-                        timestamp: data.timestamp || Date.now(),
-                        initialTime: existingTimer.initialTime // Preserve initialTime if available
-                    };
-                }
-
-                // Case 3: If we get valid timer values from backend, use them
-                else if (data.timeLeft > 0) {
-                    const question = quizState?.questions?.find(q => q.uid === data.questionId);
-                    // Determine initial time to preserve (either from existing timer state or question default)
-                    const initialTime = existingTimer?.initialTime || question?.time || data.timeLeft; // MODIFIED: temps -> time
-
-                    logger.debug(`[UI TIMER FIX] Using backend time value (${data.timeLeft}s) for ${data.questionId}`);
-                    newTimerState = {
-                        status: data.status,
-                        timeLeft: data.timeLeft,
-                        timestamp: data.timestamp || Date.now(),
-                        initialTime: initialTime // Preserve original time for later use
-                    };
-                }
-
-                // Case 4: For any other case, use the best available value
-                else {
-                    const question = quizState?.questions?.find(q => q.uid === data.questionId);
-                    const fallbackTimeLeft = (existingTimer?.timeLeft > 0)
-                        ? existingTimer.timeLeft
-                        : (question?.time || 0); // MODIFIED: temps -> time
-
-                    // Determine initial time to preserve
-                    const initialTime = existingTimer?.initialTime || question?.time || fallbackTimeLeft; // MODIFIED: temps -> time
-
-                    logger.debug(`[UI TIMER FIX] Using fallback time (${fallbackTimeLeft}s) for ${data.questionId}`);
-                    newTimerState = {
-                        status: data.status,
-                        timeLeft: fallbackTimeLeft,
-                        timestamp: data.timestamp || Date.now(),
-                        initialTime: initialTime // Preserve original time for later use
-                    };
-                }
-
-                // Update UI display timers if this is the active question
-                if (timerQuestionId === data.questionId) {
-                    logger.debug(`[UI TIMER FIX] Updating active question display to ${newTimerState.timeLeft}s (status: ${newTimerState.status})`);
-
-                    // Update the display timers
-                    setTimeLeft(newTimerState.timeLeft);
-
-                    // Update the local time if not in play mode (play mode manages its own countdown)
-                    if (data.status !== 'play') {
-                        setLocalTimeLeft(newTimerState.timeLeft);
-                    }
-                }
-
-                // Return updated timer state for this question
-                return {
-                    ...prev,
-                    [data.questionId]: newTimerState
-                };
-            });
-
-            logger.debug(`[useTeacherQuizSocket] Updated questionTimers: ${JSON.stringify(questionTimers)}`);
+            logger.debug(`[TIMER OVERHAUL] Updated timer display to ${data.timeLeft}s (status: ${data.status})`);
         };
 
         // Handle backend error events
@@ -358,250 +279,171 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
             setTimerQuestionId(null);
             setTimeLeft(0);
             setLocalTimeLeft(null);
-            if (timerRef.current) clearInterval(timerRef.current);
         };
 
-        // Register event handlers
-        quizSocket.on("game_control_state", handleGameControlState);
-        quizSocket.on("quiz_timer_update", handleTimerUpdate);
-        quizSocket.on("quiz_connected_count", (data: { count: number }) => {
+        // Register Phase 8 event handlers
+        quizSocket.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, handleGameControlState);
+
+        // Register specific dashboard update events from Phase 8
+        quizSocket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_QUESTION_CHANGED, ({ questionUid, timer }) => {
+            logger.debug('Received dashboard_question_changed', { questionUid, timer });
+            setTimerQuestionId(questionUid);
+            if (timer && timer.timeRemaining !== undefined) {
+                setTimeLeft(timer.timeRemaining);
+                setLocalTimeLeft(timer.timeRemaining);
+            }
+        });
+
+        quizSocket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_TIMER_UPDATED, (timerData) => {
+            logger.debug('Received dashboard_timer_updated', timerData);
+            handleTimerUpdate(timerData);
+        });
+
+        quizSocket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_ANSWERS_LOCK_CHANGED, ({ answersLocked }) => {
+            logger.debug('Received dashboard_answers_lock_changed', { answersLocked });
+            // Update locked state in quizState if needed
+            if (quizState) {
+                setQuizState(prev => prev ? { ...prev, locked: answersLocked } : prev);
+            }
+        });
+
+        quizSocket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_GAME_STATUS_CHANGED, ({ status }) => {
+            logger.debug('Received dashboard_game_status_changed', { status });
+            // Update game status in quizState if needed
+            if (quizState) {
+                setQuizState(prev => prev ? { ...prev, ended: status === 'completed' } : prev);
+            }
+        });
+
+        // Legacy timer update for backward compatibility
+        quizSocket.on(SOCKET_EVENTS.TEACHER.TIMER_UPDATE, handleTimerUpdate);
+
+        quizSocket.on(SOCKET_EVENTS.TEACHER.CONNECTED_COUNT, (data: { count: number }) => {
             logger.debug('Received quiz_connected_count', data);
             setConnectedCount(data.count);
         });
 
         // Error event handlers
-        quizSocket.on("error_dashboard", handleErrorDashboard);
-        quizSocket.on("game_error", handleGameError);
-        quizSocket.on("lobby_error", handleLobbyError);
-        quizSocket.on("connect_error", handleConnectError);
-        quizSocket.on("disconnect", handleDisconnect);
+        quizSocket.on(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, handleErrorDashboard);
+        quizSocket.on(SOCKET_EVENTS.GAME.GAME_ERROR, handleGameError);
+        quizSocket.on(SOCKET_EVENTS.LOBBY.LOBBY_ERROR, handleLobbyError);
+        quizSocket.on(SOCKET_EVENTS.CONNECT_ERROR, handleConnectError);
+        quizSocket.on(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
 
         // Request state again if socket reconnects (e.g., after server restart)
-        quizSocket.on("connect", () => {
-            logger.info("Reconnected, requesting game state again.");
-            quizSocket.emit("get_game_state", { quizId });
+        quizSocket.on(SOCKET_EVENTS.CONNECT, () => {
+            logger.info("Reconnected, rejoining dashboard with gameId.");
+            quizSocket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { gameId: quizId });
         });
 
         return () => {
             // Cleanup all event listeners
-            quizSocket.off("game_control_state", handleGameControlState);
-            quizSocket.off("quiz_timer_update", handleTimerUpdate);
-            quizSocket.off("quiz_connected_count");
-            quizSocket.off("error_dashboard", handleErrorDashboard);
-            quizSocket.off("game_error", handleGameError);
-            quizSocket.off("lobby_error", handleLobbyError);
-            quizSocket.off("connect_error", handleConnectError);
-            quizSocket.off("disconnect", handleDisconnect);
-            quizSocket.off("connect");
+            quizSocket.off(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, handleGameControlState);
+            quizSocket.off(SOCKET_EVENTS.TEACHER.TIMER_UPDATE, handleTimerUpdate);
+            quizSocket.off(SOCKET_EVENTS.TEACHER.CONNECTED_COUNT);
+            quizSocket.off(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, handleErrorDashboard);
+            quizSocket.off(SOCKET_EVENTS.GAME.GAME_ERROR, handleGameError);
+            quizSocket.off(SOCKET_EVENTS.LOBBY.LOBBY_ERROR, handleLobbyError);
+            quizSocket.off(SOCKET_EVENTS.CONNECT_ERROR, handleConnectError);
+            quizSocket.off(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
+            quizSocket.off(SOCKET_EVENTS.CONNECT);
         };
     }, [quizSocket, quizId, timerStatus, timerQuestionId, quizState]);
 
-    // --- Immediate local timer reset on question change ---
-    // Track the previous timerQuestionId to reset its timer state on question switch
-    const prevTimerQuestionIdRef = useRef<string | null>(null);
-
+    // --- Backend-Driven Question Timer State Management ---
     useEffect(() => {
-        if (!quizState || !quizState.questions) return;
-        if (!timerQuestionId) return;
+        if (!quizState || !quizState.questions || !timerQuestionId) return;
+
         const question = quizState.questions.find(q => q.uid === timerQuestionId);
         if (!question) return;
 
-        // Capture questionTimers in a ref to avoid dependency issues
-        const currentQuestionTimers = questionTimers;
-
-        // --- Reset timer for the previous question ONLY IF WE HAVEN'T PAUSED IT ---
-        const prevId = prevTimerQuestionIdRef.current;
-        if (prevId && prevId !== timerQuestionId) {
-            // CRITICAL BUG FIX: Check if the previous question has a paused state before resetting
-            // Only reset if the question is not paused (has status 'stop' or no status)
-            const prevTimer = currentQuestionTimers[prevId];
-            const prevQuestion = quizState.questions.find(q => q.uid === prevId);
-
-            if (prevQuestion && (!prevTimer || prevTimer.status === 'stop')) {
-                logger.debug(`[UI TIMER FIX] Previous question ${prevId} not paused, safe to reset timer to initial value (${prevQuestion.time ?? 0})`); // MODIFIED: temps -> time
-                setQuestionTimers(prev => ({
-                    ...prev,
-                    [prevId]: {
-                        status: 'stop',
-                        timeLeft: prevQuestion.time ?? 0, // MODIFIED: temps -> time
-                        timestamp: null
-                    }
-                }));
-            } else if (prevTimer && prevTimer.status === 'pause') {
-                // If timer is paused, preserve its timeLeft value
-                logger.debug(`[UI TIMER FIX] Preserving paused timer for question ${prevId}: ${prevTimer.timeLeft}s`);
-                // No state update needed - we're keeping the existing timer state
-            }
-        }
-        prevTimerQuestionIdRef.current = timerQuestionId;
-
-        // --- Handle timer for current question when switching ---
-        if (!currentQuestionTimers[timerQuestionId]) {
-            // Case 1: No timer state exists yet, create it
-            setQuestionTimers(prev => {
-                if (prev[timerQuestionId]) {
-                    // Timer state already exists (from backend or previous pause), do not overwrite
-                    logger.debug(`[UI TIMER FIX] Using existing timer state for question ${timerQuestionId}: ${JSON.stringify(prev[timerQuestionId])}`);
-                    return prev;
-                }
-                logger.debug(`[UI TIMER FIX] Setting initial timer for new question ${timerQuestionId} to ${question.time ?? 0}`); // MODIFIED: temps -> time
+        // TIMER MANAGEMENT OVERHAUL: Simplified question timer initialization
+        // Only initialize timer state if it doesn't exist, let backend control the values
+        setQuestionTimers(prev => {
+            if (!prev[timerQuestionId]) {
+                logger.debug(`[TIMER OVERHAUL] Initializing timer state for question ${timerQuestionId}`);
                 return {
                     ...prev,
                     [timerQuestionId]: {
                         status: 'stop',
-                        timeLeft: question.time ?? 0, // MODIFIED: temps -> time
-                        initialTime: question.time ?? 0, // Store initial time // MODIFIED: temps -> time
+                        timeLeft: question.time || 0,
+                        initialTime: question.time || 0,
                         timestamp: null
                     }
                 };
-            });
-
-            // Only set localTimeLeft if not already set for this question
-            if (localTimeLeftRef.current === null || timerQuestionId !== prevId) {
-                setLocalTimeLeft(question.time ?? 0); // MODIFIED: temps -> time
-                localTimeLeftRef.current = question.time ?? 0; // MODIFIED: temps -> time
             }
-        } else {
-            // Case 2: Timer state exists, check if we need to restore from a stopped state
-            const existingTimer = currentQuestionTimers[timerQuestionId];
-
-            // If timer was stopped (shows 0) but we have initialTime, restore it when switching back
-            if (existingTimer.status === 'stop' && existingTimer.timeLeft === 0 && existingTimer.initialTime !== undefined) {
-                logger.info(`[UI TIMER FIX] Restoring stopped question ${timerQuestionId} from 0 to initial time: ${existingTimer.initialTime}s`);
-
-                setQuestionTimers(prev => ({
-                    ...prev,
-                    [timerQuestionId]: {
-                        ...prev[timerQuestionId],
-                        timeLeft: existingTimer.initialTime as number,
-                    }
-                }));
-
-                // Update display timers
-                setTimeLeft(existingTimer.initialTime);
-                setLocalTimeLeft(existingTimer.initialTime);
-                localTimeLeftRef.current = existingTimer.initialTime;
-            }
-        }
-
-        // DEBUG - Log the current state of all question timers whenever the active question changes
-        logger.debug(`[UI TIMER DEBUG] All question timers after switching to ${timerQuestionId}:`, JSON.stringify(currentQuestionTimers));
-
-        // CRITICAL: Removed questionTimers from dependency array to prevent circular updates
+            return prev;
+        });
     }, [timerQuestionId, quizState]);
 
-    // --- Effect to update display timer when active question changes ---
+    // --- Simple Display Timer Update ---
     useEffect(() => {
-        if (!timerQuestionId || !quizState || !quizState.questions) return;
+        if (!timerQuestionId || !questionTimers[timerQuestionId]) return;
 
-        // Find question in quiz state
-        const question = quizState.questions.find(q => q.uid === timerQuestionId);
-        if (!question) {
-            logger.warn(`[UI TIMER FIX] Cannot update display timer: Question ${timerQuestionId} not found`);
-            return;
-        }
-
-        // Get current question's timer state if it exists
         const questionTimer = questionTimers[timerQuestionId];
-        if (questionTimer) {
-            logger.info(`[UI TIMER FIX] Question ${timerQuestionId} switched to active, timer state: ${JSON.stringify(questionTimer)}`);
 
-            // If the question has a paused state with a valid timeLeft, use that value
-            if (questionTimer.status === 'pause' && questionTimer.timeLeft > 0) {
-                logger.info(`[UI TIMER FIX] Using preserved paused timer value (${questionTimer.timeLeft}s) for question ${timerQuestionId}`);
-                setTimeLeft(questionTimer.timeLeft);
-                setLocalTimeLeft(questionTimer.timeLeft);
-            }
-            // If question is already running, trust the backend value
-            else if (questionTimer.status === 'play' && questionTimer.timeLeft > 0) {
-                logger.info(`[UI TIMER FIX] Setting timer for running question ${timerQuestionId} to ${questionTimer.timeLeft}s`);
-                setTimeLeft(questionTimer.timeLeft);
-                setLocalTimeLeft(questionTimer.timeLeft);
-            }
-            // If timer is stopped, use the stored initial value or revert to question's default
-            else if (questionTimer.status === 'stop') {
-                // Use the stored initialTime if available, otherwise fall back to question's default
-                const initialTime = questionTimer.initialTime !== undefined ? questionTimer.initialTime : (question.time || 0); // MODIFIED: temps -> time
-
-                // CRITICAL FIX: When displaying a stopped question, check if it's showing 0 (just stopped) or if we're switching back to it
-                if (questionTimer.timeLeft === 0) {
-                    // If the timer was explicitly stopped (timeLeft=0), check if we're actively viewing it or switching back
-                    if (timerStatus === 'stop') {
-                        // Currently viewing the same question that was just stopped - show 0
-                        logger.info(`[UI TIMER FIX] Showing 0 for recently stopped question ${timerQuestionId}`);
-                        setTimeLeft(0);
-                        setLocalTimeLeft(0);
-                    } else {
-                        // Switching back to a previously stopped question - restore the initial time
-                        logger.info(`[UI TIMER FIX] Restoring initial time (${initialTime}s) for previously stopped question ${timerQuestionId}`);
-                        setTimeLeft(initialTime);
-                        setLocalTimeLeft(initialTime);
-
-                        // Update the timer state to show the initial time instead of 0
-                        setQuestionTimers(prev => ({
-                            ...prev,
-                            [timerQuestionId]: {
-                                ...prev[timerQuestionId],
-                                timeLeft: initialTime
-                            }
-                        }));
-                    }
-                } else {
-                    // Regular case - use the stored timeLeft value
-                    logger.info(`[UI TIMER FIX] Setting timer for stopped question ${timerQuestionId} to value ${questionTimer.timeLeft}s`);
-                    setTimeLeft(questionTimer.timeLeft);
-                    setLocalTimeLeft(questionTimer.timeLeft);
-                }
-            }
-        } else {
-            // No timer state exists yet, use the question's default
-            const defaultTime = question.time || 0; // MODIFIED: temps -> time
-            logger.info(`[UI TIMER FIX] No existing timer for question ${timerQuestionId}, using default ${defaultTime}s`);
-            setTimeLeft(defaultTime);
-            setLocalTimeLeft(defaultTime);
+        // TIMER MANAGEMENT OVERHAUL: Simple display update from stored state
+        if (questionTimer.timeLeft !== undefined) {
+            setTimeLeft(questionTimer.timeLeft);
+            setLocalTimeLeft(questionTimer.timeLeft);
+            logger.debug(`[TIMER OVERHAUL] Display updated for question ${timerQuestionId}: ${questionTimer.timeLeft}s`);
         }
-    }, [timerQuestionId, quizState, questionTimers, timerStatus]);
+    }, [timerQuestionId, questionTimers]);
 
-    // --- Local Timer Countdown based on system clock ---
+    // --- Internal UI Timer for Smooth Countdown Display ---
     useEffect(() => {
-        // Clean up any previous animation frame
+        // TIMER MANAGEMENT OVERHAUL: Implement proper internal UI timer
+        // Backend provides discrete timer events, frontend provides smooth countdown display
+
+        // Clear any existing timer/animation frame
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
         }
 
-        if (!timerQuestionId || timerStatus === 'stop') return;
+        if (!timerQuestionId || timerStatus === 'stop') {
+            // When stopped, display the backend-provided timeLeft value
+            if (timeLeft !== null) {
+                setLocalTimeLeft(timeLeft);
+            }
+            return;
+        }
 
-        logger.debug(`Timer status changed: ${timerStatus}, timeLeft from backend: ${timeLeft}`);
+        if (timerStatus === 'pause') {
+            // When paused, show the current backend value without countdown
+            if (timeLeft !== null) {
+                setLocalTimeLeft(timeLeft);
+            }
+            return;
+        }
 
         if (timerStatus === 'play' && timeLeft !== null && timeLeft > 0) {
-            // Initialize local timer with backend value
+            // Start internal countdown timer from backend-provided value
             startTimeRef.current = Date.now();
             initialDurationRef.current = timeLeft;
-
-            // Set initial value without throttling
-            localTimeLeftRef.current = timeLeft;
             setLocalTimeLeft(timeLeft);
-            lastUpdateTimeRef.current = Date.now();
 
-            logger.debug(`Starting local countdown with initial value: ${timeLeft}s`);
+            logger.debug(`[TIMER OVERHAUL] Starting internal countdown from ${timeLeft}s`);
 
-            // Timer tick function using system clock and requestAnimationFrame
+            // Use requestAnimationFrame for smooth countdown
             const tick = () => {
                 if (startTimeRef.current === null || initialDurationRef.current === null) return;
 
                 const now = Date.now();
-                const elapsed = (now - startTimeRef.current) / 1000; // in seconds
+                const elapsed = (now - startTimeRef.current) / 1000;
                 const remaining = Math.max(initialDurationRef.current - elapsed, 0);
+                const roundedRemaining = Math.floor(remaining);
 
-                // Use Math.floor instead of rounding to always show whole numbers only
-                const wholeNumberRemaining = Math.floor(remaining);
-
-                // Update using our throttled update function
-                updateLocalTimeLeft(wholeNumberRemaining);
+                // Update display with throttling
+                updateLocalTimeLeft(roundedRemaining);
 
                 if (remaining <= 0) {
-                    // Timer finished
+                    // Timer finished - stop countdown but don't change timer status
+                    // Backend will send the authoritative timer event
                     if (animationFrameRef.current) {
                         cancelAnimationFrame(animationFrameRef.current);
                         animationFrameRef.current = null;
@@ -609,41 +451,22 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
                     startTimeRef.current = null;
                     initialDurationRef.current = null;
                 } else {
-                    // Continue the animation loop
+                    // Continue countdown
                     animationFrameRef.current = requestAnimationFrame(tick);
                 }
             };
 
-            // Start the animation loop (single call, loop maintained in tick function)
             animationFrameRef.current = requestAnimationFrame(tick);
-        } else if (timerStatus === 'pause') {
-            // On pause, preserve the current value and stop counting
-            if (timeLeft !== null) {
-                localTimeLeftRef.current = timeLeft;
-                setLocalTimeLeft(timeLeft);
-            }
-            startTimeRef.current = null; // Stop the countdown
-        } else {
-            // On stop, reset everything
-            startTimeRef.current = null;
-            initialDurationRef.current = null;
-            localTimeLeftRef.current = 0;
-            setLocalTimeLeft(0);
         }
 
-        // Cleanup on unmount or state change
-        return () => {
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
-                animationFrameRef.current = null;
-            }
-        };
-    }, [timerStatus, timeLeft, timerQuestionId, updateLocalTimeLeft]);
+        // Note: No local countdown logic - backend will send timer updates as needed
+        // This eliminates sync issues and ensures backend is single source of truth
+    }, [timerStatus, timeLeft, timerQuestionId]);
 
     // --- Emitter Functions ---
     const getTeacherId = () => (typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null);
 
-    // Updated emitSetQuestion to use new backend event format
+    // Updated emitSetQuestion to use Phase 8 backend event format
     const emitSetQuestion = useCallback((questionUid: string, startTime?: number) => {
         // ENHANCED: Check if we have a preserved timer value for this question
         let effectiveStartTime = startTime;
@@ -662,38 +485,22 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
             }
         }
 
-        // Use new backend event format - simplified payload structure
+        // Use Phase 8 backend event format with gameId
         logger.info(`Emitting set_question with gameId=${quizId}, questionUid=${questionUid}`);
 
         const payload: any = {
-            gameId: quizId, // New backend uses gameId instead of quizId
+            gameId: quizId, // Phase 8 backend uses gameId
             questionUid
         };
 
-        // Only include duration if we have a specific time value to preserve
-        if (effectiveStartTime !== undefined) {
-            payload.duration = effectiveStartTime;
-            logger.info(`[UI TIMER FIX] Including preserved timer duration: ${effectiveStartTime}s`);
-        }
+        // Note: Phase 8 backend handles timer initialization based on question.time
+        // Duration parameter not needed unless overriding default
 
-        quizSocket?.emit("set_question", payload);
+        quizSocket?.emit(SOCKET_EVENTS.TEACHER.SET_QUESTION, payload);
 
-        // Also emit using legacy event name for backward compatibility during transition
-        quizSocket?.emit("quiz_set_question", payload);
-
-        // Update local state immediately for smoother UI experience
-        if (effectiveStartTime !== undefined) {
-            setTimeLeft(effectiveStartTime);
-            setLocalTimeLeft(effectiveStartTime);
-        } else if (quizState && quizState.questions) {
-            const question = quizState.questions.find(q => q.uid === questionUid);
-            if (question && question.time !== undefined) {
-                setTimeLeft(question.time);
-                setLocalTimeLeft(question.time);
-            }
-        }
-
+        // TIMER MANAGEMENT OVERHAUL: Remove optimistic state updates
         // Just set the active question ID for immediate UI feedback
+        // Backend will send proper timer state via timer_update events
         setTimerQuestionId(questionUid);
 
         logger.info(`Waiting for backend confirmation of question ${questionUid}`);
@@ -702,19 +509,19 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
     // Updated emitEndQuiz to use new backend event format
     const emitEndQuiz = useCallback(() => {
         logger.info('Emitting end_game', { gameId: quizId });
-        quizSocket?.emit("end_game", { gameId: quizId });
+        quizSocket?.emit(SOCKET_EVENTS.TEACHER.END_GAME, { gameId: quizId });
     }, [quizSocket, quizId]);
 
     // Updated emitPauseQuiz to use new timer action system
     const emitPauseQuiz = useCallback(() => {
         logger.info('Emitting quiz_timer_action with action=pause', { gameId: quizId });
-        quizSocket?.emit("quiz_timer_action", { gameId: quizId, action: 'pause' });
+        quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, { gameId: quizId, action: 'pause' });
     }, [quizSocket, quizId]);
 
     // Updated emitResumeQuiz to use new timer action system  
     const emitResumeQuiz = useCallback(() => {
         logger.info('Emitting quiz_timer_action with action=resume', { gameId: quizId });
-        quizSocket?.emit("quiz_timer_action", { gameId: quizId, action: 'resume' });
+        quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, { gameId: quizId, action: 'resume' });
     }, [quizSocket, quizId]);
 
     // Updated emitSetTimer to use new backend event format with set_duration action
@@ -723,22 +530,18 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
             gameId: quizId,
             duration: newTime
         });
-        quizSocket?.emit("quiz_timer_action", {
+        quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, {
             gameId: quizId,
             action: 'set_duration',
             duration: newTime
         });
     }, [quizSocket, quizId]);
 
-    // Updated emitTimerAction to use new backend event format with gameId
+    // Updated emitTimerAction to use Phase 8 backend event format
     const emitTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft?: number }) => {
-        // For stop actions, immediately update UI to show 0
-        if (action.status === 'stop') {
-            // Do not update local state here; wait for backend confirmation
-        }
+        // Map frontend status names to Phase 8 backend action names
+        let backendAction: 'start' | 'pause' | 'resume' | 'stop' | 'set_duration';
 
-        // Map old status names to new backend action names
-        let backendAction: 'start' | 'pause' | 'resume' | 'stop';
         switch (action.status) {
             case 'play':
                 backendAction = 'start';
@@ -753,14 +556,28 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
                 backendAction = 'stop';
         }
 
-        // Use new backend event format with gameId instead of quizId
-        logger.info(`Emitting quiz_timer_action with gameId=${quizId}, action=${backendAction}`);
-        quizSocket?.emit("quiz_timer_action", {
-            gameId: quizId, // New backend uses gameId instead of quizId
-            action: backendAction,
-            duration: action.timeLeft // Include duration for set_duration actions
+        const payload: any = {
+            gameId: quizId, // Phase 8 backend uses gameId
+            action: backendAction
+        };
+
+        // Include duration for set_duration actions or when preserving timer state
+        if (action.timeLeft !== undefined) {
+            payload.duration = action.timeLeft;
+        }
+
+        logger.info(`Emitting quiz_timer_action with gameId=${quizId}, action=${backendAction}`, payload);
+        quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, payload);
+    }, [quizSocket, quizId]);
+
+    // Updated emitLockAnswers to use Phase 8 backend event format
+    const emitLockAnswers = useCallback((lock: boolean) => {
+        logger.info(`Emitting lock_answers with gameId=${quizId}, lock=${lock}`);
+        quizSocket?.emit(SOCKET_EVENTS.TEACHER.LOCK_ANSWERS, {
+            gameId: quizId,
+            lock: lock
         });
-    }, [quizSocket, quizId, timerQuestionId]);
+    }, [quizSocket, quizId]);
 
     // NOTE: Tournament code functionality removed as it's not supported in the new backend architecture
     // The new backend uses accessCode system instead of tournament codes
@@ -786,6 +603,7 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
         emitResumeQuiz,
         emitSetTimer,
         emitTimerAction,
+        emitLockAnswers, // NEW: Phase 8 answer lock control
         emitUpdateTournamentCode,
     };
 }

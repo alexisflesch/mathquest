@@ -18,6 +18,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AvatarSelector from '@/components/AvatarSelector';
 import { useAuth } from '@/components/AuthProvider';
+import { makeApiRequest } from '@/config/api';
 
 function StudentPageInner() {
     const [username, setusername] = useState('');
@@ -56,16 +57,11 @@ function StudentPageInner() {
             localStorage.setItem('mathquest_cookie_id', cookie_id);
         }
         try {
-            const res = await fetch('/api/student', {
+            const result = await makeApiRequest<{ message?: string }>('players/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'join', username, avatar: selectedAvatar, cookie_id }),
+                body: JSON.stringify({ username, email: undefined, password: undefined, cookie_id }),
             });
-            const result = await res.json();
-            if (!res.ok) {
-                setError(result.message || 'Erreur lors de la validation du username.');
-                return;
-            }
             localStorage.setItem('mathquest_username', username);
             localStorage.setItem('mathquest_avatar', selectedAvatar);
             if (refreshAuth) refreshAuth();

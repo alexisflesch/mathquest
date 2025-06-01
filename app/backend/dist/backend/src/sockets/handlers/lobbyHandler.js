@@ -8,6 +8,7 @@ const prisma_1 = require("@/db/prisma");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const roomUtils_1 = require("@/sockets/utils/roomUtils");
+const events_1 = require("@shared/types/socket/events");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('LobbyHandler');
 // Redis key prefixes
@@ -19,7 +20,7 @@ const LOBBY_KEY_PREFIX = 'mathquest:lobby:';
  */
 function registerLobbyHandlers(io, socket) {
     // Join a game lobby
-    socket.on('join_lobby', async (payload) => {
+    socket.on(events_1.LOBBY_EVENTS.JOIN_LOBBY, async (payload) => {
         const { accessCode, userId, username, avatarUrl } = payload;
         logger.info({ accessCode, userId, username, socketId: socket.id }, 'Player joining lobby');
         try {
@@ -35,7 +36,7 @@ function registerLobbyHandlers(io, socket) {
             });
             if (!gameInstance) {
                 logger.warn({ accessCode, socketId: socket.id }, 'Game not found during join_lobby');
-                socket.emit('lobby_error', {
+                socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
                     error: 'game_not_found',
                     message: 'Game not found with the provided access code.'
                 });
@@ -44,7 +45,7 @@ function registerLobbyHandlers(io, socket) {
             // Check if game is in a joinable state
             if (gameInstance.status !== 'pending' && gameInstance.status !== 'active') {
                 logger.info({ accessCode, gameStatus: gameInstance.status, socketId: socket.id }, 'Game not joinable');
-                socket.emit('lobby_error', {
+                socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
                     error: 'game_not_joinable',
                     message: `Cannot join game in '${gameInstance.status}' status.`
                 });
@@ -53,7 +54,7 @@ function registerLobbyHandlers(io, socket) {
             // If game is already active, send redirect immediately
             if (gameInstance.status === 'active') {
                 logger.info({ accessCode, socketId: socket.id }, 'Game already active, sending redirect');
-                socket.emit('redirect_to_game', { accessCode, gameId: gameInstance.id });
+                socket.emit(events_1.LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId: gameInstance.id });
                 // Still join the lobby room temporarily to receive any announcements
                 await (0, roomUtils_1.joinRoom)(socket, `lobby_${accessCode}`, {
                     userId,
@@ -84,9 +85,9 @@ function registerLobbyHandlers(io, socket) {
             const participants = Object.values(participantsHash)
                 .map(p => JSON.parse(p));
             // Notify others that someone joined
-            socket.to(`lobby_${accessCode}`).emit('participant_joined', participant);
+            socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_JOINED, participant);
             // Send full participants list to everyone in the lobby
-            io.to(`lobby_${accessCode}`).emit('participants_list', {
+            io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
                 participants,
                 gameId: gameInstance.id,
                 gameName: gameInstance.name
@@ -96,14 +97,14 @@ function registerLobbyHandlers(io, socket) {
         }
         catch (error) {
             logger.error({ error, accessCode, socketId: socket.id }, 'Error in join_lobby handler');
-            socket.emit('lobby_error', {
+            socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
                 error: 'internal_error',
                 message: 'An internal error occurred while joining the lobby.'
             });
         }
     });
     // Leave a game lobby
-    socket.on('leave_lobby', async (payload) => {
+    socket.on(events_1.LOBBY_EVENTS.LEAVE_LOBBY, async (payload) => {
         const { accessCode } = payload;
         logger.info({ accessCode, socketId: socket.id }, 'Player leaving lobby');
         try {
@@ -116,16 +117,16 @@ function registerLobbyHandlers(io, socket) {
             const participants = Object.values(participantsHash)
                 .map(p => JSON.parse(p));
             // Notify others that someone left
-            socket.to(`lobby_${accessCode}`).emit('participant_left', { id: socket.id });
+            socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socket.id });
             // Send updated participants list
-            io.to(`lobby_${accessCode}`).emit('participants_list', { participants });
+            io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, { participants });
         }
         catch (error) {
             logger.error({ error, accessCode, socketId: socket.id }, 'Error in leave_lobby handler');
         }
     });
     // Request current participants list
-    socket.on('get_participants', async (payload) => {
+    socket.on(events_1.LOBBY_EVENTS.GET_PARTICIPANTS, async (payload) => {
         const { accessCode } = payload;
         logger.debug({ accessCode, socketId: socket.id }, 'Getting lobby participants');
         try {
@@ -141,7 +142,7 @@ function registerLobbyHandlers(io, socket) {
                 select: { id: true, name: true, status: true }
             });
             if (!gameInstance) {
-                socket.emit('lobby_error', {
+                socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
                     error: 'game_not_found',
                     message: 'Game not found'
                 });
@@ -152,7 +153,7 @@ function registerLobbyHandlers(io, socket) {
             const participants = participantsHash ?
                 Object.values(participantsHash).map(p => JSON.parse(p)) : [];
             // Send participants list only to requesting socket
-            socket.emit('participants_list', {
+            socket.emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
                 participants,
                 gameId: gameInstance.id,
                 gameName: gameInstance.name
@@ -160,7 +161,7 @@ function registerLobbyHandlers(io, socket) {
         }
         catch (error) {
             logger.error({ error, accessCode, socketId: socket.id }, 'Error in get_participants handler');
-            socket.emit('lobby_error', {
+            socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
                 error: 'internal_error',
                 message: 'Error retrieving participants list'
             });
@@ -183,9 +184,9 @@ function registerLobbyHandlers(io, socket) {
                     const participants = participantsHash ?
                         Object.values(participantsHash).map(p => JSON.parse(p)) : [];
                     // Notify others that someone left - using io instead of socket.to to ensure delivery
-                    io.to(`lobby_${accessCode}`).emit('participant_left', { id: socketId });
+                    io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socketId });
                     // Send updated participants list
-                    io.to(`lobby_${accessCode}`).emit('participants_list', { participants });
+                    io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, { participants });
                 }
             }
         }
@@ -214,7 +215,7 @@ async function setupGameStatusCheck(io, socket, accessCode, gameId) {
             if (!gameInstance) {
                 logger.warn({ accessCode, gameId, socketId: socket.id }, 'Game no longer exists during status check');
                 clearInterval(intervalId);
-                socket.emit('lobby_error', {
+                socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
                     error: 'game_not_found',
                     message: 'Game no longer exists'
                 });
@@ -224,15 +225,15 @@ async function setupGameStatusCheck(io, socket, accessCode, gameId) {
             if (gameInstance.status === 'active') {
                 logger.info({ accessCode, gameId, socketId: socket.id }, 'Game is now active, sending redirect');
                 // Send redirect to individual socket
-                socket.emit('redirect_to_game', { accessCode, gameId });
+                socket.emit(events_1.LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId });
                 // Also broadcast to all sockets in the lobby
-                io.to(`lobby_${accessCode}`).emit('game_started', { accessCode, gameId });
-                io.to(`lobby_${accessCode}`).emit('redirect_to_game', { accessCode, gameId });
+                io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId });
+                io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId });
                 // Send delayed redirects to ensure clients receive it
                 [500, 1500, 3000].forEach(delay => {
                     setTimeout(() => {
                         if (socket.connected) {
-                            socket.emit('redirect_to_game', { accessCode, gameId });
+                            socket.emit(events_1.LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId });
                         }
                     }, delay);
                 });
@@ -240,7 +241,7 @@ async function setupGameStatusCheck(io, socket, accessCode, gameId) {
             }
             else if (gameInstance.status === 'completed' || gameInstance.status === 'archived') {
                 logger.info({ accessCode, gameId, gameStatus: gameInstance.status, socketId: socket.id }, 'Game is no longer available');
-                socket.emit('lobby_error', {
+                socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
                     error: 'game_ended',
                     message: `Game has ended (${gameInstance.status})`
                 });

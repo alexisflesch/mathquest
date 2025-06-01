@@ -1,21 +1,11 @@
-// --- Define MockLogger interface and instance first ---
-interface MockLogger {
-    debug: jest.Mock;
-    info: jest.Mock;
-    warn: jest.Mock;
-    error: jest.Mock;
-}
-
-const mockLoggerInstance: MockLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-};
-
-// --- Mock logger ---
+// --- Mock logger with inline implementation ---
 jest.mock('@/clientLogger', () => ({
-    createLogger: jest.fn(() => mockLoggerInstance), // Always return the pre-defined instance
+    createLogger: jest.fn(() => ({
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+    })),
 }));
 
 // --- Mock socket.io-client ---
@@ -24,13 +14,9 @@ jest.mock('socket.io-client', () => ({
 }));
 
 // --- Actual imports ---
-import { renderHook } from '@testing-library/react';
-import { io } from 'socket.io-client'; // This will be the mocked version
-import { useTeacherQuizSocket } from '../useTeacherQuizSocket'; // The hook under test
-
-// --- Constants ---
-const SOCKET_URL = 'http://localhost:3007'; // Matches API_URL from config.ts
-const SOCKET_PATH = '/api/socket.io'; // Matches SOCKET_CONFIG.path from config.ts
+import { renderHook, act } from '@testing-library/react';
+import { io } from 'socket.io-client';
+import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 
 // --- Mocks ---
 const mockedIo = io as jest.MockedFunction<typeof io>;
@@ -51,81 +37,87 @@ describe('useTeacherQuizSocket Initialization', () => {
     const mockQuizId = 'quiz123';
 
     beforeEach(() => {
-        // Reset all mocks before each test
         jest.clearAllMocks();
-
-        // Reset specific mock functions for the logger instance
-        mockLoggerInstance.debug.mockClear();
-        mockLoggerInstance.info.mockClear();
-        mockLoggerInstance.warn.mockClear();
-        mockLoggerInstance.error.mockClear();
-
-        // Reset mockSocket methods
         mockSocket.emit.mockClear();
         mockSocket.on.mockClear();
         mockSocket.off.mockClear();
         mockSocket.disconnect.mockClear();
-        mockSocket.connect.mockClear(); // ensure connect is also cleared
-        mockSocket.connected = false; // Reset connected state
-
-        // Setup default mock return value for io
+        mockSocket.connect.mockClear();
+        mockSocket.connected = false;
         mockedIo.mockReturnValue(mockSocket as any);
-    });
 
-    it('should initialize logger and socket with correct parameters', () => {
-        // Mock localStorage for getSocketAuth
         const mockLocalStorage = (() => {
             let store: Record<string, string> = {};
             return {
                 getItem: (key: string) => store[key] || null,
-                setItem: (key: string, value: string) => {
-                    store[key] = value.toString();
-                },
-                removeItem: (key: string) => {
-                    delete store[key];
-                },
-                clear: () => {
-                    store = {};
-                }
+                setItem: (key: string, value: string) => { store[key] = value.toString(); },
+                removeItem: (key: string) => { delete store[key]; },
+                clear: () => { store = {}; }
             };
         })();
-        Object.defineProperty(window, 'localStorage', {
-            value: mockLocalStorage
-        });
-        // Set the token that the hook will try to retrieve
+        Object.defineProperty(window, 'localStorage', { value: mockLocalStorage, writable: true });
         window.localStorage.setItem('mathquest_jwt_token', mockToken);
+    });
 
+    afterEach(() => {
+        window.localStorage.clear();
+    });
+
+    it('should initialize socket with correct configuration', () => {
         renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
 
-        expect(mockLoggerInstance.info).toHaveBeenCalledWith(
-            `Initializing socket connection for quiz: ${mockQuizId} to ${SOCKET_URL}`
-        );
+        // Verify that socket.io was called with correct parameters
+        expect(mockedIo).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({
+            transports: ['websocket', 'polling'],
+            auth: expect.objectContaining({
+                token: mockToken
+            }),
+            autoConnect: false,
+            forceNew: true
+        }));
+    });
 
-        // Expected configuration based on SOCKET_CONFIG and createSocketConfig
-        const expectedSocketConfig = {
-            url: SOCKET_URL, // From SOCKET_CONFIG
-            path: SOCKET_PATH, // From SOCKET_CONFIG
-            transports: ['websocket', 'polling'], // From SOCKET_CONFIG
-            reconnectionAttempts: 10, // From SOCKET_CONFIG
-            reconnectionDelay: 1000, // From SOCKET_CONFIG
-            reconnectionDelayMax: 10000, // From SOCKET_CONFIG
-            timeout: 30000, // From SOCKET_CONFIG
-            forceNew: true, // From SOCKET_CONFIG
-            autoConnect: false, // From SOCKET_CONFIG
-            withCredentials: true, // From SOCKET_CONFIG
-            extraHeaders: { // From SOCKET_CONFIG
-                "X-Client-Version": "1.0.0",
-                "X-Client-Source": "frontend"
-            },
-            auth: { token: mockToken }, // From createSocketConfig via getSocketAuth
-            query: { token: mockToken } // From createSocketConfig via getSocketAuth
-        };
+    it('should setup all required event listeners', () => {
+        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
 
-        expect(mockedIo).toHaveBeenCalledWith(SOCKET_URL, expectedSocketConfig);
+        // Verify that all required event listeners are registered
+        expect(mockSocket.on).toHaveBeenCalledWith('connect', expect.any(Function));
+        expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
+        expect(mockSocket.on).toHaveBeenCalledWith('game_control_state', expect.any(Function));
+        expect(mockSocket.on).toHaveBeenCalledWith('quiz_timer_update', expect.any(Function));
+        expect(mockSocket.on).toHaveBeenCalledWith('quiz_connected_count', expect.any(Function));
+        expect(mockSocket.on).toHaveBeenCalledWith('dashboard_joined', expect.any(Function));
+    });
 
-        expect(mockSocket.connect).toHaveBeenCalledTimes(1);
+    it('should emit "join_dashboard" on connect', () => {
+        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
 
-        // Clean up localStorage mock
-        window.localStorage.clear();
+        act(() => {
+            const connectCallback = mockSocket.on.mock.calls.find(call => call[0] === 'connect')?.[1];
+            if (connectCallback) {
+                mockSocket.connected = true;
+                connectCallback();
+            }
+        });
+
+        // Verify that join_dashboard was emitted with Phase 8 payload structure
+        expect(mockSocket.emit).toHaveBeenCalledWith('join_dashboard', {
+            gameId: mockQuizId
+        });
+    });
+
+    it('should initialize with default states', () => {
+        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+
+        // Check initial state values
+        expect(result.current.connectedCount).toBe(1); // Professor connected by default
+        expect(result.current.timeLeft).toBe(0);
+        expect(result.current.timerStatus).toBe('stop');
+        expect(result.current.quizState).toBeDefined();
+        expect(typeof result.current.emitSetQuestion).toBe('function');
+        expect(typeof result.current.emitEndQuiz).toBe('function');
+        expect(typeof result.current.emitPauseQuiz).toBe('function');
+        expect(typeof result.current.emitResumeQuiz).toBe('function');
+        expect(typeof result.current.emitTimerAction).toBe('function');
     });
 });

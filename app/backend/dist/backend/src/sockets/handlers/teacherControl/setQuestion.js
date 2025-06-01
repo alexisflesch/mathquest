@@ -7,6 +7,7 @@ exports.setQuestionHandler = setQuestionHandler;
 const prisma_1 = require("@/db/prisma");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const logger_1 = __importDefault(require("@/utils/logger"));
+const events_1 = require("@shared/types/socket/events");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('SetQuestionHandler');
 function setQuestionHandler(io, socket) {
@@ -25,7 +26,7 @@ function setQuestionHandler(io, socket) {
             }
         }
         if (!effectiveuserId) {
-            socket.emit('error_dashboard', {
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control the game',
             });
@@ -55,7 +56,7 @@ function setQuestionHandler(io, socket) {
                     }
                     return;
                 }
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'NOT_AUTHORIZED',
                     message: 'Not authorized to control this game',
                 });
@@ -78,7 +79,7 @@ function setQuestionHandler(io, socket) {
                 return;
             }
             if (!fullState || !fullState.gameState) {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'STATE_ERROR',
                     message: 'Could not retrieve game state',
                 });
@@ -100,7 +101,7 @@ function setQuestionHandler(io, socket) {
             const foundQuestionIndex = gameState.questionIds.findIndex(id => id === questionUid);
             if (foundQuestionIndex === -1) {
                 logger.warn({ gameId, questionUid, questionIds: gameState.questionIds }, 'Question UID not found in gameState');
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'QUESTION_NOT_FOUND',
                     message: 'Question not found in this game',
                 });
@@ -198,7 +199,7 @@ function setQuestionHandler(io, socket) {
         }
         catch (error) {
             logger.error({ gameId, error }, 'Error in setQuestionHandler');
-            socket.emit('error_dashboard', {
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'UNKNOWN_ERROR',
                 message: 'An unknown error occurred while setting the question',
             });

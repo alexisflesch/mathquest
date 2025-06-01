@@ -46,7 +46,7 @@ exports.__setGameParticipantServiceForTesting = __setGameParticipantServiceForTe
  */
 router.post('/', auth_1.optionalAuth, async (req, res) => {
     try {
-        const { name, gameTemplateId, playMode, settings, gradeLevel, discipline, themes, nbOfQuestions } = req.body;
+        const { name, gameTemplateId, playMode, settings, gradeLevel, discipline, themes, nbOfQuestions, initiatorStudentId } = req.body;
         // Strict playMode values
         const validPlayModes = ['quiz', 'tournament', 'practice'];
         if (!playMode || !validPlayModes.includes(playMode)) {
@@ -56,12 +56,16 @@ router.post('/', auth_1.optionalAuth, async (req, res) => {
             });
             return;
         }
-        // Use unified user model
+        // Use unified user model or allow student ID
         let userId = undefined;
         let role = undefined;
         if (req.user) {
             userId = req.user.userId;
             role = req.user.role;
+        }
+        else if (initiatorStudentId) {
+            userId = initiatorStudentId;
+            role = 'STUDENT';
         }
         if (!userId) {
             res.status(401).json({ error: 'Authentication required (teacher or student)' });
@@ -108,6 +112,63 @@ router.post('/', auth_1.optionalAuth, async (req, res) => {
     catch (error) {
         logger.error({ error }, 'Error creating game instance');
         res.status(500).json({ error: 'An error occurred while creating the game instance' });
+    }
+});
+/**
+ * Legacy route for backward compatibility
+ * GET /api/v1/games/game-status?code=XXXXX
+ * @deprecated Use GET /api/v1/games/:code/state instead
+ */
+router.get('/game-status', async (req, res) => {
+    logger.info('GET /api/v1/games/game-status called (DEPRECATED - use /:code/state instead)', { query: req.query });
+    try {
+        const { code } = req.query;
+        if (!code || typeof code !== 'string') {
+            res.status(400).json({ error: 'Access code is required' });
+            return;
+        }
+        // Forward to the consolidated state route by making an internal call
+        // Create a new request object for the state route
+        const stateReq = {
+            ...req,
+            params: { code },
+            url: `/api/v1/games/${code}/state`
+        };
+        // Get the consolidated state data
+        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        // Map status to legacy format
+        let legacyStatus = 'en préparation';
+        switch (gameInstance.status) {
+            case 'pending':
+                legacyStatus = 'en préparation';
+                break;
+            case 'active':
+                legacyStatus = 'en cours';
+                break;
+            case 'completed':
+            case 'archived':
+                legacyStatus = 'terminé';
+                break;
+            case 'paused':
+                legacyStatus = 'en pause';
+                break;
+        }
+        // Return legacy format for backward compatibility
+        res.status(200).json({
+            status: gameInstance.status,
+            statut: legacyStatus,
+            currentQuestionIndex: gameInstance.currentQuestionIndex || 0,
+            accessCode: gameInstance.accessCode,
+            name: gameInstance.name
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error in legacy game-status route');
+        res.status(500).json({ error: 'An error occurred while fetching game status' });
     }
 });
 /**
@@ -308,29 +369,88 @@ router.get('/:code/leaderboard', async (req, res) => {
 });
 /**
  * GET /api/v1/games/:code/state
- * Returns the current question and timer state for a live game (for late joiners)
+ * Returns comprehensive game state including current question, timer, and basic game info
+ * Consolidates functionality from the deprecated /game-status route
+ * Public endpoint - no authentication required
  */
 router.get('/:code/state', async (req, res) => {
     const { code } = req.params;
+    logger.info('GET /api/v1/games/:code/state called', { accessCode: code });
     try {
-        // Use the imported getFullGameState function directly
-        const gameStateRaw = await (0, gameStateService_1.getFullGameState)(code);
-        if (!gameStateRaw || !gameStateRaw.gameState) {
-            res.status(404).json({ error: 'Game not found or not live' });
+        // Validate access code format
+        if (!code || code.length < 6) {
+            res.status(400).json({ error: 'Invalid access code format' });
             return;
         }
-        // Return current question, timer, and status
-        const { currentQuestionIndex, questionIds, questionData, timer, status } = gameStateRaw.gameState;
-        res.json({
-            currentQuestionIndex,
-            questionId: questionIds[currentQuestionIndex],
-            questionData,
-            timer,
-            status
-        });
+        // First get basic game instance info from database
+        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
+        if (!gameInstance) {
+            logger.warn('GameInstance not found for accessCode', { accessCode: code });
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        // Map the new status to legacy format for frontend compatibility
+        let legacyStatus = 'en préparation'; // Default
+        switch (gameInstance.status) {
+            case 'pending':
+                legacyStatus = 'en préparation';
+                break;
+            case 'active':
+                legacyStatus = 'en cours';
+                break;
+            case 'completed':
+            case 'archived':
+                legacyStatus = 'terminé';
+                break;
+            case 'paused':
+                legacyStatus = 'en pause';
+                break;
+        }
+        // Try to get detailed game state from Redis (for active games)
+        let gameStateData = null;
+        let redisGameState = null;
+        if (gameInstance.status === 'active') {
+            try {
+                const gameStateRaw = await (0, gameStateService_1.getFullGameState)(code);
+                if (gameStateRaw && gameStateRaw.gameState) {
+                    redisGameState = gameStateRaw.gameState;
+                    const { currentQuestionIndex, questionIds, questionData, timer, status } = redisGameState;
+                    gameStateData = {
+                        currentQuestionIndex,
+                        questionId: questionIds && questionIds[currentQuestionIndex] ? questionIds[currentQuestionIndex] : null,
+                        questionData,
+                        timer,
+                        redisStatus: status
+                    };
+                }
+            }
+            catch (redisError) {
+                logger.warn('Could not fetch Redis game state, falling back to database only', {
+                    accessCode: code,
+                    error: redisError
+                });
+            }
+        }
+        // Return comprehensive response that includes both basic info and detailed state
+        const response = {
+            // Basic game info (from database) - for backward compatibility with /game-status
+            status: gameInstance.status,
+            statut: legacyStatus,
+            currentQuestionIndex: gameInstance.currentQuestionIndex || 0,
+            accessCode: gameInstance.accessCode,
+            name: gameInstance.name,
+            // Extended game state info (from Redis) - for live game functionality
+            ...(gameStateData && {
+                gameState: gameStateData,
+                isLive: true
+            }),
+            // If no Redis state, indicate it's not a live game
+            ...(!gameStateData && { isLive: false })
+        };
+        res.status(200).json(response);
     }
     catch (err) {
-        logger.error('Failed to fetch game state', err);
+        logger.error('Failed to fetch comprehensive game state', { accessCode: code, error: err });
         res.status(500).json({ error: 'Failed to fetch game state' });
     }
 });
@@ -347,6 +467,83 @@ router.get('/teacher/active', auth_1.teacherAuth, async (req, res) => {
     catch (error) {
         logger.error({ error }, 'Error fetching teacher active games');
         res.status(500).json({ error: 'An error occurred while fetching active games' });
+    }
+});
+/**
+ * Create a tournament (legacy format support for existing frontend)
+ * POST /api/v1/games/tournament
+ * Supports the legacy frontend format with action: 'create'
+ */
+router.post('/tournament', auth_1.optionalAuth, async (req, res) => {
+    try {
+        const { action, nom, questions_ids, type, niveau, categorie, themes, cree_par_id, username, avatar } = req.body;
+        // Validate required fields for legacy format
+        if (action !== 'create') {
+            res.status(400).json({ error: 'Invalid action. Expected "create"' });
+            return;
+        }
+        if (!nom || !questions_ids || !Array.isArray(questions_ids) || questions_ids.length === 0) {
+            res.status(400).json({
+                error: 'Required fields missing',
+                required: ['nom', 'questions_ids (array)']
+            });
+            return;
+        }
+        // Get or set user ID
+        let userId = req.user?.userId;
+        if (!userId && cree_par_id) {
+            // For student-created tournaments, use cookie ID as user identifier
+            userId = cree_par_id;
+        }
+        if (!userId) {
+            res.status(401).json({ error: 'User identification required' });
+            return;
+        }
+        logger.info('Creating tournament with legacy format', {
+            nom,
+            questionCount: questions_ids.length,
+            niveau,
+            categorie,
+            themes,
+            userId
+        });
+        // Create a game template on-the-fly for this tournament
+        const gameTemplateService = new gameTemplateService_1.GameTemplateService();
+        const gameTemplate = await gameTemplateService.createStudentGameTemplate({
+            userId,
+            gradeLevel: niveau,
+            discipline: categorie,
+            themes: Array.isArray(themes) ? themes : [themes].filter(Boolean),
+            nbOfQuestions: questions_ids.length
+        });
+        // Create the game instance
+        const gameInstance = await getGameInstanceService().createGameInstanceUnified({
+            name: nom,
+            gameTemplateId: gameTemplate.id,
+            playMode: 'tournament',
+            settings: {
+                type,
+                avatar,
+                username
+            },
+            initiatorUserId: userId
+        });
+        // Initialize game state in Redis
+        await (0, gameStateService_1.initializeGameState)(gameInstance.id);
+        logger.info('Tournament created successfully', {
+            gameInstanceId: gameInstance.id,
+            accessCode: gameInstance.accessCode,
+            templateId: gameTemplate.id
+        });
+        // Return in the format expected by the frontend
+        res.status(201).json({
+            code: gameInstance.accessCode,
+            message: 'Tournament created successfully'
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error creating tournament');
+        res.status(500).json({ error: 'An error occurred while creating the tournament' });
     }
 });
 exports.default = router;

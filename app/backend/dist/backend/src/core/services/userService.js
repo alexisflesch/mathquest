@@ -19,7 +19,7 @@ class UserService {
      */
     async registerUser(data) {
         try {
-            const { username, email, password, role } = data;
+            const { username, email, password, role, cookieId: providedCookieId } = data;
             let existingUser = null;
             if (email) {
                 existingUser = await prisma_1.prisma.user.findFirst({ where: { email } });
@@ -27,10 +27,10 @@ class UserService {
             if (existingUser) {
                 throw new Error('User with this email already exists');
             }
-            // Generate a unique cookieId for students
+            // Use provided cookieId for students, or generate one if not provided
             let cookieId = undefined;
             if (role === 'STUDENT') {
-                cookieId = crypto_1.default.randomBytes(32).toString('hex');
+                cookieId = providedCookieId || crypto_1.default.randomBytes(32).toString('hex');
             }
             // Prepare user data
             const userData = {

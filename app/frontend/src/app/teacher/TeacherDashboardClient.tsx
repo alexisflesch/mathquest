@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import QuizList from '@/components/QuizList';
 import QuestionSelector from '@/components/QuestionSelector';
+import { makeApiRequest } from '@/config/api';
 
 export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
     const [quizzes, setQuizzes] = useState<{ id: string; nom: string }[]>([]);
@@ -12,14 +13,14 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
     const [quizSaveError, setQuizSaveError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('/api/quiz')
-            .then(res => res.json())
-            .then((data) => setQuizzes(Array.isArray(data) ? data.filter(q => q && typeof q.id === 'string' && typeof q.nom === 'string') : []));
+        makeApiRequest<{ id: string; nom: string }[]>('quiz')
+            .then((data) => setQuizzes(Array.isArray(data) ? data.filter(q => q && typeof q.id === 'string' && typeof q.nom === 'string') : []))
+            .catch((err) => console.error('Error loading quizzes:', err));
     }, []);
     useEffect(() => {
-        fetch('/api/quiz')
-            .then(res => res.json())
-            .then((data) => setQuizzes(Array.isArray(data) ? data.filter(q => q && typeof q.id === 'string' && typeof q.nom === 'string') : []));
+        makeApiRequest<{ id: string; nom: string }[]>('quiz')
+            .then((data) => setQuizzes(Array.isArray(data) ? data.filter(q => q && typeof q.id === 'string' && typeof q.nom === 'string') : []))
+            .catch((err) => console.error('Error loading quizzes:', err));
     }, [quizSaveSuccess]);
 
     const handleSaveQuiz = async () => {
@@ -27,7 +28,7 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
         setQuizSaveError(null);
         setQuizSaveSuccess(null);
         try {
-            const response = await fetch('/api/quiz', {
+            const result = await makeApiRequest<{ id: string; message?: string }>('quiz', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -40,8 +41,6 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
                     type: 'direct',
                 }),
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Erreur lors de la sauvegarde du quiz.');
             setQuizSaveSuccess('Quiz sauvegardé !');
             setQuizName('');
             setSelectedQuestions([]);

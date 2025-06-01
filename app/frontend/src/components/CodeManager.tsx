@@ -2,6 +2,8 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import { createLogger } from '@/clientLogger';
 import { Socket } from 'socket.io-client';
 import type { QuizState } from '@/hooks/useTeacherQuizSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { makeApiRequest } from '@/config/api';
 
 const logger = createLogger('CodeManager');
 
@@ -43,19 +45,18 @@ const CodeManager = forwardRef<CodeManagerRef, CodeManagerProps>(({
         setTournamentCode(null);
 
         try {
-            const res = await fetch(`/api/quiz/${quizId}/tournament-code`, {
+            const data = await makeApiRequest<{ tournament_code?: string }>(`quiz/${quizId}/tournament-code`, {
                 method: 'POST',
             });
-            const data = await res.json();
 
-            if (res.ok && data.tournament_code) {
+            if (data.tournament_code) {
                 const newCode = data.tournament_code;
                 setTournamentCode(newCode);
                 onCodeGenerated(newCode);
 
                 if (quizSocket) {
                     logger.info('Resetting quiz ended state after new tournament code');
-                    quizSocket.emit('quiz_reset_ended', { quizId });
+                    quizSocket.emit(SOCKET_EVENTS.LEGACY_QUIZ.RESET_ENDED, { quizId });
                 }
 
                 if (quizSocket) {
@@ -67,7 +68,7 @@ const CodeManager = forwardRef<CodeManagerRef, CodeManagerProps>(({
                         logger.info(`Re-emitting current question with new tournament code`);
                         const currentIdx = quizState.currentQuestionIdx;
                         const chrono = quizState.chrono?.timeLeft;
-                        quizSocket.emit("quiz_set_question", {
+                        quizSocket.emit(SOCKET_EVENTS.LEGACY_QUIZ.SET_QUESTION, {
                             quizId,
                             questionIdx: currentIdx,
                             chrono: chrono,
@@ -76,11 +77,10 @@ const CodeManager = forwardRef<CodeManagerRef, CodeManagerProps>(({
                     }
                 }
             } else {
-                const errorMsg = data.message || 'Erreur lors de la génération';
-                setError(errorMsg);
+                setError('Erreur lors de la génération du code');
                 setTournamentCode(null);
                 onCodeGenerated(null);
-                logger.error(`Error generating tournament code: ${errorMsg}`);
+                logger.error('Error generating tournament code: No tournament_code in response');
             }
         } catch (err) {
             const errorMsg = 'Erreur réseau ou serveur lors de la génération';

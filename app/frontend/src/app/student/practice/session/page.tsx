@@ -2,14 +2,14 @@
  * Student Practice Session Page
  * 
  * This page provides the interactive question interface for student practice sessions:
- * - Loads questions based on the filter parameters from the practice setup page
+ * - Uses socket-based practice mode with the new backend system
  * - Presents questions one at a time with multiple choice answers
- * - Tracks student score as they progress through questions
+ * - Provides immediate feedback on answers with explanations
+ * - Tracks student score with manual progression through questions
  * - Provides a summary and score report upon completion
  * 
- * The practice session allows students to work through a customized set of questions
- * matching their selected criteria, with immediate feedback on their answers.
- * It represents the core question-answering experience in the practice mode.
+ * Updated to use usePracticeGameSocket hook for real-time socket communication
+ * with the backend practice mode system, replacing the old API-based approach.
  */
 
 "use client";
@@ -17,101 +17,150 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import QuestionCard from '@/components/QuestionCard';
-
-interface CurrentQuestion {
-    uid: string;
-    text: string; // Renamed from question
-    answers: { text: string; correct: boolean }[]; // Renamed from reponses and made mandatory
-    type: string;
-    discipline: string;
-    themes: string[]; // Changed from theme: string
-    difficulty: number; // Renamed from difficulte
-    level: string; // Renamed from niveau
-    author?: string; // Renamed from auteur
-    explanation?: string; // Renamed from explication
-    tags?: string[];
-    time?: number; // Renamed from temps
-}
+import { usePracticeGameSocket } from '@/hooks/usePracticeGameSocket';
+import { Answer } from '@shared/types/question';
 
 export default function PracticeSessionPage() {
     const router = useRouter();
-    const [practiceQuestions, setPracticeQuestions] = useState<CurrentQuestion[]>([]);
-    const [practiceIndex, setPracticeIndex] = useState(0);
-    const [practiceScore, setPracticeScore] = useState(0);
-    const [practiceDone, setPracticeDone] = useState(false);
-    const [loading, setLoading] = useState(true);
-    // Timer state for visual coherence (simulate timer if temps existe)
-    const [timer, setTimer] = useState<number | null>(null);
     const [isMobile, setIsMobile] = useState(false);
+
+    // Get practice parameters from URL
+    const [practiceParams, setPracticeParams] = useState({
+        discipline: '',
+        level: '',
+        themes: [] as string[],
+        limit: 10
+    });
+
+    // Mock user data - in real app this would come from auth context
+    const [userId] = useState('practice-user-123');
+    const [username] = useState('Practice User');
+
+    // Initialize practice socket hook
+    const {
+        gameState,
+        connected,
+        connecting,
+        error,
+        startPracticeSession,
+        submitAnswer,
+        requestNextQuestion,
+        clearFeedback
+    } = usePracticeGameSocket({
+        discipline: practiceParams.discipline,
+        level: practiceParams.level,
+        themes: practiceParams.themes,
+        questionLimit: practiceParams.limit,
+        userId,
+        username
+    });
+
+    // UI state for answer selection
+    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+    const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setIsMobile(window.innerWidth < 768);
         }
     }, []);
-    useEffect(() => {
-        if (!practiceDone && practiceQuestions.length > 0) {
-            const t = practiceQuestions[practiceIndex]?.time; // Changed from temps
-            if (typeof t === 'number') setTimer(t);
-            else setTimer(null);
-        }
-    }, [practiceIndex, practiceQuestions, practiceDone]);
 
+    // Extract practice parameters from URL on component mount
     useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
         const discipline = searchParams.get("discipline") || "";
-        const level = searchParams.get("level") || ""; // Renamed from niveau
+        const level = searchParams.get("level") || "";
         const themesParam = searchParams.get("themes") || "";
-        const limit = searchParams.get("limit") || "10";
+        const limit = parseInt(searchParams.get("limit") || "10", 10);
 
-        const params = new URLSearchParams();
-        if (discipline) params.append("discipline", discipline);
-        if (level) params.append("level", level); // Renamed from niveau
-        if (themesParam) params.append("themes", themesParam);
-        params.append("limit", limit);
+        const themes = themesParam ? themesParam.split(',').filter(t => t.trim()) : [];
 
-        fetch(`/api/questions?${params.toString()}`)
-            .then((res) => res.json())
-            .then((questions) => {
-                setPracticeQuestions(questions);
-                setLoading(false);
-            });
+        setPracticeParams({
+            discipline,
+            level,
+            themes,
+            limit
+        });
     }, []);
 
-    // Handlers for QuestionCard
-    const isMultipleChoice = practiceQuestions[practiceIndex]?.type === 'choix_multiple';
-    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-    const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+    // Start practice session when parameters are loaded and socket is connected
+    useEffect(() => {
+        if (connected && practiceParams.discipline && !gameState.connectedToRoom) {
+            startPracticeSession();
+        }
+    }, [connected, practiceParams, gameState.connectedToRoom, startPracticeSession]);
+
+    // Reset answer selection when question changes
     useEffect(() => {
         setSelectedAnswer(null);
         setSelectedAnswers([]);
-    }, [practiceIndex]);
-    const handleSingleChoice = (idx: number) => {
-        setSelectedAnswer(idx === selectedAnswer ? null : idx);
-        const rep = practiceQuestions[practiceIndex].answers[idx]; // Changed from reponses
-        handlePracticeAnswer(rep.correct);
-    };
-    const handleSubmitMultiple = () => {
-        // At least one answer selected
-        if (selectedAnswers.length === 0) return;
-        // All selected must be correct, and all correct must be selected
-        const reps = practiceQuestions[practiceIndex].answers; // Changed from reponses
-        const correctIndexes = reps.map((r, i) => r.correct ? i : null).filter(i => i !== null);
-        const isCorrect =
-            selectedAnswers.length === correctIndexes.length &&
-            selectedAnswers.every(idx => reps[idx].correct);
-        handlePracticeAnswer(isCorrect);
-    };
+    }, [gameState.currentQuestion?.uid]);
 
-    const handlePracticeAnswer = (isCorrect: boolean) => {
-        if (isCorrect) setPracticeScore((s) => s + 1);
-        if (practiceIndex + 1 < practiceQuestions.length) {
-            setPracticeIndex((i) => i + 1);
-        } else {
-            setPracticeDone(true);
+    const isMultipleChoice = gameState.currentQuestion?.type === 'choix_multiple';
+
+    const handleSingleChoice = (idx: number) => {
+        if (gameState.answered) return; // Prevent changes after answering
+
+        setSelectedAnswer(idx === selectedAnswer ? null : idx);
+
+        // Auto-submit for single choice
+        if (gameState.currentQuestion && idx !== selectedAnswer) {
+            const answer = idx;
+            // Practice mode: No timer, use a simple time tracking or 0
+            const timeSpent = 0; // Practice mode doesn't track time strictly
+
+            submitAnswer(gameState.currentQuestion.uid, answer, timeSpent);
         }
     };
 
-    if (loading) {
+    const handleSubmitMultiple = () => {
+        if (gameState.answered || selectedAnswers.length === 0 || !gameState.currentQuestion) return;
+
+        // Practice mode: No timer, use simple time tracking
+        const timeSpent = 0; // Practice mode doesn't track time strictly
+
+        submitAnswer(gameState.currentQuestion.uid, selectedAnswers, timeSpent);
+    };
+
+    const handleNextQuestion = () => {
+        if (!gameState.currentQuestion) return;
+
+        clearFeedback();
+        requestNextQuestion(gameState.currentQuestion.uid);
+    };
+
+    // Loading states
+    if (connecting) {
+        return (
+            <div className="main-content">
+                <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
+                    <div className="card-body items-center justify-center min-h-[300px]">
+                        <div className="text-xl font-bold">Connexion en cours…</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="main-content">
+                <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
+                    <div className="card-body items-center justify-center min-h-[300px]">
+                        <div className="text-xl font-bold text-error">Erreur: {error}</div>
+                        <button
+                            className="btn btn-primary mt-4"
+                            onClick={() => router.push("/student/create-game/?training=true")}
+                        >
+                            Retour
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!connected) {
         return (
             <div className="main-content">
                 <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
@@ -123,60 +172,157 @@ export default function PracticeSessionPage() {
         );
     }
 
-    const currentPracticeQuestion = practiceQuestions.length > 0 ? practiceQuestions[practiceIndex] : null;
-
     return (
         <div className="main-content">
             <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
-                {/* Timer visuel supprimé */}
                 <MathJaxWrapper>
-                    {!practiceDone && practiceQuestions.length > 0 && (
-                        <QuestionCard
-                            currentQuestion={{
-                                // uid is an optional top-level property in TournamentQuestion
-                                uid: practiceQuestions[practiceIndex].uid,
-                                // The 'question' object should conform to FilteredQuestion or Question (BaseQuestion)
-                                question: {
-                                    uid: practiceQuestions[practiceIndex].uid,
-                                    text: practiceQuestions[practiceIndex].text,
-                                    type: practiceQuestions[practiceIndex].type,
-                                    answers: practiceQuestions[practiceIndex].answers, // Pass as Answer[]
-                                    explanation: practiceQuestions[practiceIndex].explanation,
-                                    time: practiceQuestions[practiceIndex].time,
-                                    tags: practiceQuestions[practiceIndex].tags,
-                                    // Fields like discipline, theme, difficulty, level, author from CurrentQuestion
-                                    // are not part of BaseQuestion, so they are omitted here to ensure
-                                    // the 'question' object strictly conforms to the expected shared types.
-                                }
-                                // Other LiveQuestionPayload fields (timer, questionIndex, etc.) or
-                                // other TournamentQuestion top-level fields (code, remainingTime, etc.)
-                                // can be added here if/when needed by this specific use case.
-                            }}
-                            questionIndex={practiceIndex}
-                            totalQuestions={practiceQuestions.length}
-                            isMultipleChoice={isMultipleChoice}
-                            selectedAnswer={selectedAnswer}
-                            setSelectedAnswer={setSelectedAnswer}
-                            selectedAnswers={selectedAnswers}
-                            setSelectedAnswers={setSelectedAnswers}
-                            handleSingleChoice={handleSingleChoice}
-                            handleSubmitMultiple={handleSubmitMultiple}
-                            answered={false}
-                            isQuizMode={false}
-                        />
+                    {gameState.gameStatus !== 'finished' && gameState.currentQuestion && (
+                        <>
+                            <QuestionCard
+                                currentQuestion={{
+                                    uid: gameState.currentQuestion.uid,
+                                    question: {
+                                        uid: gameState.currentQuestion.uid,
+                                        text: gameState.currentQuestion.text,
+                                        type: gameState.currentQuestion.type,
+                                        answers: Array.isArray(gameState.currentQuestion.answers)
+                                            ? gameState.currentQuestion.answers.map((answer, index) => {
+                                                if (typeof answer === 'string') {
+                                                    // Transform string array to Answer format
+                                                    return {
+                                                        text: answer,
+                                                        correct: gameState.currentQuestion?.correctAnswers?.[index] || false
+                                                    };
+                                                } else {
+                                                    // Already in Answer format
+                                                    return answer;
+                                                }
+                                            })
+                                            : [],
+                                        explanation: gameState.currentQuestion.explanation,
+                                        time: gameState.currentQuestion.time,
+                                        tags: gameState.currentQuestion.tags,
+                                    }
+                                }}
+                                questionIndex={gameState.questionIndex}
+                                totalQuestions={gameState.totalQuestions}
+                                isMultipleChoice={isMultipleChoice}
+                                selectedAnswer={selectedAnswer}
+                                setSelectedAnswer={setSelectedAnswer}
+                                selectedAnswers={selectedAnswers}
+                                setSelectedAnswers={setSelectedAnswers}
+                                handleSingleChoice={handleSingleChoice}
+                                handleSubmitMultiple={handleSubmitMultiple}
+                                answered={gameState.answered}
+                                isQuizMode={false}
+                            />
+
+                            {/* Enhanced Feedback Section */}
+                            {gameState.feedback && (
+                                <div className="card-body">
+                                    <div className={`alert ${gameState.feedback.correct ? 'alert-success' : 'alert-error'}`}>
+                                        <div>
+                                            <h4 className="font-bold">
+                                                {gameState.feedback.correct ? '✅ Bonne réponse!' : '❌ Mauvaise réponse'}
+                                            </h4>
+
+                                            {/* Show correct answers if available */}
+                                            {gameState.feedback.correctAnswers && gameState.currentQuestion?.answers && (
+                                                <div className="mt-3">
+                                                    <p className="font-semibold">Bonnes réponses:</p>
+                                                    <ul className="list-disc list-inside ml-4">
+                                                        {gameState.feedback.correctAnswers.map((isCorrect, index) => {
+                                                            if (isCorrect && gameState.currentQuestion?.answers[index]) {
+                                                                const answer = gameState.currentQuestion.answers[index];
+                                                                const answerText = typeof answer === 'string'
+                                                                    ? answer
+                                                                    : answer.text;
+                                                                return (
+                                                                    <li key={index} className="text-green-700">
+                                                                        {answerText}
+                                                                    </li>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {/* Explanation */}
+                                            {gameState.feedback.explanation && (
+                                                <div className="mt-3">
+                                                    <p className="font-semibold">Explication:</p>
+                                                    <p className="mt-1">{gameState.feedback.explanation}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Score awarded */}
+                                            {gameState.feedback.scoreAwarded && (
+                                                <p className="mt-2">
+                                                    Points gagnés: {gameState.feedback.scoreAwarded}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Next Question Button */}
+                                    {gameState.questionIndex < gameState.totalQuestions - 1 ? (
+                                        <button
+                                            className="btn btn-primary mt-4"
+                                            onClick={handleNextQuestion}
+                                        >
+                                            Question suivante
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="btn btn-success mt-4"
+                                            onClick={handleNextQuestion}
+                                        >
+                                            Terminer l'entraînement
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Multiple Choice Submit Button */}
+                            {isMultipleChoice && !gameState.answered && (
+                                <div className="card-body pt-0">
+                                    <button
+                                        className="btn btn-primary w-full"
+                                        onClick={handleSubmitMultiple}
+                                        disabled={selectedAnswers.length === 0}
+                                    >
+                                        Valider la réponse
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </MathJaxWrapper>
-                {practiceDone && (
-                    <div className="w-full flex flex-col items-center gap-4 text-center">
+
+                {/* Practice Complete */}
+                {gameState.gameStatus === 'finished' && (
+                    <div className="w-full flex flex-col items-center gap-4 text-center p-8">
                         <h3 className="card-title text-2xl mb-2">Entraînement terminé !</h3>
                         <div className="text-2xl mb-2 font-extrabold">
-                            Score : {practiceScore} / {practiceQuestions.length}
+                            Score : {gameState.score} / {gameState.totalQuestions}
+                        </div>
+                        <div className="stats shadow">
+                            <div className="stat">
+                                <div className="stat-title">Questions répondues</div>
+                                <div className="stat-value">{gameState.questionIndex + 1}</div>
+                            </div>
+                            <div className="stat">
+                                <div className="stat-title">Score total</div>
+                                <div className="stat-value">{gameState.score}</div>
+                            </div>
                         </div>
                         <button
-                            className="btn btn-primary btn-lg"
-                            onClick={() => router.push("/student/create-tournament/?training=true")}
+                            className="btn btn-primary btn-lg mt-4"
+                            onClick={() => router.push("/student/create-game/?training=true")}
                         >
-                            Recommencer
+                            Nouvel entraînement
                         </button>
                     </div>
                 )}

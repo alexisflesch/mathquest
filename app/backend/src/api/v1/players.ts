@@ -28,7 +28,7 @@ export const __setUserServiceForTesting = (mockService: UserService): void => {
  */
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, cookie_id } = req.body;
 
         // Basic validation
         if (!username) {
@@ -48,6 +48,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
             email,
             password,
             role: 'STUDENT', // Use string literal instead of UserRole enum
+            cookieId: cookie_id, // Pass the frontend-generated cookie_id
         });
 
         res.status(201).json(result);

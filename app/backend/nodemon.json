@@ -1,0 +1,18 @@
+{
+    "watch": [
+        "src",
+        "../shared"
+    ],
+    "ext": "ts,js,json",
+    "ignore": [
+        "src/**/*.test.ts",
+        "src/**/*.spec.ts",
+        "dist/**",
+        "node_modules/**"
+    ],
+    "exec": "ts-node -r tsconfig-paths/register src/server.ts",
+    "env": {
+        "NODE_ENV": "development"
+    },
+    "delay": 1000
+}
