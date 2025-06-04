@@ -46,6 +46,8 @@ import ZoomControls from '@/components/ZoomControls'; // Import du nouveau compo
 import { Question } from '@/types'; // Remove unused QuizState import
 import type { TournamentQuestion } from '@/components/QuestionCard';
 import { makeApiRequest } from '@/config/api';
+import { QuizListResponseSchema, TournamentCodeResponseSchema, type QuizListResponse, type TournamentCodeResponse } from '@/types/api';
+import { STORAGE_KEYS } from '@/constants/auth';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const logger = createLogger('ProjectionPage');
@@ -233,7 +235,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
             setError(null);
 
             try {
-                const teacherId = localStorage.getItem('mathquest_teacher_id');
+                const teacherId = localStorage.getItem(STORAGE_KEYS.TEACHER_ID);
                 if (!teacherId) {
                     logger.warn('No teacher ID found, redirecting to login');
                     router.push('/teacher/login');
@@ -241,7 +243,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                 }
 
                 // Fetch quiz name and tournament code
-                const quizzes: { id: string; nom: string }[] = await makeApiRequest(`quiz?enseignant_id=${teacherId}`);
+                const quizzes: QuizListResponse = await makeApiRequest(`quiz?enseignant_id=${teacherId}`, undefined, undefined, QuizListResponseSchema);
                 const found = Array.isArray(quizzes) ? quizzes.find((q) => q.id === quizId) : null;
 
                 if (!found) {
@@ -254,7 +256,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
 
                 // Fetch tournament code
                 try {
-                    const codeData = await makeApiRequest<{ tournament_code?: string }>(`quiz/${quizId}/tournament-code`);
+                    const codeData = await makeApiRequest<TournamentCodeResponse>(`quiz/${quizId}/tournament-code`, undefined, undefined, TournamentCodeResponseSchema);
                     if (codeData && codeData.tournament_code) {
                         setCurrentTournamentCode(codeData.tournament_code);
                     }
@@ -537,7 +539,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                                     key={podiumKey}
                                     top3={leaderboard.slice(0, 3).map((entry) => ({
                                         name: entry.username,
-                                        avatarUrl: entry.avatar,
+                                        avatarEmoji: entry.avatar,
                                         score: entry.score,
                                     }))}
                                     others={leaderboard.slice(3).map((entry) => ({

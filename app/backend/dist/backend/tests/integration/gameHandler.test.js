@@ -301,7 +301,7 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-123',
             username: 'Test Player',
-            avatarUrl: 'https://example.com/avatar.jpg'
+            avatarEmoji: 'https://example.com/avatar.jpg'
         });
         // Wait for game joined response with a timeout
         const joinResponse = await Promise.race([
@@ -347,7 +347,7 @@ describe('Game Handler', () => {
     //         accessCode: TEST_ACCESS_CODE,
     //         userId: 'player-123',
     //         username: 'Test Player',
-    //         avatarUrl: 'https://example.com/avatar.jpg'
+    //         avatarEmoji: 'https://example.com/avatar.jpg'
     //     });
     //     const playerJoinResponse = await Promise.race([
     //         playerJoinPromise,
@@ -437,7 +437,7 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-1',
             username: 'Player 1',
-            avatarUrl: 'https://example.com/avatar1.jpg'
+            avatarEmoji: 'https://example.com/avatar1.jpg'
         });
         // Wait for first player to join
         await joinPromise1;
@@ -446,7 +446,7 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-2',
             username: 'Player 2',
-            avatarUrl: 'https://example.com/avatar2.jpg'
+            avatarEmoji: 'https://example.com/avatar2.jpg'
         });
         // Wait for second player to join
         await joinPromise2;
@@ -512,14 +512,14 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-1',
             username: 'Player 1',
-            avatarUrl: 'https://example.com/avatar1.jpg'
+            avatarEmoji: 'https://example.com/avatar1.jpg'
         });
         // Player 2 joins
         socket2.emit('join_game', {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-2',
             username: 'Player 2',
-            avatarUrl: 'https://example.com/avatar2.jpg'
+            avatarEmoji: 'https://example.com/avatar2.jpg'
         });
         // Wait for both players to join the game
         await Promise.all([

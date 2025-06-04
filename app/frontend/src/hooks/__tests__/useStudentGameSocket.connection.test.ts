@@ -160,7 +160,7 @@ describe('useStudentGameSocket - Connection', () => {
                 accessCode: 'TEST123',
                 userId: 'user-123',
                 username: 'TestUser',
-                avatarUrl: undefined,
+                avatarEmoji: undefined,
                 isDiffered: false
             });
         });
@@ -171,7 +171,7 @@ describe('useStudentGameSocket - Connection', () => {
             accessCode: 'TEST123',
             userId: 'user-123',
             username: 'TestUser',
-            avatarUrl: 'https://example.com/avatar.jpg'
+            avatarEmoji: 'https://example.com/avatar.jpg'
         };
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
@@ -191,7 +191,7 @@ describe('useStudentGameSocket - Connection', () => {
                 accessCode: 'TEST123',
                 userId: 'user-123',
                 username: 'TestUser',
-                avatarUrl: 'https://example.com/avatar.jpg',
+                avatarEmoji: 'https://example.com/avatar.jpg',
                 isDiffered: false
             });
         });
@@ -217,7 +217,7 @@ describe('useStudentGameSocket - Connection', () => {
                 accessCode: 'TEST123',
                 userId: 'user-123',
                 username: 'TestUser',
-                avatarUrl: undefined,
+                avatarEmoji: undefined,
                 isDiffered: true
             });
         });

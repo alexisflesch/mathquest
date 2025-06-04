@@ -17,8 +17,8 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const sockets_1 = require("@/sockets"); // Import getIO
 // Create a server-specific logger
 const logger = (0, logger_1.default)('Server');
-// Load environment variables from the root .env file
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../../../.env') });
+// Load environment variables from backend/.env file
+dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
 // Check for JWT_SECRET
 if (!process.env.JWT_SECRET) {
     logger.warn('JWT_SECRET not found in environment variables, using default secret');

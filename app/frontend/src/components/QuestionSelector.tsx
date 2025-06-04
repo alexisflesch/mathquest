@@ -21,14 +21,15 @@ import type { Question as BaseQuestion } from '../types';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { Check, X } from 'lucide-react';
 import { makeApiRequest } from '@/config/api';
+import { QuestionsFiltersResponseSchema, QuestionsResponseSchema } from '@/types/api';
 
 
 // Extend the shared Question interface with additional fields for this component
 interface Question extends BaseQuestion {
-    discipline: string;
-    themes: string[]; // New plural themes
-    difficulty: number;
-    gradeLevel: string;
+    discipline?: string;
+    themes?: string[]; // New plural themes
+    difficulty?: number;
+    gradeLevel?: string;
     auteur?: string;
     tags?: string[];
 }
@@ -62,7 +63,7 @@ export default function QuestionSelector({
     const [expanded, setExpanded] = useState<{ [uid: string]: boolean }>({});
 
     useEffect(() => {
-        makeApiRequest<{ disciplines: string[]; niveaux: string[]; themes: string[] }>('questions/filters')
+        makeApiRequest('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
             .then(setFilters)
             .catch(error => {
                 console.error('Error fetching filters:', error);
@@ -92,8 +93,12 @@ export default function QuestionSelector({
         params.push('limit=100');
         if (params.length) url += '?' + params.join('&');
 
-        makeApiRequest<Question[]>(url)
-            .then(setQuestions)
+        makeApiRequest(url, undefined, undefined, QuestionsResponseSchema)
+            .then(response => {
+                // Handle union type - could be array or object with questions property
+                const questionsArray = Array.isArray(response) ? response : response.questions;
+                setQuestions(questionsArray as Question[]);
+            })
             .catch(error => {
                 console.error('Error fetching questions:', error);
             });
@@ -131,9 +136,11 @@ export default function QuestionSelector({
             } else {
                 // Fetch from API
                 try {
-                    const arr = await makeApiRequest<Question[]>(`questions?uid=${uid}`);
-                    if (Array.isArray(arr) && arr.length > 0) {
-                        updatedMap[uid] = arr[0];
+                    const response = await makeApiRequest(`questions?uid=${uid}`, undefined, undefined, QuestionsResponseSchema);
+                    // Handle union type - could be array or object with questions property
+                    const questionsArray = Array.isArray(response) ? response : response.questions;
+                    if (questionsArray && questionsArray.length > 0) {
+                        updatedMap[uid] = questionsArray[0] as Question;
                     }
                 } catch (error) {
                     console.error('Error fetching question:', error);
@@ -147,8 +154,8 @@ export default function QuestionSelector({
         setSelectedQuestionsMap(updatedMap);
         // Compute meta arrays from all selected questions
         const selectedQuestionsMeta = Object.values(updatedMap);
-        const niveaux = Array.from(new Set(selectedQuestionsMeta.map(q => q.gradeLevel)));
-        const categories = Array.from(new Set(selectedQuestionsMeta.map(q => q.discipline)));
+        const niveaux = Array.from(new Set(selectedQuestionsMeta.map(q => q.gradeLevel).filter(Boolean) as string[]));
+        const categories = Array.from(new Set(selectedQuestionsMeta.map(q => q.discipline).filter(Boolean) as string[]));
         const themes = Array.from(new Set(selectedQuestionsMeta.flatMap(q => q.themes || []))); // New themes calculation, ensuring to handle undefined/empty themes
         onSelect(next, { niveaux, categories, themes });
     };
@@ -172,7 +179,7 @@ export default function QuestionSelector({
             // Vérification du thème (accepte string ou string[])
             if (externalFilter?.themes && externalFilter.themes.length > 0) { // New themes filter logic
                 if (!q.themes || q.themes.length === 0) return false; // Question has no themes, so it can't match
-                const questionHasMatchingTheme = externalFilter.themes.some(efTheme => q.themes.includes(efTheme));
+                const questionHasMatchingTheme = externalFilter.themes.some(efTheme => q.themes!.includes(efTheme));
                 if (!questionHasMatchingTheme) {
                     return false;
                 }

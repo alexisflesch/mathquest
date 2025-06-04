@@ -6,6 +6,7 @@ import { createSocketConfig } from '@/utils';
 import { Question } from '@shared/types/quiz/question';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { AnswerValue } from '@/types/socket';
 
 const logger = createLogger('usePracticeGameSocket');
 
@@ -17,6 +18,8 @@ export interface FeedbackPayload {
     timeSpent?: number;
     scoreAwarded?: number;
     feedbackWaitTime?: number; // Optional timer for feedback phase
+    correctAnswers?: boolean[]; // Array indicating which answers are correct
+    correctAnswersText?: string[]; // Text of correct answers for display
 }
 
 export interface PracticeQuestion {
@@ -40,6 +43,7 @@ export interface PracticeQuestionPayload {
     totalQuestions: number;
     timer?: number;
     questionState?: 'active' | 'paused' | 'stopped';
+    currentQuestionIndex?: number; // For backward compatibility
 }
 
 export interface PracticeAnswerReceived {
@@ -50,6 +54,7 @@ export interface PracticeAnswerReceived {
     questionId?: string;
     timeSpent?: number;
     correctAnswers?: boolean[];
+    correctAnswersText?: string[]; // Added for better feedback display
     explanation?: string;
     scoreAwarded?: number;
 }
@@ -69,9 +74,13 @@ export interface PracticeGameState {
         questionId?: string;
         timeSpent?: number;
         correctAnswers?: boolean[];
+        correctAnswersText?: string[]; // Enhanced for better display
         scoreAwarded?: number;
     } | null;
     showingCorrectAnswers: boolean;
+    // Enhanced for practice mode feedback experience
+    isShowingFeedback: boolean;
+    canProgressToNext: boolean;
 }
 
 export interface PracticeGameSocketHookProps {
@@ -83,7 +92,7 @@ export interface PracticeGameSocketHookProps {
     // User authentication
     userId: string | null;
     username: string | null;
-    avatarUrl?: string | null;
+    avatarEmoji?: string | null;
 }
 
 export interface PracticeGameSocketHook {
@@ -97,7 +106,7 @@ export interface PracticeGameSocketHook {
 
     // Actions
     startPracticeSession: () => void;
-    submitAnswer: (questionId: string, answer: any, timeSpent: number) => void;
+    submitAnswer: (questionId: string, answer: AnswerValue, timeSpent: number) => void;
     requestNextQuestion: (currentQuestionId: string) => void;
     endPracticeSession: () => void;
 
@@ -113,7 +122,7 @@ export function usePracticeGameSocket({
     questionLimit = 10,
     userId,
     username,
-    avatarUrl
+    avatarEmoji
 }: PracticeGameSocketHookProps): PracticeGameSocketHook {
 
     const [socket, setSocket] = useState<Socket | null>(null);
@@ -131,7 +140,9 @@ export function usePracticeGameSocket({
         answered: false,
         connectedToRoom: false,
         feedback: null,
-        showingCorrectAnswers: false
+        showingCorrectAnswers: false,
+        isShowingFeedback: false,
+        canProgressToNext: false
     });
 
     // Refs for access code management
@@ -202,7 +213,7 @@ export function usePracticeGameSocket({
         });
 
         // Handle practice questions
-        socket.on(SOCKET_EVENTS.GAME.GAME_QUESTION, (payload: any) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_QUESTION, (payload: PracticeQuestionPayload) => {
             logger.debug("Received practice question", payload);
 
             // Handle both structured payload and flat question data
@@ -230,13 +241,28 @@ export function usePracticeGameSocket({
         socket.on(SOCKET_EVENTS.GAME.ANSWER_RECEIVED, (payload: PracticeAnswerReceived) => {
             logger.debug("Received practice answer feedback", payload);
 
+            // Extract correct answers text from current question if available
+            let correctAnswersText: string[] = [];
+            if (payload.correctAnswers && gameState.currentQuestion?.answers) {
+                correctAnswersText = payload.correctAnswers
+                    .map((isCorrect, index) => {
+                        if (isCorrect && gameState.currentQuestion?.answers[index]) {
+                            const answer = gameState.currentQuestion.answers[index];
+                            return typeof answer === 'string' ? answer : answer.text;
+                        }
+                        return null;
+                    })
+                    .filter((text): text is string => text !== null);
+            }
+
             // Create comprehensive feedback object from backend response
             const feedback = {
                 correct: payload.correct,
                 explanation: payload.explanation,
                 questionId: payload.questionId,
                 timeSpent: payload.timeSpent,
-                correctAnswers: payload.correctAnswers, // Include correct answers for display
+                correctAnswers: payload.correctAnswers,
+                correctAnswersText: payload.correctAnswersText || correctAnswersText,
                 scoreAwarded: payload.scoreAwarded
             };
 
@@ -244,13 +270,16 @@ export function usePracticeGameSocket({
                 ...prev,
                 answered: true,
                 feedback: feedback,
+                isShowingFeedback: true,
+                canProgressToNext: true, // Enable progression after feedback
                 score: payload.scoreAwarded ? prev.score + payload.scoreAwarded : prev.score
             }));
 
             // Practice mode: No timer to clear since we don't use enforced timers
-            logger.info("Practice answer processed", {
+            logger.info("Practice answer processed with enhanced feedback", {
                 correct: payload.correct,
-                hasExplanation: !!payload.explanation
+                hasExplanation: !!payload.explanation,
+                correctAnswersCount: correctAnswersText.length
             });
 
             if (payload.rejected) {
@@ -333,7 +362,9 @@ export function usePracticeGameSocket({
             answered: false,
             connectedToRoom: false,
             feedback: null,
-            showingCorrectAnswers: false
+            showingCorrectAnswers: false,
+            isShowingFeedback: false,
+            canProgressToNext: false
         }));
 
         // Practice mode uses isDiffered: true to enable deferred/manual progression
@@ -341,7 +372,7 @@ export function usePracticeGameSocket({
             accessCode: 'PRACTICE', // Special identifier for practice mode
             userId,
             username,
-            avatarUrl: avatarUrl || undefined,
+            avatarEmoji: avatarEmoji || undefined,
             isDiffered: true,
             practiceMode: true,
             practiceConfig: {
@@ -351,9 +382,9 @@ export function usePracticeGameSocket({
                 questionLimit
             }
         });
-    }, [socket, userId, username, avatarUrl, discipline, level, themes, questionLimit]);
+    }, [socket, userId, username, avatarEmoji, discipline, level, themes, questionLimit]);
 
-    const submitAnswer = useCallback((questionId: string, answer: any, timeSpent: number) => {
+    const submitAnswer = useCallback((questionId: string, answer: AnswerValue, timeSpent: number) => {
         if (!socket || !userId) {
             logger.warn("Cannot submit practice answer: missing socket or parameters");
             return;
@@ -416,7 +447,9 @@ export function usePracticeGameSocket({
         setGameState(prev => ({
             ...prev,
             feedback: null,
-            showingCorrectAnswers: false
+            showingCorrectAnswers: false,
+            isShowingFeedback: false,
+            canProgressToNext: false
         }));
     }, []);
 
@@ -431,7 +464,9 @@ export function usePracticeGameSocket({
             answered: false,
             connectedToRoom: false,
             feedback: null,
-            showingCorrectAnswers: false
+            showingCorrectAnswers: false,
+            isShowingFeedback: false,
+            canProgressToNext: false
         });
         practiceAccessCodeRef.current = null;
         setError(null);

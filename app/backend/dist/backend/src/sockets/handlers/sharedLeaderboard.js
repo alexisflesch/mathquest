@@ -27,7 +27,7 @@ async function calculateLeaderboard(accessCode) {
         .map((p) => ({
         userId: p.userId,
         username: p.username,
-        avatarUrl: p.avatarUrl,
+        avatarEmoji: p.avatarEmoji,
         score: p.score || 0
     }))
         .sort((a, b) => b.score - a.score);

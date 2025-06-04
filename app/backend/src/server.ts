@@ -1,11 +1,15 @@
+// Load environment variables FIRST, before any other imports
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 // Register module aliases for path mapping
 import 'module-alias/register';
 
 import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
-import dotenv from 'dotenv';
-import path from 'path';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import apiRouter from '@/api';
 import createLogger from '@/utils/logger';
 import { initializeSocketIO, getIO } from '@/sockets'; // Import getIO
@@ -14,9 +18,6 @@ import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketDa
 
 // Create a server-specific logger
 const logger = createLogger('Server');
-
-// Load environment variables from the root .env file
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 // Check for JWT_SECRET
 if (!process.env.JWT_SECRET) {
@@ -37,6 +38,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

@@ -7,7 +7,7 @@ exports.joinGamePayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." }),
     userId: zod_1.z.string().min(1, { message: "Player ID cannot be empty." }),
     username: zod_1.z.string().min(1, { message: "Username cannot be empty." }),
-    avatarUrl: zod_1.z.string().url({ message: "Invalid URL format for avatar." }).optional(),
+    avatarEmoji: zod_1.z.string().optional(),
     isDiffered: zod_1.z.boolean().optional(),
 });
 exports.gameAnswerPayloadSchema = zod_1.z.object({
@@ -34,7 +34,7 @@ exports.participantDataSchema = zod_1.z.object({
     id: zod_1.z.string().min(1, { message: "Participant ID cannot be empty." }),
     userId: zod_1.z.string().min(1, { message: "Player ID cannot be empty." }),
     username: zod_1.z.string().min(1, { message: "Username cannot be empty." }),
-    avatarUrl: zod_1.z.string().url({ message: "Invalid URL format for avatar." }).optional(),
+    avatarEmoji: zod_1.z.string().optional(),
     score: zod_1.z.number().int({ message: "Score must be an integer." }).optional(),
     online: zod_1.z.boolean().optional(),
     joinedAt: zod_1.z.union([zod_1.z.string().datetime({ message: "Invalid datetime string for joinedAt" }), zod_1.z.number()]).optional(),
@@ -60,7 +60,7 @@ exports.questionDataSchema = zod_1.z.object({
 exports.leaderboardEntryDataSchema = zod_1.z.object({
     userId: zod_1.z.string().min(1, { message: "Player ID cannot be empty." }),
     username: zod_1.z.string().min(1, { message: "Username cannot be empty." }),
-    avatarUrl: zod_1.z.string().url({ message: "Invalid URL format for avatar." }).optional(),
+    avatarEmoji: zod_1.z.string().optional(),
     score: zod_1.z.number().int({ message: "Score must be an integer." }),
     rank: zod_1.z.number().int({ message: "Rank must be an integer." }).positive({ message: "Rank must be positive." }).optional(),
 });
@@ -229,7 +229,7 @@ exports.serverToClientEventsSchema = zod_1.z.object({
         leaderboard: zod_1.z.array(zod_1.z.object({
             userId: zod_1.z.string(),
             username: zod_1.z.string(),
-            avatarUrl: zod_1.z.string().optional(),
+            avatarEmoji: zod_1.z.string().optional(),
             score: zod_1.z.number()
         })).optional()
     }))

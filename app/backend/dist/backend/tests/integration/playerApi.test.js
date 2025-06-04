@@ -91,7 +91,7 @@ describe('User API', () => {
                 email: null, // Prisma returns null for missing optional fields
                 role: 'STUDENT',
                 createdAt: new Date(),
-                avatarUrl: null,
+                avatarEmoji: null,
             });
             const res = await (0, supertest_1.default)(server_1.app)
                 .get('/api/v1/players/cookie/test-cookie-id');

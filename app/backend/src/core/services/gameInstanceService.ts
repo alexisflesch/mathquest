@@ -134,7 +134,7 @@ export class GameInstanceService {
                             user: {
                                 select: {
                                     username: true,
-                                    avatarUrl: true
+                                    avatarEmoji: true
                                 }
                             }
                         },
@@ -173,7 +173,7 @@ export class GameInstanceService {
                             user: {
                                 select: {
                                     username: true,
-                                    avatarUrl: true
+                                    avatarEmoji: true
                                 }
                             }
                         },

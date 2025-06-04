@@ -73,7 +73,7 @@ describe('usePracticeGameSocket', () => {
         questionLimit: 5,
         userId: 'test-user-123',
         username: 'Test User',
-        avatarUrl: 'https://example.com/avatar.jpg'
+        avatarEmoji: 'https://example.com/avatar.jpg'
     };
 
     it('should initialize with default state', () => {
@@ -169,6 +169,7 @@ describe('usePracticeGameSocket', () => {
             questionId: 'question-123',
             timeSpent: 1000,
             correctAnswers: [false, true, false],
+            correctAnswersText: [],
             scoreAwarded: undefined
         });
     });
@@ -203,7 +204,7 @@ describe('usePracticeGameSocket', () => {
             accessCode: 'PRACTICE',
             userId: 'test-user-123',
             username: 'Test User',
-            avatarUrl: 'https://example.com/avatar.jpg',
+            avatarEmoji: 'https://example.com/avatar.jpg',
             isDiffered: true,
             practiceMode: true,
             practiceConfig: {

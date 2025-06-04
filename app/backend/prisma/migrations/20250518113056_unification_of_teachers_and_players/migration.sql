@@ -45,7 +45,7 @@ CREATE TABLE "User" (
     "username" TEXT NOT NULL,
     "email" TEXT,
     "passwordHash" TEXT,
-    "avatarUrl" TEXT,
+    "avatarEmoji" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "role" "UserRole" NOT NULL,
 

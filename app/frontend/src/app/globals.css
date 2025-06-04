@@ -794,6 +794,33 @@ textarea:focus {
   }
 }
 
+/* ================================
+   EMOJI AVATAR CONSISTENCY
+   ================================ */
+
+/* Ensure consistent emoji rendering across all platforms */
+.emoji-avatar {
+  font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+    "Twemoji Mozilla", "Noto Emoji", "EmojiOne Color", emoji, sans-serif;
+  font-feature-settings: "liga" off, "kern" off;
+  -webkit-font-feature-settings: "liga" off, "kern" off;
+  font-variant-emoji: emoji;
+  text-rendering: optimizeSpeed;
+  /* Prevent text selection on emoji avatars */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Ensure emoji avatars display consistently in all contexts */
+.emoji-avatar,
+.emoji-avatar * {
+  font-style: normal !important;
+  font-weight: normal !important;
+  text-decoration: none !important;
+}
+
 .main-content {
   min-height: 100dvh;
   padding-top: 56px;
@@ -906,7 +933,6 @@ textarea:focus {
   max-height: 0;
   opacity: 0;
   pointer-events: none;
-  border-top: none;
 }
 
 .answers-closed {
@@ -1033,6 +1059,8 @@ textarea:focus {
   gap: 0.75rem;
   pointer-events: auto;
   animation: fadeInUp 0.3s ease-out;
+  position: relative;
+  /* For absolute positioning of close button */
 }
 
 .feedback-header {
@@ -1078,6 +1106,11 @@ textarea:focus {
   height: 100%;
   background: var(--primary);
   transition: width 0.1s linear;
+}
+
+.feedback-correct-answers {
+  border-left: 4px solid rgb(34, 197, 94);
+  /* success color */
 }
 
 @keyframes fadeInUp {

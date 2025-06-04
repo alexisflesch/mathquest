@@ -89,7 +89,7 @@ describe('useStudentGameSocket - Initialization', () => {
             accessCode: 'TEST123',
             userId: 'user-123',
             username: 'TestUser',
-            avatarUrl: 'https://example.com/avatar.jpg',
+            avatarEmoji: 'https://example.com/avatar.jpg',
             isDiffered: false
         };
 

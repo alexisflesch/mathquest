@@ -20,7 +20,7 @@
 
 - `/api/v1/games/:accessCode/leaderboard` calls `getFormattedLeaderboard` in `gameStateService.ts`.
 - This reads the leaderboard ZSET and participant hashes from Redis.
-- Returns an array of leaderboard entries with userId, username, avatarUrl, and score.
+- Returns an array of leaderboard entries with userId, username, avatarEmoji, and score.
 
 ## Debugging Empty Leaderboard
 

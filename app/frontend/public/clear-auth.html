@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Clear MathQuest Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .button:hover {
+            background: #2563eb;
+        }
+
+        .warning {
+            background: #dc2626;
+        }
+
+        .warning:hover {
+            background: #b91c1c;
+        }
+
+        .info {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>MathQuest Authentication Reset</h1>
+
+        <div class="info">
+            <h3>Current localStorage data:</h3>
+            <pre id="localStorageData"></pre>
+        </div>
+
+        <div class="info">
+            <h3>Current cookies:</h3>
+            <pre id="cookieData"></pre>
+        </div>
+
+        <button class="button warning" onclick="clearAll()">Clear All Authentication Data</button>
+        <button class="button" onclick="clearLocalStorageOnly()">Clear LocalStorage Only</button>
+        <button class="button" onclick="clearCookiesOnly()">Clear Cookies Only</button>
+        <button class="button" onclick="refresh()">Refresh Data</button>
+
+        <div style="margin-top: 20px;">
+            <a href="http://localhost:3008/login" class="button">Try /login</a>
+            <a href="http://localhost:3008/teacher/login" class="button">Try /teacher/login</a>
+            <a href="http://localhost:3008/" class="button">Go to Home</a>
+        </div>
+    </div>
+
+    <script>
+        function displayData() {
+            // Show localStorage
+            const localStorageData = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('mathquest_')) {
+                    localStorageData[key] = localStorage.getItem(key);
+                }
+            }
+            document.getElementById('localStorageData').textContent = JSON.stringify(localStorageData, null, 2);
+
+            // Show cookies
+            document.getElementById('cookieData').textContent = document.cookie || 'No cookies';
+        }
+
+        function clearAll() {
+            // Clear localStorage
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('mathquest_')) {
+                    keys.push(key);
+                }
+            }
+            keys.forEach(key => localStorage.removeItem(key));
+
+            // Clear cookies
+            document.cookie.split(";").forEach(function (c) {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+
+            alert('All authentication data cleared!');
+            displayData();
+        }
+
+        function clearLocalStorageOnly() {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('mathquest_')) {
+                    keys.push(key);
+                }
+            }
+            keys.forEach(key => localStorage.removeItem(key));
+            alert('LocalStorage cleared!');
+            displayData();
+        }
+
+        function clearCookiesOnly() {
+            document.cookie.split(";").forEach(function (c) {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+            alert('Cookies cleared!');
+            displayData();
+        }
+
+        function refresh() {
+            displayData();
+        }
+
+        // Initial display
+        displayData();
+    </script>
+</body>
+
+</html>

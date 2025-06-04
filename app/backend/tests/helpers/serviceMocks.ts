@@ -9,6 +9,7 @@ export const createMockUserService = (): jest.Mocked<UserService> => {
         loginUser: jest.fn(),
         getUserById: jest.fn(),
         getUserByCookieId: jest.fn(),
+        getUserByEmail: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
     return mockService;
 };

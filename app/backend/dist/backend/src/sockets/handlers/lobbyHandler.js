@@ -21,7 +21,7 @@ const LOBBY_KEY_PREFIX = 'mathquest:lobby:';
 function registerLobbyHandlers(io, socket) {
     // Join a game lobby
     socket.on(events_1.LOBBY_EVENTS.JOIN_LOBBY, async (payload) => {
-        const { accessCode, userId, username, avatarUrl } = payload;
+        const { accessCode, userId, username, avatarEmoji } = payload;
         logger.info({ accessCode, userId, username, socketId: socket.id }, 'Player joining lobby');
         try {
             // Verify the game exists and check its status
@@ -59,7 +59,7 @@ function registerLobbyHandlers(io, socket) {
                 await (0, roomUtils_1.joinRoom)(socket, `lobby_${accessCode}`, {
                     userId,
                     username,
-                    avatarUrl,
+                    avatarEmoji,
                     redirected: true
                 });
                 return;
@@ -68,7 +68,7 @@ function registerLobbyHandlers(io, socket) {
             await (0, roomUtils_1.joinRoom)(socket, `lobby_${accessCode}`, {
                 userId,
                 username,
-                avatarUrl,
+                avatarEmoji,
                 joinedAt: Date.now()
             });
             // Store participant data in Redis
@@ -76,7 +76,7 @@ function registerLobbyHandlers(io, socket) {
                 id: socket.id,
                 userId,
                 username,
-                avatarUrl,
+                avatarEmoji,
                 joinedAt: Date.now()
             };
             await redis_1.redisClient.hset(`${LOBBY_KEY_PREFIX}${accessCode}`, socket.id, JSON.stringify(participant));

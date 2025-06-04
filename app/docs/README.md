@@ -30,7 +30,6 @@ The documentation is organized into logical categories to help you quickly find 
 
 ### Quick Links
 - [Project Overview](./overview/project-overview.md): What is MathQuest?
-- [TODO List](./project/TODO.md): Current development priorities
 - [TypeScript Guide](./types/typescript-guide.md): Guide to TypeScript usage
 - [Socket Guide](./sockets/socket-guide.md): Guide to Socket.IO implementation
 - [Contribution Guide](./contributing.md): How to contribute as an AI agent or human collaborator
@@ -55,8 +54,7 @@ The documentation is organized into logical categories to help you quickly find 
 > - [Documentation Standards](./documentation-standards.md): Guidelines for creating and maintaining documentation
 >
 > **Supporting Documentation:**
-> - [JavaScript Cleanup Plan](./project/javascript-cleanup-plan.md): Plan for cleaning JavaScript files after TypeScript migration
-> - [Timer Bugs](./backend/timer-bugs.md): Documentation on timer-related bugs and fixes
+> - All completed project phases and cleanup plans have been moved to the [archive/](./archive/) directory
 >
 > **You MUST update these files whenever you modify or add backend, frontend, hook, or API code.**
 >

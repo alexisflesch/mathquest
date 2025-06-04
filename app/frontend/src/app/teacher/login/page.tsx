@@ -21,6 +21,8 @@ import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
+import { STORAGE_KEYS } from '@/constants/auth';
+import { UniversalLoginResponseSchema, ErrorResponseSchema, type UniversalLoginResponse } from '@/types/api';
 
 // Create a logger for this component
 const logger = createLogger('TeacherLogin');
@@ -38,49 +40,54 @@ export default function TeacherLoginPage() {
         setError(null);
         setIsLoading(true);
         try {
-            const result = await makeApiRequest<{
-                message?: string;
-                enseignant?: { id: string; username: string };
-                enseignantId?: string;
-                cookie_id?: string;
-                username?: string;
-                avatar?: string;
-            }>('auth', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'teacher_login', email, password }),
-            });
-            logger.debug('Login response', result);
-            // Store teacher id in localStorage for frontend profile fetch
-            if (result.enseignantId) {
-                localStorage.setItem('mathquest_teacher_id', result.enseignantId);
+            const responseData = await makeApiRequest<UniversalLoginResponse>(
+                '/api/auth',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'teacher_login', email, password }),
+                },
+                undefined,
+                UniversalLoginResponseSchema
+            );
+
+            // Store JWT token for authentication
+            if (responseData.token) {
+                localStorage.setItem('mathquest_jwt_token', responseData.token);
+                logger.debug('Stored JWT token');
             }
+
+            // Handle teacher login response format
+            if ('enseignantId' in responseData) {
+                // Teacher login response
+                const teacherResponse = responseData;
+
+                // Store teacher id in localStorage for frontend profile fetch
+                if (teacherResponse.enseignantId) {
+                    localStorage.setItem(STORAGE_KEYS.TEACHER_ID, teacherResponse.enseignantId);
+                }
+
+                // Set username and avatar for gameplay/leaderboard
+                if (teacherResponse.username) {
+                    localStorage.setItem(STORAGE_KEYS.USERNAME, teacherResponse.username);
+                    logger.debug('Set mathquest_username', { username: teacherResponse.username });
+                }
+                if (teacherResponse.avatar) {
+                    localStorage.setItem(STORAGE_KEYS.AVATAR, teacherResponse.avatar);
+                    logger.debug('Set mathquest_avatar', { avatar: teacherResponse.avatar });
+                }
+            }
+
             // Ensure mathquest_cookie_id is set for teacher gameplay/leaderboard
             if (typeof window !== 'undefined') {
-                let cookie_id = result.cookie_id;
-                if (cookie_id) {
-                    localStorage.setItem('mathquest_cookie_id', cookie_id);
-                    logger.debug('Set mathquest_cookie_id', { cookie_id });
+                let cookie_id = localStorage.getItem(STORAGE_KEYS.COOKIE_ID);
+                if (!cookie_id) {
+                    cookie_id = Math.random().toString(36).substring(2) + Date.now();
+                    localStorage.setItem(STORAGE_KEYS.COOKIE_ID, cookie_id);
+                    logger.debug('Set new mathquest_cookie_id', { cookie_id });
                 } else {
-                    // fallback for legacy/old backend
-                    cookie_id = localStorage.getItem('mathquest_cookie_id') || undefined;
-                    if (!cookie_id) {
-                        cookie_id = Math.random().toString(36).substring(2) + Date.now();
-                        localStorage.setItem('mathquest_cookie_id', cookie_id);
-                        logger.debug('Set new mathquest_cookie_id', { cookie_id });
-                    } else {
-                        logger.debug('Using existing mathquest_cookie_id', { cookie_id });
-                    }
+                    logger.debug('Using existing mathquest_cookie_id', { cookie_id });
                 }
-                // Set username and avatar for gameplay/leaderboard
-                if (result.username) {
-                    localStorage.setItem('mathquest_username', result.username);
-                    logger.debug('Set mathquest_username', { username: result.username });
-                }
-                if (result.avatar) {
-                    localStorage.setItem('mathquest_avatar', result.avatar);
-                    logger.debug('Set mathquest_avatar', { avatar: result.avatar });
-                }
+
                 // Log all values after setting
                 logger.info('Teacher login successful', {
                     cookie_id: localStorage.getItem('mathquest_cookie_id'),

@@ -30,7 +30,11 @@ export default function Lobby({ players = [], code = '', onStart }: { players?: 
                 {players.length === 0 && <li className="text-gray-500">Aucun joueur pour l&apos;instant.</li>}
                 {players.map((p) => (
                     <li key={p.username} className="flex flex-col items-center">
-                        {p.avatar && <Image src={`/avatars/${p.avatar}`} alt={p.avatar} width={32} height={32} className="w-8 h-8 rounded-full" />}
+                        {p.avatar && (
+                            <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)]">
+                                {p.avatar}
+                            </div>
+                        )}
                         <span>{p.username}</span>
                     </li>
                 ))}

@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 export type PodiumUser = {
     name: string;
-    avatarUrl?: string;
+    avatarEmoji?: string;
     score: number;
 };
 
@@ -57,8 +57,8 @@ export default function ClassementPodium({ top3, others, zoomFactor = 1, correct
                             }}
                         >
                             <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-2 overflow-hidden">
-                                {user.avatarUrl ? (
-                                    <Image src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" width={64} height={64} />
+                                {user.avatarEmoji ? (
+                                    <Image src={user.avatarEmoji} alt={user.name} className="w-full h-full object-cover" width={64} height={64} />
                                 ) : (
                                     <span className="text-2xl font-bold text-gray-700">{user.name.slice(0, 2).toUpperCase()}</span>
                                 )}

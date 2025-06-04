@@ -41,13 +41,13 @@ const sharedLeaderboard_1 = require("./sharedLeaderboard");
 const sharedAnswers_1 = require("./sharedAnswers");
 const sharedScore_1 = require("./sharedScore");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const gameStateService_1 = require("@/core/gameStateService"); // Ensure GameState is imported
-const redis_1 = require("@/config/redis"); // Import redisClient
+const gameStateService_1 = require("@/core/gameStateService");
+const redis_1 = require("@/config/redis");
 const events_1 = require("@shared/types/socket/events");
 const logger = (0, logger_1.default)('SharedLiveHandler');
 function registerSharedLiveHandlers(io, socket) {
     const joinHandler = async (payload) => {
-        const { accessCode, userId, username, avatarUrl } = payload;
+        const { accessCode, userId, username, avatarEmoji } = payload;
         let { playMode } = payload;
         // Determine playMode if not provided
         if (!playMode) {
@@ -73,13 +73,13 @@ function registerSharedLiveHandlers(io, socket) {
         }
         const room = `game_${accessCode}`;
         const participantUsername = typeof username === 'string' ? username : 'Anonymous';
-        const participantAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl : undefined;
+        const participantAvatarEmoji = typeof avatarEmoji === 'string' ? avatarEmoji : undefined;
         // Populate socket.data for disconnectHandler and other potential uses
         socket.data.userId = userId;
         socket.data.accessCode = accessCode;
         socket.data.username = participantUsername;
         socket.data.currentGameRoom = room;
-        logger.info({ accessCode, userId, room, playMode, username: participantUsername, avatarUrl: participantAvatarUrl }, '[DEBUG] Attempting to join room');
+        logger.info({ accessCode, userId, room, playMode, username: participantUsername, avatarEmoji: participantAvatarEmoji }, '[DEBUG] Attempting to join room');
         await socket.join(room); // Use await for join
         logger.info({ accessCode, userId, room, playMode }, '[DEBUG] Joined room');
         const gameStateRaw = await (0, gameStateService_1.getFullGameState)(accessCode);
@@ -159,8 +159,8 @@ function registerSharedLiveHandlers(io, socket) {
         socket.emit('game_joined', gameJoinPayload);
         logger.info({ accessCode, userId, room, playMode, gameJoinPayload }, '[DEBUG] Emitted game_joined with timer and state');
         // const participantUsername = typeof username === 'string' ? username : 'Anonymous'; // Moved up
-        // const participantAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl : undefined; // Moved up
-        io.to(room).emit('participant_joined', { userId, username: participantUsername, avatarUrl: participantAvatarUrl, playMode });
+        // const participantavatarEmoji = typeof avatarEmoji === 'string' ? avatarEmoji : undefined; // Moved up
+        io.to(room).emit('participant_joined', { userId, username: participantUsername, avatarEmoji: participantAvatarEmoji, playMode });
         try {
             // Redis keys
             const participantsKey = `mathquest:game:participants:${accessCode}`;
@@ -173,7 +173,7 @@ function registerSharedLiveHandlers(io, socket) {
             const participantDataForRedis = {
                 userId,
                 username: participantUsername,
-                avatarUrl: participantAvatarUrl,
+                avatarEmoji: participantAvatarEmoji,
                 score: 0, // Initial score, can be updated by answers
                 answers: [], // For tracking answers within the live session
                 online: true,

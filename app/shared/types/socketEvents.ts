@@ -6,7 +6,7 @@ export interface JoinGamePayload {
     accessCode: string;
     userId: string;
     username: string;
-    avatarUrl?: string;
+    avatarEmoji?: string;
     isDiffered?: boolean; // For joining a differed mode game
 }
 
@@ -75,7 +75,7 @@ export interface ParticipantData {
     id: string;                 // GameParticipant ID from Prisma (if available post-join) or socket.id as a temporary identifier
     userId: string;           // Player model ID
     username: string;           // Player model username
-    avatarUrl?: string;         // Player model avatarUrl
+    avatarEmoji?: string;         // Player model avatarEmoji
     score?: number;             // Current score in the game (from GameParticipant model or Redis)
     online?: boolean;           // Real-time presence status
     joinedAt?: number | string; // Timestamp or ISO string of when they joined this specific game session
@@ -85,7 +85,7 @@ export interface ParticipantData {
 export interface LeaderboardEntryData {
     userId: string;           // Corresponds to Player.id
     username: string;           // From Player model
-    avatarUrl?: string;         // From Player model
+    avatarEmoji?: string;         // From Player model
     score: number;              // From GameParticipant model
     rank?: number;              // Calculated rank
     // Add any other fields needed for displaying a leaderboard entry

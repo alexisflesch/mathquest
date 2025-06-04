@@ -13,9 +13,11 @@ model User {
   username               String
   email                  String?           @unique
   passwordHash           String?
-  avatarUrl              String?
+  avatarEmoji            String?
   createdAt              DateTime          @default(now())
   role                   UserRole
+  resetToken             String?           @map("reset_token")
+  resetTokenExpiresAt    DateTime?         @map("reset_token_expires_at")
   studentProfile         StudentProfile?
   teacherProfile         TeacherProfile?
   initiatedGameInstances GameInstance[]    @relation("InitiatedGameInstancesByUser")

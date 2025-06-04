@@ -4,9 +4,11 @@ import QuestionDisplay from '@/components/QuestionDisplay';
 import type { BaseQuestion as SharedQuestion, Answer as SharedAnswer } from '@shared/types/question'; // Import shared types
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import { useAccessGuard } from '@/hooks/useAccessGuard';
 import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
+import { QuestionsResponseSchema, QuizCreationResponseSchema, type QuestionsResponse, type QuizCreationResponse } from '@/types/api';
 
 // Local interface for questions on this page, compatible with QuestionDisplayProps
 interface QuestionForCreatePage {
@@ -23,6 +25,17 @@ interface QuestionForCreatePage {
 }
 
 export default function CreateQuizPage() {
+    // Access guard: Require teacher access for quiz creation
+    const { isAllowed } = useAccessGuard({
+        allowStates: ['teacher'],
+        redirectTo: '/teacher/login'
+    });
+
+    // If access is denied, the guard will handle redirection
+    if (!isAllowed) {
+        return null; // Component won't render while redirecting
+    }
+
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
     const [quizMeta, setQuizMeta] = useState<{ levels: string[]; themes: string[] }>({ levels: [], themes: [] }); // Removed categories
     const [quizName, setQuizName] = useState('');
@@ -80,7 +93,7 @@ export default function CreateQuizPage() {
         params.push('shuffle=false');
         if (params.length > 0) url += params.join('&');
 
-        const data = await makeApiRequest<SharedQuestion[] | { questions: SharedQuestion[] }>(url);
+        const data = await makeApiRequest<QuestionsResponse>(url, undefined, undefined, QuestionsResponseSchema);
 
         const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as SharedQuestion[];
 
@@ -165,7 +178,7 @@ export default function CreateQuizPage() {
                 setSavingQuiz(false);
                 return;
             }
-            const result = await makeApiRequest<{ message?: string }>('quiz', {
+            const result = await makeApiRequest<QuizCreationResponse>('quiz', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -176,7 +189,7 @@ export default function CreateQuizPage() {
                     themes: quizMeta.themes,
                     type: 'direct',
                 }),
-            });
+            }, undefined, QuizCreationResponseSchema);
             setQuizSaveSuccess('Quiz sauvegardé avec succès !');
             setQuizName('');
             setSelectedQuestions([]);

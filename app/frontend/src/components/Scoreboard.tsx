@@ -15,7 +15,6 @@
  */
 
 import React from 'react';
-import Image from 'next/image';
 
 // TODO: Replace with real scoreboard logic and props
 export default function Scoreboard({ scores = [] }: { scores?: { username: string; score: number; avatar?: string }[] }) {
@@ -26,7 +25,11 @@ export default function Scoreboard({ scores = [] }: { scores?: { username: strin
                 {scores.length === 0 && <li className="text-gray-500">Aucun score pour l&apos;instant.</li>}
                 {scores.sort((a, b) => b.score - a.score).map((s) => (
                     <li key={s.username} className="flex items-center gap-2">
-                        {s.avatar && <Image src={`/avatars/${s.avatar}`} alt={s.avatar} width={32} height={32} className="w-8 h-8 rounded-full" />} {s.username} - {s.score} pts
+                        {s.avatar && (
+                            <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)]">
+                                {s.avatar}
+                            </div>
+                        )} {s.username} - {s.score} pts
                     </li>
                 ))}
             </ol>

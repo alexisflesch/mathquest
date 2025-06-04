@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const auth_1 = require("@/middleware/auth");
 const userService_1 = require("@/core/services/userService");
 const client_1 = require("@/db/generated/client");
+const avatarUtils_1 = require("@/utils/avatarUtils");
 const logger_1 = __importDefault(require("@/utils/logger"));
 // Create a route-specific logger
 const logger = (0, logger_1.default)('AuthAPI');
@@ -27,8 +28,12 @@ router.post('/', async (req, res) => {
     try {
         const { action, email, password, username } = req.body;
         switch (action) {
+            case 'login':
+                await handleUniversalLogin(req, res);
+                break;
             case 'teacher_login':
-                await handleTeacherLogin(req, res);
+                // Legacy support - redirect to universal login
+                await handleUniversalLogin(req, res);
                 break;
             case 'teacher_register':
             case 'teacher_signup':
@@ -44,7 +49,101 @@ router.post('/', async (req, res) => {
     }
 });
 /**
- * Handle teacher login
+ * Universal login handler - determines user role automatically
+ */
+async function handleUniversalLogin(req, res) {
+    const { email, password } = req.body;
+    // Basic validation
+    if (!email || !password) {
+        res.status(400).json({ error: 'Email and password are required' });
+        return;
+    }
+    try {
+        const result = await getUserService().loginUser({
+            email,
+            password,
+        });
+        // Return appropriate response format based on user role
+        if (result.user.role === client_1.UserRole.TEACHER) {
+            // Set teacher token cookie for middleware
+            res.cookie('teacherToken', result.token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+            // Teacher response format for frontend compatibility
+            res.status(200).json({
+                message: 'Login successful',
+                enseignant: {
+                    id: result.user.id,
+                    username: result.user.username
+                },
+                enseignantId: result.user.id,
+                username: result.user.username,
+                avatar: result.user.avatarEmoji || (0, avatarUtils_1.getRandomAvatar)(),
+                cookie_id: `teacher_${result.user.id}_${Date.now()}`,
+                token: result.token,
+                role: 'TEACHER'
+            });
+        }
+        else if (result.user.role === client_1.UserRole.STUDENT) {
+            // Set auth token cookie for middleware
+            res.cookie('authToken', result.token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+            // Student response format
+            res.status(200).json({
+                success: true,
+                user: {
+                    id: result.user.id,
+                    email: result.user.email,
+                    username: result.user.username,
+                    avatar: result.user.avatarEmoji || (0, avatarUtils_1.getRandomAvatar)(),
+                    role: 'STUDENT'
+                },
+                token: result.token,
+                message: 'Login successful'
+            });
+        }
+        else {
+            // Generic response for other roles - default to student cookie
+            res.cookie('authToken', result.token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+            res.status(200).json({
+                success: true,
+                user: {
+                    id: result.user.id,
+                    email: result.user.email,
+                    username: result.user.username,
+                    avatar: result.user.avatarEmoji || (0, avatarUtils_1.getRandomAvatar)(),
+                    role: result.user.role
+                },
+                token: result.token,
+                message: 'Login successful'
+            });
+        }
+    }
+    catch (error) {
+        logger.error({ error }, 'Error in universal login');
+        // Handle authentication errors
+        if (error instanceof Error && (error.message.includes('Invalid email') ||
+            error.message.includes('Invalid password'))) {
+            res.status(401).json({ error: 'Invalid email or password' });
+            return;
+        }
+        res.status(500).json({ error: 'An error occurred during login' });
+    }
+}
+/**
+ * Handle teacher login (legacy - now redirects to universal login)
  */
 async function handleTeacherLogin(req, res) {
     const { email, password } = req.body;
@@ -62,6 +161,13 @@ async function handleTeacherLogin(req, res) {
             res.status(403).json({ error: 'Not a teacher account' });
             return;
         }
+        // Set teacher token cookie for middleware
+        res.cookie('teacherToken', result.token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
         // Return in the format expected by frontend
         res.status(200).json({
             message: 'Login successful',
@@ -71,7 +177,7 @@ async function handleTeacherLogin(req, res) {
             },
             enseignantId: result.user.id,
             username: result.user.username,
-            avatar: 'avatar1.png', // Default avatar for now
+            avatar: (0, avatarUtils_1.getRandomAvatar)(), // Use random animal emoji avatar
             cookie_id: `teacher_${result.user.id}_${Date.now()}`,
             token: result.token
         });
@@ -101,8 +207,27 @@ async function handleTeacherRegister(req, res) {
         res.status(400).json({ error: 'Password must be at least 6 characters long' });
         return;
     }
-    // For now, we'll ignore the admin password check
-    // In a real implementation, you might want to validate adminPassword
+    // Validate admin password for teacher registration
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+    if (!adminPassword || adminPassword !== ADMIN_PASSWORD) {
+        res.status(403).json({ error: 'Invalid admin password' });
+        return;
+    }
+    // Validate avatar if provided, otherwise use random animal emoji
+    let validatedAvatar;
+    if (avatar) {
+        try {
+            (0, avatarUtils_1.validateAvatar)(avatar);
+            validatedAvatar = avatar;
+        }
+        catch (error) {
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid avatar' });
+            return;
+        }
+    }
+    else {
+        validatedAvatar = (0, avatarUtils_1.getRandomAvatar)();
+    }
     try {
         // Register the user as a TEACHER
         const result = await getUserService().registerUser({
@@ -110,19 +235,27 @@ async function handleTeacherRegister(req, res) {
             email,
             password,
             role: client_1.UserRole.TEACHER,
+            avatarEmoji: validatedAvatar,
         });
-        // Return in the format expected by frontend
+        // Set teacher token cookie for middleware
+        res.cookie('teacherToken', result.token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+        // Return in the format expected by frontend AuthProvider
         res.status(201).json({
-            message: 'Registration successful',
-            enseignant: {
+            success: true,
+            user: {
                 id: result.user.id,
-                username: result.user.username
+                email: result.user.email || email,
+                username: result.user.username,
+                avatar: validatedAvatar,
+                role: 'TEACHER'
             },
-            enseignantId: result.user.id,
-            username: result.user.username,
-            avatar: avatar || 'avatar1.png', // Use provided avatar or default
-            cookie_id: `teacher_${result.user.id}_${Date.now()}`,
-            token: result.token
+            token: result.token,
+            message: 'Registration successful'
         });
     }
     catch (error) {
@@ -136,6 +269,288 @@ async function handleTeacherRegister(req, res) {
     }
 }
 /**
+ * Universal registration endpoint
+ * POST /api/v1/auth/register
+ * Handles: guest registration, student registration, teacher registration
+ */
+router.post('/register', async (req, res) => {
+    try {
+        const { username, avatar, cookieId, email, password, role = 'STUDENT', adminPassword } = req.body;
+        // Basic validation
+        if (!username) {
+            res.status(400).json({
+                success: false,
+                error: 'Username is required'
+            });
+            return;
+        }
+        // Validate avatar
+        let validatedAvatar;
+        if (avatar) {
+            try {
+                (0, avatarUtils_1.validateAvatar)(avatar);
+                validatedAvatar = avatar;
+            }
+            catch (error) {
+                res.status(400).json({
+                    success: false,
+                    error: 'Invalid avatar. Must be a valid animal emoji.'
+                });
+                return;
+            }
+        }
+        else {
+            validatedAvatar = (0, avatarUtils_1.getRandomAvatar)();
+        }
+        // For authenticated accounts (with email/password)
+        if (email && password) {
+            if (password.length < 6) {
+                res.status(400).json({
+                    success: false,
+                    error: 'Password must be at least 6 characters long'
+                });
+                return;
+            }
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                res.status(400).json({
+                    success: false,
+                    error: 'Invalid email format'
+                });
+                return;
+            }
+            // Check if email already exists
+            try {
+                const existingUser = await getUserService().getUserByEmail(email);
+                if (existingUser) {
+                    res.status(400).json({
+                        success: false,
+                        error: 'Email already exists'
+                    });
+                    return;
+                }
+            }
+            catch (error) {
+                // User not found is expected - continue
+            }
+            // For teacher registration, validate admin password
+            if (role === 'TEACHER') {
+                const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+                if (!adminPassword || adminPassword !== ADMIN_PASSWORD) {
+                    res.status(403).json({
+                        success: false,
+                        error: 'Invalid admin password'
+                    });
+                    return;
+                }
+                logger.info('Teacher registration attempt', { username, email, adminPassword: !!adminPassword });
+            }
+        }
+        // Register the user
+        const result = await getUserService().registerUser({
+            username,
+            email,
+            password,
+            role: role,
+            cookieId,
+            avatarEmoji: validatedAvatar
+        });
+        logger.info('User registered successfully', {
+            userId: result.user.id,
+            username,
+            role,
+            hasEmail: !!email,
+            hasCookieId: !!cookieId
+        });
+        // Set appropriate cookie based on user role
+        if (result.user.role === client_1.UserRole.TEACHER) {
+            res.cookie('teacherToken', result.token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+        }
+        else {
+            // Default to student cookie for STUDENT and other roles
+            res.cookie('authToken', result.token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+        }
+        res.status(201).json({
+            success: true,
+            user: {
+                id: result.user.id,
+                email: result.user.email,
+                username: result.user.username,
+                avatar: validatedAvatar,
+                role: result.user.role
+            },
+            token: result.token,
+            message: 'Registration successful'
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error in user registration');
+        if (error instanceof Error) {
+            if (error.message.includes('already exists')) {
+                res.status(409).json({
+                    success: false,
+                    error: error.message
+                });
+                return;
+            }
+        }
+        res.status(500).json({
+            success: false,
+            error: 'An error occurred during registration'
+        });
+    }
+});
+/**
+ * Universal upgrade endpoint
+ * POST /api/v1/auth/upgrade
+ * Handles: guest→student, student→teacher, guest→teacher
+ */
+router.post('/upgrade', async (req, res) => {
+    try {
+        const { cookieId, email, password, targetRole = 'STUDENT', adminPassword } = req.body;
+        // Validation
+        if (!cookieId) {
+            res.status(400).json({
+                success: false,
+                error: 'Cookie ID is required'
+            });
+            return;
+        }
+        if (!email || !password) {
+            res.status(400).json({
+                success: false,
+                error: 'Email and password are required'
+            });
+            return;
+        }
+        if (password.length < 6) {
+            res.status(400).json({
+                success: false,
+                error: 'Password must be at least 6 characters long'
+            });
+            return;
+        }
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            res.status(400).json({
+                success: false,
+                error: 'Invalid email format'
+            });
+            return;
+        }
+        // Check if email already exists
+        try {
+            const existingUserByEmail = await getUserService().getUserByEmail(email);
+            if (existingUserByEmail) {
+                res.status(400).json({
+                    success: false,
+                    error: 'Email already exists'
+                });
+                return;
+            }
+        }
+        catch (error) {
+            // User not found is expected - continue
+        }
+        // Find existing user by cookieId
+        const existingUser = await getUserService().getUserByCookieId(cookieId);
+        if (!existingUser) {
+            res.status(404).json({
+                success: false,
+                error: 'User not found. Please register first.'
+            });
+            return;
+        }
+        // For teacher upgrade, validate admin password
+        if (targetRole === 'TEACHER') {
+            // TODO: Implement admin password validation
+            logger.info('Teacher upgrade attempt', {
+                userId: existingUser.id,
+                username: existingUser.username,
+                adminPassword: !!adminPassword
+            });
+        }
+        // Update existing user instead of creating new one
+        const result = await getUserService().upgradeUser(existingUser.id, {
+            email,
+            password,
+            targetRole: targetRole
+        });
+        logger.info('User upgraded successfully', {
+            userId: existingUser.id,
+            username: existingUser.username,
+            fromRole: existingUser.role,
+            toRole: targetRole,
+            email
+        });
+        // Set appropriate cookie based on user role
+        if (result.user.role === client_1.UserRole.TEACHER) {
+            res.cookie('teacherToken', result.token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+        }
+        else {
+            // Default to student cookie for STUDENT and other roles
+            res.cookie('authToken', result.token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+        }
+        res.status(200).json({
+            success: true,
+            user: {
+                id: result.user.id,
+                email: result.user.email,
+                username: result.user.username,
+                avatar: existingUser.avatarEmoji || (0, avatarUtils_1.getRandomAvatar)(),
+                role: result.user.role
+            },
+            token: result.token,
+            message: 'Account upgraded successfully'
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error upgrading user account');
+        if (error instanceof Error) {
+            if (error.message.includes('already exists')) {
+                res.status(400).json({
+                    success: false,
+                    error: error.message
+                });
+                return;
+            }
+        }
+        res.status(500).json({
+            success: false,
+            error: 'An error occurred during account upgrade'
+        });
+    }
+});
+/**
+ * Universal login endpoint (for backwards compatibility)
+ * POST /api/v1/auth/login
+ */
+router.post('/login', async (req, res) => {
+    await handleUniversalLogin(req, res);
+});
+/**
  * Password reset request endpoint
  * POST /api/v1/auth/reset-password
  */
@@ -146,15 +561,60 @@ router.post('/reset-password', async (req, res) => {
             res.status(400).json({ error: 'Email is required' });
             return;
         }
-        // For now, just return success regardless of whether email exists
+        // Generate reset token
+        const resetToken = await getUserService().generatePasswordResetToken(email);
+        logger.info('Password reset token generated', { email, tokenLength: resetToken.length });
         // In a real implementation, you would send an email with reset link
-        logger.info('Password reset requested for email', { email });
+        // For development/testing, we'll return the token in the response
+        // TODO: Implement email sending service
         res.status(200).json({
-            message: 'Password reset email sent if account exists'
+            message: 'Password reset email sent if account exists',
+            // Remove this in production - only for development
+            resetToken: resetToken
         });
     }
     catch (error) {
         logger.error({ error }, 'Error in password reset');
+        // Return success even if user doesn't exist for security
+        res.status(200).json({
+            message: 'Password reset email sent if account exists'
+        });
+    }
+});
+/**
+ * Password reset confirmation endpoint
+ * POST /api/v1/auth/reset-password/confirm
+ */
+router.post('/reset-password/confirm', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            res.status(400).json({ error: 'Token and new password are required' });
+            return;
+        }
+        if (newPassword.length < 6) {
+            res.status(400).json({ error: 'Password must be at least 6 characters long' });
+            return;
+        }
+        // Reset password using token
+        await getUserService().resetPasswordWithToken(token, newPassword);
+        logger.info('Password reset completed successfully');
+        res.status(200).json({
+            message: 'Password reset successful'
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error in password reset confirmation');
+        if (error instanceof Error) {
+            if (error.message.includes('Invalid or expired')) {
+                res.status(400).json({ error: 'Invalid or expired reset token' });
+                return;
+            }
+            if (error.message.includes('User not found')) {
+                res.status(404).json({ error: 'User not found' });
+                return;
+            }
+        }
         res.status(500).json({ error: 'An error occurred during password reset' });
     }
 });
@@ -182,6 +642,55 @@ router.get('/status', auth_1.optionalAuth, async (req, res) => {
     catch (error) {
         logger.error({ error }, 'Error checking auth status');
         res.status(500).json({ error: 'An error occurred while checking authentication status' });
+    }
+});
+/**
+ * Update user profile (username and avatar)
+ * PUT /api/v1/auth/profile
+ * Updates the profile for authenticated students and teachers
+ */
+router.put('/profile', auth_1.optionalAuth, async (req, res) => {
+    try {
+        const { username, avatar } = req.body;
+        if (!username || !avatar) {
+            res.status(400).json({ error: 'Username and avatar are required' });
+            return;
+        }
+        // Validate avatar
+        try {
+            (0, avatarUtils_1.validateAvatar)(avatar);
+        }
+        catch (error) {
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid avatar' });
+            return;
+        }
+        // Check if user is authenticated (student or teacher)
+        if (!req.user?.userId) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        const userService = getUserService();
+        // Update user profile
+        const updatedUser = await userService.updateUserProfile(req.user.userId, { username, avatar });
+        logger.info('Profile updated successfully', {
+            userId: req.user.userId,
+            username,
+            avatar
+        });
+        res.status(200).json({
+            message: 'Profile updated successfully',
+            user: {
+                id: updatedUser.id,
+                email: updatedUser.email,
+                username: updatedUser.username,
+                avatar: updatedUser.avatarEmoji,
+                role: updatedUser.role
+            }
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error updating profile');
+        res.status(500).json({ error: 'An error occurred while updating profile' });
     }
 });
 exports.default = router;

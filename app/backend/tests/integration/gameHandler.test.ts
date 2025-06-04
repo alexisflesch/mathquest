@@ -338,7 +338,7 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-123',
             username: 'Test Player',
-            avatarUrl: 'https://example.com/avatar.jpg'
+            avatarEmoji: 'https://example.com/avatar.jpg'
         });
 
         // Wait for game joined response with a timeout
@@ -391,7 +391,7 @@ describe('Game Handler', () => {
     //         accessCode: TEST_ACCESS_CODE,
     //         userId: 'player-123',
     //         username: 'Test Player',
-    //         avatarUrl: 'https://example.com/avatar.jpg'
+    //         avatarEmoji: 'https://example.com/avatar.jpg'
     //     });
 
     //     const playerJoinResponse = await Promise.race([
@@ -502,7 +502,7 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-1',
             username: 'Player 1',
-            avatarUrl: 'https://example.com/avatar1.jpg'
+            avatarEmoji: 'https://example.com/avatar1.jpg'
         });
 
         // Wait for first player to join
@@ -513,7 +513,7 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-2',
             username: 'Player 2',
-            avatarUrl: 'https://example.com/avatar2.jpg'
+            avatarEmoji: 'https://example.com/avatar2.jpg'
         });
 
         // Wait for second player to join
@@ -598,7 +598,7 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-1',
             username: 'Player 1',
-            avatarUrl: 'https://example.com/avatar1.jpg'
+            avatarEmoji: 'https://example.com/avatar1.jpg'
         });
 
         // Player 2 joins
@@ -606,7 +606,7 @@ describe('Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-2',
             username: 'Player 2',
-            avatarUrl: 'https://example.com/avatar2.jpg'
+            avatarEmoji: 'https://example.com/avatar2.jpg'
         });
 
         // Wait for both players to join the game

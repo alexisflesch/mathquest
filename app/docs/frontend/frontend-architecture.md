@@ -1,13 +1,29 @@
-# MathQuest Frontend - Exhaustive Technical Reference
+<!-- filepath: /home/aflesch/mathquest/app/docs/frontend/frontend-architecture.md -->
+# MathQuest Frontend – Exhaustive Technical Reference
+
+_Last updated: June 2, 2025_
+
+## Purpose
+Detailed technical reference for the MathQuest frontend, including app structure, core components, hooks, state/data flows, and event mapping with the unified 4-state authentication system.
+
+## See Also
+- [Frontend README](./README.md)
+- [Hooks Reference](./hooks.md)
+- [Socket Integration](./socket.md)
+- [Timer Management](./timer-management.md)
+- [Component Library](./components.md)
+
+---
 
 ## Table of Contents
-- [App Pages](#app-pages)
-- [Core Components](#core-components)
-- [Hooks](#hooks)
-- [State, Real-Time, and Data Flows](#state-real-time-and-data-flows)
-- [Styling, Theming, and Logging](#styling-theming-and-logging)
-- [Identity, Auth, and LocalStorage](#identity-auth-and-localstorage)
-- [UI-to-Backend Event Mapping](#ui-to-backend-event-mapping)
+- App Pages
+- Core Components
+- Hooks
+- State, Real-Time, and Data Flows
+- Authentication System
+- Styling, Theming, and Logging
+- Identity, Auth, and LocalStorage
+- UI-to-Backend Event Mapping
 
 ---
 
@@ -126,6 +142,45 @@
 - **State:** Managed via React state/hooks, context (AuthProvider), and localStorage for identity.
 - **Real-Time:** All live quiz/tournament logic is handled via Socket.IO, with custom hooks for each role/view.
 - **Data:** API is used for fetching quiz/tournament/question data, leaderboard, and saving quizzes.
+
+---
+
+## Authentication System
+
+### 4-State Authentication System ✨
+The frontend implements a comprehensive 4-state authentication system:
+
+1. **Anonymous** (`userState: 'anonymous'`)
+   - No username/avatar set
+   - Cannot join games or create content
+   - Redirected to login/registration
+
+2. **Guest** (`userState: 'guest'`)
+   - Username and avatar set via localStorage
+   - Can join games and tournaments
+   - Profile stored in database with cookieId for upgradeability
+   - No email/password required
+
+3. **Student** (`userState: 'student'`)
+   - Full student account with email/password
+   - Can join games, view tournaments, access profile
+   - Upgraded from guest or direct registration
+
+4. **Teacher** (`userState: 'teacher'`)
+   - Teacher account with admin privileges
+   - Can create quizzes, manage tournaments, access dashboard
+   - Requires admin password for registration/upgrade
+
+### AuthProvider Integration
+- **Unified Methods**: All authentication flows use unified backend endpoints (`/auth/register`, `/auth/upgrade`)
+- **Profile Preservation**: Guest profiles (username/avatar) are preserved during upgrades
+- **Backward Compatibility**: Maintains `isStudent`/`isTeacher` flags for existing components
+- **Database Persistence**: Guest profiles are stored in database for reliable upgrade lookup
+
+### Key Authentication Pages
+- **`/login`**: Unified authentication page supporting all user types and upgrade flows
+- **`/profile`**: Profile management with upgrade options for guests and students
+- **`/student`**: Legacy guest registration (redirects to `/login?mode=guest`)
 
 ---
 

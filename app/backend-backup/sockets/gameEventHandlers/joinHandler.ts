@@ -21,7 +21,7 @@ async function handleJoinGame(
     socket: Socket,
     payload: JoinGamePayload
 ): Promise<void> {
-    const { accessCode, playerId, playerName, avatarUrl, isDeferredMode } = payload;
+    const { accessCode, playerId, playerName, avatarEmoji, isDeferredMode } = payload;
 
     // Create a logger
     const logger = createLogger('JoinGameHandler');
@@ -62,7 +62,7 @@ async function handleJoinGame(
                 id: playerId,
                 socketId: socket.id,
                 username: playerName || '', // Using username in state structure for now
-                avatar: avatarUrl || '', // Using avatar in state structure for now
+                avatar: avatarEmoji || '', // Using avatar in state structure for now
                 answers: [],
                 score: 0 // Initialize score
             });

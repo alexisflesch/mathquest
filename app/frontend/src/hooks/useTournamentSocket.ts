@@ -6,6 +6,7 @@ import { createSocketConfig } from '@/utils';
 import { Question } from '@shared/types/quiz/question';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { AnswerValue, SocketQuestion, AnswerFeedback } from '@/types/socket';
 
 const logger = createLogger('useTournamentSocket');
 
@@ -24,7 +25,7 @@ export interface TournamentQuestion {
     level?: string;
     themes?: string[];
     // Tournament-specific properties
-    question?: any; // Nested question data
+    question?: SocketQuestion; // Nested question data with proper typing
     questionIndex?: number;
     totalQuestions?: number;
     timer?: number;
@@ -60,7 +61,7 @@ export interface TournamentSocketHookProps {
     accessCode: string;
     userId: string | null;
     username: string | null;
-    avatarUrl?: string | null;
+    avatarEmoji?: string | null;
     isDiffered?: boolean;
 }
 
@@ -75,7 +76,7 @@ export interface TournamentSocketHook {
 
     // Actions
     joinTournament: () => void;
-    submitAnswer: (questionId: string, answer: any, timeSpent?: number) => void;
+    submitAnswer: (questionId: string, answer: AnswerValue, timeSpent?: number) => void;
 
     // UI helpers
     clearFeedback: () => void;
@@ -86,7 +87,7 @@ export function useTournamentSocket({
     accessCode,
     userId,
     username,
-    avatarUrl,
+    avatarEmoji,
     isDiffered = false
 }: TournamentSocketHookProps): TournamentSocketHook {
 
@@ -446,18 +447,18 @@ export function useTournamentSocket({
             return;
         }
 
-        logger.info(`Joining tournament ${accessCode}`, { userId, username, avatarUrl, isDiffered });
+        logger.info(`Joining tournament ${accessCode}`, { userId, username, avatarEmoji, isDiffered });
 
         socket.emit(SOCKET_EVENTS.GAME.JOIN_TOURNAMENT, {
             accessCode,
             userId,
             username,
-            avatarUrl: avatarUrl || undefined,
+            avatarEmoji: avatarEmoji || undefined,
             isDiffered
         });
-    }, [socket, accessCode, userId, username, avatarUrl, isDiffered]);
+    }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
 
-    const submitAnswer = useCallback((questionId: string, answer: any, timeSpent = 0) => {
+    const submitAnswer = useCallback((questionId: string, answer: AnswerValue, timeSpent = 0) => {
         if (!socket || !accessCode || !userId) {
             logger.warn("Cannot submit tournament answer: missing socket or parameters");
             return;

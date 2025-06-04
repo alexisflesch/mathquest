@@ -70,7 +70,7 @@ export interface JoinGamePayload {
     accessCode: string;      // The access code of the game instance to join
     playerId: string;        // The player's ID
     playerName: string;      // The player's display name
-    avatarUrl?: string;      // Optional URL to the player's avatar
+    avatarEmoji?: string;      // Optional URL to the player's avatar
     isDeferredMode?: boolean; // Whether this is a deferred play session
 }
 

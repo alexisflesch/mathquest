@@ -1,3 +1,6 @@
+import { STORAGE_KEYS } from '@/constants/auth';
+import { SocketConfig, BaseSocketConfig } from '@/types/socket';
+
 export function formatTime(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -10,7 +13,7 @@ export function formatTime(seconds: number): string {
  * Get authentication data for socket connection
  * Returns token for JWT auth or fallback data for compatibility
  */
-export function getSocketAuth() {
+export function getSocketAuth(): Record<string, string> | null {
     if (typeof window === 'undefined') {
         return null;
     }
@@ -24,16 +27,19 @@ export function getSocketAuth() {
     }
 
     // Fallback to legacy auth data for compatibility
-    const teacherId = localStorage.getItem('mathquest_teacher_id');
+    const teacherId = localStorage.getItem(STORAGE_KEYS.TEACHER_ID);
     const cookieId = localStorage.getItem('mathquest_cookie_id');
 
     if (teacherId) {
-        return {
+        const auth: Record<string, string> = {
             userId: teacherId,
-            userType: 'teacher',
-            // Include cookie_id for backward compatibility
-            cookie_id: cookieId
+            userType: 'teacher'
         };
+        // Include cookie_id only if it exists
+        if (cookieId) {
+            auth.cookie_id = cookieId;
+        }
+        return auth;
     }
 
     // No authentication data available
@@ -43,13 +49,13 @@ export function getSocketAuth() {
 /**
  * Create socket configuration with authentication
  */
-export function createSocketConfig(baseConfig: any) {
+export function createSocketConfig(baseConfig: BaseSocketConfig): SocketConfig {
     const auth = getSocketAuth();
 
     return {
         ...baseConfig,
-        auth: auth || {},
+        auth: auth || undefined,
         // Also pass auth data in query for backend compatibility
-        query: auth || {}
+        query: auth || undefined
     };
 }

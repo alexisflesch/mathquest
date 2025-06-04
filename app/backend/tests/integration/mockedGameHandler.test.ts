@@ -111,7 +111,7 @@ describe('Direct handler unit tests', () => {
         await redisClient.hset(
             `${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`,
             'socket-id-1',
-            JSON.stringify({ id: 'socket-id-1', userId: 'player-1', user: { username: 'Test', avatarUrl: '' }, joinedAt: Date.now(), score: 0, online: true })
+            JSON.stringify({ id: 'socket-id-1', userId: 'player-1', user: { username: 'Test', avatarEmoji: '' }, joinedAt: Date.now(), score: 0, online: true })
         );
         const handler = requestParticipantsHandler(localIO as any, socket);
         await handler({ accessCode: TEST_ACCESS_CODE });
@@ -123,7 +123,7 @@ describe('Direct handler unit tests', () => {
         await redisClient.hset(
             `${PARTICIPANTS_KEY_PREFIX}${TEST_ACCESS_CODE}`,
             socket.id,
-            JSON.stringify({ id: socket.id, userId: 'player-1', user: { username: 'Test', avatarUrl: '' }, joinedAt: Date.now(), score: 0, online: true })
+            JSON.stringify({ id: socket.id, userId: 'player-1', user: { username: 'Test', avatarEmoji: '' }, joinedAt: Date.now(), score: 0, online: true })
         );
         const handler = disconnectHandler(localIO as any, socket);
         await handler();
@@ -362,7 +362,7 @@ describe('Mocked Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: uniqueId('player-1'),
             username: 'Player 1',
-            avatarUrl: 'https://example.com/avatar1.jpg' // must be a valid URL per Zod schema
+            avatarEmoji: 'https://example.com/avatar1.jpg' // must be a valid URL per Zod schema
         });
 
         // Give Redis time to process
@@ -379,7 +379,7 @@ describe('Mocked Game Handler', () => {
         const participant = JSON.parse(participantEntry);
         expect(participant.userId).toBe(uniqueId('player-1'));
         expect(participant.username).toBe('Player 1');
-        expect(participant.avatarUrl).toBe('https://example.com/avatar1.jpg');
+        expect(participant.avatarEmoji).toBe('https://example.com/avatar1.jpg');
 
         // Verify socket.emit was called with game_joined and appropriate data
         expect(socket.emit).toHaveBeenCalledWith('game_joined', expect.objectContaining({
@@ -414,7 +414,7 @@ describe('Mocked Game Handler', () => {
             JSON.stringify({
                 id: 'socket-id-1',
                 userId: 'player-1',
-                user: { username: 'Player 1', avatarUrl: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
+                user: { username: 'Player 1', avatarEmoji: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
                 joinedAt: Date.now(),
                 score: 10,
                 online: true
@@ -427,7 +427,7 @@ describe('Mocked Game Handler', () => {
             JSON.stringify({
                 id: 'socket-id-2',
                 userId: 'player-2',
-                user: { username: 'Player 2', avatarUrl: 'https://example.com/avatar2.jpg' }, // Use plain, non-unique username
+                user: { username: 'Player 2', avatarEmoji: 'https://example.com/avatar2.jpg' }, // Use plain, non-unique username
                 joinedAt: Date.now(),
                 score: 5,
                 online: true
@@ -489,7 +489,7 @@ describe('Mocked Game Handler', () => {
             JSON.stringify({
                 id: socket.id,
                 userId: 'player-1',
-                user: { username: 'Player 1', avatarUrl: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
+                user: { username: 'Player 1', avatarEmoji: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
                 score: 0,
                 joinedAt: Date.now(),
                 online: true
@@ -603,7 +603,7 @@ describe('Mocked Game Handler', () => {
             JSON.stringify({
                 id: socket.id,
                 userId: 'player-1',
-                user: { username: 'Player 1', avatarUrl: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
+                user: { username: 'Player 1', avatarEmoji: 'https://example.com/avatar1.jpg' }, // Use plain, non-unique username
                 score: 0,
                 joinedAt: Date.now(),
                 online: true
@@ -762,7 +762,7 @@ describe('Mocked Game Handler', () => {
                 accessCode: differedAccessCode,
                 userId: uniqueId('player-1'),
                 username: 'Player 1', // Use plain, non-unique username
-                avatarUrl: 'https://example.com/avatar1.jpg',
+                avatarEmoji: 'https://example.com/avatar1.jpg',
                 isDiffered: true
             });
             expect(socket.emit).toHaveBeenCalledWith('game_joined', expect.objectContaining({ accessCode: differedAccessCode }));
@@ -782,7 +782,7 @@ describe('Mocked Game Handler', () => {
                 accessCode: differedAccessCode,
                 userId: uniqueId('player-2'),
                 username: 'Player 2', // Use plain, non-unique username
-                avatarUrl: 'https://example.com/avatar2.jpg',
+                avatarEmoji: 'https://example.com/avatar2.jpg',
                 isDiffered: true
             });
             expect(socket.emit).toHaveBeenCalledWith('game_error', expect.objectContaining({ message: expect.stringContaining('Differed mode not available') }));
@@ -807,7 +807,7 @@ describe('Mocked Game Handler', () => {
                 accessCode: differedAccessCode,
                 userId: uniqueId('player-1'),
                 username: 'Player 1',
-                avatarUrl: 'https://example.com/avatar1.jpg',
+                avatarEmoji: 'https://example.com/avatar1.jpg',
                 isDiffered: true
             });
             expect(socket.emit).toHaveBeenCalledWith('game_already_played', expect.objectContaining({ accessCode: differedAccessCode }));
@@ -820,7 +820,7 @@ describe('Mocked Game Handler', () => {
                 accessCode: differedAccessCode,
                 userId: uniqueId('player-3'),
                 username: 'Player 3',
-                avatarUrl: 'https://example.com/avatar3.jpg',
+                avatarEmoji: 'https://example.com/avatar3.jpg',
                 isDiffered: true
             });
             socket.emit.mockClear();
@@ -847,7 +847,7 @@ describe('Mocked Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: uniqueId('player-1'),
             username: 'Player 1',
-            avatarUrl: 'https://example.com/avatar1.jpg'
+            avatarEmoji: 'https://example.com/avatar1.jpg'
         });
 
         // Get the question UID from the test setup

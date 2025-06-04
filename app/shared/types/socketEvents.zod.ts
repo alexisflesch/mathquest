@@ -5,7 +5,7 @@ export const joinGamePayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
   userId: z.string().min(1, { message: "Player ID cannot be empty." }),
   username: z.string().min(1, { message: "Username cannot be empty." }),
-  avatarUrl: z.string().url({ message: "Invalid URL format for avatar." }).optional(),
+  avatarEmoji: z.string().optional(),
   isDiffered: z.boolean().optional(),
 });
 
@@ -36,7 +36,7 @@ export const participantDataSchema = z.object({
   id: z.string().min(1, { message: "Participant ID cannot be empty." }),
   userId: z.string().min(1, { message: "Player ID cannot be empty." }),
   username: z.string().min(1, { message: "Username cannot be empty." }),
-  avatarUrl: z.string().url({ message: "Invalid URL format for avatar." }).optional(),
+  avatarEmoji: z.string().optional(),
   score: z.number().int({ message: "Score must be an integer." }).optional(),
   online: z.boolean().optional(),
   joinedAt: z.union([z.string().datetime({ message: "Invalid datetime string for joinedAt" }), z.number()]).optional(),
@@ -66,7 +66,7 @@ export const questionDataSchema = z.object({
 export const leaderboardEntryDataSchema = z.object({
   userId: z.string().min(1, { message: "Player ID cannot be empty." }),
   username: z.string().min(1, { message: "Username cannot be empty." }),
-  avatarUrl: z.string().url({ message: "Invalid URL format for avatar." }).optional(),
+  avatarEmoji: z.string().optional(),
   score: z.number().int({ message: "Score must be an integer." }),
   rank: z.number().int({ message: "Rank must be an integer." }).positive({ message: "Rank must be positive." }).optional(),
 });
@@ -272,7 +272,7 @@ export const serverToClientEventsSchema = z.object({
           z.object({
             userId: z.string(),
             username: z.string(),
-            avatarUrl: z.string().optional(),
+            avatarEmoji: z.string().optional(),
             score: z.number()
           })
         ).optional()

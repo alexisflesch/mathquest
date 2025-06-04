@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { UserService } from '@/core/services/userService';
 import { UserRole } from '@/db/generated/client';
+import { validateAvatar } from '@/utils/avatarUtils';
 import createLogger from '@/utils/logger';
 
 // Create a route-specific logger
@@ -51,8 +52,11 @@ async function handleStudentJoin(req: Request, res: Response): Promise<void> {
         return;
     }
 
-    if (!avatar) {
-        res.status(400).json({ error: 'Avatar is required' });
+    try {
+        // Validate avatar (ensures it's one of the allowed animal emojis)
+        validateAvatar(avatar);
+    } catch (error) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid avatar' });
         return;
     }
 
@@ -63,6 +67,7 @@ async function handleStudentJoin(req: Request, res: Response): Promise<void> {
             email: undefined, // Students don't need email
             password: undefined, // Students don't need password
             role: UserRole.STUDENT,
+            avatarEmoji: avatar
         });
 
         logger.info('Student registered successfully', {

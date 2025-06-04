@@ -7,12 +7,9 @@ export default function TeacherPage() {
     const router = useRouter();
 
     useEffect(() => {
-        if (isAuthenticated) {
-            router.replace('/teacher/home'); // Redirect to the home page
-        } else {
-            router.replace('/teacher/login'); // Redirect to the login page
-        }
-    }, [isAuthenticated, router]);
+        // Always redirect to main landing page - no separate teacher/student homes
+        router.replace('/');
+    }, [router]);
 
     return null;
 }

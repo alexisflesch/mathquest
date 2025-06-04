@@ -20,7 +20,9 @@ import CustomDropdown from "@/components/CustomDropdown";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
+import { QuestionsFiltersResponseSchema, QuestionsResponseSchema, QuestionsCountResponseSchema, PlayerCookieResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsResponse, type QuestionsCountResponse, type PlayerCookieResponse, type GameCreationResponse, type Question } from '@/types/api';
 import { buildQuestionsUrl } from '@/utils/apiUtils';
+import { useAccessGuard } from '@/hooks/useAccessGuard';
 
 // Create a logger for this component
 const logger = createLogger('CreateTournament');
@@ -34,6 +36,17 @@ interface Filters {
 const QUESTION_OPTIONS = [10, 20, 30];
 
 function StudentCreateTournamentPageInner() {
+    // Access guard: Require at least guest access to create tournaments
+    const { isAllowed, canCreateQuiz } = useAccessGuard({
+        requireMinimum: 'guest',
+        redirectTo: '/login'
+    });
+
+    // If access is denied, the guard will handle redirection
+    if (!isAllowed) {
+        return null; // Component won't render while redirecting
+    }
+
     const [step, setStep] = useState(1);
     const [filters, setFilters] = useState<Filters>({ niveaux: [], disciplines: [], themes: [] });
     const [niveau, setNiveau] = useState("");
@@ -50,7 +63,7 @@ function StudentCreateTournamentPageInner() {
     const [availableThemes, setAvailableThemes] = useState<string[]>([]);
 
     useEffect(() => {
-        makeApiRequest<Filters>('questions/filters')
+        makeApiRequest<QuestionsFiltersResponse>('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
             .then((data) => {
                 setFilters(data);
                 logger.debug("Loaded filters", data);
@@ -72,9 +85,10 @@ function StudentCreateTournamentPageInner() {
                 gradeLevel: niveau,
                 pageSize: 1000
             });
-            makeApiRequest<{ questions: any[] }>(disciplinesUrl)
+            makeApiRequest<QuestionsResponse>(disciplinesUrl, undefined, undefined, QuestionsResponseSchema)
                 .then(data => {
-                    const uniqueDisciplines = [...new Set(data.questions.map(q => q.discipline).filter(Boolean))];
+                    const questions = Array.isArray(data) ? data : data.questions;
+                    const uniqueDisciplines = [...new Set(questions.map(q => q.discipline).filter(Boolean))] as string[];
                     setAvailableDisciplines(uniqueDisciplines.sort());
                 })
                 .catch(err => {
@@ -100,10 +114,11 @@ function StudentCreateTournamentPageInner() {
                 discipline: discipline,
                 pageSize: 1000
             });
-            makeApiRequest<{ questions: any[] }>(themesUrl)
+            makeApiRequest<QuestionsResponse>(themesUrl, undefined, undefined, QuestionsResponseSchema)
                 .then(data => {
+                    const questions = Array.isArray(data) ? data : data.questions;
                     const uniqueThemes = new Set<string>();
-                    data.questions.forEach(q => {
+                    questions.forEach((q: Question) => {
                         if (Array.isArray(q.themes)) {
                             q.themes.forEach((theme: string) => uniqueThemes.add(theme));
                         }
@@ -135,7 +150,7 @@ function StudentCreateTournamentPageInner() {
                 page: 1,
                 pageSize: 1
             });
-            makeApiRequest<{ total: number }>(questionsUrl)
+            makeApiRequest<QuestionsCountResponse>(questionsUrl, undefined, undefined, QuestionsCountResponseSchema)
                 .then((data) => {
                     logger.debug("Question count response", data);
                     if (data.total === 0) {
@@ -201,8 +216,8 @@ function StudentCreateTournamentPageInner() {
                 themes: themes,
                 pageSize: numQuestions
             });
-            const questionsResult = await makeApiRequest<{ questions: Question[] }>(questionsUrl);
-            const questions = questionsResult.questions;
+            const questionsResult = await makeApiRequest<QuestionsResponse>(questionsUrl, undefined, undefined, QuestionsResponseSchema);
+            const questions = Array.isArray(questionsResult) ? questionsResult : questionsResult.questions;
 
             logger.debug("Questions fetched", { count: questions.length });
             if (!questions || !Array.isArray(questions) || questions.length === 0) {
@@ -232,7 +247,7 @@ function StudentCreateTournamentPageInner() {
             // Get the student's User ID (should already be registered from /student page)
             let userId: string;
             try {
-                const existingUser = await makeApiRequest<{ user: { id: string } }>(`players/cookie/${cookie_id}`);
+                const existingUser = await makeApiRequest<PlayerCookieResponse>(`players/cookie/${cookie_id}`, undefined, undefined, PlayerCookieResponseSchema);
                 userId = existingUser.user.id;
                 logger.debug("Found existing user", { userId, cookie_id });
             } catch (error) {
@@ -260,11 +275,11 @@ function StudentCreateTournamentPageInner() {
             };
 
             logger.debug("Games API request body", requestBody);
-            const gameData = await makeApiRequest<{ gameInstance: { accessCode: string }; message?: string }>('games', {
+            const gameData = await makeApiRequest<GameCreationResponse>('games', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
-            });
+            }, undefined, GameCreationResponseSchema);
             logger.info("Tournament created successfully", { code: gameData.gameInstance.accessCode });
             router.push(`/lobby/${gameData.gameInstance.accessCode}`);
         } catch (err: unknown) {

@@ -1,8 +1,15 @@
+<!-- filepath: /home/aflesch/mathquest/app/docs/frontend/timer-management.md -->
 # Timer Management in MathQuest Frontend
 
-## Overview
+_Last updated: 2025-06-01_
 
-Timer management in MathQuest is designed to keep the frontend and backend in sync while ensuring a smooth user experience for teachers, students, and projection views. This document describes how timers are managed in all supported modes (Quiz, Tournament, Self-Paced), the division of responsibilities between frontend and backend, and the expected UI behaviors.
+## Purpose
+Explains how timers are managed in all supported modes (Quiz, Tournament, Practice), and the division of responsibilities between frontend and backend.
+
+## See Also
+- [Socket Integration](./socket.md)
+- [Hooks Reference](./hooks.md)
+- [Frontend Architecture](./frontend-architecture.md)
 
 ---
 

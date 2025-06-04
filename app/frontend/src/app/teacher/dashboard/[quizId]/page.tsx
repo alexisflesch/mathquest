@@ -13,11 +13,13 @@ import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
 import CodeManager from '@/components/CodeManager'; // Import new component
-import { useTeacherQuizSocket, Question } from '@/hooks/useTeacherQuizSocket'; // Remove unused QuizState
+import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { UsersRound } from "lucide-react";
 import { log } from "console";
 import { makeApiRequest } from '@/config/api';
+import { QuizListResponseSchema, TeacherQuizQuestionsResponseSchema, TournamentCodeResponseSchema, TournamentVerificationResponseSchema, type QuizListResponse, type TeacherQuizQuestionsResponse, type TournamentCodeResponse, type TournamentVerificationResponse, type Question } from '@/types/api';
+import { STORAGE_KEYS } from '@/constants/auth';
 
 // Create a logger for this component
 const logger = createLogger('TeacherDashboardPage');
@@ -113,32 +115,33 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         const fetchQuizData = async () => {
             try {
                 // Fetch quiz name
-                const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-                let quizzes: { id: string; nom: string }[];
+                const teacherId = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.TEACHER_ID) : null;
+                let quizzes: QuizListResponse;
                 if (teacherId) {
-                    quizzes = await makeApiRequest<{ id: string; nom: string }[]>(`quiz?enseignant_id=${teacherId}`);
+                    quizzes = await makeApiRequest<QuizListResponse>(`quiz?enseignant_id=${teacherId}`, undefined, undefined, QuizListResponseSchema);
                 } else {
-                    quizzes = await makeApiRequest<{ id: string; nom: string }[]>('quiz'); // Will return error, but keeps logic safe
+                    quizzes = await makeApiRequest<QuizListResponse>('quiz', undefined, undefined, QuizListResponseSchema); // Will return error, but keeps logic safe
                 }
                 const found = Array.isArray(quizzes) ? quizzes.find((q) => q.id === quizId) : null;
                 if (isMounted) setQuizName(found?.nom || "Quiz");
 
                 // Fetch questions
-                const questionsData = await makeApiRequest<{ questions: Question[] }>(`teacher/quiz/${quizId}/questions`);
+                const questionsData = await makeApiRequest<TeacherQuizQuestionsResponse>(`teacher/quiz/${quizId}/questions`, undefined, undefined, TeacherQuizQuestionsResponseSchema);
                 // Initialize local question state, ensuring 'temps' exists
                 const initialQuestions = (questionsData.questions || []).map((q: Question) => ({
                     ...q,
+                    type: q.type || 'choix_simple', // Default type if not provided
                     temps: q.time ?? 60 // Default to 60s if undefined
                 }));
                 if (isMounted) setQuestions(initialQuestions);
 
                 // Fetch initial tournament code
                 try {
-                    const codeData = await makeApiRequest<{ tournament_code: string }>(`quiz/${quizId}/tournament-code`);
+                    const codeData = await makeApiRequest<TournamentCodeResponse>(`quiz/${quizId}/tournament-code`, undefined, undefined, TournamentCodeResponseSchema);
                     if (codeData && codeData.tournament_code) {
                         // Verify the tournament exists before setting the code
                         try {
-                            await makeApiRequest(`tournament?code=${codeData.tournament_code}`);
+                            await makeApiRequest<TournamentVerificationResponse>(`tournament?code=${codeData.tournament_code}`, {}, undefined, TournamentVerificationResponseSchema);
                             if (isMounted) {
                                 logger.info(`Fetched initial tournament code: ${codeData.tournament_code}`);
                                 setInitialTournamentCode(codeData.tournament_code);

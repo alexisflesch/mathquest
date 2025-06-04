@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import CustomDropdown from "@/components/CustomDropdown";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import { makeApiRequest } from '@/config/api';
+import { QuizListResponseSchema, QuestionsFiltersResponseSchema, type QuizListResponse, type QuestionsFiltersResponse } from '@/types/api';
+import { useAuth } from '@/components/AuthProvider';
+import { useAccessGuard } from '@/hooks/useAccessGuard';
 
 interface Quiz {
     id: string;
@@ -19,6 +22,18 @@ interface Quiz {
 }
 
 export default function UseQuizPage() {
+    // Access guard: Require teacher access for quiz usage
+    const { isAllowed } = useAccessGuard({
+        allowStates: ['teacher'],
+        redirectTo: '/teacher/login'
+    });
+
+    // If access is denied, the guard will handle redirection
+    if (!isAllowed) {
+        return null; // Component won't render while redirecting
+    }
+
+    const { teacherId } = useAuth();
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [filters, setFilters] = useState<{ niveaux: string[]; disciplines: string[]; themes: string[] }>({ niveaux: [], disciplines: [], themes: [] });
     const [selectedNiveau, setSelectedNiveau] = useState('');
@@ -30,12 +45,23 @@ export default function UseQuizPage() {
     const router = useRouter();
 
     useEffect(() => {
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
         if (teacherId) {
-            makeApiRequest<Quiz[]>(`quiz?enseignant_id=${teacherId}`)
+            makeApiRequest<QuizListResponse>(`quiz?enseignant_id=${teacherId}`, undefined, undefined, QuizListResponseSchema)
                 .then(data => {
                     if (Array.isArray(data)) {
-                        setQuizzes(data);
+                        // Map API response to local Quiz interface with required fields
+                        const mappedQuizzes = data.map(quiz => ({
+                            id: quiz.id,
+                            nom: quiz.nom,
+                            questions_ids: quiz.questions_ids || [],
+                            enseignant_id: quiz.enseignant_id || teacherId,
+                            date_creation: quiz.date_creation || new Date().toISOString(),
+                            niveaux: quiz.niveaux || quiz.levels || [],
+                            categories: quiz.categories || [],
+                            themes: quiz.themes || [],
+                            type: quiz.type || 'standard'
+                        }));
+                        setQuizzes(mappedQuizzes);
                     } else {
                         setQuizzes([]);
                     }
@@ -47,12 +73,12 @@ export default function UseQuizPage() {
         } else {
             setQuizzes([]);
         }
-        makeApiRequest<{ niveaux: string[]; disciplines: string[]; themes: string[] }>('questions/filters')
+        makeApiRequest<QuestionsFiltersResponse>('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
             .then(setFilters)
             .catch(error => {
                 console.error('Error fetching filters:', error);
             });
-    }, []);
+    }, [teacherId]);
 
     useEffect(() => {
         const filtered = quizzes.filter(q =>

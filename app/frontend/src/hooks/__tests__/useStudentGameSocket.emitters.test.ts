@@ -48,7 +48,7 @@ describe('useStudentGameSocket - Emitters', () => {
             accessCode: 'TEST123',
             userId: 'user-123',
             username: 'TestUser',
-            avatarUrl: 'https://example.com/avatar.jpg',
+            avatarEmoji: 'https://example.com/avatar.jpg',
             isDiffered: false
         };
 
@@ -62,7 +62,7 @@ describe('useStudentGameSocket - Emitters', () => {
             accessCode: 'TEST123',
             userId: 'user-123',
             username: 'TestUser',
-            avatarUrl: 'https://example.com/avatar.jpg',
+            avatarEmoji: 'https://example.com/avatar.jpg',
             isDiffered: false
         });
     });
@@ -85,7 +85,7 @@ describe('useStudentGameSocket - Emitters', () => {
             accessCode: 'TEST123',
             userId: 'user-123',
             username: 'TestUser',
-            avatarUrl: undefined,
+            avatarEmoji: undefined,
             isDiffered: true
         });
     });

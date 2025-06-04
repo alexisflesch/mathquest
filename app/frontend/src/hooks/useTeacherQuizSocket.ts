@@ -5,6 +5,8 @@ import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
 import { BaseQuestion, Answer } from '@shared/types/question'; // MODIFIED: Added Answer import
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { STORAGE_KEYS } from '@/constants/auth';
+import { SetQuestionPayload, TimerActionPayload, GameErrorDetails } from '@/types/socket';
 
 const logger = createLogger('useTeacherQuizSocket');
 
@@ -248,7 +250,7 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
             }
         };
 
-        const handleGameError = (error: { message?: string; code?: string; details?: any; error?: string }) => {
+        const handleGameError = (error: GameErrorDetails) => {
             logger.error('Game error received:', error);
 
             // Handle specific game errors
@@ -464,7 +466,7 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
     }, [timerStatus, timeLeft, timerQuestionId]);
 
     // --- Emitter Functions ---
-    const getTeacherId = () => (typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null);
+    const getTeacherId = () => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.TEACHER_ID) : null);
 
     // Updated emitSetQuestion to use Phase 8 backend event format
     const emitSetQuestion = useCallback((questionUid: string, startTime?: number) => {
@@ -488,7 +490,7 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
         // Use Phase 8 backend event format with gameId
         logger.info(`Emitting set_question with gameId=${quizId}, questionUid=${questionUid}`);
 
-        const payload: any = {
+        const payload: SetQuestionPayload = {
             gameId: quizId, // Phase 8 backend uses gameId
             questionUid
         };
@@ -556,7 +558,7 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
                 backendAction = 'stop';
         }
 
-        const payload: any = {
+        const payload: TimerActionPayload = {
             gameId: quizId, // Phase 8 backend uses gameId
             action: backendAction
         };

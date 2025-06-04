@@ -30,12 +30,12 @@ socket.on('error', (error) => {
 });
 
 // Join a lobby when user enters an access code
-function joinLobby(accessCode, username, userId, avatarUrl = null) {
+function joinLobby(accessCode, username, userId, avatarEmoji = null) {
   socket.emit('join_lobby', {
     accessCode,
     username,
     userId,
-    avatarUrl
+    avatarEmoji
   });
 }
 
@@ -103,9 +103,9 @@ function updateParticipantsUI(participants) {
     const listItem = document.createElement('li');
     
     // Create avatar if available
-    if (participant.avatarUrl) {
+    if (participant.avatarEmoji) {
       const avatar = document.createElement('img');
-      avatar.src = participant.avatarUrl;
+      avatar.src = participant.avatarEmoji;
       avatar.classList.add('avatar');
       listItem.appendChild(avatar);
     }

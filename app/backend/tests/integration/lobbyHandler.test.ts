@@ -157,7 +157,7 @@ describe('Lobby Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-123',
             username: 'Test Player',
-            avatarUrl: 'avatar.jpg'
+            avatarEmoji: 'avatar.jpg'
         });
 
         // Wait for participants list response
@@ -211,7 +211,7 @@ describe('Lobby Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-1',
             username: 'Player 1',
-            avatarUrl: 'avatar1.jpg'
+            avatarEmoji: 'avatar1.jpg'
         });
 
         // Wait for first player to join
@@ -227,7 +227,7 @@ describe('Lobby Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-2',
             username: 'Player 2',
-            avatarUrl: 'avatar2.jpg'
+            avatarEmoji: 'avatar2.jpg'
         });
 
         // Both sockets should get updated participants list
@@ -244,7 +244,7 @@ describe('Lobby Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-3',
             username: 'Player 3',
-            avatarUrl: 'avatar3.jpg'
+            avatarEmoji: 'avatar3.jpg'
         });
 
         // Wait for participant_joined event on first socket
@@ -286,7 +286,7 @@ describe('Lobby Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-redirect-test',
             username: 'Redirect Test',
-            avatarUrl: 'avatar.jpg'
+            avatarEmoji: 'avatar.jpg'
         });
 
         // Wait for initial join response
@@ -337,14 +337,14 @@ describe('Lobby Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-d1',
             username: 'Disconnect Test 1',
-            avatarUrl: 'avatar.jpg'
+            avatarEmoji: 'avatar.jpg'
         });
 
         socket2.emit('join_lobby', {
             accessCode: TEST_ACCESS_CODE,
             userId: 'player-d2',
             username: 'Disconnect Test 2',
-            avatarUrl: 'avatar.jpg'
+            avatarEmoji: 'avatar.jpg'
         });
 
         // Wait for both to receive participants list

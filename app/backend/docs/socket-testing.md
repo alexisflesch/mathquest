@@ -82,7 +82,7 @@ test('Player can join a game', async () => {
         accessCode: TEST_ACCESS_CODE,
         userId: 'player-1',
         username: 'Player One',
-        avatarUrl: 'avatar1.jpg'
+        avatarEmoji: 'avatar1.jpg'
     });
 
     // Verify Redis state changes

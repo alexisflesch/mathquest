@@ -4,8 +4,8 @@ import { calculateLeaderboard } from './sharedLeaderboard';
 import { collectAnswers } from './sharedAnswers';
 import { calculateScore } from './sharedScore';
 import createLogger from '@/utils/logger';
-import { getFullGameState, GameState } from '@/core/gameStateService'; // Ensure GameState is imported
-import { redisClient as redis } from '@/config/redis'; // Import redisClient
+import { getFullGameState, GameState } from '@/core/gameStateService';
+import { redisClient as redis } from '@/config/redis';
 import { GAME_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('SharedLiveHandler');
@@ -14,7 +14,7 @@ interface JoinPayload {
     accessCode: string;
     userId: string;
     username: string;
-    avatarUrl?: string;
+    avatarEmoji?: string;
     playMode: 'quiz' | 'tournament' | 'practice';
 }
 
@@ -29,7 +29,7 @@ interface AnswerPayload {
 
 export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
     const joinHandler = async (payload: JoinPayload) => {
-        const { accessCode, userId, username, avatarUrl } = payload;
+        const { accessCode, userId, username, avatarEmoji } = payload;
         let { playMode } = payload;
 
         // Determine playMode if not provided
@@ -55,7 +55,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
         const room = `game_${accessCode}`;
         const participantUsername = typeof username === 'string' ? username : 'Anonymous';
-        const participantAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl : undefined;
+        const participantAvatarEmoji = typeof avatarEmoji === 'string' ? avatarEmoji : undefined;
 
         // Populate socket.data for disconnectHandler and other potential uses
         socket.data.userId = userId;
@@ -63,7 +63,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         socket.data.username = participantUsername;
         socket.data.currentGameRoom = room;
 
-        logger.info({ accessCode, userId, room, playMode, username: participantUsername, avatarUrl: participantAvatarUrl }, '[DEBUG] Attempting to join room');
+        logger.info({ accessCode, userId, room, playMode, username: participantUsername, avatarEmoji: participantAvatarEmoji }, '[DEBUG] Attempting to join room');
         await socket.join(room); // Use await for join
         logger.info({ accessCode, userId, room, playMode }, '[DEBUG] Joined room');
 
@@ -145,9 +145,9 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         logger.info({ accessCode, userId, room, playMode, gameJoinPayload }, '[DEBUG] Emitted game_joined with timer and state');
 
         // const participantUsername = typeof username === 'string' ? username : 'Anonymous'; // Moved up
-        // const participantAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl : undefined; // Moved up
+        // const participantavatarEmoji = typeof avatarEmoji === 'string' ? avatarEmoji : undefined; // Moved up
 
-        io.to(room).emit('participant_joined', { userId, username: participantUsername, avatarUrl: participantAvatarUrl, playMode });
+        io.to(room).emit('participant_joined', { userId, username: participantUsername, avatarEmoji: participantAvatarEmoji, playMode });
 
         try {
             // Redis keys
@@ -163,7 +163,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
             const participantDataForRedis = {
                 userId,
                 username: participantUsername,
-                avatarUrl: participantAvatarUrl,
+                avatarEmoji: participantAvatarEmoji,
                 score: 0, // Initial score, can be updated by answers
                 answers: [], // For tracking answers within the live session
                 online: true,

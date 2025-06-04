@@ -4,6 +4,7 @@ import { Socket } from 'socket.io-client';
 import type { QuizState } from '@/hooks/useTeacherQuizSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { makeApiRequest } from '@/config/api';
+import { TournamentCodeResponseSchema, type TournamentCodeResponse } from '@/types/api';
 
 const logger = createLogger('CodeManager');
 
@@ -45,9 +46,9 @@ const CodeManager = forwardRef<CodeManagerRef, CodeManagerProps>(({
         setTournamentCode(null);
 
         try {
-            const data = await makeApiRequest<{ tournament_code?: string }>(`quiz/${quizId}/tournament-code`, {
+            const data = await makeApiRequest<TournamentCodeResponse>(`quiz/${quizId}/tournament-code`, {
                 method: 'POST',
-            });
+            }, undefined, TournamentCodeResponseSchema);
 
             if (data.tournament_code) {
                 const newCode = data.tournament_code;

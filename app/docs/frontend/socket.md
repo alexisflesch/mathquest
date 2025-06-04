@@ -1,6 +1,15 @@
+<!-- filepath: /home/aflesch/mathquest/app/docs/frontend/socket.md -->
 # Socket Integration in MathQuest Frontend
 
-This document details how real-time communication is handled in the MathQuest frontend using Socket.IO. It is intended for developers and AI agents working on features involving live quizzes, tournaments, and classroom interactions.
+_Last updated: 2025-06-01_
+
+## Purpose
+Describes how real-time communication is handled in the MathQuest frontend using Socket.IO and custom React hooks.
+
+## See Also
+- [Hooks Reference](./hooks.md)
+- [Frontend Architecture](./frontend-architecture.md)
+- [Timer Management](./timer-management.md)
 
 ---
 
@@ -56,10 +65,3 @@ This document details how real-time communication is handled in the MathQuest fr
 - Add new events in the relevant hook and document them here.
 - For new real-time features, create a new hook or extend an existing one.
 - Coordinate event names and payloads with the backend team.
-
----
-
-## See Also
-- [Custom React Hooks](hooks.md)
-- [Frontend Architecture](frontend-architecture.md)
-- [Backend Socket API](../../backend/sockets/)

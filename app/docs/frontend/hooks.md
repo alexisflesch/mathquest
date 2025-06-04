@@ -1,6 +1,14 @@
-# MathQuest Hooks - Technical Reference
+<!-- filepath: /home/aflesch/mathquest/app/docs/frontend/hooks.md -->
+# MathQuest Hooks – Technical Reference
 
-This document provides a comprehensive reference for all custom React hooks used in the MathQuest codebase. Hooks encapsulate reusable logic for state management, real-time socket communication, authentication, and side effects. They are typically located in `/src/hooks/` and are used throughout the frontend to keep components clean and logic modular.
+_Last updated: 2025-06-01_
+
+## Purpose
+Comprehensive reference for all custom React hooks in the MathQuest frontend. Hooks encapsulate reusable logic for state, sockets, authentication, and side effects.
+
+## See Also
+- [Frontend Architecture](./frontend-architecture.md)
+- [Socket Integration](./socket.md)
 
 ---
 

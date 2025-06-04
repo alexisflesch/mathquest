@@ -25,16 +25,22 @@ export const __setUserServiceForTesting = (mockService: UserService): void => {
 };
 
 /**
- * Register a new teacher
+ * Deprecated: Register a new teacher
  * POST /api/v1/teachers/register
+ * Use /api/v1/auth/register instead
  */
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, adminPassword } = req.body;
 
         // Basic validation
-        if (!username || !password) {
-            res.status(400).json({ error: 'Username and password are required' });
+        if (!username) {
+            res.status(400).json({ error: 'Username is required' });
+            return;
+        }
+
+        if (!email || !password) {
+            res.status(400).json({ error: 'Email and password are required for teacher registration' });
             return;
         }
 
@@ -43,68 +49,56 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Register the user as a TEACHER
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            res.status(400).json({ error: 'Invalid email format' });
+            return;
+        }
+
+        // Check if email already exists
+        try {
+            const existingUser = await getUserService().getUserByEmail(email);
+            if (existingUser) {
+                res.status(400).json({ error: 'Email already exists' });
+                return;
+            }
+        } catch (error) {
+            // User not found is expected - continue with registration
+        }
+
+        // Use UserService directly instead of making HTTP calls
         const result = await getUserService().registerUser({
             username,
             email,
             password,
-            role: UserRole.TEACHER,
+            role: UserRole.TEACHER
+        });
+
+        logger.info('Teacher registered successfully via deprecated endpoint', {
+            userId: result.user.id,
+            username,
+            email
         });
 
         res.status(201).json(result);
     } catch (error) {
-        logger.error({ error }, 'Error in teacher registration');
+        logger.error({ error }, 'Error in deprecated teachers/register endpoint');
 
-        // Handle specific errors
-        if (error instanceof Error && error.message.includes('already exists')) {
-            res.status(409).json({ error: error.message });
-            return;
+        // Handle specific user service errors
+        if (error instanceof Error) {
+            if (error.message.includes('already exists')) {
+                res.status(400).json({ error: 'Email already exists' });
+                return;
+            }
         }
 
         res.status(500).json({ error: 'An error occurred during registration' });
     }
 });
 
-/**
- * Login a teacher (now generic user login)
- * POST /api/v1/teachers/login
- */
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { email, password } = req.body;
-
-        // Basic validation
-        if (!email || !password) {
-            res.status(400).json({ error: 'Email and password are required' });
-            return;
-        }
-
-        const result = await getUserService().loginUser({
-            email,
-            password,
-        });
-
-        if (result.user.role !== UserRole.TEACHER) {
-            res.status(403).json({ error: 'Not a teacher account' });
-            return;
-        }
-
-        res.status(200).json(result);
-    } catch (error) {
-        logger.error({ error }, 'Error in teacher login');
-
-        // Handle authentication errors
-        if (error instanceof Error && (
-            error.message.includes('Invalid email') ||
-            error.message.includes('Invalid password')
-        )) {
-            res.status(401).json({ error: 'Invalid email or password' });
-            return;
-        }
-
-        res.status(500).json({ error: 'An error occurred during login' });
-    }
-});
+// Note: Teacher login has been consolidated into the unified /api/v1/auth endpoint
+// Use POST /api/v1/auth with action: 'teacher_login' instead
 
 /**
  * Get the authenticated teacher's profile

@@ -16,7 +16,7 @@ export interface LobbyParticipant {
     id: string;           // Socket ID
     userId: string;     // Player ID from database
     username: string;     // Display name
-    avatarUrl?: string;   // URL to avatar image
+    avatarEmoji?: string;   // Emoji avatar
     joinedAt: number;     // Timestamp when joined
 }
 
@@ -25,7 +25,7 @@ export interface JoinLobbyPayload {
     accessCode: string;   // Game access code
     userId: string;     // Player ID
     username: string;     // Display name
-    avatarUrl?: string;   // Avatar URL
+    avatarEmoji?: string;   // Avatar emoji
 }
 
 export interface LeaveLobbyPayload {
@@ -44,7 +44,7 @@ export interface GetParticipantsPayload {
 export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void {
     // Join a game lobby
     socket.on(LOBBY_EVENTS.JOIN_LOBBY, async (payload: JoinLobbyPayload) => {
-        const { accessCode, userId, username, avatarUrl } = payload;
+        const { accessCode, userId, username, avatarEmoji } = payload;
         logger.info({ accessCode, userId, username, socketId: socket.id }, 'Player joining lobby');
 
         try {
@@ -87,7 +87,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                 await joinRoom(socket, `lobby_${accessCode}`, {
                     userId,
                     username,
-                    avatarUrl,
+                    avatarEmoji,
                     redirected: true
                 });
 
@@ -98,7 +98,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             await joinRoom(socket, `lobby_${accessCode}`, {
                 userId,
                 username,
-                avatarUrl,
+                avatarEmoji,
                 joinedAt: Date.now()
             });
 
@@ -107,7 +107,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                 id: socket.id,
                 userId,
                 username,
-                avatarUrl,
+                avatarEmoji,
                 joinedAt: Date.now()
             };
 

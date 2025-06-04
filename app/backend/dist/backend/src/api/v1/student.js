@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const userService_1 = require("@/core/services/userService");
 const client_1 = require("@/db/generated/client");
+const avatarUtils_1 = require("@/utils/avatarUtils");
 const logger_1 = __importDefault(require("@/utils/logger"));
 // Create a route-specific logger
 const logger = (0, logger_1.default)('StudentAPI');
@@ -48,8 +49,12 @@ async function handleStudentJoin(req, res) {
         res.status(400).json({ error: 'Username is required' });
         return;
     }
-    if (!avatar) {
-        res.status(400).json({ error: 'Avatar is required' });
+    try {
+        // Validate avatar (ensures it's one of the allowed animal emojis)
+        (0, avatarUtils_1.validateAvatar)(avatar);
+    }
+    catch (error) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Invalid avatar' });
         return;
     }
     try {
@@ -59,6 +64,7 @@ async function handleStudentJoin(req, res) {
             email: undefined, // Students don't need email
             password: undefined, // Students don't need password
             role: client_1.UserRole.STUDENT,
+            avatarEmoji: avatar
         });
         logger.info('Student registered successfully', {
             username,

@@ -28,8 +28,38 @@ import { SOCKET_CONFIG } from '@/config';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { makeApiRequest } from '@/config/api';
 
+// Game state interface for lobby status checking
+interface GameState {
+    status?: string;
+    currentQuestionIndex?: number;
+    participants?: Array<{
+        id: string;
+        username: string;
+        avatar?: string;
+        score?: number;
+    }>;
+    timer?: {
+        timeLeft: number;
+        running: boolean;
+    };
+    question?: {
+        uid: string;
+        text: string;
+        type: string;
+    };
+}
+
+// Tournament status response interface
+interface TournamentStatusResponse {
+    status: string;
+    statut: string;
+    currentQuestionIndex?: number;
+    isLive?: boolean;
+    gameState?: GameState;
+}
+
 // Create a logger for this component
-const logger = createLogger('Lobby');
+const logger = createLogger('LobbyPage');
 
 export default function LobbyPage() {
     const { code } = useParams();
@@ -43,13 +73,7 @@ export default function LobbyPage() {
     const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);    // Function to check tournament status and redirect if needed
     const checkTournamentStatus = useCallback(async () => {
         try {
-            const status = await makeApiRequest<{
-                status: string;
-                statut: string;
-                currentQuestionIndex?: number;
-                isLive?: boolean;
-                gameState?: any;
-            }>(`games/${code}/state`);
+            const status = await makeApiRequest<TournamentStatusResponse>(`games/${code}/state`);
 
             if (status.statut === 'terminé') {
                 logger.info(`Tournament ${code} is finished, redirecting to leaderboard`);
@@ -80,12 +104,12 @@ export default function LobbyPage() {
             const username = localStorage.getItem('mathquest_username');
             const avatar = localStorage.getItem('mathquest_avatar');
             logger.debug('Teacher identity', { username, avatar });
-            if (username && avatar) return { username, avatar: `/avatars/${avatar}` };
+            if (username && avatar) return { username, avatar };
         } else if (isStudent) {
             const username = localStorage.getItem('mathquest_username');
             const avatar = localStorage.getItem('mathquest_avatar');
             logger.debug('Student identity', { username, avatar });
-            if (username && avatar) return { username, avatar: `/avatars/${avatar}` };
+            if (username && avatar) return { username, avatar };
         }
         logger.warn('No valid identity found');
         return null;
@@ -95,13 +119,7 @@ export default function LobbyPage() {
     useEffect(() => {
         async function fetchCreator() {
             try {
-                const status = await makeApiRequest<{
-                    status: string;
-                    statut: string;
-                    currentQuestionIndex?: number;
-                    isLive?: boolean;
-                    gameState?: any;
-                }>(`games/${code}/state`);
+                const status = await makeApiRequest<TournamentStatusResponse>(`games/${code}/state`);
                 if (status.statut === 'terminé') {
                     router.replace(`/leaderboard/${code}`);
                     return;
@@ -140,15 +158,15 @@ export default function LobbyPage() {
                     try {
                         // For now, use a placeholder since we don't know the exact user API structure
                         // This can be updated when the user API is available
-                        creatorData = { username: "Creator", avatar: "/avatars/cat-face.svg" };
+                        creatorData = { username: "Creator", avatar: "🐱" };
                     } catch (error) {
                         logger.error("Error fetching game creator:", error);
-                        creatorData = { username: "Unknown", avatar: "/avatars/cat-face.svg" };
+                        creatorData = { username: "Unknown", avatar: "🐱" };
                     }
                 } else {
                     // No creator found
                     logger.warn("No creator found in game instance");
-                    creatorData = { username: "Unknown", avatar: "/avatars/cat-face.svg" };
+                    creatorData = { username: "Unknown", avatar: "🐱" };
                 }
                 if (creatorData) setCreator(creatorData);
             } catch (error) {
@@ -199,7 +217,7 @@ export default function LobbyPage() {
                     accessCode: code,
                     userId,
                     username: identity.username,
-                    avatarUrl: identity.avatar,
+                    avatarEmoji: identity.avatar,
                 });
                 // Check tournament status after reconnect
                 checkTournamentStatus();
@@ -219,7 +237,7 @@ export default function LobbyPage() {
             accessCode: code,
             userId,
             username: identity.username,
-            avatarUrl: identity.avatar,
+            avatarEmoji: identity.avatar,
         });
 
         // Debug: log after join_lobby
@@ -589,14 +607,12 @@ export default function LobbyPage() {
                         <div className="flex-1 min-h-0 overflow-y-auto flex flex-wrap gap-4 justify-start w-full" style={{ maxHeight: '40vh' }}>
                             {participants.map((p, i) => (
                                 <div key={p.id ? `${p.id}-${i}` : i} className="flex flex-col items-center">
-                                    <Image
-                                        src={p.avatar.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`}
-                                        alt="avatar"
-                                        width={40}
-                                        height={40}
-                                        className="w-[49px] h-[49px] rounded-full border-2"
+                                    <div
+                                        className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-2xl"
                                         style={{ borderColor: "var(--primary)" }}
-                                    />
+                                    >
+                                        {p.avatar}
+                                    </div>
                                     <span className="text-sm mt-0 truncate max-w-[70px]">{p.username}</span>
                                 </div>
                             ))}

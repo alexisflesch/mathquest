@@ -10,6 +10,7 @@ const createMockUserService = () => {
         loginUser: jest.fn(),
         getUserById: jest.fn(),
         getUserByCookieId: jest.fn(),
+        getUserByEmail: jest.fn(),
     };
     return mockService;
 };

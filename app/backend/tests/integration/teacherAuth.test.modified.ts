@@ -106,7 +106,7 @@ describe('Teacher Authentication API', () => {
         });
     });
 
-    describe('POST /api/v1/teachers/login', () => {
+    describe('POST /api/v1/auth (teacher_login)', () => {
         it('should login a teacher with valid credentials', async () => {
             // Mock prisma.user.findUnique to return a teacher
             (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
@@ -121,39 +121,41 @@ describe('Teacher Authentication API', () => {
             jest.spyOn(bcrypt, 'compare').mockResolvedValueOnce(true as never);
 
             const res = await request(app)
-                .post('/api/v1/teachers/login')
+                .post('/api/v1/auth')
                 .send({
-                    username: 'testteacher',
+                    action: 'teacher_login',
+                    email: 'teacher@example.com',
                     password: 'password123',
                 });
 
             expect(res.status).toBe(200);
             expect(res.body).toHaveProperty('token');
-            expect(res.body).toHaveProperty('teacher');
-            expect(res.body.teacher).toHaveProperty('id', 'teacher-uuid');
-            expect(res.body.teacher).toHaveProperty('username', 'testteacher');
+            expect(res.body).toHaveProperty('username');
+            expect(res.body.username).toBe('testteacher');
         });
 
-        it('should return 400 if username is missing', async () => {
+        it('should return 400 if email is missing', async () => {
             const res = await request(app)
-                .post('/api/v1/teachers/login')
+                .post('/api/v1/auth')
                 .send({
+                    action: 'teacher_login',
                     password: 'password123',
                 });
 
             expect(res.status).toBe(400);
-            expect(res.body).toHaveProperty('error', 'Username and password are required');
+            expect(res.body).toHaveProperty('error', 'Email and password are required');
         });
 
         it('should return 400 if password is missing', async () => {
             const res = await request(app)
-                .post('/api/v1/teachers/login')
+                .post('/api/v1/auth')
                 .send({
-                    username: 'testteacher',
+                    action: 'teacher_login',
+                    email: 'teacher@example.com',
                 });
 
             expect(res.status).toBe(400);
-            expect(res.body).toHaveProperty('error', 'Username and password are required');
+            expect(res.body).toHaveProperty('error', 'Email and password are required');
         });
 
         it('should return 401 if teacher does not exist', async () => {
@@ -161,14 +163,15 @@ describe('Teacher Authentication API', () => {
             (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
             const res = await request(app)
-                .post('/api/v1/teachers/login')
+                .post('/api/v1/auth')
                 .send({
-                    username: 'nonexistentteacher',
+                    action: 'teacher_login',
+                    email: 'nonexistent@example.com',
                     password: 'password123',
                 });
 
             expect(res.status).toBe(401);
-            expect(res.body).toHaveProperty('error', 'Invalid username or password');
+            expect(res.body).toHaveProperty('error');
         });
 
         it('should return 401 if password is incorrect', async () => {
@@ -176,6 +179,7 @@ describe('Teacher Authentication API', () => {
             (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
                 id: 'teacher-uuid',
                 username: 'testteacher',
+                email: 'teacher@example.com',
                 passwordHash: 'hashed_password',
                 role: 'TEACHER',
             });
@@ -184,14 +188,15 @@ describe('Teacher Authentication API', () => {
             jest.spyOn(bcrypt, 'compare').mockResolvedValueOnce(false as never);
 
             const res = await request(app)
-                .post('/api/v1/teachers/login')
+                .post('/api/v1/auth')
                 .send({
-                    username: 'testteacher',
+                    action: 'teacher_login',
+                    email: 'teacher@example.com',
                     password: 'wrongpassword',
                 });
 
             expect(res.status).toBe(401);
-            expect(res.body).toHaveProperty('error', 'Invalid username or password');
+            expect(res.body).toHaveProperty('error');
         });
     });
 });

@@ -14,7 +14,7 @@ model Teacher {
   passwordHash String
   email        String?  @unique
   createdAt    DateTime @default(now()) @map("created_at")
-  avatarUrl    String?  @map("avatar_url")
+  avatarEmoji  String?  @map("avatar_url")
 
   resetToken          String?   @map("reset_token")
   resetTokenExpiresAt DateTime? @map("reset_token_expires_at")
@@ -32,7 +32,7 @@ model Player {
   email        String?  @unique // Optional: for registered players
   passwordHash String? // Optional: for registered players
   createdAt    DateTime @default(now()) @map("created_at")
-  avatarUrl    String?  @map("avatar_url")
+  avatarEmoji  String?  @map("avatar_url")
 
   gameParticipations GameParticipant[]
 

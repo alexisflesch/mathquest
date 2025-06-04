@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = globalTeardown;
-const redis_1 = require("../src/config/redis");
-const sockets_1 = require("../src/sockets");
+const redis_1 = require("@/config/redis");
+const sockets_1 = require("@/sockets");
 const testSetup_1 = require("./testSetup");
 async function globalTeardown() {
     // Suppress unhandled promise rejections during teardown

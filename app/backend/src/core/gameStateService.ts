@@ -44,7 +44,7 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<any[]
     try {
         const participantsHash = await redisClient.hgetall(`${GAME_PARTICIPANTS_PREFIX}${accessCode}`);
         const participantsFromRedis = participantsHash
-            ? Object.values(participantsHash).map(p => JSON.parse(p as string) as { userId: string, username: string, avatarUrl: string, [key: string]: any })
+            ? Object.values(participantsHash).map(p => JSON.parse(p as string) as { userId: string, username: string, avatarEmoji: string, [key: string]: any })
             : [];
 
         const leaderboardRaw = await redisClient.zrevrange(
@@ -65,7 +65,7 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<any[]
                 leaderboardPromises.push(Promise.resolve({
                     userId,
                     username: playerInfo.username,
-                    avatarUrl: playerInfo.avatarUrl,
+                    avatarEmoji: playerInfo.avatarEmoji,
                     score
                 }));
             } else {
@@ -74,13 +74,13 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<any[]
                 logger.warn({ accessCode, userId }, "Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.");
                 const userPromise = prisma.user.findUnique({
                     where: { id: userId },
-                    select: { username: true, avatarUrl: true }
+                    select: { username: true, avatarEmoji: true }
                 }).then(user => {
                     if (user) {
                         return {
                             userId,
                             username: user.username || 'Unknown Player',
-                            avatarUrl: user.avatarUrl || undefined,
+                            avatarEmoji: user.avatarEmoji || undefined,
                             score
                         };
                     }
@@ -88,7 +88,7 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<any[]
                     return {
                         userId,
                         username: 'Unknown Player',
-                        avatarUrl: undefined,
+                        avatarEmoji: undefined,
                         score
                     };
                 });
@@ -351,7 +351,7 @@ export async function getFullGameState(accessCode: string): Promise<{
                 leaderboard.push({
                     userId,
                     username: player.username,
-                    avatarUrl: player.avatarUrl,
+                    avatarEmoji: player.avatarEmoji,
                     score
                 });
             }

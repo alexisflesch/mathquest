@@ -15,7 +15,7 @@ export interface GameParticipant {
     id: string;
     userId: string;
     username: string;
-    avatarUrl?: string;
+    avatarEmoji?: string;
     joinedAt?: number;
     score?: number;
     online?: boolean;

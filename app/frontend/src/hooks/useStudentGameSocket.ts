@@ -6,6 +6,7 @@ import { createSocketConfig } from '@/utils';
 import { Question } from '@shared/types/quiz/question';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { AnswerValue, TimerUpdate, GameTimerUpdate } from '@/types/socket';
 
 const logger = createLogger('useStudentGameSocket');
 
@@ -35,12 +36,6 @@ export interface GameQuestionPayload {
     questionState?: 'active' | 'paused' | 'stopped';
     phase?: 'question' | 'feedback' | 'show_answers';
     feedbackRemaining?: number;
-}
-
-export interface TimerUpdate {
-    timeLeft: number;
-    status?: 'play' | 'pause' | 'stop';
-    timestamp?: number;
 }
 
 export interface GameUpdate {
@@ -99,7 +94,7 @@ export interface StudentGameSocketHookProps {
     accessCode: string | null;
     userId: string | null;
     username: string | null;
-    avatarUrl?: string | null;
+    avatarEmoji?: string | null;
     isDiffered?: boolean;
 }
 
@@ -114,7 +109,7 @@ export interface StudentGameSocketHook {
 
     // Actions
     joinGame: () => void;
-    submitAnswer: (questionId: string, answer: any, timeSpent: number) => void;
+    submitAnswer: (questionId: string, answer: AnswerValue, timeSpent: number) => void;
     requestNextQuestion: (currentQuestionId: string) => void;
 
     // Event handlers (optional callbacks)
@@ -122,8 +117,8 @@ export interface StudentGameSocketHook {
     onAnswerReceived?: (result: AnswerReceived) => void;
     onFeedbackReceived?: (feedback: FeedbackEvent) => void;
     onCorrectAnswersReceived?: (correctAnswers: CorrectAnswersEvent) => void;
-    onGameEnded?: (results: any) => void;
-    onGameError?: (error: any) => void;
+    onGameEnded?: (results: unknown) => void;
+    onGameError?: (error: { message: string }) => void;
     onCorrectAnswers?: (payload: { questionId: string, correctAnswers: number[] }) => void;
 }
 
@@ -131,7 +126,7 @@ export function useStudentGameSocket({
     accessCode,
     userId,
     username,
-    avatarUrl,
+    avatarEmoji,
     isDiffered = false
 }: StudentGameSocketHookProps): StudentGameSocketHook {
 
@@ -319,7 +314,7 @@ export function useStudentGameSocket({
                     accessCode,
                     userId,
                     username,
-                    avatarUrl: avatarUrl || undefined,
+                    avatarEmoji: avatarEmoji || undefined,
                     isDiffered
                 });
             }
@@ -341,7 +336,7 @@ export function useStudentGameSocket({
             setConnected(false);
             setConnecting(false);
         };
-    }, [accessCode, userId, username, avatarUrl, isDiffered]);
+    }, [accessCode, userId, username, avatarEmoji, isDiffered]);
 
     // --- Game Event Handlers ---
     useEffect(() => {
@@ -447,7 +442,7 @@ export function useStudentGameSocket({
         });
 
         // Handle backend timer updates (new backend event)
-        socket.on(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED, (data: { timer: any }) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED, (data: GameTimerUpdate) => {
             logger.debug("Received game_timer_updated", data);
 
             if (data.timer) {
@@ -729,12 +724,12 @@ export function useStudentGameSocket({
             accessCode,
             userId,
             username,
-            avatarUrl: avatarUrl || undefined,
+            avatarEmoji: avatarEmoji || undefined,
             isDiffered
         });
-    }, [socket, accessCode, userId, username, avatarUrl, isDiffered]);
+    }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
 
-    const submitAnswer = useCallback((questionId: string, answer: any, timeSpent: number) => {
+    const submitAnswer = useCallback((questionId: string, answer: AnswerValue, timeSpent: number) => {
         if (!socket || !accessCode || !userId) {
             logger.warn("Cannot submit answer: missing socket or parameters");
             return;

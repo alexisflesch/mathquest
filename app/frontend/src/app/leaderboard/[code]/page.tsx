@@ -15,9 +15,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Share2 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
+import { TournamentVerificationResponseSchema, TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentVerificationResponse, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
 
 type LeaderboardEntry = { id: string; username: string; avatar: string; score: number; isDiffered?: boolean };
 
@@ -34,18 +34,15 @@ export default function TournamentLeaderboardPage() {
     if (typeof window !== "undefined") {
         currentusername = localStorage.getItem("mathquest_username");
         currentAvatar = localStorage.getItem("mathquest_avatar");
-        if (currentAvatar && !currentAvatar.startsWith("/")) {
-            currentAvatar = `/avatars/${currentAvatar}`;
-        }
     }
 
     useEffect(() => {
         async function fetchLeaderboard() {
             try {
-                const tournoi = await makeApiRequest<{ id: string }>(`tournament?code=${code}`);
+                const tournoi = await makeApiRequest<TournamentVerificationResponse>(`tournament?code=${code}`, {}, undefined, TournamentVerificationResponseSchema);
                 if (!tournoi || !tournoi.id) throw new Error('Tournoi introuvable');
 
-                const lb = await makeApiRequest<{ leaderboard: LeaderboardEntry[] }>(`tournament-leaderboard?code=${code}`);
+                const lb = await makeApiRequest<TournamentLeaderboardResponse>(`tournament-leaderboard?code=${code}`, {}, undefined, TournamentLeaderboardResponseSchema);
                 setLeaderboard(lb.leaderboard || []);
 
                 // Vérifier si l'utilisateur peut jouer en différé
@@ -55,8 +52,8 @@ export default function TournamentLeaderboardPage() {
                 }
                 if (userId) {
                     try {
-                        const { canPlay } = await makeApiRequest<{ canPlay: boolean }>(`can-play-differed?code=${code}&userId=${encodeURIComponent(userId)}`);
-                        setCanPlayDiffered(!!canPlay);
+                        const differedResponse = await makeApiRequest<CanPlayDifferedResponse>(`can-play-differed?code=${code}&userId=${encodeURIComponent(userId)}`, {}, undefined, CanPlayDifferedResponseSchema);
+                        setCanPlayDiffered(!!differedResponse.canPlay);
                     } catch (err) {
                         console.error('Error checking differed play availability:', err);
                         setCanPlayDiffered(false);
@@ -139,8 +136,7 @@ export default function TournamentLeaderboardPage() {
                                 currentusername &&
                                 currentAvatar &&
                                 p.username === currentusername &&
-                                (p.avatar === currentAvatar ||
-                                    p.avatar === currentAvatar.replace("/avatars/", ""));
+                                p.avatar === currentAvatar;
                             return (
                                 <li
                                     key={p.id}
@@ -152,16 +148,14 @@ export default function TournamentLeaderboardPage() {
                                     }
                                     style={isCurrent ? { backgroundColor: "var(--primary)", color: "white" } : undefined}
                                 >
-                                    <Image
-                                        src={p.avatar?.startsWith('/') ? p.avatar : `/avatars/${p.avatar}`}
-                                        alt="avatar"
-                                        width={32}
-                                        height={32}
-                                        className="w-8 h-8 rounded-full"
+                                    <div
+                                        className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
                                         style={{
                                             boxShadow: "0 0 0 2px var(--border), 0 1px 2px 0 rgba(0,0,0,0.07)"
                                         }}
-                                    />
+                                    >
+                                        {p.avatar}
+                                    </div>
                                     <span className="w-8 text-center">#{idx + 1}</span>
                                     <span className="flex-1 flex items-center gap-2">
                                         {p.isDiffered ? (

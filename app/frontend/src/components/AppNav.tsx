@@ -1,26 +1,25 @@
 /**
  * Application Navigation Component
  * 
- * This component provides the main navigation interface for the MathQuest application,
- * handling both desktop sidebar and mobile drawer navigation patterns.
+ * Enhanced version that combines the beautiful styling of the original AppNav
+ * with the new 4-state authentication system (anonymous, guest, student, teacher).
  * 
  * Key features:
  * - Responsive design with collapsible sidebar for desktop and drawer for mobile
- * - Dynamic menu items based on user authentication state (teacher/student/unauthenticated)
+ * - Dynamic menu items based on new 4-state authentication system
  * - User profile display with avatar and username
  * - Theme switching functionality (light/dark/system)
  * - Sub-menu support for nested navigation options
- * - Logout functionality
+ * - Logout and guest upgrade functionality
  * 
  * The component adapts its display and available options based on the user's
- * authentication status and role within the application.
+ * authentication state: anonymous, guest, student, or teacher.
  */
 
 "use client";
 import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useAuth } from './AuthProvider'; // Corrected import path
-import Image from 'next/image';
+import { useAuth } from './AuthProvider';
 import { makeApiRequest } from '@/config/api';
 import {
     Home,
@@ -34,18 +33,27 @@ import {
     Monitor,
     GraduationCap,
     LogOut,
+    LogIn,
+    UserPlus,
+    AlertTriangle,
     Menu,
     Sun,
     Moon,
-    ClipboardList, // Ajout de l'icône ClipboardList
+    ClipboardList,
+    User,
 } from 'lucide-react';
 
-export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { sidebarCollapsed: boolean, setSidebarCollapsed: (c: boolean) => void }) {
-    const { /* refreshAuth, */ isAuthenticated, isStudent, isTeacher } = useAuth();
+export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
+    sidebarCollapsed: boolean,
+    setSidebarCollapsed: (c: boolean) => void
+}) {
+    const { userState, userProfile, logout } = useAuth();
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
-    const [username, setusername] = useState<string | null>(null);
-    const [avatar, setAvatar] = useState<string | null>(null);
+
+    // Use userProfile from AuthProvider instead of local state
+    const username = userProfile?.username || null;
+    const avatar = userProfile?.avatar || null;
 
     // Theme toggle state
     const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
@@ -80,60 +88,31 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         setTheme(t => t === 'light' ? 'dark' : t === 'dark' ? 'system' : 'light');
     };
 
-    useEffect(() => {
-        async function fetchTeacherProfile(teacherId: string) {
-            try {
-                const data = await makeApiRequest<{
-                    username?: string;
-                    avatar?: string;
-                }>(`teacher/profile?id=${teacherId}`);
-                setusername(data.username || null);
-                setAvatar(data.avatar || null);
-                localStorage.setItem('mathquest_username', data.username || '');
-                localStorage.setItem('mathquest_avatar', data.avatar || '');
-            } catch (e) {
-                setusername(null);
-                setAvatar(null);
-                console.error('Error fetching teacher profile:', e);
-            }
-        }
-        if (isTeacher && typeof window !== 'undefined') {
-            // Try to get teacherId from cookie if not in localStorage
-            let teacherId = localStorage.getItem('mathquest_teacher_id');
-            if (!teacherId) {
-                // Try to get from cookie
-                const match = document.cookie.match(/mathquest_teacher=([^;]+)/);
-                if (match) teacherId = match[1];
-            }
-            if (teacherId) {
-                fetchTeacherProfile(teacherId);
-            } else {
-                setusername(null);
-                setAvatar(null);
-            }
-        } else if (isStudent && typeof window !== 'undefined') {
-            setusername(localStorage.getItem('mathquest_username'));
-            setAvatar(localStorage.getItem('mathquest_avatar'));
-        } else {
-            setusername(null);
-            setAvatar(null);
-        }
-    }, [isStudent, isTeacher]); // Re-run when isStudent or isTeacher changes
-
-    // Add handleDisconnect function for menu actions
+    // Handle disconnect/logout for all user types
     const handleDisconnect = async () => {
-        // Remove localStorage/session data if needed
-        localStorage.removeItem('mathquest_username');
-        localStorage.removeItem('mathquest_avatar');
-        localStorage.removeItem('mathquest_teacher_id');
-        localStorage.removeItem('mathquest_cookie_id');
-        // Optionally call logout API
+        console.log('[AppNav] Logout initiated');
+
         try {
-            await makeApiRequest('auth/logout', { method: 'POST' });
+            // Check if we're already on the landing page
+            const isOnLandingPage = typeof window !== 'undefined' &&
+                (window.location.pathname === '/' || window.location.pathname === '');
+
+            // Only redirect if not already on landing page
+            const redirectUrl = isOnLandingPage ? undefined : '/?loggedOut=true';
+
+            // Use the centralized logout function from AuthProvider
+            await logout(redirectUrl);
+            console.log('[AppNav] Logout completed via AuthProvider');
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error('[AppNav] Logout error:', error);
+
+            // Fallback - only force redirect if not already on landing page
+            if (typeof window !== 'undefined' &&
+                window.location.pathname !== '/' &&
+                window.location.pathname !== '') {
+                window.location.href = '/?loggedOut=true';
+            }
         }
-        window.location.href = '/';
     };
 
     // Icon mapping for menu items
@@ -143,56 +122,72 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
         'Rejoindre un tournoi': Users,
         'Entraînement libre': Dumbbell,
         'Créer un tournoi': PlusCircle,
-        'Mes tournois': ClipboardList, // Utilise ClipboardList pour "Mes tournois"
+        'Mes tournois': ClipboardList,
         'Espace enseignant': BookOpen,
         'Utiliser un quiz existant': ListChecks,
         'Créer un quiz': FilePlus,
         'Consulter les résultats': BarChart2,
-        // 'Vidéoprojecteur': Monitor, // Removed
         'Déconnexion': LogOut,
+        'Profil': User,
+        // New icons for 4-state system
+        'Se connecter': LogIn,
+        'Enregistrer mon compte': UserPlus,
+        'Profil requis': AlertTriangle,
     };
 
-    // Menu structure based on authentication state
+    // Menu structure based on the new 4-state authentication system
     const menu = useMemo(() => {
-        if (!isAuthenticated) {
-            return [
-                { label: 'Accueil', href: '/' },
-                { label: 'Espace élève', href: '/student' },
-                { label: 'Espace enseignant', href: '/teacher/login' },
-            ];
+        switch (userState) {
+            case 'anonymous':
+                // State 1: Not connected, no profile set up
+                return [
+                    { label: 'Accueil', href: '/' },
+                    { label: 'Se connecter', href: '/login' },
+                ];
+
+            case 'guest':
+            case 'student':
+                // State 2 & 3: Guest (profile set but no account) and Student (full account)
+                // Same menu for consistent student experience
+                return [
+                    { label: 'Accueil', href: '/' },
+                    { label: 'Entraînement libre', href: '/student/create-game?training=true' },
+                    { label: 'Rejoindre un tournoi', href: '/student/join' },
+                    { label: 'Créer un tournoi', href: '/student/create-game' },
+                    { label: 'Mes tournois', href: '/my-tournaments' },
+                    { label: 'Profil', href: '/profile' },
+                    { label: 'Déconnexion', action: handleDisconnect },
+                ];
+
+            case 'teacher':
+                // State 4: Teacher account with admin features
+                return [
+                    { label: 'Accueil', href: '/' },
+                    { label: 'Entraînement libre', href: '/student/create-game?training=true' },
+                    { label: 'Rejoindre un tournoi', href: '/student/join' },
+                    { label: 'Créer un tournoi', href: '/student/create-game' },
+                    { label: 'Mes tournois', href: '/my-tournaments' },
+                    { label: 'Profil', href: '/profile' },
+                    {
+                        label: 'Espace enseignant',
+                        href: '/teacher/home',
+                        submenu: [
+                            { label: 'Créer un quiz', href: '/teacher/quiz/create' },
+                            { label: 'Utiliser un quiz existant', href: '/teacher/quiz/use' },
+                        ],
+                    },
+                    { label: 'Déconnexion', action: handleDisconnect },
+                ];
+
+            default:
+                // Fallback to anonymous state
+                console.warn('Unknown userState:', userState, 'falling back to anonymous');
+                return [
+                    { label: 'Accueil', href: '/' },
+                    { label: 'Se connecter', href: '/login' },
+                ];
         }
-        if (isTeacher) {
-            return [
-                { label: 'Accueil', href: '/' },
-                { label: 'Entraînement libre', href: '/student/create-game?training=true' },
-                { label: 'Rejoindre un tournoi', href: '/student/join' },
-                { label: 'Créer un tournoi', href: '/student/create-game' },
-                { label: 'Mes tournois', href: '/my-tournaments' },
-                {
-                    label: 'Espace enseignant',
-                    href: '/teacher/home',
-                    submenu: [
-                        { label: 'Créer un quiz', href: '/teacher/quiz/create' },
-                        { label: 'Utiliser un quiz existant', href: '/teacher/quiz/use' },
-                        // { label: 'Vidéoprojecteur', href: '/teacher/projection' }, // Removed
-                    ],
-                },
-                { label: 'Déconnexion', action: handleDisconnect },
-            ];
-        }
-        if (isStudent) {
-            return [
-                { label: 'Accueil', href: '/' },
-                { label: 'Entraînement libre', href: '/student/create-game?training=true' },
-                { label: 'Rejoindre un tournoi', href: '/student/join' },
-                { label: 'Créer un tournoi', href: '/student/create-game' },
-                { label: 'Mes tournois', href: '/my-tournaments' },
-                { label: 'Espace enseignant', href: '/teacher/login' },
-                { label: 'Déconnexion', action: handleDisconnect },
-            ];
-        }
-        return [];
-    }, [isAuthenticated, isStudent, isTeacher]);
+    }, [userState, handleDisconnect]);
 
     if (!mounted) return null;
 
@@ -210,20 +205,43 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                         <Menu className="w-6 h-6" />
                     </button>
                 </div>
-                {(!sidebarCollapsed && (isTeacher || isStudent)) && (
+
+                {/* Warning section for anonymous users */}
+                {!sidebarCollapsed && userState === 'anonymous' && (
+                    <div className="px-4 py-3 border-b border-white/10">
+                        <div className="flex items-start space-x-2 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
+                            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                            <div className="text-sm">
+                                <div className="font-semibold text-yellow-300">Profil requis</div>
+                                <div className="text-yellow-200/80 mt-1">
+                                    Connectez-vous pour accéder aux fonctionnalités
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {(!sidebarCollapsed && (userState === 'guest' || userState === 'student' || userState === 'teacher')) && (
                     <div className={`flex flex-col items-center justify-center h-32 pt-4 -mt-10`}>
                         {avatar ? (
-                            <Image src={`/avatars/${avatar}`} alt="avatar" width={80} height={80} className="w-20 h-20 rounded-full mb-2 avatar-ring-primary" />
+                            <div className="w-20 h-20 text-5xl rounded-full mb-2 flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border-2 border-[color:var(--primary)]">
+                                {avatar}
+                            </div>
                         ) : (
                             <div className="w-20 h-20 rounded-full mb-2 bg-gray-700" />
                         )}
                         {username ? (
                             <span className="text-lg font-semibold text-white drop-shadow">{username}</span>
                         ) : (
-                            <span className="text-lg font-semibold text-gray-500">{isTeacher ? 'Enseignant' : 'Loading...'}</span>
+                            <span className="text-lg font-semibold text-gray-500">
+                                {userState === 'teacher' ? 'Enseignant' :
+                                    userState === 'student' ? 'Étudiant' :
+                                        userState === 'guest' ? 'Invité' : 'Loading...'}
+                            </span>
                         )}
                     </div>
                 )}
+
                 <nav className={`flex-1 p-4 space-y-0.5`}>
                     {menu.map((item) => {
                         const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
@@ -283,6 +301,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                         );
                     })}
                 </nav>
+
                 {/* Theme toggle at the bottom, desktop only */}
                 <div className="p-4 mt-auto flex flex-col gap-2">
                     <button
@@ -305,6 +324,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                     </button>
                 </div>
             </aside>
+
             {/* Top bar for mobile only */}
             <div className="md:hidden" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '56px', zIndex: 100, background: 'var(--navbar)' }}>
                 <div className="flex items-center justify-between h-14 px-4 text-white">
@@ -316,20 +336,22 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
                     </button>
                     {/* Avatar/username on the right */}
                     <div className="flex items-center gap-2">
-                        {isTeacher ? (
+                        {(userState === 'guest' || userState === 'student' || userState === 'teacher') ? (
                             <>
-                                {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
+                                {avatar && (
+                                    <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)]">
+                                        {avatar}
+                                    </div>
+                                )}
                                 {username && <span className="font-bold text-base">{username}</span>}
                             </>
-                        ) : isStudent && (
-                            <>
-                                {avatar && <Image src={`/avatars/${avatar}`} alt="avatar" width={32} height={32} className="w-8 h-8 rounded-full avatar-ring-primary" />}
-                                {username && <span className="font-bold text-base">{username}</span>}
-                            </>
+                        ) : userState === 'anonymous' && (
+                            <span className="text-sm text-yellow-300">Non connecté</span>
                         )}
                     </div>
                 </div>
             </div>
+
             {/* Drawer menu for small screens */}
             {open && (
                 <div className="fixed inset-0 z-[200] bg-black bg-opacity-40">

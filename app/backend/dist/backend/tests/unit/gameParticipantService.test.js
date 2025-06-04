@@ -59,7 +59,7 @@ describe('Game Participant Service', () => {
                 userId,
                 score: 0,
                 answers: [],
-                user: { username: 'testplayer', avatarUrl: 'avatar.png' },
+                user: { username: 'testplayer', avatarEmoji: 'avatar.png' },
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 rank: null,
@@ -91,7 +91,7 @@ describe('Game Participant Service', () => {
                 userId,
                 score: 0,
                 answers: [],
-                user: { username: 'testplayer', avatarUrl: 'avatar.png' },
+                user: { username: 'testplayer', avatarEmoji: 'avatar.png' },
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 rank: null,
@@ -160,7 +160,7 @@ describe('Game Participant Service', () => {
                 userId,
                 score: 0,
                 answers: [],
-                user: { username: 'testplayer', avatarUrl: 'avatar.png' },
+                user: { username: 'testplayer', avatarEmoji: 'avatar.png' },
                 createdAt: now,
                 updatedAt: now,
                 rank: null,
@@ -196,7 +196,7 @@ describe('Game Participant Service', () => {
                 answers: [],
                 user: {
                     username: 'testplayer',
-                    avatarUrl: 'avatar.png'
+                    avatarEmoji: 'avatar.png'
                 }
             };
             prisma_1.prisma.gameParticipant.create.mockResolvedValue(mockCreatedParticipant);
@@ -213,7 +213,7 @@ describe('Game Participant Service', () => {
                                 username: `guest-${userId}`,
                                 role: 'STUDENT',
                                 studentProfile: { create: { cookieId: `cookie-${userId}` } },
-                                avatarUrl: null,
+                                avatarEmoji: null,
                             }
                         }
                     }
@@ -261,7 +261,7 @@ describe('Game Participant Service', () => {
                 timeTakenMs: 3000,
                 joinedAt: new Date(),
                 completedAt: null,
-                user: { username: 'testplayer', avatarUrl: 'avatar.png' }
+                user: { username: 'testplayer', avatarEmoji: 'avatar.png' }
             };
             prisma_1.prisma.gameParticipant.findFirst.mockResolvedValue(mockParticipant);
             prisma_1.prisma.gameParticipant.update.mockResolvedValue({ ...mockParticipant, score: 200 });
@@ -315,7 +315,7 @@ describe('Game Participant Service', () => {
                 userId: 'player-123',
                 score: 200,
                 answers: [],
-                user: { username: 'testplayer', avatarUrl: 'avatar.png' },
+                user: { username: 'testplayer', avatarEmoji: 'avatar.png' },
                 gameInstance: {
                     id: 'game-123',
                     name: 'Test Game',

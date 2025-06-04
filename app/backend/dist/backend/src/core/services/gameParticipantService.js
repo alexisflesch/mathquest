@@ -50,10 +50,10 @@ class GameParticipantService {
      * @param userId The ID of the user joining the game
      * @param accessCode The access code of the game to join
      * @param username Optional username to use for the user
-     * @param avatarUrl Optional avatar URL to use for the user
+     * @param avatarEmoji Optional avatar emoji to use for the user
      * @returns Result of the join attempt
      */
-    async joinGame(userId, accessCode, username, avatarUrl) {
+    async joinGame(userId, accessCode, username, avatarEmoji) {
         try {
             // Find the game instance
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
@@ -144,13 +144,13 @@ class GameParticipantService {
                     where: { id: userId },
                     update: {
                         username: username || `guest-${userId.substring(0, 8)}`,
-                        avatarUrl: avatarUrl || null,
+                        avatarEmoji: avatarEmoji || null,
                     },
                     create: {
                         id: userId,
                         username: username || `guest-${userId.substring(0, 8)}`,
                         role: 'STUDENT',
-                        avatarUrl: avatarUrl || null,
+                        avatarEmoji: avatarEmoji || null,
                         studentProfile: { create: { cookieId: `cookie-${userId}` } }
                     }
                 });
@@ -208,10 +208,10 @@ class GameParticipantService {
      * @param gameInstanceId The ID of the game instance
      * @param userId The ID of the user
      * @param username Optional username for the participant
-     * @param avatarUrl Optional avatar URL for the participant
+     * @param avatarEmoji Optional avatar emoji for the participant
      * @returns The created participant
      */
-    async createParticipant(gameInstanceId, userId, username, avatarUrl) {
+    async createParticipant(gameInstanceId, userId, username, avatarEmoji) {
         try {
             const participant = await prisma_1.prisma.gameParticipant.create({
                 data: {
@@ -223,7 +223,7 @@ class GameParticipantService {
                             where: { id: userId },
                             create: {
                                 username: username || `guest-${userId}`,
-                                avatarUrl: avatarUrl || null,
+                                avatarEmoji: avatarEmoji || null,
                                 role: 'STUDENT',
                                 studentProfile: {
                                     create: {

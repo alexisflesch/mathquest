@@ -17,6 +17,8 @@ describe('Teacher Authentication API', () => {
     });
     describe('POST /api/v1/teachers/register', () => {
         it('should register a new teacher and return a token', async () => {
+            // Mock getUserByEmail to throw error (user not found - which is expected for new registration)
+            mockUserService.getUserByEmail.mockRejectedValueOnce(new Error('User not found'));
             mockUserService.registerUser.mockResolvedValueOnce({
                 user: {
                     id: 'teacher-uuid',
@@ -46,7 +48,7 @@ describe('Teacher Authentication API', () => {
             });
         });
     });
-    describe('POST /api/v1/teachers/login', () => {
+    describe('POST /api/v1/auth (teacher_login)', () => {
         it('should login a teacher and return a token', async () => {
             mockUserService.loginUser.mockResolvedValueOnce({
                 user: {
@@ -58,16 +60,17 @@ describe('Teacher Authentication API', () => {
                 token: 'mock-jwt-token'
             });
             const res = await (0, supertest_1.default)(server_1.app)
-                .post('/api/v1/teachers/login')
+                .post('/api/v1/auth')
                 .send({
+                action: 'teacher_login',
                 email: 'test@example.com',
                 password: 'Password123!'
             });
             expect(res.statusCode).toEqual(200);
             expect(res.body).toHaveProperty('token');
             expect(res.body.token).toBe('mock-jwt-token');
-            expect(res.body).toHaveProperty('user');
-            expect(res.body.user.username).toBe('testteacher');
+            expect(res.body).toHaveProperty('username');
+            expect(res.body.username).toBe('testteacher');
             expect(mockUserService.loginUser).toHaveBeenCalledWith({
                 email: 'test@example.com',
                 password: 'Password123!'

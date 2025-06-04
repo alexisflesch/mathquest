@@ -32,7 +32,7 @@ export default function LiveGamePage() {
     // Get user data from localStorage
     const [userId, setUserId] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [avatarEmoji, setavatarEmoji] = useState<string | null>(null);
 
     // Detect differed mode from URL
     const [isDiffered, setIsDiffered] = useState(false);
@@ -48,13 +48,13 @@ export default function LiveGamePage() {
         if (typeof window !== 'undefined') {
             const storedUserId = localStorage.getItem('mathquest_cookie_id');
             const storedUsername = localStorage.getItem('mathquest_username');
-            const storedAvatarUrl = localStorage.getItem('mathquest_avatar');
+            const storedavatarEmoji = localStorage.getItem('mathquest_avatar');
 
             setUserId(storedUserId);
             setUsername(storedUsername);
-            setAvatarUrl(storedAvatarUrl);
+            setavatarEmoji(storedavatarEmoji);
 
-            if (!storedUsername || !storedAvatarUrl) {
+            if (!storedUsername || !storedavatarEmoji) {
                 // Redirect to /student with redirect param
                 router.replace(`/student?redirect=/live/${code}`);
             }
@@ -75,7 +75,7 @@ export default function LiveGamePage() {
         accessCode: typeof code === 'string' ? code : null,
         userId,
         username,
-        avatarUrl,
+        avatarEmoji,
         isDiffered
     });
 
@@ -136,8 +136,19 @@ export default function LiveGamePage() {
 
     // Enhanced feedback handling for all modes
     useEffect(() => {
+        // Handle practice mode feedback with immediate answer received events
+        if (gameMode === 'practice' && gameState.lastAnswerFeedback) {
+            const feedback = gameState.lastAnswerFeedback;
+            if (feedback.explanation) {
+                setFeedbackText(feedback.explanation);
+                setFeedbackDuration(10); // Longer duration for practice mode
+                setShowFeedbackOverlay(true);
+
+                logger.info(`Showing practice mode feedback overlay`);
+            }
+        }
         // Handle feedback phase in tournament/quiz modes
-        if (gameState.phase === 'feedback' && gameState.feedbackRemaining !== null) {
+        else if (gameState.phase === 'feedback' && gameState.feedbackRemaining !== null) {
             // Get explanation from current question
             let explanation: string | undefined;
 
@@ -290,13 +301,19 @@ export default function LiveGamePage() {
 
     return (
         <div className="main-content">
-            {/* Feedback Overlay */}
+            {/* Enhanced Feedback Overlay */}
             {showFeedbackOverlay && (
                 <div className="feedback-overlay">
                     <AnswerFeedbackOverlay
                         explanation={feedbackText}
                         duration={feedbackDuration}
                         onClose={() => setShowFeedbackOverlay(false)}
+                        isCorrect={gameState.lastAnswerFeedback?.correct}
+                        correctAnswers={gameState.currentQuestion?.correctAnswers}
+                        answerOptions={gameState.currentQuestion?.answers || gameState.currentQuestion?.answerOptions}
+                        showTimer={gameMode !== 'practice'} // Hide timer for practice mode
+                        mode={gameMode}
+                        allowManualClose={gameMode === 'practice'}
                     />
                 </div>
             )}
@@ -335,16 +352,41 @@ export default function LiveGamePage() {
                     )}
                 </MathJaxWrapper>
 
-                {/* Practice mode next question button */}
+                {/* Enhanced practice mode progression */}
                 {gameMode === 'practice' && gameState.answered && !showFeedbackOverlay && (
                     <div className="p-4 text-center">
-                        <button
-                            className="btn btn-primary"
-                            onClick={handleRequestNextQuestion}
-                            disabled={!gameState.currentQuestion}
-                        >
-                            Question suivante
-                        </button>
+                        <div className="space-y-2">
+                            <div className="text-sm text-gray-600">
+                                Question {gameState.questionIndex + 1} sur {gameState.totalQuestions} terminée
+                            </div>
+                            {gameState.questionIndex < gameState.totalQuestions - 1 ? (
+                                <button
+                                    className="btn btn-primary btn-lg"
+                                    onClick={handleRequestNextQuestion}
+                                    disabled={!gameState.currentQuestion}
+                                >
+                                    Question suivante →
+                                </button>
+                            ) : (
+                                <button
+                                    className="btn btn-success btn-lg"
+                                    onClick={handleRequestNextQuestion}
+                                    disabled={!gameState.currentQuestion}
+                                >
+                                    Terminer l'entraînement ✓
+                                </button>
+                            )}
+
+                            {/* Show explanation again if available */}
+                            {gameState.lastAnswerFeedback?.explanation && (
+                                <button
+                                    className="btn btn-outline btn-sm"
+                                    onClick={() => setShowFeedbackOverlay(true)}
+                                >
+                                    Revoir l'explication
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

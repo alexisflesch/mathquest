@@ -43,7 +43,7 @@ async function getFormattedLeaderboard(accessCode) {
                 leaderboardPromises.push(Promise.resolve({
                     userId,
                     username: playerInfo.username,
-                    avatarUrl: playerInfo.avatarUrl,
+                    avatarEmoji: playerInfo.avatarEmoji,
                     score
                 }));
             }
@@ -53,13 +53,13 @@ async function getFormattedLeaderboard(accessCode) {
                 logger.warn({ accessCode, userId }, "Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.");
                 const userPromise = prisma_1.prisma.user.findUnique({
                     where: { id: userId },
-                    select: { username: true, avatarUrl: true }
+                    select: { username: true, avatarEmoji: true }
                 }).then(user => {
                     if (user) {
                         return {
                             userId,
                             username: user.username || 'Unknown Player',
-                            avatarUrl: user.avatarUrl || undefined,
+                            avatarEmoji: user.avatarEmoji || undefined,
                             score
                         };
                     }
@@ -67,7 +67,7 @@ async function getFormattedLeaderboard(accessCode) {
                     return {
                         userId,
                         username: 'Unknown Player',
-                        avatarUrl: undefined,
+                        avatarEmoji: undefined,
                         score
                     };
                 });
@@ -279,7 +279,7 @@ async function getFullGameState(accessCode) {
                 leaderboard.push({
                     userId,
                     username: player.username,
-                    avatarUrl: player.avatarUrl,
+                    avatarEmoji: player.avatarEmoji,
                     score
                 });
             }

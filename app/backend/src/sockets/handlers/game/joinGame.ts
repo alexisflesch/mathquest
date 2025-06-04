@@ -50,9 +50,9 @@ export function joinGameHandler(
             socket.emit('game_error', errorPayload);
             return;
         }
-        const { accessCode, userId, username, avatarUrl } = parseResult.data;
+        const { accessCode, userId, username, avatarEmoji } = parseResult.data;
         try {
-            logger.debug({ accessCode, userId, username, avatarUrl }, 'Looking up gameInstance');
+            logger.debug({ accessCode, userId, username, avatarEmoji }, 'Looking up gameInstance');
             const gameInstance = await prisma.gameInstance.findUnique({
                 where: { accessCode },
                 select: {
@@ -111,8 +111,8 @@ export function joinGameHandler(
                 socket.data.currentGameRoom = roomName;
             }
             const participantService = new GameParticipantService();
-            logger.debug({ userId, accessCode, username, avatarUrl }, 'Calling participantService.joinGame');
-            const joinResult = await participantService.joinGame(userId, accessCode, username, avatarUrl);
+            logger.debug({ userId, accessCode, username, avatarEmoji }, 'Calling participantService.joinGame');
+            const joinResult = await participantService.joinGame(userId, accessCode, username, avatarEmoji);
             logger.debug({ joinResult }, 'Result of participantService.joinGame');
             if (!joinResult.success || !joinResult.participant) {
                 const errorPayload: ErrorPayload = { message: joinResult.error || 'Join failed.' };
@@ -133,7 +133,7 @@ export function joinGameHandler(
                 // id: socket.id, // No longer using socket.id as the primary participant identifier in this hash
                 userId: joinResult.participant.userId,
                 username: joinResult.participant.user.username,
-                avatarUrl: joinResult.participant.user.avatarUrl,
+                avatarEmoji: joinResult.participant.user.avatarEmoji,
                 joinedAt: joinResult.participant.joinedAt.toISOString(),
                 score: joinResult.participant.score,
                 online: true,
@@ -155,7 +155,7 @@ export function joinGameHandler(
                     id: joinResult.participant.id,
                     userId: joinResult.participant.userId,
                     username: joinResult.participant.user.username,
-                    avatarUrl: joinResult.participant.user.avatarUrl || undefined,
+                    avatarEmoji: joinResult.participant.user.avatarEmoji || undefined,
                     score: joinResult.participant.score,
                     joinedAt: joinResult.participant.joinedAt.toISOString(),
                     online: true,
@@ -173,7 +173,7 @@ export function joinGameHandler(
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
                         username: joinResult.participant.user.username,
-                        avatarUrl: joinResult.participant.user.avatarUrl || undefined,
+                        avatarEmoji: joinResult.participant.user.avatarEmoji || undefined,
                         score: joinResult.participant.score,
                         online: true
                     }

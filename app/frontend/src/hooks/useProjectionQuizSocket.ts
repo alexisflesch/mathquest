@@ -4,6 +4,7 @@ import { createLogger } from '@/clientLogger';
 import type { QuizState, Question } from './useTeacherQuizSocket';
 import { SOCKET_CONFIG } from '@/config';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { STORAGE_KEYS } from '@/constants/auth';
 
 const logger = createLogger('useProjectionQuizSocket');
 
@@ -40,8 +41,8 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
         // Connect to backend using complete centralized configuration
         const s = io(SOCKET_CONFIG.url, SOCKET_CONFIG);
         setGameSocket(s);
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem('mathquest_teacher_id') : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem('mathquest_cookie_id') : null;
+        const teacherId = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.TEACHER_ID) : null;
+        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.COOKIE_ID) : null;
         logger.info(`[DEBUG][CLIENT] Emitting join_projector for gameId=${gameId}, teacherId=${teacherId}, cookie_id=${cookie_id}`);
         s.emit(SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTOR, gameId);
         s.on(SOCKET_EVENTS.CONNECT, () => {

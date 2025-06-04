@@ -4,7 +4,7 @@
  * This component displays a grid of available avatar options and allows users
  * to select one for their profile. Key features include:
  * 
- * - Grid display of all available avatars from the public/avatars directory
+ * - Grid display of all available emoji avatars (animal emojis only)
  * - Visual highlighting of the currently selected avatar
  * - Responsive layout that adapts to different screen sizes
  * - Scrollable container for many avatar options
@@ -15,20 +15,12 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 
-// Dynamically load avatar filenames from the avatars folder
+// Available animal emojis for avatars
 function getAvatarList() {
-    // Hardcoded list based on your workspace (public/avatars)
     return [
-        'angry-face-with-horns.svg', 'automobile.svg', 'bear-face.svg', 'bird.svg', 'blowfish.svg', 'boar.svg', 'bug.svg', 'camel.svg',
-        'cat-face-with-wry-smile.svg', 'cat-face.svg', 'cow-face.svg', 'crab.svg', 'dog-face.svg', 'dragon-face.svg', 'ewe.svg',
-        'face-with-rolling-eyes.svg', 'face-with-thermometer.svg', 'fish.svg', 'french-fries.svg', 'frog-face.svg', 'front-facing-baby-chick.svg',
-        'ghost.svg', 'gorilla.svg', 'hamburger.svg', 'hamster-face.svg', 'hatching-chick.svg', 'honeybee.svg', 'horse-face.svg', 'koala.svg',
-        'lady-beetle.svg', 'leopard.svg', 'lion-face.svg', 'lizard.svg', 'monkey.svg', 'mouse.svg', 'mrs-claus-medium-light-skin-tone.svg',
-        'octopus.svg', 'owl.svg', 'ox.svg', 'panda-face.svg', 'penguin.svg', 'pig-face.svg', 'rabbit-face.svg', 'ram.svg', 'rat.svg',
-        'robot-face.svg', 'rooster.svg', 'scorpion.svg', 'shark.svg', 'shrimp.svg', 'snail.svg', 'spider.svg', 'spouting-whale.svg',
-        'tiger-face.svg', 'tropical-fish.svg', 'turkey.svg', 'turtle.svg', 'two-hump-camel.svg', 'unicorn-face.svg', 'whale.svg', 'wolf.svg',
+        '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼',
+        '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐧'
     ];
 }
 
@@ -42,21 +34,14 @@ export default function AvatarSelector({ onSelect, selected }: { onSelect?: (ava
     return (
         <div className="flex justify-center w-full h-full">
             <div className="flex flex-wrap justify-center gap-2 sm:gap-4 w-full overflow-y-auto">
-                {avatars.map((file) => (
+                {avatars.map((emoji) => (
                     <button
-                        key={file}
-                        className={`rounded-full border-2 bg-white ${selected === file ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-500 focus:outline-none`}
-                        style={{ backgroundColor: 'white' }}
-                        onClick={() => onSelect && onSelect(file)}
+                        key={emoji}
+                        className={`rounded-full border-2 bg-white w-16 h-16 flex items-center justify-center text-2xl ${selected === emoji ? 'border-blue-500' : 'border-gray-300'} hover:border-blue-500 focus:outline-none`}
+                        onClick={() => onSelect && onSelect(emoji)}
                         type="button"
                     >
-                        <Image
-                            src={`/avatars/${file}`}
-                            alt={file.replace('.svg', '')}
-                            width={48}
-                            height={48}
-                            className="w-16 h-16 object-cover rounded-full"
-                        />
+                        {emoji}
                     </button>
                 ))}
             </div>

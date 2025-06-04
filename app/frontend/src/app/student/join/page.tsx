@@ -18,6 +18,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { makeApiRequest } from '@/config/api';
+import { TournamentStatusResponseSchema, type TournamentStatusResponse } from '@/types/api';
 
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");
@@ -32,11 +33,7 @@ export default function StudentJoinPage() {
             return;
         }
         try {
-            const data = await makeApiRequest<{
-                code: string;
-                type: string;
-                statut: string;
-            }>(`tournament/status?code=${code}`);
+            const data = await makeApiRequest<TournamentStatusResponse>(`tournament/status?code=${code}`, {}, undefined, TournamentStatusResponseSchema);
             const tournoiCode = data.code || code; // prefer code over id
             if (data.type === 'differé' || data.type === 'différé') {
                 router.push(`/live/${tournoiCode}`);
