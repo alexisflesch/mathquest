@@ -12,7 +12,7 @@ import { AUTH_STATES } from '../constants/auth';
 const UserSchema = z.object({
     id: z.string(),
     username: z.string(),
-    email: z.string(),
+    email: z.string().optional(), // Optional because guest users don't have emails
     role: z.enum(['STUDENT', 'TEACHER']),
     avatar: z.string().optional()
 });

@@ -79,6 +79,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
 
+    // Auth refresh caching to prevent excessive API calls
+    const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
+    const AUTH_CACHE_DURATION = 30000; // 30 seconds cache
+
     // Utility methods
     const canCreateQuiz = useCallback(() => {
         return userState === 'student' || userState === 'teacher';
@@ -442,9 +446,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [userState, setGuestProfile]);
 
-    const refreshAuth = useCallback(async () => {
-        setIsLoading(true);
-        logger.info('Refreshing authentication state');
+    // Use a stable callback for refreshAuth to avoid infinite loops
+    const refreshAuth = useCallback(async (force = false) => {
+        // Check if we should skip this refresh due to caching
+        const now = Date.now();
+        const timeSinceLastCheck = now - lastAuthCheck;
+
+        if (!force && timeSinceLastCheck < AUTH_CACHE_DURATION) {
+            logger.debug('Skipping auth refresh due to cache', {
+                timeSinceLastCheck,
+                cacheDuration: AUTH_CACHE_DURATION
+            });
+            return;
+        }
+
+        // Only show loading for forced refreshes or when cache is stale
+        const shouldShowLoading = force || (timeSinceLastCheck > AUTH_CACHE_DURATION * 2);
+        if (shouldShowLoading) {
+            setIsLoading(true);
+        }
+
+        setLastAuthCheck(now);
+        logger.info('Refreshing authentication state', { force, shouldShowLoading });
 
         let detectedState: UserState = 'anonymous';
         let profile: UserProfile = {};
@@ -597,7 +620,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     useEffect(() => {
-        refreshAuth(); // Initial check on mount
+        refreshAuth(true); // Initial check on mount - force refresh
     }, [refreshAuth]);
 
     // Log state changes for debugging
@@ -651,17 +674,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             clientCookies: document.cookie,
         });
 
-        // Add event listener for user focus
-        const handleFocus = () => {
-            logger.debug('Window focused, checking auth state');
-            refreshAuth();  // Refresh auth when window regains focus
-        };
-        window.addEventListener('focus', handleFocus);
-
-        // Cleanup event listener on unmount
-        return () => {
-            window.removeEventListener('focus', handleFocus);
-        };
+        // Removed automatic auth refresh on window focus to prevent 
+        // excessive loading states and interrupted login flows
+        // Auth refresh now only happens on mount and manual triggers
     }, [userState, isAuthenticated, isStudent, isTeacher, userProfile, refreshAuth]);
 
     /**

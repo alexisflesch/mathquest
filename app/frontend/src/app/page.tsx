@@ -35,12 +35,12 @@ export default function Home() {
       console.log('[LandingPage] Detected logout redirection, forcing auth refresh');
 
       // Force auth refresh to ensure we have the latest state
-      refreshAuth();
+      refreshAuth(true);
 
       // Create a slight delay to ensure cookies are properly processed
       const timeoutId = setTimeout(() => {
         console.log('[LandingPage] Post-logout check - verifying authentication state');
-        refreshAuth(); // Double-check auth state after a delay
+        refreshAuth(true); // Double-check auth state after a delay
       }, 500);
 
       // Clean up URL

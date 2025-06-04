@@ -47,7 +47,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
     sidebarCollapsed: boolean,
     setSidebarCollapsed: (c: boolean) => void
 }) {
-    const { userState, userProfile, logout } = useAuth();
+    const { userState, userProfile, logout, isLoading } = useAuth();
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
@@ -129,6 +129,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
         'Consulter les résultats': BarChart2,
         'Déconnexion': LogOut,
         'Profil': User,
+        'Mon profil': User,
         // New icons for 4-state system
         'Se connecter': LogIn,
         'Enregistrer mon compte': UserPlus,
@@ -156,7 +157,6 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     { label: 'Créer un tournoi', href: '/student/create-game' },
                     { label: 'Mes tournois', href: '/my-tournaments' },
                     { label: 'Profil', href: '/profile' },
-                    { label: 'Déconnexion', action: handleDisconnect },
                 ];
 
             case 'teacher':
@@ -167,16 +167,11 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     { label: 'Rejoindre un tournoi', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
                     { label: 'Mes tournois', href: '/my-tournaments' },
-                    { label: 'Profil', href: '/profile' },
-                    {
-                        label: 'Espace enseignant',
-                        href: '/teacher/home',
-                        submenu: [
-                            { label: 'Créer un quiz', href: '/teacher/quiz/create' },
-                            { label: 'Utiliser un quiz existant', href: '/teacher/quiz/use' },
-                        ],
-                    },
-                    { label: 'Déconnexion', action: handleDisconnect },
+                    { type: 'section', label: 'Enseignant' },
+                    { label: 'Créer un quiz', href: '/teacher/quiz/create' },
+                    { label: 'Utiliser un quiz existant', href: '/teacher/quiz/use' },
+                    { type: 'section', label: 'Compte' },
+                    { label: 'Mon profil', href: '/profile' },
                 ];
 
             default:
@@ -187,7 +182,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     { label: 'Se connecter', href: '/login' },
                 ];
         }
-    }, [userState, handleDisconnect]);
+    }, [userState]);
 
     if (!mounted) return null;
 
@@ -195,15 +190,39 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
         <>
             {/* Sidebar for large screens */}
             <aside className={`hidden md:flex md:flex-col md:h-screen md:fixed md:left-0 md:top-0 bg-[color:var(--navbar)] text-white z-40 overflow-y-auto transition-all duration-200 ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'}`}>
-                {/* Header with burger and avatar/username side by side */}
-                <div className="relative w-full h-20 flex items-center">
+                {/* Header with burger on left, username + avatar on right */}
+                <div className={`appnav-header-row-desktop ${sidebarCollapsed ? 'collapsed' : ''}`}>
                     <button
-                        className="ml-2 flex items-center justify-center h-12 w-12 border-b border-white/10 hover:bg-gray-800 focus:outline-none z-10"
+                        className={`flex items-center px-3 py-1.5 rounded hover:bg-gray-800 focus:outline-none flex-shrink-0 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                         aria-label={sidebarCollapsed ? 'Déplier le menu' : 'Réduire le menu'}
                     >
-                        <Menu className="w-6 h-6" />
+                        <Menu className="w-5 h-5" />
                     </button>
+                    {!sidebarCollapsed && (
+                        <div className="appnav-user-section ml-auto">
+                            {userState === 'guest' ? (
+                                <span className="guest-label">Invité</span>
+                            ) : (userState === 'student' || userState === 'teacher') ? (
+                                <>
+                                    {avatar && (
+                                        <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)] flex-shrink-0">
+                                            {avatar}
+                                        </div>
+                                    )}
+                                    {username ? (
+                                        <span className="appnav-username">{username}</span>
+                                    ) : (
+                                        <span className="appnav-username text-gray-300">
+                                            {isLoading ? 'Chargement...' :
+                                                userState === 'teacher' ? 'Enseignant' :
+                                                    'Étudiant'}
+                                        </span>
+                                    )}
+                                </>
+                            ) : null}
+                        </div>
+                    )}
                 </div>
 
                 {/* Warning section for anonymous users */}
@@ -221,133 +240,120 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     </div>
                 )}
 
-                {(!sidebarCollapsed && (userState === 'guest' || userState === 'student' || userState === 'teacher')) && (
-                    <div className={`flex flex-col items-center justify-center h-32 pt-4 -mt-10`}>
-                        {avatar ? (
-                            <div className="w-20 h-20 text-5xl rounded-full mb-2 flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border-2 border-[color:var(--primary)]">
-                                {avatar}
-                            </div>
-                        ) : (
-                            <div className="w-20 h-20 rounded-full mb-2 bg-gray-700" />
-                        )}
-                        {username ? (
-                            <span className="text-lg font-semibold text-white drop-shadow">{username}</span>
-                        ) : (
-                            <span className="text-lg font-semibold text-gray-500">
-                                {userState === 'teacher' ? 'Enseignant' :
-                                    userState === 'student' ? 'Étudiant' :
-                                        userState === 'guest' ? 'Invité' : 'Loading...'}
-                            </span>
-                        )}
-                    </div>
-                )}
-
-                <nav className={`flex-1 p-4 space-y-0.5`}>
-                    {menu.map((item) => {
+                <nav className={`flex-1 p-1 space-y-1`}>
+                    {menu.map((item, index) => {
                         const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
+
+                        // Section header: title inline with horizontal line after
+                        if (item.type === 'section') {
+                            return (
+                                <div key={`section-${index}`} className="pt-4 pb-1">
+                                    {!sidebarCollapsed && (
+                                        <div className="flex items-center gap-2 px-2">
+                                            <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                                                {item.label}
+                                            </span>
+                                            <div className="flex-1 border-t border-white/30 ml-2"></div>
+                                        </div>
+                                    )}
+                                    {sidebarCollapsed && (
+                                        <div className="border-t border-white/30 my-2"></div>
+                                    )}
+                                </div>
+                            );
+                        }
+
                         return (
                             <div key={item.label} className="group relative">
-                                {item.href && !item.submenu && (
-                                    <Link href={item.href} className={`flex items-center gap-3 px-2 py-2 rounded hover:bg-gray-700 transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
+                                {item.href && (
+                                    <Link href={item.href} className={`flex items-center gap-3 px-3 py-1.5 rounded hover:bg-gray-700 transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
                                         title={sidebarCollapsed ? item.label : undefined}
                                     >
                                         <Icon className="w-5 h-5" />
-                                        {!sidebarCollapsed && <span>{item.label}</span>}
+                                        {!sidebarCollapsed && <span className="text-sm">{item.label}</span>}
                                     </Link>
-                                )}
-                                {item.href && item.submenu && (
-                                    <>
-                                        <Link href={item.href} className={`flex items-center gap-3 px-2 py-2 rounded hover:bg-gray-700 transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
-                                            title={sidebarCollapsed ? item.label : undefined}
-                                        >
-                                            <Icon className="w-5 h-5" />
-                                            {!sidebarCollapsed && <span>{item.label}</span>}
-                                        </Link>
-                                        {sidebarCollapsed ? (
-                                            <div className="flex flex-col items-center mt-1">
-                                                {item.submenu.map((sub) => {
-                                                    const SubIcon = (iconMap as Record<string, typeof Home>)[sub.label] || Home;
-                                                    return (
-                                                        <Link key={sub.href} href={sub.href} className="flex items-center justify-center px-2 py-2 rounded hover:bg-gray-700 transition-colors" title={sub.label}>
-                                                            <SubIcon className="w-5 h-5" />
-                                                        </Link>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <div className="ml-4 mt-1 space-y-1">
-                                                {item.submenu.map((sub) => {
-                                                    const SubIcon = (iconMap as Record<string, typeof Home>)[sub.label] || Home;
-                                                    return (
-                                                        <Link key={sub.href} href={sub.href} className="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-800 text-sm">
-                                                            <SubIcon className="w-4 h-4" />
-                                                            <span>{sub.label}</span>
-                                                        </Link>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                                {item.action && (
-                                    <button onClick={item.action} className={`flex items-center gap-3 w-full text-left px-2 py-2 rounded bg-gray-700 hover:bg-red-600 mt-8 transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
-                                        title={sidebarCollapsed ? item.label : undefined}
-                                    >
-                                        <Icon className="w-5 h-5" />
-                                        {!sidebarCollapsed && <span>{item.label}</span>}
-                                    </button>
                                 )}
                             </div>
                         );
                     })}
                 </nav>
 
-                {/* Theme toggle at the bottom, desktop only */}
-                <div className="p-4 mt-auto flex flex-col gap-2">
+                {/* Bottom section: Theme toggle and logout */}
+                <div className="p-1 mt-auto flex flex-col gap-1">
+                    {/* Separator line */}
+                    {!sidebarCollapsed && (
+                        <div className="border-t border-white/20 mb-2"></div>
+                    )}
+
+                    {/* Theme toggle */}
                     <button
                         onClick={toggleTheme}
-                        className={`flex items-center gap-2 px-2 py-1 rounded transition-colors text-sm h-8 w-full ${theme === 'light' ? ' text-yellow-400' : theme === 'dark' ? ' text-blue-400' : ' text-green-400'}`}
+                        className={`flex items-center gap-3 px-3 py-1.5 rounded transition-colors ${theme === 'light' ? 'text-yellow-400' : theme === 'dark' ? 'text-blue-400' : 'text-green-400'} ${sidebarCollapsed ? 'justify-center' : ''}`}
                         aria-label={
                             theme === 'light' ? 'Passer en mode sombre' :
                                 theme === 'dark' ? 'Passer en mode système' :
                                     'Passer en mode clair'
                         }
+                        title={sidebarCollapsed ? (theme === 'light' ? 'Thème clair' : theme === 'dark' ? 'Thème sombre' : 'Thème système') : undefined}
                     >
-                        {theme === 'light' && <Sun className="w-4 h-4" />}
-                        {theme === 'dark' && <Moon className="w-4 h-4" />}
-                        {theme === 'system' && <Monitor className="w-4 h-4" />}
+                        {theme === 'light' && <Sun className="w-5 h-5" />}
+                        {theme === 'dark' && <Moon className="w-5 h-5" />}
+                        {theme === 'system' && <Monitor className="w-5 h-5" />}
                         {!sidebarCollapsed && (
-                            <span>
-                                {theme === 'light' ? 'Clair' : theme === 'dark' ? 'Sombre' : 'Système'}
+                            <span className="text-sm">
+                                {theme === 'light' ? 'Thème clair' : theme === 'dark' ? 'Thème sombre' : 'Thème système'}
                             </span>
                         )}
                     </button>
+
+                    {/* Logout button - only show if user is logged in */}
+                    {(userState === 'guest' || userState === 'student' || userState === 'teacher') && (
+                        <button
+                            onClick={handleDisconnect}
+                            className={`flex items-center gap-3 w-full text-left px-3 py-1.5 rounded bg-gray-700 hover:bg-red-600 transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
+                            title={sidebarCollapsed ? 'Déconnexion' : undefined}
+                        >
+                            <LogOut className="w-5 h-5" />
+                            {!sidebarCollapsed && <span className="text-sm">Déconnexion</span>}
+                        </button>
+                    )}
                 </div>
             </aside>
 
             {/* Top bar for mobile only */}
             <div className="md:hidden" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '56px', zIndex: 100, background: 'var(--navbar)' }}>
-                <div className="flex items-center justify-between h-14 px-4 text-white">
-                    {/* Burger menu button on the left */}
+                <div className="appnav-header-row h-14">
+                    {/* Burger menu button */}
                     <button onClick={() => setOpen(o => !o)} aria-label="Ouvrir le menu" className="focus:outline-none">
-                        <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    {/* Avatar/username on the right */}
-                    <div className="flex items-center gap-2">
-                        {(userState === 'guest' || userState === 'student' || userState === 'teacher') ? (
+
+                    {/* User section */}
+                    <div className="appnav-user-section">
+                        {userState === 'guest' ? (
+                            <span className="guest-label">Invité</span>
+                        ) : (userState === 'student' || userState === 'teacher') ? (
                             <>
                                 {avatar && (
-                                    <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)]">
+                                    <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)] flex-shrink-0">
                                         {avatar}
                                     </div>
                                 )}
-                                {username && <span className="font-bold text-base">{username}</span>}
+                                {username ? (
+                                    <span className="appnav-username">{username}</span>
+                                ) : (
+                                    <span className="appnav-username text-gray-300">
+                                        {isLoading ? 'Chargement...' :
+                                            userState === 'teacher' ? 'Enseignant' :
+                                                'Étudiant'}
+                                    </span>
+                                )}
                             </>
-                        ) : userState === 'anonymous' && (
+                        ) : userState === 'anonymous' ? (
                             <span className="text-sm text-yellow-300">Non connecté</span>
-                        )}
+                        ) : null}
                     </div>
                 </div>
             </div>
@@ -380,44 +386,56 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                             </Link>
                         </div>
                         <div className="p-6 space-y-1">
-                            {menu.map((item) => {
+                            {menu.map((item, index) => {
                                 const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
+
+                                // Handle section headers
+                                if (item.type === 'section') {
+                                    return (
+                                        <div key={`mobile-section-${index}`} className="pt-3 pb-1">
+                                            <div className="flex items-center gap-2 px-2">
+                                                <div className="flex-1 border-t border-white/30"></div>
+                                                <span className="text-xs font-semibold text-white/70 uppercase tracking-wider px-2">
+                                                    {item.label}
+                                                </span>
+                                                <div className="flex-1 border-t border-white/30"></div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
                                 return (
                                     <div key={item.label}>
-                                        {item.href && !item.submenu && (
-                                            <Link href={item.href} className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700" onClick={() => setOpen(false)}>
+                                        {item.href && (
+                                            <Link href={item.href} className="flex items-center gap-3 px-4 py-1.5 rounded hover:bg-gray-700 text-sm" onClick={() => setOpen(false)}>
                                                 <Icon className="w-5 h-5" />
                                                 <span>{item.label}</span>
                                             </Link>
                                         )}
-                                        {item.href && item.submenu && (
-                                            <>
-                                                <Link href={item.href} className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700" onClick={() => setOpen(false)}>
-                                                    <Icon className="w-5 h-5" />
-                                                    <span>{item.label}</span>
-                                                </Link>
-                                                <div className="ml-4 mt-1 space-y-1">
-                                                    {item.submenu.map(sub => {
-                                                        const SubIcon = (iconMap as Record<string, typeof Home>)[sub.label] || Home;
-                                                        return (
-                                                            <Link key={sub.href} href={sub.href} className="flex items-center gap-2 px-4 py-2 rounded hover:bg-gray-800 text-sm" onClick={() => setOpen(false)}>
-                                                                <SubIcon className="w-4 h-4" />
-                                                                <span>{sub.label}</span>
-                                                            </Link>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </>
-                                        )}
-                                        {item.action && (
-                                            <button onClick={() => { setOpen(false); item.action(); }} className="flex items-center gap-3 w-full text-left px-4 py-2 rounded bg-gray-700 hover:bg-red-600 mt-8">
-                                                <Icon className="w-5 h-5" />
-                                                <span>{item.label}</span>
-                                            </button>
-                                        )}
                                     </div>
                                 );
                             })}
+
+                            {/* Theme toggle and logout for mobile */}
+                            <div className="pt-4 mt-4 border-t border-white/20 space-y-1">
+                                <button onClick={() => { toggleTheme(); }}
+                                    className={`flex items-center gap-3 w-full text-left px-4 py-1.5 rounded transition-colors text-sm ${theme === 'light' ? 'text-yellow-400' : theme === 'dark' ? 'text-blue-400' : 'text-green-400'}`}>
+                                    {theme === 'light' && <Sun className="w-5 h-5" />}
+                                    {theme === 'dark' && <Moon className="w-5 h-5" />}
+                                    {theme === 'system' && <Monitor className="w-5 h-5" />}
+                                    <span>
+                                        {theme === 'light' ? 'Thème clair' : theme === 'dark' ? 'Thème sombre' : 'Thème système'}
+                                    </span>
+                                </button>
+
+                                {(userState === 'guest' || userState === 'student' || userState === 'teacher') && (
+                                    <button onClick={() => { setOpen(false); handleDisconnect(); }}
+                                        className="flex items-center gap-3 w-full text-left px-4 py-1.5 rounded bg-gray-700 hover:bg-red-600 text-sm">
+                                        <LogOut className="w-5 h-5" />
+                                        <span>Déconnexion</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </nav>
                 </div>

@@ -2,7 +2,7 @@
 
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from '../components/AuthProvider';
+import { AuthProvider, useAuth } from '../components/AuthProvider';
 import Head from 'next/head';
 import React, { useState, useEffect } from 'react';
 import { logger, getCurrentLogLevel, setLogLevel, LogLevel } from '@/clientLogger';
@@ -14,13 +14,72 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+// Loading screen component
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+      <div className="text-center">
+        {/* Animated spinner with app colors */}
+        <div
+          className="w-16 h-16 border-4 rounded-full animate-spin mx-auto mb-6"
+          style={{
+            borderColor: 'var(--muted)',
+            borderTopColor: 'var(--primary)'
+          }}
+        ></div>
+
+        {/* App logo/title */}
+        <h2
+          className="text-3xl font-bold mb-2"
+          style={{ color: 'var(--navbar)' }}
+        >
+          🧮 MathQuest
+        </h2>
+
+        {/* Loading text */}
+        <p
+          className="text-lg"
+          style={{ color: 'var(--muted-foreground)' }}
+        >
+          Chargement...
+        </p>
+
+        {/* Optional: Add some math-themed decorative elements */}
+        <div className="mt-8 flex justify-center space-x-4 text-2xl opacity-50">
+          <span style={{ color: 'var(--primary)' }}>+</span>
+          <span style={{ color: 'var(--secondary)' }}>×</span>
+          <span style={{ color: 'var(--accent)' }}>÷</span>
+          <span style={{ color: 'var(--success)' }}>−</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main app content that shows after auth is loaded
+function AppContent({ children }: { children: React.ReactNode }) {
+  const { isLoading } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <>
+      <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
+      <main className={`min-h-screen transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+        {children}
+      </main>
+    </>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
   useEffect(() => {
     // Example of client-side logging in action
     logger.debug('Layout mounted - Debug level message');
@@ -60,10 +119,9 @@ export default function RootLayout({
           tex: { packages: { '[+]': ["ams"] } }
         }}>
           <AuthProvider>
-            <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
-            <main className={`min-h-screen transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+            <AppContent>
               {children}
-            </main>
+            </AppContent>
           </AuthProvider>
         </MathJaxContext>
       </body>

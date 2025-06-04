@@ -95,7 +95,7 @@ export default function TeacherLoginPage() {
                     avatar: localStorage.getItem('mathquest_avatar'),
                 });
             }
-            if (refreshAuth) refreshAuth(); // Trigger refreshAuth after successful login
+            if (refreshAuth) refreshAuth(true); // Trigger forced refreshAuth after successful login
             router.push('/teacher/home'); // Redirect to home
         } catch (err: unknown) {
             logger.error('Login error', err);

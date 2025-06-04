@@ -70,7 +70,11 @@ html[data-theme="dark"] {
   /* Pour le react-grid-layout */
   --grid-layout-background: #1a4962;
   --bar-stat: #9ca3af;
+  --guest: #fbbf24;
+  /* Yellow color for guest users - same in both themes */
+  --guest-foreground: #1f2937;
 }
+
 
 html[data-theme="dark"],
 html[data-theme="dark"] body {
@@ -103,6 +107,9 @@ html[data-theme="light"] {
   --badge-stepper-color: #153B50;
   --grid-layout-background: #cce5ff;
   --bar-stat: #9ca3af;
+  --guest: #fbbf24;
+  /* Yellow color for guest users */
+  --guest-foreground: #1f2937;
 }
 
 html[data-theme="light"],
@@ -1042,7 +1049,10 @@ textarea:focus {
 }
 
 .feedback-overlay-inner {
-  /* supprimé : plus de max-width, plus de centrage, plus de flex, etc. */
+  /* This class is kept for potential future use but currently has no properties */
+  /* Originally contained max-width, centering, and flex layout which have been removed */
+  display: block;
+  /* Placeholder property to avoid empty ruleset */
 }
 
 .feedback-card {
@@ -1123,4 +1133,92 @@ textarea:focus {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Fade-out utility for long text with ellipsis */
+.text-fade-out {
+  position: relative;
+  /* overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis; */
+  /* max-width: 100%; */
+  /* max-width: 24rem; */
+  /* Adjust as needed for your layout */
+}
+
+.text-fade-out::after {
+  display: none;
+  /* Fade-out effect disabled to prevent text cropping appearance */
+  /* Original properties commented out:
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, var(--navbar));
+  pointer-events: none; */
+}
+
+/* Guest user styling */
+.guest-label {
+  color: var(--guest);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Header row layout for AppNav */
+.appnav-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  min-height: 4rem;
+}
+
+/* Desktop-specific header row with better spacing and alignment */
+.appnav-header-row-desktop {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  /* Gap between burger and user section */
+  padding: 1rem 1rem 1rem 0.25rem;
+  /* Adjusted left padding to perfectly align burger button with nav icons: 0.25rem + 0.75rem (px-3) = 1rem total, exactly matching nav p-1 + px-3 = 1rem */
+  min-height: 4rem;
+  /* Ensure all elements align to start */
+  justify-content: flex-start;
+}
+
+/* When collapsed, remove left padding for perfect centering */
+.appnav-header-row-desktop.collapsed {
+  padding-left: 0.65rem;
+}
+
+.appnav-user-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  /* Increased gap between username and avatar */
+  flex-shrink: 1;
+  min-width: 0;
+  /* Allow shrinking and enable text truncation */
+  max-width: 80%;
+  /* Start from approximately the middle, allowing more space for usernames */
+}
+
+.appnav-username {
+  flex-shrink: 1;
+  min-width: 0;
+  /* Allow shrinking for text truncation */
+  font-weight: 600;
+  font-size: 1rem;
+  /* Increased from 0.875rem (14px) to 1rem (16px) */
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Enable text truncation */
+  max-width: 12rem;
+  /* Reasonable space for usernames - long names will be truncated with "..." */
 }

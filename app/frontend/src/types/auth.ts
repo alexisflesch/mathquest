@@ -36,7 +36,7 @@ export interface AuthContextType {
     teacherId?: string;
 
     // Méthodes principales
-    refreshAuth: () => void;
+    refreshAuth: (force?: boolean) => void;
     logout: (redirectUrl?: string) => Promise<boolean>;
 
     // Nouvelles méthodes pour la gestion des invités
