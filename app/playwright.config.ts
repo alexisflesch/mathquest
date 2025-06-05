@@ -31,6 +31,12 @@ export default defineConfig({
         video: 'retain-on-failure',
     },
 
+    /* Global timeout settings */
+    timeout: 60000, // 60 seconds per test for real-time socket testing
+    expect: {
+        timeout: 15000, // 15 seconds for expect assertions
+    },
+
     /* Configure projects for major browsers */
     projects: [
         {

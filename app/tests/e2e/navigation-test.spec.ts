@@ -9,18 +9,7 @@ test.describe('Navigation Analysis', () => {
         await page.waitForLoadState('networkidle');
         console.log(`Homepage URL: ${page.url()}`);
 
-        // Step 2: Try to click Teacher button using text selector
-        const teacherButton = page.getByText('Enseignant');
-        if (await teacherButton.isVisible()) {
-            console.log('✅ Found Teacher button, clicking...');
-            await teacherButton.click();
-            await page.waitForLoadState('networkidle');
-            console.log(`After Teacher click: ${page.url()}`);
-        } else {
-            console.log('❌ Teacher button not found');
-        }
-
-        // Step 3: Look for login elements - use button role to avoid ambiguity
+        // Step 2: Look for login elements - use button role to avoid ambiguity
         const loginButton = page.getByRole('button', { name: 'Se connecter' });
         if (await loginButton.isVisible()) {
             console.log('✅ Found Login button, clicking...');

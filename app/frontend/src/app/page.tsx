@@ -86,6 +86,16 @@ export default function Home() {
             <p className="text-lg text-muted-foreground">
               🧠 Une alternative libre à Kahoot, pour tous les niveaux, toutes les disciplines.
             </p>
+            <p className="text-lg text-muted-foreground mt-2">
+              🧮 Support natif de{' '}
+              <span className="font-serif">
+                L<span style={{ position: 'relative', top: '-0.2em', fontSize: '0.8em' }}>A</span>
+                <span style={{ letterSpacing: '-0.1em' }}>T</span>
+                <span style={{ position: 'relative', top: '0.15em', fontSize: '0.8em' }}>E</span>
+                X
+              </span>{' '}
+              pour écrire des formules.
+            </p>
           </div>
 
           {/* Features Grid */}
@@ -127,7 +137,7 @@ export default function Home() {
               <h3 className="font-semibold text-xl mb-4">🔓 Libre. Gratuit. Sans pub.</h3>
               <ul className="space-y-2 text-sm">
                 <li>• Projet personnel libre et gratuit, sans publicité</li>
-                <li>• Hébergé sur notre propre serveur</li>
+                <li>• Hébergé sur mon propre serveur</li>
                 <li>• Utilisation illimitée, sans restriction de temps ni de fonctionnalités</li>
               </ul>
             </div>

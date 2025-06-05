@@ -4,12 +4,12 @@ test.describe('Basic Connectivity', () => {
   test('Analyze available selectors on homepage', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    
+
     // Take a screenshot
     await page.screenshot({ path: 'test-results/homepage-analysis.png', fullPage: true });
-    
+
     console.log('\n=== HOMEPAGE ANALYSIS ===');
-    
+
     // List all buttons and their text to understand available selectors
     const buttons = await page.locator('button').all();
     console.log(`\nFound ${buttons.length} buttons:`);
@@ -19,43 +19,26 @@ test.describe('Basic Connectivity', () => {
       const classes = await button.getAttribute('class');
       console.log(`Button ${i + 1}: "${text?.trim()}" | Classes: ${classes}`);
     }
-    
-    // Check for specific role-based navigation
-    const eleveButton = page.getByText('Élève');
-    const enseignantButton = page.getByText('Enseignant');
-    
-    console.log(`\nRole buttons:`);
-    console.log(`Élève button visible: ${await eleveButton.isVisible()}`);
-    console.log(`Enseignant button visible: ${await enseignantButton.isVisible()}`);
-    
-    // Test navigation to teacher/student paths
+
     console.log(`\nTesting navigation...`);
-    
-    // Try clicking Enseignant (Teacher) button
-    if (await enseignantButton.isVisible()) {
-      await enseignantButton.click();
-      await page.waitForLoadState('networkidle');
-      console.log(`After clicking Enseignant: ${page.url()}`);
-      await page.screenshot({ path: 'test-results/after-teacher-click.png' });
-    }
-    
+
     expect(page.url()).toContain('localhost:3008');
   });
 
   test('Test login flow navigation', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    
+
     // Look for login/connection related elements
     const connectButton = page.getByText('Se connecter');
     console.log(`Se connecter button visible: ${await connectButton.isVisible()}`);
-    
+
     if (await connectButton.isVisible()) {
       await connectButton.click();
       await page.waitForLoadState('networkidle');
       console.log(`After clicking Se connecter: ${page.url()}`);
       await page.screenshot({ path: 'test-results/login-page.png' });
-      
+
       // Check what form elements are available on login page
       const inputs = await page.locator('input').all();
       console.log(`\nLogin page has ${inputs.length} input fields:`);
@@ -67,7 +50,7 @@ test.describe('Basic Connectivity', () => {
         console.log(`Input ${i + 1}: type="${type}", placeholder="${placeholder}", name="${name}"`);
       }
     }
-    
+
     expect(page.url()).toContain('localhost:3008');
   });
 
@@ -75,7 +58,7 @@ test.describe('Basic Connectivity', () => {
     try {
       const response = await request.get('http://localhost:3007/health');
       console.log('Backend health status:', response.status());
-      
+
       if (response.status() === 200) {
         const responseText = await response.text();
         console.log('Backend health response:', responseText);

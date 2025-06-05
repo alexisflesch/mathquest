@@ -72,8 +72,18 @@ export class LoginHelper {
     constructor(private page: Page) { }
 
     async loginAsTeacher(credentials: { email: string; password: string }) {
-        // Navigate directly to unified login page in teacher mode
-        await this.page.goto('/login?mode=teacher');
+        // Navigate to home page and click through the login flow
+        await this.page.goto('/');
+        await this.page.waitForLoadState('networkidle');
+
+        // Click "Se connecter" button
+        const loginButton = this.page.getByText('Se connecter');
+        await loginButton.click();
+        await this.page.waitForLoadState('networkidle');
+
+        // Click "Compte" mode button to switch to account mode
+        const accountModeButton = this.page.locator('button:has-text("Compte")');
+        await accountModeButton.click();
         await this.page.waitForLoadState('networkidle');
 
         // Fill in the actual form fields

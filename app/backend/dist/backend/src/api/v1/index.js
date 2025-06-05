@@ -13,6 +13,7 @@ const quizTemplates_1 = __importDefault(require("./quizTemplates")); // Import q
 const games_1 = __importDefault(require("./games")); // Re-enabled gamesRouter
 const questions_1 = __importDefault(require("./questions")); // Import questionsRouter
 const student_1 = __importDefault(require("./student")); // Import studentRouter
+const users_1 = __importDefault(require("./users")); // Import usersRouter
 // import gameSessionsRouter from './gameSessions';
 const auth_2 = require("@/middleware/auth");
 const router = express_1.default.Router();
@@ -34,6 +35,8 @@ router.use('/game-control', gameControl_1.default);
 router.use('/questions', questions_1.default);
 // Mount the student router (for student operations)
 router.use('/student', student_1.default);
+// Mount the users router (protected by authentication)
+router.use('/users', users_1.default);
 // User management routes
 // router.use('/users', usersManagementRouter); // Commented out
 exports.default = router;

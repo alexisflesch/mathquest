@@ -58,15 +58,58 @@ router.post('/', auth_1.teacherAuth, async (req, res) => {
 /**
  * Get available filter values (unique disciplines, grade levels, themes)
  * GET /api/v1/questions/filters
+ * Optional query parameters: niveau, discipline to filter cascading results
  */
 router.get('/filters', async (req, res) => {
     try {
-        const filters = await getQuestionService().getAvailableFilters();
+        const { niveau, discipline } = req.query;
+        const filterCriteria = {};
+        if (niveau)
+            filterCriteria.gradeLevel = niveau;
+        if (discipline)
+            filterCriteria.discipline = discipline;
+        const filters = await getQuestionService().getAvailableFilters(filterCriteria);
         res.status(200).json(filters);
     }
     catch (error) {
         logger.error({ error }, 'Error fetching filters');
         res.status(500).json({ error: 'An error occurred while fetching filters' });
+    }
+});
+/**
+ * Get question UIDs with filtering (public endpoint for students)
+ * GET /api/v1/questions/list
+ * Query parameters: niveau, discipline, themes (comma-separated), limit
+ * Returns only question UIDs without sensitive data
+ */
+router.get('/list', async (req, res) => {
+    try {
+        const { niveau, discipline, themes, limit } = req.query;
+        // Convert to appropriate types for filtering
+        const filters = {};
+        if (niveau)
+            filters.gradeLevel = niveau;
+        if (discipline)
+            filters.discipline = discipline;
+        if (themes) {
+            filters.themes = Array.isArray(themes)
+                ? themes
+                : themes.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        }
+        // Students can only see non-hidden questions
+        filters.includeHidden = false;
+        const pagination = {
+            skip: 0,
+            take: limit ? Number(limit) : 1000 // Default to large number if no limit specified
+        };
+        const result = await getQuestionService().getQuestions(filters, pagination);
+        // Return only UIDs as simple string array for privacy/security
+        const questionUIDs = result.questions.map(q => q.uid);
+        res.status(200).json(questionUIDs);
+    }
+    catch (error) {
+        logger.error({ error }, 'Error fetching question list');
+        res.status(500).json({ error: 'An error occurred while fetching question list' });
     }
 });
 /**
@@ -96,8 +139,9 @@ router.get('/:uid', auth_1.optionalAuth, async (req, res) => {
 /**
  * Get all questions with filtering and pagination
  * GET /api/v1/questions
+ * REQUIRES TEACHER AUTHENTICATION - Contains complete question data including answers
  */
-router.get('/', auth_1.optionalAuth, async (req, res) => {
+router.get('/', auth_1.teacherAuth, async (req, res) => {
     try {
         const { discipline, themes, difficulty, gradeLevel, tags, questionType, includeHidden, // req.query.includeHidden (string | undefined)
         page = '1', pageSize = '20' } = req.query;

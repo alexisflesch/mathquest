@@ -55,9 +55,10 @@ test.describe('Late-Joiners E2E', () => {
             password: testData.password
         });
 
-        await expect(teacherPage).toHaveURL('/teacher/home');
+        await expect(teacherPage).toHaveURL('/');
 
-        // Step 2: Create and start live quiz/tournament
+        // Step 2: Navigate to quiz creation page and create quiz
+        await teacherPage.goto('/teacher/quiz/create');
         await teacherPage.click('[data-testid="create-quiz-button"]');
         await teacherPage.fill('[data-testid="quiz-name-input"]', testData.quizName);
 
@@ -74,18 +75,20 @@ test.describe('Late-Joiners E2E', () => {
         const accessCode = await teacherPage.locator('[data-testid="access-code"]').textContent();
         expect(accessCode).toBeTruthy();
 
-        // Step 3: Initial students join on time
-        const initialHelpers = [];
+        // Step 3: Initial students join on time using current join flow
+        const initialHelpers: Array<{ page: Page, socket: SocketHelper }> = [];
         for (let i = 0; i < initialStudentPages.length; i++) {
             const studentPage = initialStudentPages[i];
             const studentSocket = new SocketHelper(studentPage);
 
             initialHelpers.push({ page: studentPage, socket: studentSocket });
 
-            await studentPage.goto('/student/join');
+            // Use the current join flow via main page
+            await studentPage.goto('/');
+            await studentPage.click('[data-testid="join-game-button"]');
             await studentPage.fill('[data-testid="access-code-input"]', accessCode!);
             await studentPage.fill('[data-testid="username-input"]', `${testData.username}_initial_${i + 1}`);
-            await studentPage.click('[data-testid="join-quiz-button"]');
+            await studentPage.click('[data-testid="join-button"]');
             await studentSocket.waitForSocketConnection();
         }
 
@@ -119,10 +122,11 @@ test.describe('Late-Joiners E2E', () => {
         const earlyLateJoiner = lateJoinerPages[0];
         const earlyLateSocket = new SocketHelper(earlyLateJoiner);
 
-        await earlyLateJoiner.goto('/student/join');
+        await earlyLateJoiner.goto('/');
+        await earlyLateJoiner.click('[data-testid="join-game-button"]');
         await earlyLateJoiner.fill('[data-testid="access-code-input"]', accessCode!);
         await earlyLateJoiner.fill('[data-testid="username-input"]', `${testData.username}_early_late`);
-        await earlyLateJoiner.click('[data-testid="join-quiz-button"]');
+        await earlyLateJoiner.click('[data-testid="join-button"]');
 
         // Check if early late-joiner is allowed or blocked based on settings
         try {
@@ -144,10 +148,11 @@ test.describe('Late-Joiners E2E', () => {
         // Step 6: Test late-joiner scenario 2 - Late in session (should likely be blocked)
         const lateLateJoiner = lateJoinerPages[1];
 
-        await lateLateJoiner.goto('/student/join');
+        await lateLateJoiner.goto('/');
+        await lateLateJoiner.click('[data-testid="join-game-button"]');
         await lateLateJoiner.fill('[data-testid="access-code-input"]', accessCode!);
         await lateLateJoiner.fill('[data-testid="username-input"]', `${testData.username}_very_late`);
-        await lateLateJoiner.click('[data-testid="join-quiz-button"]');
+        await lateLateJoiner.click('[data-testid="join-button"]');
 
         // Very late joiners should typically be blocked
         await expect(lateLateJoiner.locator('[data-testid="late-join-blocked"]')).toBeVisible();
@@ -156,10 +161,11 @@ test.describe('Late-Joiners E2E', () => {
         // Step 7: Test access code validity for late-joiners
         const invalidCodeJoiner = lateJoinerPages[2];
 
-        await invalidCodeJoiner.goto('/student/join');
+        await invalidCodeJoiner.goto('/');
+        await invalidCodeJoiner.click('[data-testid="join-game-button"]');
         await invalidCodeJoiner.fill('[data-testid="access-code-input"]', '999999'); // Invalid code
         await invalidCodeJoiner.fill('[data-testid="username-input"]', `${testData.username}_invalid`);
-        await invalidCodeJoiner.click('[data-testid="join-quiz-button"]');
+        await invalidCodeJoiner.click('[data-testid="join-button"]');
 
         await expect(invalidCodeJoiner.locator('[data-testid="invalid-access-code"]')).toBeVisible();
 

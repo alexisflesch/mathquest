@@ -6,17 +6,21 @@ test.describe('Basic Authentication Flow', () => {
         await page.goto('/');
         await page.waitForLoadState('networkidle');
 
-        // Step 2: Click unified login button
-        const loginButton = page.getByText('Se connecter ou jouer en invité');
+        // Step 2: Click login button
+        const loginButton = page.getByText('Se connecter');
         await expect(loginButton).toBeVisible();
         await loginButton.click();
         await page.waitForLoadState('networkidle');
 
-        // Step 3: Should be on login page, select teacher mode
-        expect(page.url()).toContain('/login');
+        // Step 3: Check if login form is displayed (it stays on same page)
+        // Look for the mode selection buttons instead of URL change
+        const guestModeButton = page.locator('button:has-text("Invité")');
+        const accountModeButton = page.locator('button:has-text("Compte")');
+
+        await expect(guestModeButton).toBeVisible();
+        await expect(accountModeButton).toBeVisible();
 
         // Step 4: Click on "Compte" (Account) mode button
-        const accountModeButton = page.locator('button:has-text("Compte")');
         await expect(accountModeButton).toBeVisible();
         await accountModeButton.click();
 
@@ -40,18 +44,23 @@ test.describe('Basic Authentication Flow', () => {
         await page.goto('/');
         await page.waitForLoadState('networkidle');
 
-        // Step 2: Click unified login button
-        const loginButton = page.getByText('Se connecter ou jouer en invité');
+        // Step 2: Click login button
+        const loginButton = page.getByText('Se connecter');
         await expect(loginButton).toBeVisible();
         await loginButton.click();
         await page.waitForLoadState('networkidle');
 
-        // Step 3: Should be on login page, use guest mode (default)
-        expect(page.url()).toContain('/login');
+        // Step 3: Check if login form is displayed (guest mode should be default)
+        // Look for mode selection buttons
+        const guestModeButton = page.locator('button:has-text("Invité")');
+        const accountModeButton = page.locator('button:has-text("Compte")');
+
+        await expect(guestModeButton).toBeVisible();
+        await expect(accountModeButton).toBeVisible();
 
         // Step 4: Check guest form is present (should be default)
-        const usernameInput = page.locator('[data-testid="username-input"]');
-        const submitButton = page.locator('button[type="submit"]');
+        const usernameInput = page.getByRole('textbox'); // Use getByRole for textbox
+        const submitButton = page.locator('button:has-text("Commencer à jouer")');
 
         await expect(usernameInput).toBeVisible();
         await expect(submitButton).toBeVisible();

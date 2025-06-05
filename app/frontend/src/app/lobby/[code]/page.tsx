@@ -68,7 +68,7 @@ export default function LobbyPage() {
     const [countdown, setCountdown] = useState<number | null>(null);
     const socketRef = useRef<Socket | null>(null);
     const [participants, setParticipants] = useState<{ id: string; username: string; avatar: string }[]>([]);
-    const [creator, setCreator] = useState<{ username: string; avatar: string } | null>(null);
+    const [creator, setCreator] = useState<{ id: string | null; username: string; avatar: string } | null>(null);
     const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);
 
     // Authentication guard - redirect if user is not properly authenticated
@@ -153,11 +153,13 @@ export default function LobbyPage() {
         if (userProfile.username && userProfile.avatar) {
             logger.debug('User identity from AuthProvider', {
                 username: userProfile.username,
-                avatar: userProfile.avatar
+                avatar: userProfile.avatar,
+                userId: userProfile.userId || userProfile.cookieId
             });
             return {
                 username: userProfile.username,
-                avatar: userProfile.avatar
+                avatar: userProfile.avatar,
+                userId: userProfile.userId || userProfile.cookieId || null
             };
         }
 
@@ -165,11 +167,15 @@ export default function LobbyPage() {
         return null;
     }, [userState, userProfile]);
 
-    // Fetch tournament and creator info
+    // Fetch tournament and creator info (only once when component mounts)
     useEffect(() => {
+        let mounted = true; // Prevent state updates if component unmounts
+
         async function fetchCreator() {
             try {
                 const status = await makeApiRequest<TournamentStatusResponse>(`games/${code}/state`);
+                if (!mounted) return; // Component unmounted, don't update state
+
                 if (status.statut === 'terminé') {
                     router.replace(`/leaderboard/${code}`);
                     return;
@@ -189,6 +195,9 @@ export default function LobbyPage() {
                         name: string;
                     }
                 }>(`games/${code}`);
+
+                if (!mounted) return; // Component unmounted, don't update state
+
                 logger.debug("Game instance fetched", {
                     id: gameInstance.gameInstance.id,
                     accessCode: gameInstance.gameInstance.accessCode,
@@ -203,27 +212,54 @@ export default function LobbyPage() {
 
                 let creatorData = null;
                 if (gameInstance.gameInstance.initiatorUserId) {
-                    // Try to fetch user info - this might need adjustment based on your user API
+                    // Fetch user info from the users API
                     logger.debug("Fetching game creator", { id: gameInstance.gameInstance.initiatorUserId });
                     try {
-                        // For now, use a placeholder since we don't know the exact user API structure
-                        // This can be updated when the user API is available
-                        creatorData = { username: "Creator", avatar: "🐱" };
+                        const userResponse = await makeApiRequest<{
+                            id: string;
+                            username: string;
+                            email: string;
+                            role: string;
+                            avatarEmoji: string;
+                            createdAt: string;
+                            updatedAt: string;
+                        }>(`users/${gameInstance.gameInstance.initiatorUserId}`, {
+                            method: 'GET'
+                        });
+
+                        if (!mounted) return; // Component unmounted, don't update state
+
+                        if (userResponse) {
+                            creatorData = {
+                                id: userResponse.id,
+                                username: userResponse.username,
+                                avatar: userResponse.avatarEmoji
+                            };
+                        } else {
+                            logger.warn("Creator user data not found");
+                            creatorData = { id: gameInstance.gameInstance.initiatorUserId, username: "Unknown", avatar: "🐱" };
+                        }
                     } catch (error) {
                         logger.error("Error fetching game creator:", error);
-                        creatorData = { username: "Unknown", avatar: "🐱" };
+                        creatorData = { id: gameInstance.gameInstance.initiatorUserId, username: "Unknown", avatar: "🐱" };
                     }
                 } else {
                     // No creator found
                     logger.warn("No creator found in game instance");
-                    creatorData = { username: "Unknown", avatar: "🐱" };
+                    creatorData = { id: null, username: "Unknown", avatar: "🐱" };
                 }
-                if (creatorData) setCreator(creatorData);
+
+                if (mounted && creatorData) setCreator(creatorData);
             } catch (error) {
                 logger.error("Error fetching tournament info:", error);
             }
         }
+
         fetchCreator();
+
+        return () => {
+            mounted = false; // Cleanup flag
+        };
     }, [code, router]);
 
     // Determine if the current user is the creator
@@ -232,23 +268,34 @@ export default function LobbyPage() {
         const identity = getCurrentIdentity();
         setIsCreator(
             !!identity &&
-            identity.username === creator.username &&
-            identity.avatar === creator.avatar
+            !!creator.id &&
+            identity.userId === creator.id
         );
     }, [creator, getCurrentIdentity]);
 
+    // Socket connection effect - only run once when the component mounts and user is authenticated
     useEffect(() => {
+        // Skip if we don't have proper authentication or user profile
+        if (isLoading || !userProfile.username || !userProfile.avatar) {
+            return;
+        }
+
         // Connect to socket.io server
         logger.info('Creating socket connection with config:', SOCKET_CONFIG);
-        // Use the centralized SOCKET_CONFIG without local overrides for transports and timeout
         const socket = io(SOCKET_CONFIG.url, {
             ...SOCKET_CONFIG,
+            autoConnect: true, // Enable auto-connect for lobby
         });
         socketRef.current = socket;
 
+        // Add connection success logging
+        socket.on('connect', () => {
+            logger.info(`Socket connected successfully! Socket ID: ${socket.id}`);
+        });
+
         // Handle connection errors and reconnection
         socket.on(SOCKET_EVENTS.CONNECT_ERROR, (err) => {
-            logger.error(`Socket connection error: ${err.message}`);
+            logger.error(`Socket connection error: ${err.message}`, err);
         });
 
         socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
@@ -480,7 +527,9 @@ export default function LobbyPage() {
             // TODO: Display this error to the user appropriately
             alert(`Erreur: ${message}`); // Simple alert for now
             router.replace('/'); // Redirect home on error
-        });        // Debug: log all socket events
+        });
+
+        // Debug: log all socket events
         socket.onAny((event, ...args) => {
             logger.debug(`Socket event: ${event}`, args);
         });
@@ -528,10 +577,12 @@ export default function LobbyPage() {
 
         // Clean up on unmount
         return () => {
-            socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: code });
-            socket.disconnect();
+            if (socket && socket.connected) {
+                socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: code });
+                socket.disconnect();
+            }
         };
-    }, [code, getCurrentIdentity, router, checkTournamentStatus, userProfile]);
+    }, [code, userState, userProfile.username, userProfile.avatar, isLoading]); // Only depend on stable values
 
     useEffect(() => {
         if (countdown === 0) {

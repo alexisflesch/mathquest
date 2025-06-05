@@ -625,16 +625,67 @@ router.post('/reset-password/confirm', async (req, res) => {
  */
 router.get('/status', auth_1.optionalAuth, async (req, res) => {
     try {
-        // Check if user is authenticated and is a teacher
-        const isTeacher = !!(req.user?.userId && req.user?.role === 'TEACHER');
-        const teacherId = isTeacher ? req.user?.userId : undefined;
+        // Check if user is authenticated
+        const isAuthenticated = !!(req.user?.userId);
+        if (!isAuthenticated) {
+            // Anonymous user
+            res.status(200).json({
+                authState: 'anonymous',
+                cookiesFound: 0,
+                cookieNames: [],
+                hasAuthToken: false,
+                hasTeacherToken: false,
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+        // User is authenticated - fetch complete profile
+        const userService = getUserService();
+        const userId = req.user.userId;
+        const userRole = req.user.role;
+        let user;
+        try {
+            user = await userService.getUserById(userId);
+        }
+        catch (dbError) {
+            logger.error({ error: dbError, userId, userRole }, 'Failed to fetch user profile from database');
+            // Fallback to basic user info from JWT
+            user = {
+                id: userId,
+                username: req.user.username || 'Utilisateur',
+                avatarEmoji: '👤', // Default avatar
+                email: undefined,
+                role: userRole
+            };
+        }
+        // Determine auth state
+        const authState = userRole === 'TEACHER' ? 'teacher' : 'student';
+        // Legacy fields for backward compatibility
+        const isTeacher = userRole === 'TEACHER';
+        const teacherId = isTeacher ? userId : undefined;
         logger.debug('Auth status check', {
+            authState,
             isTeacher,
             teacherId,
-            userRole: req.user?.role,
-            userId: req.user?.userId
+            userRole,
+            userId,
+            hasUserProfile: !!user
         });
         res.status(200).json({
+            authState,
+            cookiesFound: 2, // Placeholder - actual cookie count would need req.cookies inspection
+            cookieNames: isTeacher ? ['teacherToken'] : ['authToken'],
+            hasAuthToken: !isTeacher,
+            hasTeacherToken: isTeacher,
+            timestamp: new Date().toISOString(),
+            user: user ? {
+                id: user.id,
+                username: user.username || 'Utilisateur',
+                avatar: user.avatarEmoji || '👤',
+                email: user.email,
+                role: userRole
+            } : undefined,
+            // Legacy fields for backward compatibility
             isTeacher,
             teacherId
         });

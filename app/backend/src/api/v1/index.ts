@@ -8,6 +8,7 @@ import quizTemplatesRouter from './quizTemplates'; // Import quizTemplatesRouter
 import gamesRouter from './games'; // Re-enabled gamesRouter
 import questionsRouter from './questions'; // Import questionsRouter
 import studentRouter from './student'; // Import studentRouter
+import usersRouter from './users'; // Import usersRouter
 // import gameSessionsRouter from './gameSessions';
 import { teacherAuth } from '@/middleware/auth';
 
@@ -39,6 +40,9 @@ router.use('/questions', questionsRouter);
 
 // Mount the student router (for student operations)
 router.use('/student', studentRouter);
+
+// Mount the users router (protected by authentication)
+router.use('/users', usersRouter);
 
 // User management routes
 // router.use('/users', usersManagementRouter); // Commented out

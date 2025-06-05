@@ -50,7 +50,7 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 30000
+        "timeout": 60000
       }
     ],
     "shard": null,
@@ -62,25 +62,25 @@
   },
   "suites": [
     {
-      "title": "basic-auth-flow.spec.ts",
-      "file": "basic-auth-flow.spec.ts",
+      "title": "practice-mode.spec.ts",
+      "file": "practice-mode.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "Basic Authentication Flow",
-          "file": "basic-auth-flow.spec.ts",
-          "line": 3,
+          "title": "Practice Mode E2E",
+          "file": "practice-mode.spec.ts",
+          "line": 4,
           "column": 6,
           "specs": [
             {
-              "title": "Teacher can login successfully",
-              "ok": true,
+              "title": "Practice Mode: Self-paced learning with feedback",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 30000,
+                  "timeout": 60000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
@@ -89,103 +89,167 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 8071,
-                      "errors": [],
-                      "stdout": [
+                      "status": "timedOut",
+                      "duration": 60081,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
                         {
-                          "text": "✅ Teacher login form found successfully\n"
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/home/aflesch/mathquest/app/tests/e2e/practice-mode.spec.ts",
+                            "column": 31,
+                            "line": 460
+                          },
+                          "message": "Error: page.screenshot: Target page, context or browser has been closed\n\n\u001b[0m \u001b[90m 458 |\u001b[39m\n \u001b[90m 459 |\u001b[39m             \u001b[90m// Take error screenshot\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 460 |\u001b[39m             \u001b[36mawait\u001b[39m studentPage\u001b[33m.\u001b[39mscreenshot({ path\u001b[33m:\u001b[39m \u001b[32m'debug-practice-error.png'\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 461 |\u001b[39m\n \u001b[90m 462 |\u001b[39m             \u001b[90m// Log current page state for debugging\u001b[39m\n \u001b[90m 463 |\u001b[39m             \u001b[36mconst\u001b[39m errorContent \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m studentPage\u001b[33m.\u001b[39mtextContent(\u001b[32m'body'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /home/aflesch/mathquest/app/tests/e2e/practice-mode.spec.ts:460:31\u001b[22m"
                         }
                       ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-06-03T18:10:07.201Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "8b2fa8c3d22aa9f0bbd1-891894ac97d6a3d321f5",
-              "file": "basic-auth-flow.spec.ts",
-              "line": 4,
-              "column": 9
-            },
-            {
-              "title": "Student can access student area",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 5325,
-                      "errors": [],
                       "stdout": [
                         {
-                          "text": "✅ Guest/Student form found successfully\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-06-03T18:10:15.982Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "8b2fa8c3d22aa9f0bbd1-785904994db01300c7f1",
-              "file": "basic-auth-flow.spec.ts",
-              "line": 38,
-              "column": 9
-            },
-            {
-              "title": "Can navigate to tournament join page",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 3761,
-                      "errors": [],
-                      "stdout": [
+                          "text": "🔐 Logging in as student...\n"
+                        },
                         {
-                          "text": "✅ Tournament join form found successfully\n"
+                          "text": "✅ Student login successful\n"
+                        },
+                        {
+                          "text": "🎯 Navigating to practice mode...\n"
+                        },
+                        {
+                          "text": "📸 Taking screenshot...\n"
+                        },
+                        {
+                          "text": "⚙️ Setting up practice parameters...\n"
+                        },
+                        {
+                          "text": "🔍 Page contains: (self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"3:\\\"$Sreact.fragment\\\"\\n4:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/client-segment.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"ClientSegmentRoot\\\"]\\n5:I[\\\"(app-pages-browser)/./src/app/layout.tsx\\\",[\\\"app/layout\\\",\\\"static/chunks/app/layout.js\\\"],\\\"default\\\"]\\n6:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"sta...\n"
+                        },
+                        {
+                          "text": "✅ Opened niveau dropdown\n"
+                        },
+                        {
+                          "text": "🔍 Found 1 niveau options\n"
+                        },
+                        {
+                          "text": "🔍 Available niveau options: [ \u001b[32m'elementary'\u001b[39m ]\n"
+                        },
+                        {
+                          "text": "✅ Found and selecting niveau: elementary\n"
+                        },
+                        {
+                          "text": "✅ Opened discipline dropdown\n"
+                        },
+                        {
+                          "text": "🔍 Found 6 discipline options\n"
+                        },
+                        {
+                          "text": "🔍 Available discipline options: [ \u001b[32m'art'\u001b[39m, \u001b[32m'cooking'\u001b[39m, \u001b[32m'geography'\u001b[39m, \u001b[32m'literature'\u001b[39m, \u001b[32m'math'\u001b[39m, \u001b[32m'science'\u001b[39m ]\n"
+                        },
+                        {
+                          "text": "✅ Found and selecting discipline: Math\n"
+                        },
+                        {
+                          "text": "🔍 Debug: Looking for themes dropdown...\n"
+                        },
+                        {
+                          "text": "✅ Opened themes dropdown\n"
+                        },
+                        {
+                          "text": "🔍 Found 2 theme options\n"
+                        },
+                        {
+                          "text": "🔍 Available theme options: [ \u001b[32m'arithmetic'\u001b[39m, \u001b[32m'multiplication'\u001b[39m ]\n"
+                        },
+                        {
+                          "text": "✅ Found and selecting theme: Multiplication\n"
+                        },
+                        {
+                          "text": "🔄 Clicking outside dropdown to close it and reveal next step button...\n"
+                        },
+                        {
+                          "text": "✅ Validated themes\n"
+                        },
+                        {
+                          "text": "🔍 Available question numbers: [\n  \u001b[32m'1'\u001b[39m,  \u001b[32m'2'\u001b[39m,  \u001b[32m'3'\u001b[39m,\n  \u001b[32m'4'\u001b[39m,  \u001b[32m'5'\u001b[39m,  \u001b[32m'5'\u001b[39m,\n  \u001b[32m'10'\u001b[39m, \u001b[32m'20'\u001b[39m, \u001b[32m'30'\u001b[39m\n]\n"
+                        },
+                        {
+                          "text": "🔍 Found 2 buttons with \"5\" text\n"
+                        },
+                        {
+                          "text": "🔍 Button 0: class=\"badge badge-stepper-xs badge-stepper badge-stepper-ghost cursor-pointer transition\", text=\"5\"\n"
+                        },
+                        {
+                          "text": "🔍 Button 1: class=\"flex-1 rounded-lg border btn-primary transition-colors duration-100\n                                            py-3 text-lg font-semibold\n                                        \", text=\"5\"\n"
+                        },
+                        {
+                          "text": "✅ Selecting question count button 1\n"
+                        },
+                        {
+                          "text": "✅ Selected 5 questions\n"
+                        },
+                        {
+                          "text": "🔍 Looking for \"Commencer l'entraînement\" button...\n"
+                        },
+                        {
+                          "text": "🔍 All buttons on page: [\n  \u001b[32m''\u001b[39m,            \u001b[32m'Thème système'\u001b[39m,\n  \u001b[32m'Déconnexion'\u001b[39m, \u001b[32m''\u001b[39m,\n  \u001b[32m'1'\u001b[39m,           \u001b[32m'2'\u001b[39m,\n  \u001b[32m'3'\u001b[39m,           \u001b[32m'4'\u001b[39m,\n  \u001b[32m'5'\u001b[39m,           \u001b[32m'5'\u001b[39m,\n  \u001b[32m'10'\u001b[39m,          \u001b[32m'20'\u001b[39m,\n  \u001b[32m'30'\u001b[39m,          \u001b[32m'Valider'\u001b[39m,\n  \u001b[32m''\u001b[39m\n]\n"
+                        },
+                        {
+                          "text": "❌ Could not find or click any training start button\n"
+                        },
+                        {
+                          "text": "🔍 Available fallback buttons: [\n  \u001b[32m'Thème système'\u001b[39m,\n  \u001b[32m'Déconnexion'\u001b[39m,\n  \u001b[32m'1'\u001b[39m,\n  \u001b[32m'2'\u001b[39m,\n  \u001b[32m'3'\u001b[39m,\n  \u001b[32m'4'\u001b[39m,\n  \u001b[32m'5'\u001b[39m,\n  \u001b[32m'5'\u001b[39m,\n  \u001b[32m'10'\u001b[39m,\n  \u001b[32m'20'\u001b[39m,\n  \u001b[32m'30'\u001b[39m\n]\n"
+                        },
+                        {
+                          "text": "🔄 Attempting to click last available non-Valider button as fallback\n"
+                        },
+                        {
+                          "text": "🎮 Waiting for practice session to start...\n"
+                        },
+                        {
+                          "text": "🔍 Practice session content: (self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"3:\\\"$Sreact.fragment\\\"\\n4:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/client-segment.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"ClientSegmentRoot\\\"]\\n5:I[\\\"(app-pages-browser)/./sr...\n"
+                        },
+                        {
+                          "text": "✅ Found practice session question with: text=Question\n"
+                        },
+                        {
+                          "text": "✅ Successfully entered practice session\n"
+                        },
+                        {
+                          "text": "📝 Answering question 1/5...\n"
+                        },
+                        {
+                          "text": "🔘 Found 9 answer buttons, selecting first one\n"
+                        },
+                        {
+                          "text": "✅ Submitting answer...\n"
                         }
                       ],
-                      "stderr": [],
+                      "stderr": [
+                        {
+                          "text": "❌ Practice Mode E2E test failed: locator.click: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Valider\"), button:has-text(\"Submit\"), button:has-text(\"Confirmer\")').first()\u001b[22m\n\n    at interactWithPracticeSession \u001b[90m(/home/aflesch/mathquest/app/\u001b[39mtests/e2e/practice-mode.spec.ts:396:57\u001b[90m)\u001b[39m\n    at \u001b[90m/home/aflesch/mathquest/app/\u001b[39mtests/e2e/practice-mode.spec.ts:441:17\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2025-06-03T18:10:21.318Z",
+                      "startTime": "2025-06-05T10:42:52.429Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/aflesch/mathquest/app/test-results/practice-mode-Practice-Mod-5a33a-aced-learning-with-feedback-chromium/test-failed-1.png"
+                        }
+                      ]
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "8b2fa8c3d22aa9f0bbd1-18a7538def40e2d51b7b",
-              "file": "basic-auth-flow.spec.ts",
-              "line": 65,
+              "id": "d9a2d32c1987e77e042e-e106781a5862cfaa0e23",
+              "file": "practice-mode.spec.ts",
+              "line": 17,
               "column": 9
             }
           ]
@@ -195,11 +259,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-06-03T18:10:05.392Z",
-    "duration": 20082.057,
-    "expected": 3,
+    "startTime": "2025-06-05T10:42:50.958Z",
+    "duration": 63688.042,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 1,
     "flaky": 0
   }
 }

@@ -5,20 +5,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.app = void 0;
 exports.setupServer = setupServer;
+// Load environment variables FIRST, before any other imports
+const dotenv_1 = __importDefault(require("dotenv"));
+const path_1 = __importDefault(require("path"));
+dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
 // Register module aliases for path mapping
 require("module-alias/register");
 const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
-const dotenv_1 = __importDefault(require("dotenv"));
-const path_1 = __importDefault(require("path"));
 const cors_1 = __importDefault(require("cors"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const api_1 = __importDefault(require("@/api"));
 const logger_1 = __importDefault(require("@/utils/logger"));
 const sockets_1 = require("@/sockets"); // Import getIO
 // Create a server-specific logger
 const logger = (0, logger_1.default)('Server');
-// Load environment variables from backend/.env file
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
 // Check for JWT_SECRET
 if (!process.env.JWT_SECRET) {
     logger.warn('JWT_SECRET not found in environment variables, using default secret');
@@ -36,6 +37,7 @@ app.use((0, cors_1.default)({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express_1.default.json());
+app.use((0, cookie_parser_1.default)());
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
