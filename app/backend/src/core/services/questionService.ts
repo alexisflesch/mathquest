@@ -211,31 +211,62 @@ export class QuestionService {
 
     /**
      * Get available filter values (unique disciplines, grade levels, themes)
+     * @param filterCriteria Optional criteria to filter the results (e.g., {gradeLevel: 'elementary'})
      */
-    async getAvailableFilters() {
+    async getAvailableFilters(filterCriteria?: any) {
         try {
+            const baseWhere: any = {
+                isHidden: false
+            };
+
+            // Build different where clauses for different filter types
+            const niveauxWhere = { ...baseWhere };
+            const disciplinesWhere = { ...baseWhere };
+            const themesWhere = { ...baseWhere };
+
+            // Apply cascading filter logic
+            if (filterCriteria?.discipline) {
+                // When discipline is selected:
+                // - niveaux: show niveaux that have this discipline
+                // - disciplines: show only the selected discipline  
+                // - themes: show themes for this discipline
+                niveauxWhere.discipline = filterCriteria.discipline;
+                disciplinesWhere.discipline = filterCriteria.discipline;
+                themesWhere.discipline = filterCriteria.discipline;
+            }
+
+            if (filterCriteria?.gradeLevel) {
+                // When niveau is selected:
+                // - niveaux: show only the selected niveau
+                // - disciplines: show disciplines that have this niveau
+                // - themes: show themes for this niveau
+                niveauxWhere.gradeLevel = filterCriteria.gradeLevel;
+                disciplinesWhere.gradeLevel = filterCriteria.gradeLevel;
+                themesWhere.gradeLevel = filterCriteria.gradeLevel;
+            }
+
             const [niveaux, disciplines, themes] = await Promise.all([
                 prisma.question.findMany({
                     select: { gradeLevel: true },
                     distinct: ['gradeLevel'],
                     where: {
-                        gradeLevel: { not: '' },
-                        isHidden: false
+                        ...niveauxWhere,
+                        gradeLevel: { not: '' }
                     }
                 }),
                 prisma.question.findMany({
                     select: { discipline: true },
                     distinct: ['discipline'],
                     where: {
-                        discipline: { not: '' },
-                        isHidden: false
+                        ...disciplinesWhere,
+                        discipline: { not: '' }
                     }
                 }),
                 prisma.question.findMany({
                     select: { themes: true },
                     where: {
-                        themes: { isEmpty: false },
-                        isHidden: false
+                        ...themesWhere,
+                        themes: { isEmpty: false }
                     }
                 })
             ]);

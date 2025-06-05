@@ -10,6 +10,7 @@ This project uses AI coding agents (e.g. GitHub Copilot, ChatGPT) to assist in d
 - Avoid guessing or renaming variables. Stick to existing naming conventions.
 - Do not make assumptions about side effects — check function signatures and schema definitions.
 - Keep API contracts strict and centralized.
+- Don't go through the codebase to figure out how things work. Use the documentation first, then the code if needed.
 
 
 ## Documentation

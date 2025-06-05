@@ -42,6 +42,7 @@ import {
     ClipboardList,
     User,
 } from 'lucide-react';
+import { motion, useAnimation } from 'framer-motion';
 
 export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
     sidebarCollapsed: boolean,
@@ -184,43 +185,109 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
         }
     }, [userState]);
 
+    // Animation controls for sidebar
+    const sidebarControls = useAnimation();
+    const COLLAPSED_WIDTH = 48; // px - smaller width to hide text and center icons
+    const EXPANDED_WIDTH = 256; // px
+    const ANIMATION_DURATION = 0.22; // seconds
+
+    // Animate collapse/expand sequence (just width)
+    useEffect(() => {
+        sidebarControls.start({
+            width: sidebarCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
+            transition: { duration: ANIMATION_DURATION, ease: 'easeInOut' }
+        });
+    }, [sidebarCollapsed]);
+
+    // Factored: SidebarRow component for animated/cropped row
+    function SidebarRow({
+        icon: Icon,
+        label,
+        children,
+        href,
+        sidebarCollapsed,
+        align = 'left', // 'left' or 'center'
+        ...props
+    }: {
+        icon: React.ElementType,
+        label?: string,
+        children?: React.ReactNode,
+        href?: string,
+        sidebarCollapsed: boolean,
+        align?: 'left' | 'center',
+        [key: string]: any
+    }) {
+        // Always use left alignment to keep consistent animation
+        const content = (
+            <div className="flex items-center min-w-0 w-full">
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm ml-2 whitespace-nowrap overflow-hidden text-ellipsis min-w-0 flex-1">
+                    {label}
+                    {children}
+                </span>
+            </div>
+        );
+        if (href) {
+            return (
+                <Link
+                    href={href}
+                    className={`flex items-center justify-start px-2 py-1.5 rounded hover:bg-gray-700 transition-colors h-[36px] text-white ${props.className || ''}`}
+                    title={sidebarCollapsed ? label : undefined}
+                    {...props}
+                >
+                    {content}
+                </Link>
+            );
+        }
+        return (
+            <button
+                type="button"
+                className={`flex items-center justify-start px-2 py-1.5 rounded transition-colors w-full text-left h-[36px] text-white hover:bg-gray-700 ${props.className || ''}`}
+                style={props.style}
+                title={sidebarCollapsed ? label : undefined}
+                {...props}
+            >
+                {content}
+            </button>
+        );
+    }
+
     if (!mounted) return null;
 
     return (
         <>
             {/* Sidebar for large screens */}
-            <aside className={`hidden md:flex md:flex-col md:h-screen md:fixed md:left-0 md:top-0 bg-[color:var(--navbar)] text-white z-40 overflow-y-auto transition-all duration-200 ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'}`}>
-                {/* Header with burger on left, username + avatar on right */}
-                <div className={`appnav-header-row-desktop ${sidebarCollapsed ? 'collapsed' : ''}`}>
+            <motion.aside
+                animate={sidebarControls}
+                initial={{ width: sidebarCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH }}
+                className={`hidden md:flex md:flex-col md:h-screen md:fixed md:left-0 md:top-0 bg-[color:var(--navbar)] text-white z-40 overflow-y-auto overflow-x-hidden`}
+                style={{ width: sidebarCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH }}
+            >
+                {/* Header with burger menu and username/avatar */}
+                <div className="relative px-3 py-1.5 hover:bg-gray-800 focus:outline-none flex-shrink-0 h-[44px] overflow-hidden">
+                    {/* Burger menu - always visible, positioned absolutely on left */}
                     <button
-                        className={`flex items-center px-3 py-1.5 rounded hover:bg-gray-800 focus:outline-none flex-shrink-0 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                         aria-label={sidebarCollapsed ? 'Déplier le menu' : 'Réduire le menu'}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center flex-shrink-0 z-20"
                     >
-                        <Menu className="w-5 h-5" />
+                        <Menu className="w-5 h-5 flex-shrink-0" />
                     </button>
-                    {!sidebarCollapsed && (
-                        <div className="appnav-user-section ml-auto">
-                            {userState === 'guest' ? (
-                                <span className="guest-label">Invité</span>
-                            ) : (userState === 'student' || userState === 'teacher') ? (
-                                <>
-                                    {avatar && (
-                                        <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)] flex-shrink-0">
-                                            {avatar}
-                                        </div>
-                                    )}
-                                    {username ? (
-                                        <span className="appnav-username">{username}</span>
-                                    ) : (
-                                        <span className="appnav-username text-gray-300">
-                                            {isLoading ? 'Chargement...' :
-                                                userState === 'teacher' ? 'Enseignant' :
-                                                    'Étudiant'}
-                                        </span>
-                                    )}
-                                </>
-                            ) : null}
+
+                    {/* Username + Avatar - positioned like other sidebar rows */}
+                    {(userState === 'guest' || userState === 'student' || userState === 'teacher') && (
+                        <div className="flex items-center justify-start h-full pl-10 pr-2 overflow-hidden">
+                            {/* Username - positioned on the left, will be naturally cropped by sidebar overflow */}
+                            <span className="text-sm whitespace-nowrap overflow-hidden min-w-0 flex-1 mr-3 text-right">
+                                {username || (isLoading ? 'Chargement...' : userState === 'teacher' ? 'Enseignant' : 'Étudiant')}
+                            </span>
+
+                            {/* Avatar - positioned on the far right, very close to username */}
+                            {avatar && (userState === 'guest' || userState === 'student' || userState === 'teacher') && (
+                                <span className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)] flex-shrink-0">
+                                    {avatar}
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>
@@ -243,37 +310,42 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                 <nav className={`flex-1 p-1 space-y-1`}>
                     {menu.map((item, index) => {
                         const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
-
-                        // Section header: title inline with horizontal line after
                         if (item.type === 'section') {
                             return (
-                                <div key={`section-${index}`} className="pt-4 pb-1">
-                                    {!sidebarCollapsed && (
-                                        <div className="flex items-center gap-2 px-2">
-                                            <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">
-                                                {item.label}
-                                            </span>
-                                            <div className="flex-1 border-t border-white/30 ml-2"></div>
-                                        </div>
-                                    )}
-                                    {sidebarCollapsed && (
-                                        <div className="border-t border-white/30 my-2"></div>
-                                    )}
+                                <div key={`section-${index}`} className="pt-4 pb-1 relative h-6 flex items-center">
+                                    <div className="flex items-center w-full px-2 relative">
+                                        {/* Animated section text */}
+                                        <motion.span
+                                            className="text-xs font-semibold text-white/70 uppercase tracking-wider whitespace-nowrap pr-2"
+                                            animate={{
+                                                x: sidebarCollapsed ? -120 : 0,
+                                                opacity: sidebarCollapsed ? 0 : 1
+                                            }}
+                                            transition={{ duration: ANIMATION_DURATION, ease: 'easeInOut' }}
+                                        >
+                                            {item.label}
+                                        </motion.span>
+
+                                        {/* Horizontal line - positioned after text in expanded, centered in collapsed */}
+                                        {!sidebarCollapsed ? (
+                                            <div className="border-t border-white/30 flex-1" />
+                                        ) : (
+                                            <div className="absolute inset-x-1 border-t border-white/30" />
+                                        )}
+                                    </div>
                                 </div>
                             );
                         }
-
+                        if (!item.href) return null;
                         return (
-                            <div key={item.label} className="group relative">
-                                {item.href && (
-                                    <Link href={item.href} className={`flex items-center gap-3 px-3 py-1.5 rounded hover:bg-gray-700 transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
-                                        title={sidebarCollapsed ? item.label : undefined}
-                                    >
-                                        <Icon className="w-5 h-5" />
-                                        {!sidebarCollapsed && <span className="text-sm">{item.label}</span>}
-                                    </Link>
-                                )}
-                            </div>
+                            <SidebarRow
+                                key={item.label}
+                                icon={Icon}
+                                label={item.label}
+                                href={item.href as string}
+                                sidebarCollapsed={sidebarCollapsed}
+                                title={sidebarCollapsed ? item.label : undefined}
+                            />
                         );
                     })}
                 </nav>
@@ -285,40 +357,39 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                         <div className="border-t border-white/20 mb-2"></div>
                     )}
 
-                    {/* Theme toggle */}
-                    <button
+                    {/* Theme toggle (animated like others) */}
+                    <SidebarRow
+                        icon={theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor}
+                        label={theme === 'light' ? 'Thème clair' : theme === 'dark' ? 'Thème sombre' : 'Thème système'}
+                        sidebarCollapsed={sidebarCollapsed}
                         onClick={toggleTheme}
-                        className={`flex items-center gap-3 px-3 py-1.5 rounded transition-colors ${theme === 'light' ? 'text-yellow-400' : theme === 'dark' ? 'text-blue-400' : 'text-green-400'} ${sidebarCollapsed ? 'justify-center' : ''}`}
-                        aria-label={
-                            theme === 'light' ? 'Passer en mode sombre' :
-                                theme === 'dark' ? 'Passer en mode système' :
-                                    'Passer en mode clair'
-                        }
-                        title={sidebarCollapsed ? (theme === 'light' ? 'Thème clair' : theme === 'dark' ? 'Thème sombre' : 'Thème système') : undefined}
-                    >
-                        {theme === 'light' && <Sun className="w-5 h-5" />}
-                        {theme === 'dark' && <Moon className="w-5 h-5" />}
-                        {theme === 'system' && <Monitor className="w-5 h-5" />}
-                        {!sidebarCollapsed && (
-                            <span className="text-sm">
-                                {theme === 'light' ? 'Thème clair' : theme === 'dark' ? 'Thème sombre' : 'Thème système'}
-                            </span>
-                        )}
-                    </button>
+                        aria-label={theme === 'light' ? 'Passer en mode sombre' : theme === 'dark' ? 'Passer en mode système' : 'Passer en mode clair'}
+                        style={{
+                            color: theme === 'light' ? '#fbbf24' : theme === 'dark' ? '#60a5fa' : '#34d399'
+                        }}
+                    />
 
-                    {/* Logout button - only show if user is logged in */}
+                    {/* Logout button (animated like others) */}
                     {(userState === 'guest' || userState === 'student' || userState === 'teacher') && (
-                        <button
+                        <SidebarRow
+                            icon={LogOut}
+                            label="Déconnexion"
+                            sidebarCollapsed={sidebarCollapsed}
                             onClick={handleDisconnect}
-                            className={`flex items-center gap-3 w-full text-left px-3 py-1.5 rounded bg-gray-700 hover:bg-red-600 transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
-                            title={sidebarCollapsed ? 'Déconnexion' : undefined}
-                        >
-                            <LogOut className="w-5 h-5" />
-                            {!sidebarCollapsed && <span className="text-sm">Déconnexion</span>}
-                        </button>
+                            aria-label="Déconnexion"
+                            style={{
+                                color: 'white'
+                            }}
+                            onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                                e.currentTarget.style.backgroundColor = '#dc2626';
+                            }}
+                            onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+                                e.currentTarget.style.backgroundColor = '';
+                            }}
+                        />
                     )}
                 </div>
-            </aside>
+            </motion.aside>
 
             {/* Top bar for mobile only */}
             <div className="md:hidden" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '56px', zIndex: 100, background: 'var(--navbar)' }}>

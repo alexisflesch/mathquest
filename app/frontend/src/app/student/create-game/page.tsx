@@ -20,8 +20,7 @@ import CustomDropdown from "@/components/CustomDropdown";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
-import { QuestionsFiltersResponseSchema, QuestionsResponseSchema, QuestionsCountResponseSchema, PlayerCookieResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsResponse, type QuestionsCountResponse, type PlayerCookieResponse, type GameCreationResponse, type Question } from '@/types/api';
-import { buildQuestionsUrl } from '@/utils/apiUtils';
+import { QuestionsFiltersResponseSchema, QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 
 // Create a logger for this component
@@ -33,7 +32,7 @@ interface Filters {
     themes: string[];
 }
 
-const QUESTION_OPTIONS = [10, 20, 30];
+const QUESTION_OPTIONS = [5, 10, 20, 30];
 
 function StudentCreateTournamentPageInner() {
     // Access guard: Require at least guest access to create tournaments
@@ -52,7 +51,7 @@ function StudentCreateTournamentPageInner() {
     const [niveau, setNiveau] = useState("");
     const [discipline, setDiscipline] = useState("");
     const [themes, setThemes] = useState<string[]>([]);
-    const [numQuestions, setNumQuestions] = useState(10);
+    const [numQuestions, setNumQuestions] = useState(5);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [canCreate, setCanCreate] = useState(true);
@@ -80,16 +79,13 @@ function StudentCreateTournamentPageInner() {
             setThemes([]);
             setAvailableThemes([]);
 
-            // Use existing questions API to get disciplines for this niveau
-            const disciplinesUrl = buildQuestionsUrl({
-                gradeLevel: niveau,
-                pageSize: 1000
-            });
-            makeApiRequest<QuestionsResponse>(disciplinesUrl, undefined, undefined, QuestionsResponseSchema)
+            // Use secure filters API to get disciplines filtered by niveau
+            const params = new URLSearchParams();
+            params.append('niveau', niveau);
+
+            makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
-                    const questions = Array.isArray(data) ? data : data.questions;
-                    const uniqueDisciplines = [...new Set(questions.map(q => q.discipline).filter(Boolean))] as string[];
-                    setAvailableDisciplines(uniqueDisciplines.sort());
+                    setAvailableDisciplines(data.disciplines.sort());
                 })
                 .catch(err => {
                     logger.error("Error loading disciplines", err);
@@ -108,22 +104,14 @@ function StudentCreateTournamentPageInner() {
         if (niveau && discipline) {
             setThemes([]);
 
-            // Use existing questions API to get themes for this niveau and discipline
-            const themesUrl = buildQuestionsUrl({
-                gradeLevel: niveau,
-                discipline: discipline,
-                pageSize: 1000
-            });
-            makeApiRequest<QuestionsResponse>(themesUrl, undefined, undefined, QuestionsResponseSchema)
+            // Use secure filters API to get themes filtered by niveau and discipline
+            const params = new URLSearchParams();
+            params.append('niveau', niveau);
+            params.append('discipline', discipline);
+
+            makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
-                    const questions = Array.isArray(data) ? data : data.questions;
-                    const uniqueThemes = new Set<string>();
-                    questions.forEach((q: Question) => {
-                        if (Array.isArray(q.themes)) {
-                            q.themes.forEach((theme: string) => uniqueThemes.add(theme));
-                        }
-                    });
-                    setAvailableThemes(Array.from(uniqueThemes).sort());
+                    setAvailableThemes(data.themes.sort());
                 })
                 .catch(err => {
                     logger.error("Error loading themes", err);
@@ -142,23 +130,23 @@ function StudentCreateTournamentPageInner() {
             setError(null);
             logger.debug("Checking question count for", { niveau, discipline, themes, numQuestions });
 
-            // Use existing questions API to count questions
-            const questionsUrl = buildQuestionsUrl({
-                gradeLevel: niveau,
+            // Use secure list API to get question UIDs and count them locally
+            const listParams = new URLSearchParams({
+                niveau: niveau,
                 discipline: discipline,
-                themes: themes,
-                page: 1,
-                pageSize: 1
+                themes: themes.join(',')
             });
-            makeApiRequest<QuestionsCountResponse>(questionsUrl, undefined, undefined, QuestionsCountResponseSchema)
-                .then((data) => {
-                    logger.debug("Question count response", data);
-                    if (data.total === 0) {
+            makeApiRequest<string[]>(`/api/questions/list?${listParams.toString()}`)
+                .then((questions) => {
+                    const count = questions.length;
+                    logger.debug("Question count response", { count });
+                    if (count === 0) {
                         setCanCreate(false);
                         setError("Aucune question ne correspond à ces critères.");
-                    } else if (data.total < numQuestions) {
+                    } else if (count < numQuestions) {
+                        // Show warning but still allow creation
                         setCanCreate(true);
-                        setError(`Seulement ${data.total} questions dans la base satisfaisant vos critères, continuer quand même ?`);
+                        setError(`Attention: Seulement ${count} question(s) disponible(s) pour ces critères. Vous en demandez ${numQuestions}. Le tournoi utilisera toutes les questions disponibles.`);
                     } else {
                         setCanCreate(true);
                         setError(null);
@@ -208,16 +196,15 @@ function StudentCreateTournamentPageInner() {
         setError(null);
         try {
             logger.info("Creating tournament with", { niveau, discipline, themes, numQuestions });
-            // 1. Fetch question IDs matching filters using existing questions API
-            interface Question { uid: string; }
-            const questionsUrl = buildQuestionsUrl({
-                gradeLevel: niveau,
+            // 1. Fetch question IDs only using secure questions list API
+            const listParams = new URLSearchParams({
+                niveau: niveau,
                 discipline: discipline,
-                themes: themes,
-                pageSize: numQuestions
+                themes: themes.join(','),
+                limit: numQuestions.toString()
             });
-            const questionsResult = await makeApiRequest<QuestionsResponse>(questionsUrl, undefined, undefined, QuestionsResponseSchema);
-            const questions = Array.isArray(questionsResult) ? questionsResult : questionsResult.questions;
+            const questionsResult = await makeApiRequest<string[]>(`/api/questions/list?${listParams.toString()}`);
+            const questions = questionsResult;
 
             logger.debug("Questions fetched", { count: questions.length });
             if (!questions || !Array.isArray(questions) || questions.length === 0) {
@@ -238,27 +225,8 @@ function StudentCreateTournamentPageInner() {
             }
             const avatar = localStorage.getItem('mathquest_avatar') || '';
             const username = localStorage.getItem('mathquest_username') || 'Élève';
-            let cookie_id = localStorage.getItem('mathquest_cookie_id');
-            if (!cookie_id) {
-                cookie_id = Math.random().toString(36).substring(2) + Date.now();
-                localStorage.setItem('mathquest_cookie_id', cookie_id);
-            }
 
-            // Get the student's User ID (should already be registered from /student page)
-            let userId: string;
-            try {
-                const existingUser = await makeApiRequest<PlayerCookieResponse>(`players/cookie/${cookie_id}`, undefined, undefined, PlayerCookieResponseSchema);
-                userId = existingUser.user.id;
-                logger.debug("Found existing user", { userId, cookie_id });
-            } catch (error) {
-                // This shouldn't happen if the student properly registered via /student page
-                logger.error("Student not found in database", { cookie_id, error });
-                setError('Vous devez vous connecter avant de créer un tournoi.');
-                setLoading(false);
-                return;
-            }
-
-            // Convert to modern games API format
+            // Create tournament directly - backend will handle authentication
             const requestBody = {
                 name: `${username}`,
                 playMode: 'tournament',
@@ -266,7 +234,6 @@ function StudentCreateTournamentPageInner() {
                 discipline: discipline,
                 themes: themes,
                 nbOfQuestions: numQuestions,
-                initiatorStudentId: userId, // Use the actual User ID instead of cookie_id
                 settings: {
                     type: 'direct',
                     avatar: avatar,
@@ -275,13 +242,23 @@ function StudentCreateTournamentPageInner() {
             };
 
             logger.debug("Games API request body", requestBody);
-            const gameData = await makeApiRequest<GameCreationResponse>('games', {
+            const gameData = await fetch('/api/games', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Include cookies for authentication
                 body: JSON.stringify(requestBody),
-            }, undefined, GameCreationResponseSchema);
-            logger.info("Tournament created successfully", { code: gameData.gameInstance.accessCode });
-            router.push(`/lobby/${gameData.gameInstance.accessCode}`);
+            });
+
+            if (!gameData.ok) {
+                const errorData = await gameData.json();
+                throw new Error(errorData.error || 'Failed to create tournament');
+            }
+
+            const gameResponse = await gameData.json() as GameCreationResponse;
+            logger.info("Tournament created successfully", { code: gameResponse.gameInstance.accessCode });
+            router.push(`/lobby/${gameResponse.gameInstance.accessCode}`);
         } catch (err: unknown) {
             logger.error("Error creating tournament", err);
             if (err instanceof Error) setError(err.message);
@@ -423,7 +400,7 @@ function StudentCreateTournamentPageInner() {
                             {error && (
                                 <>
                                     {logger.debug('Résumé création tournoi', { niveau, discipline, themes, numQuestions, error })}
-                                    <div className={`alert ${error.startsWith("Seulement") ? "alert-warning" : "alert-error"} justify-center mb-2`}>
+                                    <div className={`alert ${error.startsWith("Attention:") ? "alert-warning" : "alert-error"} justify-center mb-2`}>
                                         {error}
                                     </div>
                                 </>

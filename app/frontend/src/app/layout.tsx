@@ -68,7 +68,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   return (
     <>
       <AppNav sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
-      <main className={`min-h-screen transition-all duration-200 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+      <main className={`min-h-screen transition-all ease-in-out ${sidebarCollapsed ? 'md:ml-12' : 'md:ml-64'}`} style={{ transitionDuration: '220ms' }}>
         {children}
       </main>
     </>

@@ -27,7 +27,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useEffect } from 'react';
 
 export default function Home() {
-  const { isStudent, isTeacher, isLoading, refreshAuth, canJoinGame, userState } = useAuth();
+  const { isStudent, isTeacher, isLoading, refreshAuth, canJoinGame } = useAuth();
 
   useEffect(() => {
     // Check if we just logged out (URL param)
@@ -63,7 +63,7 @@ export default function Home() {
     return (
       <div className="main-content">
         <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-6">
-          <div className="flex items-center justify-center p-8">
+          <div className="card-body items-center">
             <span className="loading loading-spinner loading-lg"></span>
           </div>
         </div>
@@ -74,135 +74,73 @@ export default function Home() {
   return (
     <div className="main-content">
       <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-6">
-        <div className="flex flex-col gap-8 p-8">
+        <div className="card-body items-center gap-8">
           {/* Header with logo */}
           <div className="flex items-center justify-center gap-4 mb-4">
             <Image src="/favicon.svg" alt="MathQuest logo" width={64} height={64} priority />
-            <h1 className="text-3xl text-center font-bold text-base-content">Bienvenue sur MathQuest</h1>
+            <h1 className="text-3xl text-center font-bold text-base-content">Zornigma</h1>
           </div>
 
-          {/* What is MathQuest */}
-          <div className="prose prose-lg max-w-none">
-            <h2 className="text-xl font-semibold mb-4">Qu'est-ce que MathQuest ?</h2>
-            <p className="text-base mb-4">
-              MathQuest est une plateforme éducative interactive qui transforme l'apprentissage des mathématiques en aventure ludique.
-              Que vous soyez élève souhaitant réviser ou enseignant cherchant à dynamiser vos cours, MathQuest s'adapte à vos besoins.
+          {/* Subtitle */}
+          <div className="text-left mt-12 mb-6">
+            <p className="text-lg text-muted-foreground">
+              🧠 Une alternative libre à Kahoot, pour tous les niveaux, toutes les disciplines.
             </p>
+          </div>
 
-            <div className="grid md:grid-cols-2 gap-6 my-6">
-              <div className="bg-base-200 p-4 rounded-lg">
-                <h3 className="font-semibold text-lg mb-2">🎯 Pour tous</h3>
-                <ul className="text-sm space-y-1">
-                  <li>• Exercices adaptés par niveau (CP à Terminale)</li>
-                  <li>• Mathématiques, sciences et plus</li>
-                  <li>• Entraînement libre à votre rythme</li>
-                  <li>• Tournois en temps réel ou en différé</li>
-                </ul>
-              </div>
+          {/* Features Grid */}
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-6 my-6 w-full">
+            {/* For Students */}
+            <div className="bg-primary/10 p-6 rounded-lg md:flex-1 md:basis-[calc(50%-0.75rem)]">
+              <h3 className="font-semibold text-xl mb-4">👋 Pour les étudiants</h3>
+              <ul className="space-y-3 text-sm">
+                <li>• Révisez à votre rythme avec des quiz issus d'une grande base de données mutualisée</li>
+                <li>• Affrontez vos amis en duel ou en mode compétition multi-joueurs</li>
+                <li>• Jouez sans compte : entrez juste un pseudo et c'est parti !</li>
+                <li>• Envie de suivre vos progrès ? Créez un compte (optionnel) pour garder un historique</li>
+              </ul>
+            </div>
 
-              <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-semibold text-lg mb-2">👨‍🏫 Spécial Enseignants</h3>
-                <ul className="text-sm space-y-1">
-                  <li>• Créez vos propres quiz personnalisés</li>
-                  <li>• Organisez des tournois pour votre classe</li>
-                  <li>• Suivez les résultats en temps réel</li>
-                  <li>• Analysez les performances de vos élèves</li>
-                  <li>• Gérez le rythme avec des contrôles avancés</li>
-                </ul>
-              </div>
+            {/* For Teachers */}
+            <div className="bg-secondary/10 p-6 rounded-lg md:flex-1 md:basis-[calc(50%-0.75rem)]">
+              <h3 className="font-semibold text-xl mb-4">🧑‍🏫 Pour les enseignants</h3>
+              <ul className="space-y-3 text-sm">
+                <li>• Créez vos quiz personnalisés à partir de la base commune (ou ajoutez vos propres questions)</li>
+                <li>• Animez vos cours en projetant les quiz en temps réel avec scores, podiums, statistiques</li>
+                <li>• Contrôlez tout : timer, ordre des questions, affichage des réponses, visibilité des résultats…</li>
+                <li>• Partagez vos questions avec la communauté</li>
+              </ul>
+            </div>
+
+            {/* Question Database */}
+            <div className="bg-accent/10 p-6 rounded-lg md:flex-1 md:basis-[calc(50%-0.75rem)]">
+              <h3 className="font-semibold text-xl mb-4">📚 Une base de questions ouverte</h3>
+              <ul className="space-y-2 text-sm">
+                <li>• Des milliers de questions du CP à Bac+2, dans toutes les disciplines</li>
+                <li>• Rédigées, vérifiées et filtrées par un enseignant</li>
+                <li>• Utilisables en classe, en autonomie, en ligne, sur tablette ou smartphone</li>
+              </ul>
+            </div>
+
+            {/* Open Source */}
+            <div className="bg-success/10 p-6 rounded-lg md:flex-1 md:basis-[calc(50%-0.75rem)]">
+              <h3 className="font-semibold text-xl mb-4">🔓 Libre. Gratuit. Sans pub.</h3>
+              <ul className="space-y-2 text-sm">
+                <li>• Projet personnel libre et gratuit, sans publicité</li>
+                <li>• Hébergé sur notre propre serveur</li>
+                <li>• Utilisation illimitée, sans restriction de temps ni de fonctionnalités</li>
+              </ul>
             </div>
           </div>
 
-          {/* Getting Started - Dynamic content based on user state */}
-          <div className="border-t pt-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {userState === 'anonymous' ? 'Comment commencer ?' :
-                userState === 'guest' ? 'Que voulez-vous faire ?' :
-                  userState === 'student' ? 'Votre espace étudiant' :
-                    userState === 'teacher' ? 'Votre espace enseignant' : 'Actions disponibles'}
-            </h2>
-
-            {/* Anonymous users */}
-            {userState === 'anonymous' && (
-              <div className="bg-accent/10 p-6 rounded-lg mb-4">
-                <h3 className="font-semibold mb-2">🚀 Nouvelle visite ?</h3>
-                <p className="mb-4">Découvrez MathQuest en quelques clics !</p>
-                <a href="/login" className="btn btn-primary btn-lg">
-                  Se connecter ou jouer en invité
-                </a>
-              </div>
-            )}
-
-            {/* Guests */}
-            {userState === 'guest' && (
-              <div className="space-y-4">
-                <div className="bg-success/10 p-6 rounded-lg">
-                  <h3 className="font-semibold mb-2">🎮 Prêt à jouer !</h3>
-                  <p className="mb-4">Vous êtes connecté en tant qu'invité. Explorez toutes les fonctionnalités !</p>
-                  <div className="flex flex-wrap gap-3">
-                    <a href="/student/create-game" className="btn btn-primary">
-                      Créer un tournoi
-                    </a>
-                    <a href="/student/join" className="btn btn-outline">
-                      Rejoindre un tournoi
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Students */}
-            {userState === 'student' && (
-              <div className="space-y-4">
-                <div className="bg-primary/10 p-6 rounded-lg">
-                  <h3 className="font-semibold mb-2">🎓 Votre espace personnel</h3>
-                  <p className="mb-4">Bienvenue dans votre espace étudiant !</p>
-                  <div className="flex flex-wrap gap-3">
-                    <a href="/student/create-game" className="btn btn-primary">
-                      Créer un tournoi
-                    </a>
-                    <a href="/student/join" className="btn btn-outline">
-                      Rejoindre un tournoi
-                    </a>
-                    <a href="/student/practice/session" className="btn btn-secondary">
-                      Mode entraînement
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Teachers */}
-            {userState === 'teacher' && (
-              <div className="space-y-4">
-                <div className="bg-warning/10 p-6 rounded-lg">
-                  <h3 className="font-semibold mb-2">👨‍🏫 Espace enseignant</h3>
-                  <p className="mb-4">Gérez vos quiz et tournois, créez du contenu personnalisé.</p>
-                  <div className="flex flex-wrap gap-3">
-                    <a href="/teacher/quizzes" className="btn btn-primary">
-                      Mes quiz
-                    </a>
-                    <a href="/teacher/create" className="btn btn-outline">
-                      Créer un quiz
-                    </a>
-                    <a href="/student/create-game" className="btn btn-secondary">
-                      Créer un tournoi
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Common actions for existing users */}
-            {userState !== 'anonymous' && (
-              <div className="bg-base-200 p-6 rounded-lg">
-                <h3 className="font-semibold mb-2">💡 Besoin d'aide ?</h3>
-                <p>
-                  Utilisez le menu de navigation en haut de page pour accéder à toutes les fonctionnalités,
-                  ou explorez les différentes sections pour découvrir tout ce que MathQuest a à offrir.
-                </p>
-              </div>
-            )}
+          {/* Help section for everyone */}
+          <div className="border-t pt-6 w-full">
+            <div className="bg-base-200 p-6 rounded-lg">
+              <h3 className="font-semibold mb-2">💡 Besoin d'aide ?</h3>
+              <p>
+                Commencez par vous connecter en choisissant un pseudo et un avatar (pas besoind de créer un compte) puis utilisez le menu pour naviguer dans les différentes sections.
+              </p>
+            </div>
           </div>
         </div>
       </div>

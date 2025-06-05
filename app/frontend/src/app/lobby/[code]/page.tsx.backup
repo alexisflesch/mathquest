@@ -21,6 +21,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from '@/components/AuthProvider';
+import Image from 'next/image';
 import { Share2 } from "lucide-react";
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
@@ -531,7 +532,7 @@ export default function LobbyPage() {
             socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: code });
             socket.disconnect();
         };
-    }, [code, getCurrentIdentity, router, checkTournamentStatus, userProfile]);
+    }, [code, userProfile, getCurrentIdentity, router, checkTournamentStatus]);
 
     useEffect(() => {
         if (countdown === 0) {
@@ -591,90 +592,113 @@ export default function LobbyPage() {
     const handleStart = () => {
         if (isCreator && socketRef.current) {
             logger.info("Starting tournament", { code, socketConnected: socketRef.current.connected });
-            // Updated to use new backend API payload format
+            // Updated to use new backend API payload
             socketRef.current.emit(SOCKET_EVENTS.TOURNAMENT.START_TOURNAMENT, { accessCode: code });
-        } else {
-            logger.warn("Cannot start tournament", { isCreator, socketReady: !!socketRef.current });
         }
     };
 
-    // Handler for share button
-    const handleShare = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: "Rejoignez le tournoi !",
-                text: `Code du tournoi : ${code}`,
-                url: window.location.href,
-            });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert("Lien copié dans le presse-papier !");
-        }
-    };
+    // Component layout - Note: authentication is already handled in useEffect above
+    // If we reach this point, user is authenticated
+
+    if (countdown !== null) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-8xl font-bold text-blue-600 animate-pulse mb-4">
+                        {countdown}
+                    </div>
+                    <p className="text-xl text-gray-700">Le tournoi commence dans...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="main-content">
-            <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
-                <div className="flex flex-col gap-8 w-full">
-                    {/* First row: Avatar/username | Code | Share button */}
-                    <div className="flex flex-row items-center justify-between w-full gap-4">
-                        {/* Avatar + username */}
-                        <div className="flex items-center gap-3 min-w-0">
-                            {creator ? (
-                                <>
-                                    <div className="w-[50px] h-[50px] rounded-full border-2 flex items-center justify-center text-2xl" style={{ borderColor: "var(--secondary)" }}>
-                                        {creator.avatar}
-                                    </div>
-                                    <span className="font-bold text-lg truncate">{creator.username}</span>
-                                </>
-                            ) : (
-                                <span>Chargement...</span>
-                            )}
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">Salle d'attente</h1>
+                            <p className="text-gray-600 mt-2">Code du tournoi: <span className="font-mono text-blue-600 text-lg">{code}</span></p>
                         </div>
-                        {/* Tournament code */}
-                        <div className="flex flex-col items-center flex-1">
-                            <span className="text-lg font-mono font-bold tracking-widest bg-base-200 rounded px-2 py-0.5 mt-1">{code}</span>
+                        <div className="flex items-center space-x-4">
+                            <button
+                                onClick={() => navigator.clipboard.writeText(code as string)}
+                                className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors"
+                            >
+                                <Share2 size={20} />
+                                <span>Partager</span>
+                            </button>
                         </div>
-                        {/* Share button */}
-                        <button
-                            className="btn btn-sm btn-outline flex items-center justify-center"
-                            onClick={handleShare}
-                            aria-label="Partager le code du tournoi"
-                            type="button"
-                        >
-                            <Share2 className="w-5 h-5" />
-                        </button>
-                    </div>
-                    <hr className="w-full border-base-300" />
-                    <div className="w-full mt-0 mb-0 text-left">
-                        <div className="font-semibold text-lg">Participants connectés</div>
-                        <div className="h-4" />
-                    </div>
-                    <div className="w-full flex flex-col gap-0">
-                        <div className="flex-1 min-h-0 overflow-y-auto flex flex-wrap gap-4 justify-start w-full" style={{ maxHeight: '40vh' }}>
-                            {participants.map((p, i) => (
-                                <div key={p.id ? `${p.id}-${i}` : i} className="flex flex-col items-center">
-                                    <div
-                                        className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-2xl"
-                                        style={{ borderColor: "var(--primary)" }}
-                                    >
-                                        {p.avatar}
-                                    </div>
-                                    <span className="text-sm mt-0 truncate max-w-[70px]">{p.username}</span>
-                                </div>
-                            ))}
-                        </div>
-                        {isCreator && countdown === null && isQuizLinked === false && (
-                            <div className="w-full flex justify-end">
-                                <button className="btn btn-primary btn-lg mt-4" onClick={handleStart}>
-                                    Démarrer le tournoi
-                                </button>
-                            </div>
-                        )}
-                        {countdown !== null && (
-                            <div className="text-5xl font-extrabold text-primary mt-2 text-right w-full">{countdown}</div>
-                        )}
                     </div>
                 </div>
+
+                {/* Creator Info */}
+                {creator && (
+                    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Créateur du tournoi</h2>
+                        <div className="flex items-center space-x-3">
+                            <div className="text-2xl">{creator.avatar}</div>
+                            <span className="font-medium text-gray-900">{creator.username}</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Participants */}
+                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                        Participants ({participants.length})
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {participants.map((participant) => (
+                            <div
+                                key={participant.id}
+                                className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                            >
+                                <div className="text-2xl">{participant.avatar}</div>
+                                <span className="font-medium text-gray-900 truncate">
+                                    {participant.username}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                    {participants.length === 0 && (
+                        <p className="text-gray-500 text-center py-8">
+                            En attente de participants...
+                        </p>
+                    )}
+                </div>
+
+                {/* Start Button */}
+                {isCreator && (
+                    <div className="bg-white rounded-lg shadow-lg p-6">
+                        <div className="text-center">
+                            <button
+                                onClick={handleStart}
+                                disabled={participants.length === 0}
+                                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
+                            >
+                                Commencer le tournoi
+                            </button>
+                            {participants.length === 0 && (
+                                <p className="text-gray-500 mt-2 text-sm">
+                                    En attente de participants pour commencer
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Quiz Linked Indicator */}
+                {isQuizLinked !== null && (
+                    <div className="mt-4 text-center">
+                        <p className="text-sm text-gray-600">
+                            {isQuizLinked ? '🔗 Connecté au quiz en direct' : '📝 Tournoi autonome'}
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

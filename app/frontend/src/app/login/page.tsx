@@ -127,7 +127,7 @@ function LoginPageInner() {
         <div className="min-h-screen flex flex-col items-center justify-center bg-[color:var(--background)]">
             <div className="main-content w-full flex flex-col items-center justify-center">
                 <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-4 mx-4 sm:my-8 sm:mx-8">
-                    <div className="flex flex-col gap-6 p-2 sm:p-4 md:p-6">
+                    <div className="card-body items-center gap-6">
                         <div className="flex flex-col items-center gap-2 mb-2">
                             {/* Title removed as upgrade functionality moved to profile page */}
                         </div>

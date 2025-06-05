@@ -24,15 +24,41 @@ interface NavbarStateManagerProps {
 }
 
 export default function NavbarStateManager({ sidebarCollapsed, setSidebarCollapsed }: NavbarStateManagerProps) {
-    const { userState, isAuthenticated } = useAuth();
+    const { userState, isAuthenticated, isLoading } = useAuth();
 
     // Debug logging for development
     if (process.env.NODE_ENV === 'development') {
         console.log('NavbarStateManager - Current state:', {
             userState,
             isAuthenticated,
+            isLoading,
             sidebarCollapsed
         });
+    }
+
+    // Show loading state during initial auth check to prevent hydration issues
+    if (isLoading) {
+        return (
+            <div className="fixed left-0 top-0 z-40 h-screen w-64 bg-base-200 border-r border-base-300 hidden lg:block">
+                <div className="flex h-full flex-col overflow-y-auto">
+                    <div className="flex items-center justify-between p-4">
+                        <h1 className="text-xl font-bold text-primary">MathQuest</h1>
+                        <button className="btn btn-ghost btn-sm" disabled>
+                            ☰
+                        </button>
+                    </div>
+                    <div className="px-4 py-2">
+                        <div className="flex items-center space-x-3 p-3 bg-base-300 rounded-lg">
+                            <div className="skeleton w-10 h-10 rounded-full"></div>
+                            <div className="flex-1 space-y-2">
+                                <div className="skeleton h-4 w-20"></div>
+                                <div className="skeleton h-3 w-16"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     // Render appropriate navbar based on authentication state
