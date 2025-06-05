@@ -64,14 +64,38 @@ function registerLobbyHandlers(io, socket) {
                 });
                 return;
             }
-            // Join the lobby room
+            // Get current participants list BEFORE joining to check for duplicates
+            const participantsHash = await redis_1.redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
+            const existingParticipants = participantsHash ?
+                Object.values(participantsHash).map(p => JSON.parse(p)) : [];
+            // Check if this user is already in the lobby (by userId) and remove ALL instances
+            const existingParticipantsForUser = existingParticipants.filter(p => p.userId === userId);
+            let isReconnection = existingParticipantsForUser.length > 0;
+            if (existingParticipantsForUser.length > 0) {
+                logger.info({
+                    existingSocketIds: existingParticipantsForUser.map(p => p.id),
+                    newSocketId: socket.id,
+                    userId,
+                    accessCode,
+                    count: existingParticipantsForUser.length
+                }, 'Removing existing participant connections for user');
+                // Remove ALL old socket connections for this user
+                for (const existingParticipant of existingParticipantsForUser) {
+                    await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, existingParticipant.id);
+                    // Notify that each old participant left
+                    socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, {
+                        id: existingParticipant.id
+                    });
+                }
+            }
+            // Now join the lobby room
             await (0, roomUtils_1.joinRoom)(socket, `lobby_${accessCode}`, {
                 userId,
                 username,
                 avatarEmoji,
                 joinedAt: Date.now()
             });
-            // Store participant data in Redis
+            // Store new participant data in Redis
             const participant = {
                 id: socket.id,
                 userId,
@@ -80,12 +104,35 @@ function registerLobbyHandlers(io, socket) {
                 joinedAt: Date.now()
             };
             await redis_1.redisClient.hset(`${LOBBY_KEY_PREFIX}${accessCode}`, socket.id, JSON.stringify(participant));
-            // Get current participants list
-            const participantsHash = await redis_1.redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
-            const participants = Object.values(participantsHash)
+            // Get updated participants list and deduplicate by userId
+            const updatedParticipantsHash = await redis_1.redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
+            const allParticipants = Object.values(updatedParticipantsHash)
                 .map(p => JSON.parse(p));
-            // Notify others that someone joined
-            socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_JOINED, participant);
+            // Final deduplication by userId - keep the most recent joinedAt for each userId
+            const uniqueParticipants = new Map();
+            for (const participant of allParticipants) {
+                const existing = uniqueParticipants.get(participant.userId);
+                if (!existing || participant.joinedAt > existing.joinedAt) {
+                    uniqueParticipants.set(participant.userId, participant);
+                }
+            }
+            const participants = Array.from(uniqueParticipants.values());
+            // Clean up any duplicate entries in Redis
+            const validSocketIds = new Set(participants.map(p => p.id));
+            for (const participant of allParticipants) {
+                if (!validSocketIds.has(participant.id)) {
+                    await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, participant.id);
+                    logger.info({
+                        removedSocketId: participant.id,
+                        userId: participant.userId,
+                        accessCode
+                    }, 'Cleaned up duplicate participant entry');
+                }
+            }
+            // Notify others that someone joined (only if this is a new user, not a reconnection)
+            if (!isReconnection) {
+                socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_JOINED, participant);
+            }
             // Send full participants list to everyone in the lobby
             io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
                 participants,
@@ -112,10 +159,26 @@ function registerLobbyHandlers(io, socket) {
             await (0, roomUtils_1.leaveRoom)(socket, `lobby_${accessCode}`);
             // Remove from Redis
             await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, socket.id);
-            // Get updated participants list
+            // Get updated participants list and deduplicate
             const participantsHash = await redis_1.redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
-            const participants = Object.values(participantsHash)
+            const allParticipants = Object.values(participantsHash)
                 .map(p => JSON.parse(p));
+            // Deduplicate by userId - keep the most recent joinedAt for each userId
+            const uniqueParticipants = new Map();
+            for (const participant of allParticipants) {
+                const existing = uniqueParticipants.get(participant.userId);
+                if (!existing || participant.joinedAt > existing.joinedAt) {
+                    uniqueParticipants.set(participant.userId, participant);
+                }
+            }
+            const participants = Array.from(uniqueParticipants.values());
+            // Clean up any duplicate entries in Redis
+            const validSocketIds = new Set(participants.map(p => p.id));
+            for (const participant of allParticipants) {
+                if (!validSocketIds.has(participant.id)) {
+                    await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, participant.id);
+                }
+            }
             // Notify others that someone left
             socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socket.id });
             // Send updated participants list
@@ -150,8 +213,26 @@ function registerLobbyHandlers(io, socket) {
             }
             // Get participants list
             const participantsHash = await redis_1.redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
-            const participants = participantsHash ?
+            const allParticipants = participantsHash ?
                 Object.values(participantsHash).map(p => JSON.parse(p)) : [];
+            // Deduplicate by userId - keep the most recent joinedAt for each userId
+            const uniqueParticipants = new Map();
+            for (const participant of allParticipants) {
+                const existing = uniqueParticipants.get(participant.userId);
+                if (!existing || participant.joinedAt > existing.joinedAt) {
+                    uniqueParticipants.set(participant.userId, participant);
+                }
+            }
+            const participants = Array.from(uniqueParticipants.values());
+            // Clean up any duplicate entries in Redis in the background
+            const validSocketIds = new Set(participants.map(p => p.id));
+            for (const participant of allParticipants) {
+                if (!validSocketIds.has(participant.id)) {
+                    redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, participant.id).catch(err => {
+                        logger.warn({ error: err, accessCode, socketId: participant.id }, 'Failed to clean up duplicate participant');
+                    });
+                }
+            }
             // Send participants list only to requesting socket
             socket.emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
                 participants,
@@ -177,16 +258,46 @@ function registerLobbyHandlers(io, socket) {
                 if (room.startsWith('lobby_')) {
                     const accessCode = room.replace('lobby_', '');
                     logger.info({ accessCode, socketId }, 'Socket disconnecting from lobby');
-                    // Remove from Redis
-                    await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, socketId);
-                    // Get updated participants list
+                    // Get current participants to find this socket's participant data
                     const participantsHash = await redis_1.redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
                     const participants = participantsHash ?
                         Object.values(participantsHash).map(p => JSON.parse(p)) : [];
+                    // Find the participant data for this socket
+                    const disconnectingParticipant = participants.find(p => p.id === socketId);
+                    // Remove from Redis
+                    await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, socketId);
+                    // Get updated participants list and deduplicate
+                    const updatedParticipantsHash = await redis_1.redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
+                    const allUpdatedParticipants = updatedParticipantsHash ?
+                        Object.values(updatedParticipantsHash).map(p => JSON.parse(p)) : [];
+                    // Deduplicate by userId - keep the most recent joinedAt for each userId
+                    const uniqueParticipants = new Map();
+                    for (const participant of allUpdatedParticipants) {
+                        const existing = uniqueParticipants.get(participant.userId);
+                        if (!existing || participant.joinedAt > existing.joinedAt) {
+                            uniqueParticipants.set(participant.userId, participant);
+                        }
+                    }
+                    const updatedParticipants = Array.from(uniqueParticipants.values());
+                    // Clean up any duplicate entries in Redis
+                    const validSocketIds = new Set(updatedParticipants.map(p => p.id));
+                    for (const participant of allUpdatedParticipants) {
+                        if (!validSocketIds.has(participant.id)) {
+                            await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, participant.id);
+                        }
+                    }
                     // Notify others that someone left - using io instead of socket.to to ensure delivery
                     io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socketId });
                     // Send updated participants list
-                    io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, { participants });
+                    io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, { participants: updatedParticipants });
+                    if (disconnectingParticipant) {
+                        logger.info({
+                            accessCode,
+                            socketId,
+                            userId: disconnectingParticipant.userId,
+                            username: disconnectingParticipant.username
+                        }, 'Participant disconnected from lobby');
+                    }
                 }
             }
         }

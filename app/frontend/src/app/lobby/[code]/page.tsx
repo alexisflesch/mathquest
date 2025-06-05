@@ -67,7 +67,7 @@ export default function LobbyPage() {
     const [isCreator, setIsCreator] = useState(true); // TODO: Replace with real logic
     const [countdown, setCountdown] = useState<number | null>(null);
     const socketRef = useRef<Socket | null>(null);
-    const [participants, setParticipants] = useState<{ id: string; username: string; avatar: string }[]>([]);
+    const [participants, setParticipants] = useState<{ id: string; username: string; avatarEmoji: string }[]>([]);
     const [creator, setCreator] = useState<{ id: string | null; username: string; avatar: string } | null>(null);
     const [isQuizLinked, setIsQuizLinked] = useState<boolean | null>(null);
 
@@ -662,6 +662,13 @@ export default function LobbyPage() {
             alert("Lien copié dans le presse-papier !");
         }
     };
+
+    // Normalize participant avatars: always use backend-provided avatarEmoji only, no fallback or normalization
+    const normalizedParticipants = participants.map((p) => ({
+        ...p,
+        avatar: p.avatarEmoji
+    }));
+
     return (
         <div className="main-content">
             <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
@@ -672,7 +679,7 @@ export default function LobbyPage() {
                         <div className="flex items-center gap-3 min-w-0">
                             {creator ? (
                                 <>
-                                    <div className="w-[50px] h-[50px] rounded-full border-2 flex items-center justify-center text-2xl" style={{ borderColor: "var(--secondary)" }}>
+                                    <div className="w-[50px] h-[50px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--secondary)" }}>
                                         {creator.avatar}
                                     </div>
                                     <span className="font-bold text-lg truncate">{creator.username}</span>
@@ -702,10 +709,10 @@ export default function LobbyPage() {
                     </div>
                     <div className="w-full flex flex-col gap-0">
                         <div className="flex-1 min-h-0 overflow-y-auto flex flex-wrap gap-4 justify-start w-full" style={{ maxHeight: '40vh' }}>
-                            {participants.map((p, i) => (
+                            {normalizedParticipants.map((p, i) => (
                                 <div key={p.id ? `${p.id}-${i}` : i} className="flex flex-col items-center">
                                     <div
-                                        className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-2xl"
+                                        className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-3xl"
                                         style={{ borderColor: "var(--primary)" }}
                                     >
                                         {p.avatar}
