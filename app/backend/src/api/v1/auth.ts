@@ -20,6 +20,11 @@ const getUserService = (): UserService => {
     return userServiceInstance;
 };
 
+// Function to inject mock service for testing
+export const __setUserServiceForTesting = (mockService: UserService): void => {
+    userServiceInstance = mockService;
+};
+
 /**
  * Generic auth endpoint that handles multiple actions
  * POST /api/v1/auth

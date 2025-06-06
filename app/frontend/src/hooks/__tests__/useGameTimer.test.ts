@@ -126,14 +126,15 @@ describe('useGameTimer Hook', () => {
             // Simulate a timer update
             act(() => {
                 timerUpdateHandler({
+                    timeLeft: 25000, // ms, not s
+                    running: true,
                     status: 'play',
-                    timeLeft: 25,
                     questionId: 'q1'
                 });
             });
 
             expect(result.current.timerState.status).toBe('play');
-            expect(result.current.timerState.timeLeft).toBe(25);
+            expect(result.current.timerState.timeLeft).toBe(25000);
         });
     });
 
@@ -164,9 +165,9 @@ describe('useGameTimer Hook', () => {
             const { result } = renderHook(() => useGameTimer('student'));
 
             expect(result.current.formatTime(0)).toBe('0s');
-            expect(result.current.formatTime(30)).toBe('30s');
-            expect(result.current.formatTime(90)).toBe('1:30');
-            expect(result.current.formatTime(5.5, true)).toBe('5.5s');
+            expect(result.current.formatTime(30000)).toBe('30s');
+            expect(result.current.formatTime(90000)).toBe('1:30');
+            expect(result.current.formatTime(5500, true)).toBe('5.5s');
         });
     });
 
@@ -176,14 +177,15 @@ describe('useGameTimer Hook', () => {
 
             act(() => {
                 result.current.syncWithBackend({
+                    timeLeft: 45000, // ms, not s
+                    running: true,
                     status: 'play',
-                    timeLeft: 45,
                     questionId: 'question-2'
                 });
             });
 
             expect(result.current.timerState.status).toBe('play');
-            expect(result.current.timerState.timeLeft).toBe(45);
+            expect(result.current.timerState.timeLeft).toBe(45000);
             expect(result.current.timerState.questionId).toBe('question-2');
         });
     });

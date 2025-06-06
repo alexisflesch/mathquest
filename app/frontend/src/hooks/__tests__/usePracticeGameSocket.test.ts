@@ -129,8 +129,8 @@ describe('usePracticeGameSocket', () => {
         const questionData = {
             uid: 'question-123',
             text: 'What is 1+1?',
-            type: 'multiple_choice',
-            answers: ['1', '2', '3'],
+            questionType: 'multiple_choice',
+            answerOptions: ['1', '2', '3'],
             correctAnswers: [false, true, false],
             currentQuestionIndex: 0,
             totalQuestions: 5

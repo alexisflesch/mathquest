@@ -42,8 +42,8 @@ export function mapToStandardQuestion(input: QuestionLike): Question {
     const question: Question = {
         uid: input.uid || input.id || '',
         text: input.text || '',
-        type: input.type || 'choix_simple', // Retaining 'choix_simple' as it's a string literal value, not a property name
-    } as Question; // Cast to Question to satisfy stricter checks temporarily
+        questionType: input.type || 'choix_simple', // Use questionType as canonical field
+    } as unknown as Question; // Cast to unknown first, then to Question
 
     // Handle responses/answers with consistent property names
     if (Array.isArray(input.responses)) {

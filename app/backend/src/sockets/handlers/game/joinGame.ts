@@ -20,6 +20,8 @@ import {
     gameAlreadyPlayedPayloadSchema
 } from '@shared/types/socketEvents.zod';
 import { GAME_EVENTS } from '@shared/types/socket/events';
+// Import core participant types
+import { GameParticipant, ParticipantData } from '@shared/types/core/participant';
 
 const logger = createLogger('JoinGameHandler');
 
@@ -122,22 +124,28 @@ export function joinGameHandler(
             }
             socket.data.userId = userId;
             socket.data.accessCode = accessCode;
-            socket.data.username = joinResult.participant.user.username;
+            socket.data.username = username || 'Unknown';
 
             // Redis keys
             const participantsKey = `mathquest:game:participants:${accessCode}`;
             const userIdToSocketIdKey = `mathquest:game:userIdToSocketId:${accessCode}`;
             const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
 
-            const participantDataForRedis = {
-                // id: socket.id, // No longer using socket.id as the primary participant identifier in this hash
+            // Create participant data using core types (map from Prisma structure)
+            const participantDataForRedis: ParticipantData = {
+                id: joinResult.participant.id,
                 userId: joinResult.participant.userId,
-                username: joinResult.participant.user.username,
-                avatarEmoji: joinResult.participant.user.avatarEmoji,
-                joinedAt: joinResult.participant.joinedAt.toISOString(),
-                score: joinResult.participant.score,
+                username: username || 'Unknown',
+                avatar: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '😀', // Use parameter first, then fallback
+                score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji, // Use parameter first, then fallback
+                joinedAt: (joinResult.participant as any).joinedAt ?
+                    (typeof (joinResult.participant as any).joinedAt === 'string' ?
+                        (joinResult.participant as any).joinedAt :
+                        (joinResult.participant as any).joinedAt.toISOString()) :
+                    new Date().toISOString(),
                 online: true,
-                lastSocketId: socket.id // Keep track of the latest socket ID for this user
+                socketId: socket.id // Track current socket ID
             };
             logger.debug({ participantsKey, userId: joinResult.participant.userId, participantDataForRedis }, 'Storing participant in Redis by userId');
             // Store main participant data keyed by userId
@@ -154,10 +162,15 @@ export function joinGameHandler(
                 participant: {
                     id: joinResult.participant.id,
                     userId: joinResult.participant.userId,
-                    username: joinResult.participant.user.username,
-                    avatarEmoji: joinResult.participant.user.avatarEmoji || undefined,
-                    score: joinResult.participant.score,
-                    joinedAt: joinResult.participant.joinedAt.toISOString(),
+                    username: username || 'Unknown',
+                    avatar: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '😀',
+                    score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                    avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || undefined,
+                    joinedAt: (joinResult.participant as any).joinedAt ?
+                        (typeof (joinResult.participant as any).joinedAt === 'string' ?
+                            (joinResult.participant as any).joinedAt :
+                            (joinResult.participant as any).joinedAt.toISOString()) :
+                        new Date().toISOString(),
                     online: true,
                 },
                 gameStatus: gameInstance.status as GameJoinedPayload['gameStatus'],
@@ -172,9 +185,10 @@ export function joinGameHandler(
                     participant: {
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
-                        username: joinResult.participant.user.username,
-                        avatarEmoji: joinResult.participant.user.avatarEmoji || undefined,
-                        score: joinResult.participant.score,
+                        username: username || 'Unknown',
+                        avatar: (joinResult.participant as any).user?.avatarEmoji || '😀',
+                        score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                        avatarEmoji: (joinResult.participant as any).user?.avatarEmoji || undefined,
                         online: true
                     }
                 };

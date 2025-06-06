@@ -2,7 +2,6 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import { createLogger } from '@/clientLogger';
 import { Socket } from 'socket.io-client';
 import type { QuizState } from '@/hooks/migrations';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { makeApiRequest } from '@/config/api';
 import { TournamentCodeResponseSchema, type TournamentCodeResponse } from '@/types/api';
 
@@ -57,7 +56,7 @@ const CodeManager = forwardRef<CodeManagerRef, CodeManagerProps>(({
 
                 if (quizSocket) {
                     logger.info('Resetting quiz ended state after new tournament code');
-                    quizSocket.emit(SOCKET_EVENTS.LEGACY_QUIZ.RESET_ENDED, { quizId });
+                    // quizSocket.emit(SOCKET_EVENTS.LEGACY_QUIZ.RESET_ENDED, { quizId });
                 }
 
                 if (quizSocket) {
@@ -69,12 +68,12 @@ const CodeManager = forwardRef<CodeManagerRef, CodeManagerProps>(({
                         logger.info(`Re-emitting current question with new tournament code`);
                         const currentIdx = quizState.currentQuestionIdx;
                         const chrono = quizState.chrono?.timeLeft;
-                        quizSocket.emit(SOCKET_EVENTS.LEGACY_QUIZ.SET_QUESTION, {
-                            quizId,
-                            questionIdx: currentIdx,
-                            chrono: chrono,
-                            code: newCode
-                        });
+                        // quizSocket.emit(SOCKET_EVENTS.LEGACY_QUIZ.SET_QUESTION, {
+                        //     quizId,
+                        //     questionIdx: currentIdx,
+                        //     chrono: chrono,
+                        //     code: newCode
+                        // });
                     }
                 }
             } else {

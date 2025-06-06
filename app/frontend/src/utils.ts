@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from '@/constants/auth';
-import { SocketConfig, BaseSocketConfig } from '@/types/socket';
+import { SocketConfig } from '@/types/socket';
 
 export function formatTime(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
@@ -49,7 +49,7 @@ export function getSocketAuth(): Record<string, string> | null {
 /**
  * Create socket configuration with authentication
  */
-export function createSocketConfig(baseConfig: BaseSocketConfig): SocketConfig {
+export function createSocketConfig(baseConfig: SocketConfig): SocketConfig {
     const auth = getSocketAuth();
 
     return {

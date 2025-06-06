@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.__setUserServiceForTesting = void 0;
 const express_1 = __importDefault(require("express"));
 const auth_1 = require("@/middleware/auth");
 const userService_1 = require("@/core/services/userService");
@@ -20,6 +21,11 @@ const getUserService = () => {
     }
     return userServiceInstance;
 };
+// Function to inject mock service for testing
+const __setUserServiceForTesting = (mockService) => {
+    userServiceInstance = mockService;
+};
+exports.__setUserServiceForTesting = __setUserServiceForTesting;
 /**
  * Generic auth endpoint that handles multiple actions
  * POST /api/v1/auth

@@ -2,6 +2,20 @@
 // This file defines the types for Socket.IO events and their payloads,
 // shared between the backend and frontend.
 
+// Import consolidated core types
+import type {
+    ParticipantData,
+    TimerUpdatePayload,
+    GameTimerUpdatePayload,
+    TimerActionPayload,
+    AnswerSubmissionPayload as GameAnswerPayload,
+    LeaderboardEntry
+} from './core';
+import type { LiveQuestionPayload } from './quiz/liveQuestion';
+
+// Define LeaderboardEntryData for this file's usage
+type LeaderboardEntryData = LeaderboardEntry;
+
 export interface JoinGamePayload {
     accessCode: string;
     userId: string;
@@ -10,13 +24,12 @@ export interface JoinGamePayload {
     isDiffered?: boolean; // For joining a differed mode game
 }
 
-export interface GameAnswerPayload {
-    accessCode: string;
-    userId: string;
-    questionId: string; // Typically the UID of the question
-    answer: any; // Can be string, number, array depending on question type - TODO: Make more specific if possible (e.g. string | string[] | number)
-    timeSpent: number; // Milliseconds spent on the question
-}
+// Re-export core types for backward compatibility
+export type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload } from './core';
+export type { LeaderboardEntry as LeaderboardEntryData } from './core';
+
+// Legacy alias for GameAnswerPayload
+export type { AnswerSubmissionPayload as GameAnswerPayload } from './core';
 
 // Placeholder for other payloads - we'll add more as we identify them.
 
@@ -58,6 +71,16 @@ export interface NotificationPayload {
 
 // --- Specific Data Structures for Payloads ---
 
+// Game state update payload
+export interface GameStateUpdatePayload {
+    status: 'waiting' | 'active' | 'paused' | 'finished';
+    currentQuestion?: QuestionData;
+    questionIndex?: number;
+    totalQuestions?: number;
+    timer?: number;
+    participants?: ParticipantData[];
+}
+
 export interface QuestionData {
     uid: string;
     title?: string;
@@ -68,27 +91,18 @@ export interface QuestionData {
     timeLimit?: number; // Time in seconds
     currentQuestionIndex?: number; // 0-based index of the current question
     totalQuestions?: number;     // Total number of questions in the game/quiz
-    // Add other fields the client needs to display and interact with a question
-}
 
-export interface ParticipantData {
-    id: string;                 // GameParticipant ID from Prisma (if available post-join) or socket.id as a temporary identifier
-    userId: string;           // Player model ID
-    username: string;           // Player model username
-    avatarEmoji?: string;         // Player model avatarEmoji
-    score?: number;             // Current score in the game (from GameParticipant model or Redis)
-    online?: boolean;           // Real-time presence status
-    joinedAt?: number | string; // Timestamp or ISO string of when they joined this specific game session
-    // Add other relevant fields that the client needs to display a participant
-}
+    // Additional fields used throughout the frontend
+    gradeLevel?: string; // Educational grade level
+    discipline?: string; // Subject/discipline 
+    themes?: string[]; // Question themes
+    tags?: string[]; // Question tags
+    difficulty?: number; // Difficulty level
+    explanation?: string; // Question explanation
 
-export interface LeaderboardEntryData {
-    userId: string;           // Corresponds to Player.id
-    username: string;           // From Player model
-    avatarEmoji?: string;         // From Player model
-    score: number;              // From GameParticipant model
-    rank?: number;              // Calculated rank
-    // Add any other fields needed for displaying a leaderboard entry
+    // Legacy/alternative field names for backward compatibility
+    question?: string; // Alternative field for question text
+    answers?: string[]; // Legacy field for answer options
 }
 
 // --- Core Socket.IO Event Definitions ---
@@ -97,13 +111,20 @@ export interface LeaderboardEntryData {
 export interface ClientToServerEvents {
     join_game: (payload: JoinGamePayload) => void;
     game_answer: (payload: GameAnswerPayload) => void;
+    submit_answer: (payload: GameAnswerPayload) => void; // Alias for game_answer
     request_participants: (payload: { accessCode: string }) => void;
     request_next_question: (payload: { accessCode: string; userId: string; currentQuestionId: string }) => void;
-    // Example: teacher controls
-    teacher_set_question: (payload: { accessCode: string; questionUid: string; questionIndex: number }) => void;
-    teacher_timer_action: (payload: { accessCode: string; action: 'start' | 'pause' | 'resume' | 'stop' | 'set_duration'; duration?: number }) => void;
-    teacher_lock_answers: (payload: { accessCode: string; lock: boolean }) => void;
-    teacher_end_game: (payload: { accessCode: string }) => void;
+    // Teacher controls - using actual event names from TEACHER_EVENTS
+    set_question: (payload: { gameId?: string; accessCode?: string; questionUid: string; questionIndex: number }) => void;
+    quiz_timer_action: (payload: TimerActionPayload) => void;
+    lock_answers: (payload: { accessCode?: string; gameId?: string; lock: boolean }) => void;
+    end_game: (payload: { accessCode: string; gameId?: string }) => void;
+    join_dashboard: (payload: { gameId: string }) => void;
+    get_game_state: (payload: { accessCode: string }) => void;
+    set_timer: (payload: { gameId?: string; time: number; questionUid?: string }) => void;
+    update_tournament_code: (payload: { gameId: string; newCode: string }) => void;
+    // Tournament events
+    join_tournament: (payload: { code: string; username?: string; avatar?: string; isDeferred?: boolean; userId?: string; classId?: string; cookieId?: string }) => void;
     // Add other client-to-server events here
 }
 
@@ -114,7 +135,7 @@ export interface ServerToClientEvents {
     connection_established: (payload: { socketId: string; timestamp: string; user: Partial<SocketData> }) => void; // Example welcome event
 
     game_joined: (payload: GameJoinedPayload) => void; // Updated to use GameJoinedPayload
-    game_question: (payload: QuestionData) => void;
+    game_question: (payload: LiveQuestionPayload) => void;
     answer_received: (payload: {
         questionId: string;
         timeSpent: number;
@@ -132,14 +153,28 @@ export interface ServerToClientEvents {
     game_control_question_ended: (payload: { questionIndex: number; answers: any; leaderboard: any }) => void;
     question_ended: (payload: { questionIndex: number; questionUid?: string; showLeaderboard?: boolean }) => void;
 
-    game_state_update: (payload: any /* TODO: Define GameStatePayload for overall game state */) => void;
-    timer_update: (payload: { timeLeft: number | null; running: boolean; duration?: number }) => void;
+    game_state_update: (payload: GameStateUpdatePayload) => void;
+    timer_update: (payload: TimerUpdatePayload) => void;
+    game_timer_updated: (payload: GameTimerUpdatePayload) => void;
     answers_locked: (payload: { locked: boolean }) => void;
+    stats_update: (payload: any) => void;
     game_ended: (payload: { accessCode: string; correct?: number; total?: number; score?: number; totalQuestions?: number; /* any final stats */ }) => void;
 
     game_error: (payload: ErrorPayload) => void;
     game_already_played: (payload: GameAlreadyPlayedPayload) => void; // Updated to use GameAlreadyPlayedPayload
     notification: (payload: NotificationPayload) => void;
+
+    // Teacher dashboard events
+    error_dashboard: (payload: ErrorPayload) => void;
+    dashboard_joined: (payload: { gameId: string }) => void;
+    game_control_state: (payload: any) => void;
+    dashboard_question_changed: (payload: { questionUid: string; questionIndex?: number }) => void;
+    dashboard_timer_updated: (payload: TimerUpdatePayload) => void;
+    dashboard_answers_lock_changed: (payload: { locked: boolean }) => void;
+    dashboard_game_status_changed: (payload: { status: string }) => void;
+    quiz_connected_count: (payload: { count: number }) => void;
+    projector_state: (payload: any) => void;
+
     // Add other server-to-client events here
 }
 
@@ -162,3 +197,6 @@ export interface SocketData {
 
 // TODO: Define GameStatePayload for overall game state updates.
 // TODO: Review and refine 'any' types to be more specific where possible.
+
+// Re-export tournament question types for easy access
+export type { TournamentQuestion } from './tournament/question';

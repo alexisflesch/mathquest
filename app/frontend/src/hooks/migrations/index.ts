@@ -22,7 +22,6 @@ export { useTournamentSocket } from './useTournamentSocketMigrated';
 
 // Re-export types for backward compatibility
 export type {
-    Question,
     QuizState
 } from '../useTeacherQuizSocket';
 
@@ -33,12 +32,14 @@ export type {
 } from './useStudentGameSocketMigrated';
 
 export type {
-    TournamentQuestion,
     TournamentAnswerReceived,
     TournamentGameState,
     TournamentSocketHookProps,
     TournamentSocketHook
 } from './useTournamentSocketMigrated';
+
+// TournamentQuestion is now exported from @shared/types
+export type { TournamentQuestion } from '@shared/types';
 
 /**
  * Migration Status

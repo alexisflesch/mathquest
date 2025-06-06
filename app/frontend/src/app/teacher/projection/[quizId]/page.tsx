@@ -44,10 +44,11 @@ import QRCode from 'react-qr-code';
 import ClassementPodium from '@/components/ClassementPodium';
 import ZoomControls from '@/components/ZoomControls'; // Import du nouveau composant
 import { Question } from '@/types'; // Remove unused QuizState import
-import type { TournamentQuestion } from '@/components/QuestionCard';
+import type { TournamentQuestion } from '@shared/types';
 import { makeApiRequest } from '@/config/api';
 import { QuizListResponseSchema, TournamentCodeResponseSchema, type QuizListResponse, type TournamentCodeResponse } from '@/types/api';
 import { STORAGE_KEYS } from '@/constants/auth';
+import type { QuestionData } from '@shared/types/socketEvents';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const logger = createLogger('ProjectionPage');
@@ -106,56 +107,52 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
         setCorrectAnswers(val);
     };
 
-    useEffect(() => {
-        if (!gameSocket) return;
-        const handleResults = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
-            logger.info('[Projection] Received quiz_question_results', data);
-            setLeaderboard(data.leaderboard || []);
-            debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_results');
-            setPodiumKey(k => k + 1); // Remount ClassementPodium for animation
-        };
-        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_RESULTS, handleResults);
-        return () => {
-            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_RESULTS, handleResults);
-        };
-    }, [gameSocket]);
-
-    useEffect(() => {
-        if (!gameSocket) return;
-        const handleClosed = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
-            logger.info('[Projection] Received quiz_question_closed', data);
-            setLeaderboard(data.leaderboard || []);
-            debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_closed');
-        };
-        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_CLOSED, handleClosed);
-        return () => {
-            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_CLOSED, handleClosed);
-        };
-    }, [gameSocket]);
-
-    // Listen for stats updates
-    useEffect(() => {
-        if (!gameSocket) return;
-        const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
-            setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
-        };
-        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
-        return () => {
-            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
-        };
-    }, [gameSocket]);
-
-    // Listen for show/hide stats toggle
-    useEffect(() => {
-        if (!gameSocket) return;
-        const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
-            setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
-        };
-        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
-        return () => {
-            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
-        };
-    }, [gameSocket]);
+    // --- Legacy event listeners removed: migrate to new event system or use quizState ---
+    // useEffect(() => {
+    //     if (!gameSocket) return;
+    //     const handleResults = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
+    //         logger.info('[Projection] Received quiz_question_results', data);
+    //         setLeaderboard(data.leaderboard || []);
+    //         debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_results');
+    //         setPodiumKey(k => k + 1); // Remount ClassementPodium for animation
+    //     };
+    //     gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_RESULTS, handleResults);
+    //     return () => {
+    //         gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_RESULTS, handleResults);
+    //     };
+    // }, [gameSocket]);
+    // useEffect(() => {
+    //     if (!gameSocket) return;
+    //     const handleClosed = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
+    //         logger.info('[Projection] Received quiz_question_closed', data);
+    //         setLeaderboard(data.leaderboard || []);
+    //         debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_closed');
+    //     };
+    //     gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_CLOSED, handleClosed);
+    //     return () => {
+    //         gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_CLOSED, handleClosed);
+    //     };
+    // }, [gameSocket]);
+    // useEffect(() => {
+    //     if (!gameSocket) return;
+    //     const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
+    //         setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
+    //     };
+    //     gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
+    //     return () => {
+    //         gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
+    //     };
+    // }, [gameSocket]);
+    // useEffect(() => {
+    //     if (!gameSocket) return;
+    //     const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
+    //         setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
+    //     };
+    //     gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
+    //     return () => {
+    //         gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
+    //     };
+    // }, [gameSocket]);
 
     // Clear correctAnswers when a new question is set
     const lastQuestionIdRef = useRef<string | null>(null);
@@ -314,11 +311,11 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     // const formatTime = (seconds: number | null): string => { ... };
 
     // Get current question from game state
-    const getCurrentQuestion = (): Question | null => {
+    const getCurrentQuestion = (): QuestionData | null => {
         if (!gameState || !timerQuestionId) {
             return null;
         }
-        const found = gameState.questions.find((q: Question) => q.uid === timerQuestionId) || null;
+        const found = gameState.questions.find((q: QuestionData) => q.uid === timerQuestionId) || null;
         return found;
     };
 
@@ -342,10 +339,10 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
         ? {
             uid: currentQuestion.uid,
-            question: currentQuestion.text, // MODIFIED: Use currentQuestion.text (string) instead of currentQuestion.question (string | undefined)
-            type: currentQuestion.type,
-            answers: currentQuestion.answers // MODIFIED: Use currentQuestion.answers and map .text
-                ? currentQuestion.answers.map(r => r.text)
+            question: currentQuestion.text,
+            type: currentQuestion.questionType,
+            answers: Array.isArray(currentQuestion.answerOptions)
+                ? currentQuestion.answerOptions
                 : [],
         }
         : null;
@@ -448,7 +445,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
                                         <QuestionCard
                                             key={questionKey}
                                             currentQuestion={currentTournamentQuestion}
-                                            questionIndex={gameState?.questions.findIndex((q: Question) => q.uid === currentTournamentQuestion?.uid) ?? 0}
+                                            questionIndex={gameState?.questions.findIndex(q => q.uid === currentTournamentQuestion?.uid) ?? 0}
                                             totalQuestions={gameState?.questions.length ?? 0}
                                             isMultipleChoice={currentTournamentQuestion?.type === 'choix_multiple'}
                                             selectedAnswer={null}

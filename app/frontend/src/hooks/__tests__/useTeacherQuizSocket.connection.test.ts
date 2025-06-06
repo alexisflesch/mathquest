@@ -64,21 +64,21 @@ describe('useTeacherQuizSocket Connection', () => {
     });
 
     it('should connect socket and register connection event listener', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Verify that connect event listener was registered
         expect(mockSocket.on).toHaveBeenCalledWith('connect', expect.any(Function));
     });
 
     it('should register disconnect event listener', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Verify that disconnect event listener was registered
         expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
     });
 
     it('should handle connect event properly', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         act(() => {
             const connectCallback = mockSocket.on.mock.calls.find(call => call[0] === 'connect')?.[1];
@@ -95,7 +95,7 @@ describe('useTeacherQuizSocket Connection', () => {
     });
 
     it('should handle disconnect event properly', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         act(() => {
             const disconnectCallback = mockSocket.on.mock.calls.find(call => call[0] === 'disconnect')?.[1];
@@ -110,7 +110,7 @@ describe('useTeacherQuizSocket Connection', () => {
     });
 
     it('should cleanup listeners on component unmount', () => {
-        const { unmount } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { unmount } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Unmount the component
         unmount();

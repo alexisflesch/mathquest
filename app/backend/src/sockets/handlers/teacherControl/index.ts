@@ -7,7 +7,7 @@ import { endGameHandler } from './endGame';
 import { startTimerHandler } from './startTimer';
 import { pauseTimerHandler } from './pauseTimer';
 import { disconnectHandler } from './disconnect';
-import { TEACHER_EVENTS, LEGACY_QUIZ_EVENTS } from '@shared/types/socket/events';
+import { TEACHER_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Register all teacher dashboard socket event handlers
@@ -20,8 +20,6 @@ export function registerTeacherControlHandlers(io: SocketIOServer, socket: Socke
 
     // Set a specific question
     socket.on(TEACHER_EVENTS.SET_QUESTION, setQuestionHandler(io, socket));
-    // Support legacy/test event name for integration tests
-    socket.on(LEGACY_QUIZ_EVENTS.SET_QUESTION, setQuestionHandler(io, socket));
 
     // Timer actions (start, pause, resume, stop, set_duration)
     socket.on(TEACHER_EVENTS.TIMER_ACTION, timerActionHandler(io, socket));

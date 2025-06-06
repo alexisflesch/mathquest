@@ -64,7 +64,7 @@ describe('useTeacherQuizSocket Initialization', () => {
     });
 
     it('should initialize socket with correct configuration', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Verify that socket.io was called with correct parameters
         expect(mockedIo).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({
@@ -78,7 +78,7 @@ describe('useTeacherQuizSocket Initialization', () => {
     });
 
     it('should setup all required event listeners', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Verify that all required event listeners are registered
         expect(mockSocket.on).toHaveBeenCalledWith('connect', expect.any(Function));
@@ -90,7 +90,7 @@ describe('useTeacherQuizSocket Initialization', () => {
     });
 
     it('should emit "join_dashboard" on connect', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         act(() => {
             const connectCallback = mockSocket.on.mock.calls.find(call => call[0] === 'connect')?.[1];
@@ -107,7 +107,7 @@ describe('useTeacherQuizSocket Initialization', () => {
     });
 
     it('should initialize with default states', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Check initial state values
         expect(result.current.connectedCount).toBe(1); // Professor connected by default

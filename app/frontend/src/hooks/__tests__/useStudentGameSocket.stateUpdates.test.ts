@@ -1,7 +1,7 @@
-
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
-import { useStudentGameSocket, GameQuestionPayload } from '../useStudentGameSocket';
+import { useStudentGameSocket } from '../useStudentGameSocket';
+import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 
 // Mock socket.io-client
 jest.mock('socket.io-client');
@@ -60,17 +60,12 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is the capital of France?',
                 type: 'choix_simple',
-                answers: ['London', 'Paris', 'Berlin', 'Madrid'],
-                subject: 'Geography',
-                themes: ['Capitals'],
-                difficulty: 2,
-                gradeLevel: 'CE2'
+                answers: ['London', 'Paris', 'Berlin', 'Madrid']
             },
             timer: 45,
             questionIndex: 2,
@@ -80,6 +75,15 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+        });
+
+        // Simulate timer update from backend
+        act(() => {
+            eventHandlers['timer_update']?.({
+                timeLeft: 45,
+                status: 'play',
+                running: true
+            });
         });
 
         await waitFor(() => {
@@ -111,8 +115,7 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         // Now receive a new question
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q2',
                 text: 'What is 5 + 3?',
@@ -127,11 +130,14 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({ timeLeft: 30, status: 'play', running: true });
         });
 
         await waitFor(() => {
             expect(result.current.gameState.answered).toBe(false);
             expect(result.current.gameState.currentQuestion?.uid).toBe('q2');
+            expect(result.current.gameState.currentQuestion?.type).toBe('choix_simple');
+            expect(result.current.gameState.currentQuestion?.answers).toEqual(['6', '7', '8', '9']);
         });
     });
 
@@ -151,7 +157,9 @@ describe('useStudentGameSocket - State Updates', () => {
         act(() => {
             eventHandlers['game_joined']?.({
                 accessCode: 'TEST123',
-                gameStatus: 'active'
+                participant: { id: 'p1', userId: 'user-123', username: 'TestUser' },
+                gameStatus: 'active',
+                isDiffered: false
             });
         });
 
@@ -160,8 +168,7 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         // Connection should persist through question updates
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'Test question',
@@ -176,10 +183,14 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({ timeLeft: 30, status: 'play', running: true });
         });
 
         await waitFor(() => {
             expect(result.current.gameState.connectedToRoom).toBe(true);
+            expect(result.current.gameState.currentQuestion?.uid).toBe('q1');
+            expect(result.current.gameState.currentQuestion?.type).toBe('choix_simple');
+            expect(result.current.gameState.currentQuestion?.answers).toEqual(['A', 'B', 'C', 'D']);
         });
     });
 
@@ -192,14 +203,12 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const multipleChoicePayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const multipleChoicePayload: LiveQuestionPayload = {
             question: {
                 uid: 'q3',
                 text: 'Which of the following are prime numbers?',
                 type: 'choix_multiple',
-                answers: ['2', '3', '4', '5', '6', '7'],
-                correctAnswers: [true, true, false, true, false, true]
+                answers: ['2', '3', '4', '5', '6', '7']
             },
             timer: 60,
             questionIndex: 3,
@@ -209,11 +218,12 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(multipleChoicePayload);
+            eventHandlers['timer_update']?.({ timeLeft: 60, status: 'play', running: true });
         });
 
         await waitFor(() => {
             expect(result.current.gameState.currentQuestion?.type).toBe('choix_multiple');
-            expect(result.current.gameState.currentQuestion?.correctAnswers).toEqual([true, true, false, true, false, true]);
+            expect(result.current.gameState.currentQuestion?.answers).toEqual(['2', '3', '4', '5', '6', '7']);
         });
     });
 
@@ -233,7 +243,9 @@ describe('useStudentGameSocket - State Updates', () => {
         act(() => {
             eventHandlers['game_joined']?.({
                 accessCode: 'TEST123',
-                gameStatus: 'active'
+                participant: { id: 'p1', userId: 'user-123', username: 'TestUser' },
+                gameStatus: 'active',
+                isDiffered: false
             });
         });
 
@@ -245,7 +257,8 @@ describe('useStudentGameSocket - State Updates', () => {
         act(() => {
             eventHandlers['timer_update']?.({
                 timeLeft: 15,
-                status: 'pause'
+                status: 'pause',
+                running: false
             });
         });
 
@@ -282,7 +295,8 @@ describe('useStudentGameSocket - State Updates', () => {
         act(() => {
             eventHandlers['timer_update']?.({
                 timeLeft: 30,
-                status: 'play'
+                status: 'play',
+                running: true
             });
         });
 
@@ -292,9 +306,10 @@ describe('useStudentGameSocket - State Updates', () => {
 
         // Update timer to pause
         act(() => {
-            eventHandlers['game_update']?.({
+            eventHandlers['timer_update']?.({
                 timeLeft: 25,
-                status: 'pause'
+                status: 'pause',
+                running: false
             });
         });
 
@@ -304,8 +319,10 @@ describe('useStudentGameSocket - State Updates', () => {
 
         // Update timer to stop
         act(() => {
-            eventHandlers['game_update']?.({
-                status: 'stop'
+            eventHandlers['timer_update']?.({
+                timeLeft: 0,
+                status: 'stop',
+                running: false
             });
         });
 
@@ -323,18 +340,12 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionWithMetadata: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionWithMetadata: LiveQuestionPayload = {
             question: {
                 uid: 'q5',
                 text: 'What is photosynthesis?',
                 type: 'choix_simple',
-                answers: ['A', 'B', 'C', 'D'],
-                subject: 'Biology',
-                themes: ['Plants', 'Processes'],
-                difficulty: 3,
-                gradeLevel: 'CM1',
-                explanation: 'Photosynthesis is the process by which plants make food from sunlight.'
+                answers: ['A', 'B', 'C', 'D']
             },
             timer: 40,
             questionIndex: 4,
@@ -348,11 +359,10 @@ describe('useStudentGameSocket - State Updates', () => {
 
         await waitFor(() => {
             const currentQuestion = result.current.gameState.currentQuestion;
-            expect(currentQuestion?.subject).toBe('Biology');
-            expect(currentQuestion?.themes).toEqual(['Plants', 'Processes']);
-            expect(currentQuestion?.difficulty).toBe(3);
-            expect(currentQuestion?.gradeLevel).toBe('CM1');
-            expect(currentQuestion?.explanation).toBe('Photosynthesis is the process by which plants make food from sunlight.');
+            expect(currentQuestion?.uid).toBe('q5');
+            expect(currentQuestion?.text).toBe('What is photosynthesis?');
+            expect(currentQuestion?.type).toBe('choix_simple');
+            expect(currentQuestion?.answers).toEqual(['A', 'B', 'C', 'D']);
         });
     });
 
@@ -402,8 +412,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'Quick question',
@@ -418,10 +427,14 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({ timeLeft: 0, status: 'stop', running: false });
         });
 
         await waitFor(() => {
             expect(result.current.gameState.timer).toBe(0);
+            expect(result.current.gameState.currentQuestion?.uid).toBe('q1');
+            expect(result.current.gameState.currentQuestion?.type).toBe('choix_simple');
+            expect(result.current.gameState.currentQuestion?.answers).toEqual(['A', 'B']);
             expect(result.current.gameState.gameStatus).toBe('waiting');
         });
     });

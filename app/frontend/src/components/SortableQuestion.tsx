@@ -122,11 +122,11 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         // When a question gets stopped, store its original time for later restoration
         if (isActive && liveStatus === 'stop') {
             // When a question is stopped, remember its original time
-            const originalTime = liveTimeLeft && liveTimeLeft > 0 ? liveTimeLeft : q.time;
+            const originalTime = liveTimeLeft && liveTimeLeft > 0 ? liveTimeLeft : q.timeLimit;
             logger.debug(`[Timer Display] Question ${q.uid} was stopped. Original time ${originalTime}s is preserved for future restoration`);
             // The initialTime storage is handled in useTeacherQuizSocket.ts
         }
-    }, [isActive, liveStatus, liveTimeLeft, q.time, q.uid]);
+    }, [isActive, liveStatus, liveTimeLeft, q.timeLimit, q.uid]);
 
     // Optimize displayedTimeLeft logic
     let displayedTimeLeft: number;
@@ -136,14 +136,14 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     }
     if (isActive) {
         if (liveStatus === 'stop') {
-            displayedTimeLeft = liveTimeLeft ?? q.time ?? 0;
+            displayedTimeLeft = liveTimeLeft ?? q.timeLimit ?? 0;
         } else if (liveStatus === 'pause' || liveStatus === 'play') {
-            displayedTimeLeft = liveTimeLeft ?? q.time ?? 0;
+            displayedTimeLeft = liveTimeLeft ?? q.timeLimit ?? 0;
         } else {
-            displayedTimeLeft = q.time ?? 0;
+            displayedTimeLeft = q.timeLimit ?? 0;
         }
     } else {
-        displayedTimeLeft = q.time ?? 0;
+        displayedTimeLeft = q.timeLimit ?? 0;
     }
 
     // --- Effets (conservés ici pour la synchro et l'édition) ---
@@ -158,13 +158,13 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         if (isActive && typeof liveTimeLeft === 'number') {
             logger.debug(`Syncing active question timer ${q.uid}: localTimeLeft <- liveTimeLeft (${liveTimeLeft})`);
             setEditTimerValue(String(liveTimeLeft));
-        } else if (!isActive && q.time !== undefined && editTimerValue !== String(q.time)) {
-            logger.debug(`Syncing inactive question timer ${q.uid}: localTimeLeft <- q.time (${q.time})`);
-            setEditTimerValue(String(q.time));
+        } else if (!isActive && q.timeLimit !== undefined && editTimerValue !== String(q.timeLimit)) {
+            logger.debug(`Syncing inactive question timer ${q.uid}: localTimeLeft <- q.time (${q.timeLimit})`);
+            setEditTimerValue(String(q.timeLimit));
         }
         // Assurons-nous que toutes les dépendances sont explicitement listées
         // et que chaque valeur est de type stable (convertir les nombres en string si nécessaire)
-    }, [isActive, liveTimeLeft, q.time, editTimerValue, q.uid, editingTimer]);
+    }, [isActive, liveTimeLeft, q.timeLimit, editTimerValue, q.uid, editingTimer]);
 
     // Ajouter un logging explicite pour déboguer le problème de sélection
     useEffect(() => {
@@ -195,10 +195,10 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     useEffect(() => {
         if (editingTimer) {
             // Utilise la valeur du timer serveur pour initialiser l'édition
-            setEditTimerValue(liveTimeLeft !== undefined && liveTimeLeft !== null ? String(liveTimeLeft) : String(q.time ?? 0));
+            setEditTimerValue(liveTimeLeft !== undefined && liveTimeLeft !== null ? String(liveTimeLeft) : String(q.timeLimit ?? 0));
             setTimeout(() => timerInputRef.current?.focus(), 0);
         }
-    }, [editingTimer, liveTimeLeft, q.time]); // Added q.time as fallback
+    }, [editingTimer, liveTimeLeft, q.timeLimit]); // Added q.time as fallback
 
     // Effet pour réinitialiser la valeur en attente une fois que liveTimeLeft correspond
     useEffect(() => {
@@ -280,12 +280,21 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
 
     // --- Rendu ---
 
+    // Helper to map canonical Question to legacy shape for QuestionDisplay
+    function toLegacyQuestionShape(q: any) {
+        return {
+            ...q,
+            answers: Array.isArray(q.answerOptions) ? q.answerOptions.map((text: string, i: number) => ({ text, correct: q.correctAnswers?.[i] || false })) : [],
+            time: q.timeLimit,
+        };
+    }
+
     // JSX pour l'input d'édition (rendu conditionnellement)
     const timerEditInput = editingTimer ? (
         <div className="relative"> {/* Make this container relative for absolute overlay */}
             <QuestionDisplay
                 className="question-dashboard opacity-40 pointer-events-none select-none"
-                question={q}
+                question={toLegacyQuestionShape(q)}
                 isOpen={open}
                 onToggleOpen={setOpen}
                 timerStatus={(isActive ? liveStatus : 'stop') ?? 'stop'}
@@ -344,15 +353,15 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         <div className="transition-all duration-300 ease-in-out overflow-hidden max-h-[500px] opacity-100">
             <ul className={`ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none no-top-border ${isActive ? "answers-selected" : ""}`} style={{ borderTop: '1px solid var(--border-color)' }}>
                 <li className="mb-2 font-medium text-base text-couleur-global-neutral-700">
-                    <MathJaxWrapper>{q.question}</MathJaxWrapper>
+                    <MathJaxWrapper>{q.text}</MathJaxWrapper>
                 </li>
-                {Array.isArray(q.answers) && q.answers.length > 0
-                    ? q.answers.map((r, idx) => (
+                {Array.isArray(q.answerOptions) && q.answerOptions.length > 0
+                    ? q.answerOptions.map((text, idx) => (
                         <li key={idx} className="flex gap-2 ml-4 mb-1" style={{ listStyle: 'none', alignItems: 'flex-start' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'flex-start', height: '18px', minWidth: '18px' }}>
-                                {r.correct ? <Check size={18} strokeWidth={3} className="text-primary mt-1" style={{ display: 'block' }} /> : <X size={18} strokeWidth={3} className="text-secondary mt-1" style={{ display: 'block' }} />}
+                                {q.correctAnswers && q.correctAnswers[idx] ? <Check size={18} strokeWidth={3} className="text-primary mt-1" style={{ display: 'block' }} /> : <X size={18} strokeWidth={3} className="text-secondary mt-1" style={{ display: 'block' }} />}
                             </span>
-                            <MathJaxWrapper><span style={{ lineHeight: '1.5' }}>{r.text}</span></MathJaxWrapper>
+                            <MathJaxWrapper><span style={{ lineHeight: '1.5' }}>{text}</span></MathJaxWrapper>
                         </li>
                     ))
                     : <li className="italic text-muted-foreground">Aucune réponse définie</li>}
@@ -395,7 +404,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                     // Affiche le composant QuestionDisplay normal
                     <QuestionDisplay
                         className="question-dashboard"
-                        question={q}
+                        question={toLegacyQuestionShape(q)}
                         isOpen={open}
                         onToggleOpen={setOpen}
                         timerStatus={(isActive ? liveStatus : 'stop') ?? 'stop'}

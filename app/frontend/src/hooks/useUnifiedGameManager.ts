@@ -15,6 +15,15 @@ import { useGameTimer, type TimerRole, type TimerState } from './useGameTimer';
 import { useGameSocket as useSocketManager, type SocketConfig } from './useGameSocket';
 import type { GameTimerHook } from './useGameTimer';
 import type { GameSocketHook } from './useGameSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import type {
+    ClientToServerEvents,
+    ServerToClientEvents,
+    TimerActionPayload,
+    JoinGamePayload,
+    GameAnswerPayload
+} from '@shared/types/socketEvents';
+import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
 
 const logger = createLogger('useUnifiedGameManager');
 
@@ -92,13 +101,11 @@ export interface UnifiedGameManagerHook {
 
     // Socket controls
     socket: {
-        instance: Socket | null;
+        instance: Socket<ServerToClientEvents, ClientToServerEvents> | null;
         connect: () => void;
         disconnect: () => void;
         reconnect: () => void;
-        emit: (event: string, data?: unknown) => void;
-        on: (event: string, handler: (...args: unknown[]) => void) => () => void;
-        emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', questionId?: string, duration?: number) => void;
+        emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', duration?: number) => void;
     };
 
     // Game actions (role-specific)
@@ -134,8 +141,8 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
     const { role, gameId, timerConfig, socketConfig, token, accessCode, userId, username, avatarEmoji } = config;
 
     // --- Initialize Timer and Socket Hooks ---
-    const timer = useGameTimer(role, timerConfig);
     const socket = useSocketManager(role, gameId, socketConfig);
+    const timer = useGameTimer(role, undefined);
 
     // --- Game State Management ---
     const [gameState, setGameState] = useState<GameState>({
@@ -146,7 +153,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
         error: socket.socketState.error,
         timer: timer.timerState,
         isTimerRunning: timer.isRunning,
-        currentQuestionId: timer.timerState.questionId,
+        currentQuestionId: timer.timerState.questionId ?? null,
         currentQuestionIndex: null,
         totalQuestions: 0,
         gameStatus: 'waiting',
@@ -171,7 +178,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
             ...prev,
             timer: timer.timerState,
             isTimerRunning: timer.isRunning,
-            currentQuestionId: timer.timerState.questionId
+            currentQuestionId: timer.timerState.questionId ?? null
         }));
     }, [timer.timerState, timer.isRunning]);
 
@@ -185,17 +192,31 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
         cleanupFunctions.push(
             socket.onTimerUpdate((timerUpdate) => {
                 logger.debug(`[${role.toUpperCase()}] Received timer update`, timerUpdate);
-                timer.syncWithBackend(timerUpdate);
+                if (timerUpdate && typeof timerUpdate === 'object' && 'running' in timerUpdate) {
+                    const fixedTimerUpdate = {
+                        ...timerUpdate,
+                        timeLeft: timerUpdate.timeLeft === undefined ? null : timerUpdate.timeLeft,
+                        running: !!timerUpdate.running,
+                        questionId: timerUpdate.questionId === null ? undefined : timerUpdate.questionId
+                    };
+                    timer.syncWithBackend(fixedTimerUpdate);
+                }
             })
         );
 
-        // Connected count handler (common across roles)
-        cleanupFunctions.push(
-            socket.on('connected_count', (...args: unknown[]) => {
-                const data = args[0] as { count: number };
-                setGameState(prev => ({ ...prev, connectedCount: data.count }));
-            })
-        );
+        // Connected count handler (canonical event)
+        if (socket.socket) {
+            socket.socket.on(
+                SOCKET_EVENTS.TEACHER.CONNECTED_COUNT as keyof ServerToClientEvents,
+                (payload: any) => {
+                    // quiz_connected_count: { count: number }
+                    setGameState(prev => ({ ...prev, connectedCount: payload.count }));
+                }
+            );
+            cleanupFunctions.push(() => {
+                socket.socket?.off(SOCKET_EVENTS.TEACHER.CONNECTED_COUNT as keyof ServerToClientEvents);
+            });
+        }
 
         // Role-specific event handlers
         if (role === 'teacher') {
@@ -210,7 +231,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
 
         // Cleanup on unmount or socket change
         return () => {
-            cleanupFunctions.forEach(cleanup => cleanup());
+            cleanupFunctions.forEach(cleanup => cleanup && cleanup());
         };
     }, [socket.socket, role, timer]);
 
@@ -234,8 +255,6 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
             connect: socket.connect,
             disconnect: socket.disconnect,
             reconnect: socket.reconnect,
-            emit: socket.emit,
-            on: socket.on,
             emitTimerAction: socket.emitTimerAction
         },
         actions
@@ -249,9 +268,12 @@ function setupTeacherEvents(
     setGameState: React.Dispatch<React.SetStateAction<GameState>>,
     cleanupFunctions: (() => void)[]
 ) {
+    if (!socket.socket) return;
+
     // Game control state updates
-    cleanupFunctions.push(
-        socket.on('game_control_state', (state: any) => {
+    socket.socket.on(
+        SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents,
+        (state: any) => {
             logger.debug('Teacher received game_control_state', state);
             setGameState(prev => ({
                 ...prev,
@@ -259,16 +281,23 @@ function setupTeacherEvents(
                 totalQuestions: state.questions?.length || 0,
                 gameStatus: state.ended ? 'finished' : 'active'
             }));
-        })
+        }
     );
+    cleanupFunctions.push(() => {
+        socket.socket?.off(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents);
+    });
 
     // Dashboard-specific events
-    cleanupFunctions.push(
-        socket.on('dashboard_question_changed', (...args: unknown[]) => {
-            const data = args[0] as { questionUid: string };
-            setGameState(prev => ({ ...prev, currentQuestionId: data.questionUid }));
-        })
+    socket.socket.on(
+        SOCKET_EVENTS.TEACHER.DASHBOARD_QUESTION_CHANGED as keyof ServerToClientEvents,
+        (payload: any) => {
+            // dashboard_question_changed: { questionUid: string }
+            setGameState(prev => ({ ...prev, currentQuestionId: payload.questionUid }));
+        }
     );
+    cleanupFunctions.push(() => {
+        socket.socket?.off(SOCKET_EVENTS.TEACHER.DASHBOARD_QUESTION_CHANGED as keyof ServerToClientEvents);
+    });
 }
 
 function setupStudentEvents(
@@ -277,43 +306,55 @@ function setupStudentEvents(
     timer: GameTimerHook,
     cleanupFunctions: (() => void)[]
 ) {
+    if (!socket.socket) return;
+
     // Game question received
-    cleanupFunctions.push(
-        socket.on('game_question', (payload: any) => {
+    socket.socket.on(
+        SOCKET_EVENTS.GAME.GAME_QUESTION as keyof ServerToClientEvents,
+        (payload: LiveQuestionPayload) => {
             logger.debug('Student received game_question', payload);
             setGameState(prev => ({
                 ...prev,
                 currentQuestionId: payload.question?.uid,
-                currentQuestionIndex: payload.questionIndex,
-                totalQuestions: payload.totalQuestions,
+                currentQuestionIndex: payload.questionIndex ?? null,
+                totalQuestions: payload.totalQuestions ?? 0,
                 gameStatus: 'active',
                 phase: 'question',
                 answered: false
             }));
-
-            // Auto-start timer if configured
             if (payload.question?.uid && payload.timer) {
                 timer.start(payload.question.uid, payload.timer);
             }
-        })
+        }
     );
+    cleanupFunctions.push(() => {
+        socket.socket?.off(SOCKET_EVENTS.GAME.GAME_QUESTION as keyof ServerToClientEvents);
+    });
 
     // Answer received feedback
-    cleanupFunctions.push(
-        socket.on('answer_received', (result: any) => {
+    socket.socket.on(
+        SOCKET_EVENTS.GAME.ANSWER_RECEIVED as keyof ServerToClientEvents,
+        (result: any) => {
             logger.debug('Student received answer_received', result);
             setGameState(prev => ({ ...prev, answered: true, phase: 'feedback' }));
-        })
+        }
     );
+    cleanupFunctions.push(() => {
+        socket.socket?.off(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as keyof ServerToClientEvents);
+    });
 
     // Game ended
-    cleanupFunctions.push(
-        socket.on('game_ended', (results: any) => {
+    socket.socket.on(
+        SOCKET_EVENTS.GAME.GAME_ENDED as keyof ServerToClientEvents,
+        (results: any) => {
             logger.debug('Student received game_ended', results);
             setGameState(prev => ({ ...prev, gameStatus: 'finished', phase: 'results' }));
             timer.stop();
-        })
+        }
     );
+    cleanupFunctions.push(() => {
+        socket.socket?.off(SOCKET_EVENTS.GAME.GAME_ENDED as keyof ServerToClientEvents);
+    });
 }
 
 function setupProjectionEvents(
@@ -322,9 +363,11 @@ function setupProjectionEvents(
     timer: GameTimerHook,
     cleanupFunctions: (() => void)[]
 ) {
-    // Projector state updates
-    cleanupFunctions.push(
-        socket.on('projector_state', (state: any) => {
+    if (!socket.socket) return;
+
+    socket.socket.on(
+        SOCKET_EVENTS.PROJECTOR.PROJECTOR_STATE as keyof ServerToClientEvents,
+        (state: any) => {
             logger.debug('Projection received projector_state', state);
             setGameState(prev => ({
                 ...prev,
@@ -334,8 +377,11 @@ function setupProjectionEvents(
                 currentQuestionId: state.timerQuestionId ||
                     (state.currentQuestionIdx !== null && state.questions?.[state.currentQuestionIdx]?.uid)
             }));
-        })
+        }
     );
+    cleanupFunctions.push(() => {
+        socket.socket?.off(SOCKET_EVENTS.PROJECTOR.PROJECTOR_STATE as keyof ServerToClientEvents);
+    });
 }
 
 function setupTournamentEvents(
@@ -344,31 +390,38 @@ function setupTournamentEvents(
     timer: GameTimerHook,
     cleanupFunctions: (() => void)[]
 ) {
-    // Tournament state updates
-    cleanupFunctions.push(
-        socket.on('tournament_state', (state: any) => {
-            logger.debug('Tournament received tournament_state', state);
+    if (!socket.socket) return;
+
+    socket.socket.on(
+        SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_STATE_UPDATE as keyof ServerToClientEvents,
+        (state: any) => {
+            logger.debug('Tournament received tournament_state_update', state);
             setGameState(prev => ({
                 ...prev,
                 gameStatus: state.stopped ? 'finished' : 'active',
                 currentQuestionId: state.currentQuestionUid
             }));
-        })
+        }
     );
+    cleanupFunctions.push(() => {
+        socket.socket?.off(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_STATE_UPDATE as keyof ServerToClientEvents);
+    });
 
-    // Tournament question updates
-    cleanupFunctions.push(
-        socket.on('tournament_question', (data: any) => {
+    socket.socket.on(
+        SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_QUESTION as keyof ServerToClientEvents,
+        (data: any) => {
             logger.debug('Tournament received tournament_question', data);
             if (data.question?.uid && data.timeLeft) {
                 timer.start(data.question.uid, data.timeLeft);
             }
-        })
+        }
     );
+    cleanupFunctions.push(() => {
+        socket.socket?.off(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_QUESTION as keyof ServerToClientEvents);
+    });
 }
 
 // --- Role-Specific Actions Creation ---
-
 function createRoleSpecificActions(
     role: TimerRole,
     socket: GameSocketHook,
@@ -376,69 +429,95 @@ function createRoleSpecificActions(
     config: UnifiedGameConfig
 ) {
     const actions: any = {};
-
     if (role === 'teacher') {
         actions.setQuestion = (questionId: string, duration?: number) => {
-            socket.emit('set_question', { gameId: config.gameId, questionUid: questionId });
+            // Always provide a non-optional gameId (string)
+            const payload: import('@shared/types/socket/payloads').SetQuestionPayload = {
+                gameId: String(config.gameId),
+                questionUid: questionId,
+                questionIndex: 0 // TODO: Replace with actual index if available
+            };
+            // Only include accessCode if present (legacy support)
+            if (config.accessCode) {
+                payload.accessCode = config.accessCode;
+            }
+            socket.socket?.emit(
+                SOCKET_EVENTS.TEACHER.SET_QUESTION as keyof ClientToServerEvents,
+                payload
+            );
             if (duration) {
-                socket.emitTimerAction('start', questionId, duration);
+                socket.emitTimerAction('start', duration);
             }
         };
-
         actions.endGame = () => {
-            socket.emit('end_game', { gameId: config.gameId });
+            socket.socket?.emit(
+                SOCKET_EVENTS.TEACHER.END_GAME as keyof ClientToServerEvents,
+                { accessCode: String(config.gameId) }
+            );
         };
-
         actions.lockAnswers = () => {
-            socket.emit('lock_answers', { gameId: config.gameId });
+            socket.socket?.emit(
+                SOCKET_EVENTS.TEACHER.LOCK_ANSWERS as keyof ClientToServerEvents,
+                { accessCode: String(config.gameId), lock: true }
+            );
         };
-
         actions.unlockAnswers = () => {
-            socket.emit('unlock_answers', { gameId: config.gameId });
+            socket.socket?.emit(
+                SOCKET_EVENTS.TEACHER.LOCK_ANSWERS as keyof ClientToServerEvents,
+                { accessCode: String(config.gameId), lock: false }
+            );
         };
     }
-
     if (role === 'student') {
         actions.joinGame = () => {
             if (config.accessCode && config.userId && config.username) {
-                socket.emit('join_game', {
-                    code: config.accessCode,
-                    userId: config.userId,
-                    username: config.username,
-                    avatarEmoji: config.avatarEmoji
-                });
+                socket.socket?.emit(
+                    SOCKET_EVENTS.GAME.JOIN_GAME as keyof ClientToServerEvents,
+                    {
+                        accessCode: config.accessCode,
+                        userId: config.userId,
+                        username: config.username,
+                        avatarEmoji: config.avatarEmoji || undefined
+                    } as JoinGamePayload
+                );
             }
         };
-
         actions.submitAnswer = (questionId: string, answer: unknown, timeSpent: number) => {
-            socket.emit('submit_answer', {
-                questionId,
-                answer,
-                timeSpent,
-                code: config.accessCode
-            });
+            socket.socket?.emit(
+                SOCKET_EVENTS.GAME.GAME_ANSWER as keyof ClientToServerEvents,
+                {
+                    accessCode: config.accessCode!,
+                    userId: config.userId!,
+                    questionId,
+                    answer,
+                    timeSpent
+                } as GameAnswerPayload
+            );
         };
     }
-
     if (role === 'projection') {
         actions.getState = () => {
-            socket.emit('get_quiz_state', { gameId: config.gameId });
+            socket.socket?.emit(
+                SOCKET_EVENTS.TEACHER.GET_GAME_STATE as keyof ClientToServerEvents,
+                { accessCode: config.gameId! }
+            );
         };
     }
-
     if (role === 'tournament') {
         actions.joinTournament = () => {
             if (config.accessCode && config.userId && config.username) {
-                socket.emit('join_tournament', {
-                    code: config.accessCode,
-                    userId: config.userId,
-                    username: config.username,
-                    avatarEmoji: config.avatarEmoji
-                });
+                socket.socket?.emit(
+                    SOCKET_EVENTS.TOURNAMENT.JOIN_TOURNAMENT as keyof ClientToServerEvents,
+                    {
+                        accessCode: config.accessCode,
+                        userId: config.userId,
+                        username: config.username,
+                        avatarEmoji: config.avatarEmoji || undefined
+                    }
+                );
             }
         };
     }
-
     return actions;
 }
 

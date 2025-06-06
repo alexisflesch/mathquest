@@ -1,5 +1,6 @@
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import type { GameParticipant, AnswerSubmissionPayload } from '@shared/types/core';
 
 // Create a service-specific logger
 const logger = createLogger('GameParticipantService');
@@ -7,14 +8,24 @@ const logger = createLogger('GameParticipantService');
 export interface JoinGameResult {
     success: boolean;
     gameInstance?: any;
-    participant?: any;
+    participant?: GameParticipant;
     error?: string;
 }
 
-export interface SubmitAnswerData {
-    questionUid: string;
-    answer: any;
-    timeTakenMs: number;
+// Use consolidated answer submission type
+export type SubmitAnswerData = AnswerSubmissionPayload;
+
+// Helper function to map Prisma participant to core GameParticipant
+function mapPrismaToGameParticipant(prismaParticipant: any): GameParticipant {
+    return {
+        id: prismaParticipant.id,
+        userId: prismaParticipant.userId,
+        username: prismaParticipant.user?.username || 'Unknown',
+        avatar: prismaParticipant.user?.avatarEmoji || '😀',
+        score: prismaParticipant.score || 0,
+        joinedAt: prismaParticipant.joinedAt?.toISOString() || new Date().toISOString(),
+        online: true // Default to online when mapping
+    };
 }
 
 /**
@@ -97,6 +108,9 @@ export class GameParticipantService {
                     where: {
                         gameInstanceId: gameInstance.id,
                         userId: userId
+                    },
+                    include: {
+                        user: true // Include user data for mapping
                     }
                 });
                 if (existingParticipation && existingParticipation.completedAt) {
@@ -104,7 +118,7 @@ export class GameParticipantService {
                         success: false,
                         error: 'Already played',
                         gameInstance,
-                        participant: existingParticipation
+                        participant: mapPrismaToGameParticipant(existingParticipation)
                     };
                 }
             }
@@ -173,10 +187,7 @@ export class GameParticipantService {
             return {
                 success: true,
                 gameInstance,
-                participant: {
-                    ...participant,
-                    userId // Attach userId for downstream use
-                }
+                participant: mapPrismaToGameParticipant(participant)
             };
         } catch (error) {
             logger.error({ error, userId, accessCode }, 'Error joining game');
@@ -264,9 +275,9 @@ export class GameParticipantService {
 
             // Update the answers
             const answers = [...currentAnswers, {
-                questionUid: data.questionUid,
+                questionUid: data.questionId, // Map questionId to questionUid for DB storage
                 answer: data.answer,
-                timeTakenMs: data.timeTakenMs,
+                timeTakenMs: data.timeSpent, // Map timeSpent to timeTakenMs for DB storage
                 timestamp: new Date().toISOString()
             }];
 
@@ -285,7 +296,7 @@ export class GameParticipantService {
             const gameInstance = await prisma.gameInstance.findUnique({ where: { id: gameInstanceId } });
             if (gameInstance) {
                 // Use the same structure as scoring expects
-                const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${data.questionUid}`;
+                const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${data.questionId}`; // Use questionId
                 // Use userId as the field (or socketId if available, but userId is unique per participant)
                 await import('@/config/redis').then(({ redisClient }) =>
                     redisClient.hset(
@@ -294,7 +305,7 @@ export class GameParticipantService {
                         JSON.stringify({
                             userId,
                             answer: data.answer,
-                            timeSpent: data.timeTakenMs,
+                            timeSpent: data.timeSpent, // Use timeSpent
                             submittedAt: Date.now()
                         })
                     )

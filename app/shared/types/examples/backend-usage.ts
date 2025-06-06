@@ -23,8 +23,7 @@
 // For this example file (within the types package), we use relative imports:
 import {
     Question,
-    Answer,
-    LEGACY_QUIZ_EVENTS,
+    TEACHER_EVENTS,
     TOURNAMENT_EVENTS,
     isQuestion,
     mapToStandardQuestion,
@@ -55,7 +54,7 @@ function exampleSocketHandler(io: Server, socket: Socket, payload: QuestionLike)
     const question = mapToStandardQuestion(payload);
 
     // Use event constants for consistency
-    io.to(`quiz:${question.uid}`).emit(LEGACY_QUIZ_EVENTS.STATE_UPDATE, {
+    io.to(`quiz:${question.uid}`).emit(TEACHER_EVENTS.GAME_CONTROL_STATE, {
         question,
         status: 'updated'
     });

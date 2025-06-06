@@ -17,15 +17,13 @@ jest.mock('socket.io-client', () => ({
 import { renderHook, act } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
-import { BaseQuestion } from '@shared/types/question';
+import type { QuestionData } from '@shared/types/socketEvents';
 import { Chrono } from '@shared/types/quiz/state';
 
-// --- Define QuizState and Question locally ---
-interface Question extends BaseQuestion { }
-
+// --- Define QuizState locally ---
 export interface QuizState { // Export if needed by other test files, or keep local
     currentQuestionIdx: number | null;
-    questions: Question[];
+    questions: QuestionData[];
     chrono: Chrono;
     locked: boolean;
     ended: boolean;
@@ -36,7 +34,7 @@ export interface QuizState { // Export if needed by other test files, or keep lo
     timerTimeLeft?: number | null;
     timerTimestamp?: number;
     questionStates?: Record<string, boolean>;
-    quizId?: string;
+    accessCode?: string; // changed from quizId
     quizTitle?: string;
     hostId?: string;
     participants?: any[];
@@ -58,7 +56,7 @@ const mockSocket = {
 // --- Test Suite ---
 describe('useTeacherQuizSocket State Updates', () => {
     const mockToken = 'mock-teacher-token';
-    const mockQuizId = 'quiz123';
+    const mockAccessCode = 'code123';
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -92,12 +90,12 @@ describe('useTeacherQuizSocket State Updates', () => {
     });
 
     it('should update quizState when "game_control_state" event is received', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockAccessCode));
         const mockStateData: QuizState = {
-            quizId: mockQuizId,
+            accessCode: mockAccessCode,
             currentQuestionIdx: 1,
-            questions: [{ uid: 'q2', text: 'Another question', type: 'single_choice', answers: [], time: 60 }] as Question[],
-            chrono: { timeLeft: 60, running: true },
+            questions: [{ uid: 'q2', text: 'Another question', questionType: 'single_choice', answerOptions: [], correctAnswers: [], timeLimit: 60 }] as QuestionData[],
+            chrono: { timeLeft: 60, running: true, status: 'play' },
             locked: true,
             ended: false,
             stats: { q1: { correct: 1 } },
@@ -112,12 +110,12 @@ describe('useTeacherQuizSocket State Updates', () => {
     });
 
     it('should update timer-related states when "quiz_timer_update" event is received', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockAccessCode));
         // First, initialize quizState and questionTimers by simulating game_control_state
         const initialState: QuizState = {
             currentQuestionIdx: 0,
-            questions: [{ uid: 'q1', text: 'Q1', type: 'multiple_choice', answers: [], time: 20 }] as Question[],
-            chrono: { timeLeft: 20, running: true },
+            questions: [{ uid: 'q1', text: 'Q1', questionType: 'multiple_choice', answerOptions: [], correctAnswers: [], timeLimit: 20 }] as QuestionData[],
+            chrono: { timeLeft: 20, running: true, status: 'play' },
             locked: false,
             ended: false,
             stats: {},
@@ -127,18 +125,18 @@ describe('useTeacherQuizSocket State Updates', () => {
             if (gameControlCallback) gameControlCallback(initialState);
         });
         // Now send quiz_timer_update
-        const mockTimerUpdate = { questionId: 'q1', timeLeft: 10, status: 'pause' as 'play' | 'pause' | 'stop' };
+        const mockTimerUpdate = { questionId: 'q1', timeLeft: 10000, status: 'pause' as 'play' | 'pause' | 'stop', running: false }; // ms, not s
         act(() => {
             const callback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
             if (callback) callback(mockTimerUpdate);
         });
-        expect(result.current.timeLeft).toBe(mockTimerUpdate.timeLeft);
+        expect(result.current.timeLeft).toBe(10000); // ms
         expect(result.current.timerStatus).toBe(mockTimerUpdate.status);
         expect(result.current.timerQuestionId).toBe(mockTimerUpdate.questionId);
     });
 
     it('should update connectedCount when "quiz_connected_count" event is received', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockAccessCode));
         const mockCountData = { count: 7 };
         act(() => {
             const callback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_connected_count')?.[1];
@@ -148,8 +146,8 @@ describe('useTeacherQuizSocket State Updates', () => {
     });
 
     it('should NOT update profSocketId in quizState when "dashboard_joined" event is received', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
-        const mockJoinData = { profSocketId: 'newProfSocketId123', quizId: mockQuizId };
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockAccessCode));
+        const mockJoinData = { profSocketId: 'newProfSocketId123', accessCode: mockAccessCode };
         act(() => {
             const connectCallback = mockSocket.on.mock.calls.find(call => call[0] === 'connect')?.[1];
             if (connectCallback) {

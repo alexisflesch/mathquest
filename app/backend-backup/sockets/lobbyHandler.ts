@@ -17,6 +17,7 @@
 import { Server, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import createLogger from '@logger';
+import type { LobbyParticipant } from '@shared/types/core';
 
 const logger = createLogger('LobbyHandler');
 
@@ -25,14 +26,6 @@ import prisma from '../db';
 
 // Import utilities
 import { emitQuizConnectedCount } from './quizUtils';
-
-// Define types for lobby participants
-interface LobbyParticipant {
-    id: string;
-    username: string;
-    avatar: string;
-    cookie_id?: string;
-}
 
 interface JoinLobbyPayload {
     code: string;

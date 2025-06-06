@@ -3,64 +3,43 @@ import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
-import { Question } from '@shared/types/quiz/question';
-import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { AnswerValue } from '@/types/socket';
+
+// Import core types
+import type {
+    Question,
+    AnswerResponsePayload,
+    GameAnswer
+} from '@shared/types/core';
+
+import type {
+    QuestionData,
+    GameJoinedPayload,
+    ErrorPayload
+} from '@shared/types/socketEvents';
+
+import {
+    createSafeEventHandler,
+    isGameJoinedPayload,
+    isQuestionData,
+    isAnswerReceivedPayload,
+    isCorrectAnswersPayload,
+    isGameEndedPayload,
+    isErrorPayload,
+    isFeedbackEventPayload,
+    type AnswerReceivedPayload,
+    type GameEndedPayload,
+    type CorrectAnswersPayload,
+    type FeedbackEventPayload
+} from '@/types/socketTypeGuards';
 
 const logger = createLogger('usePracticeGameSocket');
 
 // --- Types ---
-export interface FeedbackPayload {
-    questionId: string;
-    correct: boolean;
-    explanation?: string;
-    timeSpent?: number;
-    scoreAwarded?: number;
-    feedbackWaitTime?: number; // Optional timer for feedback phase
-    correctAnswers?: boolean[]; // Array indicating which answers are correct
-    correctAnswersText?: string[]; // Text of correct answers for display
-}
-
-export interface PracticeQuestion {
-    uid: string;
-    text: string;
-    type: string;
-    answers: string[] | { text: string; correct: boolean }[];
-    correctAnswers?: boolean[];
-    explanation?: string;
-    tags?: string[];
-    time?: number;
-    difficulty?: number;
-    discipline?: string;
-    level?: string;
-    themes?: string[];
-}
-
-export interface PracticeQuestionPayload {
-    question: PracticeQuestion;
-    questionIndex: number;
-    totalQuestions: number;
-    timer?: number;
-    questionState?: 'active' | 'paused' | 'stopped';
-    currentQuestionIndex?: number; // For backward compatibility
-}
-
-export interface PracticeAnswerReceived {
-    rejected?: boolean;
-    received?: boolean;
-    message?: string;
-    correct?: boolean;
-    questionId?: string;
-    timeSpent?: number;
-    correctAnswers?: boolean[];
-    correctAnswersText?: string[]; // Added for better feedback display
-    explanation?: string;
-    scoreAwarded?: number;
-}
 
 export interface PracticeGameState {
-    currentQuestion: PracticeQuestion | null;
+    currentQuestion: QuestionData | null;
     questionIndex: number;
     totalQuestions: number;
     score: number;
@@ -74,22 +53,19 @@ export interface PracticeGameState {
         questionId?: string;
         timeSpent?: number;
         correctAnswers?: boolean[];
-        correctAnswersText?: string[]; // Enhanced for better display
+        correctAnswersText?: string[];
         scoreAwarded?: number;
     } | null;
     showingCorrectAnswers: boolean;
-    // Enhanced for practice mode feedback experience
     isShowingFeedback: boolean;
     canProgressToNext: boolean;
 }
 
 export interface PracticeGameSocketHookProps {
-    // Practice-specific configuration
     discipline?: string;
     level?: string;
     themes?: string[];
     questionLimit?: number;
-    // User authentication
     userId: string | null;
     username: string | null;
     avatarEmoji?: string | null;
@@ -197,131 +173,136 @@ export function usePracticeGameSocket({
         if (!socket) return;
 
         // Handle successful game join
-        socket.on(SOCKET_EVENTS.GAME.GAME_JOINED, (payload) => {
-            logger.debug("Practice game joined successfully", payload);
-
-            // Store the access code for future use
-            if (payload.accessCode) {
-                practiceAccessCodeRef.current = payload.accessCode;
-            }
-
-            setGameState(prev => ({
-                ...prev,
-                connectedToRoom: true,
-                gameStatus: payload.gameStatus === 'active' ? 'active' : 'waiting'
-            }));
-        });
+        socket.on(SOCKET_EVENTS.GAME.GAME_JOINED, createSafeEventHandler(
+            (payload: GameJoinedPayload) => {
+                logger.debug("Practice game joined successfully", payload);
+                if (payload.accessCode) {
+                    practiceAccessCodeRef.current = payload.accessCode;
+                }
+                setGameState(prev => ({
+                    ...prev,
+                    connectedToRoom: true,
+                    gameStatus: payload.gameStatus === 'active' ? 'active' : 'waiting'
+                }));
+            },
+            isGameJoinedPayload,
+            'GAME_JOINED'
+        ));
 
         // Handle practice questions
-        socket.on(SOCKET_EVENTS.GAME.GAME_QUESTION, (payload: PracticeQuestionPayload) => {
-            logger.debug("Received practice question", payload);
-
-            // Handle both structured payload and flat question data
-            const question = payload.question || payload;
-            const questionIndex = payload.questionIndex ?? payload.currentQuestionIndex ?? 0;
-            const totalQuestions = payload.totalQuestions ?? questionLimit;
-
-            setGameState(prev => ({
-                ...prev,
-                currentQuestion: question,
-                questionIndex: questionIndex,
-                totalQuestions: totalQuestions,
-                timer: null, // Practice mode: no enforced timers
-                answered: false,
-                feedback: null,
-                showingCorrectAnswers: false,
-                gameStatus: 'active'
-            }));
-
-            // Practice mode: No enforced timers - students have unlimited time
-            logger.debug("Practice mode: Question received, no timer started (self-paced)");
-        });
+        socket.on(SOCKET_EVENTS.GAME.GAME_QUESTION, createSafeEventHandler(
+            (payload: QuestionData) => {
+                logger.debug("Received practice question", payload);
+                const questionIndex = payload.currentQuestionIndex ?? 0;
+                const totalQuestions = payload.totalQuestions ?? questionLimit;
+                setGameState(prev => ({
+                    ...prev,
+                    currentQuestion: payload,
+                    questionIndex,
+                    totalQuestions,
+                    timer: null,
+                    answered: false,
+                    feedback: null,
+                    showingCorrectAnswers: false,
+                    gameStatus: 'active'
+                }));
+                logger.debug("Practice mode: Question received, no timer started (self-paced)");
+            },
+            isQuestionData,
+            'GAME_QUESTION'
+        ));
 
         // Handle answer responses with immediate feedback
-        socket.on(SOCKET_EVENTS.GAME.ANSWER_RECEIVED, (payload: PracticeAnswerReceived) => {
-            logger.debug("Received practice answer feedback", payload);
-
-            // Extract correct answers text from current question if available
-            let correctAnswersText: string[] = [];
-            if (payload.correctAnswers && gameState.currentQuestion?.answers) {
-                correctAnswersText = payload.correctAnswers
-                    .map((isCorrect, index) => {
-                        if (isCorrect && gameState.currentQuestion?.answers[index]) {
-                            const answer = gameState.currentQuestion.answers[index];
-                            return typeof answer === 'string' ? answer : answer.text;
-                        }
-                        return null;
-                    })
-                    .filter((text): text is string => text !== null);
-            }
-
-            // Create comprehensive feedback object from backend response
-            const feedback = {
-                correct: payload.correct,
-                explanation: payload.explanation,
-                questionId: payload.questionId,
-                timeSpent: payload.timeSpent,
-                correctAnswers: payload.correctAnswers,
-                correctAnswersText: payload.correctAnswersText || correctAnswersText,
-                scoreAwarded: payload.scoreAwarded
-            };
-
-            setGameState(prev => ({
-                ...prev,
-                answered: true,
-                feedback: feedback,
-                isShowingFeedback: true,
-                canProgressToNext: true, // Enable progression after feedback
-                score: payload.scoreAwarded ? prev.score + payload.scoreAwarded : prev.score
-            }));
-
-            // Practice mode: No timer to clear since we don't use enforced timers
-            logger.info("Practice answer processed with enhanced feedback", {
-                correct: payload.correct,
-                hasExplanation: !!payload.explanation,
-                correctAnswersCount: correctAnswersText.length
-            });
-
-            if (payload.rejected) {
-                logger.warn("Practice answer was rejected", payload.message);
-            } else if (payload.received) {
-                logger.info("Practice answer was accepted", { correct: payload.correct });
-            }
-        });
+        socket.on(SOCKET_EVENTS.GAME.ANSWER_RECEIVED, createSafeEventHandler(
+            (payload: AnswerReceivedPayload) => {
+                logger.debug("Received practice answer feedback", payload);
+                let correctAnswersText: string[] = [];
+                if (payload.correctAnswers && gameState.currentQuestion?.answerOptions) {
+                    correctAnswersText = payload.correctAnswers
+                        .map((isCorrect, index) => {
+                            if (isCorrect && gameState.currentQuestion?.answerOptions[index]) {
+                                return gameState.currentQuestion.answerOptions[index];
+                            }
+                            return null;
+                        })
+                        .filter((text): text is string => text !== null);
+                }
+                const feedback = {
+                    correct: payload.correct,
+                    explanation: payload.explanation,
+                    questionId: payload.questionId,
+                    timeSpent: payload.timeSpent,
+                    correctAnswers: payload.correctAnswers,
+                    correctAnswersText,
+                    scoreAwarded: undefined
+                };
+                setGameState(prev => ({
+                    ...prev,
+                    answered: true,
+                    feedback,
+                    isShowingFeedback: true,
+                    canProgressToNext: true,
+                    score: prev.score
+                }));
+                logger.info("Practice answer processed with enhanced feedback", {
+                    correct: payload.correct,
+                    hasExplanation: !!payload.explanation,
+                    correctAnswersCount: correctAnswersText.length
+                });
+            },
+            isAnswerReceivedPayload,
+            'ANSWER_RECEIVED'
+        ));
 
         // Handle correct answers display
-        socket.on(SOCKET_EVENTS.GAME.CORRECT_ANSWERS, (payload: { questionId: string }) => {
-            logger.debug("Received correct answers for practice", payload);
-            setGameState(prev => ({
-                ...prev,
-                showingCorrectAnswers: true
-            }));
-        });
+        socket.on(SOCKET_EVENTS.GAME.CORRECT_ANSWERS, createSafeEventHandler(
+            (payload: CorrectAnswersPayload) => {
+                logger.debug("Received correct answers for practice", payload);
+                setGameState(prev => ({
+                    ...prev,
+                    showingCorrectAnswers: true
+                }));
+            },
+            isCorrectAnswersPayload,
+            'CORRECT_ANSWERS'
+        ));
 
         // Handle practice game end
-        socket.on(SOCKET_EVENTS.GAME.GAME_ENDED, (results) => {
-            logger.debug("Practice game ended", results);
-            setGameState(prev => ({
-                ...prev,
-                gameStatus: 'finished',
-                timer: null,
-                score: results.score ?? prev.score
-            }));
-        });
+        socket.on(SOCKET_EVENTS.GAME.GAME_ENDED, createSafeEventHandler(
+            (payload: GameEndedPayload) => {
+                logger.debug("Practice game ended", payload);
+                setGameState(prev => ({
+                    ...prev,
+                    gameStatus: 'finished',
+                    timer: null,
+                    score: payload.score ?? prev.score
+                }));
+            },
+            isGameEndedPayload,
+            'GAME_ENDED'
+        ));
 
         // Handle errors
-        socket.on(SOCKET_EVENTS.GAME.GAME_ERROR, (error) => {
-            logger.error("Practice game error received", error);
-            setError(error.message || 'Unknown practice game error');
-        });
+        socket.on(SOCKET_EVENTS.GAME.GAME_ERROR, createSafeEventHandler(
+            (payload: ErrorPayload) => {
+                logger.error("Practice game error received", payload);
+                setError(payload.message || 'Unknown practice game error');
+            },
+            isErrorPayload,
+            'GAME_ERROR'
+        ));
 
         // Handle feedback event (ignored in practice mode - students have unlimited time)
-        socket.on('feedback', (payload: { questionId: string, feedbackRemaining: number }) => {
-            logger.debug("Received feedback event (ignored in practice mode)", payload);
-            // Practice mode: Students have unlimited time to read feedback
-            // Feedback events are only used for synchronized tournament/quiz experiences
-            // No action taken - students can read at their own pace
-        });
+        socket.on('feedback', createSafeEventHandler(
+            (payload: FeedbackEventPayload) => {
+                logger.debug("Received feedback event (ignored in practice mode)", payload);
+                // Practice mode: Students have unlimited time to read feedback
+                // Feedback events are only used for synchronized tournament/quiz experiences
+                // No action taken - students can read at their own pace
+            },
+            isFeedbackEventPayload,
+            'feedback'
+        ));
 
         return () => {
             socket.off(SOCKET_EVENTS.GAME.GAME_JOINED);

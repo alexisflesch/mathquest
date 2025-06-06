@@ -46,7 +46,7 @@ export function filterQuestionForClient(questionObject: Question): FilteredQuest
 
     return {
         uid: questionObject.uid,
-        type: questionObject.type,
+        type: questionObject.questionType,
         text: questionObject.text || questionObject.question || 'Question text not available',
         answers: (Array.isArray(questionObject.answers)
             ? questionObject.answers.map(ans => typeof ans === 'string' ? ans : ans.text)

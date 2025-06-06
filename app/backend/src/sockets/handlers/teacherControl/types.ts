@@ -1,4 +1,9 @@
 import { Socket } from 'socket.io';
+import type {
+    TimerActionPayload as CoreTimerActionPayload,
+    GameTimerState,
+    TimerStatus
+} from '@shared/types/core/timer';
 
 // Define dashboard event payload types
 export interface JoinDashboardPayload {
@@ -12,11 +17,10 @@ export interface SetQuestionPayload {
     questionIndex?: number; // Index of the question (legacy support)
 }
 
-export interface TimerActionPayload {
-    gameId: string;      // Database ID of the game instance
-    action: 'start' | 'pause' | 'resume' | 'stop' | 'set_duration'; // Timer action
-    duration?: number;   // Duration in seconds (only used with start or set_duration)
-}
+// Use consolidated timer action payload
+export type TimerActionPayload = CoreTimerActionPayload & {
+    gameId: string;      // Database ID of the game instance (required for teacher control)
+};
 
 export interface LockAnswersPayload {
     gameId: string;      // Database ID of the game instance
@@ -52,13 +56,8 @@ export interface QuestionForDashboard {
     correctAnswers: boolean[];
 }
 
-export interface TimerState {
-    startedAt: number | null;
-    duration: number; // in milliseconds
-    isPaused: boolean;
-    pausedAt?: number | null;
-    timeRemaining?: number | null; // in milliseconds
-}
+// Use core timer state instead of local definition
+export type TimerState = GameTimerState;
 
 // Response types for server-to-client events
 export interface GameControlStatePayload {

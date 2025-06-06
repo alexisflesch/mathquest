@@ -1,7 +1,10 @@
 <!-- filepath: /home/aflesch/mathquest/app/docs/frontend/timer-management.md -->
 # Timer Management in MathQuest Frontend
 
-_Last updated: 2025-06-01_
+> **Important: All timer values are in milliseconds (ms) throughout the frontend and tests.**
+> All timer state, payloads, and test assertions must use ms. Do not use seconds (s) anywhere in timer logic or tests.
+
+_Last updated: 2025-06-06_
 
 ## Purpose
 Explains how timers are managed in all supported modes (Quiz, Tournament, Practice), and the division of responsibilities between frontend and backend.
@@ -57,6 +60,7 @@ Explains how timers are managed in all supported modes (Quiz, Tournament, Practi
 
 ## 4. Key Principles
 
+- **All timer values are in milliseconds (ms):** All timer state, payloads, and test assertions must use ms. Do not use seconds (s) anywhere in timer logic or tests.
 - **Backend is the source of truth:** The frontend must always reflect the timer value and status as sent by the backend.
 - **No optimistic updates:** The frontend should not change timer state until it receives confirmation from the backend.
 - **Local countdown:** The frontend is responsible for ticking down the timer locally, starting from the value provided by the backend, and only if the timer status is `play`.

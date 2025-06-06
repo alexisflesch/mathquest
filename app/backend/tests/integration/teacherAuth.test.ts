@@ -2,7 +2,8 @@ import request from 'supertest';
 import { app } from '@/server';
 import { UserService } from '@/core/services/userService';
 import { createMockUserService } from '../helpers/serviceMocks';
-import { __setUserServiceForTesting } from '@/api/v1/teachers';
+import { __setUserServiceForTesting as __setAuthUserServiceForTesting } from '@/api/v1/auth';
+import { __setUserServiceForTesting as __setTeachersUserServiceForTesting } from '@/api/v1/teachers';
 
 describe('Teacher Authentication API', () => {
     jest.setTimeout(3000);
@@ -12,7 +13,8 @@ describe('Teacher Authentication API', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockUserService = createMockUserService();
-        __setUserServiceForTesting(mockUserService);
+        __setAuthUserServiceForTesting(mockUserService);
+        __setTeachersUserServiceForTesting(mockUserService);
     });
 
     describe('POST /api/v1/teachers/register', () => {

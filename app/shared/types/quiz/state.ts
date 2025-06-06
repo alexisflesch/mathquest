@@ -2,27 +2,13 @@
  * Shared Quiz State Types
  * 
  * These types represent the quiz state structure used across both frontend and backend.
+ * Timer types now use the consolidated core types.
  */
 import { Question } from './question';
+import type { Chrono, QuestionTimer } from '../core';
 
-/**
- * Timer/Chrono state
- */
-export interface Chrono {
-    timeLeft: number | null;
-    running: boolean;
-    status?: 'play' | 'pause' | 'stop'; // Additional field sometimes used
-}
-
-/**
- * Question Timer State used in quiz management
- */
-export interface QuestionTimer {
-    status: 'play' | 'pause' | 'stop';
-    timeLeft: number;
-    initialTime: number;
-    timestamp: number | null;
-}
+// Re-export core timer types
+export type { Chrono, QuestionTimer } from '../core';
 
 /**
  * Base QuizState with common properties between frontend and backend

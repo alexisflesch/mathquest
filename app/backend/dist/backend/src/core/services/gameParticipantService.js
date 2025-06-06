@@ -41,6 +41,18 @@ const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 // Create a service-specific logger
 const logger = (0, logger_1.default)('GameParticipantService');
+// Helper function to map Prisma participant to core GameParticipant
+function mapPrismaToGameParticipant(prismaParticipant) {
+    return {
+        id: prismaParticipant.id,
+        userId: prismaParticipant.userId,
+        username: prismaParticipant.user?.username || 'Unknown',
+        avatar: prismaParticipant.user?.avatarEmoji || '😀',
+        score: prismaParticipant.score || 0,
+        joinedAt: prismaParticipant.joinedAt?.toISOString() || new Date().toISOString(),
+        online: true // Default to online when mapping
+    };
+}
 /**
  * GameParticipant service class for managing game participants
  */
@@ -116,6 +128,9 @@ class GameParticipantService {
                     where: {
                         gameInstanceId: gameInstance.id,
                         userId: userId
+                    },
+                    include: {
+                        user: true // Include user data for mapping
                     }
                 });
                 if (existingParticipation && existingParticipation.completedAt) {
@@ -123,7 +138,7 @@ class GameParticipantService {
                         success: false,
                         error: 'Already played',
                         gameInstance,
-                        participant: existingParticipation
+                        participant: mapPrismaToGameParticipant(existingParticipation)
                     };
                 }
             }
@@ -189,10 +204,7 @@ class GameParticipantService {
             return {
                 success: true,
                 gameInstance,
-                participant: {
-                    ...participant,
-                    userId // Attach userId for downstream use
-                }
+                participant: mapPrismaToGameParticipant(participant)
             };
         }
         catch (error) {
@@ -277,9 +289,9 @@ class GameParticipantService {
             const currentAnswers = Array.isArray(participant.answers) ? participant.answers : [];
             // Update the answers
             const answers = [...currentAnswers, {
-                    questionUid: data.questionUid,
+                    questionUid: data.questionId, // Map questionId to questionUid for DB storage
                     answer: data.answer,
-                    timeTakenMs: data.timeTakenMs,
+                    timeTakenMs: data.timeSpent, // Map timeSpent to timeTakenMs for DB storage
                     timestamp: new Date().toISOString()
                 }];
             // Update the participant
@@ -296,12 +308,12 @@ class GameParticipantService {
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({ where: { id: gameInstanceId } });
             if (gameInstance) {
                 // Use the same structure as scoring expects
-                const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${data.questionUid}`;
+                const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${data.questionId}`; // Use questionId
                 // Use userId as the field (or socketId if available, but userId is unique per participant)
                 await Promise.resolve().then(() => __importStar(require('@/config/redis'))).then(({ redisClient }) => redisClient.hset(redisKey, userId, JSON.stringify({
                     userId,
                     answer: data.answer,
-                    timeSpent: data.timeTakenMs,
+                    timeSpent: data.timeSpent, // Use timeSpent
                     submittedAt: Date.now()
                 })));
             }

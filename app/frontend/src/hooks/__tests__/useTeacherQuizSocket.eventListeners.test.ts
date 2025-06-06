@@ -14,18 +14,16 @@ jest.mock('socket.io-client', () => ({
 }));
 
 // --- Actual imports ---
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
-import { BaseQuestion } from '@shared/types/question';
+import type { QuestionData } from '@shared/types/socketEvents';
 import { Chrono } from '@shared/types/quiz/state';
 
-// --- Define QuizState and Question locally ---
-interface Question extends BaseQuestion { }
-
+// --- Define QuizState locally ---
 interface QuizState {
     currentQuestionIdx: number | null;
-    questions: Question[];
+    questions: QuestionData[];
     chrono: Chrono;
     locked: boolean;
     ended: boolean;
@@ -89,39 +87,39 @@ describe('useTeacherQuizSocket Event Listeners', () => {
     });
 
     it('should register event listener for "game_control_state"', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Verify that the event listener was registered
         expect(mockSocket.on).toHaveBeenCalledWith('game_control_state', expect.any(Function));
     });
 
-    it('should register event listener for "quiz_timer_update"', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+    it('should register event listener for "dashboard_timer_updated"', () => {
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Verify that the event listener was registered
-        expect(mockSocket.on).toHaveBeenCalledWith('quiz_timer_update', expect.any(Function));
+        expect(mockSocket.on).toHaveBeenCalledWith('dashboard_timer_updated', expect.any(Function));
     });
 
     it('should register event listener for "quiz_connected_count"', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Verify that the event listener was registered
         expect(mockSocket.on).toHaveBeenCalledWith('quiz_connected_count', expect.any(Function));
     });
 
     it('should register event listener for "dashboard_joined"', () => {
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
         // Verify that the event listener was registered
         expect(mockSocket.on).toHaveBeenCalledWith('dashboard_joined', expect.any(Function));
     });
 
     it('should handle "game_control_state" event without errors', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
         const mockState: QuizState = {
             currentQuestionIdx: 0,
-            questions: [{ uid: 'q1', text: 'Test question', type: 'multiple_choice', answers: [{ text: 'Answer 1', correct: true }], time: 30 }] as Question[],
-            chrono: { timeLeft: 30, running: false },
+            questions: [{ uid: 'q1', text: 'Test question', questionType: 'multiple_choice', answerOptions: ['Answer 1'], correctAnswers: [true], timeLimit: 30 }] as QuestionData[],
+            chrono: { timeLeft: 30, running: false, status: 'stop' },
             locked: false,
             ended: false,
             stats: {},
@@ -137,18 +135,22 @@ describe('useTeacherQuizSocket Event Listeners', () => {
         expect(result.current.quizState?.currentQuestionIdx).toBe(0);
     });
 
-    it('should handle "quiz_timer_update" event without errors', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
-        const mockTimerData = { questionId: 'q1', timeLeft: 15, status: 'play' };
+    it('should handle "dashboard_timer_updated" event without errors', () => {
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
+        const mockTimerData = { questionId: 'q1', timeLeft: 15000, status: 'play', running: true, duration: 15000 }; // ms, not s, and running/duration required
 
         act(() => {
-            const callback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
-            if (callback) callback(mockTimerData);
+            // Trigger both dashboard_timer_updated and quiz_timer_update for robustness
+            const dashboardCallback = mockSocket.on.mock.calls.find(call => call[0] === 'dashboard_timer_updated')?.[1];
+            if (dashboardCallback) dashboardCallback(mockTimerData);
+            const quizCallback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
+            if (quizCallback) quizCallback(mockTimerData);
         });
 
-        // Test passes if no errors are thrown - we don't test the exact timeLeft value
-        // since the timer logic is complex and may not immediately update the display
-        expect(result.current.timerQuestionId).toBe('q1');
-        expect(result.current.timerStatus).toBe('play');
+        // Wait for timer state to update
+        return waitFor(() => {
+            expect(result.current.timerQuestionId).toBe('q1');
+            expect(result.current.timerStatus).toBe('play');
+        });
     });
 });

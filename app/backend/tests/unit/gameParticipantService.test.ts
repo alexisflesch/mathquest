@@ -94,8 +94,7 @@ describe('Game Participant Service', () => {
                 gameTemplate: { name: 'Test Quiz' }
             };
 
-            (prisma.gameInstance.findUnique as any).mockResolvedValue(mockGameInstance);
-            (prisma.gameParticipant.findFirst as any).mockResolvedValue({
+            const mockExistingParticipant = {
                 id: 'participant-123',
                 gameInstanceId: 'game-123',
                 userId,
@@ -108,6 +107,15 @@ describe('Game Participant Service', () => {
                 timeTakenMs: null,
                 joinedAt: new Date(),
                 completedAt: null
+            };
+
+            (prisma.gameInstance.findUnique as any).mockResolvedValue(mockGameInstance);
+            (prisma.gameParticipant.findFirst as any).mockResolvedValue(mockExistingParticipant);
+
+            // Mock the update call that happens when a participant already exists
+            (prisma.gameParticipant.update as any).mockResolvedValue({
+                ...mockExistingParticipant,
+                joinedAt: new Date() // Updated joinedAt timestamp
             });
 
             const result = await gameParticipantService.joinGame(userId, accessCode);
@@ -270,9 +278,11 @@ describe('Game Participant Service', () => {
         it('should submit an answer and update score', async () => {
             const participantId = 'participant-123';
             const answerData: SubmitAnswerData = {
-                questionUid: 'question-1',
+                accessCode: 'test-code',
+                userId: 'player-123',
+                questionId: 'question-1',
                 answer: 'option-B',
-                timeTakenMs: 5000
+                timeSpent: 5000
             };
 
             // Mock the existing participant
@@ -284,10 +294,10 @@ describe('Game Participant Service', () => {
                 answers: [
                     // Already has one answer
                     {
-                        questionUid: 'question-0',
+                        questionId: 'question-0',
                         answer: 'option-A',
                         isCorrect: true,
-                        timeTakenMs: 3000,
+                        timeSpent: 3000,
                         score: 100
                     }
                 ],
@@ -322,9 +332,11 @@ describe('Game Participant Service', () => {
         it('should throw error if participant not found', async () => {
             const participantId = 'invalid-id';
             const answerData: SubmitAnswerData = {
-                questionUid: 'question-1',
+                accessCode: 'test-code',
+                userId: 'invalid-id',
+                questionId: 'question-1',
                 answer: 'option-B',
-                timeTakenMs: 5000
+                timeSpent: 5000
             };
 
             // Participant not found
@@ -338,9 +350,11 @@ describe('Game Participant Service', () => {
         it('should handle errors during answer submission', async () => {
             const participantId = 'participant-123';
             const answerData: SubmitAnswerData = {
-                questionUid: 'question-1',
+                accessCode: 'test-code',
+                userId: 'participant-123',
+                questionId: 'question-1',
                 answer: 'option-B',
-                timeTakenMs: 5000
+                timeSpent: 5000
             };
 
             const mockError = new Error('Database error');

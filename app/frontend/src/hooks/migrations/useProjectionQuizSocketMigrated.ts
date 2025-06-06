@@ -2,17 +2,20 @@
  * Migration Wrapper for useProjectionQuizSocket
  * 
  * This file provides a backward-compatible interface for useProjectionQuizSocket
- * while using the new unified system internally. This allows for gradual
- * migration without breaking existing components.
+ * while using the new unified system internally and core types.
  * 
- * Phase 2: Timer Management Consolidation - Migration Layer
+ * Phase 3: Frontend Type Consolidation - Migration Layer
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { createLogger } from '@/clientLogger';
 import { useProjectionGameManager } from '../useUnifiedGameManager';
-import type { QuizState, Question } from '../useTeacherQuizSocket';
+import type { QuizState } from '../useTeacherQuizSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+
+// Import core types
+import type { Question } from '@shared/types/core';
+import type { QuestionData } from '@shared/types/socketEvents';
 
 const logger = createLogger('useProjectionQuizSocketMigrated');
 
@@ -78,8 +81,8 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
         const cleanupFunctions: (() => void)[] = [];
 
         // Legacy projector state handler 
-        cleanupFunctions.push(
-            gameManager.socket.on('projector_state', (...args: unknown[]) => {
+        if (gameManager.socket.instance) {
+            const projectorStateHandler = (...args: unknown[]) => {
                 const state = args[0] as any;
                 logger.debug('Received projector_state for projection', state);
                 setGameState(prev => ({
@@ -90,29 +93,34 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                         running: state.chrono?.running ?? (state.timerStatus === 'play')
                     }
                 }));
-            })
-        );
+            };
 
-        // Stats updates using existing LEGACY_QUIZ events
-        cleanupFunctions.push(
-            gameManager.socket.on(SOCKET_EVENTS.LEGACY_QUIZ.STATE_UPDATE, (...args: unknown[]) => {
-                const stats = args[0] as any;
-                logger.debug('Received stats update for projection', stats);
-                setGameState(prev => prev ? { ...prev, stats } : prev);
-            })
-        );
+            gameManager.socket.instance.on('projector_state', projectorStateHandler);
+            cleanupFunctions.push(() => {
+                gameManager.socket.instance?.off('projector_state', projectorStateHandler);
+            });
+        }
 
-        // Toggle stats visibility
-        cleanupFunctions.push(
-            gameManager.socket.on(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, (...args: unknown[]) => {
-                const data = args[0] as { showStats: boolean };
-                logger.debug('Received toggle stats for projection', data);
-                setGameState(prev => prev ? {
-                    ...prev,
-                    stats: { ...prev.stats, showStats: data.showStats }
-                } : prev);
-            })
-        );
+        // Stats updates using existing LEGACY_QUIZ events (removed, needs migration)
+        // cleanupFunctions.push(
+        //     gameManager.socket.on(SOCKET_EVENTS.LEGACY_QUIZ.STATE_UPDATE, (...args: unknown[]) => {
+        //         const stats = args[0] as any;
+        //         logger.debug('Received stats update for projection', stats);
+        //         setGameState(prev => prev ? { ...prev, stats } : prev);
+        //     })
+        // );
+
+        // Toggle stats visibility (removed, needs migration)
+        // cleanupFunctions.push(
+        //     gameManager.socket.on(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, (...args: unknown[]) => {
+        //         const data = args[0] as { showStats: boolean };
+        //         logger.debug('Received toggle stats for projection', data);
+        //         setGameState(prev => prev ? {
+        //             ...prev,
+        //             stats: { ...prev.stats, showStats: data.showStats }
+        //         } : prev);
+        //     })
+        // );
 
         return () => {
             cleanupFunctions.forEach(cleanup => cleanup());

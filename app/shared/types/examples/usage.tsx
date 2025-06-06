@@ -23,7 +23,7 @@ import {
     Question,
     Answer,
     BaseQuizState,
-    QUIZ_EVENTS,
+    TEACHER_EVENTS,
     isQuestion,
     getQuestionText
 } from '../index';
@@ -77,13 +77,13 @@ import type { SetQuestionPayload } from '../socket/payloads';
 // Example of a backend handler using shared types
 function exampleSocketHandler(io: Server, socket: Socket, payload: Partial<SetQuestionPayload>) {
     // Using type guard to validate payload
-    if (!payload || typeof payload !== 'object' || !payload.quizId) {
+    if (!payload || typeof payload !== 'object' || !payload.accessCode) {
         socket.emit('error', { message: 'Invalid payload' });
         return;
     }
 
     // Using event constants for consistency
-    socket.emit(QUIZ_EVENTS.STATE_UPDATE, {
+    socket.emit(TEACHER_EVENTS.GAME_CONTROL_STATE, {
         // State update data
     });
 }

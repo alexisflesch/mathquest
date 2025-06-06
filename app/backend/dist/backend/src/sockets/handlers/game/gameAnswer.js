@@ -105,9 +105,11 @@ function gameAnswerHandler(io, socket) {
             const participantService = new gameParticipantService_1.GameParticipantService();
             logger.debug({ userId, gameInstanceId: gameInstance.id, questionId, answer, timeSpent }, 'Calling participantService.submitAnswer');
             await participantService.submitAnswer(gameInstance.id, userId, {
-                questionUid: questionId,
+                questionId: questionId, // Use questionId to match AnswerSubmissionPayload
                 answer,
-                timeTakenMs: timeSpent
+                timeSpent: timeSpent, // Use timeSpent to match AnswerSubmissionPayload
+                accessCode: payload.accessCode, // Include required accessCode field
+                userId: userId // Include required userId field
             });
             // Determine if the answer is correct
             const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionId } });

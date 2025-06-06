@@ -19,8 +19,8 @@ function mapToStandardQuestion(input) {
     const question = {
         uid: input.uid || input.id || '',
         text: input.text || '',
-        type: input.type || 'choix_simple', // Retaining 'choix_simple' as it's a string literal value, not a property name
-    }; // Cast to Question to satisfy stricter checks temporarily
+        questionType: input.type || 'choix_simple', // Use questionType as canonical field
+    }; // Cast to unknown first, then to Question
     // Handle responses/answers with consistent property names
     if (Array.isArray(input.responses)) {
         question.responses = input.responses.map(mapToStandardAnswer);

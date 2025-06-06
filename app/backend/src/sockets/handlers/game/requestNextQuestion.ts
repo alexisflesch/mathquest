@@ -105,15 +105,22 @@ export function requestNextQuestionHandler(
                 const questionIndex = allQuestions.findIndex(q => q.questionUid === nextQuestion.uid);
                 const totalQuestions = allQuestions.length;
 
-                // Make sure we have currentQuestionIndex and totalQuestions in the question data
-                const enhancedQuestionData = {
-                    ...questionData,
-                    currentQuestionIndex: questionIndex,
-                    totalQuestions: totalQuestions
+                // Create the proper LiveQuestionPayload structure
+                const liveQuestionPayload = {
+                    question: {
+                        uid: nextQuestion.uid,
+                        text: nextQuestion.text,
+                        type: nextQuestion.questionType || 'multiple_choice_single_answer',
+                        answers: nextQuestion.answerOptions || []
+                    },
+                    timer: nextQuestion.timeLimit || 30,
+                    questionIndex: questionIndex,
+                    totalQuestions: totalQuestions,
+                    questionState: 'active' as const
                 };
 
-                // Send the question data directly as per QuestionData type
-                socket.emit('game_question', enhancedQuestionData);
+                // Send the question data using the proper LiveQuestionPayload structure
+                socket.emit('game_question', liveQuestionPayload);
             } else {
                 // All questions answered: compute and send final score
                 const total = allQuestions.length;

@@ -17,23 +17,14 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import type { Question as BaseQuestion } from '../types';
+import type { QuestionData } from '@shared/types/socketEvents';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { Check, X } from 'lucide-react';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsFiltersResponseSchema, QuestionsResponseSchema } from '@/types/api';
 
 
-// Extend the shared Question interface with additional fields for this component
-interface Question extends BaseQuestion {
-    discipline?: string;
-    themes?: string[]; // New plural themes
-    difficulty?: number;
-    gradeLevel?: string;
-    auteur?: string;
-    tags?: string[];
-}
-
+// Remove local interface Question and use QuestionData everywhere
 interface TimerProps {
     timerStatus: 'play' | 'pause' | 'stop';
     timerQuestionId: string | null;
@@ -56,10 +47,10 @@ export default function QuestionSelector({
     timerStatus, timerQuestionId, timeLeft,
     onTimerAction
 }: QuestionSelectorProps) {
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const [questions, setQuestions] = useState<QuestionData[]>([]);
     const [filters, setFilters] = useState<{ disciplines: string[]; niveaux: string[]; themes: string[] }>({ disciplines: [], niveaux: [], themes: [] });
     const [filter, setFilter] = useState({ discipline: '', niveau: '', themes: [] as string[], tag: '' }); // New filter state with themes array
-    const [selectedQuestionsMap, setSelectedQuestionsMap] = useState<{ [uid: string]: Question }>({});
+    const [selectedQuestionsMap, setSelectedQuestionsMap] = useState<{ [uid: string]: QuestionData }>({});
     const [expanded, setExpanded] = useState<{ [uid: string]: boolean }>({});
 
     useEffect(() => {
@@ -97,7 +88,7 @@ export default function QuestionSelector({
             .then(response => {
                 // Handle union type - could be array or object with questions property
                 const questionsArray = Array.isArray(response) ? response : response.questions;
-                setQuestions(questionsArray as Question[]);
+                setQuestions(questionsArray as QuestionData[]);
             })
             .catch(error => {
                 console.error('Error fetching questions:', error);
@@ -140,7 +131,7 @@ export default function QuestionSelector({
                     // Handle union type - could be array or object with questions property
                     const questionsArray = Array.isArray(response) ? response : response.questions;
                     if (questionsArray && questionsArray.length > 0) {
-                        updatedMap[uid] = questionsArray[0] as Question;
+                        updatedMap[uid] = questionsArray[0] as QuestionData;
                     }
                 } catch (error) {
                     console.error('Error fetching question:', error);
@@ -166,7 +157,7 @@ export default function QuestionSelector({
         : questions;
 
     // Filtrer les questions en fonction des critères externes
-    const filterQuestions = (questions: Question[]): Question[] => {
+    const filterQuestions = (questions: QuestionData[]): QuestionData[] => {
         return questions.filter(q => {
             // Vérification de la discipline
             if (externalFilter?.discipline && q.discipline !== externalFilter.discipline) {
@@ -278,20 +269,24 @@ export default function QuestionSelector({
                                 >
                                     <div className="font-medium mb-1 couleur-global-neutral-700">Réponses&nbsp;:</div>
                                     <ul className="pl-0">
-                                        {q.answers.map((rep, idx) => (
-                                            <li key={idx} className="flex gap-2 mb-1" style={{ listStyle: 'none', alignItems: 'flex-start' }}>
-                                                <span style={{ display: 'inline-flex', alignItems: 'flex-start', height: '18px', minWidth: '18px' }}>
-                                                    {rep.correct ? (
-                                                        <Check size={18} strokeWidth={3} className="text-primary mt-1" style={{ display: 'block' }} />
-                                                    ) : (
-                                                        <X size={18} strokeWidth={3} className="text-secondary mt-1" style={{ display: 'block' }} />
-                                                    )}
-                                                </span>
-                                                <span style={{ lineHeight: '1.5' }}>
-                                                    <MathJaxWrapper>{rep.text}</MathJaxWrapper>
-                                                </span>
-                                            </li>
-                                        ))}
+                                        {Array.isArray(q.answerOptions) && q.answerOptions.length > 0 ? (
+                                            q.answerOptions.map((text, idx) => (
+                                                <li key={idx} className="flex gap-2 mb-1" style={{ listStyle: 'none', alignItems: 'flex-start' }}>
+                                                    <span style={{ display: 'inline-flex', alignItems: 'flex-start', height: '18px', minWidth: '18px' }}>
+                                                        {q.correctAnswers && q.correctAnswers[idx] ? (
+                                                            <Check size={18} strokeWidth={3} className="text-primary mt-1" style={{ display: 'block' }} />
+                                                        ) : (
+                                                            <X size={18} strokeWidth={3} className="text-secondary mt-1" style={{ display: 'block' }} />
+                                                        )}
+                                                    </span>
+                                                    <span style={{ lineHeight: '1.5' }}>
+                                                        <MathJaxWrapper>{text}</MathJaxWrapper>
+                                                    </span>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="italic text-muted-foreground">Aucune réponse définie</li>
+                                        )}
                                     </ul>
                                     {q.explanation && <div className="mt-2 text-sm couleur-global-neutral-600">
                                         <MathJaxWrapper>

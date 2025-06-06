@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const server_1 = require("@/server");
 const serviceMocks_1 = require("../helpers/serviceMocks");
+const auth_1 = require("@/api/v1/auth");
 const teachers_1 = require("@/api/v1/teachers");
 describe('Teacher Authentication API', () => {
     jest.setTimeout(3000);
@@ -13,6 +14,7 @@ describe('Teacher Authentication API', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockUserService = (0, serviceMocks_1.createMockUserService)();
+        (0, auth_1.__setUserServiceForTesting)(mockUserService);
         (0, teachers_1.__setUserServiceForTesting)(mockUserService);
     });
     describe('POST /api/v1/teachers/register', () => {

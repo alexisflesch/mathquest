@@ -96,7 +96,7 @@ export default function PracticeSessionPage() {
         setSelectedAnswers([]);
     }, [gameState.currentQuestion?.uid]);
 
-    const isMultipleChoice = gameState.currentQuestion?.type === 'choix_multiple';
+    const isMultipleChoice = gameState.currentQuestion?.questionType === 'choix_multiple';
 
     const handleSingleChoice = (idx: number) => {
         if (gameState.answered) return; // Prevent changes after answering
@@ -184,24 +184,8 @@ export default function PracticeSessionPage() {
                                     question: {
                                         uid: gameState.currentQuestion.uid,
                                         text: gameState.currentQuestion.text,
-                                        type: gameState.currentQuestion.type,
-                                        answers: Array.isArray(gameState.currentQuestion.answers)
-                                            ? gameState.currentQuestion.answers.map((answer, index) => {
-                                                if (typeof answer === 'string') {
-                                                    // Transform string array to Answer format
-                                                    return {
-                                                        text: answer,
-                                                        correct: gameState.currentQuestion?.correctAnswers?.[index] || false
-                                                    };
-                                                } else {
-                                                    // Already in Answer format
-                                                    return answer;
-                                                }
-                                            })
-                                            : [],
-                                        explanation: gameState.currentQuestion.explanation,
-                                        time: gameState.currentQuestion.time,
-                                        tags: gameState.currentQuestion.tags,
+                                        type: gameState.currentQuestion.questionType,
+                                        answers: gameState.currentQuestion.answerOptions || [],
                                     }
                                 }}
                                 questionIndex={gameState.questionIndex}
@@ -227,16 +211,13 @@ export default function PracticeSessionPage() {
                                             </h4>
 
                                             {/* Show correct answers if available */}
-                                            {gameState.feedback.correctAnswers && gameState.currentQuestion?.answers && (
+                                            {gameState.feedback.correctAnswers && gameState.currentQuestion?.answerOptions && (
                                                 <div className="mt-3">
                                                     <p className="font-semibold">Bonnes réponses:</p>
                                                     <ul className="list-disc list-inside ml-4">
                                                         {gameState.feedback.correctAnswers.map((isCorrect, index) => {
-                                                            if (isCorrect && gameState.currentQuestion?.answers[index]) {
-                                                                const answer = gameState.currentQuestion.answers[index];
-                                                                const answerText = typeof answer === 'string'
-                                                                    ? answer
-                                                                    : answer.text;
+                                                            if (isCorrect && gameState.currentQuestion?.answerOptions[index]) {
+                                                                const answerText = gameState.currentQuestion.answerOptions[index];
                                                                 return (
                                                                     <li key={index} className="text-green-700">
                                                                         {answerText}

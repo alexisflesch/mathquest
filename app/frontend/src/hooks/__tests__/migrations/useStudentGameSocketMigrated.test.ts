@@ -162,7 +162,7 @@ describe('useStudentGameSocket', () => {
                 answer: 2,
                 accessCode: 'test-game-123',
                 userId: 'user-1',
-                clientTimestamp: 10
+                timeSpent: 10
             })
         );
     });

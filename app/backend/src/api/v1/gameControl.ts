@@ -101,17 +101,18 @@ router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Resp
         const io = getIO();
 
         if (io) {
-            // Emit the question to all players in the game using the proper QuestionData structure
+            // Emit the question to all players in the game using the proper LiveQuestionPayload structure
             io.to(`game_${accessCode}`).emit('game_question', {
-                uid: updatedGameState.questionData.uid,
-                text: updatedGameState.questionData.text,
-                title: updatedGameState.questionData.title,
-                answerOptions: updatedGameState.questionData.answerOptions,
-                correctAnswers: new Array(updatedGameState.questionData.answerOptions.length).fill(false), // Hide correct answers
-                questionType: updatedGameState.questionData.questionType,
-                timeLimit: updatedGameState.timer.duration / 1000, // Convert ms to seconds
-                currentQuestionIndex: questionIndex,
-                totalQuestions: updatedGameState.questionIds.length
+                question: {
+                    uid: updatedGameState.questionData.uid,
+                    text: updatedGameState.questionData.text,
+                    type: updatedGameState.questionData.questionType,
+                    answers: updatedGameState.questionData.answerOptions
+                },
+                timer: updatedGameState.timer.duration / 1000, // Convert ms to seconds
+                questionIndex: questionIndex,
+                totalQuestions: updatedGameState.questionIds.length,
+                questionState: 'active'
             });
 
             // Emit to teacher control room as well

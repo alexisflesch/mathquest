@@ -9,7 +9,7 @@ export const answerSchema = z.object({
 export const baseQuestionSchema = z.object({
   uid: z.string(),
   text: z.string(),
-  type: z.string(),
+  questionType: z.string(),
   answers: z.array(answerSchema),
   time: z.number().optional(),
   explanation: z.string().optional(),

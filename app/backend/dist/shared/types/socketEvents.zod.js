@@ -34,10 +34,14 @@ exports.participantDataSchema = zod_1.z.object({
     id: zod_1.z.string().min(1, { message: "Participant ID cannot be empty." }),
     userId: zod_1.z.string().min(1, { message: "Player ID cannot be empty." }),
     username: zod_1.z.string().min(1, { message: "Username cannot be empty." }),
-    avatarEmoji: zod_1.z.string().optional(),
-    score: zod_1.z.number().int({ message: "Score must be an integer." }).optional(),
+    avatar: zod_1.z.string().min(1, { message: "Avatar cannot be empty." }),
+    score: zod_1.z.number().int({ message: "Score must be an integer." }),
+    avatarEmoji: zod_1.z.string().optional(), // For backward compatibility
     online: zod_1.z.boolean().optional(),
     joinedAt: zod_1.z.union([zod_1.z.string().datetime({ message: "Invalid datetime string for joinedAt" }), zod_1.z.number()]).optional(),
+    socketId: zod_1.z.string().optional(),
+    isDeferred: zod_1.z.boolean().optional(),
+    cookieId: zod_1.z.string().optional(),
 });
 exports.playerJoinedGamePayloadSchema = zod_1.z.object({
     participant: exports.participantDataSchema,

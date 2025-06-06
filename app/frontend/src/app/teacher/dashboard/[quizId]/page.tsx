@@ -25,8 +25,15 @@ import { STORAGE_KEYS } from '@/constants/auth';
 const logger = createLogger('TeacherDashboardPage');
 
 
-// --- Types moved to hook ---
-
+// Add this mapping function above the component if not present
+function mapToCanonicalQuestion(q: any) {
+    return {
+        ...q,
+        answerOptions: q.answers ? q.answers.map((a: any) => a.text) : [],
+        correctAnswers: q.answers ? q.answers.filter((a: any) => a.correct).map((a: any) => a.text) : [],
+        timeLimit: q.time ?? q.temps ?? 60,
+    };
+}
 
 export default function TeacherDashboardPage({ params }: { params: Promise<{ quizId: string }> }) {
     const { quizId } = React.use(params);
@@ -44,6 +51,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     const [pendingPlayIdx, setPendingPlayIdx] = useState<number | null>(null);
 
     // --- Use the Custom Hook ---
+    // Get token from localStorage
+    const token = (typeof window !== 'undefined') ? localStorage.getItem('mathquest_jwt_token') : null;
     const {
         quizSocket,
         quizState,
@@ -59,36 +68,64 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         emitSetTimer,
         emitTimerAction,
         emitUpdateTournamentCode,
-    } = useTeacherQuizSocket(quizId, currentTournamentCode); // Pass quizId and current code to hook
+    } = useTeacherQuizSocket(currentTournamentCode, token, quizId); // Pass accessCode, token, quizId
 
     // --- Stats state for answer histograms ---
     type StatsData = { stats: number[]; totalAnswers: number };
     const [questionStats, setQuestionStats] = useState<Record<string, StatsData>>({});
 
     // Listen for stats updates from the socket
+    // useEffect(() => {
+    //     if (!quizSocket) return;
+    //     const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
+    //         setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
+    //     };
+    //     quizSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
+    //     return () => {
+    //         quizSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
+    //     };
+    // }, [quizSocket]);
+
+    // Sync questionStats from quizState.stats
     useEffect(() => {
-        if (!quizSocket) return;
-        const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
-            setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
-        };
-        quizSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
-        return () => {
-            quizSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
-        };
-    }, [quizSocket]);
+        if (quizState?.stats) {
+            const newStats: Record<string, StatsData> = {};
+            for (const uid in quizState.stats) {
+                const statItem = quizState.stats[uid];
+                if (
+                    statItem &&
+                    typeof statItem === 'object' &&
+                    'stats' in statItem &&
+                    Array.isArray((statItem as any).stats) &&
+                    'totalAnswers' in statItem &&
+                    typeof (statItem as any).totalAnswers === 'number'
+                ) {
+                    newStats[uid] = {
+                        stats: (statItem as any).stats as number[],
+                        totalAnswers: (statItem as any).totalAnswers as number,
+                    };
+                } else {
+                    // Log if the structure is unexpected, but don't break
+                    logger.warn(`Unexpected structure for quizState.stats[${uid}]:`, statItem);
+                }
+            }
+            setQuestionStats(newStats);
+        }
+    }, [quizState?.stats]);
 
     useEffect(() => {
         if (!quizSocket) return;
 
-        const handleActionResponse = (data: { status: string; message: string }) => {
-            logger.info(`[Snackbar] Received action response:`, data);
+        const handleActionResponse = (data: { message: string; type?: 'info' | 'warning' | 'error' | 'success' }) => { // Updated data type
+            logger.info(`[Snackbar] Received notification:`, data);
             setSnackbarMessage(data.message);
+            // Optionally, use data.type to style the snackbar
         };
 
-        quizSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ACTION_RESPONSE, handleActionResponse);
+        quizSocket.on('error_dashboard', handleActionResponse); // Use error_dashboard event for notifications
 
         return () => {
-            quizSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ACTION_RESPONSE, handleActionResponse);
+            quizSocket.off('error_dashboard', handleActionResponse); // Use error_dashboard event for notifications
         };
     }, [quizSocket]);
 
@@ -130,7 +167,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 // Initialize local question state, ensuring 'temps' exists
                 const initialQuestions = (questionsData.questions || []).map((q: Question) => ({
                     ...q,
-                    type: q.type || 'choix_simple', // Default type if not provided
+                    type: q.questionType || 'choix_simple', // Default type if not provided
                     temps: q.time ?? 60 // Default to 60s if undefined
                 }));
                 if (isMounted) setQuestions(initialQuestions);
@@ -265,18 +302,19 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         emitTimerAction(action);
         logger.info(`[DASHBOARD] Timer action emitted:`, action);
 
-        // Force synchronization after emitting the action
-        if (action.status === 'play') {
-            quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.GET_TIMER, { quizId: action.questionId }, (response: { timeLeft: number }) => {
-                logger.info(`[DASHBOARD] Timer synchronized after play action:`, response);
-                setQuestions(prev => prev.map(q => q.uid === action.questionId ? { ...q, temps: response.timeLeft } : q));
-            });
-        }
+        // Force synchronization after emitting the action - REMOVED LEGACY_QUIZ.GET_TIMER
+        // if (action.status === 'play') {
+        //     quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.GET_TIMER, { quizId: action.questionId }, (response: { timeLeft: number }) => {
+        //         logger.info(`[DASHBOARD] Timer synchronized after play action:`, response);
+        //         setQuestions(prev => prev.map(q => q.uid === action.questionId ? { ...q, temps: response.timeLeft } : q));
+        //     });
+        // }
     }, [emitTimerAction, quizSocket]);
 
     const handleShowResults = useCallback((uid: string) => {
         emitTimerAction({ status: 'stop', questionId: uid, timeLeft: 0 });
-        quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.CLOSE_QUESTION, { quizId, tournamentCode: currentTournamentCode, questionUid: uid });
+        // quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.CLOSE_QUESTION, { quizId, tournamentCode: currentTournamentCode, questionUid: uid }); // REMOVED
+        // Consider if emitLockAnswers(true) is needed here or if stopping timer is sufficient
     }, [emitTimerAction, quizSocket, quizId, currentTournamentCode]);
 
     // Callback from CodeManager when a new code is generated
@@ -415,8 +453,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 </div>
                             )}
                             <DraggableQuestionsList
-                                quizSocket={quizSocket} // Pass the quizSocket prop
-                                questions={questions}
+                                quizSocket={quizSocket}
+                                questions={questions.map(mapToCanonicalQuestion)}
                                 currentQuestionIdx={quizState?.currentQuestionIdx}
                                 isChronoRunning={quizState?.chrono?.running}
                                 isQuizEnded={quizState?.ended}
@@ -429,25 +467,26 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 onPause={handlePause}
                                 onStop={handleStop}
                                 onEditTimer={handleEditTimer}
-                                onReorder={handleReorder}
+                                onReorder={qs => setQuestions(qs.map(q => {
+                                    let correctAnswers: string[] = [];
+                                    if (Array.isArray(q.correctAnswers) && q.correctAnswers.length > 0) {
+                                        if (typeof q.correctAnswers[0] === 'boolean' && Array.isArray(q.answerOptions)) {
+                                            correctAnswers = q.answerOptions.filter((_: string, i: number) => (q.correctAnswers as boolean[])[i]);
+                                        } else if (typeof q.correctAnswers[0] === 'string') {
+                                            correctAnswers = (q.correctAnswers as (string | boolean)[]).filter((a): a is string => typeof a === 'string');
+                                        }
+                                    }
+                                    return {
+                                        ...q,
+                                        answers: Array.isArray(q.answerOptions)
+                                            ? q.answerOptions.map((text: string) => ({ text, correct: correctAnswers.includes(text) }))
+                                            : []
+                                    };
+                                }))}
+                                quizId={quizId}
+                                currentTournamentCode={currentTournamentCode || ''}
                                 onTimerAction={handleTimerAction}
                                 disabled={!quizSocket || !quizSocket.connected || quizState?.ended}
-                                onShowResults={handleShowResults}
-                                showResultsDisabled={() => false}
-                                // Always show stats if available
-                                getStatsForQuestion={uid => questionStats[uid]?.stats}
-                                onStatsToggle={(uid, show) => {
-                                    logger.info(`[DASHBOARD] Emitting quiz_toggle_stats`, { quizId, questionUid: uid, show });
-                                    if (quizSocket && quizId) {
-                                        quizSocket.emit(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, {
-                                            quizId,
-                                            questionUid: uid,
-                                            show
-                                        });
-                                    }
-                                }}
-                                quizId={quizId} // Added missing prop
-                                currentTournamentCode={currentTournamentCode || ''} // Added fallback for null
                             />
                         </section>
                     </div>

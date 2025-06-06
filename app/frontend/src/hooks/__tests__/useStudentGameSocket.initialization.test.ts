@@ -1,4 +1,3 @@
-
 import { renderHook } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useStudentGameSocket } from '../useStudentGameSocket';
@@ -70,7 +69,7 @@ describe('useStudentGameSocket - Initialization', () => {
             currentQuestion: null,
             questionIndex: 0,
             totalQuestions: 0,
-            timer: null,
+            timer: 0, // changed from null to 0 to match unified timer default
             timerStatus: 'stop',
             gameStatus: 'waiting',
             answered: false,

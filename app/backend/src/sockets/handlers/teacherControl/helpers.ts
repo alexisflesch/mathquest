@@ -3,6 +3,7 @@ import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import gameStateService from '@/core/gameStateService';
 import { GameControlStatePayload, QuestionForDashboard } from './types';
+import type { GameTimerState } from '@shared/types/core/timer';
 
 // Create a handler-specific logger
 const logger = createLogger('TeacherControlHelpers');
@@ -10,6 +11,48 @@ const logger = createLogger('TeacherControlHelpers');
 // Redis key prefixes
 export const DASHBOARD_PREFIX = 'mathquest:dashboard:';
 export const ANSWERS_KEY_PREFIX = 'mathquest:game:answers:';
+
+/**
+ * Maps backend timer structure to core GameTimerState
+ */
+function mapBackendTimerToCore(backendTimer: any): GameTimerState {
+    if (!backendTimer) {
+        return {
+            status: 'stop',
+            timeLeft: 0,
+            duration: 30,
+            questionId: undefined,
+            timestamp: null,
+            localTimeLeft: 0
+        };
+    }
+
+    // Calculate current time left if timer is running
+    let timeLeft = 0;
+    let status: 'play' | 'pause' | 'stop' = 'stop';
+
+    if (backendTimer.isPaused) {
+        status = 'pause';
+        timeLeft = backendTimer.timeRemaining ? Math.ceil(backendTimer.timeRemaining / 1000) : 0;
+    } else if (backendTimer.startedAt && backendTimer.startedAt > 0) {
+        status = 'play';
+        const elapsed = Date.now() - backendTimer.startedAt;
+        const remaining = Math.max(0, backendTimer.duration - elapsed);
+        timeLeft = Math.ceil(remaining / 1000);
+    } else {
+        status = 'stop';
+        timeLeft = backendTimer.duration ? Math.ceil(backendTimer.duration / 1000) : 30;
+    }
+
+    return {
+        status,
+        timeLeft,
+        duration: backendTimer.duration ? Math.ceil(backendTimer.duration / 1000) : 30,
+        questionId: undefined, // Backend timer doesn't store question ID
+        timestamp: Date.now(),
+        localTimeLeft: timeLeft
+    };
+}
 
 /**
  * Helper function to fetch and prepare the comprehensive dashboard state
@@ -103,7 +146,7 @@ export async function getGameControlState(gameId: string | undefined, userId: st
             status: gameState.status,
             currentQuestionUid,
             questions,
-            timer: gameState.timer,
+            timer: mapBackendTimerToCore(gameState.timer),
             answersLocked: gameState.answersLocked ?? false,
             participantCount,
             answerStats

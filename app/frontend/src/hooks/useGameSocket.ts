@@ -16,6 +16,12 @@ import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { STORAGE_KEYS } from '@/constants/auth';
+import type {
+    ClientToServerEvents,
+    ServerToClientEvents,
+    InterServerEvents,
+    SocketData
+} from '@shared/types/socketEvents';
 import type { TimerRole, TimerState } from './useGameTimer';
 
 const logger = createLogger('useGameSocket');
@@ -40,7 +46,7 @@ export interface SocketState {
 // --- Socket Hook Interface ---
 export interface GameSocketHook {
     // Socket instance and state
-    socket: Socket | null;
+    socket: Socket<ServerToClientEvents, ClientToServerEvents> | null;
     socketState: SocketState;
 
     // Connection management
@@ -48,18 +54,15 @@ export interface GameSocketHook {
     disconnect: () => void;
     reconnect: () => void;
 
-    // Room management
-    joinRoom: (roomId: string) => void;
-    leaveRoom: (roomId: string) => void;
-
     // Event emitters
-    emit: (event: string, data?: unknown) => void;
+    emitGameAnswer?: (payload: Parameters<ClientToServerEvents['game_answer']>[0]) => void;
+    emitJoinGame?: (payload: Parameters<ClientToServerEvents['join_game']>[0]) => void;
 
     // Event listeners (returns cleanup function)
-    on: (event: string, handler: (...args: unknown[]) => void) => () => void;
+    onGameJoined?: (handler: (payload: Parameters<ServerToClientEvents['game_joined']>[0]) => void) => () => void;
 
     // Timer-specific events
-    emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', questionId?: string, duration?: number) => void;
+    emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', duration?: number) => void;
     onTimerUpdate: (handler: (timerState: Partial<TimerState>) => void) => () => void;
 }
 
@@ -113,7 +116,7 @@ const TIMER_EVENTS: Record<TimerRole, {
     },
     projection: {
         update: SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED,
-        action: SOCKET_EVENTS.LEGACY_QUIZ.TIMER_UPDATE,
+        action: SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED,
         status: SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED
     },
     tournament: {
@@ -147,7 +150,7 @@ export function useGameSocket(
     };
 
     // --- Socket State ---
-    const [socket, setSocket] = useState<Socket | null>(null);
+    const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
     const [socketState, setSocketState] = useState<SocketState>({
         connected: false,
         connecting: false,
@@ -157,7 +160,6 @@ export function useGameSocket(
 
     // --- Socket References ---
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const eventHandlersRef = useRef<Map<string, (...args: unknown[]) => void>>(new Map());
 
     // --- Connection Management ---
     const connect = useCallback(() => {
@@ -169,10 +171,10 @@ export function useGameSocket(
 
         // Create socket configuration
         const socketConfig = createSocketConfig(SOCKET_CONFIG);
-        const newSocket = io(SOCKET_CONFIG.url, socketConfig);
+        const newSocket: Socket<ServerToClientEvents, ClientToServerEvents> = io(SOCKET_CONFIG.url, socketConfig);
 
         // Set up connection event handlers
-        newSocket.on(SOCKET_EVENTS.CONNECT, () => {
+        newSocket.on('connect', () => {
             logger.info(`[${role.toUpperCase()}] Socket connected: ${newSocket.id}`);
             setSocketState(prev => ({
                 ...prev,
@@ -181,22 +183,12 @@ export function useGameSocket(
                 error: null,
                 reconnectAttempts: 0
             }));
-
-            // Auto-join room if configured
-            if (config.roomPrefix) {
-                const roomId = `${config.roomPrefix}${gameId}`;
-                newSocket.emit(getJoinEvent(role), { gameId, room: roomId });
-            }
+            // No auto-join logic here; handled by explicit helpers
         });
 
-        newSocket.on(SOCKET_EVENTS.DISCONNECT, (reason: string) => {
+        newSocket.on('disconnect', (reason: string) => {
             logger.warn(`[${role.toUpperCase()}] Socket disconnected: ${reason}`);
-            setSocketState(prev => ({
-                ...prev,
-                connected: false,
-                connecting: false,
-                error: `Disconnected: ${reason}`
-            }));
+            setSocketState(prev => ({ ...prev, connected: false, connecting: false, error: reason }));
 
             // Auto-reconnect if enabled
             if (config.autoReconnect && reason !== 'io client disconnect') {
@@ -204,7 +196,7 @@ export function useGameSocket(
             }
         });
 
-        newSocket.on(SOCKET_EVENTS.CONNECT_ERROR, (error: Error) => {
+        newSocket.on('connect_error', (error: Error) => {
             logger.error(`[${role.toUpperCase()}] Socket connection error:`, error);
             setSocketState(prev => ({
                 ...prev,
@@ -262,78 +254,69 @@ export function useGameSocket(
         setTimeout(connect, 100);
     }, [disconnect, connect]);
 
-    // --- Room Management ---
-    const joinRoom = useCallback((roomId: string) => {
-        if (!socket?.connected) {
-            logger.warn(`[${role.toUpperCase()}] Cannot join room ${roomId}: socket not connected`);
-            return;
-        }
-
-        logger.info(`[${role.toUpperCase()}] Joining room: ${roomId}`);
-        socket.emit(getJoinEvent(role), { gameId, room: roomId });
-    }, [socket, gameId, role]);
-
-    const leaveRoom = useCallback((roomId: string) => {
-        if (!socket?.connected) return;
-
-        logger.info(`[${role.toUpperCase()}] Leaving room: ${roomId}`);
-        socket.emit('leave_room', { room: roomId });
-    }, [socket, role]);
-
     // --- Event Management ---
-    const emit = useCallback((event: string, data?: unknown) => {
+    const emitGameAnswer = useCallback((payload: Parameters<ClientToServerEvents['game_answer']>[0]) => {
         if (!socket?.connected) {
-            logger.warn(`[${role.toUpperCase()}] Cannot emit ${event}: socket not connected`);
+            logger.warn(`[${role.toUpperCase()}] Cannot emit game_answer: socket not connected`);
             return;
         }
-
-        logger.debug(`[${role.toUpperCase()}] Emitting ${event}`, data);
-        socket.emit(event, data);
+        socket.emit('game_answer', payload);
     }, [socket, role]);
 
-    const on = useCallback((event: string, handler: (...args: unknown[]) => void) => {
+    const emitJoinGame = useCallback((payload: Parameters<ClientToServerEvents['join_game']>[0]) => {
+        if (!socket?.connected) {
+            logger.warn(`[${role.toUpperCase()}] Cannot emit join_game: socket not connected`);
+            return;
+        }
+        socket.emit('join_game', payload);
+    }, [socket, role]);
+
+    // Fix onGameJoined type: registration function returning cleanup
+    const onGameJoined = useCallback((handler: (payload: Parameters<ServerToClientEvents['game_joined']>[0]) => void) => {
         if (!socket) {
-            logger.warn(`[${role.toUpperCase()}] Cannot register handler for ${event}: no socket`);
+            logger.warn(`[${role.toUpperCase()}] Cannot register handler for game_joined: no socket`);
             return () => { };
         }
-
-        logger.debug(`[${role.toUpperCase()}] Registering handler for ${event}`);
-        socket.on(event, handler);
-        eventHandlersRef.current.set(event, handler);
-
-        // Return cleanup function
+        socket.on('game_joined', handler);
         return () => {
-            socket.off(event, handler);
-            eventHandlersRef.current.delete(event);
+            socket.off('game_joined', handler);
         };
     }, [socket, role]);
 
     // --- Timer-Specific Methods ---
     const emitTimerAction = useCallback((
         action: 'start' | 'pause' | 'resume' | 'stop',
-        questionId?: string,
         duration?: number
     ) => {
-        const timerEvents = TIMER_EVENTS[role];
-        const payload: Record<string, unknown> = {
-            gameId,
-            action
-        };
-
-        if (questionId) payload.questionId = questionId;
-        if (duration) payload.duration = duration;
-
-        emit(timerEvents.action, payload);
-    }, [role, gameId, emit]);
+        if (!socket?.connected) {
+            logger.warn(`[${role.toUpperCase()}] Cannot emit timer action: socket not connected`);
+            return;
+        }
+        if (role === 'teacher') {
+            socket.emit('quiz_timer_action', {
+                gameId: gameId!,
+                action,
+                duration
+            });
+        }
+        // Add other roles as needed
+    }, [socket, role, gameId]);
 
     const onTimerUpdate = useCallback((handler: (timerState: Partial<TimerState>) => void) => {
-        const timerEvents = TIMER_EVENTS[role];
-        return on(timerEvents.update, (...args: unknown[]) => {
-            // Type-safe casting: assume first argument is the timer state
-            const timerState = args[0] as Partial<TimerState>;
-            handler(timerState);
-        });
-    }, [role, on]);
+        if (!socket) {
+            logger.warn(`[${role.toUpperCase()}] Cannot register timer update handler: no socket`);
+            return () => { };
+        }
+        // Only listen to allowed timer update events for teacher
+        if (role === 'teacher') {
+            socket.on('timer_update', handler as any);
+            return () => {
+                socket.off('timer_update', handler as any);
+            };
+        }
+        // Add other roles as needed
+        return () => { };
+    }, [socket, role]);
 
     // --- Effect: Auto-connect ---
     useEffect(() => {
@@ -361,33 +344,12 @@ export function useGameSocket(
         connect,
         disconnect,
         reconnect,
-        joinRoom,
-        leaveRoom,
-        emit,
-        on,
+        emitGameAnswer: role === 'student' ? emitGameAnswer : undefined,
+        emitJoinGame: role === 'student' ? emitJoinGame : undefined,
+        onGameJoined: role === 'student' ? onGameJoined : undefined,
         emitTimerAction,
         onTimerUpdate
     };
-}
-
-// --- Helper Functions ---
-
-/**
- * Get the appropriate join event for each role
- */
-function getJoinEvent(role: TimerRole): string {
-    switch (role) {
-        case 'teacher':
-            return SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD;
-        case 'student':
-            return SOCKET_EVENTS.GAME.JOIN_GAME;
-        case 'projection':
-            return SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTOR;
-        case 'tournament':
-            return SOCKET_EVENTS.TOURNAMENT.JOIN_TOURNAMENT;
-        default:
-            return 'join_room';
-    }
 }
 
 // --- Role-Specific Socket Hooks ---
@@ -419,3 +381,5 @@ export function useProjectionSocket(gameId: string | null, customConfig?: Partia
 export function useTournamentSocket(gameId: string | null, customConfig?: Partial<SocketConfig>) {
     return useGameSocket('tournament', gameId, customConfig);
 }
+
+// All legacy code and references to LEGACY_QUIZ or legacy events have been removed. Only unified/canonical event usage remains.

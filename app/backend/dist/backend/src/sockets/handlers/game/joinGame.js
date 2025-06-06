@@ -102,20 +102,26 @@ function joinGameHandler(io, socket) {
             }
             socket.data.userId = userId;
             socket.data.accessCode = accessCode;
-            socket.data.username = joinResult.participant.user.username;
+            socket.data.username = username || 'Unknown';
             // Redis keys
             const participantsKey = `mathquest:game:participants:${accessCode}`;
             const userIdToSocketIdKey = `mathquest:game:userIdToSocketId:${accessCode}`;
             const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
+            // Create participant data using core types (map from Prisma structure)
             const participantDataForRedis = {
-                // id: socket.id, // No longer using socket.id as the primary participant identifier in this hash
+                id: joinResult.participant.id,
                 userId: joinResult.participant.userId,
-                username: joinResult.participant.user.username,
-                avatarEmoji: joinResult.participant.user.avatarEmoji,
-                joinedAt: joinResult.participant.joinedAt.toISOString(),
-                score: joinResult.participant.score,
+                username: username || 'Unknown',
+                avatar: avatarEmoji || joinResult.participant.user?.avatarEmoji || '😀', // Use parameter first, then fallback
+                score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                avatarEmoji: avatarEmoji || joinResult.participant.user?.avatarEmoji, // Use parameter first, then fallback
+                joinedAt: joinResult.participant.joinedAt ?
+                    (typeof joinResult.participant.joinedAt === 'string' ?
+                        joinResult.participant.joinedAt :
+                        joinResult.participant.joinedAt.toISOString()) :
+                    new Date().toISOString(),
                 online: true,
-                lastSocketId: socket.id // Keep track of the latest socket ID for this user
+                socketId: socket.id // Track current socket ID
             };
             logger.debug({ participantsKey, userId: joinResult.participant.userId, participantDataForRedis }, 'Storing participant in Redis by userId');
             // Store main participant data keyed by userId
@@ -130,10 +136,15 @@ function joinGameHandler(io, socket) {
                 participant: {
                     id: joinResult.participant.id,
                     userId: joinResult.participant.userId,
-                    username: joinResult.participant.user.username,
-                    avatarEmoji: joinResult.participant.user.avatarEmoji || undefined,
-                    score: joinResult.participant.score,
-                    joinedAt: joinResult.participant.joinedAt.toISOString(),
+                    username: username || 'Unknown',
+                    avatar: avatarEmoji || joinResult.participant.user?.avatarEmoji || '😀',
+                    score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                    avatarEmoji: avatarEmoji || joinResult.participant.user?.avatarEmoji || undefined,
+                    joinedAt: joinResult.participant.joinedAt ?
+                        (typeof joinResult.participant.joinedAt === 'string' ?
+                            joinResult.participant.joinedAt :
+                            joinResult.participant.joinedAt.toISOString()) :
+                        new Date().toISOString(),
                     online: true,
                 },
                 gameStatus: gameInstance.status,
@@ -148,9 +159,10 @@ function joinGameHandler(io, socket) {
                     participant: {
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
-                        username: joinResult.participant.user.username,
-                        avatarEmoji: joinResult.participant.user.avatarEmoji || undefined,
-                        score: joinResult.participant.score,
+                        username: username || 'Unknown',
+                        avatar: joinResult.participant.user?.avatarEmoji || '😀',
+                        score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                        avatarEmoji: joinResult.participant.user?.avatarEmoji || undefined,
                         online: true
                     }
                 };

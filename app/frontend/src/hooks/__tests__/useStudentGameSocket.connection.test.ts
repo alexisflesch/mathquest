@@ -1,4 +1,3 @@
-
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useStudentGameSocket } from '../useStudentGameSocket';
@@ -146,7 +145,10 @@ describe('useStudentGameSocket - Connection', () => {
 
         // Simulate reconnection
         act(() => {
-            reconnectHandler?.(3); // After 3 attempts
+            mockSocket.connected = true;
+            connectHandler?.();
+            reconnectHandler?.(3);
+            // Optionally emit timer_update if timer state is asserted after reconnection
         });
 
         await waitFor(() => {
@@ -209,6 +211,8 @@ describe('useStudentGameSocket - Connection', () => {
 
         // Simulate reconnection
         act(() => {
+            mockSocket.connected = true;
+            connectHandler?.();
             reconnectHandler?.(1);
         });
 

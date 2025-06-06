@@ -3,7 +3,6 @@
  */
 import {
     BaseQuizState,
-    Answer, // Keep this import as it's used for Response alias
     Logger as BaseLogger,
     Question as SharedQuestion // Import shared Question
 } from '@shared/types';
@@ -12,11 +11,7 @@ import {
 // import { BaseQuestion } from '@shared/types/question';
 
 // Re-export shared types
-export type { Answer } from '@shared/types'; // Ensured "export type" is used
 export type { Question } from '@shared/types'; // Re-export the shared Question type
-
-// Frontend-specific Response type (alias for Answer for backward compatibility)
-export type Response = Answer;
 
 // Frontend-specific QuizState extensions
 export interface QuizState extends BaseQuizState {

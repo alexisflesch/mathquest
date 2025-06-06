@@ -4,24 +4,14 @@ import GoodAnswer from '@/components/GoodAnswer';
 import WrongAnswer from '@/components/WrongAnswer';
 import type { Question, Answer } from '@shared/types/quiz/question'; // Corrected import
 import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import type { QuestionData, TournamentQuestion } from '@shared/types/socketEvents';
+import { getQuestionText, getQuestionAnswers, getQuestionUid } from '@shared/types/tournament/question';
 import { createLogger } from '@/clientLogger';
 
 const logger = createLogger('QuestionCard');
 
-// This extends the shared LiveQuestionPayload type and adds any frontend-specific fields
-export interface TournamentQuestion extends Omit<LiveQuestionPayload, 'question'> {
-    // We allow the question field to be either the FilteredQuestion or the original Question object
-    // to support both live_question events and direct question rendering
-    question: FilteredQuestion | Question | string;
-
-    // Legacy and additional fields for backward compatibility
-    code?: string;
-    remainingTime?: number;
-    tournoiState?: 'pending' | 'running' | 'paused' | 'stopped' | 'finished';
-    uid?: string; // Added uid property for compatibility
-    type?: string; // Added type property for compatibility
-    answers?: string[]; // Array of answer texts, used if 'question' is a string or as a fallback
-}
+// NOTE: TournamentQuestion interface is now imported from shared types
+// This local definition has been replaced by the canonical shared type
 
 interface StatsData {
     stats: number[];
@@ -48,78 +38,43 @@ interface QuestionCardProps {
     showStats?: boolean; // Whether to display the stats
 }
 
+// Helper to get the question type (for multiple choice detection)
+const getQuestionType = (q: FilteredQuestion | QuestionData | string): string | undefined => {
+    if (typeof q === 'object' && q !== null) {
+        // FilteredQuestion uses 'type', QuestionData uses 'questionType'
+        if ('type' in q && typeof q.type === 'string') return q.type;
+        if ('questionType' in q && typeof q.questionType === 'string') return q.questionType;
+    }
+    return undefined;
+};
+
+// Updated helper functions using shared type utilities
 const getQuestionTextToRender = (payload: TournamentQuestion | null): string => {
     if (!payload) return "Question non disponible";
-    if (!payload.question) return "Question non disponible";
-
-    if (typeof payload.question === 'string') {
-        return payload.question;
+    try {
+        const text = getQuestionText(payload);
+        return text === 'Question text not available' ? "Question mal formatée" : text;
+    } catch (error) {
+        logger.warn('[QuestionCard] Error extracting question text:', error);
+        return "Question mal formatée";
     }
-
-    // payload.question is FilteredQuestion | Question
-    // Both should have 'text: string'. // MODIFIED: texte -> text
-    if (payload.question.text && typeof payload.question.text === 'string' && payload.question.text.trim() !== '') { // MODIFIED: texte -> text
-        return payload.question.text; // MODIFIED: texte -> text
-    }
-
-    // Fallback for Question type's optional 'question' field if 'text' was empty or not present.
-    // This handles cases where the object might be a Question type but missing 'text'.
-    if ('question' in payload.question) {
-        const qObject = payload.question as Question; // Assert Question type to access 'question'
-        if (qObject.question && typeof qObject.question === 'string' && qObject.question.trim() !== '') {
-            return qObject.question;
-        }
-    }
-
-    logger.warn('[QuestionCard] Could not extract question text from object. payload.question:', payload.question);
-    return "Question mal formatée"; // Fallback
 };
 
 const getAnswersToRender = (payload: TournamentQuestion | null): string[] => {
     if (!payload) return [];
-
-    // Case 1: payload.question is an object (FilteredQuestion or Question)
-    if (typeof payload.question === 'object' && payload.question !== null) {
-        // The 'answers' property is now mandatory on BaseQuestion, and thus on FilteredQuestion and Question
-        if (payload.question.answers && Array.isArray(payload.question.answers)) {
-            if (payload.question.answers.length === 0) return [];
-
-            const firstAnswer = payload.question.answers[0];
-            if (typeof firstAnswer === 'string') {
-                // This means payload.question.answers is string[] (likely from FilteredQuestion)
-                return payload.question.answers as string[];
-            } else if (typeof firstAnswer === 'object' && firstAnswer !== null && 'text' in firstAnswer) {
-                // This means payload.question.answers is Answer[] (likely from Question)
-                return (payload.question.answers as Answer[]).map(ans => ans.text);
-            }
-        }
-        logger.warn('[QuestionCard] payload.question is object, but its answers are missing or malformed:', payload.question);
-        // Fall through to check top-level payload.answers as a last resort if question object's answers are unusable
-    }
-    // Case 2: payload.question is a string, or payload.question object's answers were not usable
-    else if (typeof payload.question === 'string') {
-        if (payload.answers && Array.isArray(payload.answers)) {
-            return payload.answers; // Use top-level answers
-        }
-        logger.warn('[QuestionCard] payload.question is string, but top-level payload.answers is missing or not an array:', payload);
+    try {
+        return getQuestionAnswers(payload);
+    } catch (error) {
+        logger.warn('[QuestionCard] Error extracting answers:', error);
         return [];
     }
-
-    // Fallback: If payload.question was an object but its answers were bad, try the top-level payload.answers.
-    if (payload.answers && Array.isArray(payload.answers)) {
-        logger.debug('[QuestionCard] getAnswersToRender: Using top-level payload.answers as fallback.');
-        return payload.answers;
-    }
-
-    logger.warn('[QuestionCard] Could not determine how to extract answers from payload:', payload);
-    return [];
 };
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
     currentQuestion,
     questionIndex,
     totalQuestions,
-    isMultipleChoice, // This prop comes from parent component
+    isMultipleChoice,
     selectedAnswer,
     setSelectedAnswer,
     selectedAnswers,
@@ -128,21 +83,17 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     handleSubmitMultiple,
     answered,
     isQuizMode = true,
-    readonly = false,  // Default to interactive mode
-    zoomFactor = 1,    // Kept but no longer used // MODIFIED: Translated comment
-    correctAnswers = [], // Add default value
-    stats, // Destructure stats
-    showStats = false, // Destructure showStats
+    readonly = false,
+    zoomFactor = 1,
+    correctAnswers = [],
+    stats,
+    showStats = false,
 }) => {
-    // Helper: determine if this is a multiple choice question based on the question's type
+    // Use shared type helpers for type detection
     const isMultipleChoiceQuestion = React.useMemo(() => {
         if (!currentQuestion) return false;
-
-        if (typeof currentQuestion.question === 'object' && currentQuestion.question.type) {
-            return currentQuestion.question.type === "choix_multiple";
-        }
-
-        return false;
+        const t = getQuestionType(currentQuestion.question);
+        return t === 'choix_multiple';
     }, [currentQuestion]);
 
     // Use either the passed prop or our computed value

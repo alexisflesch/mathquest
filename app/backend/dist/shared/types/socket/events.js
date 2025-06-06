@@ -8,7 +8,7 @@
  * Updated to align with the new backend socket event naming conventions.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SOCKET_EVENTS = exports.GAME_EVENTS = exports.PROJECTOR_EVENTS = exports.LOBBY_EVENTS = exports.TOURNAMENT_EVENTS = exports.LEGACY_QUIZ_EVENTS = exports.TEACHER_EVENTS = void 0;
+exports.SOCKET_EVENTS = exports.GAME_EVENTS = exports.PROJECTOR_EVENTS = exports.LOBBY_EVENTS = exports.TOURNAMENT_EVENTS = exports.TEACHER_EVENTS = void 0;
 // ===== Teacher Dashboard Events =====
 exports.TEACHER_EVENTS = {
     // Connection and state
@@ -35,34 +35,6 @@ exports.TEACHER_EVENTS = {
     DASHBOARD_GAME_STATUS_CHANGED: 'dashboard_game_status_changed',
     // Error handling
     ERROR_DASHBOARD: 'error_dashboard'
-};
-// ===== Legacy Quiz Events (for backward compatibility during migration only) =====
-exports.LEGACY_QUIZ_EVENTS = {
-    // Legacy teacher events
-    SET_QUESTION: 'quiz_set_question',
-    SET_TIMER: 'quiz_set_timer',
-    LOCK_UNLOCK: 'quiz_lock_unlock',
-    END_QUIZ: 'quiz_end',
-    CLOSE_QUESTION: 'quiz_close_question',
-    PAUSE_RESUME: 'quiz_pause_resume',
-    GET_STATE: 'quiz_get_state',
-    GET_TIMER: 'quiz_get_timer',
-    TOGGLE_STATS: 'quiz_toggle_stats',
-    RESET_ENDED: 'quiz_reset_ended',
-    // Student events
-    JOIN: 'quiz_join',
-    SUBMIT_ANSWER: 'quiz_submit_answer',
-    // Legacy broadcast events
-    STATE_UPDATE: 'quiz_state_update',
-    STATE: 'quiz_state',
-    PLAYER_JOINED: 'quiz_player_joined',
-    ANSWER_RECEIVED: 'quiz_answer_received',
-    QUESTION_CLOSED: 'quiz_question_closed',
-    QUIZ_ENDED: 'quiz_ended',
-    TIMER_UPDATE: 'quiz_timer_update',
-    ANSWER_STATS_UPDATE: 'quiz_answer_stats_update',
-    ACTION_RESPONSE: 'quiz_action_response',
-    QUESTION_RESULTS: 'quiz_question_results'
 };
 // ===== Tournament Events =====
 exports.TOURNAMENT_EVENTS = {
@@ -163,7 +135,6 @@ exports.SOCKET_EVENTS = {
     TOURNAMENT: exports.TOURNAMENT_EVENTS,
     LOBBY: exports.LOBBY_EVENTS,
     PROJECTOR: exports.PROJECTOR_EVENTS,
-    LEGACY_QUIZ: exports.LEGACY_QUIZ_EVENTS,
     // Connection events
     CONNECT: 'connect',
     DISCONNECT: 'disconnect',

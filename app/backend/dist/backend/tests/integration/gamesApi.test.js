@@ -174,7 +174,13 @@ describe('Games API Integration Tests', () => {
             const mockJoinResult = {
                 success: true,
                 gameInstance: { id: 'game-123', name: 'Test Game' },
-                participant: { id: 'participant-123', userId }
+                participant: {
+                    id: 'participant-123',
+                    userId,
+                    username: 'TestPlayer',
+                    avatar: '🎮',
+                    score: 0
+                }
             };
             mockGameParticipantService.joinGame.mockResolvedValue(mockJoinResult);
             const response = await (0, supertest_1.default)(server_1.app)

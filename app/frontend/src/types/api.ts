@@ -114,7 +114,7 @@ const AnswerSchema = z.object({
 const QuestionSchema = z.object({
     uid: z.string(),
     text: z.string(),
-    type: z.string(), // Question type (e.g., choix_simple, choix_multiple)
+    questionType: z.string(), // Canonical field, matches DB and API
     answers: z.array(AnswerSchema),
     title: z.string().optional(),
     explanation: z.string().optional(),

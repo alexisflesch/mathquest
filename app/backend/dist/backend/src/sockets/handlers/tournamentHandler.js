@@ -45,7 +45,14 @@ function tournamentHandler(io, socket) {
             socketId: socket.id
         }, '[TournamentHandler] Fetched gameInstance for start_tournament');
         const authenticatedUserId = socket.data.user?.userId;
-        logger.debug({ accessCode, socketId: socket.id, authenticatedUserId, initiatorUserId: gameInstance.initiatorUserId }, '[DEBUG] Checking authorization for start_tournament');
+        logger.debug({
+            accessCode,
+            socketId: socket.id,
+            authenticatedUserId,
+            initiatorUserId: gameInstance.initiatorUserId,
+            socketData: socket.data,
+            socketUser: socket.data.user
+        }, '[DEBUG] Checking authorization for start_tournament');
         if (!authenticatedUserId || gameInstance.initiatorUserId !== authenticatedUserId) {
             logger.warn({ authenticatedUserId, initiatorUserId: gameInstance.initiatorUserId, accessCode, socketId: socket.id }, '[DEBUG] Not authorized to start tournament');
             socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Not authorized to start this tournament' });

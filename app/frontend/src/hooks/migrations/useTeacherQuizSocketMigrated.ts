@@ -2,17 +2,20 @@
  * Migration Wrapper for useTeacherQuizSocket
  * 
  * This file provides a backward-compatible interface for useTeacherQuizSocket
- * while using the new unified system internally. This allows for gradual
- * migration without breaking existing components.
+ * while using the new unified system internally and core types.
  * 
- * Phase 2: Timer Management Consolidation - Migration Layer
+ * Phase 3: Frontend Type Consolidation - Migration Layer
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { createLogger } from '@/clientLogger';
 import { useTeacherGameManager } from '../useUnifiedGameManager';
-import type { Question, QuizState } from '../useTeacherQuizSocket';
+import type { QuizState } from '../useTeacherQuizSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+
+// Import core types
+import type { Question } from '@shared/types/core';
+import type { QuestionData, ServerToClientEvents } from '@shared/types/socketEvents';
 
 const logger = createLogger('useTeacherQuizSocketMigrated');
 
@@ -22,13 +25,14 @@ const logger = createLogger('useTeacherQuizSocketMigrated');
  * Maintains the exact same interface as the original useTeacherQuizSocket
  * but uses the unified system internally for timer and socket management.
  * 
- * @param quizId - The quiz/game ID
+ * @param accessCode - The access code for the quiz/game
  * @param token - Authentication token
+ * @param quizId - The quiz/game ID (optional)
  * @returns The same interface as original useTeacherQuizSocket
  */
-export function useTeacherQuizSocket(quizId: string | null, token: string | null) {
+export function useTeacherQuizSocket(accessCode: string | null, token: string | null, quizId?: string | null) {
     // Use the unified game manager internally
-    const gameManager = useTeacherGameManager(quizId, token, {
+    const gameManager = useTeacherGameManager(accessCode, token, {
         timerConfig: {
             autoStart: false,
             smoothCountdown: false,
@@ -79,8 +83,8 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
         const cleanupFunctions: (() => void)[] = [];
 
         // Legacy quiz state handler
-        cleanupFunctions.push(
-            gameManager.socket.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, (state: any) => {
+        if (gameManager.socket.instance) {
+            const gameControlStateHandler = (state: any) => {
                 logger.debug('Received legacy quiz_state', state);
                 setQuizState(prev => ({
                     ...prev,
@@ -90,23 +94,40 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
                         running: state.chrono?.running ?? (state.timerStatus === 'play')
                     }
                 }));
-            })
-        );
+            };
+
+            gameManager.socket.instance.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents, gameControlStateHandler);
+            cleanupFunctions.push(() => {
+                gameManager.socket.instance?.off(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents, gameControlStateHandler);
+            });
+        }
 
         // Legacy stats update handler
-        cleanupFunctions.push(
-            gameManager.socket.on('stats_update', (stats: any) => {
+        if (gameManager.socket.instance) {
+            const statsUpdateHandler = (stats: any) => {
+                logger.debug('Received stats_update', stats);
                 setQuizState(prev => prev ? { ...prev, stats } : prev);
-            })
-        );
+            };
+
+            gameManager.socket.instance.on('stats_update' as keyof ServerToClientEvents, statsUpdateHandler);
+            cleanupFunctions.push(() => {
+                gameManager.socket.instance?.off('stats_update' as keyof ServerToClientEvents, statsUpdateHandler);
+            });
+        }
 
         // Legacy locked state handler
-        cleanupFunctions.push(
-            gameManager.socket.on('answers_locked', (...args: unknown[]) => {
+        if (gameManager.socket.instance) {
+            const answersLockedHandler = (...args: unknown[]) => {
                 const data = args[0] as { locked: boolean };
+                logger.debug('Received answers_locked', data);
                 setQuizState(prev => prev ? { ...prev, locked: data.locked } : prev);
-            })
-        );
+            };
+
+            gameManager.socket.instance.on('answers_locked' as keyof ServerToClientEvents, answersLockedHandler);
+            cleanupFunctions.push(() => {
+                gameManager.socket.instance?.off('answers_locked' as keyof ServerToClientEvents, answersLockedHandler);
+            });
+        }
 
         return () => {
             cleanupFunctions.forEach(cleanup => cleanup());
@@ -123,7 +144,7 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
 
         // Also emit timer action if duration is provided
         if (duration) {
-            gameManager.socket.emitTimerAction('start', questionUid, duration);
+            gameManager.socket.emitTimerAction('start', duration);
         }
     }, [gameManager.actions.setQuestion, gameManager.socket.emitTimerAction]);
 
@@ -150,8 +171,10 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
     const emitSetTimer = useCallback((newTime: number, questionUid?: string) => {
         logger.info('Legacy emitSetTimer called', { newTime, questionUid });
         gameManager.timer.setDuration(newTime);
-        gameManager.socket.emit('set_timer', { gameId: quizId, time: newTime, questionUid });
-    }, [gameManager.timer.setDuration, gameManager.socket.emit, quizId]);
+        if (gameManager.socket.instance && quizId) {
+            gameManager.socket.instance.emit('set_timer', { gameId: quizId, time: newTime, questionUid });
+        }
+    }, [gameManager.timer.setDuration, gameManager.socket.instance, quizId]);
 
     const emitTimerAction = useCallback((payload: { status: string; questionId?: string; timeLeft?: number }) => {
         logger.info('Legacy emitTimerAction called', payload);
@@ -165,26 +188,28 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
                 } else {
                     gameManager.timer.resume();
                 }
-                gameManager.socket.emitTimerAction('start', questionId, timeLeft);
+                gameManager.socket.emitTimerAction('start', timeLeft);
                 break;
             case 'pause':
                 gameManager.timer.pause();
-                gameManager.socket.emitTimerAction('pause', questionId);
+                gameManager.socket.emitTimerAction('pause');
                 break;
             case 'stop':
                 gameManager.timer.stop();
-                gameManager.socket.emitTimerAction('stop', questionId);
+                gameManager.socket.emitTimerAction('stop');
                 break;
         }
     }, [gameManager.timer, gameManager.socket.emitTimerAction]);
 
     const emitUpdateTournamentCode = useCallback((tournamentCode: string) => {
         logger.info('Legacy emitUpdateTournamentCode called', { tournamentCode });
-        gameManager.socket.emit('update_tournament_code', {
-            gameId: quizId,
-            tournamentCode
-        });
-    }, [gameManager.socket.emit, quizId]);
+        if (gameManager.socket.instance && quizId) {
+            gameManager.socket.instance.emit('update_tournament_code', {
+                gameId: quizId,
+                newCode: tournamentCode
+            });
+        }
+    }, [gameManager.socket.instance, quizId]);
 
     // Return the same interface as the original hook
     return {

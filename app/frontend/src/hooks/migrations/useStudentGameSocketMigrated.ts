@@ -1,34 +1,50 @@
 /**
  * Modern Student Game Socket Hook (No Legacy Code)
  * 
- * Complete rewrite using the unified timer management system.
+ * Complete rewrite using the unified timer management system and core types.
  * Provides the exact interface expected by the live game component.
  * 
- * Phase 2: Timer Management Consolidation - Clean Modern Implementation
+ * Phase 3: Frontend Type Consolidation - Uses core types from @shared/types/core
  */
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createLogger } from '@/clientLogger';
 import { useStudentGameManager } from '../useUnifiedGameManager';
 
+// Import core types instead of local interfaces
+import type {
+    Question,
+    AnswerResponsePayload
+} from '@shared/types/core';
+import type { ServerToClientEvents } from '@shared/types/socketEvents';
+
 const logger = createLogger('useStudentGameSocket');
 
-// Modern interfaces based on actual component usage
+// Modern interfaces based on core types and actual component usage
 export interface StudentGameQuestion {
     uid: string;
     text: string;
-    type: string;
+    questionType: string;
+    answerOptions: string[];
+    // Legacy compatibility fields
+    type?: string;
     answers?: string[];
-    answerOptions?: string[];
+    correctAnswers?: number[]; // Keep as number[] for legacy compatibility
     explanation?: string;
-    correctAnswers?: number[];
+    timeLimit?: number;
+    gradeLevel?: string;
+    difficulty?: number;
+    themes?: string[];
 }
 
 export interface AnswerFeedback {
     correct: boolean;
     explanation?: string;
     points?: number;
-    correctAnswers?: number[];
+    correctAnswers?: boolean[];
+    questionId?: string;
+    timeSpent?: number;
+    score?: number;
 }
 
 export interface StudentGameState {
@@ -125,9 +141,11 @@ export function useStudentGameSocket(props: StudentGameSocketHookProps): Student
             setCurrentQuestion({
                 uid: data.question?.uid || data.uid,
                 text: data.question?.text || data.text,
+                questionType: data.question?.questionType || data.question?.type || data.type || 'multiple_choice',
+                answerOptions: data.question?.answerOptions || data.answerOptions || data.answers || [],
+                // Legacy compatibility fields
                 type: data.question?.type || data.type,
                 answers: data.question?.answers || data.answers || data.answerOptions,
-                answerOptions: data.question?.answerOptions || data.answerOptions || data.answers,
                 explanation: data.question?.explanation || data.explanation,
                 correctAnswers: data.question?.correctAnswers || data.correctAnswers
             });
@@ -205,13 +223,13 @@ export function useStudentGameSocket(props: StudentGameSocketHookProps): Student
 
         // Register all handlers
         Object.entries(handlers).forEach(([event, handler]) => {
-            socket.on(event, handler);
+            socket.on(event as keyof ServerToClientEvents, handler);
         });
 
         // Cleanup
         return () => {
             Object.entries(handlers).forEach(([event, handler]) => {
-                socket.off(event, handler);
+                socket.off(event as keyof ServerToClientEvents, handler);
             });
         };
     }, [gameManager.socket.instance, gameMode]);
@@ -246,7 +264,7 @@ export function useStudentGameSocket(props: StudentGameSocketHookProps): Student
     }, [gameManager.socket.instance, accessCode, userId, username, avatarEmoji, isDiffered]);
 
     const submitAnswer = useCallback((questionId: string, answer: number | number[], clientTimestamp: number) => {
-        if (!gameManager.socket.instance || answered) return;
+        if (!gameManager.socket.instance || answered || !accessCode) return;
 
         logger.info('Submitting answer', { questionId, answer, clientTimestamp });
 
@@ -255,12 +273,12 @@ export function useStudentGameSocket(props: StudentGameSocketHookProps): Student
             answer,
             accessCode,
             userId,
-            clientTimestamp
+            timeSpent: clientTimestamp // Map clientTimestamp to timeSpent for the payload
         });
     }, [gameManager.socket.instance, accessCode, userId, answered]);
 
     const requestNextQuestion = useCallback((questionId: string) => {
-        if (!gameManager.socket.instance) return;
+        if (!gameManager.socket.instance || !accessCode) return;
 
         logger.info('Requesting next question', { questionId });
 

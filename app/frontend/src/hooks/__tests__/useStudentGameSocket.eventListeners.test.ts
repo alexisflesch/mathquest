@@ -1,7 +1,7 @@
-
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
-import { useStudentGameSocket, GameQuestionPayload, AnswerReceived } from '../useStudentGameSocket';
+import { useStudentGameSocket, AnswerReceived } from '../useStudentGameSocket';
+import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
 
 // Mock socket.io-client
 jest.mock('socket.io-client');
@@ -62,7 +62,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const joinedPayload = {
             accessCode: 'TEST123',
-            participant: { userId: 'user-123', username: 'TestUser' },
+            participant: { id: 'p1', userId: 'user-123', username: 'TestUser' },
             gameStatus: 'active' as const,
             isDiffered: false
         };
@@ -88,15 +88,15 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        // Canonical payload for LiveQuestionPayload
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                type: 'choix_simple',
+                type: 'multiple_choice_single_answer',
                 answers: ['3', '4', '5', '6']
             },
-            timer: 30,
+            timer: 30000, // ms
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'
@@ -104,13 +104,18 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({
+                timeLeft: 30000,
+                running: true,
+                status: 'play'
+            });
         });
 
         await waitFor(() => {
             expect(result.current.gameState.currentQuestion).toEqual(questionPayload.question);
             expect(result.current.gameState.questionIndex).toBe(0);
             expect(result.current.gameState.totalQuestions).toBe(5);
-            expect(result.current.gameState.timer).toBe(30);
+            expect(result.current.gameState.timer).toBe(30000);
             expect(result.current.gameState.answered).toBe(false);
             expect(result.current.gameState.gameStatus).toBe('active');
         });
@@ -127,15 +132,15 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        // Canonical payload for LiveQuestionPayload
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                type: 'choix_simple',
+                type: 'multiple_choice_single_answer',
                 answers: ['3', '4', '5', '6']
             },
-            timer: 30,
+            timer: 30000, // ms
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'paused'
@@ -143,11 +148,16 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({
+                timeLeft: 30000,
+                running: false,
+                status: 'pause'
+            });
         });
 
         await waitFor(() => {
             expect(result.current.gameState.gameStatus).toBe('paused');
-            expect(result.current.gameState.timer).toBe(30);
+            expect(result.current.gameState.timer).toBe(30000);
         });
     });
 
@@ -160,17 +170,16 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const timerUpdate = {
-            timeLeft: 15,
-            status: 'play' as const
-        };
-
         act(() => {
-            eventHandlers['timer_update']?.(timerUpdate);
+            eventHandlers['timer_update']?.({
+                timeLeft: 15000, // ms
+                status: 'play',
+                running: true
+            });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(15);
+            expect(result.current.gameState.timer).toBe(15000);
             expect(result.current.gameState.timerStatus).toBe('play');
         });
     });
@@ -184,17 +193,16 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const timerUpdate = {
-            timeLeft: 10,
-            status: 'pause' as const
-        };
-
         act(() => {
-            eventHandlers['timer_update']?.(timerUpdate);
+            eventHandlers['timer_update']?.({
+                timeLeft: 10000, // ms
+                status: 'pause',
+                running: false
+            });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(10);
+            expect(result.current.gameState.timer).toBe(10000);
             expect(result.current.gameState.timerStatus).toBe('pause');
             expect(result.current.gameState.gameStatus).toBe('paused');
         });
@@ -210,16 +218,21 @@ describe('useStudentGameSocket - Event Listeners', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         const gameUpdate = {
-            timeLeft: 20,
+            timeLeft: 20000, // ms
             status: 'play' as const
         };
 
         act(() => {
             eventHandlers['game_update']?.(gameUpdate);
+            eventHandlers['timer_update']?.({
+                timeLeft: 20000,
+                running: true,
+                status: 'play'
+            });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(20);
+            expect(result.current.gameState.timer).toBe(20000);
             expect(result.current.gameState.timerStatus).toBe('play');
         });
     });

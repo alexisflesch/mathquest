@@ -69,7 +69,7 @@ describe('useTeacherQuizSocket Emitters', () => {
         window.localStorage.setItem('mathquest_jwt_token', mockToken);
 
         // Initial render to set up the socket instance in the hook
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
         act(() => {
             const connectCallback = mockSocket.on.mock.calls.find(call => call[0] === 'connect')?.[1];
             if (connectCallback) connectCallback(); // Trigger connect logic
@@ -81,52 +81,47 @@ describe('useTeacherQuizSocket Emitters', () => {
     });
 
     it('should emit "set_question" when emitSetQuestion is called', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
-        const questionUid = "q1";
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
+        const payload = { gameId: mockQuizId, questionUid: "q1", questionIndex: 0 };
         act(() => {
-            result.current.emitSetQuestion(questionUid);
+            result.current.emitSetQuestion(payload);
         });
-
-        // Check for the Phase 8 event with gameId payload structure
-        expect(mockSocket.emit).toHaveBeenCalledWith('set_question', { gameId: mockQuizId, questionUid });
+        expect(mockSocket.emit).toHaveBeenCalledWith('set_question', payload);
     });
 
     it('should emit "end_game" when emitEndQuiz is called', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
+        const payload = { gameId: mockQuizId };
         act(() => {
-            result.current.emitEndQuiz();
+            result.current.emitEndQuiz(payload);
         });
-
-        expect(mockSocket.emit).toHaveBeenCalledWith('end_game', { gameId: mockQuizId });
+        expect(mockSocket.emit).toHaveBeenCalledWith('end_game', payload);
     });
 
     it('should emit "quiz_timer_action" with "pause" when emitPauseQuiz is called', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
+        const payload = { gameId: mockQuizId, action: 'pause' as const };
         act(() => {
-            result.current.emitPauseQuiz();
+            result.current.emitPauseQuiz(payload);
         });
-
-        expect(mockSocket.emit).toHaveBeenCalledWith('quiz_timer_action', { gameId: mockQuizId, action: 'pause' });
+        expect(mockSocket.emit).toHaveBeenCalledWith('quiz_timer_action', payload);
     });
 
     it('should emit "quiz_timer_action" with "resume" when emitResumeQuiz is called', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
+        const payload = { gameId: mockQuizId, action: 'resume' as const };
         act(() => {
-            result.current.emitResumeQuiz();
+            result.current.emitResumeQuiz(payload);
         });
-
-        expect(mockSocket.emit).toHaveBeenCalledWith('quiz_timer_action', { gameId: mockQuizId, action: 'resume' });
+        expect(mockSocket.emit).toHaveBeenCalledWith('quiz_timer_action', payload);
     });
 
     it('should emit "quiz_timer_action" with "stop" when emitTimerAction is called with stop status', () => {
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
-        const questionIdForStop = "q_stop_test";
+        const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
+        const payload = { gameId: mockQuizId, action: 'stop' as const, questionId: "q_stop_test", timeLeft: 0 };
         act(() => {
-            // Call emitTimerAction with status 'stop'
-            result.current.emitTimerAction({ status: 'stop', questionId: questionIdForStop });
+            result.current.emitTimerAction(payload);
         });
-
-        // emitTimerAction for 'stop' will emit { gameId, action: 'stop', duration: undefined }
-        expect(mockSocket.emit).toHaveBeenCalledWith('quiz_timer_action', { gameId: mockQuizId, action: 'stop', duration: undefined });
+        expect(mockSocket.emit).toHaveBeenCalledWith('quiz_timer_action', payload);
     });
 });

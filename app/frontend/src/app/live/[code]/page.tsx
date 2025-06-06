@@ -17,7 +17,8 @@ import Snackbar from '@/components/Snackbar';
 import { createLogger } from '@/clientLogger';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
-import QuestionCard, { TournamentQuestion } from '@/components/QuestionCard';
+import QuestionCard from '@/components/QuestionCard';
+import type { TournamentQuestion } from '@shared/types';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
 import { useStudentGameSocket } from '@/hooks/migrations';
@@ -300,7 +301,7 @@ export default function LiveGamePage() {
         const convertedQuestion: FilteredQuestion = {
             uid: gameState.currentQuestion.uid,
             text: gameState.currentQuestion.text,
-            type: gameState.currentQuestion.type,
+            type: gameState.currentQuestion.type || gameState.currentQuestion.questionType || 'multiple_choice',
             answers: gameState.currentQuestion.answers || gameState.currentQuestion.answerOptions || []
         };
 

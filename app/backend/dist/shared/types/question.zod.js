@@ -10,7 +10,7 @@ exports.answerSchema = zod_1.z.object({
 exports.baseQuestionSchema = zod_1.z.object({
     uid: zod_1.z.string(),
     text: zod_1.z.string(),
-    type: zod_1.z.string(),
+    questionType: zod_1.z.string(),
     answers: zod_1.z.array(exports.answerSchema),
     time: zod_1.z.number().optional(),
     explanation: zod_1.z.string().optional(),

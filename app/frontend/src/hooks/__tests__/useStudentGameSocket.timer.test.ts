@@ -1,7 +1,7 @@
-
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
-import { useStudentGameSocket, GameQuestionPayload } from '../useStudentGameSocket';
+import { useStudentGameSocket } from '../useStudentGameSocket';
+import { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
 
 // Mock socket.io-client
 jest.mock('socket.io-client');
@@ -25,10 +25,21 @@ jest.mock('@/clientLogger', () => ({
 describe('useStudentGameSocket - Timer Management', () => {
     let mockSocket: any;
     let eventHandlers: { [key: string]: (...args: any[]) => void } = {};
+    let mockDateNow: jest.SpyInstance;
 
     beforeEach(() => {
         jest.clearAllMocks();
         eventHandlers = {};
+
+        // Mock Date.now for consistent timer testing
+        mockDateNow = jest.spyOn(Date, 'now');
+        let mockTime = 1000000000000; // Start at a fixed time
+        mockDateNow.mockImplementation(() => mockTime);
+
+        // Helper to advance mock time
+        (global as any).mockAdvanceTime = (ms: number) => {
+            mockTime += ms;
+        };
 
         // Create mock socket that captures event handlers
         mockSocket = {
@@ -49,6 +60,8 @@ describe('useStudentGameSocket - Timer Management', () => {
 
     afterEach(() => {
         jest.useRealTimers();
+        mockDateNow?.mockRestore();
+        delete (global as any).mockAdvanceTime;
     });
 
     it('should start timer countdown when receiving active question', async () => {
@@ -62,15 +75,14 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6']
+                answers: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
-            timer: 30,
+            timer: 30000, // ms
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'
@@ -78,29 +90,42 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({
+                timeLeft: 30000,
+                running: true,
+                status: 'play'
+            });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(30);
+            expect(result.current.gameState.timer).toBe(30000); // ms
             expect(result.current.gameState.timerStatus).toBe('play');
         });
 
+        // Debug: Log the timer state before advancing
+        console.log('Timer before advancing:', result.current.gameState.timer, result.current.gameState.timerStatus);
+
         // Advance timer by 5 seconds
         act(() => {
-            jest.advanceTimersByTime(5000);
+            (global as any).mockAdvanceTime(5000); // Advance Date.now()
+            jest.advanceTimersByTime(5000); // Advance setInterval
         });
 
+        // Debug: Log the timer state after advancing
+        console.log('Timer after advancing 5s:', result.current.gameState.timer, result.current.gameState.timerStatus);
+
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(25);
+            expect(result.current.gameState.timer).toBe(25000); // ms
         });
 
         // Advance timer by 20 more seconds
         act(() => {
-            jest.advanceTimersByTime(20000);
+            (global as any).mockAdvanceTime(20000); // Advance Date.now()
+            jest.advanceTimersByTime(20000); // Advance setInterval
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(5);
+            expect(result.current.gameState.timer).toBe(5000); // ms
         });
 
         jest.useRealTimers();
@@ -117,15 +142,14 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6']
+                answers: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
-            timer: 3,
+            timer: 3000, // ms
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'
@@ -133,19 +157,25 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({
+                timeLeft: 3000,
+                running: true,
+                status: 'play'
+            });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(3);
+            expect(result.current.gameState.timer).toBe(3000); // ms
         });
 
         // Advance timer past zero
         act(() => {
-            jest.advanceTimersByTime(4000);
+            (global as any).mockAdvanceTime(4000); // Advance Date.now()
+            jest.advanceTimersByTime(4000); // Advance setInterval
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(0);
+            expect(result.current.gameState.timer).toBe(0); // ms
             expect(result.current.gameState.gameStatus).toBe('waiting');
         });
 
@@ -163,15 +193,14 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6']
+                answers: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
-            timer: 30,
+            timer: 30000, // ms
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'paused'
@@ -179,20 +208,26 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({
+                timeLeft: 30000,
+                running: false,
+                status: 'pause'
+            });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(30);
+            expect(result.current.gameState.timer).toBe(30000); // ms
             expect(result.current.gameState.gameStatus).toBe('paused');
         });
 
         // Advance timer - should not change because it's paused
         act(() => {
-            jest.advanceTimersByTime(5000);
+            (global as any).mockAdvanceTime(5000); // Advance Date.now()
+            jest.advanceTimersByTime(5000); // Advance setInterval
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(30); // Should remain unchanged
+            expect(result.current.gameState.timer).toBe(30000); // Should remain unchanged
         });
 
         jest.useRealTimers();
@@ -210,15 +245,14 @@ describe('useStudentGameSocket - Timer Management', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         // Start with an active question
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6']
+                answers: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
-            timer: 30,
+            timer: 30000, // ms
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'
@@ -226,21 +260,28 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({
+                timeLeft: 30000,
+                running: true,
+                status: 'play'
+            });
         });
 
         // Let timer run for 5 seconds
         act(() => {
-            jest.advanceTimersByTime(5000);
+            (global as any).mockAdvanceTime(5000); // Advance Date.now()
+            jest.advanceTimersByTime(5000); // Advance setInterval
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(25);
+            expect(result.current.gameState.timer).toBe(25000); // ms
         });
 
         // Pause the timer
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 25,
+                timeLeft: 25000, // ms
+                running: false,
                 status: 'pause'
             });
         });
@@ -252,11 +293,12 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         // Advance time - timer should not change when paused
         act(() => {
-            jest.advanceTimersByTime(10000);
+            (global as any).mockAdvanceTime(10000); // Advance Date.now()
+            jest.advanceTimersByTime(10000); // Advance setInterval
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(25); // Should remain paused
+            expect(result.current.gameState.timer).toBe(25000); // ms
         });
 
         jest.useRealTimers();
@@ -276,7 +318,8 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Start with paused state
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 20,
+                timeLeft: 20000, // ms
+                running: false,
                 status: 'pause'
             });
         });
@@ -288,7 +331,8 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Resume the timer
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 20,
+                timeLeft: 20000, // ms
+                running: true,
                 status: 'play'
             });
         });
@@ -300,11 +344,12 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         // Timer should now countdown
         act(() => {
-            jest.advanceTimersByTime(3000);
+            (global as any).mockAdvanceTime(3000); // Advance Date.now()
+            jest.advanceTimersByTime(3000); // Advance setInterval
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(17);
+            expect(result.current.gameState.timer).toBe(17000); // ms
         });
 
         jest.useRealTimers();
@@ -324,22 +369,28 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Set timer to specific value
         act(() => {
             eventHandlers['timer_set']?.({
-                timeLeft: 15,
+                timeLeft: 15000, // ms
                 questionState: 'active'
+            });
+            eventHandlers['timer_update']?.({
+                timeLeft: 15000,
+                running: true,
+                status: 'play'
             });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(15);
+            expect(result.current.gameState.timer).toBe(15000); // ms
         });
 
         // Timer should start counting down
         act(() => {
-            jest.advanceTimersByTime(5000);
+            (global as any).mockAdvanceTime(5000); // Advance Date.now()
+            jest.advanceTimersByTime(5000); // Advance setInterval
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(10);
+            expect(result.current.gameState.timer).toBe(10000); // ms
         });
 
         jest.useRealTimers();
@@ -365,7 +416,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(0);
+            expect(result.current.gameState.timer).toBe(0); // ms
             expect(result.current.gameState.gameStatus).toBe('waiting');
         });
 
@@ -384,15 +435,14 @@ describe('useStudentGameSocket - Timer Management', () => {
         const { result, unmount } = renderHook(() => useStudentGameSocket(hookProps));
 
         // Start a timer
-        const questionPayload: GameQuestionPayload = {
-            code: 'TEST123',
+        const questionPayload: LiveQuestionPayload = {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
                 answers: ['3', '4', '5', '6']
             },
-            timer: 30,
+            timer: 30000, // ms
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'
@@ -400,10 +450,15 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
+            eventHandlers['timer_update']?.({
+                timeLeft: 30000,
+                running: true,
+                status: 'play'
+            });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(30);
+            expect(result.current.gameState.timer).toBe(30000); // ms
         });
 
         // Unmount the component
@@ -412,7 +467,8 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Timer should be cleaned up and not continue
         // This test primarily ensures no memory leaks or errors occur
         act(() => {
-            jest.advanceTimersByTime(35000);
+            (global as any).mockAdvanceTime(35000); // Advance Date.now()
+            jest.advanceTimersByTime(35000); // Advance setInterval
         });
 
         jest.useRealTimers();
@@ -432,13 +488,18 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Start with active timer
         act(() => {
             eventHandlers['game_update']?.({
-                timeLeft: 20,
+                timeLeft: 20000, // ms
+                status: 'play'
+            });
+            eventHandlers['timer_update']?.({
+                timeLeft: 20000,
+                running: true,
                 status: 'play'
             });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(20);
+            expect(result.current.gameState.timer).toBe(20000); // ms
         });
 
         // Stop the timer
@@ -446,10 +507,15 @@ describe('useStudentGameSocket - Timer Management', () => {
             eventHandlers['game_update']?.({
                 status: 'stop'
             });
+            eventHandlers['timer_update']?.({
+                timeLeft: 0,
+                running: false,
+                status: 'stop'
+            });
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(0);
+            expect(result.current.gameState.timer).toBe(0); // ms
             expect(result.current.gameState.gameStatus).toBe('waiting');
         });
 
