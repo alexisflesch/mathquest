@@ -13,7 +13,7 @@ import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
 import CodeManager from '@/components/CodeManager'; // Import new component
-import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
+import { useTeacherQuizSocket } from '@/hooks/migrations';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { UsersRound } from "lucide-react";
 import { log } from "console";

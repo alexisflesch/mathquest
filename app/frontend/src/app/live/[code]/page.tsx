@@ -12,6 +12,7 @@
 "use client";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useAuth } from '@/components/AuthProvider';
 import Snackbar from '@/components/Snackbar';
 import { createLogger } from '@/clientLogger';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
@@ -19,7 +20,7 @@ import TournamentTimer from '@/components/TournamentTimer';
 import QuestionCard, { TournamentQuestion } from '@/components/QuestionCard';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
-import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
+import { useStudentGameSocket } from '@/hooks/migrations';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 
 // Create a logger for this component
@@ -28,11 +29,7 @@ const logger = createLogger('LiveGamePage');
 export default function LiveGamePage() {
     const { code } = useParams();
     const router = useRouter();
-
-    // Get user data from localStorage
-    const [userId, setUserId] = useState<string | null>(null);
-    const [username, setUsername] = useState<string | null>(null);
-    const [avatarEmoji, setavatarEmoji] = useState<string | null>(null);
+    const { userState, userProfile, isLoading } = useAuth();
 
     // Detect differed mode from URL
     const [isDiffered, setIsDiffered] = useState(false);
@@ -43,23 +40,49 @@ export default function LiveGamePage() {
         }
     }, []);
 
-    // Initialize user data
+    // Authentication guard - redirect if user is not properly authenticated
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const storedUserId = localStorage.getItem('mathquest_cookie_id');
-            const storedUsername = localStorage.getItem('mathquest_username');
-            const storedavatarEmoji = localStorage.getItem('mathquest_avatar');
-
-            setUserId(storedUserId);
-            setUsername(storedUsername);
-            setavatarEmoji(storedavatarEmoji);
-
-            if (!storedUsername || !storedavatarEmoji) {
-                // Redirect to /student with redirect param
-                router.replace(`/student?redirect=/live/${code}`);
-            }
+        if (isLoading) {
+            // Still checking authentication, wait
+            return;
         }
-    }, [code, router]);
+
+        if (userState === 'anonymous') {
+            logger.warn('User is anonymous, redirecting to home page');
+            router.push('/');
+            return;
+        }
+
+        if (!userProfile.username || !userProfile.avatar) {
+            logger.warn('User profile incomplete, redirecting to home page', { userProfile });
+            router.push('/');
+            return;
+        }
+
+        logger.info('User authentication verified for live game', { userState, userProfile });
+    }, [isLoading, userState, userProfile, router]);
+
+    // Show loading while authentication is being checked
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Vérification de l'authentification...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Don't render if not authenticated
+    if (userState === 'anonymous' || !userProfile.username || !userProfile.avatar) {
+        return null;
+    }
+
+    // Get user data from AuthProvider
+    const userId = userProfile.userId || userProfile.cookieId || `temp_${Date.now()}`;
+    const username = userProfile.username;
+    const avatarEmoji = userProfile.avatar;
 
     // Enhanced socket hook integration
     const {
@@ -121,10 +144,11 @@ export default function LiveGamePage() {
             }
         }
 
-        if (userId && username) {
+        // Only check tournament status if user is authenticated
+        if (userProfile.username) {
             checkTournamentStatus();
         }
-    }, [code, router, userId, username]);
+    }, [code, router, userState, userProfile.username]);
 
     // Automatically join the game when user data is ready
     useEffect(() => {
@@ -309,7 +333,11 @@ export default function LiveGamePage() {
                         duration={feedbackDuration}
                         onClose={() => setShowFeedbackOverlay(false)}
                         isCorrect={gameState.lastAnswerFeedback?.correct}
-                        correctAnswers={gameState.currentQuestion?.correctAnswers}
+                        correctAnswers={gameState.currentQuestion?.correctAnswers ?
+                            gameState.currentQuestion.answers?.map((_, index) =>
+                                gameState.currentQuestion?.correctAnswers?.includes(index) || false
+                            ) : undefined
+                        }
                         answerOptions={gameState.currentQuestion?.answers || gameState.currentQuestion?.answerOptions}
                         showTimer={gameMode !== 'practice'} // Hide timer for practice mode
                         mode={gameMode}

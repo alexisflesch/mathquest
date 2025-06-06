@@ -26,6 +26,7 @@ import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { makeApiRequest } from '@/config/api';
+import { getSocketAuth } from '@/utils';
 
 // Game state interface for lobby status checking
 interface GameState {
@@ -280,11 +281,21 @@ export default function LobbyPage() {
             return;
         }
 
-        // Connect to socket.io server
-        logger.info('Creating socket connection with config:', SOCKET_CONFIG);
+        // Get authentication data for socket connection
+        const socketAuth = getSocketAuth();
+        logger.info('Creating socket connection with auth:', {
+            config: SOCKET_CONFIG,
+            hasAuth: !!socketAuth,
+            authKeys: socketAuth ? Object.keys(socketAuth) : [],
+            authData: socketAuth // Log the actual auth data for debugging
+        });
+
+        // Connect to socket.io server with authentication
         const socket = io(SOCKET_CONFIG.url, {
             ...SOCKET_CONFIG,
             autoConnect: true, // Enable auto-connect for lobby
+            auth: socketAuth || undefined, // Pass authentication data
+            query: socketAuth || undefined, // Also pass in query for backend compatibility
         });
         socketRef.current = socket;
 

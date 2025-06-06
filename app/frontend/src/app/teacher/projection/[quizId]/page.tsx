@@ -36,7 +36,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import "@/app/globals.css";
 import { createLogger } from '@/clientLogger';
-import { useProjectionQuizSocket } from '@/hooks/useProjectionQuizSocket';
+import { useProjectionQuizSocket } from '@/hooks/migrations';
 import { useRouter } from 'next/navigation';
 import QuestionCard from '@/components/QuestionCard';
 import { Timer } from 'lucide-react'; // Suppression de MoveDiagonal2 et ZoomIn/ZoomOut car géré par ZoomControls

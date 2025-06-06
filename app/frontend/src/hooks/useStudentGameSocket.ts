@@ -182,28 +182,39 @@ export function useStudentGameSocket({
 
         if (initialTime <= 0) return;
 
+        // Set initial timer value immediately
+        setGameState(prev => ({
+            ...prev,
+            timer: initialTime,
+            timerStatus: 'play',
+            gameStatus: 'active'
+        }));
+
+        // Use a local countdown variable to avoid React state race conditions
+        let countdown = initialTime;
+
         // Start new countdown timer
         timerRef.current = setInterval(() => {
-            setGameState(prev => {
-                const newTimer = Math.max((prev.timer || 0) - 1, 0);
+            countdown = Math.max(countdown - 1, 0);
 
-                // Stop timer when reaching zero
-                if (newTimer === 0 && timerRef.current) {
+            // Stop timer when reaching zero
+            if (countdown === 0) {
+                if (timerRef.current) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
-                    return {
-                        ...prev,
-                        timer: 0,
-                        timerStatus: 'stop',
-                        gameStatus: 'waiting'
-                    };
                 }
-
-                return {
+                setGameState(prev => ({
                     ...prev,
-                    timer: newTimer
-                };
-            });
+                    timer: 0,
+                    timerStatus: 'stop',
+                    gameStatus: 'waiting'
+                }));
+            } else {
+                setGameState(prev => ({
+                    ...prev,
+                    timer: countdown
+                }));
+            }
         }, 1000);
     }, []);
 
@@ -225,27 +236,36 @@ export function useStudentGameSocket({
 
         if (initialTime <= 0) return;
 
+        // Set initial feedback timer value immediately
+        setGameState(prev => ({
+            ...prev,
+            feedbackRemaining: initialTime
+        }));
+
+        // Use a local countdown variable to avoid React state race conditions
+        let feedbackCountdown = initialTime;
+
         // Start new feedback countdown timer
         feedbackTimerRef.current = setInterval(() => {
-            setGameState(prev => {
-                const newFeedbackRemaining = Math.max((prev.feedbackRemaining || 0) - 1, 0);
+            feedbackCountdown = Math.max(feedbackCountdown - 1, 0);
 
-                // Stop timer when reaching zero
-                if (newFeedbackRemaining === 0 && feedbackTimerRef.current) {
+            // Stop timer when reaching zero
+            if (feedbackCountdown === 0) {
+                if (feedbackTimerRef.current) {
                     clearInterval(feedbackTimerRef.current);
                     feedbackTimerRef.current = null;
-                    return {
-                        ...prev,
-                        feedbackRemaining: 0,
-                        phase: 'show_answers'
-                    };
                 }
-
-                return {
+                setGameState(prev => ({
                     ...prev,
-                    feedbackRemaining: newFeedbackRemaining
-                };
-            });
+                    feedbackRemaining: 0,
+                    phase: 'show_answers'
+                }));
+            } else {
+                setGameState(prev => ({
+                    ...prev,
+                    feedbackRemaining: feedbackCountdown
+                }));
+            }
         }, 1000);
     }, []);
 
@@ -412,30 +432,32 @@ export function useStudentGameSocket({
             logger.debug("Received timer_update", data);
 
             if (typeof data.timeLeft === 'number') {
-                setGameState(prev => ({
-                    ...prev,
-                    timer: data.timeLeft,
-                    timerStatus: data.status || prev.timerStatus
-                }));
-
                 // TIMER MANAGEMENT OVERHAUL: Manage local countdown based on status
                 if (data.status === 'pause') {
                     stopLocalTimer();
                     setGameState(prev => ({
                         ...prev,
+                        timer: data.timeLeft,
+                        timerStatus: 'pause',
                         gameStatus: 'paused'
                     }));
                 } else if (data.status === 'play' && data.timeLeft > 0) {
+                    // Start local timer and let it manage the countdown
                     startLocalTimer(data.timeLeft);
-                    setGameState(prev => ({
-                        ...prev,
-                        gameStatus: 'active'
-                    }));
                 } else if (data.timeLeft === 0) {
                     stopLocalTimer();
                     setGameState(prev => ({
                         ...prev,
+                        timer: 0,
+                        timerStatus: data.status || 'stop',
                         gameStatus: 'waiting'
+                    }));
+                } else {
+                    // For other cases, just update the display
+                    setGameState(prev => ({
+                        ...prev,
+                        timer: data.timeLeft,
+                        timerStatus: data.status || prev.timerStatus
                     }));
                 }
             }
@@ -460,30 +482,25 @@ export function useStudentGameSocket({
                     status = 'play';
                 }
 
-                setGameState(prev => ({
-                    ...prev,
-                    timer: timeLeft,
-                    timerStatus: status
-                }));
-
                 // TIMER MANAGEMENT OVERHAUL: Manage local countdown based on status
                 if (status === 'pause') {
                     stopLocalTimer();
                     setGameState(prev => ({
                         ...prev,
+                        timer: timeLeft,
+                        timerStatus: status,
                         gameStatus: 'paused'
                     }));
                 } else if (status === 'play' && timeLeft > 0) {
+                    // Start local timer and let it manage the countdown
                     startLocalTimer(timeLeft);
-                    setGameState(prev => ({
-                        ...prev,
-                        gameStatus: 'active'
-                    }));
-                } else if (timeLeft === 0) {
+                } else {
                     stopLocalTimer();
                     setGameState(prev => ({
                         ...prev,
-                        gameStatus: 'waiting'
+                        timer: timeLeft,
+                        timerStatus: status,
+                        gameStatus: timeLeft === 0 ? 'waiting' : prev.gameStatus
                     }));
                 }
             }

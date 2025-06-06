@@ -68,6 +68,8 @@ This document tracks the current end-to-end (E2E) test status in the MathQuest a
 ---
 
 ## Next Steps
+- [ ] **Legacy Socket Code Review**: Search frontend codebase for legacy socket connection code that may still be trying to connect to old unified backend. During the backend rewrite, the codebase was split into separate backend and frontend, so ensure all socket connections now properly connect to the new backend service rather than assuming a unified codebase.
+- [ ] **Legacy Code Review 2**: update legacy auth methode to use the new auth flow and remove any old auth logic.
 - [ ] Investigate each failing test scenario and document root causes.
 - [ ] Align test selectors and expectations with current UI implementation.
 - [ ] Fix application or test code as needed.

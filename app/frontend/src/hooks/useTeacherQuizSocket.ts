@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
+import { UI_CONFIG } from '@/config/gameConfig';
 import { createSocketConfig } from '@/utils';
 import { BaseQuestion, Answer } from '@shared/types/question'; // MODIFIED: Added Answer import
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
@@ -61,8 +62,8 @@ export function useTeacherQuizSocket(quizId: string | null, token: string | null
     const localTimeLeftRef = useRef<number | null>(null);
     // Track last UI update time to throttle state updates
     const lastUpdateTimeRef = useRef<number>(0);
-    // Threshold in ms - only update UI state every 200ms
-    const UI_UPDATE_THRESHOLD = 200;
+    // Use centralized UI configuration for update threshold
+    const UI_UPDATE_THRESHOLD = UI_CONFIG.LEADERBOARD_UPDATE_INTERVAL;
 
     // --- Debounced logging for timer updates ---
     const lastLoggedTimerRef = useRef<Record<string, { status: string; intTimeLeft: number | null }>>({});

@@ -17,10 +17,39 @@ const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret';
  */
 export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void) => {
     try {
+        logger.debug({
+            socketId: socket.id,
+            auth: socket.handshake.auth,
+            query: socket.handshake.query,
+            headers: socket.handshake.headers
+        }, 'Socket authentication middleware called');
+
         // Accept userId and role from both auth and query for compatibility
         const userId = socket.handshake.auth.userId || socket.handshake.query.userId;
         const userType = socket.handshake.auth.userType || socket.handshake.query.userType;
         const token = socket.handshake.auth.token || socket.handshake.query.token;
+
+        // Also check for JWT token in cookies (for web browser connections)
+        let cookieToken = null;
+        if (socket.handshake.headers.cookie) {
+            const cookies = socket.handshake.headers.cookie;
+            const teacherTokenMatch = cookies.match(/teacherToken=([^;]+)/);
+            const authTokenMatch = cookies.match(/authToken=([^;]+)/);
+            cookieToken = teacherTokenMatch?.[1] || authTokenMatch?.[1] || null;
+        }
+
+        // Enhanced debug logging
+        logger.debug({
+            socketId: socket.id,
+            auth: socket.handshake.auth,
+            query: socket.handshake.query,
+            userId,
+            userType,
+            hasToken: !!(token || cookieToken),
+            tokenPrefix: (token || cookieToken)?.substring(0, 20) + '...' || null,
+            hasCookieToken: !!cookieToken,
+            cookieTokenPrefix: cookieToken?.substring(0, 20) + '...' || null
+        }, 'Socket authentication attempt');
 
         // --- PATCH: Accept userId from auth or query for test/dev compatibility ---
         if (userId) {
@@ -50,10 +79,16 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
             };
             logger.debug({ userId: userId, socketId: socket.id }, 'Teacher socket authenticated directly (test mode)');
         }
-        // If a token is provided, try to authenticate as a teacher
-        else if (token) {
+        // If a token is provided (from auth/query or cookies), try to authenticate as a teacher
+        else if (token || cookieToken) {
+            const actualToken = token || cookieToken;
             try {
-                const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+                logger.debug({
+                    tokenLength: actualToken!.length,
+                    tokenSource: token ? 'auth/query' : 'cookie',
+                    socketId: socket.id
+                }, 'Attempting JWT verification');
+                const decoded = jwt.verify(actualToken!, JWT_SECRET) as JwtPayload;
 
                 // Attach the user data to the socket
                 socket.data.user = {
@@ -62,9 +97,20 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
                     role: decoded.role
                 };
 
-                logger.debug({ userId: decoded.userId, socketId: socket.id }, 'Teacher socket authenticated');
+                logger.debug({
+                    userId: decoded.userId,
+                    username: decoded.username,
+                    role: decoded.role,
+                    tokenSource: token ? 'auth/query' : 'cookie',
+                    socketId: socket.id
+                }, 'Socket authenticated via JWT token');
             } catch (err) {
-                logger.warn({ err, socketId: socket.id }, 'Invalid token in socket connection');
+                logger.warn({
+                    err: err instanceof Error ? err.message : err,
+                    token: actualToken!.substring(0, 20) + '...',
+                    tokenSource: token ? 'auth/query' : 'cookie',
+                    socketId: socket.id
+                }, 'Invalid token in socket connection');
                 // Don't reject the connection, just don't attach user data
             }
         }
@@ -81,7 +127,7 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
         }
 
         // If neither token nor userId is provided
-        if (!token && !userId) {
+        if (!token && !cookieToken && !userId) {
             logger.debug({ socketId: socket.id }, 'Anonymous socket connection');
             // We still allow anonymous connections, they just won't have access to protected events
         }

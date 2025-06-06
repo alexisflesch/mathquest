@@ -1,7 +1,7 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { createLogger } from '@/clientLogger';
 import { Socket } from 'socket.io-client';
-import type { QuizState } from '@/hooks/useTeacherQuizSocket';
+import type { QuizState } from '@/hooks/migrations';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { makeApiRequest } from '@/config/api';
 import { TournamentCodeResponseSchema, type TournamentCodeResponse } from '@/types/api';

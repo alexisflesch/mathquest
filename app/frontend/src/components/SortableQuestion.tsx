@@ -7,7 +7,7 @@ import { createLogger } from '@/clientLogger';
 import { formatTime } from "@/utils";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import QuestionDisplay from "@/components/QuestionDisplay"; // Import du nouveau composant
-import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
+import { useTeacherQuizSocket } from '@/hooks/migrations';
 
 const logger = createLogger('SortableQuestion');
 
