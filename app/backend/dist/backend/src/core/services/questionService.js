@@ -62,14 +62,19 @@ class QuestionService {
      */
     async getQuestions(filters = {}, pagination = {}) {
         try {
-            const { discipline, themes, difficulty, gradeLevel, tags, questionType, includeHidden = false } = filters;
+            const { discipline, disciplines, themes, difficulty, gradeLevel, gradeLevels, author, authors, tags, questionType, includeHidden = false } = filters;
             const { skip = 0, take = 20 } = pagination;
-            // Build the where clause based on filters
+            // Build the where clause with AND logic between filter types, OR within each filter type
             const where = {};
-            if (discipline) {
+            // Apply discipline filters with OR logic if multiple values
+            if (disciplines && disciplines.length > 0) {
+                where.discipline = { in: disciplines };
+            }
+            else if (discipline) {
                 where.discipline = discipline;
             }
             if (themes && themes.length > 0) {
+                // OR logic within themes: question must match at least one theme
                 where.themes = {
                     hasSome: themes
                 };
@@ -77,10 +82,22 @@ class QuestionService {
             if (difficulty !== undefined) {
                 where.difficulty = difficulty;
             }
-            if (gradeLevel) {
+            // Apply grade level filters with OR logic if multiple values
+            if (gradeLevels && gradeLevels.length > 0) {
+                where.gradeLevel = { in: gradeLevels };
+            }
+            else if (gradeLevel) {
                 where.gradeLevel = gradeLevel;
             }
+            // Apply author filters with OR logic if multiple values
+            if (authors && authors.length > 0) {
+                where.author = { in: authors };
+            }
+            else if (author) {
+                where.author = author;
+            }
             if (tags && tags.length > 0) {
+                // OR logic within tags: question must match at least one tag
                 where.tags = {
                     hasSome: tags
                 };
@@ -88,6 +105,7 @@ class QuestionService {
             if (questionType) {
                 where.questionType = questionType;
             }
+            // Always apply hidden filter (AND with other conditions)
             if (!includeHidden) {
                 where.isHidden = false;
             }

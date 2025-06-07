@@ -31,7 +31,7 @@ import {
     SortableContext,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import type { Question } from "../types";
+import type { Question } from "@/types/api";
 import { createLogger } from '@/clientLogger';
 import { SortableQuestion } from './SortableQuestion';
 import { Socket } from 'socket.io-client';

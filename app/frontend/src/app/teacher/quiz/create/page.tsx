@@ -299,7 +299,6 @@ export default function CreateQuizPage() {
                                             </div>
                                         ))}
                                     {loadingMore && <div className="text-center text-muted py-2">Chargement…</div>}
-                                    {!hasMore && questions.length > 0 && <div className="text-center text-muted py-2">Toutes les questions sont chargées.</div>}
                                 </>
                             )}
                         </div>

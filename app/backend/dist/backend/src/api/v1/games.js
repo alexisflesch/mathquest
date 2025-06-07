@@ -46,6 +46,11 @@ exports.__setGameParticipantServiceForTesting = __setGameParticipantServiceForTe
  */
 router.post('/', auth_1.optionalAuth, async (req, res) => {
     try {
+        // Debug: Log the full request body
+        logger.info('Games POST request body debug', {
+            fullBody: req.body,
+            keys: Object.keys(req.body)
+        });
         const { name, gameTemplateId, playMode, settings, gradeLevel, discipline, themes, nbOfQuestions, initiatorStudentId } = req.body;
         // Strict playMode values
         const validPlayModes = ['quiz', 'tournament', 'practice'];
@@ -90,11 +95,21 @@ router.post('/', auth_1.optionalAuth, async (req, res) => {
                 return;
             }
         }
+        // Debug logging for validation
+        logger.info('Games validation debug', {
+            name,
+            finalgameTemplateId,
+            playMode,
+            nameCheck: !!name,
+            templateIdCheck: !!finalgameTemplateId,
+            playModeCheck: !!playMode
+        });
         // Basic validation for required fields
         if (!name || !finalgameTemplateId || !playMode) {
             res.status(400).json({
                 error: 'Required fields missing',
-                required: ['name', 'gameTemplateId', 'playMode']
+                required: ['name', 'gameTemplateId', 'playMode'],
+                received: { name, finalgameTemplateId, playMode }
             });
             return;
         }
@@ -544,6 +559,79 @@ router.post('/tournament', auth_1.optionalAuth, async (req, res) => {
     catch (error) {
         logger.error({ error }, 'Error creating tournament');
         res.status(500).json({ error: 'An error occurred while creating the tournament' });
+    }
+});
+/**
+ * Get a game instance by ID with full template data (for editing)
+ * GET /api/v1/games/instance/:id/edit
+ * Requires teacher authentication
+ */
+router.get('/instance/:id/edit', auth_1.teacherAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+        if (!id) {
+            res.status(400).json({ error: 'Game ID is required' });
+            return;
+        }
+        const gameInstance = await getGameInstanceService().getGameInstanceByIdWithTemplate(id);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        // Check if the user is the creator of this game
+        const isCreator = user && user.userId && gameInstance.initiatorUserId === user.userId;
+        if (!isCreator) {
+            res.status(403).json({ error: 'You do not have permission to edit this game' });
+            return;
+        }
+        res.status(200).json({ gameInstance });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error fetching game instance for editing');
+        res.status(500).json({ error: 'An error occurred while fetching the game for editing' });
+    }
+});
+/**
+ * Update a game instance
+ * PUT /api/v1/games/instance/:id
+ * Requires teacher authentication
+ */
+router.put('/instance/:id', auth_1.teacherAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, playMode, settings } = req.body;
+        const user = req.user;
+        if (!id) {
+            res.status(400).json({ error: 'Game ID is required' });
+            return;
+        }
+        // Check if the game exists and the user is the creator
+        const existingGame = await getGameInstanceService().getGameInstanceById(id);
+        if (!existingGame) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        const isCreator = user && user.userId && existingGame.initiatorUserId === user.userId;
+        if (!isCreator) {
+            res.status(403).json({ error: 'You do not have permission to update this game' });
+            return;
+        }
+        // Only allow updates to pending games
+        if (existingGame.status !== 'pending') {
+            res.status(400).json({ error: 'Only pending games can be edited' });
+            return;
+        }
+        const updatedGame = await getGameInstanceService().updateGameInstance(id, {
+            name,
+            playMode,
+            settings
+        });
+        res.status(200).json({ gameInstance: updatedGame });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error updating game instance');
+        res.status(500).json({ error: 'An error occurred while updating the game instance' });
     }
 });
 exports.default = router;

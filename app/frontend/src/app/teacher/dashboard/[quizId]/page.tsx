@@ -164,11 +164,13 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
                 // Fetch questions
                 const questionsData = await makeApiRequest<TeacherQuizQuestionsResponse>(`teacher/quiz/${quizId}/questions`, undefined, undefined, TeacherQuizQuestionsResponseSchema);
-                // Initialize local question state, ensuring 'temps' exists
+                // Initialize local question state, ensuring 'temps' exists and preserving all API fields
                 const initialQuestions = (questionsData.questions || []).map((q: Question) => ({
                     ...q,
                     type: q.questionType || 'choix_simple', // Default type if not provided
-                    temps: q.time ?? 60 // Default to 60s if undefined
+                    temps: q.time ?? 60, // Default to 60s if undefined
+                    timeLimit: q.timeLimit ?? 20, // Default to 20s if null
+                    feedbackWaitTime: q.feedbackWaitTime ?? 3000 // Default to 3s if null
                 }));
                 if (isMounted) setQuestions(initialQuestions);
 
@@ -478,6 +480,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                     }
                                     return {
                                         ...q,
+                                        timeLimit: q.timeLimit ?? 20, // Default to 20 seconds if null
+                                        feedbackWaitTime: q.feedbackWaitTime ?? 3000, // Default to 3 seconds if null
                                         answers: Array.isArray(q.answerOptions)
                                             ? q.answerOptions.map((text: string) => ({ text, correct: correctAnswers.includes(text) }))
                                             : []

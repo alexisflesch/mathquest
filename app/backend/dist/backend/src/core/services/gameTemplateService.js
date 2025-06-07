@@ -52,15 +52,23 @@ class GameTemplateService {
         return gameTemplate;
     }
     async creategameTemplate(userId, data) {
-        const { questions, ...rest } = data;
+        const { questions, questionIds, ...rest } = data;
+        // Convert questionIds to questions format if provided
+        let questionData = questions;
+        if (questionIds && questionIds.length > 0) {
+            questionData = questionIds.map((questionUid, index) => ({
+                questionUid,
+                sequence: index
+            }));
+        }
         return prisma_1.prisma.gameTemplate.create({
             data: {
                 ...rest,
                 creatorId: userId, // Use unified creatorId
                 defaultMode: data.defaultMode,
-                ...(questions ? {
+                ...(questionData ? {
                     questions: {
-                        create: questions.map(q => ({
+                        create: questionData.map(q => ({
                             questionUid: q.questionUid, // Corrected: use q.questionUid from input
                             sequence: q.sequence // Corrected: use q.sequence from input
                         }))

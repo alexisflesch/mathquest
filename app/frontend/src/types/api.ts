@@ -115,15 +115,24 @@ const QuestionSchema = z.object({
     uid: z.string(),
     text: z.string(),
     questionType: z.string(), // Canonical field, matches DB and API
-    answers: z.array(AnswerSchema),
-    title: z.string().optional(),
-    explanation: z.string().optional(),
+    answerOptions: z.array(z.string()), // Database field name
+    correctAnswers: z.array(z.boolean()), // Database field name
+    answers: z.array(AnswerSchema).optional(), // Legacy field for backward compatibility
+    title: z.string().nullable().optional(),
+    explanation: z.string().nullable().optional(),
     time: z.number().optional(),
+    timeLimit: z.number().nullable(), // Database field name - nullable to match database schema
     tags: z.array(z.string()).optional(),
     level: z.string().optional(),
-    gradeLevel: z.string().optional(),
-    discipline: z.string().optional(),
-    themes: z.array(z.string()).optional()
+    gradeLevel: z.string(),
+    discipline: z.string(),
+    themes: z.array(z.string()),
+    difficulty: z.number(),
+    author: z.string().nullable().optional(),
+    isHidden: z.boolean(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    feedbackWaitTime: z.number().nullable() // Nullable to match database schema
 });
 
 export type Question = z.infer<typeof QuestionSchema>;
@@ -140,8 +149,11 @@ export type QuestionsFiltersResponse = z.infer<typeof QuestionsFiltersResponseSc
 // Questions Response Schema (for various question endpoints)
 export const QuestionsResponseSchema = z.object({
     questions: z.array(QuestionSchema),
-    total: z.number().optional(),
-    hasMore: z.boolean().optional()
+    total: z.number(),
+    hasMore: z.boolean().optional(),
+    page: z.number(),
+    pageSize: z.number(),
+    totalPages: z.number()
 });
 
 export type QuestionsResponse = z.infer<typeof QuestionsResponseSchema>;
@@ -284,6 +296,29 @@ export const MyTournamentsResponseSchema = z.object({
 
 export type MyTournamentsResponse = z.infer<typeof MyTournamentsResponseSchema>;
 
+// Teacher Active Games Response Schema
+export const TeacherActiveGamesResponseSchema = z.object({
+    games: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        accessCode: z.string(),
+        status: z.string(),
+        playMode: z.string(),
+        createdAt: z.string(),
+        startedAt: z.string().nullable(),
+        endedAt: z.string().nullable(),
+        currentQuestionIndex: z.number().nullable(),
+        gameTemplate: z.object({
+            name: z.string()
+        }),
+        participants: z.array(z.object({
+            id: z.string()
+        }))
+    }))
+});
+
+export type TeacherActiveGamesResponse = z.infer<typeof TeacherActiveGamesResponseSchema>;
+
 // Export all schemas for runtime validation
 export const API_SCHEMAS = {
     authStatus: AuthStatusResponseSchema,
@@ -308,5 +343,6 @@ export const API_SCHEMAS = {
     tournamentStatus: TournamentStatusResponseSchema,
     tournamentLeaderboard: TournamentLeaderboardResponseSchema,
     canPlayDiffered: CanPlayDifferedResponseSchema,
-    myTournaments: MyTournamentsResponseSchema
+    myTournaments: MyTournamentsResponseSchema,
+    teacherActiveGames: TeacherActiveGamesResponseSchema
 } as const;

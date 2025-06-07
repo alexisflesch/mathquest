@@ -20,6 +20,7 @@ export interface GameTemplateCreationData {
     description?: string;
     defaultMode?: string;
     questions?: any[];
+    questionIds?: string[]; // Add support for simple question ID array
 }
 
 export interface GameTemplateUpdateData {
@@ -83,15 +84,25 @@ export class GameTemplateService {
         return gameTemplate;
     }
     async creategameTemplate(userId: string, data: GameTemplateCreationData) {
-        const { questions, ...rest } = data;
+        const { questions, questionIds, ...rest } = data;
+
+        // Convert questionIds to questions format if provided
+        let questionData = questions;
+        if (questionIds && questionIds.length > 0) {
+            questionData = questionIds.map((questionUid, index) => ({
+                questionUid,
+                sequence: index
+            }));
+        }
+
         return prisma.gameTemplate.create({
             data: {
                 ...rest,
                 creatorId: userId, // Use unified creatorId
                 defaultMode: data.defaultMode as PlayMode,
-                ...(questions ? {
+                ...(questionData ? {
                     questions: {
-                        create: questions.map(q => ({
+                        create: questionData.map(q => ({
                             questionUid: q.questionUid, // Corrected: use q.questionUid from input
                             sequence: q.sequence        // Corrected: use q.sequence from input
                         }))

@@ -166,6 +166,35 @@ class GameInstanceService {
         }
     }
     /**
+     * Get game instance by ID with full template data (including questions)
+     * This is useful for editing game instances
+     */
+    async getGameInstanceByIdWithTemplate(id) {
+        try {
+            return await prisma_1.prisma.gameInstance.findUnique({
+                where: { id },
+                include: {
+                    gameTemplate: {
+                        include: {
+                            questions: {
+                                include: {
+                                    question: true // Include the actual Question data
+                                },
+                                orderBy: {
+                                    sequence: 'asc' // Ensure questions are ordered by sequence
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        catch (error) {
+            logger.error({ error }, `Error fetching game instance with full template data for ID ${id}`);
+            throw error;
+        }
+    }
+    /**
      * Update game status
      */
     async updateGameStatus(gameId, updateData) {
@@ -221,6 +250,39 @@ class GameInstanceService {
         }
         catch (error) {
             logger.error({ error }, `Error updating differed mode for game ID ${gameId}`);
+            throw error;
+        }
+    }
+    /**
+     * Update game instance basic information (name, settings, play mode)
+     */
+    async updateGameInstance(gameId, updateData) {
+        try {
+            const updates = {};
+            if (updateData.name !== undefined)
+                updates.name = updateData.name;
+            if (updateData.playMode !== undefined)
+                updates.playMode = updateData.playMode;
+            if (updateData.settings !== undefined)
+                updates.settings = updateData.settings;
+            const updatedGame = await prisma_1.prisma.gameInstance.update({
+                where: { id: gameId },
+                data: updates,
+                include: {
+                    gameTemplate: {
+                        select: {
+                            name: true,
+                            themes: true,
+                            discipline: true,
+                            gradeLevel: true,
+                        }
+                    }
+                }
+            });
+            return updatedGame;
+        }
+        catch (error) {
+            logger.error({ error }, `Error updating game instance ${gameId}`);
             throw error;
         }
     }

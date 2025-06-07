@@ -76,3 +76,56 @@ Ajout d’un bouton **[💾 Enregistrer les modifications]**.
 - `/teacher/activities/new` → Créer une activité
 - `/teacher/activities/:id/edit` → Éditer une activité
 
+
+# Update page teacher/games prompt :
+
+Please redesign the “My Activities” page with a clean, professional, and minimal layout.
+
+**no hardcoded colors**: use colors from globals.css
+
+Each activity should appear as a compact card with subtle visual separation. Prioritize readability and hierarchy over flashy colors or large buttons.
+
+🔹 Activity Card Layout:
+Top section:
+
+Title (bold)
+
+Optional level tag (e.g., “elementary”) — keep it small and neutral (e.g. muted text)
+
+Small dropdown arrow on the right to expand/collapse
+
+When collapsed: show just the title and metadata (e.g. created date, subject, themes)
+
+When expanded:
+
+Section: “Start Activity” with a single main button:
+
+“Start Activity” → opens a modal or dropdown with:
+
+Quiz
+
+Tournament
+
+Training
+
+Secondary actions (ghost or text buttons):
+
+Edit Model | Duplicate | Delete
+
+🔹 Visual Style:
+Neutral background, soft borders, subtle shadows
+
+Compact spacing with clear hierarchy (e.g. bold titles, small metadata)
+
+Buttons should be small or medium, not full-width unless necessary
+
+Avoid bright or oversized buttons
+
+No strong colored tags like big “elementary” badges
+
+🔹 Overall Page:
+Keep the “Create New Activity” button in the top-right corner, rounded and slightly more vibrant
+
+Ensure mobile responsiveness with clean stacking
+
+Consider a floating action button (FAB) for “Create Activity” on mobile instead of placing it in the header.

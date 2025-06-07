@@ -279,6 +279,123 @@ This document outlines the REST API endpoints available in the MathQuest applica
   }
   ```
 
+## Game Templates
+
+### Create Game Template
+- **URL:** `/api/v1/game-templates`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+  ```json
+  {
+    "name": "string",
+    "discipline": "string",
+    "gradeLevel": "string",
+    "themes": ["string"],
+    "description": "string",
+    "defaultMode": "quiz | tournament | practice",
+    "questions": [
+      {
+        "questionUid": "string",
+        "sequence": "number"
+      }
+    ]
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "message": "Game template created successfully",
+    "gameTemplate": {
+      "id": "string",
+      "name": "string",
+      "discipline": "string",
+      "gradeLevel": "string",
+      "themes": ["string"],
+      "description": "string",
+      "defaultMode": "quiz | tournament | practice",
+      "questions": [
+        {
+          "id": "string",
+          "sequence": "number",
+          "question": {
+            "id": "string",
+            "text": "string",
+            "type": "multiple-choice | true-false | open-ended",
+            "options": ["string"],
+            "correctAnswer": "string",
+            "explanation": "string",
+            "points": "number",
+            "timeLimit": "number"
+          }
+        }
+      ],
+      "creatorId": "string",
+      "createdAt": "datetime"
+    }
+  }
+  ```
+
+### Update Game Template
+- **URL:** `/api/v1/game-templates/:id`
+- **Method:** `PUT`
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+  ```json
+  {
+    "name": "string",
+    "discipline": "string",
+    "gradeLevel": "string",
+    "themes": ["string"],
+    "description": "string",
+    "defaultMode": "quiz | tournament | practice",
+    "questions": [
+      {
+        "questionUid": "string",
+        "sequence": "number"
+      }
+    ]
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "message": "Game template updated successfully",
+    "gameTemplate": {
+      "id": "string",
+      "name": "string",
+      "discipline": "string",
+      "gradeLevel": "string",
+      "themes": ["string"],
+      "description": "string",
+      "defaultMode": "quiz | tournament | practice",
+      "questions": [
+        {
+          "id": "string",
+          "sequence": "number",
+          "question": {
+            "id": "string",
+            "text": "string",
+            "type": "multiple-choice | true-false | open-ended",
+            "options": ["string"],
+            "correctAnswer": "string",
+            "explanation": "string",
+            "points": "number",
+            "timeLimit": "number"
+          }
+        }
+      ],
+      "creatorId": "string",
+      "updatedAt": "datetime"
+    }
+  }
+  ```
+- **Responses:**
+  - `200 OK`: Game template updated successfully  
+  - `401 Unauthorized`: Not authenticated
+  - `404 Not Found`: Template not found or no permission to update
+  - `500 Internal Server Error`: Server error
+
 ## Game Instances
 
 ### Create Game Instance
@@ -335,6 +452,94 @@ This document outlines the REST API endpoints available in the MathQuest applica
     "createdAt": "datetime"
   }
   ```
+
+### Get Game Instance for Editing
+- **URL:** `/api/v1/games/instance/:id/edit`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+- **Description:** Gets a game instance by ID with full template data including questions for editing purposes
+- **Response:**
+  ```json
+  {
+    "gameInstance": {
+      "id": "string",
+      "name": "string",
+      "accessCode": "string",
+      "status": "pending | active | paused | completed | archived",
+      "playMode": "quiz | tournament | practice",
+      "settings": {},
+      "initiatorUserId": "string",
+      "createdAt": "datetime",
+      "gameTemplate": {
+        "id": "string",
+        "name": "string",
+        "themes": ["string"],
+        "discipline": "string",
+        "gradeLevel": "string",
+        "questions": [
+          {
+            "id": "string",
+            "sequence": "number",
+            "question": {
+              "id": "string",
+              "text": "string",
+              "type": "multiple-choice | true-false | open-ended",
+              "options": ["string"],
+              "correctAnswer": "string",
+              "explanation": "string",
+              "points": "number",
+              "timeLimit": "number"
+            }
+          }
+        ]
+      }
+    }
+  }
+  ```
+- **Responses:**
+  - `200 OK`: Game instance retrieved successfully
+  - `401 Unauthorized`: Not authenticated
+  - `403 Forbidden`: Not authorized to edit this game (not the creator)
+  - `404 Not Found`: Game not found
+
+### Update Game Instance
+- **URL:** `/api/v1/games/instance/:id`
+- **Method:** `PUT`
+- **Headers:** `Authorization: Bearer <token>`
+- **Description:** Updates basic game instance information (name, play mode, settings)
+- **Body:**
+  ```json
+  {
+    "name": "string",
+    "playMode": "quiz | tournament | practice",
+    "settings": {}
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "gameInstance": {
+      "id": "string",
+      "name": "string",
+      "playMode": "quiz | tournament | practice",
+      "settings": {},
+      "status": "pending",
+      "accessCode": "string",
+      "gameTemplate": {
+        "name": "string",
+        "themes": ["string"],
+        "discipline": "string",
+        "gradeLevel": "string"
+      }
+    }
+  }
+  ```
+- **Responses:**
+  - `200 OK`: Game instance updated successfully
+  - `400 Bad Request`: Invalid input or game not in pending status
+  - `401 Unauthorized`: Not authenticated
+  - `403 Forbidden`: Not authorized to update this game
+  - `404 Not Found`: Game not found
 
 ### Update Game Instance Status
 - **URL:** `/api/v1/games/:id/status`

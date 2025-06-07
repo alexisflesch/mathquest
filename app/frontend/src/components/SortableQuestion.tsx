@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react"; // Ajout de useEffec
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Check, X, GripVertical } from 'lucide-react';
-import type { Question, QuizState } from "../types";
+import type { Question } from "@/types/api";
+import type { QuizState } from "../types";
 import { createLogger } from '@/clientLogger';
 import { formatTime } from "@/utils";
 import MathJaxWrapper from '@/components/MathJaxWrapper';

@@ -224,6 +224,42 @@ describe('QuestionService', () => {
                 })
             }));
         });
+        it('should apply multiple values within filter types using OR logic', async () => {
+            const mockQuestions = [
+                {
+                    uid: 'question-1',
+                    title: 'Math Question',
+                    discipline: 'math',
+                    gradeLevel: '10th Grade',
+                    themes: ['algebra']
+                },
+                {
+                    uid: 'question-2',
+                    title: 'Science Question',
+                    discipline: 'science',
+                    gradeLevel: '11th Grade',
+                    themes: ['chemistry']
+                }
+            ];
+            (prisma.question.findMany as any).mockResolvedValue(mockQuestions);
+            (prisma.question.count as any).mockResolvedValue(2);
+
+            // Test multiple disciplines and grade levels (OR within each filter, AND between filters)
+            await questionService.getQuestions({
+                disciplines: ['math', 'science'],
+                gradeLevels: ['10th Grade', '11th Grade'],
+                authors: ['teacher1', 'teacher2']
+            });
+
+            expect(prisma.question.findMany).toHaveBeenCalledWith(expect.objectContaining({
+                where: expect.objectContaining({
+                    discipline: { in: ['math', 'science'] },
+                    gradeLevel: { in: ['10th Grade', '11th Grade'] },
+                    author: { in: ['teacher1', 'teacher2'] },
+                    isHidden: false
+                })
+            }));
+        });
         it('should handle errors when fetching questions', async () => {
             const mockError = new Error('Database error');
             (prisma.question.findMany as any).mockRejectedValue(mockError);

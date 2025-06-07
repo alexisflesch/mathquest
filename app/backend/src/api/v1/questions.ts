@@ -154,9 +154,12 @@ router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> 
     try {
         const {
             discipline,
+            theme,  // Frontend sends 'theme', not 'themes'
             themes,
-            difficulty,
+            level,  // Frontend sends 'level', not 'gradeLevel'
             gradeLevel,
+            author, // Frontend sends 'author'
+            difficulty,
             tags,
             questionType,
             includeHidden, // req.query.includeHidden (string | undefined)
@@ -167,21 +170,49 @@ router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> 
         // Convert to appropriate types
         const filters: any = {};
 
-        if (discipline) filters.discipline = discipline as string;
+        if (discipline) {
+            // Handle multiple disciplines as comma-separated values
+            if (typeof discipline === 'string' && discipline.includes(',')) {
+                filters.disciplines = discipline.split(',').map(d => d.trim()).filter(d => d.length > 0);
+            } else {
+                filters.discipline = discipline as string;
+            }
+        }
 
-        if (themes) {
-            filters.themes = Array.isArray(themes)
-                ? themes as string[]
-                : [themes as string];
+        // Handle themes from both 'theme' and 'themes' parameters
+        const themeParam = theme || themes;
+        if (themeParam) {
+            filters.themes = Array.isArray(themeParam)
+                ? themeParam as string[]
+                : (themeParam as string).split(',').map(t => t.trim()).filter(t => t.length > 0);
         }
 
         if (difficulty) filters.difficulty = Number(difficulty);
-        if (gradeLevel) filters.gradeLevel = gradeLevel as string;
+
+        // Handle grade level from both 'level' and 'gradeLevel' parameters
+        const levelParam = level || gradeLevel;
+        if (levelParam) {
+            // Handle multiple grade levels as comma-separated values
+            if (typeof levelParam === 'string' && levelParam.includes(',')) {
+                filters.gradeLevels = levelParam.split(',').map(g => g.trim()).filter(g => g.length > 0);
+            } else {
+                filters.gradeLevel = levelParam as string;
+            }
+        }
+
+        if (author) {
+            // Handle multiple authors as comma-separated values
+            if (typeof author === 'string' && author.includes(',')) {
+                filters.authors = author.split(',').map(a => a.trim()).filter(a => a.length > 0);
+            } else {
+                filters.author = author as string;
+            }
+        }
 
         if (tags) {
             filters.tags = Array.isArray(tags)
                 ? tags as string[]
-                : [tags as string];
+                : (tags as string).split(',').map(t => t.trim()).filter(t => t.length > 0);
         }
 
         if (questionType) filters.questionType = questionType as string;
@@ -207,6 +238,12 @@ router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> 
         };
 
         const result = await getQuestionService().getQuestions(filters, pagination);
+
+        // Debug logging
+        logger.info(`Returning ${result.questions.length} questions for API request`);
+        if (result.questions.length > 0) {
+            logger.info(`First question sample: ${JSON.stringify(result.questions[0], null, 2)}`);
+        }
 
         res.status(200).json(result);
     } catch (error) {

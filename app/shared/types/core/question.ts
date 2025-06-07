@@ -20,7 +20,9 @@ export interface BaseQuestion {
     /** Question type classification */
     questionType: string;
     /** Time limit in seconds */
-    timeLimit?: number;
+    timeLimit?: number | null;
+    /** Feedback wait time in milliseconds */
+    feedbackWaitTime?: number | null;
 }
 
 /**

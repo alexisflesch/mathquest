@@ -15,6 +15,48 @@ const getGameTemplateService = (): GameTemplateService => {
 };
 
 /**
+ * Get game templates for the authenticated teacher
+ * GET /api/v1/game-templates
+ * Requires teacher authentication
+ */
+router.get('/', async (req: Request, res: Response): Promise<void> => {
+    try {
+        // Extract user ID from either req.user (from middleware) or x-user-id header (from frontend API route)
+        const userId = req.user?.userId || req.headers['x-user-id'] as string;
+        const userRole = req.user?.role || req.headers['x-user-role'] as string;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+
+        // Verify user is a teacher (either from middleware or headers)
+        if (userRole !== 'TEACHER') {
+            res.status(403).json({ error: 'Teacher access required' });
+            return;
+        }
+
+        logger.info({ userId }, 'Fetching game templates for teacher');
+
+        // Fetch templates created by this teacher
+        const result = await getGameTemplateService().getgameTemplates(userId, {}, { skip: 0, take: 50 });
+
+        res.status(200).json({
+            gameTemplates: result.gameTemplates,
+            meta: {
+                total: result.total,
+                page: result.page,
+                pageSize: result.pageSize,
+                totalPages: result.totalPages
+            }
+        });
+    } catch (error) {
+        logger.error({ error }, 'Error fetching game templates');
+        res.status(500).json({ error: 'An error occurred while fetching game templates' });
+    }
+});
+
+/**
  * Teacher/Admin-driven GameTemplate creation
  * POST /api/v1/game-templates
  * Allows a teacher/admin to create a game template with specific details.
@@ -25,24 +67,26 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
         // Log the received request body for debugging
         logger.info({ body: req.body, user: req.user }, 'Received request for game template creation');
 
-        const { name, discipline, gradeLevel, themes, questions, description, defaultMode } = req.body as GameTemplateCreationData;
+        const { name, discipline, gradeLevel, themes, questions, questionIds, description, defaultMode } = req.body as GameTemplateCreationData;
 
-        // req.user should be populated by the auth middleware (e.g., teacherAuth)
-        const userId = req.user?.userId; // Corrected: JwtPayload uses userId
+        // Try to get userId from req.user first, then from headers for frontend API route compatibility
+        let userId = req.user?.userId;
+        if (!userId && req.headers['x-user-id']) {
+            userId = req.headers['x-user-id'] as string;
+        }
 
         // Validate required fields
         const missingFields = [];
         if (!userId) {
-            // This case should ideally be caught by auth middleware returning 401 earlier
-            logger.warn('User ID missing from request after auth middleware. Ensure route is protected.');
-            missingFields.push('userId (from authenticated token - missing after auth)');
+            logger.warn('User ID missing from request. Ensure route is protected or user ID is provided.');
+            missingFields.push('userId (from authenticated token or headers)');
         }
         if (!name) missingFields.push('name (string)');
         if (!discipline) missingFields.push('discipline (string)');
         if (!gradeLevel) missingFields.push('gradeLevel (string)');
         if (!themes || !Array.isArray(themes) || themes.length === 0) missingFields.push('themes (array of strings)');
 
-        // Validate questions structure if provided, as per GameTemplateCreationData and service expectations
+        // Validate questions structure if provided, or questionIds
         if (questions) {
             if (!Array.isArray(questions)) {
                 missingFields.push('questions (must be an array if provided)');
@@ -57,6 +101,12 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
                         break;
                     }
                 }
+            }
+        } else if (questionIds) {
+            if (!Array.isArray(questionIds)) {
+                missingFields.push('questionIds (must be an array if provided)');
+            } else if (questionIds.some(id => typeof id !== 'string')) {
+                missingFields.push('questionIds (must be array of strings)');
             }
         }
 
@@ -83,6 +133,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
             gradeLevel,
             themes,
             questions, // Pass questions through as validated
+            questionIds, // Pass questionIds through as validated
             description,
             defaultMode
         };
@@ -123,6 +174,59 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
         }
 
         res.status(statusCode).json({ error: responseMessage, details: errorDetails });
+    }
+});
+
+/**
+ * Update an existing game template
+ * PUT /api/v1/game-templates/:id
+ * Allows a teacher to update their game template
+ */
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { name, discipline, gradeLevel, themes, description, defaultMode, questions } = req.body;
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            res.status(401).json({ error: 'User ID is required' });
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({ error: 'Template ID is required' });
+            return;
+        }
+
+        logger.info({ templateId: id, userId, body: req.body }, 'Updating game template');
+
+        const updatedTemplate = await getGameTemplateService().updategameTemplate(userId, {
+            id,
+            name,
+            discipline,
+            gradeLevel,
+            themes,
+            description,
+            defaultMode,
+            questions
+        });
+
+        res.status(200).json({
+            message: 'Game template updated successfully',
+            gameTemplate: updatedTemplate
+        });
+    } catch (error: any) {
+        logger.error({
+            error: error.message,
+            templateId: req.params.id,
+            userId: req.user?.userId
+        }, 'Error updating game template');
+
+        if (error.message.includes('not found or you don\'t have permission')) {
+            res.status(404).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'An error occurred while updating the game template' });
+        }
     }
 });
 
