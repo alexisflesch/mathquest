@@ -348,6 +348,38 @@ class GameInstanceService {
         }
     }
     /**
+     * Get game instances by template ID for a specific teacher
+     */
+    async getGameInstancesByTemplateId(templateId, teacherUserId) {
+        try {
+            return await prisma_1.prisma.gameInstance.findMany({
+                where: {
+                    gameTemplateId: templateId,
+                    initiatorUserId: teacherUserId
+                },
+                include: {
+                    gameTemplate: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    participants: {
+                        select: {
+                            id: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            });
+        }
+        catch (error) {
+            logger.error({ error }, `Error fetching game instances for template ${templateId} and teacher ${teacherUserId}`);
+            throw error;
+        }
+    }
+    /**
      * Get game instances by initiator user ID
      */
     async getGameInstanceByInitiatorUserId(userId) {

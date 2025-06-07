@@ -709,4 +709,33 @@ router.put('/instance/:id', teacherAuth, async (req: Request, res: Response): Pr
     }
 });
 
+/**
+ * Get game instances by template ID (teacher only)
+ * GET /api/v1/games/template/:templateId/instances
+ * Requires teacher authentication
+ */
+router.get('/template/:templateId/instances', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+    try {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
+            res.status(401).json({ error: 'Teacher authentication required' });
+            return;
+        }
+
+        const { templateId } = req.params;
+
+        if (!templateId) {
+            res.status(400).json({ error: 'Template ID is required' });
+            return;
+        }
+
+        // Get all games for this teacher filtered by template ID
+        const gameInstances = await getGameInstanceService().getGameInstancesByTemplateId(templateId, req.user.userId);
+
+        res.status(200).json({ gameInstances });
+    } catch (error) {
+        logger.error({ error, templateId: req.params.templateId }, 'Error fetching game instances by template');
+        res.status(500).json({ error: 'An error occurred while fetching game instances' });
+    }
+});
+
 export default router;

@@ -3,9 +3,11 @@ import { BACKEND_API_BASE_URL } from '@/config/api';
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { gameId: string } }
+    { params }: { params: Promise<{ gameId: string }> }
 ) {
     try {
+        const { gameId } = await params;
+        
         // Get authentication token from cookies
         const teacherToken = request.cookies.get('teacherToken')?.value;
         const authToken = request.cookies.get('authToken')?.value;
@@ -17,7 +19,7 @@ export async function DELETE(
         }
 
         // Forward request to backend
-        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${params.gameId}`, {
+        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${gameId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`,

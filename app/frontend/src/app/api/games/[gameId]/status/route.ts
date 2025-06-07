@@ -3,9 +3,11 @@ import { BACKEND_API_BASE_URL } from '@/config/api';
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { gameId: string } }
+    { params }: { params: Promise<{ gameId: string }> }
 ) {
     try {
+        const { gameId } = await params;
+        
         // Get authentication token from cookies
         const teacherToken = request.cookies.get('teacherToken')?.value;
         const authToken = request.cookies.get('authToken')?.value;
@@ -19,7 +21,7 @@ export async function PUT(
         const body = await request.text();
 
         // Forward request to backend
-        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${params.gameId}/status`, {
+        const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${gameId}/status`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
