@@ -230,4 +230,60 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     }
 });
 
+/**
+ * Delete a game template
+ * DELETE /api/v1/game-templates/:id
+ * Requires teacher authentication
+ */
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+    try {
+        // Extract user ID from either req.user (from middleware) or x-user-id header (from frontend API route)
+        const userId = req.user?.userId || req.headers['x-user-id'] as string;
+        const userRole = req.user?.role || req.headers['x-user-role'] as string;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+
+        // Verify user is a teacher (either from middleware or headers)
+        if (userRole !== 'TEACHER') {
+            res.status(403).json({ error: 'Teacher access required' });
+            return;
+        }
+
+        const templateId = req.params.id;
+        if (!templateId) {
+            res.status(400).json({ error: 'Template ID is required' });
+            return;
+        }
+
+        logger.info({ templateId, userId }, 'Deleting game template');
+
+        // Check if force delete is requested
+        const forceDelete = req.query.force === 'true';
+
+        // Delete the template
+        await getGameTemplateService().deletegameTemplate(userId, templateId, forceDelete);
+
+        // Return 204 No Content for successful deletion
+        res.status(204).send();
+    } catch (error) {
+        const err = error as Error;
+        logger.error({
+            error: err.message,
+            templateId: req.params.id,
+            userId: req.user?.userId
+        }, 'Error deleting game template');
+
+        if (err.message.includes('not found or you don\'t have permission')) {
+            res.status(404).json({ error: err.message });
+        } else if (err.message.includes('Cannot delete template') && err.message.includes('game session')) {
+            res.status(409).json({ error: err.message }); // 409 Conflict
+        } else {
+            res.status(500).json({ error: 'An error occurred while deleting the game template' });
+        }
+    }
+});
+
 export default router;

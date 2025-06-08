@@ -24,6 +24,7 @@
 "use client";
 import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
+import InfinitySpin from '@/components/InfinitySpin';
 import { useEffect } from 'react';
 
 export default function Home() {
@@ -64,7 +65,7 @@ export default function Home() {
       <div className="main-content">
         <div className="card w-full max-w-4xl bg-base-100 rounded-lg shadow-xl my-6">
           <div className="card-body items-center">
-            <span className="loading loading-spinner loading-lg"></span>
+            <InfinitySpin size={48} />
           </div>
         </div>
       </div>

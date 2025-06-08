@@ -18,6 +18,7 @@
  */
 
 import React, { useRef, useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface MultiSelectDropdownProps {
     label?: string;
@@ -70,7 +71,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
             {label && <label className="font-bold text-lg mb-1">{label}</label>}
             <div className="relative w-full" ref={dropdownRef}>
                 <button
-                    className="btn btn-outline btn-lg w-full text-left bg-dropdown text-dropdown no-dropdown-hover"
+                    className="btn btn-outline btn-lg w-full bg-dropdown text-dropdown no-dropdown-hover"
                     onClick={e => { e.preventDefault(); if (!disabled) setOpen(o => !o); }}
                     type="button"
                     disabled={disabled}
@@ -78,10 +79,16 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
                         transition: 'none',
                     }}
                 >
-                    <span className={(selected?.length ?? 0) === 0 ? "text-placeholder" : "text-dropdown"}>
-                        {(selected?.length ?? 0) === 0 ? placeholder : (selected || []).join(", ")}
-                    </span>
-                    <span className="float-right ml-2 select-none text-primary">▼</span>
+                    <div className="flex items-center justify-between w-full min-w-0">
+                        <span className={`${(selected?.length ?? 0) === 0 ? "text-placeholder" : "text-dropdown"} truncate flex-1 text-left`}>
+                            {(selected?.length ?? 0) === 0 ? placeholder : (selected || []).join(", ")}
+                        </span>
+                        <ChevronDown
+                            size={16}
+                            className="ml-2 flex-shrink-0 text-gray-600 dark:text-gray-400"
+                            style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                        />
+                    </div>
                 </button>
                 <div
                     className="absolute z-10 w-full bg-dropdown text-dropdown rounded-xl shadow-lg mt-2 max-h-60 overflow-y-auto border border-base-200"

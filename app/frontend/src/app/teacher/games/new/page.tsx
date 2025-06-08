@@ -8,6 +8,7 @@ import { useAccessGuard } from '@/hooks/useAccessGuard';
 import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
+import { Search } from 'lucide-react';
 import { QuestionsResponseSchema, GameCreationResponseSchema, type QuestionsResponse, type GameCreationResponse } from '@/types/api';
 import {
     DndContext,
@@ -28,6 +29,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ShoppingCart, X, Clock } from 'lucide-react';
 import Snackbar from '@/components/Snackbar';
+import InfinitySpin from '@/components/InfinitySpin';
 
 // Local interface for questions on this page, compatible with QuestionDisplayProps
 interface QuestionForCreatePage {
@@ -71,18 +73,18 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
     const [timeValue, setTimeValue] = useState(question.customTime || question.time || 30);
 
     return (
-        <div ref={setNodeRef} style={style} className="bg-white border border-gray-200 rounded-lg p-3 mb-2 shadow-sm">
+        <div ref={setNodeRef} style={style} className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg p-3 mb-2 shadow-sm">
             <div className="flex items-start gap-3">
                 <button
                     {...attributes}
                     {...listeners}
-                    className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing mt-1"
+                    className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] cursor-grab active:cursor-grabbing mt-1"
                 >
                     <GripVertical size={16} />
                 </button>
 
                 <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate mb-1">
+                    <div className="text-sm font-medium text-[color:var(--foreground)] truncate mb-1">
                         {question.title || question.text.substring(0, 50)}...
                     </div>
                 </div>
@@ -111,7 +113,7 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
                     ) : (
                         <button
                             onClick={() => setEditingTime(true)}
-                            className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800"
+                            className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
                         >
                             <Clock size={12} />
                             {question.customTime || question.time || 30}s
@@ -120,7 +122,7 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
 
                     <button
                         onClick={onRemove}
-                        className="text-red-400 hover:text-red-600"
+                        className="text-[color:var(--alert)] hover:text-red-600"
                     >
                         <X size={16} />
                     </button>
@@ -410,57 +412,71 @@ export default function CreateActivityPage() {
     return (
         <div className="main-content">
             <div className="w-full max-w-7xl mx-auto p-4">
-                <h1 className="text-3xl font-bold text-center mb-6">Créer une Nouvelle Activité</h1>
+                <h1 className="text-3xl font-bold text-left mb-6 text-[color:var(--foreground)]">Créer une nouvelle activité</h1>
 
                 {/* Filters Row */}
-                <div className="flex flex-col lg:flex-row gap-4 mb-6">
-                    <MultiSelectDropdown
-                        options={filters.levels || []}
-                        selected={selectedLevels}
-                        onChange={setSelectedLevels}
-                        placeholder="Niveaux"
-                    />
-                    <MultiSelectDropdown
-                        options={filters.disciplines || []}
-                        selected={selectedDisciplines}
-                        onChange={setSelectedDisciplines}
-                        placeholder="Disciplines"
-                    />
-                    <MultiSelectDropdown
-                        options={filters.themes || []}
-                        selected={selectedThemes ?? []}
-                        onChange={setSelectedThemes}
-                        placeholder="Thèmes"
-                    />
-                    <MultiSelectDropdown
-                        options={filters.authors || []}
-                        selected={selectedAuthors}
-                        onChange={setSelectedAuthors}
-                        placeholder="Auteurs"
-                    />
-                    <input
-                        className="input input-bordered flex-1"
-                        type="text"
-                        placeholder="🔍 Rechercher par tag, thème, niveau, discipline..."
-                        value={tagSearch}
-                        onChange={e => setTagSearch(e.target.value)}
-                    />
+                <div className="flex flex-col xl:flex-row gap-4 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-row gap-4 xl:flex-1">
+                        <MultiSelectDropdown
+                            options={filters.levels || []}
+                            selected={selectedLevels}
+                            onChange={setSelectedLevels}
+                            placeholder="Niveaux"
+                        />
+                        <MultiSelectDropdown
+                            options={filters.disciplines || []}
+                            selected={selectedDisciplines}
+                            onChange={setSelectedDisciplines}
+                            placeholder="Disciplines"
+                        />
+                        <MultiSelectDropdown
+                            options={filters.themes || []}
+                            selected={selectedThemes ?? []}
+                            onChange={setSelectedThemes}
+                            placeholder="Thèmes"
+                        />
+                        <MultiSelectDropdown
+                            options={filters.authors || []}
+                            selected={selectedAuthors}
+                            onChange={setSelectedAuthors}
+                            placeholder="Auteurs"
+                        />
+                    </div>
+                    <div className="relative flex-1 xl:max-w-md">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search size={20} className="text-[color:var(--muted-foreground)]" />
+                        </div>
+                        <input
+                            className="input input-bordered w-full pl-10"
+                            type="text"
+                            placeholder="Rechercher par tag, thème, niveau, discipline..."
+                            value={tagSearch}
+                            onChange={e => setTagSearch(e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 {/* Desktop Two-Panel Layout */}
                 <div className="hidden lg:flex gap-6">
                     {/* Left Panel - Available Questions */}
-                    <div className="flex-1 bg-white rounded-lg shadow-sm border p-4">
-                        <h2 className="text-xl font-semibold mb-4">Questions disponibles</h2>
+                    <div className="flex-1 bg-[color:var(--card)] rounded-lg shadow-sm border border-[color:var(--border)] p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                            <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Liste des questions</h2>
+                            {loadingQuestions && (
+                                <InfinitySpin size={24} />
+                            )}
+                        </div>
                         <div
                             className="space-y-3 overflow-y-auto"
                             ref={listRef}
                             style={{ maxHeight: '60vh' }}
                         >
                             {loadingQuestions && questions.length === 0 ? (
-                                <div className="text-center text-gray-500 py-8">Chargement des questions…</div>
+                                <div className="text-center text-[color:var(--muted-foreground)] text-lg py-8">
+                                    Chargement des questions…
+                                </div>
                             ) : questions.length === 0 ? (
-                                <div className="text-center text-gray-500 py-8">Aucune question trouvée pour ces filtres.</div>
+                                <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
                             ) : (
                                 <>
                                     {questions
@@ -478,7 +494,7 @@ export default function CreateActivityPage() {
                                             return tags.some(t => t.includes(search));
                                         })
                                         .map(q => (
-                                            <div key={q.uid} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                                            <div key={q.uid} className="flex items-start gap-3 p-3 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)]">
                                                 <input
                                                     type="checkbox"
                                                     checked={isQuestionSelected(q.uid)}
@@ -504,27 +520,27 @@ export default function CreateActivityPage() {
                                                         showMeta={true}
                                                     />
                                                 </div>
-                                                <div className="flex items-center gap-1 text-xs text-gray-600 mt-2">
+                                                <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] mt-2">
                                                     <Clock size={12} />
                                                     <span>{q.time || 30}s</span>
                                                 </div>
                                             </div>
                                         ))}
-                                    {loadingMore && <div className="text-center text-gray-500 py-2">Chargement…</div>}
+                                    {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
                                 </>
                             )}
                         </div>
                     </div>
 
                     {/* Right Panel - Shopping Cart */}
-                    <div className="w-80 bg-white rounded-lg shadow-sm border p-4">
+                    <div className="w-80 bg-[color:var(--card)] rounded-lg shadow-sm border border-[color:var(--border)] p-4">
                         <div className="flex items-center gap-2 mb-4">
-                            <ShoppingCart size={20} />
-                            <h2 className="text-xl font-semibold">Panier ({selectedQuestions.length} questions)</h2>
+                            <ShoppingCart size={20} className="text-[color:var(--foreground)]" />
+                            <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Panier ({selectedQuestions.length} questions)</h2>
                         </div>
 
                         {selectedQuestions.length === 0 ? (
-                            <div className="text-center text-gray-500 py-8">
+                            <div className="text-center text-[color:var(--muted-foreground)] py-8">
                                 Sélectionnez des questions pour les ajouter au panier
                             </div>
                         ) : (
@@ -574,15 +590,21 @@ export default function CreateActivityPage() {
 
                 {/* Mobile Layout */}
                 <div className="lg:hidden">
-                    <div className="bg-white rounded-lg shadow-sm border p-4">
+                    <div className="bg-[color:var(--card)] rounded-lg shadow-sm border border-[color:var(--border)] p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                            <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Liste des questions</h2>
+                            {loadingQuestions && (
+                                <InfinitySpin size={24} />
+                            )}
+                        </div>
                         <div
                             className="space-y-3 overflow-y-auto mb-4"
                             style={{ maxHeight: '50vh' }}
                         >
                             {loadingQuestions && questions.length === 0 ? (
-                                <div className="text-center text-gray-500 py-8">Chargement des questions…</div>
+                                <div className="text-center text-[color:var(--muted-foreground)] py-8">Chargement des questions…</div>
                             ) : questions.length === 0 ? (
-                                <div className="text-center text-gray-500 py-8">Aucune question trouvée pour ces filtres.</div>
+                                <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
                             ) : (
                                 <>
                                     {questions
@@ -600,7 +622,7 @@ export default function CreateActivityPage() {
                                             return tags.some(t => t.includes(search));
                                         })
                                         .map(q => (
-                                            <div key={q.uid} className="flex items-start gap-3 p-3 border rounded-lg">
+                                            <div key={q.uid} className="flex items-start gap-3 p-3 border border-[color:var(--border)] rounded-lg">
                                                 <input
                                                     type="checkbox"
                                                     checked={isQuestionSelected(q.uid)}
@@ -626,13 +648,13 @@ export default function CreateActivityPage() {
                                                         showMeta={true}
                                                     />
                                                 </div>
-                                                <div className="flex items-center gap-1 text-xs text-gray-600 mt-2">
+                                                <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] mt-2">
                                                     <Clock size={12} />
                                                     <span>{q.time || 30}s</span>
                                                 </div>
                                             </div>
                                         ))}
-                                    {loadingMore && <div className="text-center text-gray-500 py-2">Chargement…</div>}
+                                    {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
                                 </>
                             )}
                         </div>
@@ -656,11 +678,11 @@ export default function CreateActivityPage() {
                     {/* Mobile Cart Modal */}
                     {showMobileCart && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-                            <div className="bg-white w-full rounded-t-xl p-4 max-h-[80vh] overflow-y-auto">
+                            <div className="bg-[color:var(--card)] w-full rounded-t-xl p-4 max-h-[80vh] overflow-y-auto">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
-                                        <ShoppingCart size={20} />
-                                        <h2 className="text-xl font-semibold">Panier de l'activité</h2>
+                                        <ShoppingCart size={20} className="text-[color:var(--foreground)]" />
+                                        <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Panier de l'activité</h2>
                                     </div>
                                     <button
                                         onClick={() => setShowMobileCart(false)}
@@ -689,23 +711,23 @@ export default function CreateActivityPage() {
                                     >
                                         <div className="space-y-2 mb-4">
                                             {selectedQuestions.map((question, index) => (
-                                                <div key={question.uid} className="flex items-center gap-2 p-3 border rounded-lg">
+                                                <div key={question.uid} className="flex items-center gap-2 p-3 border border-[color:var(--border)] rounded-lg">
                                                     <div className="flex items-center gap-2">
-                                                        <button className="text-gray-400">
+                                                        <button className="text-[color:var(--muted-foreground)]">
                                                             <GripVertical size={16} />
                                                         </button>
-                                                        <span className="text-sm font-medium">Q{index + 1}.</span>
+                                                        <span className="text-sm font-medium text-[color:var(--foreground)]">Q{index + 1}.</span>
                                                     </div>
-                                                    <div className="flex-1 text-sm truncate">
+                                                    <div className="flex-1 text-sm truncate text-[color:var(--foreground)]">
                                                         {question.title || question.text.substring(0, 40)}...
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <span className="text-xs text-gray-500">
+                                                        <span className="text-xs text-[color:var(--muted-foreground)]">
                                                             {question.customTime || question.time || 30}s
                                                         </span>
                                                         <button
                                                             onClick={() => removeFromCart(question.uid)}
-                                                            className="text-red-400 hover:text-red-600"
+                                                            className="text-[color:var(--alert)] hover:text-red-600"
                                                         >
                                                             <X size={16} />
                                                         </button>

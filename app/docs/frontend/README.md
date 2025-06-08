@@ -12,6 +12,7 @@ This document provides a concise technical overview of the MathQuest frontend, i
 - [Socket Integration](./socket.md)
 - [Timer Management](./timer-management.md)
 - [Component Library](./components.md)
+- [Loading Patterns & InfinitySpin](./loading-patterns.md)
 
 ---
 

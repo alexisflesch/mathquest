@@ -430,4 +430,39 @@ export class GameInstanceService {
             }
         });
     }
+
+    /**
+     * Delete a game instance
+     */
+    async deleteGameInstance(userId: string, instanceId: string) {
+        try {
+            // First check if the instance exists and the user has permission
+            const existing = await prisma.gameInstance.findUnique({
+                where: { id: instanceId },
+                include: {
+                    gameTemplate: {
+                        select: {
+                            creatorId: true
+                        }
+                    }
+                }
+            });
+
+            if (!existing) {
+                throw new Error(`Game instance with ID ${instanceId} not found`);
+            }
+
+            // Check if user is the creator of the template or the initiator of the instance
+            if (existing.gameTemplate.creatorId !== userId && existing.initiatorUserId !== userId) {
+                throw new Error('You do not have permission to delete this game instance');
+            }
+
+            await prisma.gameInstance.delete({ where: { id: instanceId } });
+
+            logger.info({ instanceId, userId }, 'Game instance deleted successfully');
+        } catch (error) {
+            logger.error({ error, instanceId, userId }, 'Error deleting game instance');
+            throw error;
+        }
+    }
 }

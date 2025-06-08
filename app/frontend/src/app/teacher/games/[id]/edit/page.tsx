@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { makeApiRequest } from '@/config/api';
+import InfinitySpin from '@/components/InfinitySpin';
+import { Search } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -433,7 +435,7 @@ export default function EditActivityPage() {
             <div className="min-h-screen bg-base-100 p-4">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-center justify-center h-64">
-                        <div className="loading loading-spinner loading-lg"></div>
+                        <InfinitySpin size={48} />
                         <span className="ml-4 text-lg">Chargement de l'activité...</span>
                     </div>
                 </div>
@@ -531,13 +533,18 @@ export default function EditActivityPage() {
 
                         {/* Search */}
                         <div className="mb-4">
-                            <input
-                                type="text"
-                                placeholder="Rechercher une question..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="input input-bordered w-full"
-                            />
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search size={20} className="text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher une question..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="input input-bordered w-full pl-10"
+                                />
+                            </div>
                         </div>
 
                         {/* Questions List */}
@@ -659,8 +666,8 @@ export default function EditActivityPage() {
                             >
                                 {saving ? (
                                     <>
-                                        <span className="loading loading-spinner loading-sm"></span>
-                                        Modification...
+                                        <InfinitySpin size={16} trailColor="var(--primary-foreground)" />
+                                        <span className="ml-2">Modification...</span>
                                     </>
                                 ) : (
                                     'Modifier'
@@ -708,38 +715,45 @@ export default function EditActivityPage() {
                 {/* Filters */}
                 <div className="bg-base-200 rounded-lg p-4 mb-4">
                     <h2 className="text-lg font-semibold mb-3">Filtres</h2>
-                    <div className="grid grid-cols-1 gap-3">
-                        <MultiSelectDropdown
-                            options={availableLevels}
-                            selected={selectedLevels}
-                            onChange={setSelectedLevels}
-                            placeholder="Niveau"
-                        />
-                        <MultiSelectDropdown
-                            options={availableDisciplines}
-                            selected={selectedDisciplines}
-                            onChange={setSelectedDisciplines}
-                            placeholder="Discipline"
-                        />
-                        <MultiSelectDropdown
-                            options={availableThemes}
-                            selected={selectedThemes}
-                            onChange={setSelectedThemes}
-                            placeholder="Thèmes"
-                        />
-                        <MultiSelectDropdown
-                            options={availableAuthors}
-                            selected={selectedAuthors}
-                            onChange={setSelectedAuthors}
-                            placeholder="Auteur"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Rechercher une question..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input input-bordered"
-                        />
+                    <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <MultiSelectDropdown
+                                options={availableLevels}
+                                selected={selectedLevels}
+                                onChange={setSelectedLevels}
+                                placeholder="Niveau"
+                            />
+                            <MultiSelectDropdown
+                                options={availableDisciplines}
+                                selected={selectedDisciplines}
+                                onChange={setSelectedDisciplines}
+                                placeholder="Discipline"
+                            />
+                            <MultiSelectDropdown
+                                options={availableThemes}
+                                selected={selectedThemes}
+                                onChange={setSelectedThemes}
+                                placeholder="Thèmes"
+                            />
+                            <MultiSelectDropdown
+                                options={availableAuthors}
+                                selected={selectedAuthors}
+                                onChange={setSelectedAuthors}
+                                placeholder="Auteur"
+                            />
+                        </div>
+                        <div className="relative max-w-md">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search size={20} className="text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Rechercher une question..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="input input-bordered w-full pl-10"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -862,8 +876,8 @@ export default function EditActivityPage() {
                             >
                                 {saving ? (
                                     <>
-                                        <span className="loading loading-spinner loading-sm"></span>
-                                        Modification...
+                                        <InfinitySpin size={16} trailColor="var(--primary-foreground)" />
+                                        <span className="ml-2">Modification...</span>
                                     </>
                                 ) : (
                                     'Modifier'

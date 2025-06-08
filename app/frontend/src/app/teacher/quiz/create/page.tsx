@@ -9,6 +9,7 @@ import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsResponseSchema, QuizCreationResponseSchema, type QuestionsResponse, type QuizCreationResponse } from '@/types/api';
+import { Search } from 'lucide-react';
 
 // Local interface for questions on this page, compatible with QuestionDisplayProps
 interface QuestionForCreatePage {
@@ -230,13 +231,18 @@ export default function CreateQuizPage() {
                                 placeholder="Thèmes"
                             />
                         </div>
-                        <input
-                            className="input input-bordered w-full mb-2"
-                            type="text"
-                            placeholder="Rechercher par tag, thème, niveau, discipline..."
-                            value={tagSearch}
-                            onChange={e => setTagSearch(e.target.value)}
-                        />
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search size={20} className="text-gray-400" />
+                            </div>
+                            <input
+                                className="input input-bordered w-full pl-10 mb-2"
+                                type="text"
+                                placeholder="Rechercher par tag, thème, niveau, discipline..."
+                                value={tagSearch}
+                                onChange={e => setTagSearch(e.target.value)}
+                            />
+                        </div>
                         <div className="quiz-create-question-list flex flex-col w-full" ref={listRef} style={{ maxHeight: '60vh', overflowY: 'auto' }}>
                             {loadingQuestions && questions.length === 0 ? (
                                 <div className="text-center text-muted">Chargement des questions…</div>

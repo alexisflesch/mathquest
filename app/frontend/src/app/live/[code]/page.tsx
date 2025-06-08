@@ -23,6 +23,7 @@ import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
 import { useStudentGameSocket } from '@/hooks/migrations';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import InfinitySpin from '@/components/InfinitySpin';
 
 // Create a logger for this component
 const logger = createLogger('LiveGamePage');
@@ -68,7 +69,7 @@ export default function LiveGamePage() {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                    <InfinitySpin size={48} />
                     <p className="mt-4 text-gray-600">Vérification de l'authentification...</p>
                 </div>
             </div>

@@ -10,6 +10,7 @@ import GuestForm from '../../components/auth/GuestForm';
 import StudentAuthForm from '../../components/auth/StudentAuthForm';
 import AvatarGrid from '../../components/ui/AvatarGrid';
 import Image from 'next/image';
+import InfinitySpin from '@/components/InfinitySpin';
 
 function LoginPageInner() {
     const router = useRouter();
@@ -117,7 +118,7 @@ function LoginPageInner() {
     if (userState === 'guest' || userState === 'student' || userState === 'teacher') {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-[color:var(--background)]">
-                <div className="loading loading-spinner loading-lg"></div>
+                <InfinitySpin size={48} />
                 <p className="mt-4 text-base-content">Redirection en cours...</p>
             </div>
         );

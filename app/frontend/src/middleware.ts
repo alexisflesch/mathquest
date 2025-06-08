@@ -9,10 +9,16 @@ import type { NextRequest } from 'next/server';
  * - guest: Username/avatar set via localStorage, no account
  * - student: Full student account with email/password
  * - teacher: Teacher account with admin privileges (can access all routes)
+ * 
+ * Important: This middleware only checks for token presence, not validity.
+ * Token validation (expiration, signature) is handled by the AuthProvider
+ * via backend API calls to prevent UX deadlocks with expired tokens.
  */
 
 function getUserState(request: NextRequest): 'anonymous' | 'guest' | 'student' | 'teacher' {
-    // Check for JWT tokens to identify authenticated users
+    // Check for JWT tokens to identify users with potential authentication
+    // Note: This only checks for token presence, not validity/expiration
+    // The AuthProvider handles proper token validation via API calls
     const authToken = request.cookies.get('authToken');
     const teacherToken = request.cookies.get('teacherToken');
 
@@ -61,14 +67,11 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Redirect authenticated users away from login page
-    // This prevents the issue where users briefly see login form before client-side redirect
-    if (pathname === '/login' && (userState === 'teacher' || userState === 'student')) {
-        // Create a new URL object for the home page based on the current request
-        const url = new URL('/', request.url);
-
-        // Use the URL object directly in the redirect for reliable redirection
-        return NextResponse.redirect(url);
+    // Allow access to login page for all users
+    // The AuthProvider will handle proper authentication validation and redirects
+    // This prevents the UX issue where users with expired tokens get locked out
+    if (pathname === '/login') {
+        return NextResponse.next();
     }
 
     return NextResponse.next();

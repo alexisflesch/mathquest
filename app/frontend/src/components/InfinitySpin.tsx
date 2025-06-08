@@ -6,8 +6,8 @@ const InfinitySpin: React.FC<{
     trailColor?: string;
 }> = ({
     size = 100,
-    baseColor = "#ccc",
-    trailColor = "#3b82f6",
+    baseColor = "var(--muted-foreground)",
+    trailColor = "var(--primary)",
 }) => {
         const animationKeyframes = `
         @keyframes infinityTrailDash {

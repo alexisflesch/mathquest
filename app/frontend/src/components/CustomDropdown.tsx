@@ -17,6 +17,7 @@
  */
 
 import React, { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface CustomDropdownProps {
     options: string[];
@@ -61,7 +62,7 @@ export default function CustomDropdown({
             {label && <label className="font-bold text-lg">{label}</label>}
             <div className="relative w-full" ref={dropdownRef}>
                 <button
-                    className="btn btn-outline btn-lg w-full text-left bg-dropdown text-dropdown no-dropdown-hover"
+                    className="btn btn-outline btn-lg w-full bg-dropdown text-dropdown no-dropdown-hover"
                     onClick={e => { e.preventDefault(); if (!disabled) setOpen(o => !o); }}
                     type="button"
                     disabled={disabled}
@@ -70,10 +71,16 @@ export default function CustomDropdown({
                         transition: 'none',
                     }}
                 >
-                    <span className={value ? "text-dropdown" : "text-placeholder"}>
-                        {value || placeholder}
-                    </span>
-                    <span className="float-right ml-2 select-none text-primary">▼</span>
+                    <div className="flex items-center justify-between w-full min-w-0">
+                        <span className={`${value ? "text-dropdown" : "text-placeholder"} truncate flex-1 text-left`}>
+                            {value || placeholder}
+                        </span>
+                        <ChevronDown
+                            size={16}
+                            className="ml-2 flex-shrink-0 text-gray-600 dark:text-gray-400"
+                            style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+                        />
+                    </div>
                 </button>
                 <div
                     className="absolute z-10 w-full bg-dropdown rounded-xl shadow-lg mt-2 max-h-60 overflow-y-auto border border-base-200"

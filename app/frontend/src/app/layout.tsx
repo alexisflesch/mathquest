@@ -18,7 +18,7 @@ const inter = Inter({
 // Loading screen component
 function LoadingScreen() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-[color:var(--background)]">
       <div className="text-center">
         {/* Custom infinity spinner */}
         <div className="flex justify-center mb-8">
@@ -30,24 +30,24 @@ function LoadingScreen() {
 
         {/* App logo/title */}
         <h2
-          className="text-3xl font-bold mb-2 text-foreground"
+          className="text-3xl font-bold mb-2 text-[color:var(--foreground)]"
         >
           🧮 MathQuest
         </h2>
 
         {/* Loading text */}
         <p
-          className="text-lg text-muted-foreground"
+          className="text-lg text-[color:var(--muted-foreground)]"
         >
           Chargement...
         </p>
 
         {/* Optional: Add some math-themed decorative elements */}
         <div className="mt-8 flex justify-center space-x-4 text-2xl opacity-50">
-          <span className="text-primary">+</span>
-          <span className="text-secondary">×</span>
-          <span className="text-accent">÷</span>
-          <span className="text-green-500">−</span>
+          <span className="text-[color:var(--primary)]">+</span>
+          <span className="text-[color:var(--secondary)]">×</span>
+          <span className="text-[color:var(--accent)]">÷</span>
+          <span className="text-[color:var(--success)]">−</span>
         </div>
       </div>
     </div>
@@ -112,6 +112,23 @@ export default function RootLayout({
         <link rel="alternate icon" href="/favicon.svg" type="image/svg+xml" />
       </Head>
       <body>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                const stored = localStorage.getItem('theme');
+                const theme = stored || 'system';
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const appliedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+                document.documentElement.setAttribute('data-theme', appliedTheme);
+              } catch (e) {
+                // Fallback if localStorage is not available
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', systemDark ? 'dark' : 'light');
+              }
+            })();
+          `
+        }} />
         <MathJaxContext config={{
           loader: { load: ["[tex]/ams"] },
           tex: { packages: { '[+]': ["ams"] } }

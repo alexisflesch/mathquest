@@ -8,6 +8,7 @@ import { makeApiRequest } from '@/config/api';
 import { QuizListResponseSchema, QuestionsFiltersResponseSchema, type QuizListResponse, type QuestionsFiltersResponse } from '@/types/api';
 import { useAuth } from '@/components/AuthProvider';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
+import { Search } from 'lucide-react';
 
 interface Quiz {
     id: string;
@@ -116,13 +117,18 @@ export default function UseQuizPage() {
                                 placeholder="Thème(s)"
                             />
                         </div>
-                        <input
-                            className="input input-bordered input-lg w-full"
-                            type="text"
-                            placeholder="Rechercher par nom de quiz..."
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                        />
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search size={20} className="text-gray-400" />
+                            </div>
+                            <input
+                                className="input input-bordered input-lg w-full pl-10"
+                                type="text"
+                                placeholder="Rechercher par nom de quiz..."
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                            />
+                        </div>
                         <div className="flex flex-wrap gap-2 w-full mt-4 justify-center">
                             {filteredQuizzes.length === 0 && (
                                 <span className="text-gray-500">Aucun quiz disponible.</span>

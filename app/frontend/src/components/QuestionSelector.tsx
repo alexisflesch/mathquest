@@ -19,7 +19,7 @@
 import React, { useEffect, useState } from 'react';
 import type { QuestionData } from '@shared/types/socketEvents';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
-import { Check, X } from 'lucide-react';
+import { Check, X, Search } from 'lucide-react';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsFiltersResponseSchema, QuestionsResponseSchema } from '@/types/api';
 
@@ -208,22 +208,32 @@ export default function QuestionSelector({
                         <option value="">Thème</option>
                         {filters.themes.map((t: string) => <option key={t} value={t}>{t}</option>)}
                     </select>
-                    <input
-                        className="input input-bordered input-lg w-full"
-                        placeholder="Rechercher par tag"
-                        value={filter.tag}
-                        onChange={e => setFilter(f => ({ ...f, tag: e.target.value }))}
-                    />
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search size={20} className="text-gray-400" />
+                        </div>
+                        <input
+                            className="input input-bordered input-lg w-full pl-10"
+                            placeholder="Rechercher par tag"
+                            value={filter.tag}
+                            onChange={e => setFilter(f => ({ ...f, tag: e.target.value }))}
+                        />
+                    </div>
                 </div>
             )}
             {externalFilter && (
                 <div className="flex flex-col gap-4 w-full mb-4">
-                    <input
-                        className="input input-bordered input-lg w-full"
-                        placeholder="Rechercher par tag"
-                        value={filter.tag}
-                        onChange={e => setFilter(f => ({ ...f, tag: e.target.value }))}
-                    />
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search size={20} className="text-gray-400" />
+                        </div>
+                        <input
+                            className="input input-bordered input-lg w-full pl-10"
+                            placeholder="Rechercher par tag"
+                            value={filter.tag}
+                            onChange={e => setFilter(f => ({ ...f, tag: e.target.value }))}
+                        />
+                    </div>
                 </div>
             )}
             <div className="max-h-96 overflow-y-auto border-2 rounded-2xl p-4 shadow-inner">

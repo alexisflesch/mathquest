@@ -738,4 +738,48 @@ router.get('/template/:templateId/instances', teacherAuth, async (req: Request, 
     }
 });
 
+/**
+ * Delete a game instance (teacher only)
+ * DELETE /api/v1/games/:id
+ * Requires teacher authentication
+ */
+router.delete('/:id', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+    try {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
+            res.status(401).json({ error: 'Teacher authentication required' });
+            return;
+        }
+
+        const { id } = req.params;
+
+        if (!id) {
+            res.status(400).json({ error: 'Game instance ID is required' });
+            return;
+        }
+
+        logger.info({ instanceId: id, userId: req.user.userId }, 'Deleting game instance');
+
+        // Delete the game instance
+        await getGameInstanceService().deleteGameInstance(req.user.userId, id);
+
+        // Return 204 No Content for successful deletion
+        res.status(204).send();
+    } catch (error) {
+        const err = error as Error;
+        logger.error({
+            error: err.message,
+            instanceId: req.params.id,
+            userId: req.user?.userId
+        }, 'Error deleting game instance');
+
+        if (err.message.includes('not found')) {
+            res.status(404).json({ error: err.message });
+        } else if (err.message.includes('permission')) {
+            res.status(403).json({ error: err.message });
+        } else {
+            res.status(500).json({ error: 'An error occurred while deleting the game instance' });
+        }
+    }
+});
+
 export default router;

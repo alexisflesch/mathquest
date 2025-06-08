@@ -32,16 +32,26 @@ export async function DELETE(
             return new NextResponse(null, { status: 204 });
         }
 
-        const data = await backendResponse.json();
+        // Only try to parse JSON if there's content
+        let data = null;
+        const contentType = backendResponse.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await backendResponse.json();
+            } catch (error) {
+                console.error('Failed to parse JSON response:', error);
+                data = { error: 'Invalid response format' };
+            }
+        }
 
         if (!backendResponse.ok) {
             return NextResponse.json(
-                { error: data.error || 'Failed to delete game' },
+                { error: data?.error || 'Failed to delete game' },
                 { status: backendResponse.status }
             );
         }
 
-        return NextResponse.json(data);
+        return NextResponse.json(data || { success: true });
     } catch (error) {
         console.error('Frontend API route error:', error);
         return NextResponse.json(

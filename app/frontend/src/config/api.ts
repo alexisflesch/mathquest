@@ -72,6 +72,11 @@ export async function makeApiRequest<T>(
         throw new Error(errorMessage);
     }
 
+    // Handle 204 No Content responses (successful deletion with no body)
+    if (response.status === 204) {
+        return {} as T; // Return empty object for 204 responses
+    }
+
     const data = await response.json();
 
     // Validate response using Zod schema if provided
