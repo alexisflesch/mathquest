@@ -7,7 +7,7 @@ export async function DELETE(
 ) {
     try {
         const { gameId } = await params;
-        
+
         // Get authentication token from cookies
         const teacherToken = request.cookies.get('teacherToken')?.value;
         const authToken = request.cookies.get('authToken')?.value;

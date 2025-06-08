@@ -212,8 +212,8 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                                             </div>
                                                             <div>
                                                                 <div className="text-sm font-medium text-[color:var(--foreground)]">
-                                                                    {instance.playMode === 'quiz' ? 'Quiz' : 
-                                                                     instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'}
+                                                                    {instance.playMode === 'quiz' ? 'Quiz' :
+                                                                        instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'}
                                                                 </div>
                                                                 <div className="text-xs text-[color:var(--muted-foreground)]">
                                                                     {formatDate(instance.createdAt)}
@@ -224,15 +224,14 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <span className={`px-2 py-1 text-xs rounded-full ${
-                                                                instance.status === 'pending' ? 'bg-[color:var(--muted)] text-[color:var(--muted-foreground)]' :
-                                                                instance.status === 'active' ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
-                                                                instance.status === 'completed' ? 'bg-[color:var(--primary)] text-[color:var(--card)]' :
-                                                                'bg-[color:var(--alert)] text-[color:var(--card)]'
-                                                            }`}>
+                                                            <span className={`px-2 py-1 text-xs rounded-full ${instance.status === 'pending' ? 'bg-[color:var(--muted)] text-[color:var(--muted-foreground)]' :
+                                                                    instance.status === 'active' ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
+                                                                        instance.status === 'completed' ? 'bg-[color:var(--primary)] text-[color:var(--card)]' :
+                                                                            'bg-[color:var(--alert)] text-[color:var(--card)]'
+                                                                }`}>
                                                                 {instance.status === 'pending' ? 'En attente' :
-                                                                 instance.status === 'active' ? 'Active' :
-                                                                 instance.status === 'completed' ? 'Terminée' : 'Annulée'}
+                                                                    instance.status === 'active' ? 'Active' :
+                                                                        instance.status === 'completed' ? 'Terminée' : 'Annulée'}
                                                             </span>
                                                             {instance.status === 'active' && instance.playMode === 'quiz' && (
                                                                 <button
@@ -723,7 +722,7 @@ export default function TeacherGamesPage() {
             const response = await makeApiRequest<{ gameInstances: GameInstance[] }>(
                 `/api/game-templates/${templateId}/instances`
             );
-            
+
             setGameInstances(prev => ({
                 ...prev,
                 [templateId]: response.gameInstances
