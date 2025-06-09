@@ -7,7 +7,7 @@ import { PrismaClient } from '../../src/db/generated/client';
 export default async (): Promise<void> => {
     // Set NODE_ENV to test FIRST, before any other imports or operations
     process.env.NODE_ENV = 'test';
-    
+
     // Generate the client using the BACKEND schema
     // The schema is located at /home/aflesch/mathquest/app/backend/prisma/schema.prisma
     // process.cwd() is /home/aflesch/mathquest/app/backend/
