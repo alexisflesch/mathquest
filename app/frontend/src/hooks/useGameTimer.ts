@@ -61,7 +61,7 @@ const DEFAULT_CONFIGS: Record<TimerRole, TimerConfig> = {
         smoothCountdown: false,
         showMilliseconds: false,
         enableLocalAnimation: false,
-        updateThreshold: UI_CONFIG.LEADERBOARD_UPDATE_INTERVAL
+        updateThreshold: 1000 // Reduce teacher timer updates to 1 second intervals
     },
     student: {
         role: 'student',
@@ -207,8 +207,8 @@ export function useGameTimer(
             // Run the first tick immediately to set initial state
             intervalTick();
 
-            // Use 100ms intervals for testing (10 FPS)
-            timerRef.current = setInterval(intervalTick, 100);
+            // Use 500ms intervals for teacher dashboard (2 FPS for less frequent updates)
+            timerRef.current = setInterval(intervalTick, role === 'teacher' ? 500 : 100);
         } else {
             // Use requestAnimationFrame for production (60 FPS)
             const tick = () => {

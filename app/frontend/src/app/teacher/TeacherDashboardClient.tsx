@@ -14,12 +14,12 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
     const [quizSaveError, setQuizSaveError] = useState<string | null>(null);
 
     useEffect(() => {
-        makeApiRequest<QuizListResponse>('quiz', undefined, undefined, QuizListResponseSchema)
+        makeApiRequest<QuizListResponse>('/api/quiz', undefined, undefined, QuizListResponseSchema)
             .then((data) => setQuizzes(Array.isArray(data) ? data.filter(q => q && typeof q.id === 'string' && typeof q.nom === 'string') : []))
             .catch((err) => console.error('Error loading quizzes:', err));
     }, []);
     useEffect(() => {
-        makeApiRequest<QuizListResponse>('quiz', undefined, undefined, QuizListResponseSchema)
+        makeApiRequest<QuizListResponse>('/api/quiz', undefined, undefined, QuizListResponseSchema)
             .then((data) => setQuizzes(Array.isArray(data) ? data.filter(q => q && typeof q.id === 'string' && typeof q.nom === 'string') : []))
             .catch((err) => console.error('Error loading quizzes:', err));
     }, [quizSaveSuccess]);
@@ -29,7 +29,7 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
         setQuizSaveError(null);
         setQuizSaveSuccess(null);
         try {
-            const result = await makeApiRequest<QuizCreationResponse>('quiz', {
+            const result = await makeApiRequest<QuizCreationResponse>('/api/quiz', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

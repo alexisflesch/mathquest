@@ -7,7 +7,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 // Removed direct socket import
 import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -20,6 +20,7 @@ import { log } from "console";
 import { makeApiRequest } from '@/config/api';
 import { QuizListResponseSchema, TeacherQuizQuestionsResponseSchema, TournamentCodeResponseSchema, TournamentVerificationResponseSchema, type QuizListResponse, type TeacherQuizQuestionsResponse, type TournamentCodeResponse, type TournamentVerificationResponse, type Question } from '@/types/api';
 import { STORAGE_KEYS } from '@/constants/auth';
+import InfinitySpin from '@/components/InfinitySpin';
 
 // Create a logger for this component
 const logger = createLogger('TeacherDashboardPage');
@@ -90,6 +91,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null); // UI state for selected question
+    const [expandedUids, setExpandedUids] = useState<Set<string>>(new Set()); // Track expanded questions
     const [initialTournamentCode, setInitialTournamentCode] = useState<string | null>(null); // Fetched code
     const [currentTournamentCode, setCurrentTournamentCode] = useState<string | null>(null); // Active code (from fetch or generation)
     const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
@@ -298,15 +300,46 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         if (timerQuestionId) {
             setQuestionActiveUid(timerQuestionId); // Synchronise toujours sur l'UID
         }
+        // DO NOT mutate expandedUids here or in any effect!
     }, [timerQuestionId]);
 
-    // --- Compute effective timeLeft for DraggableQuestionsList ---
-    const effectiveTimeLeft = timerStatus === 'stop' ? 0 : (localTimeLeft ?? timeLeft ?? 0);
+    // --- Memoize mapped questions to prevent unnecessary re-renders ---
+    const mappedQuestions = useMemo(() => {
+        return questions.map(mapToCanonicalQuestion);
+    }, [questions]);
+
+    // --- Compute effective timeLeft for DraggableQuestionsList with throttling ---
+    const [throttledTimeLeft, setThrottledTimeLeft] = useState<number>(0);
+
+    // Throttle timer updates for better performance
+    useEffect(() => {
+        const newTimeLeft = timerStatus === 'stop' ? 0 : (localTimeLeft ?? timeLeft ?? 0);
+
+        // Only update if there's a meaningful change (1 second or more)
+        if (Math.abs(newTimeLeft - throttledTimeLeft) >= 1) {
+            setThrottledTimeLeft(newTimeLeft);
+        }
+    }, [timerStatus, localTimeLeft, timeLeft, throttledTimeLeft]);
+
+    const effectiveTimeLeft = throttledTimeLeft;
 
     // --- Handlers (using hook emitters) ---
 
     const handleSelect = useCallback((uid: string) => {
         setQuestionActiveUid(uid);
+    }, []);
+
+    // Toggle expansion for a question
+    const handleToggleExpand = useCallback((uid: string) => {
+        setExpandedUids(prev => {
+            const next = new Set(prev);
+            if (next.has(uid)) {
+                next.delete(uid);
+            } else {
+                next.add(uid);
+            }
+            return next;
+        });
     }, []);
 
     const handleReorder = useCallback((newQuestions: Question[]) => {
@@ -345,17 +378,18 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             setQuestionActiveUid(questionToPlay.uid);
             emitSetQuestion(questionToPlay.uid, startTime);
         }
-    }, [questions, timerStatus, timerQuestionId, emitPauseQuiz, emitResumeQuiz, emitSetQuestion, currentTournamentCode]);
+    }, [questions, emitPauseQuiz, emitResumeQuiz, emitSetQuestion]); // Removed frequently changing values
 
     const handlePause = useCallback(() => {
         emitPauseQuiz();
-    }, [timerQuestionId, emitPauseQuiz]);
+    }, [emitPauseQuiz]); // Keep minimal dependencies
 
     const handleStop = useCallback(() => {
+        // Use current timer state from closure - avoid dependencies that cause re-renders
         if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
             emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeft: 0 });
         }
-    }, [timerStatus, timerQuestionId, emitTimerAction]);
+    }, [emitTimerAction, timerQuestionId, timerStatus]); // Include timer state but optimized for essential logic
 
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
         const question = questions.find(q => q.uid === uid);
@@ -365,7 +399,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         emitSetTimer(newTime, question.uid);
         logger.info(`[DASHBOARD] Timer updated for question ${question.uid}: ${newTime}`);
         // Do NOT call emitTimerAction({ status: 'play', ... }) here. Only resume on explicit user action.
-    }, [questions, timerQuestionId, timerStatus, emitSetTimer]);
+    }, [questions, emitSetTimer]); // Removed frequently changing timer states
 
     const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
         emitTimerAction(action);
@@ -378,13 +412,13 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         //         setQuestions(prev => prev.map(q => q.uid === action.questionId ? { ...q, temps: response.timeLeft } : q));
         //     });
         // }
-    }, [emitTimerAction, quizSocket]);
+    }, [emitTimerAction]); // Removed quizSocket from dependencies
 
     const handleShowResults = useCallback((uid: string) => {
         emitTimerAction({ status: 'stop', questionId: uid, timeLeft: 0 });
         // quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.CLOSE_QUESTION, { quizId, tournamentCode: currentTournamentCode, questionUid: uid }); // REMOVED
         // Consider if emitLockAnswers(true) is needed here or if stopping timer is sufficient
-    }, [emitTimerAction, quizSocket, quizId, currentTournamentCode]);
+    }, [emitTimerAction]); // Removed frequently changing dependencies
 
     // Callback from CodeManager when a new code is generated
     const handleCodeGenerated = useCallback((newCode: string | null) => {
@@ -434,23 +468,27 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         setShowEndQuizConfirm(false);
     };
 
-    // --- Confirmation Dialog for Tournament Code Generation ---
-    const [showGenerateCodeConfirm, setShowGenerateCodeConfirm] = useState(false);
-    const CodeManagerRef = React.useRef<CodeManagerRef | null>(null);
-
-    const handleRequestGenerateCode = () => {
-        setShowGenerateCodeConfirm(true);
-    };
-    const confirmGenerateCode = () => {
-        setShowGenerateCodeConfirm(false);
-        // Appelle la méthode de génération du code du composant enfant
-        if (CodeManagerRef.current && CodeManagerRef.current.generateTournament) {
-            CodeManagerRef.current.generateTournament();
-        }
-    };
-    const cancelGenerateCode = () => {
-        setShowGenerateCodeConfirm(false);
-    };
+    // Memoize the onReorder callback to prevent unnecessary re-renders
+    const handleReorderMemoized = useCallback((qs: Question[]) => {
+        setQuestions(qs.map(q => {
+            let correctAnswers: string[] = [];
+            if (Array.isArray(q.correctAnswers) && q.correctAnswers.length > 0) {
+                if (typeof q.correctAnswers[0] === 'boolean' && Array.isArray(q.answerOptions)) {
+                    correctAnswers = q.answerOptions.filter((_: string, i: number) => (q.correctAnswers as boolean[])[i]);
+                } else if (typeof q.correctAnswers[0] === 'string') {
+                    correctAnswers = (q.correctAnswers as (string | boolean)[]).filter((a): a is string => typeof a === 'string');
+                }
+            }
+            return {
+                ...q,
+                timeLimit: q.timeLimit ?? 20, // Default to 20 seconds if null
+                feedbackWaitTime: q.feedbackWaitTime ?? 3000, // Default to 3 seconds if null
+                answers: Array.isArray(q.answerOptions)
+                    ? q.answerOptions.map((text: string) => ({ text, correct: correctAnswers.includes(text) }))
+                    : []
+            };
+        }));
+    }, []);
 
     // --- Render Logic ---
     if (loading) return <div className="p-8">Chargement du tableau de bord...</div>;
@@ -478,14 +516,12 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                             <div>
                                 <CodeManager
-                                    ref={CodeManagerRef}
                                     quizId={quizId}
                                     quizSocket={quizSocket}
                                     quizState={quizState}
                                     initialTournamentCode={initialTournamentCode}
                                     onCodeGenerated={handleCodeGenerated}
                                     onCodeUpdateEmitted={handleCodeUpdateEmitted}
-                                    onRequestGenerateCode={handleRequestGenerateCode}
                                 />
                             </div>
                             <div className="basis-full h-0 sm:hidden" />
@@ -507,23 +543,23 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                             ) : (
                                 <div className="alert alert-success text-base-content flex justify-between items-center">
                                     <span>Quiz en cours.</span>
-                                    <a href={`/teacher/projection/${quizId}`} target="_blank" rel="noopener noreferrer"
-                                        className="text-primary underline font-medium">
-                                        Afficher la vue projecteur
-                                    </a>
+                                    {currentTournamentCode && (
+                                        <a href={`/teacher/projection/${currentTournamentCode}`} target="_blank" rel="noopener noreferrer"
+                                            className="text-primary underline font-medium">
+                                            Afficher la vue projecteur
+                                        </a>
+                                    )}
                                 </div>
                             )}
                         </div>
                         <section>
-                            <h2 className="text-xl font-semibold mb-4">Questions</h2>
-                            {!quizSocket || !quizSocket.connected && (
-                                <div className="alert alert-warning mb-4">
-                                    Connexion au serveur en cours ou perdue... Les contrôles sont désactivés.
-                                </div>
-                            )}
+                            <div className="flex items-center gap-2 mb-4">
+                                <h2 className="text-xl font-semibold">Questions</h2>
+                                {loading && <InfinitySpin size={32} />}
+                            </div>
                             <DraggableQuestionsList
                                 quizSocket={quizSocket}
-                                questions={questions.map(mapToCanonicalQuestion)}
+                                questions={mappedQuestions}
                                 currentQuestionIdx={quizState?.currentQuestionIdx}
                                 isChronoRunning={quizState?.chrono?.running}
                                 isQuizEnded={quizState?.ended}
@@ -536,28 +572,13 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 onPause={handlePause}
                                 onStop={handleStop}
                                 onEditTimer={handleEditTimer}
-                                onReorder={qs => setQuestions(qs.map(q => {
-                                    let correctAnswers: string[] = [];
-                                    if (Array.isArray(q.correctAnswers) && q.correctAnswers.length > 0) {
-                                        if (typeof q.correctAnswers[0] === 'boolean' && Array.isArray(q.answerOptions)) {
-                                            correctAnswers = q.answerOptions.filter((_: string, i: number) => (q.correctAnswers as boolean[])[i]);
-                                        } else if (typeof q.correctAnswers[0] === 'string') {
-                                            correctAnswers = (q.correctAnswers as (string | boolean)[]).filter((a): a is string => typeof a === 'string');
-                                        }
-                                    }
-                                    return {
-                                        ...q,
-                                        timeLimit: q.timeLimit ?? 20, // Default to 20 seconds if null
-                                        feedbackWaitTime: q.feedbackWaitTime ?? 3000, // Default to 3 seconds if null
-                                        answers: Array.isArray(q.answerOptions)
-                                            ? q.answerOptions.map((text: string) => ({ text, correct: correctAnswers.includes(text) }))
-                                            : []
-                                    };
-                                }))}
+                                onReorder={handleReorderMemoized}
                                 quizId={quizId}
                                 currentTournamentCode={currentTournamentCode || ''}
                                 onTimerAction={handleTimerAction}
                                 disabled={!quizSocket || !quizSocket.connected || quizState?.ended}
+                                expandedUids={expandedUids}
+                                onToggleExpand={handleToggleExpand}
                             />
                         </section>
                     </div>
@@ -570,14 +591,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 message={"Une autre question est en cours ou en pause. Voulez-vous vraiment lancer cette nouvelle question et arrêter la précédente ?"}
                 onConfirm={confirmPlay}
                 onCancel={cancelPlay}
-            />
-            {/* Removed ConfirmDialog for changing questions because confirmChangeQuestion and cancelChangeQuestion are not defined */}
-            <ConfirmDialog
-                open={showGenerateCodeConfirm}
-                title="Générer un nouveau code"
-                message="Les résultats du tournoi actuel seront perdus. Continuer ?"
-                onConfirm={confirmGenerateCode}
-                onCancel={cancelGenerateCode}
             />
             {snackbarMessage && (
                 <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg">

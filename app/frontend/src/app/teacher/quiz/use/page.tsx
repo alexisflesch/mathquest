@@ -47,7 +47,7 @@ export default function UseQuizPage() {
 
     useEffect(() => {
         if (teacherId) {
-            makeApiRequest<QuizListResponse>(`quiz?enseignant_id=${teacherId}`, undefined, undefined, QuizListResponseSchema)
+            makeApiRequest<QuizListResponse>(`/api/quiz?enseignant_id=${teacherId}`, undefined, undefined, QuizListResponseSchema)
                 .then(data => {
                     if (Array.isArray(data)) {
                         // Map API response to local Quiz interface with required fields

@@ -122,7 +122,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                 setMaxHeight('0px');
             });
         }
-    }, [isOpen, question, question.answers]); // Added question.answers to dependencies for dynamic content height
+    }, [isOpen]); // Removed question and question.answers dependencies to prevent unnecessary re-calculations
 
     // Base font sizes (adjust based on actual Tailwind classes used)
     const baseTitleFontSize = '1rem'; // Assuming default size for title/cropped question
@@ -424,4 +424,34 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     );
 };
 
-export default QuestionDisplay;
+// Memoize QuestionDisplay to prevent unnecessary re-renders
+export default React.memo(QuestionDisplay, (prevProps, nextProps) => {
+    // Compare essential props that affect rendering
+    if (prevProps.isOpen !== nextProps.isOpen) return false;
+    if (prevProps.isActive !== nextProps.isActive) return false;
+    if (prevProps.disabled !== nextProps.disabled) return false;
+    if (prevProps.timerStatus !== nextProps.timerStatus) return false;
+    if (prevProps.showResultsDisabled !== nextProps.showResultsDisabled) return false;
+
+    // Only compare timeLeft if there's a meaningful difference (>= 1 second)
+    const timeDiff = Math.abs((prevProps.timeLeft ?? 0) - (nextProps.timeLeft ?? 0));
+    if (timeDiff >= 1) return false;
+
+    // Compare question object - only key fields that affect display
+    if (prevProps.question.uid !== nextProps.question.uid) return false;
+    if (prevProps.question.text !== nextProps.question.text) return false;
+    if (prevProps.question.time !== nextProps.question.time) return false;
+
+    // Compare answers array length and content
+    if (prevProps.question.answers?.length !== nextProps.question.answers?.length) return false;
+
+    // Compare stats array for meaningful changes
+    if (prevProps.stats?.length !== nextProps.stats?.length) return false;
+    if (prevProps.stats && nextProps.stats) {
+        for (let i = 0; i < prevProps.stats.length; i++) {
+            if (prevProps.stats[i] !== nextProps.stats[i]) return false;
+        }
+    }
+
+    return true; // No meaningful changes detected
+});

@@ -45,36 +45,57 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
     const [quizState, setQuizState] = useState<QuizState | null>(null);
     const [localTimeLeft, setLocalTimeLeft] = useState<number | null>(null);
 
-    // Map unified game state to legacy format
+    // Optimize state mapping to reduce excessive re-renders
     useEffect(() => {
         const unifiedState = gameManager.gameState;
 
-        // Transform unified state to legacy QuizState format
+        // Transform unified state to legacy QuizState format - only update if meaningful changes
         if (unifiedState.gameId) {
-            setQuizState(prev => ({
-                currentQuestionIdx: unifiedState.currentQuestionIndex,
-                questions: prev?.questions || [], // Keep existing questions array
-                chrono: {
-                    timeLeft: unifiedState.timer.timeLeft,
-                    running: unifiedState.isTimerRunning
-                },
-                locked: false, // Will be updated by socket events
-                ended: unifiedState.gameStatus === 'finished',
-                stats: prev?.stats || {},
-                profSocketId: gameManager.socket.instance?.id || null,
-                timerStatus: unifiedState.timer.status,
-                timerQuestionId: unifiedState.timer.questionId,
-                timerTimeLeft: unifiedState.timer.timeLeft,
-                timerTimestamp: unifiedState.timer.timestamp ?? undefined,
-                questionStates: prev?.questionStates || {}
-            }));
-        }
-    }, [gameManager.gameState, gameManager.socket.instance?.id]);
+            setQuizState(prev => {
+                const newState = {
+                    currentQuestionIdx: unifiedState.currentQuestionIndex,
+                    questions: prev?.questions || [], // Keep existing questions array
+                    chrono: {
+                        timeLeft: unifiedState.timer.timeLeft,
+                        running: unifiedState.isTimerRunning
+                    },
+                    locked: prev?.locked ?? false, // Preserve lock state
+                    ended: unifiedState.gameStatus === 'finished',
+                    stats: prev?.stats || {},
+                    profSocketId: gameManager.socket.instance?.id || null,
+                    timerStatus: unifiedState.timer.status,
+                    timerQuestionId: unifiedState.timer.questionId,
+                    timerTimeLeft: unifiedState.timer.timeLeft,
+                    timerTimestamp: unifiedState.timer.timestamp ?? undefined,
+                    questionStates: prev?.questionStates || {}
+                };
 
-    // Sync local time left for animation purposes
+                // Only update if there are meaningful changes
+                if (!prev ||
+                    prev.currentQuestionIdx !== newState.currentQuestionIdx ||
+                    prev.chrono.timeLeft !== newState.chrono.timeLeft ||
+                    prev.chrono.running !== newState.chrono.running ||
+                    prev.ended !== newState.ended ||
+                    prev.timerStatus !== newState.timerStatus ||
+                    prev.timerQuestionId !== newState.timerQuestionId ||
+                    prev.profSocketId !== newState.profSocketId) {
+                    return newState;
+                }
+                return prev;
+            });
+        }
+    }, [gameManager.gameState.gameId, gameManager.gameState.currentQuestionIndex,
+    gameManager.gameState.timer.timeLeft, gameManager.gameState.isTimerRunning,
+    gameManager.gameState.gameStatus, gameManager.gameState.timer.status,
+    gameManager.gameState.timer.questionId, gameManager.socket.instance?.id]);
+
+    // Optimize local time sync to reduce re-renders
     useEffect(() => {
-        setLocalTimeLeft(gameManager.timer.getDisplayTime());
-    }, [gameManager.timer]);
+        const displayTime = gameManager.timer.getDisplayTime();
+        if (displayTime !== localTimeLeft) {
+            setLocalTimeLeft(displayTime);
+        }
+    }, [gameManager.timer.getDisplayTime, localTimeLeft]);
 
     // Set up additional legacy event handlers that aren't covered by unified system
     useEffect(() => {

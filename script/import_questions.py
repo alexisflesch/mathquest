@@ -1,7 +1,6 @@
 import yaml
 import psycopg2
 import os
-import json
 import logging
 import argparse
 from dotenv import load_dotenv
@@ -41,13 +40,14 @@ def get_conn():
 def clear_db():
     conn = get_conn()
     cur = conn.cursor()
-    logging.info('Clearing the Enseignant and TournoiSauvegarde tables...')
-    cur.execute('DELETE FROM "TournoiSauvegarde"')
-    cur.execute('DELETE FROM "Enseignant"')
+    logging.info('Clearing the game_participants and game_instances tables...')
+    cur.execute('DELETE FROM game_participants')
+    cur.execute('DELETE FROM game_instances') 
+    cur.execute('DELETE FROM game_templates')
     conn.commit()
     cur.close()
     conn.close()
-    logging.info('Tables Enseignant and TournoiSauvegarde cleared.')
+    logging.info('Tables game_participants, game_instances, and game_templates cleared.')
 
 def import_questions():
     logging.info('Starting import process...')
@@ -55,7 +55,7 @@ def import_questions():
     conn = get_conn()
     cur = conn.cursor()
     logging.info('Clearing the Question table...')
-    cur.execute('DELETE FROM "Question"')
+    cur.execute('DELETE FROM questions')
     conn.commit()
     cur.close()
     conn.close()
@@ -68,26 +68,55 @@ def import_questions():
         cur = conn.cursor()
         for q in questions:
             try:
+                # Process reponses to extract answer options and correct answers
+                reponses = q.get('reponses', [])
+                answer_options = []
+                correct_answers = []
+                
+                for reponse in reponses:
+                    answer_options.append(reponse.get('texte', ''))
+                    correct_answers.append(reponse.get('correct', False))
+                
+                # Convert theme to array format
+                theme = q.get('theme')
+                themes = [theme] if theme else []
+                
                 cur.execute(
-                    '''INSERT INTO "Question"
-                    (uid, question, reponses, type, discipline, theme, difficulte, niveau, auteur, explication, tags, temps, titre, hidden)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (uid) DO NOTHING''',
+                    '''INSERT INTO questions
+                    (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, is_hidden, answer_options, correct_answers, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                    ON CONFLICT (uid) DO UPDATE SET
+                    title = EXCLUDED.title,
+                    question_text = EXCLUDED.question_text,
+                    question_type = EXCLUDED.question_type,
+                    discipline = EXCLUDED.discipline,
+                    themes = EXCLUDED.themes,
+                    difficulty = EXCLUDED.difficulty,
+                    grade_level = EXCLUDED.grade_level,
+                    author = EXCLUDED.author,
+                    explanation = EXCLUDED.explanation,
+                    tags = EXCLUDED.tags,
+                    time_limit_seconds = EXCLUDED.time_limit_seconds,
+                    is_hidden = EXCLUDED.is_hidden,
+                    answer_options = EXCLUDED.answer_options,
+                    correct_answers = EXCLUDED.correct_answers,
+                    updated_at = NOW()''',
                     [
                         q.get('uid'),
+                        q.get('titre'),
                         q.get('question'),
-                        json.dumps(q.get('reponses')) if q.get('reponses') is not None else None,
                         q.get('type'),
                         q.get('discipline'),
-                        q.get('theme'),
+                        themes,
                         q.get('difficulte'),
                         q.get('niveau'),
                         q.get('auteur'),
                         q.get('explication'),
                         q.get('tags'),
                         q.get('temps'),
-                        q.get('titre'),
-                        q.get('hidden')
+                        q.get('hidden', False),
+                        answer_options,
+                        correct_answers
                     ]
                 )
                 logging.info(f"Imported: {q.get('question')}")
@@ -100,7 +129,7 @@ def import_questions():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Import questions or clear database tables.')
-    parser.add_argument('--clear-db', action='store_true', help='Clear Enseignant and TournoiSauvegarde tables')
+    parser.add_argument('--clear-db', action='store_true', help='Clear game-related tables')
     args = parser.parse_args()
 
     if args.clear_db:

@@ -38,6 +38,7 @@ import "@/app/globals.css";
 import { createLogger } from '@/clientLogger';
 import { useProjectionQuizSocket } from '@/hooks/migrations';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/AuthProvider';
 import QuestionCard from '@/components/QuestionCard';
 import { Timer } from 'lucide-react'; // Suppression de MoveDiagonal2 et ZoomIn/ZoomOut car géré par ZoomControls
 import QRCode from 'react-qr-code';
@@ -45,9 +46,6 @@ import ClassementPodium from '@/components/ClassementPodium';
 import ZoomControls from '@/components/ZoomControls'; // Import du nouveau composant
 import { Question } from '@/types'; // Remove unused QuizState import
 import type { TournamentQuestion } from '@shared/types';
-import { makeApiRequest } from '@/config/api';
-import { QuizListResponseSchema, TournamentCodeResponseSchema, type QuizListResponse, type TournamentCodeResponse } from '@/types/api';
-import { STORAGE_KEYS } from '@/constants/auth';
 import type { QuestionData } from '@shared/types/socketEvents';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -65,14 +63,14 @@ function formatTimer(val: number | null) {
 
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
-export default function ProjectionPage({ params }: { params: Promise<{ quizId: string }> }) { // Update params type to Promise
-    const resolvedParams = use(params); // Use React.use() to resolve the params Promise
-    const { quizId }: { quizId: string } = resolvedParams; // Destructure from resolved params
+export default function ProjectionPage({ params }: { params: Promise<{ gameCode: string }> }) {
+    const resolvedParams = use(params);
+    const { gameCode }: { gameCode: string } = resolvedParams;
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     // const [quizName, setQuizName] = useState<string>(""); // TODO: Remove if not used
-    const [currentTournamentCode, setCurrentTournamentCode] = useState<string | null>(null);
+    const [currentTournamentCode, setCurrentTournamentCode] = useState<string | null>(gameCode);
     // const [isMobile, setIsMobile] = useState(false); // TODO: Remove if not used
     const [baseUrl, setBaseUrl] = useState<string>("");
     // Ensure zoomFactors state is declared here
@@ -99,7 +97,15 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
         localTimeLeft,
         setLocalTimeLeft, // <-- Now available
         connectedCount,
-    } = useProjectionQuizSocket(quizId, currentTournamentCode);
+    } = useProjectionQuizSocket(gameCode, null); // Use gameCode directly
+
+    // Extract tournament code from game state when available
+    useEffect(() => {
+        if (gameState && gameState.accessCode && !currentTournamentCode) {
+            logger.info('Setting tournament code from game state:', gameState.accessCode);
+            setCurrentTournamentCode(gameState.accessCode);
+        }
+    }, [gameState, currentTournamentCode]);
 
     // Move this function here, after setCorrectAnswers is defined:
     const debugSetCorrectAnswers = (val: number[], reason: string) => {
@@ -226,51 +232,39 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     // const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
 
     // Teacher authentication check
+    const { userState, userProfile, isLoading: authLoading } = useAuth();
+
     useEffect(() => {
         const checkTeacherAuth = async () => {
             setLoading(true);
             setError(null);
 
-            try {
-                const teacherId = localStorage.getItem(STORAGE_KEYS.TEACHER_ID);
-                if (!teacherId) {
-                    logger.warn('No teacher ID found, redirecting to login');
-                    router.push('/teacher/login');
-                    return;
-                }
-
-                // Fetch quiz name and tournament code
-                const quizzes: QuizListResponse = await makeApiRequest(`quiz?enseignant_id=${teacherId}`, undefined, undefined, QuizListResponseSchema);
-                const found = Array.isArray(quizzes) ? quizzes.find((q) => q.id === quizId) : null;
-
-                if (!found) {
-                    setError("Quiz non trouvé ou vous n'avez pas les droits d'accès.");
-                    return;
-                }
-
-                // Remove setQuizName, as it is not defined or used.
-                // setQuizName(found.nom || "Quiz");
-
-                // Fetch tournament code
-                try {
-                    const codeData = await makeApiRequest<TournamentCodeResponse>(`quiz/${quizId}/tournament-code`, undefined, undefined, TournamentCodeResponseSchema);
-                    if (codeData && codeData.tournament_code) {
-                        setCurrentTournamentCode(codeData.tournament_code);
-                    }
-                } catch (codeErr) {
-                    logger.error("Error fetching tournament code:", codeErr);
-                }
-
-                setLoading(false);
-            } catch (err: unknown) {
-                logger.error("Error authenticating teacher:", err);
-                setError((err as Error).message || "Erreur d'authentification");
-                setLoading(false);
+            // Check if user is authenticated as teacher using new auth system
+            if (authLoading) {
+                // Wait for auth to load
+                return;
             }
+
+            if (userState !== 'teacher') {
+                logger.warn('User is not a teacher, redirecting to login');
+                router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+                return;
+            }
+
+            if (!userProfile.userId) {
+                logger.warn('No teacher ID found in userProfile, redirecting to login');
+                router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+                return;
+            }
+
+            // The projection page connects directly to an existing game instance
+            // No need to fetch quiz data or generate tournament codes
+            setLoading(false);
+            logger.info('Teacher authentication passed for projection view of game:', gameCode);
         };
 
         checkTeacherAuth();
-    }, [quizId, router]);
+    }, [gameCode, router, userState, userProfile, authLoading]);
 
     // Handle bringing a component to the front when interacted with
     const bringToFront = (id: string) => {
@@ -328,10 +322,11 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
     // const fakeOthers = [...];
 
     // Defensive: Only render grid if layout is defined and not empty
+    if (authLoading) return <div className="p-8">Vérification de l'authentification...</div>;
     if (loading) return <div className="p-8">Chargement de la vue projection...</div>;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
-    if (!quizId) return <div className="p-8 text-orange-600">Aucun ID de quiz fourni.</div>;
-    if (!gameState) return <div className="p-8">Connexion au serveur...</div>;
+    if (!gameCode) return <div className="p-8 text-orange-600">Aucun code de jeu fourni.</div>;
+    if (!gameState) return <div className="p-8">Connexion au jeu en cours...</div>;
     if (!layout || layout.length === 0) return <div className="p-8 text-orange-600">Aucun layout défini pour la projection.</div>;
 
     const currentQuestion = getCurrentQuestion();
@@ -357,7 +352,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ quizId: s
         <div className="main-content w-full max-w-none px-0">
             {!currentTournamentCode ? (
                 <div className="alert alert-warning justify-center m-4">
-                    Ce quiz n&apos;a pas encore de code de tournoi. Générez un code depuis le tableau de bord.
+                    Aucun code de tournoi disponible pour ce jeu. Vérifiez que le jeu est bien démarré.
                 </div>
             ) : (
                 <ResponsiveGridLayout

@@ -18,24 +18,11 @@
  */
 
 import React, { useState, useCallback, useRef } from "react";
-import {
-    DndContext,
-    closestCenter,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import type { Question } from "@/types/api";
-import { createLogger } from '@/clientLogger';
-import { SortableQuestion } from './SortableQuestion';
 import { Socket } from 'socket.io-client';
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { createLogger } from '@/clientLogger';
+import type { Question } from "@/types/api";
+import { SortableQuestion } from './SortableQuestion';
 
 // Create a logger for this component
 const logger = createLogger('DraggableQuestions');
@@ -54,7 +41,6 @@ interface DraggableQuestionsListProps {
     onPlay: (uid: string, startTime: number) => void;
     onPause: () => void;
     onStop: () => void;
-    // Change: onEditTimer now takes uid instead of idx
     onEditTimer: (uid: string, newTime: number) => void;
     onReorder?: (newQuestions: Question[]) => void;
     timerStatus?: 'play' | 'pause' | 'stop';
@@ -67,6 +53,8 @@ interface DraggableQuestionsListProps {
     showResultsDisabled?: (uid: string) => boolean;
     onStatsToggle?: (uid: string, show: boolean) => void; // NEW: stats toggle handler
     getStatsForQuestion?: (uid: string) => number[] | undefined; // Provide stats for each question
+    expandedUids: Set<string>; // NEW: expanded question UIDs
+    onToggleExpand: (uid: string) => void; // NEW: toggle handler
 }
 
 export default function DraggableQuestionsList({
@@ -94,17 +82,9 @@ export default function DraggableQuestionsList({
     showResultsDisabled,
     onStatsToggle,
     getStatsForQuestion,
+    expandedUids,
+    onToggleExpand,
 }: DraggableQuestionsListProps) {
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-    );
-    const [openUid, setOpenUid] = useState<string | null>(null);
-    // Add the missing state variable for tracking pending status
-    const [isPendingMap, setPendingMap] = useState<Record<string, boolean>>({});
-    // Add the missing ref for tracking timeout IDs
-    const pendingTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
-
-    // Add state for confirmation dialog
     const [confirmDialog, setConfirmDialog] = useState<{
         isOpen: boolean;
         questionId: string;
@@ -115,19 +95,20 @@ export default function DraggableQuestionsList({
         startTime: 0
     });
 
-    React.useEffect(() => {
-        logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionId}, Time left: ${timeLeft}`);
-    }, [timerStatus, timerQuestionId, timeLeft]);
+    // Remove excessive logging that causes re-renders
+    // React.useEffect(() => {
+    //     logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionId}, Time left: ${timeLeft}`);
+    // }, [timerStatus, timerQuestionId, timeLeft]);
 
-    // Add logging to confirm re-renders
-    React.useEffect(() => {
-        logger.debug(`[RENDER CHECK] DraggableQuestionsList re-rendered with timeLeft: ${timeLeft}`);
-    }, [timeLeft]);
+    // Remove render check logging that causes excessive re-renders
+    // React.useEffect(() => {
+    //     logger.debug(`[RENDER CHECK] DraggableQuestionsList re-rendered with timeLeft: ${timeLeft}`);
+    // }, [timeLeft]);
 
     // Ensure timeLeft has a default value
     const effectiveTimeLeft = timeLeft ?? 0;
 
-    // Helper pour savoir si la question est en pause
+    // Memoize the pause check function to prevent unnecessary re-renders
     const isQuestionPaused = useCallback((questionId: string): boolean => {
         return (
             timerQuestionId === questionId &&
@@ -297,15 +278,19 @@ export default function DraggableQuestionsList({
         }
     }, [onTimerAction, timerQuestionId, onStop]);
 
-    const handleDragEnd = useCallback((event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
-        const oldIndex = questions.findIndex(q => String(q.uid) === active.id);
-        const newIndex = questions.findIndex(q => String(q.uid) === over.id);
-        if (oldIndex === -1 || newIndex === -1) return;
-        const newQuestions = arrayMove(questions, oldIndex, newIndex);
-        if (onReorder) onReorder(newQuestions);
-    }, [questions, onReorder]); // Add dependencies
+    // --- Drag and drop logic is now disabled. ---
+    // const sensors = useSensors(
+    //     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    // );
+    // const handleDragEnd = useCallback((event: DragEndEvent) => {
+    //     const { active, over } = event;
+    //     if (!over || active.id === over.id) return;
+    //     const oldIndex = questions.findIndex(q => String(q.uid) === active.id);
+    //     const newIndex = questions.findIndex(q => String(q.uid) === over.id);
+    //     if (oldIndex === -1 || newIndex === -1) return;
+    //     const newQuestions = arrayMove(questions, oldIndex, newIndex);
+    //     if (onReorder) onReorder(newQuestions);
+    // }, [questions, onReorder]); // Add dependencies
 
     // *** ADDED: Define the handler to immediately update the parent's localTimeLeft ***
     const handleImmediateUpdate = useCallback((newTime: number) => {
@@ -313,60 +298,6 @@ export default function DraggableQuestionsList({
         // Suppression de l'ancien état local du timer
         // setLocalTimeLeft(newTime);
     }, []);
-
-    // Create a ref to store stable callback functions by question UID
-    const stableCallbacksRef = useRef<Map<string, {
-        setOpen: () => void;
-        onPlay: (uid: string, timerValue: number) => void;
-        onSelect: () => void;
-        onEditTimer: (newTime: number) => void;
-    }>>(new Map());
-
-    // Create or update stable callbacks when questions change
-    React.useEffect(() => {
-        const currentCallbacks = stableCallbacksRef.current;
-        const updatedCallbacks = new Map(currentCallbacks);
-
-        // Create/update callbacks for each question
-        questions.forEach((q) => {
-            updatedCallbacks.set(q.uid, {
-                setOpen: () => setOpenUid(prev => prev === q.uid ? null : q.uid),
-                onPlay: (uid: string, timerValue: number) => {
-                    handlePlay(uid, timerValue);
-                },
-                onSelect: () => onSelect(q.uid),
-                onEditTimer: (newTime: number) => {
-                    logger.info(`Editing timer for question ${q.uid} to ${newTime}s`);
-                    if (onEditTimer) onEditTimer(q.uid, newTime);
-                }
-            });
-        });
-
-        // Remove callbacks for questions that no longer exist
-        Array.from(updatedCallbacks.keys()).forEach(uid => {
-            if (!questions.some(q => q.uid === uid)) {
-                updatedCallbacks.delete(uid);
-            }
-        });
-
-        stableCallbacksRef.current = updatedCallbacks;
-    }, [questions, handlePlay, openUid, setOpenUid, onSelect, onEditTimer]);
-
-    // Ajouter un effet pour surveiller les changements de questionActiveUid
-    React.useEffect(() => {
-        logger.debug(`questionActiveUid changed to: ${questionActiveUid}`);
-
-        // Vérifier si la question est bien dans la liste
-        if (questionActiveUid) {
-            const question = questions.find(q => q.uid === questionActiveUid);
-            if (question) {
-                // Use question.text as per the shared BaseQuestion type
-                logger.debug(`Question active found: ${question.text.substring(0, 20)}...`);
-            } else {
-                logger.warn(`Question active ${questionActiveUid} NOT found in questions array!`);
-            }
-        }
-    }, [questionActiveUid, questions]);
 
     React.useEffect(() => {
         const handleQuizTimerUpdateStop = () => {
@@ -390,25 +321,8 @@ export default function DraggableQuestionsList({
         const handleQuizActionResponse = (data: { status: string; message: string }) => {
             // Enhanced debugging for quiz_action_response handling
             logger.debug('Received quiz_action_response from quizSocket:', data);
-            if (data.status === 'success' || data.status === 'error') {
-                logger.debug(`Resetting isPending to false for response: ${JSON.stringify(data)}`);
-
-                // Reset all pending questions to false
-                setPendingMap({});
-
-                // Clear all pending timeouts
-                Object.keys(pendingTimeoutsRef.current).forEach(questionId => {
-                    clearTimeout(pendingTimeoutsRef.current[questionId]);
-                    delete pendingTimeoutsRef.current[questionId];
-                });
-
-                // Clear any existing fallback timeout to prevent unnecessary warnings
-                if (fallbackResetTimeoutRef.current) {
-                    logger.debug('Clearing fallback timeout after receiving valid response');
-                    clearTimeout(fallbackResetTimeoutRef.current);
-                    fallbackResetTimeoutRef.current = null;
-                }
-            } else {
+            // No-op: removed legacy setPendingMap and pendingTimeoutsRef logic
+            if (!(data.status === 'success' || data.status === 'error')) {
                 logger.warn(`Unexpected quiz_action_response received: ${JSON.stringify(data)}`);
             }
         };
@@ -429,54 +343,35 @@ export default function DraggableQuestionsList({
                 onConfirm={handleConfirmationConfirm}
                 onCancel={handleConfirmationCancel}
             />
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd} // Use memoized handler
-            >
-                <SortableContext items={questions.map(q => String(q.uid))} strategy={verticalListSortingStrategy}>
-                    <ul className="space-y-4">
-                        {questions.length === 0 && <li key="no-questions">Aucune question pour ce quiz.</li>}
-                        {questions.map((q, idx) => {
-                            const isActive = q.uid === questionActiveUid;
-
-                            // Get stable callbacks for this question from the ref
-                            const stableCallbacks = stableCallbacksRef.current.get(q.uid) || {
-                                setOpen: () => setOpenUid(openUid === q.uid ? null : q.uid),
-                                onPlay: (uid: string, timerValue: number) => handlePlay(uid, timerValue),
-                                onSelect: () => onSelect(q.uid),
-                                onEditTimer: (newTime: number) => {
-                                    if (onEditTimer) onEditTimer(q.uid, newTime);
-                                }
-                            };
-
-                            return (
-                                <SortableQuestion
-                                    key={q.uid}
-                                    q={q}
-                                    isActive={isActive}
-                                    open={openUid === q.uid}
-                                    setOpen={stableCallbacks.setOpen}
-                                    onPlay={stableCallbacks.onPlay}
-                                    onEditTimer={stableCallbacks.onEditTimer}
-                                    onPause={handlePause}
-                                    onStop={handleStop}
-                                    liveTimeLeft={isActive ? effectiveTimeLeft : undefined}
-                                    liveStatus={isActive ? timerStatus : undefined}
-                                    onImmediateUpdateActiveTimer={handleImmediateUpdate}
-                                    disabled={disabled}
-                                    onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
-                                    showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
-                                    onStatsToggle={onStatsToggle ? (show) => onStatsToggle(q.uid, show) : undefined}
-                                    stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
-                                    quizId={quizId}
-                                    currentTournamentCode={currentTournamentCode}
-                                />
-                            );
-                        })}
-                    </ul>
-                </SortableContext>
-            </DndContext>
+            <ul className="space-y-4">
+                {questions.length === 0 && <li key="no-questions">Aucune question pour ce quiz.</li>}
+                {questions.map((q, idx) => {
+                    const isActive = q.uid === questionActiveUid;
+                    return (
+                        <SortableQuestion
+                            key={q.uid}
+                            q={q}
+                            isActive={isActive}
+                            open={expandedUids.has(q.uid)}
+                            setOpen={() => onToggleExpand(q.uid)}
+                            onPlay={(uid, timerValue) => handlePlay(uid, timerValue)}
+                            onEditTimer={(newTime) => onEditTimer(q.uid, newTime)}
+                            onPause={handlePause}
+                            onStop={handleStop}
+                            liveTimeLeft={isActive ? effectiveTimeLeft : undefined}
+                            liveStatus={isActive ? timerStatus : undefined}
+                            onImmediateUpdateActiveTimer={handleImmediateUpdate}
+                            disabled={disabled}
+                            onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
+                            showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
+                            onStatsToggle={onStatsToggle ? (show) => onStatsToggle(q.uid, show) : undefined}
+                            stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
+                            quizId={quizId}
+                            currentTournamentCode={currentTournamentCode}
+                        />
+                    );
+                })}
+            </ul>
         </>
     );
 }

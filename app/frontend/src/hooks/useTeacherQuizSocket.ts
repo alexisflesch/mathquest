@@ -73,6 +73,7 @@ export interface QuizState {
     timerTimeLeft?: number | null;
     timerTimestamp?: number;
     questionStates?: Record<string, boolean>;
+    accessCode?: string; // <-- Add this line for tournament code support
 }
 
 export function useTeacherQuizSocket(accessCode: string | null, token: string | null, quizId?: string | null) {

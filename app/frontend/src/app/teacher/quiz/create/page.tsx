@@ -179,7 +179,7 @@ export default function CreateQuizPage() {
                 setSavingQuiz(false);
                 return;
             }
-            const result = await makeApiRequest<QuizCreationResponse>('quiz', {
+            const result = await makeApiRequest<QuizCreationResponse>('/api/quiz', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

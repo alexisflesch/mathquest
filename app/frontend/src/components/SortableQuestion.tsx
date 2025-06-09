@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react"; // Ajout de useEffect, useRef
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Check, X, GripVertical } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import type { Question } from "@/types/api";
 import type { QuizState } from "../types";
 import { createLogger } from '@/clientLogger';
@@ -98,25 +98,29 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     // Store paused values per UID
     const [pausedTimeLeftByUid, setPausedTimeLeftByUid] = useState<Record<string, number>>({});
 
-    // Track the last paused value for each question UID
+    // Optimize timer state tracking to reduce excessive effects
     useEffect(() => {
         if (isActive && liveStatus === 'pause' && typeof liveTimeLeft === 'number') {
-            setPausedTimeLeftByUid(prev => ({ ...prev, [q.uid]: liveTimeLeft }));
-        }
-    }, [isActive, liveStatus, liveTimeLeft, q.uid]);
-
-    // Effect to clear paused timer values when stop action is detected
-    useEffect(() => {
-        if (isActive && liveStatus === 'stop') {
+            setPausedTimeLeftByUid(prev => {
+                // Only update if the value actually changed
+                if (prev[q.uid] !== liveTimeLeft) {
+                    return { ...prev, [q.uid]: liveTimeLeft };
+                }
+                return prev;
+            });
+        } else if (isActive && liveStatus === 'stop') {
             // Clear any paused timer value for this question when stop is clicked
             setPausedTimeLeftByUid(prev => {
-                const newValues = { ...prev };
-                delete newValues[q.uid];
-                logger.debug(`[Timer Display] Cleared paused timer value for ${q.uid} after stop action`);
-                return newValues;
+                if (q.uid in prev) {
+                    const newValues = { ...prev };
+                    delete newValues[q.uid];
+                    logger.debug(`[Timer Display] Cleared paused timer value for ${q.uid} after stop action`);
+                    return newValues;
+                }
+                return prev;
             });
         }
-    }, [isActive, liveStatus, q.uid]);
+    }, [isActive, liveStatus, liveTimeLeft, q.uid]); // Combine related effects
 
     // Effect to store original time when stopping a question for later restoration
     useEffect(() => {
@@ -403,21 +407,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
             className={`flex flex-row items-start select-none transition-all duration-150 ease-in-out${isDragging ? ' opacity-70' : ''}${disabled ? ' opacity-50 pointer-events-none' : ''}`}
             {...attributes} // Attributs pour dnd-kit
         >
-            {/* --- Drag Handle (extérieur à QuestionDisplay) --- */}
-            <button
-                {...listeners} // Listeners pour dnd-kit
-                data-drag-handle
-                className={`cursor-grab p-1 rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground mt-4 mr-2 flex-shrink-0 ${disabled ? 'cursor-not-allowed' : ''}`} // Ajustement style/marge
-                aria-label="Drag to reorder"
-                style={{ touchAction: 'none' }} // Important pour dnd-kit
-                disabled={disabled}
-                onClick={e => e.stopPropagation()} // Empêche le clic d'ouvrir/fermer
-            >
-                <GripVertical size={18} className="shrink-0" />
-            </button>
-
-            {/* --- Contenu Principal (QuestionDisplay ou Input d'édition + Réponses si édition) --- */}
-            <div className="flex-1 min-w-0"> {/* Assure que le contenu peut rétrécir */}
+            < div className="flex-1 min-w-0"> {/* Assure que le contenu peut rétrécir */}
                 {editingTimer ? (
                     // Affiche l'input d'édition à la place du header normal
                     timerEditInput
@@ -445,8 +435,11 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 {/* Affiche les réponses si en mode édition ET si elles sont ouvertes */}
                 {answersWhileEditing}
             </div>
-        </li>
+        </li >
     );
 }, arePropsEqual);
 
 SortableQuestion.displayName = 'SortableQuestion'; // Pour le débogage
+
+// Export the memoized component to prevent unnecessary re-renders
+export default SortableQuestion;
