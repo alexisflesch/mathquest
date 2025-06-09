@@ -1,6 +1,7 @@
-import { redisClient } from '@/config/redis';
-import { closeSocketIORedisClients } from '@/sockets';
-import { stopAllTestServers } from './testSetup';
+// Use require to avoid module resolution issues in Jest
+const { redisClient } = require('../src/config/redis');
+const { closeSocketIORedisClients } = require('../src/sockets');
+const { stopAllTestServers } = require('./testSetup');
 
 export default async function globalTeardown() {
     // Suppress unhandled promise rejections during teardown
@@ -13,7 +14,7 @@ export default async function globalTeardown() {
     } catch (e) { }
     try {
         if (redisClient && redisClient.status !== 'end' && redisClient.status !== 'close') {
-            redisClient.disconnect();
+            await redisClient.quit(); // Use quit() instead of disconnect() for graceful shutdown
         }
     } catch (e) { }
     await new Promise(res => setTimeout(res, 200));

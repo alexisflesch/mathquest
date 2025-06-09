@@ -8,7 +8,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { io as ioc, Socket as ClientSocket } from 'socket.io-client'; // Import ioc for creating client sockets
 
 import { prisma } from '@/db/prisma';
-import { setupServer } from '@/server';
+import { startTestServer } from '../testSetup';
 import { testQuestions } from '../support/testQuestions';
 import { redisClient } from '@/config/redis';
 import { closeSocketIORedisClients } from '@/sockets';
@@ -32,7 +32,7 @@ const waitForEvent = (socket: ClientSocket, eventName: string, timeout = 10000):
 };
 
 describe('Tournament Flow - Basic Tests', () => {
-    let app: express.Express; // Use express.Express type
+    let app: express.Application; // Use express.Application type
     let httpServer: HttpServer;
     let io: SocketIOServer;
     let address: string;
@@ -45,13 +45,12 @@ describe('Tournament Flow - Basic Tests', () => {
         await prisma.question.deleteMany();
         await prisma.question.createMany({ data: testQuestions });
 
-        const serverSetup = setupServer();
-        httpServer = serverSetup.httpServer;
-        io = serverSetup.io;
-
-        await new Promise<void>((resolve) => httpServer.listen({ port: 0 }, resolve)); // Corrected listen and added void type
-        const port = (httpServer.address() as AddressInfo).port;
-        address = `http://localhost:${port}`;
+        // Use startTestServer for proper test setup
+        const setup = await startTestServer();
+        app = setup.app;
+        httpServer = setup.server;
+        io = setup.io;
+        address = `http://localhost:${setup.port}`;
 
         // Create users with unique identifiers to avoid conflicts
         player1 = await prisma.user.create({ data: { username: 'p1-basic', role: 'STUDENT', studentProfile: { create: { cookieId: 'cookie-p1-basic' } } } });
@@ -259,9 +258,21 @@ describe('Tournament Flow - Basic Tests', () => {
 
         // Connect sockets
         // Connect player 1
-        socket1 = ioc(address, { auth: { token: player1.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
+        socket1 = ioc(address, {
+            auth: { token: player1.token },
+            query: { token: player1.token },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
+        });
         // Connect player 2
-        socket2 = ioc(address, { auth: { token: player2.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
+        socket2 = ioc(address, {
+            auth: { token: player2.token },
+            query: { token: player2.token },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
+        });
         await Promise.all([
             new Promise<void>((res) => socket1.on('connect', () => res())),
             new Promise<void>((res) => socket2.on('connect', () => res())),
@@ -364,9 +375,21 @@ describe('Tournament Flow - Basic Tests', () => {
 
         // Connect sockets
         // Connect player 1
-        socket1 = ioc(address, { auth: { token: player1.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
+        socket1 = ioc(address, {
+            auth: { token: player1.token },
+            query: { token: player1.token },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
+        });
         // Connect player 2
-        socket2 = ioc(address, { auth: { token: player2.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
+        socket2 = ioc(address, {
+            auth: { token: player2.token },
+            query: { token: player2.token },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
+        });
         await Promise.all([
             new Promise<void>((res) => socket1.on('connect', () => res())),
             new Promise<void>((res) => socket2.on('connect', () => res())),

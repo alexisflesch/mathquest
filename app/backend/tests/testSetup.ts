@@ -6,6 +6,9 @@ import Redis from 'ioredis';
 import { redisClient } from '@/config/redis';
 import { configureSocketServer, registerHandlers } from '@/sockets';
 import * as jwt from 'jsonwebtoken'; // Added import
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import apiRouter from '@/api';
 
 // Patch: Set logger to warn level in test unless overridden
 import createLogger from '@/utils/logger';
@@ -31,6 +34,26 @@ export const startTestServer = async (): Promise<{
 }> => {
     // Set up Express
     const app = express();
+
+    // Configure CORS for API requests
+    app.use(cors({
+        origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3008'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization']
+    }));
+
+    app.use(express.json());
+    app.use(cookieParser());
+
+    // Health check endpoint
+    app.get('/health', (req, res) => {
+        res.status(200).send('OK');
+    });
+
+    // Mount API routes
+    app.use('/api', apiRouter);
+
     const server = http.createServer(app);
 
     // Get a random available port
@@ -137,10 +160,10 @@ export const startTestServer = async (): Promise<{
 
                                 // Close Redis clients used by this test but don't wait for them
                                 // This avoids issues with already closed connections
-                                redisClients.forEach(client => {
+                                redisClients.forEach(async (client) => {
                                     try {
                                         if (client.status !== 'end' && client.status !== 'close') {
-                                            client.disconnect();
+                                            await client.quit(); // Use quit() for graceful shutdown
                                         }
                                     } catch (e) {
                                         // Ignore errors
@@ -171,11 +194,11 @@ export const stopAllTestServers = async (): Promise<void> => {
     });
 
     // Close all Redis clients
-    const redisClosePromises = redisClients.map((client) => {
+    const redisClosePromises = redisClients.map(async (client) => {
         try {
-            // Check if the client is still connected before trying to disconnect
+            // Check if the client is still connected before trying to quit
             if (client.status !== 'end' && client.status !== 'close') {
-                client.disconnect();
+                await client.quit(); // Use quit() for graceful shutdown
             }
             return Promise.resolve();
         } catch (e) {
@@ -196,5 +219,5 @@ export const stopAllTestServers = async (): Promise<void> => {
 if (typeof afterAll === 'function') {
     afterAll(async () => {
         await stopAllTestServers();
-    });
+    }, 60000); // 60 second timeout
 }

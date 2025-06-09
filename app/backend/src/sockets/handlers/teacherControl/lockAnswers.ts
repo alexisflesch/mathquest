@@ -11,7 +11,7 @@ const logger = createLogger('LockAnswersHandler');
 export function lockAnswersHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: LockAnswersPayload, callback?: (data: any) => void) => {
         const { gameId, lock } = payload;
-        const userId = socket.data?.userId;
+        const userId = socket.data?.userId || socket.data?.user?.userId;
 
         if (!userId) {
             socket.emit('error_dashboard', {

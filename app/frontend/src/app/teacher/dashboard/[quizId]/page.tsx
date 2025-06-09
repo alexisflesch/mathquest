@@ -27,12 +27,60 @@ const logger = createLogger('TeacherDashboardPage');
 
 // Add this mapping function above the component if not present
 function mapToCanonicalQuestion(q: any) {
-    return {
+    logger.info('[DEBUG mapToCanonicalQuestion] Input question:', q);
+
+    // Handle the answer format conversion
+    let answerOptions: string[] = [];
+    let correctAnswers: boolean[] = [];
+
+    // Check if the question object has the nested question structure
+    const questionData = q.question || q;
+
+    if (questionData.answerOptions && Array.isArray(questionData.answerOptions)) {
+        // New API format - from nested question object
+        answerOptions = questionData.answerOptions;
+        correctAnswers = questionData.correctAnswers || [];
+        logger.info('[DEBUG mapToCanonicalQuestion] Using new API format from nested question');
+    } else if (q.answerOptions && Array.isArray(q.answerOptions)) {
+        // New API format - direct on question
+        answerOptions = q.answerOptions;
+        correctAnswers = q.correctAnswers || [];
+        logger.info('[DEBUG mapToCanonicalQuestion] Using new API format direct');
+    } else if (q.answers && Array.isArray(q.answers)) {
+        // Legacy format
+        answerOptions = q.answers.map((a: any) => a.text || a);
+        correctAnswers = q.answers.map((a: any) => a.correct || false);
+        logger.info('[DEBUG mapToCanonicalQuestion] Using legacy format');
+    } else {
+        logger.warn('[DEBUG mapToCanonicalQuestion] No recognizable answer format found');
+    }
+
+    // Fixed timer extraction - prioritize nested question.timeLimit over fallbacks
+    const timeLimit = questionData.timeLimit ?? questionData.time ?? questionData.temps ??
+        q.timeLimit ?? q.time ?? q.temps ?? 60;
+
+    logger.info('[DEBUG mapToCanonicalQuestion] Timer extraction:', {
+        'questionData.timeLimit': questionData.timeLimit,
+        'questionData.time': questionData.time,
+        'questionData.temps': questionData.temps,
+        'q.timeLimit': q.timeLimit,
+        'q.time': q.time,
+        'q.temps': q.temps,
+        'final timeLimit': timeLimit
+    });
+
+    const result = {
         ...q,
-        answerOptions: q.answers ? q.answers.map((a: any) => a.text) : [],
-        correctAnswers: q.answers ? q.answers.filter((a: any) => a.correct).map((a: any) => a.text) : [],
-        timeLimit: q.time ?? q.temps ?? 60,
+        // Use the data from the nested question object if it exists
+        text: questionData.text || q.text,
+        uid: questionData.uid || q.uid,
+        answerOptions,
+        correctAnswers,
+        timeLimit,
     };
+
+    logger.info('[DEBUG mapToCanonicalQuestion] Output question:', result);
+    return result;
 }
 
 export default function TeacherDashboardPage({ params }: { params: Promise<{ quizId: string }> }) {
@@ -51,8 +99,26 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     const [pendingPlayIdx, setPendingPlayIdx] = useState<number | null>(null);
 
     // --- Use the Custom Hook ---
-    // Get token from localStorage
-    const token = (typeof window !== 'undefined') ? localStorage.getItem('mathquest_jwt_token') : null;
+    // Get token from localStorage or cookies
+    const getAuthToken = () => {
+        if (typeof window === 'undefined') return null;
+
+        // First try localStorage
+        const localStorageToken = localStorage.getItem('mathquest_jwt_token');
+        if (localStorageToken) return localStorageToken;
+
+        // Fallback to cookies
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'teacherToken' && value) {
+                return value;
+            }
+        }
+        return null;
+    };
+
+    const token = getAuthToken();
     const {
         quizSocket,
         quizState,
@@ -151,62 +217,63 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
         const fetchQuizData = async () => {
             try {
-                // Fetch quiz name
-                const teacherId = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.TEACHER_ID) : null;
-                let quizzes: QuizListResponse;
-                if (teacherId) {
-                    quizzes = await makeApiRequest<QuizListResponse>(`quiz?enseignant_id=${teacherId}`, undefined, undefined, QuizListResponseSchema);
-                } else {
-                    quizzes = await makeApiRequest<QuizListResponse>('quiz', undefined, undefined, QuizListResponseSchema); // Will return error, but keeps logic safe
-                }
-                const found = Array.isArray(quizzes) ? quizzes.find((q) => q.id === quizId) : null;
-                if (isMounted) setQuizName(found?.nom || "Quiz");
+                // First, fetch the game instance to get the template ID and access code
 
-                // Fetch questions
-                const questionsData = await makeApiRequest<TeacherQuizQuestionsResponse>(`teacher/quiz/${quizId}/questions`, undefined, undefined, TeacherQuizQuestionsResponseSchema);
+                const gameInstanceData = await makeApiRequest<{ gameInstance: { id: string, name: string, gameTemplateId: string, accessCode?: string } }>(`games/id/${quizId}`);
+                const gameInstance = gameInstanceData.gameInstance;
+
+                if (isMounted) setQuizName(gameInstance.name || "Quiz");
+
+                // Fetch the game template with questions using the template ID
+                const gameTemplateData = await makeApiRequest<{ gameTemplate: { id: string, name: string, questions: any[] } }>(`game-templates/${gameInstance.gameTemplateId}`);
+
+                // Debug: Log the raw API response
+                logger.info('[DEBUG] Raw API response:', gameTemplateData);
+                logger.info('[DEBUG] Questions from API:', gameTemplateData.gameTemplate.questions);
+
                 // Initialize local question state, ensuring 'temps' exists and preserving all API fields
-                const initialQuestions = (questionsData.questions || []).map((q: Question) => ({
-                    ...q,
-                    type: q.questionType || 'choix_simple', // Default type if not provided
-                    temps: q.time ?? 60, // Default to 60s if undefined
-                    timeLimit: q.timeLimit ?? 20, // Default to 20s if null
-                    feedbackWaitTime: q.feedbackWaitTime ?? 3000 // Default to 3s if null
-                }));
+                const initialQuestions = (gameTemplateData.gameTemplate.questions || []).map((q: any, index: number) => {
+                    logger.info(`[DEBUG] Processing question ${index}:`, q);
+
+                    // Extract timer values from nested question structure
+                    const questionData = q.question || q;
+                    const timeLimit = questionData.timeLimit ?? questionData.time ?? questionData.temps ??
+                        q.timeLimit ?? q.time ?? q.temps ?? 60;
+
+                    const processedQuestion = {
+                        ...q,
+                        type: q.questionType || questionData.questionType || 'choix_simple', // Default type if not provided
+                        temps: timeLimit, // Use extracted timeLimit for backward compatibility
+                        timeLimit: timeLimit, // Also set timeLimit for consistency
+                        feedbackWaitTime: questionData.feedbackWaitTime ?? q.feedbackWaitTime ?? 3000 // Default to 3s if null
+                    };
+
+                    logger.info(`[DEBUG] Processed question ${index} timer:`, {
+                        'questionData.timeLimit': questionData.timeLimit,
+                        'questionData.time': questionData.time,
+                        'questionData.temps': questionData.temps,
+                        'final timeLimit': timeLimit
+                    });
+                    logger.info(`[DEBUG] Processed question ${index}:`, processedQuestion);
+                    return processedQuestion;
+                });
+
+                logger.info('[DEBUG] Final initialQuestions:', initialQuestions);
                 if (isMounted) setQuestions(initialQuestions);
 
-                // Fetch initial tournament code
-                try {
-                    const codeData = await makeApiRequest<TournamentCodeResponse>(`quiz/${quizId}/tournament-code`, undefined, undefined, TournamentCodeResponseSchema);
-                    if (codeData && codeData.tournament_code) {
-                        // Verify the tournament exists before setting the code
-                        try {
-                            await makeApiRequest<TournamentVerificationResponse>(`tournament?code=${codeData.tournament_code}`, {}, undefined, TournamentVerificationResponseSchema);
-                            if (isMounted) {
-                                logger.info(`Fetched initial tournament code: ${codeData.tournament_code}`);
-                                setInitialTournamentCode(codeData.tournament_code);
-                                setCurrentTournamentCode(codeData.tournament_code); // Set current code
-                            }
-                        } catch (tournoiErr) {
-                            logger.error("Error verifying tournament existence:", tournoiErr);
-                            if (isMounted) {
-                                logger.warn(`Fetched tournament code ${codeData.tournament_code}, but tournament not found or component unmounted.`);
-                                setInitialTournamentCode(null); // Treat as no code if tournament doesn't exist
-                                setCurrentTournamentCode(null);
-                            }
-                        }
-                    } else if (isMounted) {
-                        setInitialTournamentCode(null); // No code found
-                        setCurrentTournamentCode(null);
-                    }
-                } catch (codeErr) {
+                // Set tournament code from game instance access code
+                if (gameInstance.accessCode) {
                     if (isMounted) {
-                        // Handle 404 explicitly - no code exists yet
-                        logger.info("No initial tournament code found (404).");
+                        logger.info(`Using game instance access code: ${gameInstance.accessCode}`);
+                        setInitialTournamentCode(gameInstance.accessCode);
+                        setCurrentTournamentCode(gameInstance.accessCode);
+                    }
+                } else {
+                    if (isMounted) {
                         setInitialTournamentCode(null);
                         setCurrentTournamentCode(null);
                     }
                 }
-
             } catch (err: unknown) {
                 logger.error("Error fetching initial data:", err);
                 if (isMounted) setError((err as Error).message || "Une erreur est survenue");
@@ -222,7 +289,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         }
 
         return () => { isMounted = false; };
-    }, [quizId]);
+    }, [quizId, token]); // Add token as dependency to refetch when token changes
 
 
     // --- Sync UI Active Question with Hook's Timer State ---

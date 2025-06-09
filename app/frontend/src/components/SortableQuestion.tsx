@@ -283,11 +283,31 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
 
     // Helper to map canonical Question to legacy shape for QuestionDisplay
     function toLegacyQuestionShape(q: any) {
-        return {
+        logger.info('[DEBUG toLegacyQuestionShape] Input question:', q);
+        logger.info('[DEBUG toLegacyQuestionShape] answerOptions:', q.answerOptions);
+        logger.info('[DEBUG toLegacyQuestionShape] correctAnswers:', q.correctAnswers);
+
+        // Handle nested question structure from API
+        const questionData = q.question || q;
+
+        // Use answerOptions and correctAnswers from the nested question or the root
+        const answerOptions = questionData.answerOptions || q.answerOptions || [];
+        const correctAnswers = questionData.correctAnswers || q.correctAnswers || [];
+
+        const result = {
             ...q,
-            answers: Array.isArray(q.answerOptions) ? q.answerOptions.map((text: string, i: number) => ({ text, correct: q.correctAnswers?.[i] || false })) : [],
-            time: q.timeLimit,
+            uid: questionData.uid || q.uid,
+            text: questionData.text || q.text,
+            answers: Array.isArray(answerOptions) ? answerOptions.map((text: string, i: number) => ({
+                text,
+                correct: correctAnswers?.[i] || false
+            })) : [],
+            time: q.timeLimit || questionData.timeLimit,
         };
+
+        logger.info('[DEBUG toLegacyQuestionShape] Output question:', result);
+        logger.info('[DEBUG toLegacyQuestionShape] Output answers:', result.answers);
+        return result;
     }
 
     // JSX pour l'input d'édition (rendu conditionnellement)

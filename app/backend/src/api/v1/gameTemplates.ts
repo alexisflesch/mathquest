@@ -57,6 +57,56 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 /**
+ * Get a specific game template by ID
+ * GET /api/v1/game-templates/:id
+ * Requires teacher authentication
+ */
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.userId || req.headers['x-user-id'] as string;
+        const userRole = req.user?.role || req.headers['x-user-role'] as string;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+
+        // Verify user is a teacher
+        if (userRole !== 'TEACHER') {
+            res.status(403).json({ error: 'Teacher access required' });
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({ error: 'Game template ID is required' });
+            return;
+        }
+
+        logger.info({ userId, templateId: id }, 'Fetching game template by ID');
+
+        // Fetch the specific game template with questions
+        const gameTemplate = await getGameTemplateService().getgameTemplateById(id, true);
+
+        if (!gameTemplate) {
+            res.status(404).json({ error: 'Game template not found' });
+            return;
+        }
+
+        // Check if the user is the creator of this template
+        if (gameTemplate.creatorId !== userId) {
+            res.status(403).json({ error: 'You do not have permission to access this game template' });
+            return;
+        }
+
+        res.status(200).json({ gameTemplate });
+    } catch (error) {
+        logger.error({ error }, 'Error fetching game template by ID');
+        res.status(500).json({ error: 'An error occurred while fetching the game template' });
+    }
+});
+
+/**
  * Teacher/Admin-driven GameTemplate creation
  * POST /api/v1/game-templates
  * Allows a teacher/admin to create a game template with specific details.

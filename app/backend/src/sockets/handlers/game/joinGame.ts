@@ -5,6 +5,7 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { redisClient } from '@/config/redis';
 import { z } from 'zod';
+import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
 // Import shared types
 import {
     ClientToServerEvents,
@@ -195,6 +196,50 @@ export function joinGameHandler(
                 logger.info({ playerJoinedPayload, room: socket.data.currentGameRoom }, 'Emitting player_joined_game to room');
                 socket.to(socket.data.currentGameRoom).emit('player_joined_game', playerJoinedPayload);
             }
+
+            // Emit updated participant count to teacher dashboard
+            await emitParticipantCount(io, accessCode);
+
+            // Emit updated participant count
+            const participantCount = await prisma.gameParticipant.count({
+                where: { gameInstanceId: gameInstance.id }
+            });
+            logger.info({ participantCount, room: socket.data.currentGameRoom }, 'Emitting participant_count_update to room');
+            if (socket.data.currentGameRoom) {
+                // FIX: Emit full participants array, not just count
+                const dbParticipants = await prisma.gameParticipant.findMany({
+                    where: { gameInstanceId: gameInstance.id },
+                    include: { user: true }
+                });
+                const participants: ParticipantData[] = dbParticipants.map(p => ({
+                    id: p.id,
+                    userId: p.userId,
+                    username: p.user?.username || 'Unknown',
+                    avatar: p.user?.avatarEmoji || '😀',
+                    score: p.score ?? 0,
+                    avatarEmoji: p.user?.avatarEmoji || undefined,
+                    joinedAt: p.joinedAt ? (typeof p.joinedAt === 'string' ? p.joinedAt : p.joinedAt.toISOString()) : new Date().toISOString(),
+                    online: true,
+                    socketId: undefined // Not tracked here
+                }));
+                socket.to(socket.data.currentGameRoom).emit('game_participants', { participants });
+            }
+
+            // --- DEBUG: Log Redis state ---
+            const redisParticipants = await redisClient.hgetall(participantsKey);
+            logger.debug({ redisParticipants }, 'Current Redis participants');
+
+            // --- DEBUG: Log all socket rooms ---
+            const allRooms = Array.from(io.sockets.adapter.rooms.keys());
+            logger.debug({ allRooms }, 'Current socket rooms');
+
+            // --- DEBUG: Log specific socket details ---
+            const socketDetails = {
+                id: socket.id,
+                rooms: Array.from(socket.rooms),
+                data: socket.data,
+            };
+            logger.debug({ socketDetails }, 'Current socket details');
         } catch (err) {
             logger.error({ err, accessCode, userId, stack: err instanceof Error ? err.stack : undefined }, 'Error in joinGameHandler');
             const errorPayload: ErrorPayload = { message: 'Internal error joining game.' };

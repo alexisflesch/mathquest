@@ -59,7 +59,11 @@ exports.TOURNAMENT_EVENTS = {
     TOURNAMENT_NOTIFICATION: 'tournament_notification',
     TOURNAMENT_QUESTION: 'tournament_question',
     TOURNAMENT_SET_TIMER: 'tournament_set_timer',
-    REDIRECT_TO_TOURNAMENT: 'redirect_to_tournament'
+    REDIRECT_TO_TOURNAMENT: 'redirect_to_tournament',
+    // Countdown events
+    TOURNAMENT_STARTING: 'tournament_starting',
+    COUNTDOWN_TICK: 'countdown_tick',
+    COUNTDOWN_COMPLETE: 'countdown_complete'
 };
 // ===== Lobby Events =====
 exports.LOBBY_EVENTS = {
@@ -72,6 +76,7 @@ exports.LOBBY_EVENTS = {
     PARTICIPANT_JOINED: 'participant_joined',
     PARTICIPANT_LEFT: 'participant_left',
     PARTICIPANTS_LIST: 'participants_list',
+    ROOM_LEFT: 'room_left',
     REDIRECT_TO_GAME: 'redirect_to_game',
     GAME_STARTED: 'game_started',
     REDIRECT_TO_QUIZ: 'redirect_to_quiz'

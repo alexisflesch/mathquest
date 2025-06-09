@@ -11,7 +11,7 @@ const logger = createLogger('SetQuestionHandler');
 export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: SetQuestionPayload, callback?: (data: any) => void) => {
         const { gameId, questionUid, questionIndex } = payload;
-        const userId = socket.data?.userId;
+        const userId = socket.data?.userId || socket.data?.user?.userId;
         const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
         let effectiveuserId = userId;
         let callbackCalled = false;

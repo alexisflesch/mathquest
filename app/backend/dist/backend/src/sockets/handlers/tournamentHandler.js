@@ -58,11 +58,16 @@ function tournamentHandler(io, socket) {
             socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Not authorized to start this tournament' });
             return;
         }
-        // Emit redirect_to_game to the correct tournament room BEFORE activating game state
+        // Emit redirect_to_game to both lobby and game rooms BEFORE activating game state
         // This gives clients a head start to navigate.
         const tournamentRoom = `game_${accessCode}`;
-        logger.debug({ accessCode, room: tournamentRoom, socketId: socket.id }, '[DEBUG] Emitting redirect_to_game to tournament room FIRST');
+        const lobbyRoom = `lobby_${accessCode}`;
+        logger.debug({ accessCode, tournamentRoom, lobbyRoom, socketId: socket.id }, '[DEBUG] Emitting redirect_to_game to tournament and lobby rooms');
         io.to(tournamentRoom).emit('redirect_to_game');
+        io.to(lobbyRoom).emit('redirect_to_game');
+        // Also emit lobby-specific events
+        io.to(lobbyRoom).emit(events_1.LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId: gameInstance.id });
+        io.to(lobbyRoom).emit(events_1.LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId: gameInstance.id });
         // Short delay to allow clients to process redirect before game state changes affect them
         await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
         if (!gameInstance.gameTemplate || !gameInstance.gameTemplate.questions || gameInstance.gameTemplate.questions.length === 0) {
@@ -122,8 +127,14 @@ function tournamentHandler(io, socket) {
         const countdownDuration = 5; // 5 seconds
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, '[DEBUG] Updated game status to active (countdown phase)');
         logger.info({ room: liveRoom, duration: countdownDuration, accessCode, socketId: socket.id }, `[TournamentHandler] Emitting tournament_starting and waiting ${countdownDuration}s before starting game.`);
+        // Start countdown with ticking
         io.to(liveRoom).emit('tournament_starting', { countdown: countdownDuration });
-        await new Promise(resolve => setTimeout(resolve, countdownDuration * 1000));
+        // Emit countdown tick every second
+        for (let i = countdownDuration; i > 0; i--) {
+            logger.debug({ accessCode, countdown: i, socketId: socket.id }, `[TournamentHandler] Countdown tick: ${i}`);
+            io.to(liveRoom).emit('countdown_tick', { countdown: i });
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        }
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown complete. About to start game flow.`);
         io.to(liveRoom).emit('countdown_complete');
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown finished. Calling runGameFlow.`);

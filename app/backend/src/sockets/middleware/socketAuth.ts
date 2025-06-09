@@ -51,17 +51,6 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
             cookieTokenPrefix: cookieToken?.substring(0, 20) + '...' || null
         }, 'Socket authentication attempt');
 
-        // --- PATCH: Accept userId from auth or query for test/dev compatibility ---
-        if (userId) {
-            socket.data.userId = userId;
-            socket.data.user = {
-                userId,
-                role: 'teacher'
-            };
-            logger.debug({ userId, socketId: socket.id }, 'Teacher socket authenticated via userId (test/dev mode)');
-        }
-        // --- END PATCH ---
-
         // Store connection info for debugging
         const connectionInfo = {
             id: socket.id,
@@ -70,17 +59,12 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
             time: new Date().toISOString()
         };
 
-        // Direct authentication for testing
-        if (userId && userType === 'teacher') {
-            // This is for test environment direct authentication
-            socket.data.user = {
-                userId: userId,
-                role: 'TEACHER'
-            };
-            logger.debug({ userId: userId, socketId: socket.id }, 'Teacher socket authenticated directly (test mode)');
-        }
+        // Initialize user data - will be populated based on available auth info
+        let userData: any = {};
+        let finalUserId = null;
+
         // If a token is provided (from auth/query or cookies), try to authenticate as a teacher
-        else if (token || cookieToken) {
+        if (token || cookieToken) {
             const actualToken = token || cookieToken;
             try {
                 logger.debug({
@@ -90,12 +74,13 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
                 }, 'Attempting JWT verification');
                 const decoded = jwt.verify(actualToken!, JWT_SECRET) as JwtPayload;
 
-                // Attach the user data to the socket
-                socket.data.user = {
+                // Use data from JWT token
+                userData = {
                     userId: decoded.userId,
                     username: decoded.username,
                     role: decoded.role
                 };
+                finalUserId = decoded.userId;
 
                 logger.debug({
                     userId: decoded.userId,
@@ -111,25 +96,55 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
                     tokenSource: token ? 'auth/query' : 'cookie',
                     socketId: socket.id
                 }, 'Invalid token in socket connection');
-                // Don't reject the connection, just don't attach user data
+                // Continue with userId-based auth if available
             }
         }
 
-        // If a player ID is provided, store it with the socket
-        if (userId) {
-            socket.data.user = {
-                ...socket.data.user,
-                userId,
-                role: socket.data.user?.role || 'player'
-            };
+        // If we have userId (either from token or direct), use it
+        if (userId || finalUserId) {
+            const effectiveUserId = finalUserId || userId;
+            const effectiveUserType = userType || userData.role || 'player';
 
-            logger.debug({ userId, socketId: socket.id }, 'Player socket identified');
+            userData = {
+                ...userData,
+                userId: effectiveUserId,
+                role: effectiveUserType === 'teacher' ? 'TEACHER' :
+                    effectiveUserType === 'student' ? 'STUDENT' :
+                        effectiveUserType === 'TEACHER' ? 'TEACHER' :
+                            effectiveUserType === 'STUDENT' ? 'STUDENT' : 'STUDENT'
+            };
+            finalUserId = effectiveUserId;
+
+            logger.debug({
+                userId: effectiveUserId,
+                userType: effectiveUserType,
+                socketId: socket.id,
+                userData
+            }, 'Socket authenticated with userId');
         }
 
-        // If neither token nor userId is provided
-        if (!token && !cookieToken && !userId) {
+        // Set final socket data
+        if (finalUserId && userData) {
+            socket.data.user = userData;
+            socket.data.userId = finalUserId;
+
+            // SIMPLE DEBUG LOG
+            console.log('SOCKET AUTH DEBUG:', {
+                socketId: socket.id,
+                finalUserId,
+                setUserId: socket.data.userId,
+                setUserData: socket.data.user
+            });
+
+            logger.debug({
+                socketId: socket.id,
+                finalUserId,
+                userData,
+                socketDataUserId: socket.data.userId,
+                socketDataUser: socket.data.user
+            }, 'Final socket data set');
+        } else {
             logger.debug({ socketId: socket.id }, 'Anonymous socket connection');
-            // We still allow anonymous connections, they just won't have access to protected events
         }
 
         // Store connection info in socket data for potential later use

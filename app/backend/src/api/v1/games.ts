@@ -47,10 +47,12 @@ export const __setGameParticipantServiceForTesting = (mockService: GameParticipa
  */
 router.post('/', optionalAuth, async (req: Request, res: Response): Promise<void> => {
     try {
-        // Debug: Log the full request body
+        // Debug: Log the full request body, user, and headers
         logger.info('Games POST request body debug', {
             fullBody: req.body,
-            keys: Object.keys(req.body)
+            keys: Object.keys(req.body),
+            user: req.user,
+            headers: req.headers
         });
 
         const {
@@ -235,6 +237,42 @@ router.get('/:accessCode', async (req: Request, res: Response): Promise<void> =>
         res.status(200).json({ gameInstance });
     } catch (error) {
         logger.error({ error }, 'Error fetching game instance');
+        res.status(500).json({ error: 'An error occurred while fetching the game' });
+    }
+});
+
+/**
+ * Get a game instance by ID
+ * GET /api/v1/games/id/:id
+ * Requires teacher authentication
+ */
+router.get('/id/:id', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+
+        if (!id) {
+            res.status(400).json({ error: 'Game ID is required' });
+            return;
+        }
+
+        const gameInstance = await getGameInstanceService().getGameInstanceById(id);
+
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+
+        // Check if the user is the creator of this game
+        const isCreator = user && user.userId && gameInstance.initiatorUserId === user.userId;
+        if (!isCreator) {
+            res.status(403).json({ error: 'You do not have permission to access this game' });
+            return;
+        }
+
+        res.status(200).json({ gameInstance });
+    } catch (error) {
+        logger.error({ error }, 'Error fetching game instance by ID');
         res.status(500).json({ error: 'An error occurred while fetching the game' });
     }
 });

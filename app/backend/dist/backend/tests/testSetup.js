@@ -44,6 +44,9 @@ const redis_adapter_1 = require("@socket.io/redis-adapter");
 const ioredis_1 = __importDefault(require("ioredis"));
 const sockets_1 = require("@/sockets");
 const jwt = __importStar(require("jsonwebtoken")); // Added import
+const cors_1 = __importDefault(require("cors"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const api_1 = __importDefault(require("@/api"));
 // Patch: Set logger to warn level in test unless overridden
 const logger_1 = __importDefault(require("@/utils/logger"));
 const testLogger = (0, logger_1.default)('TestSetup');
@@ -60,6 +63,21 @@ const redisClients = [];
 const startTestServer = async () => {
     // Set up Express
     const app = (0, express_1.default)();
+    // Configure CORS for API requests
+    app.use((0, cors_1.default)({
+        origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3008'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization']
+    }));
+    app.use(express_1.default.json());
+    app.use((0, cookie_parser_1.default)());
+    // Health check endpoint
+    app.get('/health', (req, res) => {
+        res.status(200).send('OK');
+    });
+    // Mount API routes
+    app.use('/api', api_1.default);
     const server = http_1.default.createServer(app);
     // Get a random available port
     const port = Math.floor(Math.random() * 10000) + 30000;
@@ -151,10 +169,10 @@ const startTestServer = async () => {
                                 await new Promise(resolve => setTimeout(resolve, 100));
                                 // Close Redis clients used by this test but don't wait for them
                                 // This avoids issues with already closed connections
-                                redisClients.forEach(client => {
+                                redisClients.forEach(async (client) => {
                                     try {
                                         if (client.status !== 'end' && client.status !== 'close') {
-                                            client.disconnect();
+                                            await client.quit(); // Use quit() for graceful shutdown
                                         }
                                     }
                                     catch (e) {
@@ -185,11 +203,11 @@ const stopAllTestServers = async () => {
         });
     });
     // Close all Redis clients
-    const redisClosePromises = redisClients.map((client) => {
+    const redisClosePromises = redisClients.map(async (client) => {
         try {
-            // Check if the client is still connected before trying to disconnect
+            // Check if the client is still connected before trying to quit
             if (client.status !== 'end' && client.status !== 'close') {
-                client.disconnect();
+                await client.quit(); // Use quit() for graceful shutdown
             }
             return Promise.resolve();
         }
@@ -209,5 +227,5 @@ exports.stopAllTestServers = stopAllTestServers;
 if (typeof afterAll === 'function') {
     afterAll(async () => {
         await (0, exports.stopAllTestServers)();
-    });
+    }, 60000); // 60 second timeout
 }

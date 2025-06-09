@@ -9,10 +9,12 @@ const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const helpers_1 = require("./helpers");
 const events_1 = require("@shared/types/socket/events");
+const participantCountUtils_1 = require("@/sockets/utils/participantCountUtils");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('JoinDashboardHandler');
 function joinDashboardHandler(io, socket) {
     return async (payload, callback) => {
+        logger.info({ socketId: socket.id, payload }, 'joinDashboardHandler called');
         const { gameId, accessCode } = payload;
         // Get userId from socket.data (should be populated by auth middleware)
         let effectiveUserId = socket.data?.userId || socket.data?.user?.userId;
@@ -168,6 +170,9 @@ function joinDashboardHandler(io, socket) {
             }
             // Send the comprehensive initial state
             socket.emit(events_1.TEACHER_EVENTS.GAME_CONTROL_STATE, controlState);
+            // Send initial participant count to the teacher
+            const participantCount = await (0, participantCountUtils_1.getParticipantCount)(io, gameInstance.accessCode);
+            socket.emit('quiz_connected_count', { count: participantCount });
             logger.info({ gameId, userId: effectiveUserId, socketId: socket.id }, 'User joined dashboard successfully');
             // Call the callback if provided
             if (callback) {

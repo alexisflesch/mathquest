@@ -436,7 +436,7 @@ export default function DraggableQuestionsList({
             >
                 <SortableContext items={questions.map(q => String(q.uid))} strategy={verticalListSortingStrategy}>
                     <ul className="space-y-4">
-                        {questions.length === 0 && <li>Aucune question pour ce quiz.</li>}
+                        {questions.length === 0 && <li key="no-questions">Aucune question pour ce quiz.</li>}
                         {questions.map((q, idx) => {
                             const isActive = q.uid === questionActiveUid;
 

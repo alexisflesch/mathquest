@@ -9,6 +9,7 @@ const gameParticipantService_1 = require("@/core/services/gameParticipantService
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const redis_1 = require("@/config/redis");
+const participantCountUtils_1 = require("@/sockets/utils/participantCountUtils");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('JoinGameHandler');
 // Update handler signature with shared types
@@ -169,6 +170,45 @@ function joinGameHandler(io, socket) {
                 logger.info({ playerJoinedPayload, room: socket.data.currentGameRoom }, 'Emitting player_joined_game to room');
                 socket.to(socket.data.currentGameRoom).emit('player_joined_game', playerJoinedPayload);
             }
+            // Emit updated participant count to teacher dashboard
+            await (0, participantCountUtils_1.emitParticipantCount)(io, accessCode);
+            // Emit updated participant count
+            const participantCount = await prisma_1.prisma.gameParticipant.count({
+                where: { gameInstanceId: gameInstance.id }
+            });
+            logger.info({ participantCount, room: socket.data.currentGameRoom }, 'Emitting participant_count_update to room');
+            if (socket.data.currentGameRoom) {
+                // FIX: Emit full participants array, not just count
+                const dbParticipants = await prisma_1.prisma.gameParticipant.findMany({
+                    where: { gameInstanceId: gameInstance.id },
+                    include: { user: true }
+                });
+                const participants = dbParticipants.map(p => ({
+                    id: p.id,
+                    userId: p.userId,
+                    username: p.user?.username || 'Unknown',
+                    avatar: p.user?.avatarEmoji || '😀',
+                    score: p.score ?? 0,
+                    avatarEmoji: p.user?.avatarEmoji || undefined,
+                    joinedAt: p.joinedAt ? (typeof p.joinedAt === 'string' ? p.joinedAt : p.joinedAt.toISOString()) : new Date().toISOString(),
+                    online: true,
+                    socketId: undefined // Not tracked here
+                }));
+                socket.to(socket.data.currentGameRoom).emit('game_participants', { participants });
+            }
+            // --- DEBUG: Log Redis state ---
+            const redisParticipants = await redis_1.redisClient.hgetall(participantsKey);
+            logger.debug({ redisParticipants }, 'Current Redis participants');
+            // --- DEBUG: Log all socket rooms ---
+            const allRooms = Array.from(io.sockets.adapter.rooms.keys());
+            logger.debug({ allRooms }, 'Current socket rooms');
+            // --- DEBUG: Log specific socket details ---
+            const socketDetails = {
+                id: socket.id,
+                rooms: Array.from(socket.rooms),
+                data: socket.data,
+            };
+            logger.debug({ socketDetails }, 'Current socket details');
         }
         catch (err) {
             logger.error({ err, accessCode, userId, stack: err instanceof Error ? err.stack : undefined }, 'Error in joinGameHandler');

@@ -3,13 +3,14 @@ import { Server } from 'socket.io';
 import { createServer, Server as HttpServer } from 'http';
 import { configureSocketServer, registerHandlers, closeSocketIORedisClients } from '../../src/sockets';
 import { prisma } from '../../src/db/prisma';
-import { redisClient } from '../../src/config/redis';
+import { startTestServer } from '../testSetup';
 import gameStateService from '../../src/core/gameStateService';
 import { testQuestions } from '../support/testQuestions';
 import createLogger from '../../src/utils/logger';
+import jwt from 'jsonwebtoken';
 
 describe('Teacher Dashboard & Game Control', () => {
-    jest.setTimeout(3000); // Revert to 3s timeout for async/socket tests
+    jest.setTimeout(10000); // Increased timeout for async/socket tests
 
     let httpServer: HttpServer;
     let ioServer: Server;
@@ -20,24 +21,21 @@ describe('Teacher Dashboard & Game Control', () => {
     let accessCode: string;
     let gameTemplate: any;
     let seededQuestionUids: string[];
+    let testServerSetup: any;
+    let baseUrl: string;
+    let teacherToken: string;
 
     // Setup mock user data
     const teacherId = 'teacher-1';
     const playerId = 'player-1';
+    const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret';
 
     beforeAll(async () => {
-        // Create HTTP server and Socket.IO instance
-        httpServer = createServer();
-        ioServer = new Server(httpServer);
-        configureSocketServer(ioServer);
-        registerHandlers(ioServer);
-
-        // Start HTTP server
-        await new Promise<void>((resolve) => {
-            httpServer.listen(3001, () => {
-                resolve();
-            });
-        });
+        // Create isolated test server
+        testServerSetup = await startTestServer();
+        httpServer = testServerSetup.server;
+        ioServer = testServerSetup.io;
+        baseUrl = `http://localhost:${testServerSetup.port}`;
 
         // Ensure the teacher exists
         await prisma.user.upsert({
@@ -96,16 +94,23 @@ describe('Teacher Dashboard & Game Control', () => {
 
         // Get all seeded question UIDs
         seededQuestionUids = testQuestions.map(q => q.uid);
+
+        // Generate JWT token for teacher
+        teacherToken = jwt.sign(
+            {
+                userId: teacherId,
+                username: 'testteacher',
+                role: 'TEACHER'
+            },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
     });
 
     afterAll(async () => {
         // Close connections
         if (teacherSocket) teacherSocket.disconnect();
         if (playerSocket) playerSocket.disconnect();
-
-        // Close server
-        ioServer.close();
-        httpServer.close();
 
         // Clean up test data
         if (gameId) {
@@ -122,36 +127,26 @@ describe('Teacher Dashboard & Game Control', () => {
         await prisma.teacherProfile.deleteMany({ where: { id: teacherId } });
         await prisma.user.deleteMany({ where: { id: teacherId } });
 
-        // Clear Redis keys
-        const keys = await redisClient.keys(`mathquest:game:*${accessCode}*`);
-        if (keys.length > 0) {
-            await redisClient.del(keys);
+        // Clean up server using test setup cleanup
+        if (testServerSetup && testServerSetup.cleanup) {
+            await testServerSetup.cleanup();
         }
-
-        // Close Socket.IO Redis adapter clients
-        try {
-            await closeSocketIORedisClients();
-        } catch (e) {
-            // Ignore errors on shutdown
-        }
-        // Give ioredis a moment to fully close before Jest exits
-        await new Promise(res => setTimeout(res, 50));
 
         // Close database connections
         await prisma.$disconnect();
-        try {
-            if (redisClient.status !== 'end') {
-                await redisClient.quit();
-                await new Promise(res => setTimeout(res, 50));
-            }
-        } catch (e) {
-            // Ignore errors on shutdown
-        }
     });
 
     beforeEach((done) => {
-        teacherSocket = clientIo('http://localhost:3001', {
-            auth: { userId: teacherId }
+        teacherSocket = clientIo(baseUrl, {
+            query: {
+                token: teacherToken,
+                userId: teacherId,
+                userType: 'teacher',
+                role: 'TEACHER'
+            },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
         });
         teacherSocket.on('connect', () => {
             teacherSocket.emit('join_dashboard', { gameId });

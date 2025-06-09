@@ -133,10 +133,23 @@ class GameTemplateService {
             }
         });
     }
-    async deletegameTemplate(userId, id) {
+    async deletegameTemplate(userId, id, forceDelete = false) {
         const existing = await prisma_1.prisma.gameTemplate.findFirst({ where: { id, creatorId: userId } });
         if (!existing) {
             throw new Error(`Quiz template with ID ${id} not found or you don't have permission to delete it`);
+        }
+        // Check if there are any game instances using this template
+        const gameInstanceCount = await prisma_1.prisma.gameInstance.count({
+            where: { gameTemplateId: id }
+        });
+        if (gameInstanceCount > 0 && !forceDelete) {
+            throw new Error(`Cannot delete template: ${gameInstanceCount} game session${gameInstanceCount > 1 ? 's' : ''} still reference${gameInstanceCount === 1 ? 's' : ''} this template. Delete the game sessions first.`);
+        }
+        // If forceDelete is true, first delete all related game instances
+        if (forceDelete && gameInstanceCount > 0) {
+            await prisma_1.prisma.gameInstance.deleteMany({
+                where: { gameTemplateId: id }
+            });
         }
         await prisma_1.prisma.gameTemplate.delete({ where: { id } });
     }

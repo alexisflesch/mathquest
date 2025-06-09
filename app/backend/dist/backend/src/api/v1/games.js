@@ -46,10 +46,12 @@ exports.__setGameParticipantServiceForTesting = __setGameParticipantServiceForTe
  */
 router.post('/', auth_1.optionalAuth, async (req, res) => {
     try {
-        // Debug: Log the full request body
+        // Debug: Log the full request body, user, and headers
         logger.info('Games POST request body debug', {
             fullBody: req.body,
-            keys: Object.keys(req.body)
+            keys: Object.keys(req.body),
+            user: req.user,
+            headers: req.headers
         });
         const { name, gameTemplateId, playMode, settings, gradeLevel, discipline, themes, nbOfQuestions, initiatorStudentId } = req.body;
         // Strict playMode values
@@ -209,6 +211,37 @@ router.get('/:accessCode', async (req, res) => {
     }
     catch (error) {
         logger.error({ error }, 'Error fetching game instance');
+        res.status(500).json({ error: 'An error occurred while fetching the game' });
+    }
+});
+/**
+ * Get a game instance by ID
+ * GET /api/v1/games/id/:id
+ * Requires teacher authentication
+ */
+router.get('/id/:id', auth_1.teacherAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+        if (!id) {
+            res.status(400).json({ error: 'Game ID is required' });
+            return;
+        }
+        const gameInstance = await getGameInstanceService().getGameInstanceById(id);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        // Check if the user is the creator of this game
+        const isCreator = user && user.userId && gameInstance.initiatorUserId === user.userId;
+        if (!isCreator) {
+            res.status(403).json({ error: 'You do not have permission to access this game' });
+            return;
+        }
+        res.status(200).json({ gameInstance });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error fetching game instance by ID');
         res.status(500).json({ error: 'An error occurred while fetching the game' });
     }
 });
@@ -657,6 +690,46 @@ router.get('/template/:templateId/instances', auth_1.teacherAuth, async (req, re
     catch (error) {
         logger.error({ error, templateId: req.params.templateId }, 'Error fetching game instances by template');
         res.status(500).json({ error: 'An error occurred while fetching game instances' });
+    }
+});
+/**
+ * Delete a game instance (teacher only)
+ * DELETE /api/v1/games/:id
+ * Requires teacher authentication
+ */
+router.delete('/:id', auth_1.teacherAuth, async (req, res) => {
+    try {
+        if (!req.user?.userId || req.user?.role !== 'TEACHER') {
+            res.status(401).json({ error: 'Teacher authentication required' });
+            return;
+        }
+        const { id } = req.params;
+        if (!id) {
+            res.status(400).json({ error: 'Game instance ID is required' });
+            return;
+        }
+        logger.info({ instanceId: id, userId: req.user.userId }, 'Deleting game instance');
+        // Delete the game instance
+        await getGameInstanceService().deleteGameInstance(req.user.userId, id);
+        // Return 204 No Content for successful deletion
+        res.status(204).send();
+    }
+    catch (error) {
+        const err = error;
+        logger.error({
+            error: err.message,
+            instanceId: req.params.id,
+            userId: req.user?.userId
+        }, 'Error deleting game instance');
+        if (err.message.includes('not found')) {
+            res.status(404).json({ error: err.message });
+        }
+        else if (err.message.includes('permission')) {
+            res.status(403).json({ error: err.message });
+        }
+        else {
+            res.status(500).json({ error: 'An error occurred while deleting the game instance' });
+        }
     }
 });
 exports.default = router;

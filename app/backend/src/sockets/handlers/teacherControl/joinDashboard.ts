@@ -5,12 +5,15 @@ import createLogger from '@/utils/logger';
 import { JoinDashboardPayload } from './types';
 import { DASHBOARD_PREFIX, getGameControlState } from './helpers';
 import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { getParticipantCount } from '@/sockets/utils/participantCountUtils';
 
 // Create a handler-specific logger
 const logger = createLogger('JoinDashboardHandler');
 
 export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: JoinDashboardPayload, callback?: (data: any) => void) => {
+        logger.info({ socketId: socket.id, payload }, 'joinDashboardHandler called');
+
         const { gameId, accessCode } = payload;
 
         // Get userId from socket.data (should be populated by auth middleware)
@@ -189,6 +192,10 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             }
             // Send the comprehensive initial state
             socket.emit(TEACHER_EVENTS.GAME_CONTROL_STATE, controlState);
+
+            // Send initial participant count to the teacher
+            const participantCount = await getParticipantCount(io, gameInstance.accessCode);
+            socket.emit('quiz_connected_count', { count: participantCount });
 
             logger.info({ gameId, userId: effectiveUserId, socketId: socket.id }, 'User joined dashboard successfully');
 

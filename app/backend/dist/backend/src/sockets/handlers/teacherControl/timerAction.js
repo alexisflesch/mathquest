@@ -14,7 +14,7 @@ function timerActionHandler(io, socket) {
         logger.info({ payload }, 'Received quiz_timer_action event');
         // Only support gameId, do not allow quizId for timer actions
         const { gameId, action, duration } = payload;
-        const userId = socket.data?.userId;
+        const userId = socket.data?.userId || socket.data?.user?.userId;
         logger.info({ gameId, userId, action, duration }, 'Timer action handler entered');
         if (!gameId) {
             logger.warn({ action }, 'No gameId provided in payload, aborting timer action');

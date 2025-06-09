@@ -13,7 +13,7 @@ const logger = (0, logger_1.default)('SetQuestionHandler');
 function setQuestionHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId, questionUid, questionIndex } = payload;
-        const userId = socket.data?.userId;
+        const userId = socket.data?.userId || socket.data?.user?.userId;
         const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
         let effectiveuserId = userId;
         let callbackCalled = false;

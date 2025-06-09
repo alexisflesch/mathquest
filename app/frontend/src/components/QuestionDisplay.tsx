@@ -2,6 +2,10 @@ import React, { useRef, useEffect, useState } from "react";
 import { Play, Pause, Square, Check, X, Pencil, Trophy, ChartBarBig } from "lucide-react";
 import { formatTime } from "@/utils"; // Assure-toi que ce chemin est correct
 import MathJaxWrapper from '@/components/MathJaxWrapper'; // Assure-toi que ce chemin est correct
+import { createLogger } from '@/clientLogger';
+
+// Create a logger for this component
+const logger = createLogger('QuestionDisplay');
 
 // Types (simplifiés pour l'affichage)
 export interface QuestionDisplayProps {
@@ -66,6 +70,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onStatsToggle, // NEW: destructure onStatsToggle
     stats, // NEW: destructure stats
 }) => {
+    // Debug: Log the question data received
+    logger.info('[DEBUG QuestionDisplay] Received question:', question);
+    logger.info('[DEBUG QuestionDisplay] Question answers:', question.answers);
+    logger.info('[DEBUG QuestionDisplay] Question text:', question.text);
 
     // Détermine l'état effectif des boutons play/pause
     const effectiveIsRunning = timerStatus === 'play';

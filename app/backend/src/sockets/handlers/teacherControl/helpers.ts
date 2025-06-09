@@ -63,6 +63,8 @@ export async function getGameControlState(gameId: string | undefined, userId: st
         return null;
     }
     try {
+        logger.info({ gameId, userId, isTestEnvironment }, 'Fetching game control state');
+
         // Fetch the game instance
         const gameInstance = await prisma.gameInstance.findUnique({
             where: {
@@ -75,6 +77,8 @@ export async function getGameControlState(gameId: string | undefined, userId: st
             logger.warn({ gameId, userId }, 'Game instance not found or not authorized');
             return null;
         }
+
+        logger.info({ gameId, gameInstanceId: gameInstance.id, accessCode: gameInstance.accessCode }, 'Found game instance');
 
         // Fetch the quiz template with questions
         const gameTemplate = await prisma.gameTemplate.findUnique({
@@ -95,6 +99,8 @@ export async function getGameControlState(gameId: string | undefined, userId: st
             logger.warn({ gameId, userId }, 'Quiz template not found');
             return null;
         }
+
+        logger.info({ gameId, templateId: gameTemplate.id, questionCount: gameTemplate.questions.length }, 'Found game template');
 
         // Get the game state from Redis
         const fullState = await gameStateService.getFullGameState(gameInstance.accessCode);

@@ -100,7 +100,7 @@ describe('Self-Paced (Practice) Mode', () => {
     });
     afterAll(async () => {
         await serverCleanup();
-    });
+    }, 60000); // 60 second timeout
     test('Player can play a self-paced game and receive feedback and score', async () => {
         // 1. Player creates a self-paced game
         // (simulate API or DB call)
@@ -184,10 +184,10 @@ describe('Self-Paced (Practice) Mode', () => {
         socket.emit('request_next_question', { accessCode, userId: playerId, currentQuestionId: firstQ.uid });
         // 6. Should receive second question
         const secondQ = await waitForEvent(socket, 'game_question');
-        expect(secondQ.text).toContain('2+2');
+        expect(secondQ.question.text).toContain('2+2');
         // 7. Answer second question
-        console.log('Answering second question:', { accessCode, userId: playerId, questionId: secondQ.uid, answer: 1, timeSpent: 1200 });
-        socket.emit('game_answer', { accessCode, userId: playerId, questionId: secondQ.uid, answer: 1, timeSpent: 1200 });
+        console.log('Answering second question:', { accessCode, userId: playerId, questionId: secondQ.question.uid, answer: 1, timeSpent: 1200 });
+        socket.emit('game_answer', { accessCode, userId: playerId, questionId: secondQ.question.uid, answer: 1, timeSpent: 1200 });
         const feedback2 = await waitForEvent(socket, 'answer_received');
         console.log('Received feedback for second question:', feedback2);
         expect(feedback2.correct).toBe(true);

@@ -3,6 +3,7 @@ import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import { joinRoom, leaveRoom, getRoomMembers, broadcastToRoom } from '@/sockets/utils/roomUtils';
+import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
 import { LOBBY_EVENTS } from '@shared/types/socket/events';
 
 // Create a handler-specific logger
@@ -10,6 +11,9 @@ const logger = createLogger('LobbyHandler');
 
 // Redis key prefixes
 const LOBBY_KEY_PREFIX = 'mathquest:lobby:';
+
+// Store intervals for game status checking
+const gameStatusCheckIntervals = new Map<string, NodeJS.Timeout>();
 
 // Define types for lobby participants
 export interface LobbyParticipant {
@@ -37,6 +41,72 @@ export interface GetParticipantsPayload {
 }
 
 /**
+ * Setup periodic game status checking for a lobby
+ * This checks if the game has become active and notifies participants
+ */
+function setupGameStatusCheck(io: SocketIOServer, accessCode: string): void {
+    // Clear any existing interval for this access code
+    const existingInterval = gameStatusCheckIntervals.get(accessCode);
+    if (existingInterval) {
+        clearInterval(existingInterval);
+    }
+
+    const interval = setInterval(async () => {
+        try {
+            // Check if game is now active
+            const gameInstance = await prisma.gameInstance.findUnique({
+                where: { accessCode },
+                select: { id: true, status: true, name: true }
+            });
+
+            if (!gameInstance) {
+                // Game doesn't exist anymore, clear the interval
+                clearInterval(interval);
+                gameStatusCheckIntervals.delete(accessCode);
+                return;
+            }
+
+            if (gameInstance.status === 'active') {
+                logger.info({ accessCode, gameId: gameInstance.id }, 'Game became active, notifying lobby participants');
+
+                // Emit redirect event to all lobby participants
+                io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.REDIRECT_TO_GAME, {
+                    accessCode,
+                    gameId: gameInstance.id
+                });
+
+                // Also emit game_started event
+                io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.GAME_STARTED, {
+                    accessCode,
+                    gameId: gameInstance.id
+                });
+
+                // Clear the interval since game is now active
+                clearInterval(interval);
+                gameStatusCheckIntervals.delete(accessCode);
+            }
+        } catch (error) {
+            logger.error({ error, accessCode }, 'Error checking game status');
+        }
+    }, 2000); // Check every 2 seconds
+
+    gameStatusCheckIntervals.set(accessCode, interval);
+    logger.info({ accessCode }, 'Setup game status checking for lobby');
+}
+
+/**
+ * Stop game status checking for a lobby
+ */
+function stopGameStatusCheck(accessCode: string): void {
+    const interval = gameStatusCheckIntervals.get(accessCode);
+    if (interval) {
+        clearInterval(interval);
+        gameStatusCheckIntervals.delete(accessCode);
+        logger.info({ accessCode }, 'Stopped game status checking for lobby');
+    }
+}
+
+/**
  * Register all lobby-related socket event handlers
  * @param io The Socket.IO server instance
  * @param socket The connected socket
@@ -44,8 +114,20 @@ export interface GetParticipantsPayload {
 export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void {
     // Join a game lobby
     socket.on(LOBBY_EVENTS.JOIN_LOBBY, async (payload: JoinLobbyPayload) => {
-        const { accessCode, userId, username, avatarEmoji } = payload;
+        // const { accessCode, userId, username, avatarEmoji } = payload; // Original
+        const { accessCode } = payload; // Only take accessCode from payload
+        const { userId, username, avatarEmoji } = socket.data.user || {}; // Get user details from authenticated socket data
+
         logger.info({ accessCode, userId, username, socketId: socket.id }, 'Player joining lobby');
+
+        if (!userId || !username) {
+            logger.error({ accessCode, socketId: socket.id, payloadUserId: payload.userId, socketDataUser: socket.data.user }, 'User details not found in socket data for join_lobby');
+            socket.emit(LOBBY_EVENTS.LOBBY_ERROR, {
+                error: 'authentication_error',
+                message: 'User details not available. Ensure client is authenticated.'
+            });
+            return;
+        }
 
         try {
             // Verify the game exists and check its status
@@ -130,12 +212,16 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                 joinedAt: Date.now()
             });
 
+            // Set socket data for disconnect handler
+            socket.data.userId = userId;
+            socket.data.accessCode = accessCode;
+
             // Store new participant data in Redis
             const participant: LobbyParticipant = {
                 id: socket.id,
-                userId,
-                username,
-                avatarEmoji,
+                userId, // Use userId from socket.data.user
+                username, // Use username from socket.data.user
+                avatarEmoji: avatarEmoji || payload.avatarEmoji, // Use avatarEmoji from socket.data.user or fallback to payload
                 joinedAt: Date.now()
             };
 
@@ -175,6 +261,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
 
             // Notify others that someone joined (only if this is a new user, not a reconnection)
             if (!isReconnection) {
+                // Emit the full participant object constructed with socket.data.user details
                 socket.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANT_JOINED, participant);
             }
 
@@ -185,8 +272,14 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                 gameName: gameInstance.name
             });
 
-            // Set up periodic status check for this lobby
-            await setupGameStatusCheck(io, socket, accessCode, gameInstance.id);
+            // Emit updated participant count to teacher dashboard
+            await emitParticipantCount(io, accessCode);
+
+            // Setup periodic game status checking
+            setupGameStatusCheck(io, accessCode);
+
+            // Note: Game status change notifications are now handled by the event-driven
+            // tournament start mechanism instead of polling
 
         } catch (error) {
             logger.error({ error, accessCode, socketId: socket.id }, 'Error in join_lobby handler');
@@ -205,6 +298,12 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
         try {
             // Leave the lobby room
             await leaveRoom(socket, `lobby_${accessCode}`);
+
+            // Clear socket data
+            delete socket.data.accessCode;
+            if (socket.data.userId) {
+                delete socket.data.userId;
+            }
 
             // Remove from Redis
             await redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, socket.id);
@@ -237,6 +336,15 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
 
             // Send updated participants list
             io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANTS_LIST, { participants });
+
+            // Emit room_left event to the socket that left
+            socket.emit(LOBBY_EVENTS.ROOM_LEFT, { accessCode });
+
+            // Emit the updated participant count to all clients in the lobby
+            await emitParticipantCount(io, accessCode);
+
+            // Stop game status checking for this lobby
+            stopGameStatusCheck(accessCode);
 
         } catch (error) {
             logger.error({ error, accessCode, socketId: socket.id }, 'Error in leave_lobby handler');
@@ -318,59 +426,74 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             // Store the socket ID before disconnection
             const socketId = socket.id;
 
+            // Check Redis connection before proceeding
+            if (redisClient.status === 'end') {
+                logger.warn({ socketId }, 'Redis connection closed, skipping lobby disconnect handling');
+                return;
+            }
+
             // Check if socket is in any lobby rooms
             for (const room of Array.from(socket.rooms)) {
                 if (room.startsWith('lobby_')) {
                     const accessCode = room.replace('lobby_', '');
                     logger.info({ accessCode, socketId }, 'Socket disconnecting from lobby');
 
-                    // Get current participants to find this socket's participant data
-                    const participantsHash = await redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
-                    const participants: LobbyParticipant[] = participantsHash ?
-                        Object.values(participantsHash).map(p => JSON.parse(p as string)) : [];
+                    try {
+                        // Get current participants to find this socket's participant data
+                        const participantsHash = await redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
+                        const participants: LobbyParticipant[] = participantsHash ?
+                            Object.values(participantsHash).map(p => JSON.parse(p as string)) : [];
 
-                    // Find the participant data for this socket
-                    const disconnectingParticipant = participants.find(p => p.id === socketId);
+                        // Find the participant data for this socket
+                        const disconnectingParticipant = participants.find(p => p.id === socketId);
 
-                    // Remove from Redis
-                    await redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, socketId);
+                        // Remove from Redis
+                        await redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, socketId);
 
-                    // Get updated participants list and deduplicate
-                    const updatedParticipantsHash = await redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
-                    const allUpdatedParticipants: LobbyParticipant[] = updatedParticipantsHash ?
-                        Object.values(updatedParticipantsHash).map(p => JSON.parse(p as string)) : [];
+                        // Get updated participants list and deduplicate
+                        const updatedParticipantsHash = await redisClient.hgetall(`${LOBBY_KEY_PREFIX}${accessCode}`);
+                        const allUpdatedParticipants: LobbyParticipant[] = updatedParticipantsHash ?
+                            Object.values(updatedParticipantsHash).map(p => JSON.parse(p as string)) : [];
 
-                    // Deduplicate by userId - keep the most recent joinedAt for each userId
-                    const uniqueParticipants = new Map<string, LobbyParticipant>();
-                    for (const participant of allUpdatedParticipants) {
-                        const existing = uniqueParticipants.get(participant.userId);
-                        if (!existing || participant.joinedAt > existing.joinedAt) {
-                            uniqueParticipants.set(participant.userId, participant);
+                        // Deduplicate by userId - keep the most recent joinedAt for each userId
+                        const uniqueParticipants = new Map<string, LobbyParticipant>();
+                        for (const participant of allUpdatedParticipants) {
+                            const existing = uniqueParticipants.get(participant.userId);
+                            if (!existing || participant.joinedAt > existing.joinedAt) {
+                                uniqueParticipants.set(participant.userId, participant);
+                            }
                         }
-                    }
-                    const updatedParticipants = Array.from(uniqueParticipants.values());
+                        const updatedParticipants = Array.from(uniqueParticipants.values());
 
-                    // Clean up any duplicate entries in Redis
-                    const validSocketIds = new Set(updatedParticipants.map(p => p.id));
-                    for (const participant of allUpdatedParticipants) {
-                        if (!validSocketIds.has(participant.id)) {
-                            await redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, participant.id);
+                        // Clean up any duplicate entries in Redis
+                        const validSocketIds = new Set(updatedParticipants.map(p => p.id));
+                        for (const participant of allUpdatedParticipants) {
+                            if (!validSocketIds.has(participant.id)) {
+                                await redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, participant.id);
+                            }
                         }
-                    }
 
-                    // Notify others that someone left - using io instead of socket.to to ensure delivery
-                    io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socketId });
+                        // Notify others that someone left - using io instead of socket.to to ensure delivery
+                        io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socketId });
 
-                    // Send updated participants list
-                    io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANTS_LIST, { participants: updatedParticipants });
+                        // Send updated participants list
+                        io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANTS_LIST, { participants: updatedParticipants });
 
-                    if (disconnectingParticipant) {
-                        logger.info({
-                            accessCode,
-                            socketId,
-                            userId: disconnectingParticipant.userId,
-                            username: disconnectingParticipant.username
-                        }, 'Participant disconnected from lobby');
+                        // Emit the updated participant count to all clients in the lobby
+                        await emitParticipantCount(io, accessCode);
+
+                        if (disconnectingParticipant) {
+                            logger.info({
+                                accessCode,
+                                socketId,
+                                userId: disconnectingParticipant.userId,
+                                username: disconnectingParticipant.username
+                            }, 'Participant disconnected from lobby');
+                        }
+                    } catch (redisError) {
+                        logger.error({ error: redisError, accessCode, socketId }, 'Redis error during lobby disconnect handling');
+                        // Still emit participant_left event even if Redis fails
+                        io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socketId });
                     }
                 }
             }
@@ -381,71 +504,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
 }
 
 /**
- * Setup periodic game status check for players in the lobby
+ * The setupGameStatusCheck function has been removed in favor of event-driven
+ * game start notifications. When a tournament starts via the start_tournament event,
+ * it directly emits redirect events to lobby participants instead of polling.
  */
-async function setupGameStatusCheck(io: SocketIOServer, socket: Socket, accessCode: string, gameId: string): Promise<void> {
-    // Check every 2 seconds for game status changes
-    const intervalId = setInterval(async () => {
-        try {
-            // Stop checking if socket disconnected
-            if (!socket.connected) {
-                clearInterval(intervalId);
-                return;
-            }
-
-            // Check if game is now active
-            const gameInstance = await prisma.gameInstance.findUnique({
-                where: { id: gameId },
-                select: { status: true }
-            });
-
-            if (!gameInstance) {
-                logger.warn({ accessCode, gameId, socketId: socket.id }, 'Game no longer exists during status check');
-                clearInterval(intervalId);
-                socket.emit(LOBBY_EVENTS.LOBBY_ERROR, {
-                    error: 'game_not_found',
-                    message: 'Game no longer exists'
-                });
-                return;
-            }
-
-            // If game is now active, redirect players to the game
-            if (gameInstance.status === 'active') {
-                logger.info({ accessCode, gameId, socketId: socket.id }, 'Game is now active, sending redirect');
-
-                // Send redirect to individual socket
-                socket.emit(LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId });
-
-                // Also broadcast to all sockets in the lobby
-                io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId });
-                io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId });
-
-                // Send delayed redirects to ensure clients receive it
-                [500, 1500, 3000].forEach(delay => {
-                    setTimeout(() => {
-                        if (socket.connected) {
-                            socket.emit(LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId });
-                        }
-                    }, delay);
-                });
-
-                clearInterval(intervalId);
-            } else if (gameInstance.status === 'completed' || gameInstance.status === 'archived') {
-                logger.info({ accessCode, gameId, gameStatus: gameInstance.status, socketId: socket.id },
-                    'Game is no longer available');
-                socket.emit(LOBBY_EVENTS.LOBBY_ERROR, {
-                    error: 'game_ended',
-                    message: `Game has ended (${gameInstance.status})`
-                });
-                clearInterval(intervalId);
-            }
-        } catch (error) {
-            logger.error({ error, accessCode, gameId, socketId: socket.id }, 'Error in game status check');
-        }
-    }, 2000);
-
-    // Clear interval on disconnect
-    socket.on('disconnect', () => {
-        clearInterval(intervalId);
-    });
-}

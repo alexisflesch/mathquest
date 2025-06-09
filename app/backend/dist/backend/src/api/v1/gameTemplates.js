@@ -54,6 +54,48 @@ router.get('/', async (req, res) => {
     }
 });
 /**
+ * Get a specific game template by ID
+ * GET /api/v1/game-templates/:id
+ * Requires teacher authentication
+ */
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.userId || req.headers['x-user-id'];
+        const userRole = req.user?.role || req.headers['x-user-role'];
+        if (!userId) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        // Verify user is a teacher
+        if (userRole !== 'TEACHER') {
+            res.status(403).json({ error: 'Teacher access required' });
+            return;
+        }
+        if (!id) {
+            res.status(400).json({ error: 'Game template ID is required' });
+            return;
+        }
+        logger.info({ userId, templateId: id }, 'Fetching game template by ID');
+        // Fetch the specific game template with questions
+        const gameTemplate = await getGameTemplateService().getgameTemplateById(id, true);
+        if (!gameTemplate) {
+            res.status(404).json({ error: 'Game template not found' });
+            return;
+        }
+        // Check if the user is the creator of this template
+        if (gameTemplate.creatorId !== userId) {
+            res.status(403).json({ error: 'You do not have permission to access this game template' });
+            return;
+        }
+        res.status(200).json({ gameTemplate });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error fetching game template by ID');
+        res.status(500).json({ error: 'An error occurred while fetching the game template' });
+    }
+});
+/**
  * Teacher/Admin-driven GameTemplate creation
  * POST /api/v1/game-templates
  * Allows a teacher/admin to create a game template with specific details.
@@ -216,6 +258,56 @@ router.put('/:id', async (req, res) => {
         }
         else {
             res.status(500).json({ error: 'An error occurred while updating the game template' });
+        }
+    }
+});
+/**
+ * Delete a game template
+ * DELETE /api/v1/game-templates/:id
+ * Requires teacher authentication
+ */
+router.delete('/:id', async (req, res) => {
+    try {
+        // Extract user ID from either req.user (from middleware) or x-user-id header (from frontend API route)
+        const userId = req.user?.userId || req.headers['x-user-id'];
+        const userRole = req.user?.role || req.headers['x-user-role'];
+        if (!userId) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        // Verify user is a teacher (either from middleware or headers)
+        if (userRole !== 'TEACHER') {
+            res.status(403).json({ error: 'Teacher access required' });
+            return;
+        }
+        const templateId = req.params.id;
+        if (!templateId) {
+            res.status(400).json({ error: 'Template ID is required' });
+            return;
+        }
+        logger.info({ templateId, userId }, 'Deleting game template');
+        // Check if force delete is requested
+        const forceDelete = req.query.force === 'true';
+        // Delete the template
+        await getGameTemplateService().deletegameTemplate(userId, templateId, forceDelete);
+        // Return 204 No Content for successful deletion
+        res.status(204).send();
+    }
+    catch (error) {
+        const err = error;
+        logger.error({
+            error: err.message,
+            templateId: req.params.id,
+            userId: req.user?.userId
+        }, 'Error deleting game template');
+        if (err.message.includes('not found or you don\'t have permission')) {
+            res.status(404).json({ error: err.message });
+        }
+        else if (err.message.includes('Cannot delete template') && err.message.includes('game session')) {
+            res.status(409).json({ error: err.message }); // 409 Conflict
+        }
+        else {
+            res.status(500).json({ error: 'An error occurred while deleting the game template' });
         }
     }
 });

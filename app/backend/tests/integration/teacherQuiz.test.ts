@@ -1,11 +1,13 @@
 import request from 'supertest';
 import { Server as HttpServer } from 'http'; // Corrected import
+import { Server as SocketIOServer } from 'socket.io';
 import { io as ClientIO, Socket as ClientSocket } from 'socket.io-client';
 import { AddressInfo } from 'net'; // For port handling
 import jwt from 'jsonwebtoken'; // For token generation
 
-import { setupServer } from '../../src/server';
+import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
+import { redisClient } from '../../src/config/redis';
 
 // Utility to wait for a specific event - ensure this is robust
 function waitForEvent(socket: ClientSocket, event: string, timeout = 5000) { // Increased default timeout slightly
@@ -24,6 +26,7 @@ function waitForEvent(socket: ClientSocket, event: string, timeout = 5000) { // 
 
 describe('Teacher-driven Quiz Flow', () => {
     let httpServer: HttpServer;
+    let io: SocketIOServer;
     let baseUrl: string;
     let teacherSocket: ClientSocket;
     let player1Socket: ClientSocket;
@@ -39,12 +42,10 @@ describe('Teacher-driven Quiz Flow', () => {
     let questionUid: string; // UID of the first question
 
     beforeAll(async () => {
-        const serverSetup = setupServer(); // Assuming this sets up Socket.IO server as well
-        httpServer = serverSetup.httpServer;
-
-        await new Promise<void>((resolve) => httpServer.listen({ port: 0 }, resolve));
-        const port = (httpServer.address() as AddressInfo).port;
-        baseUrl = `http://localhost:${port}`;
+        const serverSetup = await startTestServer();
+        httpServer = serverSetup.server;
+        io = serverSetup.io;
+        baseUrl = `http://localhost:${serverSetup.port}`;
 
         // 1. Create Users (Teacher and Player)
         teacherUser = await prisma.user.create({
@@ -136,14 +137,30 @@ describe('Teacher-driven Quiz Flow', () => {
         quizId = gameInstance.id;
         accessCode = gameInstance.accessCode;
 
+        // Initialize game state in Redis (required for dashboard functionality)
+        const gameStateService = require('../../src/core/gameStateService');
+        await gameStateService.initializeGameState(gameInstance.id);
+
         // 5. Connect Teacher Socket
         teacherSocket = ClientIO(baseUrl, {
-            auth: { token: teacherToken, userId: teacherUser.id, userType: 'teacher' },
+            query: {
+                token: teacherToken,
+                userId: teacherUser.id,
+                userType: 'teacher',
+                role: teacherUser.role
+            },
             path: '/api/socket.io', // As per tournament2.test.ts
             transports: ['websocket'],
             forceNew: true
         });
         await new Promise<void>((resolve) => teacherSocket.on('connect', () => resolve()));
+
+        // Add debug logging for all teacher socket events
+        teacherSocket.onAny((event, ...args) => {
+            console.log('[teacherSocket] Event:', event, JSON.stringify(args));
+        });
+
+        console.log('Emitting join_dashboard with:', { gameId: quizId, userId: teacherUser.id, username: teacherUser.username });
         teacherSocket.emit('join_dashboard', { gameId: quizId, userId: teacherUser.id, username: teacherUser.username }); // Using 'join_dashboard'
 
         // Expect 'game_control_state' or a specific join confirmation.
@@ -154,7 +171,12 @@ describe('Teacher-driven Quiz Flow', () => {
         // Following tournament2.test.ts: connect socket, then emit join_game/join_tournament.
         // For quiz, let's assume player joins the "game" (which is the quiz session).
         player1Socket = ClientIO(baseUrl, {
-            auth: { token: player1Token },
+            query: {
+                token: player1Token,
+                userId: player1User.id,
+                userType: 'player',
+                role: player1User.role
+            },
             path: '/api/socket.io',
             transports: ['websocket'],
             forceNew: true
@@ -186,6 +208,11 @@ describe('Teacher-driven Quiz Flow', () => {
             await new Promise<void>(resolve => httpServer.close(() => resolve()));
         }
 
+        // Clean up Redis connections
+        if (redisClient) {
+            await redisClient.quit();
+        }
+
         // Clean up DB
         // Order matters due to foreign key constraints
         await prisma.gameParticipant.deleteMany({ where: { gameInstanceId: gameInstance?.id } });
@@ -200,7 +227,8 @@ describe('Teacher-driven Quiz Flow', () => {
         // await prisma.teacherProfile.deleteMany({ where: { id: { in: [teacherUser?.id].filter(Boolean) } } }); // If teacher profiles were created
         await prisma.user.deleteMany({ where: { id: { in: [teacherUser?.id, player1User?.id].filter(Boolean) } } });
 
-        // Add other cleanup as in tournament2.test.ts (Redis, etc.) if necessary
+        // Disconnect Prisma
+        await prisma.$disconnect();
     }, 60000);
 
     beforeEach(() => {

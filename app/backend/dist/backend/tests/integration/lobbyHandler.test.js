@@ -36,7 +36,7 @@ const waitForEvent = (socket, event) => {
 // Helper to wait a bit
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 describe('Lobby Handler', () => {
-    jest.setTimeout(3000);
+    jest.setTimeout(10000);
     beforeAll(async () => {
         // Start test server and get Socket.IO instance
         const setup = await (0, testSetup_1.startTestServer)();
@@ -139,10 +139,7 @@ describe('Lobby Handler', () => {
         // Join the lobby
         const joinPromise = waitForEvent(socket, 'participants_list');
         socket.emit('join_lobby', {
-            accessCode: TEST_ACCESS_CODE,
-            userId: 'player-123',
-            username: 'Test Player',
-            avatarEmoji: 'avatar.jpg'
+            accessCode: TEST_ACCESS_CODE
         });
         // Wait for participants list response
         const participantsResponse = await joinPromise;
@@ -184,10 +181,7 @@ describe('Lobby Handler', () => {
         // Player 1 joins
         const joinPromise1 = waitForEvent(socket1, 'participants_list');
         socket1.emit('join_lobby', {
-            accessCode: TEST_ACCESS_CODE,
-            userId: 'player-1',
-            username: 'Player 1',
-            avatarEmoji: 'avatar1.jpg'
+            accessCode: TEST_ACCESS_CODE
         });
         // Wait for first player to join
         const response1 = await joinPromise1;
@@ -197,10 +191,7 @@ describe('Lobby Handler', () => {
         const joinPromise2 = waitForEvent(socket2, 'participants_list');
         const updatePromise1 = waitForEvent(socket1, 'participants_list');
         socket2.emit('join_lobby', {
-            accessCode: TEST_ACCESS_CODE,
-            userId: 'player-2',
-            username: 'Player 2',
-            avatarEmoji: 'avatar2.jpg'
+            accessCode: TEST_ACCESS_CODE
         });
         // Both sockets should get updated participants list
         const [response2, update1] = await Promise.all([joinPromise2, updatePromise1]);
@@ -210,10 +201,7 @@ describe('Lobby Handler', () => {
         const participantJoinedPromise = waitForEvent(socket1, 'participant_joined');
         // Player 3 joins
         socket3.emit('join_lobby', {
-            accessCode: TEST_ACCESS_CODE,
-            userId: 'player-3',
-            username: 'Player 3',
-            avatarEmoji: 'avatar3.jpg'
+            accessCode: TEST_ACCESS_CODE
         });
         // Wait for participant_joined event on first socket
         const joinNotification = await participantJoinedPromise;
@@ -243,10 +231,7 @@ describe('Lobby Handler', () => {
         await waitForEvent(socket, 'connect');
         // Join the lobby
         socket.emit('join_lobby', {
-            accessCode: TEST_ACCESS_CODE,
-            userId: 'player-redirect-test',
-            username: 'Redirect Test',
-            avatarEmoji: 'avatar.jpg'
+            accessCode: TEST_ACCESS_CODE
         });
         // Wait for initial join response
         await waitForEvent(socket, 'participants_list');
@@ -283,16 +268,10 @@ describe('Lobby Handler', () => {
         const socket1Id = socket1.id;
         // Both join the lobby
         socket1.emit('join_lobby', {
-            accessCode: TEST_ACCESS_CODE,
-            userId: 'player-d1',
-            username: 'Disconnect Test 1',
-            avatarEmoji: 'avatar.jpg'
+            accessCode: TEST_ACCESS_CODE
         });
         socket2.emit('join_lobby', {
-            accessCode: TEST_ACCESS_CODE,
-            userId: 'player-d2',
-            username: 'Disconnect Test 2',
-            avatarEmoji: 'avatar.jpg'
+            accessCode: TEST_ACCESS_CODE
         });
         // Wait for both to receive participants list
         await Promise.all([

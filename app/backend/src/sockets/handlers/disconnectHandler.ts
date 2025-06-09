@@ -8,6 +8,7 @@ import {
     SocketData
 } from '@shared/types/socketEvents';
 import { z } from 'zod';
+import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
 
 const logger = createLogger('DisconnectHandler');
 
@@ -22,7 +23,7 @@ export function disconnectHandler(
 
         if (!userId || !accessCode) {
             logger.warn({ socketId: socket.id, reason }, 'Disconnected socket had no userId or accessCode in socket.data. Cannot process participant update.');
-            return;
+            return; // Exit early, don't try to emit participant count without accessCode
         }
 
         const participantsKey = `mathquest:game:participants:${accessCode}`;
@@ -30,6 +31,12 @@ export function disconnectHandler(
         const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
 
         try {
+            // Check if Redis client is still connected before proceeding
+            if (redisClient.status === 'end' || redisClient.status === 'close') {
+                logger.warn({ socketId: socket.id, userId, accessCode, redisStatus: redisClient.status }, 'Redis connection is closed, skipping disconnect cleanup');
+                return;
+            }
+
             // 1. Clean up socketIdToUserId mapping
             logger.debug({ socketIdToUserIdKey, socketId: socket.id }, 'Removing socketId from socketIdToUserId mapping');
             await redisClient.hdel(socketIdToUserIdKey, socket.id);
@@ -61,6 +68,9 @@ export function disconnectHandler(
                         logger.info({ playerLeftPayload, room: currentGameRoom }, 'Emitting player_left_game to room');
                         io.to(currentGameRoom).emit('player_left_game', playerLeftPayload);
                     }
+
+                    // Emit updated participant count to teacher dashboard
+                    await emitParticipantCount(io, accessCode);
                 } else {
                     logger.warn({ participantsKey, userId }, 'Participant data not found in Redis for disconnected user. Cannot mark as offline.');
                 }
@@ -73,6 +83,11 @@ export function disconnectHandler(
             // e.g., for live games to end if all players leave, that logic would go here or be triggered.
 
         } catch (err) {
+            // Check if the error is related to Redis being closed
+            if (err instanceof Error && (err.message.includes('Connection is closed') || err.message.includes('Connection is already closed'))) {
+                logger.warn({ socketId: socket.id, userId, accessCode }, 'Redis connection closed during disconnect handling, skipping cleanup');
+                return;
+            }
             logger.error({ err, socketId: socket.id, userId, accessCode, stack: err instanceof Error ? err.stack : undefined }, 'Error in disconnectHandler');
         }
     };

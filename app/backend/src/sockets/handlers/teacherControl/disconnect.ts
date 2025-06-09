@@ -9,6 +9,12 @@ const logger = createLogger('DisconnectHandler');
 export function disconnectHandler(io: SocketIOServer, socket: Socket) {
     return async () => {
         try {
+            // Check if Redis client is still connected before proceeding
+            if (redisClient.status === 'end' || redisClient.status === 'close') {
+                logger.warn({ socketId: socket.id, redisStatus: redisClient.status }, 'Redis connection is closed, skipping teacher disconnect cleanup');
+                return;
+            }
+
             // Find which dashboards this socket might be part of
             const dashboardKeys = await redisClient.keys(`${DASHBOARD_PREFIX}*`);
 
@@ -24,6 +30,11 @@ export function disconnectHandler(io: SocketIOServer, socket: Socket) {
                 }
             }
         } catch (error) {
+            // Check if the error is related to Redis being closed
+            if (error instanceof Error && (error.message.includes('Connection is closed') || error.message.includes('Connection is already closed'))) {
+                logger.warn({ socketId: socket.id }, 'Redis connection closed during teacher disconnect handling, skipping cleanup');
+                return;
+            }
             logger.error({ error }, 'Error handling teacher dashboard disconnect');
         }
     };

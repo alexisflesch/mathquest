@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const socket_io_client_1 = require("socket.io-client"); // Import ioc for creating client sockets
 const prisma_1 = require("@/db/prisma");
-const server_1 = require("@/server");
+const testSetup_1 = require("../testSetup");
 const testQuestions_1 = require("../support/testQuestions");
 const redis_1 = require("@/config/redis");
 const sockets_1 = require("@/sockets");
@@ -27,7 +27,7 @@ const waitForEvent = (socket, eventName, timeout = 10000) => {
     });
 };
 describe('Tournament Flow - Basic Tests', () => {
-    let app; // Use express.Express type
+    let app; // Use express.Application type
     let httpServer;
     let io;
     let address;
@@ -38,12 +38,12 @@ describe('Tournament Flow - Basic Tests', () => {
         // Seed all testQuestions into the database before running tournament tests
         await prisma_1.prisma.question.deleteMany();
         await prisma_1.prisma.question.createMany({ data: testQuestions_1.testQuestions });
-        const serverSetup = (0, server_1.setupServer)();
-        httpServer = serverSetup.httpServer;
-        io = serverSetup.io;
-        await new Promise((resolve) => httpServer.listen({ port: 0 }, resolve)); // Corrected listen and added void type
-        const port = httpServer.address().port;
-        address = `http://localhost:${port}`;
+        // Use startTestServer for proper test setup
+        const setup = await (0, testSetup_1.startTestServer)();
+        app = setup.app;
+        httpServer = setup.server;
+        io = setup.io;
+        address = `http://localhost:${setup.port}`;
         // Create users with unique identifiers to avoid conflicts
         player1 = await prisma_1.prisma.user.create({ data: { username: 'p1-basic', role: 'STUDENT', studentProfile: { create: { cookieId: 'cookie-p1-basic' } } } });
         player2 = await prisma_1.prisma.user.create({ data: { username: 'p2-basic', role: 'STUDENT', studentProfile: { create: { cookieId: 'cookie-p2-basic' } } } });
@@ -239,9 +239,21 @@ describe('Tournament Flow - Basic Tests', () => {
         await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode1}/join`).send({ userId: player2.id }).set('Authorization', `Bearer ${player2.token}`).expect(200);
         // Connect sockets
         // Connect player 1
-        socket1 = (0, socket_io_client_1.io)(address, { auth: { token: player1.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
+        socket1 = (0, socket_io_client_1.io)(address, {
+            auth: { token: player1.token },
+            query: { token: player1.token },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
+        });
         // Connect player 2
-        socket2 = (0, socket_io_client_1.io)(address, { auth: { token: player2.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
+        socket2 = (0, socket_io_client_1.io)(address, {
+            auth: { token: player2.token },
+            query: { token: player2.token },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
+        });
         await Promise.all([
             new Promise((res) => socket1.on('connect', () => res())),
             new Promise((res) => socket2.on('connect', () => res())),
@@ -334,9 +346,21 @@ describe('Tournament Flow - Basic Tests', () => {
         await (0, supertest_1.default)(address).post(`/api/v1/games/${accessCode2}/join`).send({ userId: player2.id }).set('Authorization', `Bearer ${player2.token}`).expect(200);
         // Connect sockets
         // Connect player 1
-        socket1 = (0, socket_io_client_1.io)(address, { auth: { token: player1.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
+        socket1 = (0, socket_io_client_1.io)(address, {
+            auth: { token: player1.token },
+            query: { token: player1.token },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
+        });
         // Connect player 2
-        socket2 = (0, socket_io_client_1.io)(address, { auth: { token: player2.token }, path: '/api/socket.io', transports: ['websocket'], forceNew: true });
+        socket2 = (0, socket_io_client_1.io)(address, {
+            auth: { token: player2.token },
+            query: { token: player2.token },
+            path: '/api/socket.io',
+            transports: ['websocket'],
+            forceNew: true
+        });
         await Promise.all([
             new Promise((res) => socket1.on('connect', () => res())),
             new Promise((res) => socket2.on('connect', () => res())),

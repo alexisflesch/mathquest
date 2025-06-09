@@ -11,7 +11,7 @@ const logger = createLogger('EndGameHandler');
 export function endGameHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: EndGamePayload, callback?: (data: any) => void) => {
         const { gameId } = payload;
-        const userId = socket.data?.userId;
+        const userId = socket.data?.userId || socket.data?.user?.userId;
 
         if (!userId) {
             socket.emit('error_dashboard', {
@@ -22,6 +22,9 @@ export function endGameHandler(io: SocketIOServer, socket: Socket) {
         }
 
         logger.info({ gameId, userId }, 'Game end requested');
+
+        console.log('[endGame] Handler called with:', { gameId, userId });
+        console.log('[endGame] Socket data:', socket.data);
 
         try {
             // Verify authorization
