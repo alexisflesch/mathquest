@@ -5,6 +5,9 @@ import { testQuestions } from './testQuestions';
 import { PrismaClient } from '../../src/db/generated/client';
 
 export default async (): Promise<void> => {
+    // Set NODE_ENV to test FIRST, before any other imports or operations
+    process.env.NODE_ENV = 'test';
+    
     // Generate the client using the BACKEND schema
     // The schema is located at /home/aflesch/mathquest/app/backend/prisma/schema.prisma
     // process.cwd() is /home/aflesch/mathquest/app/backend/
@@ -13,9 +16,10 @@ export default async (): Promise<void> => {
     // Load test-specific environment variables
     dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
 
-    // Set environment variables needed for tests
+    // Set environment variables needed for tests (override any previous values)
     process.env.NODE_ENV = 'test';
     process.env.JWT_SECRET = 'test-secret-key-for-tests';
+    process.env.DATABASE_URL = 'postgresql://postgre:Phuf0pohooFee8auohFahk7vChae4Iv0wiem5voT@localhost:5432/mathquest_test';
 
     // Assign a random port between 4000-9000 for tests to avoid conflicts
     process.env.PORT = (Math.floor(Math.random() * 5000) + 4000).toString();

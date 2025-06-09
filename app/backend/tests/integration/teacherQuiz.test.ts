@@ -7,7 +7,6 @@ import jwt from 'jsonwebtoken'; // For token generation
 
 import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
-import { redisClient } from '../../src/config/redis';
 
 // Utility to wait for a specific event - ensure this is robust
 function waitForEvent(socket: ClientSocket, event: string, timeout = 5000) { // Increased default timeout slightly
@@ -30,6 +29,7 @@ describe('Teacher-driven Quiz Flow', () => {
     let baseUrl: string;
     let teacherSocket: ClientSocket;
     let player1Socket: ClientSocket;
+    let testServerSetup: any;
 
     let teacherUser: any;
     let player1User: any;
@@ -42,10 +42,10 @@ describe('Teacher-driven Quiz Flow', () => {
     let questionUid: string; // UID of the first question
 
     beforeAll(async () => {
-        const serverSetup = await startTestServer();
-        httpServer = serverSetup.server;
-        io = serverSetup.io;
-        baseUrl = `http://localhost:${serverSetup.port}`;
+        testServerSetup = await startTestServer();
+        httpServer = testServerSetup.server;
+        io = testServerSetup.io;
+        baseUrl = `http://localhost:${testServerSetup.port}`;
 
         // 1. Create Users (Teacher and Player)
         teacherUser = await prisma.user.create({
@@ -203,16 +203,6 @@ describe('Teacher-driven Quiz Flow', () => {
         if (teacherSocket && teacherSocket.connected) teacherSocket.disconnect();
         if (player1Socket && player1Socket.connected) player1Socket.disconnect();
 
-        // Close HTTP server
-        if (httpServer && httpServer.listening) {
-            await new Promise<void>(resolve => httpServer.close(() => resolve()));
-        }
-
-        // Clean up Redis connections
-        if (redisClient) {
-            await redisClient.quit();
-        }
-
         // Clean up DB
         // Order matters due to foreign key constraints
         await prisma.gameParticipant.deleteMany({ where: { gameInstanceId: gameInstance?.id } });
@@ -229,6 +219,11 @@ describe('Teacher-driven Quiz Flow', () => {
 
         // Disconnect Prisma
         await prisma.$disconnect();
+
+        // Clean up test server
+        if (testServerSetup?.cleanup) {
+            await testServerSetup.cleanup();
+        }
     }, 60000);
 
     beforeEach(() => {

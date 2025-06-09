@@ -1,7 +1,10 @@
 // Load environment variables FIRST, before any other imports
 import dotenv from 'dotenv';
 import path from 'path';
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// Load appropriate environment file based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+dotenv.config({ path: path.resolve(__dirname, `../${envFile}`) });
 
 // Register module aliases for path mapping
 import 'module-alias/register';
