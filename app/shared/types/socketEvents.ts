@@ -113,7 +113,7 @@ export interface ClientToServerEvents {
     game_answer: (payload: GameAnswerPayload) => void;
     submit_answer: (payload: GameAnswerPayload) => void; // Alias for game_answer
     request_participants: (payload: { accessCode: string }) => void;
-    request_next_question: (payload: { accessCode: string; userId: string; currentQuestionId: string }) => void;
+    request_next_question: (payload: { accessCode: string; userId: string; currentQuestionId: string | null }) => void;
     // Teacher controls - using actual event names from TEACHER_EVENTS
     set_question: (payload: { gameId?: string; accessCode?: string; questionUid: string; questionIndex: number }) => void;
     quiz_timer_action: (payload: TimerActionPayload) => void;
@@ -159,6 +159,9 @@ export interface ServerToClientEvents {
     answers_locked: (payload: { locked: boolean }) => void;
     stats_update: (payload: any) => void;
     game_ended: (payload: { accessCode: string; correct?: number; total?: number; score?: number; totalQuestions?: number; /* any final stats */ }) => void;
+    game_end: (payload: { accessCode?: string;[key: string]: any }) => void; // Backend emits this event
+    correct_answers: (payload: { questionId: string;[key: string]: any }) => void; // Backend emits this event
+    feedback: (payload: { questionId: string; feedbackRemaining: number;[key: string]: any }) => void; // Backend emits this event
 
     game_error: (payload: ErrorPayload) => void;
     game_already_played: (payload: GameAlreadyPlayedPayload) => void; // Updated to use GameAlreadyPlayedPayload

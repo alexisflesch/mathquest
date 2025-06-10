@@ -63,20 +63,15 @@ export async function sendFirstQuestionAndStartTimer({
         return;
     }
     const firstQ = questionsInTemplate[0].question;
+
+    // ⚠️ SECURITY: Filter question to remove sensitive data (correctAnswers, explanation, etc.)
+    const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
+    const filteredQuestion = filterQuestionForClient(firstQ);
+
     const payload = {
-        question: {
-            uid: firstQ.uid,
-            text: firstQ.text,
-            answerOptions: firstQ.answerOptions,
-            correctAnswers: firstQ.correctAnswers,
-            timeLimit: firstQ.timeLimit,
-            questionType: firstQ.questionType,
-            themes: firstQ.themes,
-            difficulty: firstQ.difficulty,
-            discipline: firstQ.discipline,
-            title: firstQ.title || undefined
-        },
-        index: 0
+        question: filteredQuestion,
+        index: 0,
+        timer: firstQ.timeLimit || 30 // Include timer duration
     };
     if (mode === 'practice') {
         // target is a socket

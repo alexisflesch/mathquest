@@ -167,16 +167,14 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
 
             // Get the question data to send to players (without correct answers)
             if (question) {
-                // Create questionData object matching QuestionData type
-                const questionData = {
-                    uid: question.uid,
-                    title: question.title || undefined,
-                    text: question.text,
-                    answerOptions: question.answerOptions,
-                    correctAnswers: new Array(question.answerOptions.length).fill(false),
-                    questionType: question.questionType,
-                    timeLimit: question.timeLimit || 30,
-                    currentQuestionIndex: foundQuestionIndex,
+                // ⚠️ SECURITY: Use standard filtering function to remove sensitive data
+                const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
+                const filteredQuestion = filterQuestionForClient(question);
+
+                const gameQuestionPayload = {
+                    question: filteredQuestion,
+                    timer: gameState.timer,
+                    questionIndex: foundQuestionIndex,
                     totalQuestions: gameState.questionIds.length
                 };
 
@@ -187,18 +185,15 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 logger.info({
                     liveRoom,
                     liveRoomSocketIds,
-                    payload: { question: questionData, timer: gameState.timer }
+                    payload: gameQuestionPayload
                 }, '[DEBUG] Emitting game_question to live room');
                 // --- FORCE CONSOLE LOG FOR TEST VISIBILITY ---
                 console.log('[setQuestion] Emitting game_question:', {
                     liveRoom,
                     liveRoomSocketIds,
-                    payload: { question: questionData, timer: gameState.timer }
+                    payload: gameQuestionPayload
                 });
-                io.to(liveRoom).emit('game_question', {
-                    question: questionData,
-                    timer: gameState.timer
-                });
+                io.to(liveRoom).emit('game_question', gameQuestionPayload);
             }
 
             // Broadcast to projection room if needed

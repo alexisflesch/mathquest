@@ -33,7 +33,11 @@ import {
     isGameTimerUpdatePayload,
     createSafeEventHandler,
     validateEventPayload,
-    isLiveQuestionPayload
+    isLiveQuestionPayload,
+    isCorrectAnswersPayload,
+    isFeedbackEventPayload,
+    CorrectAnswersPayload,
+    FeedbackEventPayload
 } from '@/types/socketTypeGuards';
 
 const logger = createLogger('useStudentGameSocket');
@@ -59,15 +63,6 @@ export interface AnswerReceived {
     score?: number;
 }
 
-export interface FeedbackEvent {
-    questionId: string;
-    feedbackRemaining: number;
-}
-
-export interface CorrectAnswersEvent {
-    questionId: string;
-}
-
 // Use core answer result type for tournament answers
 export interface TournamentAnswerResult {
     questionUid: string;
@@ -89,7 +84,7 @@ export interface GameState {
     connectedToRoom: boolean;
     phase: 'question' | 'feedback' | 'show_answers';
     feedbackRemaining: number | null;
-    correctAnswers: number[] | null;
+    correctAnswers: boolean[] | null; // Backend sends boolean[], not number[]
     gameMode?: 'tournament' | 'quiz' | 'practice';
     linkedQuizId?: string | null;
     lastAnswerFeedback?: AnswerReceived | null;
@@ -175,6 +170,59 @@ export function useStudentGameSocket({
 
     // TIMER MANAGEMENT OVERHAUL: Only feedback timer remains - main timer handled by unified system
     const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const mainTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Start local main countdown timer
+    const startLocalTimer = useCallback((initialTime: number) => {
+        // Clear any existing main timer
+        if (mainTimerRef.current) {
+            clearInterval(mainTimerRef.current);
+            mainTimerRef.current = null;
+        }
+
+        if (initialTime <= 0) return;
+
+        // Set initial timer value immediately
+        setGameState(prev => ({
+            ...prev,
+            timer: initialTime,
+            timerStatus: 'play'
+        }));
+
+        // Use a local countdown variable to avoid React state race conditions
+        let countdown = initialTime;
+
+        // Start new countdown timer
+        mainTimerRef.current = setInterval(() => {
+            countdown = Math.max(countdown - 1, 0);
+
+            // Stop timer when reaching zero
+            if (countdown === 0) {
+                if (mainTimerRef.current) {
+                    clearInterval(mainTimerRef.current);
+                    mainTimerRef.current = null;
+                }
+                setGameState(prev => ({
+                    ...prev,
+                    timer: 0,
+                    timerStatus: 'stop'
+                }));
+            } else {
+                setGameState(prev => ({
+                    ...prev,
+                    timer: countdown
+                }));
+            }
+        }, 1000);
+    }, []);
+
+    // Stop local main countdown timer
+    const stopLocalTimer = useCallback(() => {
+        if (mainTimerRef.current) {
+            clearInterval(mainTimerRef.current);
+            mainTimerRef.current = null;
+        }
+    }, []);
 
     // Start local feedback countdown timer
     const startFeedbackTimer = useCallback((initialTime: number) => {
@@ -288,6 +336,10 @@ export function useStudentGameSocket({
                 clearInterval(feedbackTimerRef.current);
                 feedbackTimerRef.current = null;
             }
+            if (mainTimerRef.current) {
+                clearInterval(mainTimerRef.current);
+                mainTimerRef.current = null;
+            }
             s.disconnect();
             setSocket(null);
             setConnected(false);
@@ -306,6 +358,12 @@ export function useStudentGameSocket({
             }));
         }, isGameJoinedPayload, 'game_joined'));
         socket.on('game_question', createSafeEventHandler<LiveQuestionPayload>((payload) => {
+            logger.info('Received game_question', payload);
+
+            // Start timer with the duration from the payload
+            const timerDuration = payload.timer || 30; // Default to 30 seconds if not provided
+            logger.info('Starting local timer', { timerDuration });
+
             setGameState(prev => ({
                 ...prev,
                 currentQuestion: payload.question,
@@ -317,9 +375,12 @@ export function useStudentGameSocket({
                 feedbackRemaining: null,
                 correctAnswers: null,
                 connectedToRoom: true,
-                timer: (gameTimer.timerState.localTimeLeft ?? gameTimer.timerState.timeLeft),
-                timerStatus: gameTimer.timerState.status
+                timer: timerDuration, // Set the initial timer value
+                timerStatus: 'play' // Set timer as running
             }));
+
+            // Start a simple local countdown timer
+            startLocalTimer(timerDuration);
             stopFeedbackTimer();
         }, isLiveQuestionPayload, 'game_question'));
         socket.on('timer_update', createSafeEventHandler<TimerUpdatePayload>((data) => {
@@ -352,11 +413,69 @@ export function useStudentGameSocket({
             }));
         }, (d): d is GameStateUpdatePayload => true, 'game_state_update'));
         socket.on('answer_received', (payload) => {
-            setGameState(prev => ({ ...prev, answered: true }));
+            logger.info('=== ANSWER RECEIVED ===', payload);
+
+            // Store the correct answers when we receive answer feedback
+            setGameState(prev => {
+                const feedback = {
+                    correct: payload.correct,
+                    explanation: payload.explanation,
+                    correctAnswers: payload.correctAnswers,
+                    questionId: payload.questionId
+                };
+
+                logger.info('=== FEEDBACK SET ===', feedback);
+
+                return {
+                    ...prev,
+                    answered: true,
+                    lastAnswerFeedback: feedback,
+                    // Store correct answers for later display
+                    correctAnswers: Array.isArray(payload.correctAnswers) ? payload.correctAnswers : null
+                };
+            });
         });
         socket.on('game_ended', () => {
             setGameState(prev => ({ ...prev, gameStatus: 'finished', timer: null }));
         });
+
+        // Add missing event listeners that backend emits
+        socket.on('game_end', () => {
+            logger.info('=== GAME END RECEIVED ===');
+            setGameState(prev => ({ ...prev, gameStatus: 'finished', timer: null }));
+        });
+
+        socket.on('correct_answers', createSafeEventHandler<CorrectAnswersPayload>((payload) => {
+            logger.info('=== CORRECT ANSWERS EVENT ===', payload);
+
+            // The correct answers should already be stored from the answer_received event
+            setGameState(prev => {
+                logger.info('=== SETTING SHOW ANSWERS PHASE ===', {
+                    storedCorrectAnswers: prev.correctAnswers,
+                    hasStoredAnswers: !!prev.correctAnswers
+                });
+
+                return {
+                    ...prev,
+                    phase: 'show_answers'
+                };
+            });
+        }, isCorrectAnswersPayload, 'correct_answers'));
+
+        socket.on('feedback', createSafeEventHandler<FeedbackEventPayload>((payload) => {
+            logger.info('=== FEEDBACK PHASE STARTED ===', payload);
+            setGameState(prev => ({
+                ...prev,
+                phase: 'feedback',
+                feedbackRemaining: payload.feedbackRemaining
+            }));
+
+            // Start local feedback countdown
+            if (payload.feedbackRemaining > 0) {
+                startFeedbackTimer(payload.feedbackRemaining);
+            }
+        }, isFeedbackEventPayload, 'feedback'));
+
         socket.on('game_error', createSafeEventHandler<ErrorPayload>((error) => {
             setError(error.message || 'Unknown game error');
         }, isErrorPayload, 'game_error'));
@@ -376,6 +495,9 @@ export function useStudentGameSocket({
             socket.off('game_state_update');
             socket.off('answer_received');
             socket.off('game_ended');
+            socket.off('game_end');
+            socket.off('correct_answers');
+            socket.off('feedback');
             socket.off('game_error');
             socket.off('game_already_played');
         };

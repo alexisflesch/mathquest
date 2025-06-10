@@ -33,7 +33,7 @@ interface QuestionCardProps {
     isQuizMode?: boolean; // Whether to show question numbers
     readonly?: boolean;   // New prop to make the component display-only
     zoomFactor?: number;  // Kept for compatibility but no longer used // MODIFIED: Translated comment
-    correctAnswers?: number[]; // Add this prop
+    correctAnswers?: boolean[]; // Changed to accept boolean array directly
     stats?: StatsData; // Optional stats prop for question statistics
     showStats?: boolean; // Whether to display the stats
 }
@@ -102,9 +102,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     const questionTextToDisplay = getQuestionTextToRender(currentQuestion);
     const answersToDisplay = getAnswersToRender(currentQuestion);
 
-    // Log what will be displayed
-    logger.debug('[QuestionCard] Rendering with questionText:', questionTextToDisplay);
-    logger.debug('[QuestionCard] Rendering with answersToDisplay:', answersToDisplay);
+    // Log what will be displayed (only when answers are missing)
     if (answersToDisplay.length === 0) {
         logger.warn('[QuestionCard] Rendering with ZERO answers. Check payload and getAnswersToRender logic.');
     }
@@ -114,8 +112,6 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         pointerEvents: 'none' as const, // Blocks all mouse interactions
         userSelect: 'none' as const,    // Prevents text selection
     } : {};
-
-    console.debug('[QuestionCard] Rendering with questionText:', questionTextToDisplay, 'answersToDisplay:', answersToDisplay, 'currentQuestion prop:', currentQuestion);
 
     return (
         <div className="tqcard-content w-full flex flex-col gap-6 items-center" style={readonlyStyle}>
@@ -132,7 +128,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                     const isSelected = effectiveIsMultipleChoice
                         ? selectedAnswers.includes(idx)
                         : selectedAnswer === idx;
-                    const isCorrect = correctAnswers.includes(idx);
+                    const isCorrect = correctAnswers && correctAnswers[idx] === true;
                     const showGood = readonly && isCorrect;
                     const showWrong = readonly && isSelected && !isCorrect;
                     let statPercent: number | null = null;

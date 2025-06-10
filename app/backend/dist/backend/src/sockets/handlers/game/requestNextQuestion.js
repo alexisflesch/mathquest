@@ -26,9 +26,10 @@ function requestNextQuestionHandler(io, socket) {
                 socket.emit('game_error', { message: 'Game not found.' });
                 return;
             }
-            if (!gameInstance.isDiffered || gameInstance.playMode !== 'practice') {
-                logger.warn({ accessCode, userId }, 'Request next question is only for practice mode');
-                socket.emit('game_error', { message: 'This operation is only for practice mode.' });
+            // Allow request_next_question for both practice mode and deferred tournaments
+            if (!gameInstance.isDiffered && gameInstance.playMode !== 'practice') {
+                logger.warn({ accessCode, userId }, 'Request next question is only for practice mode or deferred tournaments');
+                socket.emit('game_error', { message: 'This operation is only for practice mode or deferred tournaments.' });
                 return;
             }
             // 2. Get participant

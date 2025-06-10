@@ -153,7 +153,22 @@ class GameParticipantService {
                     user: true
                 }
             });
-            if (!existingParticipant) {
+            if (existingParticipant) {
+                // Update existing participant's join time
+                participant = await prisma_1.prisma.gameParticipant.update({
+                    where: {
+                        id: existingParticipant.id
+                    },
+                    data: {
+                        joinedAt: new Date()
+                    },
+                    include: {
+                        user: true
+                    }
+                });
+                logger.info({ userId, accessCode, participantId: participant.id }, 'Updated existing participant join time');
+            }
+            else {
                 // Create new user if they don't exist, or connect if they do.
                 await prisma_1.prisma.user.upsert({
                     where: { id: userId },
@@ -169,37 +184,51 @@ class GameParticipantService {
                         studentProfile: { create: { cookieId: `cookie-${userId}` } }
                     }
                 });
-                // Create new participant, linking to the user via userId
-                const newParticipant = await prisma_1.prisma.gameParticipant.create({
-                    data: {
-                        gameInstanceId: gameInstance.id,
-                        userId: userId, // Map userId to userId
-                        joinedAt: new Date(),
-                        score: 0,
-                        answers: [],
+                // Create new participant with unique constraint handling
+                try {
+                    const newParticipant = await prisma_1.prisma.gameParticipant.create({
+                        data: {
+                            gameInstanceId: gameInstance.id,
+                            userId: userId,
+                            joinedAt: new Date(),
+                            score: 0,
+                            answers: [],
+                        }
+                    });
+                    participant = await prisma_1.prisma.gameParticipant.findUnique({
+                        where: { id: newParticipant.id },
+                        include: { user: true }
+                    });
+                }
+                catch (createError) {
+                    // Handle unique constraint violation (P2002)
+                    if (createError.code === 'P2002') {
+                        logger.warn({ userId, accessCode, error: createError.message }, 'Participant already exists, fetching existing participant');
+                        // Fetch the existing participant instead
+                        participant = await prisma_1.prisma.gameParticipant.findUnique({
+                            where: {
+                                gameInstanceId_userId: {
+                                    gameInstanceId: gameInstance.id,
+                                    userId: userId
+                                }
+                            },
+                            include: { user: true }
+                        });
+                        if (!participant) {
+                            logger.error({ userId, accessCode }, 'Failed to fetch existing participant after constraint violation');
+                            throw new Error('Failed to join game: participant creation failed');
+                        }
                     }
-                });
-                participant = await prisma_1.prisma.gameParticipant.findUnique({
-                    where: { id: newParticipant.id },
-                    include: { user: true }
-                });
+                    else {
+                        logger.error({ userId, accessCode, error: createError }, 'Unexpected error creating participant');
+                        throw createError;
+                    }
+                }
                 if (!participant) {
                     logger.error('Failed to fetch participant immediately after creation');
                     return { success: false, error: 'Failed to create or find participant' };
                 }
-            }
-            else {
-                participant = await prisma_1.prisma.gameParticipant.update({
-                    where: {
-                        id: existingParticipant.id
-                    },
-                    data: {
-                        joinedAt: new Date()
-                    },
-                    include: {
-                        user: true
-                    }
-                });
+                logger.info({ userId, accessCode, participantId: participant.id }, 'Created new participant');
             }
             return {
                 success: true,

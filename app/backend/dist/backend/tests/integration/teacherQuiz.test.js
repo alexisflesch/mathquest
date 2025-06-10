@@ -8,7 +8,6 @@ const socket_io_client_1 = require("socket.io-client");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken")); // For token generation
 const testSetup_1 = require("../testSetup");
 const prisma_1 = require("../../src/db/prisma");
-const redis_1 = require("../../src/config/redis");
 // Utility to wait for a specific event - ensure this is robust
 function waitForEvent(socket, event, timeout = 5000) {
     return new Promise((resolve, reject) => {
@@ -30,6 +29,7 @@ describe('Teacher-driven Quiz Flow', () => {
     let baseUrl;
     let teacherSocket;
     let player1Socket;
+    let testServerSetup;
     let teacherUser;
     let player1User;
     let quizTemplate;
@@ -40,10 +40,10 @@ describe('Teacher-driven Quiz Flow', () => {
     let accessCode;
     let questionUid; // UID of the first question
     beforeAll(async () => {
-        const serverSetup = await (0, testSetup_1.startTestServer)();
-        httpServer = serverSetup.server;
-        io = serverSetup.io;
-        baseUrl = `http://localhost:${serverSetup.port}`;
+        testServerSetup = await (0, testSetup_1.startTestServer)();
+        httpServer = testServerSetup.server;
+        io = testServerSetup.io;
+        baseUrl = `http://localhost:${testServerSetup.port}`;
         // 1. Create Users (Teacher and Player)
         teacherUser = await prisma_1.prisma.user.create({
             data: {
@@ -188,14 +188,6 @@ describe('Teacher-driven Quiz Flow', () => {
             teacherSocket.disconnect();
         if (player1Socket && player1Socket.connected)
             player1Socket.disconnect();
-        // Close HTTP server
-        if (httpServer && httpServer.listening) {
-            await new Promise(resolve => httpServer.close(() => resolve()));
-        }
-        // Clean up Redis connections
-        if (redis_1.redisClient) {
-            await redis_1.redisClient.quit();
-        }
         // Clean up DB
         // Order matters due to foreign key constraints
         await prisma_1.prisma.gameParticipant.deleteMany({ where: { gameInstanceId: gameInstance?.id } });
@@ -212,6 +204,10 @@ describe('Teacher-driven Quiz Flow', () => {
         await prisma_1.prisma.user.deleteMany({ where: { id: { in: [teacherUser?.id, player1User?.id].filter(Boolean) } } });
         // Disconnect Prisma
         await prisma_1.prisma.$disconnect();
+        // Clean up test server
+        if (testServerSetup?.cleanup) {
+            await testServerSetup.cleanup();
+        }
     }, 60000);
     beforeEach(() => {
         if (teacherSocket)

@@ -68,6 +68,7 @@ const createMockUnifiedGameManager = (overrides = {}) => ({
         phase: 'question' as 'question',
         connectedCount: 1,
         answered: false,
+        currentQuestionData: null, // Add missing property
         ...overrides
     },
     timer: {

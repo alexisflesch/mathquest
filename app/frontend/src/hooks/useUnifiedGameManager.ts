@@ -45,6 +45,7 @@ export interface GameState {
     // Question state
     currentQuestionId: string | null;
     currentQuestionIndex: number | null;
+    currentQuestionData: any | null; // Full question data from backend
     totalQuestions: number;
 
     // Game flow state
@@ -142,7 +143,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
 
     // --- Initialize Timer and Socket Hooks ---
     const socket = useSocketManager(role, gameId, socketConfig);
-    const timer = useGameTimer(role, undefined);
+    const timer = useGameTimer(role, socket.socket);
 
     // --- Game State Management ---
     const [gameState, setGameState] = useState<GameState>({
@@ -155,6 +156,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
         isTimerRunning: timer.isRunning,
         currentQuestionId: timer.timerState.questionId ?? null,
         currentQuestionIndex: null,
+        currentQuestionData: null,
         totalQuestions: 0,
         gameStatus: 'waiting',
         phase: 'question',
@@ -317,12 +319,14 @@ function setupStudentEvents(
                 ...prev,
                 currentQuestionId: payload.question?.uid,
                 currentQuestionIndex: payload.questionIndex ?? null,
+                currentQuestionData: payload, // Store full payload including question data
                 totalQuestions: payload.totalQuestions ?? 0,
                 gameStatus: 'active',
                 phase: 'question',
                 answered: false
             }));
             if (payload.question?.uid && payload.timer) {
+                logger.debug('Starting timer for question', { questionId: payload.question.uid, timer: payload.timer });
                 timer.start(payload.question.uid, payload.timer);
             }
         }
@@ -331,17 +335,17 @@ function setupStudentEvents(
         socket.socket?.off(SOCKET_EVENTS.GAME.GAME_QUESTION as keyof ServerToClientEvents);
     });
 
-    // Answer received feedback
-    socket.socket.on(
-        SOCKET_EVENTS.GAME.ANSWER_RECEIVED as keyof ServerToClientEvents,
-        (result: any) => {
-            logger.debug('Student received answer_received', result);
-            setGameState(prev => ({ ...prev, answered: true, phase: 'feedback' }));
-        }
-    );
-    cleanupFunctions.push(() => {
-        socket.socket?.off(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as keyof ServerToClientEvents);
-    });
+    // Answer received feedback - handled by custom hook
+    // socket.socket.on(
+    //     SOCKET_EVENTS.GAME.ANSWER_RECEIVED as keyof ServerToClientEvents,
+    //     (result: any) => {
+    //         logger.debug('Student received answer_received', result);
+    //         setGameState(prev => ({ ...prev, answered: true, phase: 'feedback' }));
+    //     }
+    // );
+    // cleanupFunctions.push(() => {
+    //     socket.socket?.off(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as keyof ServerToClientEvents);
+    // });
 
     // Game ended
     socket.socket.on(
@@ -411,8 +415,32 @@ function setupTournamentEvents(
         SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_QUESTION as keyof ServerToClientEvents,
         (data: any) => {
             logger.debug('Tournament received tournament_question', data);
-            if (data.question?.uid && data.timeLeft) {
-                timer.start(data.question.uid, data.timeLeft);
+
+            // Store full question data similar to game_question
+            setGameState(prev => ({
+                ...prev,
+                currentQuestionId: data.uid || data.question?.uid,
+                currentQuestionIndex: data.index ?? null,
+                currentQuestionData: {
+                    question: {
+                        uid: data.uid || data.question?.uid,
+                        text: data.question || data.text,
+                        type: data.type || 'multiple_choice',
+                        answers: data.answers || []
+                    },
+                    timer: data.remainingTime || data.timeLeft,
+                    questionIndex: data.index,
+                    totalQuestions: data.total,
+                    questionState: data.questionState || 'active'
+                },
+                totalQuestions: data.total ?? 0,
+                gameStatus: 'active',
+                phase: 'question',
+                answered: false
+            }));
+
+            if ((data.uid || data.question?.uid) && (data.remainingTime || data.timeLeft)) {
+                timer.start(data.uid || data.question?.uid, data.remainingTime || data.timeLeft);
             }
         }
     );

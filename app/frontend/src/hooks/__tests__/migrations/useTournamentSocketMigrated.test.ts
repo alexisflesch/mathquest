@@ -60,6 +60,7 @@ const createMockGameManager = (overrides: Partial<import('../../useUnifiedGameMa
             phase: 'question' as 'question',
             connectedCount: 1,
             answered: false,
+            currentQuestionData: null, // Add missing property
             ...overrides
         },
         timer: {

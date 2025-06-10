@@ -5,8 +5,6 @@
  * (sent to clients during live tournaments/quizzes).
  */
 
-import { Question } from './question';
-
 /**
  * Filtered question data (without correct answer information)
  */
@@ -14,7 +12,7 @@ export interface FilteredQuestion {
     uid: string;
     text: string;        // The question text
     type: string;         // Question type (choix_simple, choix_multiple, etc.)
-    answers: string[];   // Renamed from responses: Only answer texts, no correct info
+    answers: string[];   // Only answer texts, no correct info
 }
 
 /**
@@ -34,12 +32,13 @@ export interface LiveQuestionPayload {
 }
 
 /**
- * Filters a full question object to only include data safe to send to clients.
+ * Filters a database question object to only include data safe to send to clients.
+ * Uses the canonical database format with answerOptions.
  * 
- * @param questionObject - The full question object from the database or state
- * @returns FilteredQuestion - The question data safe for client emission
+ * @param questionObject - The question object from the database (Prisma format)
+ * @returns FilteredQuestion - The question data safe for client emission  
  */
-export function filterQuestionForClient(questionObject: Question): FilteredQuestion {
+export function filterQuestionForClient(questionObject: any): FilteredQuestion {
     if (!questionObject) {
         throw new Error('Cannot filter null or undefined question object');
     }
@@ -47,9 +46,7 @@ export function filterQuestionForClient(questionObject: Question): FilteredQuest
     return {
         uid: questionObject.uid,
         type: questionObject.questionType,
-        text: questionObject.text || questionObject.question || 'Question text not available',
-        answers: (Array.isArray(questionObject.answers)
-            ? questionObject.answers.map(ans => typeof ans === 'string' ? ans : ans.text)
-            : []),
+        text: questionObject.text,
+        answers: questionObject.answerOptions || [],
     };
 }

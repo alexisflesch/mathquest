@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -151,16 +184,13 @@ function setQuestionHandler(io, socket) {
             const liveRoom = `game_${gameInstance.accessCode}`;
             // Get the question data to send to players (without correct answers)
             if (question) {
-                // Create questionData object matching QuestionData type
-                const questionData = {
-                    uid: question.uid,
-                    title: question.title || undefined,
-                    text: question.text,
-                    answerOptions: question.answerOptions,
-                    correctAnswers: new Array(question.answerOptions.length).fill(false),
-                    questionType: question.questionType,
-                    timeLimit: question.timeLimit || 30,
-                    currentQuestionIndex: foundQuestionIndex,
+                // ⚠️ SECURITY: Use standard filtering function to remove sensitive data
+                const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/quiz/liveQuestion')));
+                const filteredQuestion = filterQuestionForClient(question);
+                const gameQuestionPayload = {
+                    question: filteredQuestion,
+                    timer: gameState.timer,
+                    questionIndex: foundQuestionIndex,
                     totalQuestions: gameState.questionIds.length
                 };
                 // Send the question to the live room
@@ -170,18 +200,15 @@ function setQuestionHandler(io, socket) {
                 logger.info({
                     liveRoom,
                     liveRoomSocketIds,
-                    payload: { question: questionData, timer: gameState.timer }
+                    payload: gameQuestionPayload
                 }, '[DEBUG] Emitting game_question to live room');
                 // --- FORCE CONSOLE LOG FOR TEST VISIBILITY ---
                 console.log('[setQuestion] Emitting game_question:', {
                     liveRoom,
                     liveRoomSocketIds,
-                    payload: { question: questionData, timer: gameState.timer }
+                    payload: gameQuestionPayload
                 });
-                io.to(liveRoom).emit('game_question', {
-                    question: questionData,
-                    timer: gameState.timer
-                });
+                io.to(liveRoom).emit('game_question', gameQuestionPayload);
             }
             // Broadcast to projection room if needed
             const projectionRoom = `projection_${gameId}`;

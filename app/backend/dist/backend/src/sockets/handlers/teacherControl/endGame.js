@@ -12,7 +12,7 @@ const logger = (0, logger_1.default)('EndGameHandler');
 function endGameHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId } = payload;
-        const userId = socket.data?.userId;
+        const userId = socket.data?.userId || socket.data?.user?.userId;
         if (!userId) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
@@ -21,6 +21,8 @@ function endGameHandler(io, socket) {
             return;
         }
         logger.info({ gameId, userId }, 'Game end requested');
+        console.log('[endGame] Handler called with:', { gameId, userId });
+        console.log('[endGame] Socket data:', socket.data);
         try {
             // Verify authorization
             const gameInstance = await prisma_1.prisma.gameInstance.findFirst({

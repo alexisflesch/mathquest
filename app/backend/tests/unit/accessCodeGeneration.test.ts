@@ -6,6 +6,7 @@ import { jest } from '@jest/globals';
 jest.mock('@/db/prisma', () => ({
     prisma: {
         gameInstance: {
+            findFirst: jest.fn(),
             findUnique: jest.fn()
         }
     }
@@ -21,7 +22,7 @@ jest.mock('@/utils/logger', () => {
     }));
 });
 
-describe('Access Code Generation', () => {
+describe('Sequential Access Code Generation', () => {
     jest.setTimeout(3000);
 
     let gameInstanceService: GameInstanceService;
@@ -29,75 +30,77 @@ describe('Access Code Generation', () => {
     beforeEach(() => {
         gameInstanceService = new GameInstanceService();
         jest.clearAllMocks();
-
-        // Set up the mock to simulate that the generated code doesn't exist yet
-        (prisma.gameInstance.findUnique as any).mockResolvedValue(null);
     });
 
-    it('should generate a code with the correct length', async () => {
-        const code = await gameInstanceService.generateUniqueAccessCode(6);
+    it('should start with 100000 when no existing codes', async () => {
+        // Mock empty database (no existing games)
+        (prisma.gameInstance.findFirst as any).mockResolvedValue(null);
+
+        const code = await gameInstanceService.generateUniqueAccessCode();
+
+        expect(code).toBe('100000');
         expect(code.length).toBe(6);
-
-        const code8 = await gameInstanceService.generateUniqueAccessCode(8);
-        expect(code8.length).toBe(8);
     });
 
-    it('should use only allowed characters', async () => {
-        // Characters used in the code generator (excluding confusing characters)
-        const allowedChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        const code = await gameInstanceService.generateUniqueAccessCode();
-
-        // Check that each character in the code is in the allowedChars set
-        for (const char of code) {
-            expect(allowedChars.includes(char)).toBe(true);
-        }
-    });
-
-    it('should not include easily confused characters', async () => {
-        // Characters that should be excluded
-        const confusingChars = '0O1I';
-        const code = await gameInstanceService.generateUniqueAccessCode();
-
-        // Check that none of the confusing characters are in the code
-        for (const char of confusingChars) {
-            expect(code.includes(char)).toBe(false);
-        }
-    });
-
-    it('should retry when a collision occurs', async () => {
-        // For the first call to findUnique, return an existing game
-        // For the second call, return null (meaning code is available)
-        (prisma.gameInstance.findUnique as any)
-            .mockResolvedValueOnce({ id: 'existing-game' })
-            .mockResolvedValueOnce(null);
+    it('should increment from the highest existing code', async () => {
+        // Mock existing game with access code 123456
+        (prisma.gameInstance.findFirst as any).mockResolvedValue({
+            accessCode: '123456'
+        });
 
         const code = await gameInstanceService.generateUniqueAccessCode();
 
-        // Verify that findUnique was called twice (collision handling)
-        expect(prisma.gameInstance.findUnique).toHaveBeenCalledTimes(2);
-        expect(code).toBeDefined();
+        expect(code).toBe('123457');
+        expect(code.length).toBe(6);
     });
 
-    it('should throw error after maximum attempts', async () => {
-        // Always return an existing game to force maximum attempts
-        (prisma.gameInstance.findUnique as any).mockResolvedValue({ id: 'always-exists' });
+    it('should handle codes with leading zeros', async () => {
+        // Mock existing game with access code 100009
+        (prisma.gameInstance.findFirst as any).mockResolvedValue({
+            accessCode: '100009'
+        });
 
-        // Should throw an error after max attempts
-        await expect(gameInstanceService.generateUniqueAccessCode()).rejects
-            .toThrow('Unable to generate unique access code after multiple attempts');
+        const code = await gameInstanceService.generateUniqueAccessCode();
+
+        expect(code).toBe('100010');
+        expect(code.length).toBe(6);
     });
 
-    it('should generate statistically unique codes', async () => {
-        // Generate a substantial number of codes to test uniqueness
-        const numCodes = 100;
-        const generatedCodes = new Set<string>();
+    it('should generate only numeric codes', async () => {
+        (prisma.gameInstance.findFirst as any).mockResolvedValue(null);
 
-        for (let i = 0; i < numCodes; i++) {
+        const code = await gameInstanceService.generateUniqueAccessCode();
+
+        // Check that code contains only digits
+        expect(/^\d{6}$/.test(code)).toBe(true);
+    });
+
+    it('should throw error when reaching maximum 6-digit range', async () => {
+        // Mock existing game with maximum 6-digit code
+        (prisma.gameInstance.findFirst as any).mockResolvedValue({
+            accessCode: '999999'
+        });
+
+        await expect(gameInstanceService.generateUniqueAccessCode())
+            .rejects.toThrow('Access code range exhausted');
+    });
+
+    it('should generate sequential unique codes', async () => {
+        // Start with code 100005
+        let currentCode = 100005;
+
+        (prisma.gameInstance.findFirst as any).mockImplementation(() =>
+            Promise.resolve({ accessCode: currentCode.toString().padStart(6, '0') })
+        );
+
+        const codes: string[] = [];
+        for (let i = 0; i < 5; i++) {
             const code = await gameInstanceService.generateUniqueAccessCode();
-            generatedCodes.add(code);
+            codes.push(code);
+            currentCode++; // Simulate the increment for next call
         }
 
-        // If all codes are unique, the set size should equal the number of generations
-        expect(generatedCodes.size).toBe(numCodes);
+        // Verify sequential generation
+        expect(codes).toEqual(['100006', '100007', '100008', '100009', '100010']);
     });
 });

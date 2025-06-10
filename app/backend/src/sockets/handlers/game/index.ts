@@ -72,20 +72,18 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
 
             // Send first question
             logger.info({ socketId: socket.id, questionId: firstQuestion.uid }, 'Sending first question');
-            // Send first question data directly as per QuestionData type
+
+            // ⚠️ SECURITY: Filter question to remove sensitive data (correctAnswers, explanation, etc.)
+            const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
+            const filteredQuestion = filterQuestionForClient(firstQuestion);
+
+            // Send first question data using filtered question
             socket.emit(GAME_EVENTS.GAME_QUESTION, {
-                uid: firstQuestion.uid,
-                text: firstQuestion.text,
-                answerOptions: firstQuestion.answerOptions,
-                correctAnswers: firstQuestion.correctAnswers,
-                timeLimit: firstQuestion.timeLimit,
-                questionType: firstQuestion.questionType,
-                themes: firstQuestion.themes,
-                difficulty: firstQuestion.difficulty,
-                discipline: firstQuestion.discipline,
-                title: firstQuestion.title || undefined,
-                currentQuestionIndex: 0,
-                totalQuestions: gameInstance.gameTemplate.questions.length
+                question: filteredQuestion,
+                timer: firstQuestion.timeLimit || 30,
+                questionIndex: 0,
+                totalQuestions: gameInstance.gameTemplate.questions.length,
+                questionState: 'active' as const
             });
 
         } catch (err) {

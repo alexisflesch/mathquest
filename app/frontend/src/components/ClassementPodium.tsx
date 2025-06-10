@@ -12,7 +12,7 @@ export type ClassementPodiumProps = {
     top3: PodiumUser[]; // max 3
     others: { name: string; score: number }[];
     zoomFactor?: number; // Add optional zoomFactor prop
-    correctAnswers?: number[]; // Allow correctAnswers prop
+    correctAnswers?: boolean[]; // Allow correctAnswers prop - changed to boolean[]
 };
 
 const medalEmojis = ['🥇', '🥈', '🥉'];

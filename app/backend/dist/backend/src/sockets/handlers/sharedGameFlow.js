@@ -8,8 +8,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runGameFlow = runGameFlow;
 const logger_1 = __importDefault(require("@/utils/logger"));
-const gameStateService_1 = __importDefault(require("@/core/gameStateService")); // Added import
+const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
+const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
 const logger = (0, logger_1.default)('SharedGameFlow');
+// Track running game flows to prevent duplicates
+const runningGameFlows = new Set();
 /**
  * Shared function to orchestrate the game/tournament flow
  * Handles question progression, timers, answer reveal, feedback, and leaderboard
@@ -20,68 +23,100 @@ const logger = (0, logger_1.default)('SharedGameFlow');
  */
 async function runGameFlow(io, accessCode, questions, options) {
     logger.info({ accessCode }, `[SharedGameFlow] runGameFlow entry`);
-    logger.info({ accessCode, playMode: options.playMode, questionCount: questions.length }, `[SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.`);
-    logger.info({ accessCode }, `[SharedGameFlow] Proceeding with first question immediately.`);
-    for (let i = 0; i < questions.length; i++) {
-        // Set and persist timer in game state before emitting question
-        const timeLimitSec = questions[i].timeLimit || 30;
-        const timer = {
-            startedAt: Date.now(),
-            duration: timeLimitSec * 1000,
-            isPaused: false
-        };
-        // Fetch and update game state
-        const currentState = await gameStateService_1.default.getFullGameState(accessCode);
-        if (currentState && currentState.gameState) {
-            const updatedState = {
-                ...currentState.gameState,
-                currentQuestionIndex: i,
-                timer
-            };
-            await gameStateService_1.default.updateGameState(accessCode, updatedState);
-        }
-        if (i === 0) {
-            const room = io.sockets.adapter.rooms.get(`game_${accessCode}`);
-            const socketIds = room ? Array.from(room) : [];
-            logger.info({ accessCode, room: `game_${accessCode}`, socketIds }, '[DEBUG] Sockets in live room before emitting first game_question');
-        }
-        logger.info({ accessCode, questionIndex: i, questionUid: questions[i].uid }, '[DEBUG] Preparing to emit game_question');
-        logger.info({ room: `game_${accessCode}`, event: 'game_question', payload: { question: questions[i], index: i, feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1) } }, '[DEBUG] Emitting game_question');
-        io.to(`game_${accessCode}`).emit('game_question', {
-            question: questions[i],
-            index: i,
-            feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1)
-        });
-        logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
-        options.onQuestionStart?.(i);
-        await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
-        logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionId: questions[i].uid }, '[DEBUG] Emitting correct_answers');
-        io.to(`game_${accessCode}`).emit('correct_answers', { questionId: questions[i].uid });
-        logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid }, '[TRACE] Emitted correct_answers');
-        options.onQuestionEnd?.(i);
-        if (questions[i] && questions[i].uid) {
-            logger.info({ accessCode, questionId: questions[i].uid }, '[SharedGameFlow] Calculating scores for question');
-            await gameStateService_1.default.calculateScores(accessCode, questions[i].uid);
-            logger.info({ accessCode, questionId: questions[i].uid }, '[SharedGameFlow] Scores calculated');
-        }
-        else {
-            logger.warn({ accessCode, questionIndex: i }, '[SharedGameFlow] Question UID missing, cannot calculate scores.');
-        }
-        const feedbackWait = (typeof questions[i].feedbackWaitTime === 'number' && questions[i].feedbackWaitTime > 0)
-            ? questions[i].feedbackWaitTime
-            : (options.playMode === 'tournament' ? 1.5 : 1);
-        // Compute feedbackRemaining based on feedback phase timing
-        const feedbackStart = Date.now();
-        const feedbackEnd = feedbackStart + feedbackWait * 1000;
-        const feedbackRemaining = Math.max(0, Math.round((feedbackEnd - Date.now()) / 1000));
-        await new Promise((resolve) => setTimeout(resolve, feedbackWait * 1000));
-        logger.info({ room: `game_${accessCode}`, event: 'feedback', questionId: questions[i].uid }, '[DEBUG] Emitting feedback');
-        io.to(`game_${accessCode}`).emit('feedback', { questionId: questions[i].uid, feedbackRemaining });
-        logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid }, '[TRACE] Emitted feedback');
-        options.onFeedback?.(i);
+    // Prevent duplicate game flows for the same access code
+    if (runningGameFlows.has(accessCode)) {
+        logger.warn({ accessCode }, `[SharedGameFlow] Game flow already running for this access code. Skipping duplicate.`);
+        return;
     }
-    logger.info({ room: `game_${accessCode}`, event: 'game_end' }, '[DEBUG] Emitting game_end');
-    io.to(`game_${accessCode}`).emit('game_end');
-    logger.info({ accessCode, event: 'game_end' }, '[TRACE] Emitted game_end');
-    options.onGameEnd?.();
+    runningGameFlows.add(accessCode);
+    logger.info({ accessCode, playMode: options.playMode, questionCount: questions.length }, `[SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.`);
+    try {
+        logger.info({ accessCode }, `[SharedGameFlow] Proceeding with first question immediately.`);
+        for (let i = 0; i < questions.length; i++) {
+            // Set and persist timer in game state before emitting question
+            const timeLimitSec = questions[i].timeLimit || 30;
+            const timer = {
+                startedAt: Date.now(),
+                duration: timeLimitSec * 1000,
+                isPaused: false
+            };
+            // Fetch and update game state
+            const currentState = await gameStateService_1.default.getFullGameState(accessCode);
+            if (currentState && currentState.gameState) {
+                const updatedState = {
+                    ...currentState.gameState,
+                    currentQuestionIndex: i,
+                    timer
+                };
+                await gameStateService_1.default.updateGameState(accessCode, updatedState);
+            }
+            if (i === 0) {
+                const room = io.sockets.adapter.rooms.get(`game_${accessCode}`);
+                const socketIds = room ? Array.from(room) : [];
+                logger.info({ accessCode, room: `game_${accessCode}`, socketIds }, '[DEBUG] Sockets in live room before emitting first game_question');
+            }
+            logger.info({ accessCode, questionIndex: i, questionUid: questions[i].uid }, '[DEBUG] Preparing to emit game_question');
+            // ⚠️ SECURITY: Filter question to remove sensitive data (correctAnswers, explanation, etc.)
+            const filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(questions[i]);
+            const gameQuestionPayload = {
+                question: filteredQuestion,
+                index: i,
+                feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1),
+                timer: questions[i].timeLimit || 30 // Include timer duration
+            };
+            logger.info({ room: `game_${accessCode}`, event: 'game_question', payload: gameQuestionPayload }, '[DEBUG] Emitting game_question');
+            io.to(`game_${accessCode}`).emit('game_question', gameQuestionPayload);
+            logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
+            options.onQuestionStart?.(i);
+            await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
+            logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionId: questions[i].uid }, '[DEBUG] Emitting correct_answers');
+            // Send correct answers with the event (not filtered out like in game_question)
+            const correctAnswersPayload = {
+                questionId: questions[i].uid,
+                correctAnswers: questions[i].correctAnswers || []
+            };
+            io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
+            logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: questions[i].correctAnswers }, '[TRACE] Emitted correct_answers');
+            options.onQuestionEnd?.(i);
+            if (questions[i] && questions[i].uid) {
+                logger.info({ accessCode, questionId: questions[i].uid }, '[SharedGameFlow] Calculating scores for question');
+                await gameStateService_1.default.calculateScores(accessCode, questions[i].uid);
+                logger.info({ accessCode, questionId: questions[i].uid }, '[SharedGameFlow] Scores calculated');
+            }
+            else {
+                logger.warn({ accessCode, questionIndex: i }, '[SharedGameFlow] Question UID missing, cannot calculate scores.');
+            }
+            // Two separate timing concerns:
+            // 1. Delay between correct answers and feedback event (fixed 1.5s for tournaments)
+            const correctAnswersToFeedbackDelay = options.playMode === 'tournament' ? 1.5 : 1;
+            // 2. Feedback display duration (from question or default to 5s)
+            const feedbackDisplayDuration = (typeof questions[i].feedbackWaitTime === 'number' && questions[i].feedbackWaitTime > 0)
+                ? questions[i].feedbackWaitTime
+                : 5; // Default to 5 seconds when feedbackWaitTime is null
+            // Wait for the delay between correct answers and feedback
+            await new Promise((resolve) => setTimeout(resolve, correctAnswersToFeedbackDelay * 1000));
+            // Emit feedback event with the full feedback display duration
+            logger.info({ room: `game_${accessCode}`, event: 'feedback', questionId: questions[i].uid, feedbackDisplayDuration }, '[DEBUG] Emitting feedback');
+            io.to(`game_${accessCode}`).emit('feedback', {
+                questionId: questions[i].uid,
+                feedbackRemaining: feedbackDisplayDuration
+            });
+            logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid, feedbackDisplayDuration }, '[TRACE] Emitted feedback');
+            options.onFeedback?.(i);
+            // Wait for feedback display duration before proceeding to next question
+            await new Promise((resolve) => setTimeout(resolve, feedbackDisplayDuration * 1000));
+        }
+        logger.info({ room: `game_${accessCode}`, event: 'game_end' }, '[DEBUG] Emitting game_end');
+        io.to(`game_${accessCode}`).emit('game_end');
+        logger.info({ accessCode, event: 'game_end' }, '[TRACE] Emitted game_end');
+        options.onGameEnd?.();
+    }
+    catch (error) {
+        logger.error({ accessCode, error }, '[SharedGameFlow] Error in game flow');
+    }
+    finally {
+        // Clean up running game flow tracking
+        runningGameFlows.delete(accessCode);
+        logger.info({ accessCode }, '[SharedGameFlow] Game flow completed and cleaned up');
+    }
 }

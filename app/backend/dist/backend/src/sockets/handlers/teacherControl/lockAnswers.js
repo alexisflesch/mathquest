@@ -12,7 +12,7 @@ const logger = (0, logger_1.default)('LockAnswersHandler');
 function lockAnswersHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId, lock } = payload;
-        const userId = socket.data?.userId;
+        const userId = socket.data?.userId || socket.data?.user?.userId;
         if (!userId) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',

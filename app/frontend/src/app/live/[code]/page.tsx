@@ -2,7 +2,14 @@
  * Live Game Page - Handles Tournament, Quiz, and Self-Paced Modes
  * 
  * This unified page handles all three game modes that can be accessed via /live/[code]:
- * 1. Tournament Mode (live/differed): Real-time competition with backend timing
+        if (gameState.gameStatus === 'finished' && code) {
+            logger.info(`Game finished, redirecting to leaderboard in 3 seconds`);
+            const timer = setTimeout(() => {
+                logger.info(`Redirecting to leaderboard: /leaderboard/${code}`);
+                router.push(`/leaderboard/${code}`);
+            }, 3000); // Give user time to see final results
+            return () => clearTimeout(timer);
+        }rnament Mode (live/differed): Real-time competition with backend timing
  * 2. Quiz Mode: Teacher-controlled quiz sessions with feedback
  * 3. Self-Paced Mode: Individual practice with immediate feedback
  * 
@@ -160,6 +167,20 @@ export default function LiveGamePage() {
         }
     }, [userId, username, code, connected, connecting, joinGame]);
 
+    // Handle game end - redirect to leaderboard (Handled by socket hook)
+    // Disabled in favor of socket hook redirect which happens faster (2s vs 3s)
+    // useEffect(() => {
+    //     if (gameState.gameStatus === 'finished') {
+    //         logger.info(`Game finished, redirecting to leaderboard in 3 seconds`);
+    //         console.log('Game status changed to finished:', gameState);
+    //         const timer = setTimeout(() => {
+    //             logger.info(`Redirecting to leaderboard: /leaderboard/${code}`);
+    //             router.push(`/leaderboard/${code}`);
+    //         }, 3000); // Give user time to see final results
+    //         return () => clearTimeout(timer);
+    //     }
+    // }, [gameState.gameStatus, router, code]);
+
     // Enhanced feedback handling for all modes
     useEffect(() => {
         // Handle practice mode feedback with immediate answer received events
@@ -174,28 +195,51 @@ export default function LiveGamePage() {
             }
         }
         // Handle feedback phase in tournament/quiz modes
-        else if (gameState.phase === 'feedback' && gameState.feedbackRemaining !== null) {
-            // Get explanation from current question
-            let explanation: string | undefined;
+        else if (gameState.phase === 'feedback' && gameState.feedbackRemaining !== null && !showFeedbackOverlay) {
+            // Only show overlay if it's not already showing (prevent re-rendering every second)
 
-            if (gameState.currentQuestion?.explanation) {
-                explanation = gameState.currentQuestion.explanation;
+            // Priority 1: Use explanation from lastAnswerFeedback (comes from backend feedback event)
+            // Priority 2: Use explanation from current question
+            // Priority 3: Generate message based on correctness
+            // Priority 4: Fallback messages
+            let feedbackMessage: string | undefined;
+
+            if (gameState.lastAnswerFeedback?.explanation) {
+                feedbackMessage = gameState.lastAnswerFeedback.explanation;
+            } else if (gameState.currentQuestion?.explanation) {
+                feedbackMessage = gameState.currentQuestion.explanation;
+            } else if (gameState.lastAnswerFeedback?.correct !== undefined) {
+                // Generate message based on correctness if no explanation available
+                feedbackMessage = gameState.lastAnswerFeedback.correct
+                    ? "Bonne réponse ! ✅"
+                    : "Mauvaise réponse ❌";
+            } else {
+                // Final fallback - check if we have any answer feedback
+                if (gameState.answered) {
+                    feedbackMessage = "Temps écoulé ⏰"; // Time expired
+                } else {
+                    feedbackMessage = "Réponse enregistrée"; // Answer recorded
+                }
             }
 
-            if (explanation) {
-                setFeedbackText(explanation);
-                setFeedbackDuration(gameState.feedbackRemaining);
-                setShowFeedbackOverlay(true);
+            setFeedbackText(feedbackMessage);
+            setFeedbackDuration(gameState.feedbackRemaining);
+            setShowFeedbackOverlay(true);
 
-                logger.info(`Showing feedback overlay for ${gameState.feedbackRemaining}s`);
+            logger.info(`Showing feedback overlay for ${gameState.feedbackRemaining}s`, {
+                hasExplanation: !!(gameState.lastAnswerFeedback?.explanation || gameState.currentQuestion?.explanation),
+                feedbackMessage,
+                lastAnswerCorrect: gameState.lastAnswerFeedback?.correct,
+                explanationSource: gameState.lastAnswerFeedback?.explanation ? 'feedback' :
+                    gameState.currentQuestion?.explanation ? 'question' : 'generated'
+            });
 
-                // Auto-hide feedback overlay when time expires
-                const timer = setTimeout(() => {
-                    setShowFeedbackOverlay(false);
-                }, gameState.feedbackRemaining * 1000);
+            // Auto-hide feedback overlay when time expires
+            const timer = setTimeout(() => {
+                setShowFeedbackOverlay(false);
+            }, gameState.feedbackRemaining * 1000);
 
-                return () => clearTimeout(timer);
-            }
+            return () => clearTimeout(timer);
         }
         // Hide feedback overlay when new question starts
         else if (gameState.phase === 'question') {
@@ -240,12 +284,12 @@ export default function LiveGamePage() {
 
     // Helper: is multiple choice
     const isMultipleChoice = useMemo(() => {
-        return gameState.currentQuestion?.type === "choix_multiple";
-    }, [gameState.currentQuestion]);
+        return gameState.currentQuestion?.questionType === "choix_multiple";
+    }, [gameState.currentQuestion?.questionType]);
 
     // Handle single choice answer submission
     const handleSingleChoice = (idx: number) => {
-        if (gameState.gameStatus !== 'active' || gameState.answered) return;
+        if (gameState.gameStatus !== 'active') return;
 
         setSelectedAnswer(idx === selectedAnswer ? null : idx);
 
@@ -264,7 +308,7 @@ export default function LiveGamePage() {
 
     // Handle multiple choice answer submission
     const handleSubmitMultiple = () => {
-        if (gameState.gameStatus !== 'active' || gameState.answered || selectedAnswers.length === 0) {
+        if (gameState.gameStatus !== 'active' || selectedAnswers.length === 0) {
             if (selectedAnswers.length === 0) {
                 setSnackbarMessage("Veuillez sélectionner au moins une réponse.");
                 setSnackbarType("error");
@@ -294,6 +338,17 @@ export default function LiveGamePage() {
         }
     };
 
+    // Debug timer value (development only)
+    useEffect(() => {
+        if (process.env.NODE_ENV === 'development') {
+            logger.debug('Timer debug:', {
+                gameStateTimer: gameState.timer,
+                gameMode,
+                isTimerShown: gameMode !== 'practice'
+            });
+        }
+    }, [gameState.timer, gameMode]);
+
     // Convert enhanced socket hook state to legacy QuestionCard format
     const currentQuestion: TournamentQuestion | null = useMemo(() => {
         if (!gameState.currentQuestion) return null;
@@ -302,8 +357,8 @@ export default function LiveGamePage() {
         const convertedQuestion: FilteredQuestion = {
             uid: gameState.currentQuestion.uid,
             text: gameState.currentQuestion.text,
-            type: gameState.currentQuestion.type || gameState.currentQuestion.questionType || 'multiple_choice',
-            answers: gameState.currentQuestion.answers || gameState.currentQuestion.answerOptions || []
+            type: gameState.currentQuestion.questionType || 'multiple_choice',
+            answers: gameState.currentQuestion.answerOptions || gameState.currentQuestion.answers || []
         };
 
         return {
@@ -316,9 +371,7 @@ export default function LiveGamePage() {
                 gameState.gameStatus === 'active' ? 'active' : 'stopped',
             tournoiState: 'running'
         };
-    }, [gameState, code]);
-
-    // Determine if component should be readonly (showing answers)
+    }, [gameState, code]);    // Determine if component should be readonly (showing answers)
     const isReadonly = useMemo(() => {
         return gameState.phase === 'show_answers' ||
             gameState.gameStatus === 'finished' ||
@@ -336,11 +389,11 @@ export default function LiveGamePage() {
                         onClose={() => setShowFeedbackOverlay(false)}
                         isCorrect={gameState.lastAnswerFeedback?.correct}
                         correctAnswers={gameState.currentQuestion?.correctAnswers ?
-                            gameState.currentQuestion.answers?.map((_, index) =>
-                                gameState.currentQuestion?.correctAnswers?.includes(index) || false
+                            (gameState.currentQuestion.answerOptions || gameState.currentQuestion.answers || [])?.map((_: string, index: number) =>
+                                gameState.currentQuestion?.correctAnswers?.[index] || false
                             ) : undefined
                         }
-                        answerOptions={gameState.currentQuestion?.answers || gameState.currentQuestion?.answerOptions}
+                        answerOptions={gameState.currentQuestion?.answerOptions || gameState.currentQuestion?.answers}
                         showTimer={gameMode !== 'practice'} // Hide timer for practice mode
                         mode={gameMode}
                         allowManualClose={gameMode === 'practice'}
@@ -375,9 +428,15 @@ export default function LiveGamePage() {
                         />
                     ) : (
                         <div className="text-center text-lg text-gray-500 p-8">
-                            {connecting ? 'Connexion...' :
-                                !connected ? 'Connexion en cours...' :
-                                    'En attente de la prochaine question...'}
+                            {gameState.gameStatus === 'finished' ?
+                                <>
+                                    <div className="text-2xl mb-4">🎉 Jeu terminé !</div>
+                                    <div>Redirection vers le classement...</div>
+                                </> :
+                                connecting ? 'Connexion...' :
+                                    !connected ? 'Connexion en cours...' :
+                                        'En attente de la prochaine question...'
+                            }
                         </div>
                     )}
                 </MathJaxWrapper>
@@ -436,6 +495,18 @@ export default function LiveGamePage() {
                 onClose={() => setSnackbarOpen(false)}
                 className={showFeedbackOverlay ? "blur-sm" : ""}
             />
+
+            {/* Answer Feedback Overlay */}
+            {showFeedbackOverlay && (
+                <AnswerFeedbackOverlay
+                    explanation={feedbackText}
+                    duration={feedbackDuration}
+                    onClose={() => setShowFeedbackOverlay(false)}
+                    isCorrect={gameState.lastAnswerFeedback?.correct}
+                    allowManualClose={gameMode === 'practice'}
+                    mode={gameMode}
+                />
+            )}
         </div>
     );
 }

@@ -81,7 +81,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
 
     // --- Listen for leaderboard/correct answer updates ---
     const [leaderboard, setLeaderboard] = useState<{ username: string; avatar: string; score: number }[]>([]); // Specify type
-    const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
+    const [correctAnswers, setCorrectAnswers] = useState<boolean[]>([]);
 
     // --- Stats state ---
     type StatsData = { stats: number[]; totalAnswers: number };
@@ -108,7 +108,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     }, [gameState, currentTournamentCode]);
 
     // Move this function here, after setCorrectAnswers is defined:
-    const debugSetCorrectAnswers = (val: number[], reason: string) => {
+    const debugSetCorrectAnswers = (val: boolean[], reason: string) => {
         logger.debug(`[Projection] setCorrectAnswers called`, { val, reason });
         setCorrectAnswers(val);
     };

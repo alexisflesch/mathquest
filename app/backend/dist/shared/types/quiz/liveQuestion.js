@@ -8,9 +8,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.filterQuestionForClient = filterQuestionForClient;
 /**
- * Filters a full question object to only include data safe to send to clients.
+ * Filters a database question object to only include data safe to send to clients.
+ * Uses the canonical database format with answerOptions.
  *
- * @param questionObject - The full question object from the database or state
+ * @param questionObject - The question object from the database (Prisma format)
  * @returns FilteredQuestion - The question data safe for client emission
  */
 function filterQuestionForClient(questionObject) {
@@ -20,9 +21,7 @@ function filterQuestionForClient(questionObject) {
     return {
         uid: questionObject.uid,
         type: questionObject.questionType,
-        text: questionObject.text || questionObject.question || 'Question text not available',
-        answers: (Array.isArray(questionObject.answers)
-            ? questionObject.answers.map(ans => typeof ans === 'string' ? ans : ans.text)
-            : []),
+        text: questionObject.text,
+        answers: questionObject.answerOptions || [],
     };
 }

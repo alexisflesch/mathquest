@@ -8,7 +8,9 @@ exports.setupServer = setupServer;
 // Load environment variables FIRST, before any other imports
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
+// Load appropriate environment file based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+dotenv_1.default.config({ path: path_1.default.resolve(__dirname, `../${envFile}`) });
 // Register module aliases for path mapping
 require("module-alias/register");
 const express_1 = __importDefault(require("express"));

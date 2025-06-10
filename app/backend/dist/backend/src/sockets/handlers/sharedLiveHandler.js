@@ -399,6 +399,10 @@ function registerSharedLiveHandlers(io, socket) {
             let participantData;
             if (participantJson) {
                 participantData = JSON.parse(participantJson);
+                // Ensure answers array exists
+                if (!participantData.answers) {
+                    participantData.answers = [];
+                }
             }
             else {
                 logger.warn({ accessCode, userId }, "Participant not found in Redis for answer submission. Creating entry.");

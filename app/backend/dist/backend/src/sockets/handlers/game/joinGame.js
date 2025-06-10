@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -10,6 +43,7 @@ const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const redis_1 = require("@/config/redis");
 const participantCountUtils_1 = require("@/sockets/utils/participantCountUtils");
+const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('JoinGameHandler');
 // Update handler signature with shared types
@@ -169,6 +203,57 @@ function joinGameHandler(io, socket) {
                 };
                 logger.info({ playerJoinedPayload, room: socket.data.currentGameRoom }, 'Emitting player_joined_game to room');
                 socket.to(socket.data.currentGameRoom).emit('player_joined_game', playerJoinedPayload);
+            }
+            // CRITICAL FIX: Start deferred tournament game flow for individual player
+            if (gameInstance.isDiffered && gameInstance.playMode === 'tournament') {
+                logger.info({ accessCode, userId }, 'Starting deferred tournament game flow for individual player');
+                // Import runGameFlow here to avoid circular dependencies
+                const { runGameFlow } = await Promise.resolve().then(() => __importStar(require('../sharedGameFlow')));
+                // Get questions for this tournament
+                const gameInstanceWithQuestions = await prisma_1.prisma.gameInstance.findUnique({
+                    where: { id: gameInstance.id },
+                    include: {
+                        gameTemplate: {
+                            include: {
+                                questions: {
+                                    include: { question: true },
+                                    orderBy: { sequence: 'asc' }
+                                }
+                            }
+                        }
+                    }
+                });
+                if (gameInstanceWithQuestions?.gameTemplate?.questions) {
+                    const actualQuestions = gameInstanceWithQuestions.gameTemplate.questions
+                        .map(gtq => gtq.question)
+                        .filter(q => q != null);
+                    if (actualQuestions.length > 0) {
+                        logger.info({ accessCode, userId, questionCount: actualQuestions.length }, 'Starting individual deferred tournament game flow');
+                        // Start game flow for this individual player
+                        // Use a unique room identifier for this player's session
+                        const playerRoom = `game_${accessCode}_${userId}`;
+                        socket.join(playerRoom);
+                        // Get current game state and merge updates
+                        const currentState = await gameStateService_1.default.getFullGameState(accessCode);
+                        if (currentState && currentState.gameState) {
+                            const updatedState = {
+                                ...currentState.gameState,
+                                status: 'active',
+                                currentQuestionIndex: 0,
+                                timer: {
+                                    ...currentState.gameState.timer,
+                                    startedAt: Date.now(),
+                                    duration: (actualQuestions[0]?.timeLimit || 30) * 1000,
+                                    isPaused: false
+                                }
+                            };
+                            await gameStateService_1.default.updateGameState(accessCode, updatedState);
+                        }
+                        // Start the individual game flow using the player-specific room
+                        runGameFlow(io, accessCode, // Keep the same access code for game state consistency
+                        actualQuestions, { playMode: 'tournament' });
+                    }
+                }
             }
             // Emit updated participant count to teacher dashboard
             await (0, participantCountUtils_1.emitParticipantCount)(io, accessCode);
