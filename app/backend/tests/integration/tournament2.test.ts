@@ -299,14 +299,14 @@ describe('Tournament Flow - Extended Tests', () => {
         socket1.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player1.id,
-            questionId: q1p1.question.uid,
+            questionUid: q1p1.question.uid,
             answer: correctAnswer,
             timeSpent: 2
         });
         socket2.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player2.id,
-            questionId: q1p2.question.uid,
+            questionUid: q1p2.question.uid,
             answer: wrongAnswer,
             timeSpent: 2
         });
@@ -414,14 +414,14 @@ describe('Tournament Flow - Extended Tests', () => {
         socket1.emit('tournament_answer', {
             accessCode: accessCode2,
             userId: player1.id,
-            questionId: q1p1.question.uid,
+            questionUid: q1p1.question.uid,
             answer: correctAnswer,
             timeSpent: 2
         });
         socket2.emit('tournament_answer', {
             accessCode: accessCode2,
             userId: player2.id,
-            questionId: q1p2.question.uid,
+            questionUid: q1p2.question.uid,
             answer: wrongAnswer,
             timeSpent: 2
         });
@@ -519,14 +519,14 @@ describe('Tournament Flow - Extended Tests', () => {
         socket1.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player1.id,
-            questionId: q1p1.question.uid,
+            questionUid: q1p1.question.uid,
             answer: correctAnswer1,
             timeSpent: 2
         });
         socket2.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player2.id,
-            questionId: q1p2.question.uid,
+            questionUid: q1p2.question.uid,
             answer: wrongAnswer1,
             timeSpent: 2
         });
@@ -536,8 +536,8 @@ describe('Tournament Flow - Extended Tests', () => {
             waitForEvent(socket1, 'correct_answers', 10000),
             waitForEvent(socket2, 'correct_answers', 10000),
         ]);
-        expect(ca1.questionId).toBe(testQuestions[0].uid);
-        expect(ca2.questionId).toBe(testQuestions[0].uid);
+        expect(ca1.questionUid).toBe(testQuestions[0].uid);
+        expect(ca2.questionUid).toBe(testQuestions[0].uid);
 
         // If feedback is expected for Q1, wait for feedback event
         if (q1p1.question.feedbackWaitTime && q1p1.question.feedbackWaitTime > 0) {
@@ -545,8 +545,8 @@ describe('Tournament Flow - Extended Tests', () => {
                 waitForEvent(socket1, 'feedback', 10000),
                 waitForEvent(socket2, 'feedback', 10000),
             ]);
-            expect(fb1.questionId).toBe(testQuestions[0].uid);
-            expect(fb2.questionId).toBe(testQuestions[0].uid);
+            expect(fb1.questionUid).toBe(testQuestions[0].uid);
+            expect(fb2.questionUid).toBe(testQuestions[0].uid);
         }
 
         // Wait for Q2 to arrive
@@ -567,14 +567,14 @@ describe('Tournament Flow - Extended Tests', () => {
         socket1.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player1.id,
-            questionId: q2p1.question.uid,
+            questionUid: q2p1.question.uid,
             answer: wrongAnswer2,
             timeSpent: 2
         });
         socket2.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player2.id,
-            questionId: q2p2.question.uid,
+            questionUid: q2p2.question.uid,
             answer: correctAnswer2,
             timeSpent: 2
         });
@@ -584,8 +584,8 @@ describe('Tournament Flow - Extended Tests', () => {
             waitForEvent(socket1, 'correct_answers', 10000),
             waitForEvent(socket2, 'correct_answers', 10000),
         ]);
-        expect(caQ2_1.questionId).toBe(testQuestions[1].uid);
-        expect(caQ2_2.questionId).toBe(testQuestions[1].uid);
+        expect(caQ2_1.questionUid).toBe(testQuestions[1].uid);
+        expect(caQ2_2.questionUid).toBe(testQuestions[1].uid);
 
         // If feedback is expected for Q2, wait for feedback event
         if (q2p1.question.feedbackWaitTime && q2p1.question.feedbackWaitTime > 0) {
@@ -593,8 +593,8 @@ describe('Tournament Flow - Extended Tests', () => {
                 waitForEvent(socket1, 'feedback', 10000),
                 waitForEvent(socket2, 'feedback', 10000),
             ]);
-            expect(fbQ2_1.questionId).toBe(testQuestions[1].uid);
-            expect(fbQ2_2.questionId).toBe(testQuestions[1].uid);
+            expect(fbQ2_1.questionUid).toBe(testQuestions[1].uid);
+            expect(fbQ2_2.questionUid).toBe(testQuestions[1].uid);
         }
     });
 
@@ -669,14 +669,14 @@ describe('Tournament Flow - Extended Tests', () => {
         socket1.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player1.id,
-            questionId: q1p1.question.uid,
+            questionUid: q1p1.question.uid,
             answer: correctAnswer1,
             timeSpent: 2
         });
         socket2.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player2.id,
-            questionId: q1p2.question.uid,
+            questionUid: q1p2.question.uid,
             answer: wrongAnswer1,
             timeSpent: 2
         });
@@ -686,8 +686,8 @@ describe('Tournament Flow - Extended Tests', () => {
             waitForEvent(socket1, 'correct_answers', 10000),
             waitForEvent(socket2, 'correct_answers', 10000),
         ]);
-        expect(ca1.questionId).toBe(testQuestions[0].uid);
-        expect(ca2.questionId).toBe(testQuestions[0].uid);
+        expect(ca1.questionUid).toBe(testQuestions[0].uid);
+        expect(ca2.questionUid).toBe(testQuestions[0].uid);
 
         // Wait a short moment to ensure feedback phase is active (feedbackWaitTime is 2s)
         await new Promise(res => setTimeout(res, 250));
@@ -743,8 +743,8 @@ describe('Tournament Flow - Extended Tests', () => {
         expect(caPayload).toBeDefined();
         expect(fbPayload).toBeDefined();
         expect(qPayload.data.question.uid).toBe(testQuestions[0].uid);
-        expect(caPayload.data.questionId).toBe(testQuestions[0].uid);
-        expect(fbPayload.data.questionId).toBe(testQuestions[0].uid);
+        expect(caPayload.data.questionUid).toBe(testQuestions[0].uid);
+        expect(fbPayload.data.questionUid).toBe(testQuestions[0].uid);
         expect(typeof fbPayload.data.feedbackRemaining).toBe('number');
         expect(fbPayload.data.feedbackRemaining).toBeGreaterThanOrEqual(0);
 
@@ -762,7 +762,7 @@ describe('Tournament Flow - Extended Tests', () => {
             socket3.emit('tournament_answer', {
                 accessCode: accessCode1,
                 userId: player3.id,
-                questionId: qPayload.data.question.uid,
+                questionUid: qPayload.data.question.uid,
                 answer: testQuestions[0].answerOptions[0], // use known answer
                 timeSpent: 1
             });

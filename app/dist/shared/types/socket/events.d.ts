@@ -1,0 +1,207 @@
+/**
+ * Socket Event Constants
+ *
+ * This file contains constants for all socket event names used in the application.
+ * Using these constants ensures consistency between frontend and backend.
+ *
+ * Updated to align with the new backend socket event naming conventions.
+ */
+export declare const TEACHER_EVENTS: {
+    JOIN_DASHBOARD: string;
+    GET_GAME_STATE: string;
+    SET_QUESTION: string;
+    TIMER_ACTION: string;
+    START_TIMER: string;
+    PAUSE_TIMER: string;
+    LOCK_ANSWERS: string;
+    END_GAME: string;
+    GAME_CONTROL_STATE: string;
+    DASHBOARD_JOINED: string;
+    TIMER_UPDATE: string;
+    CONNECTED_COUNT: string;
+    DASHBOARD_QUESTION_CHANGED: string;
+    DASHBOARD_TIMER_UPDATED: string;
+    DASHBOARD_ANSWERS_LOCK_CHANGED: string;
+    DASHBOARD_GAME_STATUS_CHANGED: string;
+    ERROR_DASHBOARD: string;
+};
+export declare const TOURNAMENT_EVENTS: {
+    START_TOURNAMENT: string;
+    JOIN_TOURNAMENT: string;
+    TOURNAMENT_ANSWER: string;
+    TOURNAMENT_STARTED: string;
+    TOURNAMENT_JOINED: string;
+    TOURNAMENT_PLAYER_JOINED: string;
+    TOURNAMENT_STATE_UPDATE: string;
+    TOURNAMENT_ANSWER_RESULT: string;
+    TOURNAMENT_QUESTION_UPDATE: string;
+    TOURNAMENT_QUESTION_STATE_UPDATE: string;
+    TOURNAMENT_LEADERBOARD_UPDATE: string;
+    TOURNAMENT_ENDED: string;
+    TOURNAMENT_TIMER_UPDATE: string;
+    TOURNAMENT_ERROR: string;
+    TOURNAMENT_ALREADY_STARTED: string;
+    TOURNAMENT_NOTIFICATION: string;
+    TOURNAMENT_QUESTION: string;
+    TOURNAMENT_SET_TIMER: string;
+    REDIRECT_TO_TOURNAMENT: string;
+    TOURNAMENT_STARTING: string;
+    COUNTDOWN_TICK: string;
+    COUNTDOWN_COMPLETE: string;
+};
+export declare const LOBBY_EVENTS: {
+    JOIN_LOBBY: string;
+    LEAVE_LOBBY: string;
+    GET_PARTICIPANTS: string;
+    LOBBY_ERROR: string;
+    PARTICIPANT_JOINED: string;
+    PARTICIPANT_LEFT: string;
+    PARTICIPANTS_LIST: string;
+    ROOM_LEFT: string;
+    REDIRECT_TO_GAME: string;
+    GAME_STARTED: string;
+    REDIRECT_TO_QUIZ: string;
+};
+export declare const PROJECTOR_EVENTS: {
+    JOIN_PROJECTOR: string;
+    LEAVE_PROJECTOR: string;
+    PROJECTOR_STATE: string;
+    PROJECTION_TIMER_UPDATED: string;
+    PROJECTOR_CONNECTED_COUNT: string;
+    JOINED_ROOM: string;
+};
+export declare const GAME_EVENTS: {
+    JOIN_GAME: string;
+    GAME_ANSWER: string;
+    REQUEST_PARTICIPANTS: string;
+    REQUEST_NEXT_QUESTION: string;
+    START_GAME: string;
+    GAME_JOINED: string;
+    PLAYER_JOINED_GAME: string;
+    GAME_PARTICIPANTS: string;
+    GAME_QUESTION: string;
+    ANSWER_RECEIVED: string;
+    GAME_ENDED: string;
+    GAME_ERROR: string;
+    GAME_ANSWERS_LOCK_CHANGED: string;
+    GAME_TIMER_UPDATED: string;
+    TIMER_UPDATE: string;
+    GAME_UPDATE: string;
+    TIMER_SET: string;
+    CORRECT_ANSWERS: string;
+    GAME_ALREADY_PLAYED: string;
+    GAME_REDIRECT_TO_LOBBY: string;
+    GAME_CODE_UPDATED: string;
+    GAME_FINISHED_REDIRECT: string;
+    EXPLICATION: string;
+    FEEDBACK: string;
+    LIVE_QUESTION: string;
+    JOIN_TOURNAMENT: string;
+    TOURNAMENT_ANSWER: string;
+    START_TOURNAMENT: string;
+    CONNECT_TIMEOUT: string;
+    RECONNECT: string;
+    ERROR: string;
+};
+export declare const SOCKET_EVENTS: {
+    TEACHER: {
+        JOIN_DASHBOARD: string;
+        GET_GAME_STATE: string;
+        SET_QUESTION: string;
+        TIMER_ACTION: string;
+        START_TIMER: string;
+        PAUSE_TIMER: string;
+        LOCK_ANSWERS: string;
+        END_GAME: string;
+        GAME_CONTROL_STATE: string;
+        DASHBOARD_JOINED: string;
+        TIMER_UPDATE: string;
+        CONNECTED_COUNT: string;
+        DASHBOARD_QUESTION_CHANGED: string;
+        DASHBOARD_TIMER_UPDATED: string;
+        DASHBOARD_ANSWERS_LOCK_CHANGED: string;
+        DASHBOARD_GAME_STATUS_CHANGED: string;
+        ERROR_DASHBOARD: string;
+    };
+    GAME: {
+        JOIN_GAME: string;
+        GAME_ANSWER: string;
+        REQUEST_PARTICIPANTS: string;
+        REQUEST_NEXT_QUESTION: string;
+        START_GAME: string;
+        GAME_JOINED: string;
+        PLAYER_JOINED_GAME: string;
+        GAME_PARTICIPANTS: string;
+        GAME_QUESTION: string;
+        ANSWER_RECEIVED: string;
+        GAME_ENDED: string;
+        GAME_ERROR: string;
+        GAME_ANSWERS_LOCK_CHANGED: string;
+        GAME_TIMER_UPDATED: string;
+        TIMER_UPDATE: string;
+        GAME_UPDATE: string;
+        TIMER_SET: string;
+        CORRECT_ANSWERS: string;
+        GAME_ALREADY_PLAYED: string;
+        GAME_REDIRECT_TO_LOBBY: string;
+        GAME_CODE_UPDATED: string;
+        GAME_FINISHED_REDIRECT: string;
+        EXPLICATION: string;
+        FEEDBACK: string;
+        LIVE_QUESTION: string;
+        JOIN_TOURNAMENT: string;
+        TOURNAMENT_ANSWER: string;
+        START_TOURNAMENT: string;
+        CONNECT_TIMEOUT: string;
+        RECONNECT: string;
+        ERROR: string;
+    };
+    TOURNAMENT: {
+        START_TOURNAMENT: string;
+        JOIN_TOURNAMENT: string;
+        TOURNAMENT_ANSWER: string;
+        TOURNAMENT_STARTED: string;
+        TOURNAMENT_JOINED: string;
+        TOURNAMENT_PLAYER_JOINED: string;
+        TOURNAMENT_STATE_UPDATE: string;
+        TOURNAMENT_ANSWER_RESULT: string;
+        TOURNAMENT_QUESTION_UPDATE: string;
+        TOURNAMENT_QUESTION_STATE_UPDATE: string;
+        TOURNAMENT_LEADERBOARD_UPDATE: string;
+        TOURNAMENT_ENDED: string;
+        TOURNAMENT_TIMER_UPDATE: string;
+        TOURNAMENT_ERROR: string;
+        TOURNAMENT_ALREADY_STARTED: string;
+        TOURNAMENT_NOTIFICATION: string;
+        TOURNAMENT_QUESTION: string;
+        TOURNAMENT_SET_TIMER: string;
+        REDIRECT_TO_TOURNAMENT: string;
+        TOURNAMENT_STARTING: string;
+        COUNTDOWN_TICK: string;
+        COUNTDOWN_COMPLETE: string;
+    };
+    LOBBY: {
+        JOIN_LOBBY: string;
+        LEAVE_LOBBY: string;
+        GET_PARTICIPANTS: string;
+        LOBBY_ERROR: string;
+        PARTICIPANT_JOINED: string;
+        PARTICIPANT_LEFT: string;
+        PARTICIPANTS_LIST: string;
+        ROOM_LEFT: string;
+        REDIRECT_TO_GAME: string;
+        GAME_STARTED: string;
+        REDIRECT_TO_QUIZ: string;
+    };
+    PROJECTOR: {
+        JOIN_PROJECTOR: string;
+        LEAVE_PROJECTOR: string;
+        PROJECTOR_STATE: string;
+        PROJECTION_TIMER_UPDATED: string;
+        PROJECTOR_CONNECTED_COUNT: string;
+        JOINED_ROOM: string;
+    };
+    CONNECT: string;
+    DISCONNECT: string;
+    CONNECT_ERROR: string;
+};

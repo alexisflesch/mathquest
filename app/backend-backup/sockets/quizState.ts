@@ -40,10 +40,10 @@ function createDefaultQuestionTimer(initialTime: number = 20): QuestionTimer {
 /**
  * Gets the timer state for a specific question, creating it if it doesn't exist
  * @param quizId - The quiz ID
- * @param questionId - The question ID
+ * @param questionUid - The question ID
  * @returns Question timer state object
  */
-function getQuestionTimer(quizId: string, questionId: string): QuestionTimer | null {
+function getQuestionTimer(quizId: string, questionUid: string): QuestionTimer | null {
     if (!quizState[quizId]) {
         return null;
     }
@@ -54,21 +54,21 @@ function getQuestionTimer(quizId: string, questionId: string): QuestionTimer | n
     }
 
     // Create timer for this question if it doesn't exist
-    if (!quizState[quizId].questionTimers?.[questionId]) {
+    if (!quizState[quizId].questionTimers?.[questionUid]) {
         // Try to get the initial time from the question definition
         let initialTime = 20; // Default
 
         if (quizState[quizId].questions) {
-            const question = quizState[quizId].questions.find(q => q.uid === questionId);
+            const question = quizState[quizId].questions.find(q => q.uid === questionUid);
             if (question && typeof question.time === 'number') {
                 initialTime = question.time;
             }
         }
 
-        quizState[quizId].questionTimers![questionId] = createDefaultQuestionTimer(initialTime);
+        quizState[quizId].questionTimers![questionUid] = createDefaultQuestionTimer(initialTime);
     }
 
-    return quizState[quizId].questionTimers![questionId];
+    return quizState[quizId].questionTimers![questionUid];
 }
 
 /**

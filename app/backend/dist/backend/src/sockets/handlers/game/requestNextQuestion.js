@@ -10,8 +10,8 @@ const logger = (0, logger_1.default)('RequestNextQuestionHandler');
 function requestNextQuestionHandler(io, socket) {
     return async (payload) => {
         try {
-            const { accessCode, userId, currentQuestionId } = payload;
-            logger.info({ socketId: socket.id, event: 'request_next_question', accessCode, userId, currentQuestionId }, 'Player requested next question');
+            const { accessCode, userId, currentQuestionUid } = payload;
+            logger.info({ socketId: socket.id, event: 'request_next_question', accessCode, userId, currentQuestionUid }, 'Player requested next question');
             // 1. Get game instance
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
                 where: { accessCode },
@@ -55,9 +55,9 @@ function requestNextQuestionHandler(io, socket) {
                 .map((a) => a.questionUid));
             // 5. Find next unanswered question - skip the current one
             let nextQuestion = null;
-            if (currentQuestionId) {
+            if (currentQuestionUid) {
                 // Find the current question's index
-                const currentIndex = allQuestions.findIndex(q => q.questionUid === currentQuestionId);
+                const currentIndex = allQuestions.findIndex(q => q.questionUid === currentQuestionUid);
                 if (currentIndex !== -1 && currentIndex < allQuestions.length - 1) {
                     // Get the next question
                     const nextQ = allQuestions[currentIndex + 1];
@@ -66,7 +66,7 @@ function requestNextQuestionHandler(io, socket) {
             }
             if (nextQuestion) {
                 // Send next question
-                logger.info({ accessCode, userId, nextQuestionId: nextQuestion.uid }, 'Sending next question');
+                logger.info({ accessCode, userId, nextQuestionUid: nextQuestion.uid }, 'Sending next question');
                 // Log what we're about to send for debugging
                 console.log('[REQUEST_NEXT_QUESTION] About to send question:', {
                     uid: nextQuestion.uid,

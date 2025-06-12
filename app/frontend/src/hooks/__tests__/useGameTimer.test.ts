@@ -62,7 +62,7 @@ describe('useGameTimer Hook', () => {
 
             expect(result.current.timerState.status).toBe('play');
             expect(result.current.timerState.durationMs).toBe(60);
-            expect(result.current.timerState.questionId).toBe('question-1');
+            expect(result.current.timerState.questionUid).toBe('question-1');
             expect(result.current.isRunning).toBe(true);
         });
 
@@ -132,7 +132,7 @@ describe('useGameTimer Hook', () => {
                     timeLeftMs: 25000, // ms, not s
                     running: true,
                     status: 'play',
-                    questionId: 'q1'
+                    questionUid: 'q1'
                 });
             });
 
@@ -183,13 +183,13 @@ describe('useGameTimer Hook', () => {
                     timeLeftMs: 45000, // ms, not s
                     running: true,
                     status: 'play',
-                    questionId: 'question-2'
+                    questionUid: 'question-2'
                 });
             });
 
             expect(result.current.timerState.status).toBe('play');
             expect(result.current.timerState.timeLeftMs).toBe(45000);
-            expect(result.current.timerState.questionId).toBe('question-2');
+            expect(result.current.timerState.questionUid).toBe('question-2');
         });
     });
 });

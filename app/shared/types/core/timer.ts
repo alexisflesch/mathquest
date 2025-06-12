@@ -38,8 +38,8 @@ export interface BaseTimer {
 export interface Chrono extends BaseTimer {
     /** Optional duration for reference in milliseconds */
     durationMs?: number;
-    /** Question ID associated with this timer */
-    questionId?: string;
+    /** Question UID associated with this timer */
+    questionUid?: string;
 }
 
 /**
@@ -55,8 +55,8 @@ export interface QuestionTimer {
     initialTimeMs: number;
     /** Timestamp when timer was last updated */
     timestamp: number | null;
-    /** Question ID this timer is associated with */
-    questionId?: string;
+    /** Question UID this timer is associated with */
+    questionUid?: string;
 }
 
 /**
@@ -70,8 +70,8 @@ export interface GameTimerState {
     timeLeftMs: number;
     /** Total timer duration in milliseconds */
     durationMs: number;
-    /** Question ID associated with timer */
-    questionId: string | null | undefined;
+    /** Question UID associated with timer */
+    questionUid: string | null | undefined;
     /** Server timestamp for synchronization */
     timestamp: number | null;
     /** Local countdown time for smooth UI updates in milliseconds */
@@ -108,8 +108,8 @@ export interface TimerUpdatePayload {
     running: boolean;
     /** Timer duration in milliseconds (optional) */
     durationMs?: number;
-    /** Associated question ID */
-    questionId?: string;
+    /** Associated question UID */
+    questionUid?: string;
     /** Timer status */
     status?: TimerStatus;
 }
@@ -171,7 +171,7 @@ export interface LegacyTimerState {
     status: TimerStatus;
     timeLeft: number;
     duration: number;
-    questionId: string | null | undefined;
+    questionUid: string | null | undefined;
     timestamp: number | null;
     localTimeLeft: number | null;
 }

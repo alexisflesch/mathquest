@@ -98,7 +98,7 @@ function registerGameHandlers(io, socket) {
             const firstQuestionInTemplate = gameInstance.gameTemplate.questions[0];
             const firstQuestion = firstQuestionInTemplate.question;
             // Send first question
-            logger.info({ socketId: socket.id, questionId: firstQuestion.uid }, 'Sending first question');
+            logger.info({ socketId: socket.id, questionUid: firstQuestion.uid }, 'Sending first question');
             // ⚠️ SECURITY: Filter question to remove sensitive data (correctAnswers, explanation, etc.)
             const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/quiz/liveQuestion')));
             const filteredQuestion = filterQuestionForClient(firstQuestion);

@@ -21,7 +21,7 @@
 // For this example file (within the types package), we need a relative import
 import {
     Question,
-    Answer,
+    BaseAnswer,
     BaseQuizState,
     TEACHER_EVENTS,
     isQuestion,
@@ -77,7 +77,7 @@ import type { SetQuestionPayload } from '../socket/payloads';
 // Example of a backend handler using shared types
 function exampleSocketHandler(io: Server, socket: Socket, payload: Partial<SetQuestionPayload>) {
     // Using type guard to validate payload
-    if (!payload || typeof payload !== 'object' || !payload.accessCode) {
+    if (!payload || typeof payload !== 'object' || !payload.gameId) {
         socket.emit('error', { message: 'Invalid payload' });
         return;
     }

@@ -67,7 +67,7 @@ describe('Timer Debug Test Suite', () => {
 
             // This simulates the processing logic from useUnifiedGameManager
             const processedTimer = {
-                questionId: mockBackendTimerData.questionUid,
+                questionUid: mockBackendTimerData.questionUid,
                 timeLeftMs: mockBackendTimerData.timer.timeRemaining,
                 running: !mockBackendTimerData.timer.isPaused && mockBackendTimerData.timer.timeRemaining > 0,
                 durationMs: mockBackendTimerData.timer.duration,
@@ -78,7 +78,7 @@ describe('Timer Debug Test Suite', () => {
 
             expect(processedTimer.timeLeftMs).toBe(25000);
             expect(processedTimer.running).toBe(true);
-            expect(processedTimer.questionId).toBe('test-question-1');
+            expect(processedTimer.questionUid).toBe('test-question-1');
 
             console.log('✓ Timer data processing works correctly');
         });
@@ -202,7 +202,7 @@ describe('Timer Debug Test Suite', () => {
 
             if (timer && questionUid) {
                 const backendTimer = {
-                    questionId: questionUid,
+                    questionUid: questionUid,
                     timeLeftMs: timer.timeRemaining,
                     running: !timer.isPaused && timer.timeRemaining > 0,
                     durationMs: timer.duration,
@@ -213,7 +213,7 @@ describe('Timer Debug Test Suite', () => {
 
                 expect(backendTimer.timeLeftMs).toBe(22000);
                 expect(backendTimer.running).toBe(true);
-                expect(backendTimer.questionId).toBe('dashboard-test-question');
+                expect(backendTimer.questionUid).toBe('dashboard-test-question');
 
                 console.log('✓ Dashboard event processing works correctly');
             } else {
@@ -297,7 +297,7 @@ describe('Timer Debug Test Suite', () => {
 
             // Step 2: Frontend processes the event (from useUnifiedGameManager)
             const processedData = {
-                questionId: backendEvent.questionUid,
+                questionUid: backendEvent.questionUid,
                 timeLeftMs: backendEvent.timer.timeRemaining,
                 running: !backendEvent.timer.isPaused && backendEvent.timer.timeRemaining > 0,
                 durationMs: backendEvent.timer.duration,
@@ -309,7 +309,7 @@ describe('Timer Debug Test Suite', () => {
             // Step 3: Data flows to migrated hook (legacy format conversion)
             const legacyFormat = {
                 timerStatus: processedData.running ? 'play' : 'stop',
-                timerQuestionId: processedData.questionId,
+                timerQuestionUid: processedData.questionUid,
                 timeLeftMs: processedData.timeLeftMs, // Still in milliseconds
                 localTimeLeftMs: processedData.timeLeftMs
             };

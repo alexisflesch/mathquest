@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createLogger } from '@/clientLogger';
-import { useTeacherQuizSocket } from '@/hooks/migrations/useTeacherQuizSocketMigrated';
+import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
 
 const logger = createLogger('TimerDebugPage');
 
@@ -28,7 +28,7 @@ export default function TimerDebugPage() {
         quizSocket,
         quizState,
         timerStatus,
-        timerQuestionId,
+        timerQuestionUid,
         timeLeftMs,
         localTimeLeftMs,
         connectedCount,
@@ -38,8 +38,8 @@ export default function TimerDebugPage() {
 
     // Log timer changes
     useEffect(() => {
-        addLog(`Timer Status: ${timerStatus}, TimeLeftMs: ${timeLeftMs}, LocalTimeLeftMs: ${localTimeLeftMs}, QuestionId: ${timerQuestionId}`);
-    }, [timerStatus, timeLeftMs, localTimeLeftMs, timerQuestionId]);
+        addLog(`Timer Status: ${timerStatus}, TimeLeftMs: ${timeLeftMs}, LocalTimeLeftMs: ${localTimeLeftMs}, QuestionUid: ${timerQuestionUid}`);
+    }, [timerStatus, timeLeftMs, localTimeLeftMs, timerQuestionUid]);
 
     // Log socket connection changes
     useEffect(() => {
@@ -50,7 +50,7 @@ export default function TimerDebugPage() {
         addLog('BUTTON: Starting timer for 30 seconds');
         emitTimerAction({
             status: 'play',
-            questionId: 'debug-question-1',
+            questionUid: 'debug-question-1',
             timeLeftMs: 30000
         });
     };
@@ -59,7 +59,7 @@ export default function TimerDebugPage() {
         addLog('BUTTON: Pausing timer');
         emitTimerAction({
             status: 'pause',
-            questionId: timerQuestionId || 'debug-question-1',
+            questionUid: timerQuestionUid || 'debug-question-1',
             timeLeftMs: timeLeftMs || 0
         });
     };
@@ -68,7 +68,7 @@ export default function TimerDebugPage() {
         addLog('BUTTON: Stopping timer');
         emitTimerAction({
             status: 'stop',
-            questionId: timerQuestionId || 'debug-question-1',
+            questionUid: timerQuestionUid || 'debug-question-1',
             timeLeftMs: 0
         });
     };
@@ -146,7 +146,7 @@ export default function TimerDebugPage() {
                     <div>
                         <div className="text-sm font-medium">Question ID</div>
                         <div className="text-lg font-mono">
-                            {timerQuestionId || 'none'}
+                            {timerQuestionUid || 'none'}
                         </div>
                     </div>
                 </div>

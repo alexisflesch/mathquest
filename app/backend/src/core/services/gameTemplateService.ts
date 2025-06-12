@@ -20,7 +20,7 @@ export interface GameTemplateCreationData {
     description?: string;
     defaultMode?: string;
     questions?: any[];
-    questionIds?: string[]; // Add support for simple question ID array
+    questionUids?: string[]; // Add support for simple question ID array
 }
 
 export interface GameTemplateUpdateData {
@@ -84,16 +84,35 @@ export class GameTemplateService {
         return gameTemplate;
     }
     async creategameTemplate(userId: string, data: GameTemplateCreationData) {
-        const { questions, questionIds, ...rest } = data;
+        const { questions, questionUids, ...rest } = data;
 
-        // Convert questionIds to questions format if provided
+        // Convert questionUids to questions format if provided
         let questionData = questions;
-        if (questionIds && questionIds.length > 0) {
-            questionData = questionIds.map((questionUid, index) => ({
-                questionUid,
+        if (questionUids && questionUids.length > 0) {
+            questionData = questionUids.map((questionUid, index) => ({
+                questionUid, // unified naming
                 sequence: index
             }));
         }
+
+        logger.info({
+            userId,
+            questionData,
+            rest,
+            fullCreateData: {
+                ...rest,
+                creatorId: userId,
+                defaultMode: data.defaultMode as PlayMode,
+                ...(questionData ? {
+                    questions: {
+                        create: questionData.map(q => ({
+                            questionUid: q.questionUid,
+                            sequence: q.sequence
+                        }))
+                    }
+                } : {})
+            }
+        }, 'About to create gameTemplate with questions');
 
         return prisma.gameTemplate.create({
             data: {
@@ -103,8 +122,8 @@ export class GameTemplateService {
                 ...(questionData ? {
                     questions: {
                         create: questionData.map(q => ({
-                            questionUid: q.questionUid, // Corrected: use q.questionUid from input
-                            sequence: q.sequence        // Corrected: use q.sequence from input
+                            questionUid: q.questionUid, // unified naming
+                            sequence: q.sequence
                         }))
                     }
                 } : {})
@@ -199,7 +218,7 @@ export class GameTemplateService {
         await prisma.questionsInGameTemplate.create({
             data: {
                 gameTemplateId: id,
-                questionUid,
+                questionUid: questionUid,
                 sequence: sequence || 1
             }
         });
@@ -223,7 +242,7 @@ export class GameTemplateService {
             where: {
                 gameTemplateId_questionUid: {
                     gameTemplateId: id,
-                    questionUid
+                    questionUid: questionUid
                 }
             }
         });
@@ -247,7 +266,7 @@ export class GameTemplateService {
                 where: {
                     gameTemplateId_questionUid: {
                         gameTemplateId: id,
-                        questionUid
+                        questionUid: questionUid
                     }
                 },
                 data: { sequence }

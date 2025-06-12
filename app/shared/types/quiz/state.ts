@@ -18,7 +18,7 @@ export interface BaseQuizState {
     chrono: Chrono;
     locked: boolean;
     ended: boolean;
-    currentQuestionIdx?: number | null;
+    currentQuestionidx?: number | null;
 }
 
 /**
@@ -32,7 +32,7 @@ export interface ExtendedQuizState extends BaseQuizState {
     profSocketId?: string | null;
     profTeacherId?: string;
     timerStatus?: 'play' | 'pause' | 'stop';
-    timerQuestionId?: string | null;
+    timerQuestionUid?: string | null;
     timerTimeLeft?: number | null;
     timerTimestamp?: number | null;
     timerInitialValue?: number | null;

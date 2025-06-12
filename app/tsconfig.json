@@ -2,13 +2,13 @@
     "files": [],
     "references": [
         {
-            "path": "backend"
+            "path": "./backend"
         },
         {
-            "path": "frontend" // Added frontend project reference
+            "path": "./shared"
         },
         {
-            "path": "shared"
+            "path": "./frontend"
         }
     ],
     "compilerOptions": {

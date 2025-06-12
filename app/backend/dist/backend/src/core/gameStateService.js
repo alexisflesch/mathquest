@@ -124,8 +124,8 @@ async function initializeGameState(gameInstanceId) {
             return null;
         }
         // Extract question UIDs in order
-        const questionIds = gameInstance.gameTemplate?.questions?.map(q => q.question.uid) || [];
-        if (questionIds.length === 0) {
+        const questionUids = gameInstance.gameTemplate?.questions?.map(q => q.question.uid) || [];
+        if (questionUids.length === 0) {
             logger.warn({ gameInstanceId }, 'No questions found in quiz template');
             return null;
         }
@@ -135,11 +135,11 @@ async function initializeGameState(gameInstanceId) {
             accessCode: gameInstance.accessCode,
             status: 'pending', // Will be set to 'active' when the first question is served
             currentQuestionIndex: -1, // No question active initially
-            questionIds,
+            questionUids,
             startedAt: Date.now(),
             timer: {
                 startedAt: 0,
-                duration: 0,
+                durationMs: 0,
                 isPaused: true
             },
             settings: {
@@ -182,17 +182,17 @@ async function setCurrentQuestion(accessCode, questionIndex) {
         }
         const gameState = JSON.parse(gameStateRaw);
         // Validate question index
-        if (questionIndex < 0 || questionIndex >= gameState.questionIds.length) {
-            logger.warn({ accessCode, questionIndex, totalQuestions: gameState.questionIds.length }, 'Invalid question index');
+        if (questionIndex < 0 || questionIndex >= gameState.questionUids.length) {
+            logger.warn({ accessCode, questionIndex, totalQuestions: gameState.questionUids.length }, 'Invalid question index');
             return null;
         }
         // Get question details from the database
-        const questionId = gameState.questionIds[questionIndex];
+        const questionUid = gameState.questionUids[questionIndex];
         const question = await prisma_1.prisma.question.findUnique({
-            where: { uid: questionId }
+            where: { uid: questionUid }
         });
         if (!question) {
-            logger.warn({ accessCode, questionId }, 'Question not found');
+            logger.warn({ accessCode, questionUid }, 'Question not found');
             return null;
         }
         // Modify game state
@@ -218,11 +218,11 @@ async function setCurrentQuestion(accessCode, questionIndex) {
         // Reset and start the timer
         gameState.timer = {
             startedAt: Date.now(),
-            duration: (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1), // Default to 30s if timeLimit is null
+            durationMs: (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1), // Default to 30s if timeLimit is null
             isPaused: false
         };
         // Initialize answer collection for this question
-        await redis_1.redisClient.del(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionId}`);
+        await redis_1.redisClient.del(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionUid}`);
         // Update game state in Redis
         await redis_1.redisClient.set(`${GAME_KEY_PREFIX}${accessCode}`, JSON.stringify(gameState), 'EX', 86400 // 24 hours
         );
@@ -257,14 +257,14 @@ async function getFullGameState(accessCode) {
         // Get answers for the current question
         const answers = {};
         if (gameState.currentQuestionIndex >= 0) {
-            const currentQuestionId = gameState.questionIds[gameState.currentQuestionIndex];
-            const answersHash = await redis_1.redisClient.hgetall(`${GAME_ANSWERS_PREFIX}${accessCode}:${currentQuestionId}`);
+            const currentQuestionUid = gameState.questionUids[gameState.currentQuestionIndex];
+            const answersHash = await redis_1.redisClient.hgetall(`${GAME_ANSWERS_PREFIX}${accessCode}:${currentQuestionUid}`);
             if (answersHash) {
                 const answerArray = Object.values(answersHash).map(a => JSON.parse(a));
-                answers[currentQuestionId] = answerArray;
+                answers[currentQuestionUid] = answerArray;
             }
             else {
-                answers[currentQuestionId] = [];
+                answers[currentQuestionUid] = [];
             }
         }
         // Get leaderboard
@@ -314,7 +314,7 @@ async function endCurrentQuestion(accessCode) {
         // Pause the timer
         gameState.timer.isPaused = true;
         gameState.timer.pausedAt = Date.now();
-        gameState.timer.timeRemaining = Math.max(0, gameState.timer.duration - (gameState.timer.pausedAt - gameState.timer.startedAt));
+        gameState.timer.timeRemainingMs = Math.max(0, gameState.timer.durationMs - (gameState.timer.pausedAt - gameState.timer.startedAt));
         // Update game state in Redis
         await redis_1.redisClient.set(`${GAME_KEY_PREFIX}${accessCode}`, JSON.stringify(gameState), 'EX', 86400 // 24 hours
         );
@@ -330,16 +330,16 @@ async function endCurrentQuestion(accessCode) {
  * Calculate and update scores for all players for a question
  *
  * @param accessCode The game access code
- * @param questionId The ID of the question
+ * @param questionUid The ID of the question
  * @returns True if successful, false if error
  */
-async function calculateScores(accessCode, questionId) {
+async function calculateScores(accessCode, questionUid) {
     try {
         const question = await prisma_1.prisma.question.findUnique({
-            where: { uid: questionId }
+            where: { uid: questionUid }
         });
         if (!question) {
-            logger.warn({ accessCode, questionId }, 'Question not found for scoring');
+            logger.warn({ accessCode, questionUid }, 'Question not found for scoring');
             return false;
         }
         const participantsKey = `${GAME_PARTICIPANTS_PREFIX}${accessCode}`;
@@ -374,7 +374,7 @@ async function calculateScores(accessCode, questionId) {
             correctAnswerValues = question.answerOptions.filter((_, index) => question.correctAnswers[index] === true);
         }
         if (correctAnswerValues.length === 0) {
-            logger.warn({ accessCode, questionId, questionType: question.questionType }, 'No correct answers defined for question during scoring. No points will be awarded for this question.');
+            logger.warn({ accessCode, questionUid, questionType: question.questionType }, 'No correct answers defined for question during scoring. No points will be awarded for this question.');
         }
         for (const userId of Object.keys(participantsHash)) {
             let participant;
@@ -389,9 +389,9 @@ async function calculateScores(accessCode, questionId) {
                     // logger.info({ accessCode, userId }, 'Participant has no answers array or is invalid. Skipping for scoring.');
                     continue;
                 }
-                const answerData = participant.answers.find((ans) => ans.questionId === questionId);
+                const answerData = participant.answers.find((ans) => ans.questionUid === questionUid);
                 if (!answerData) {
-                    // logger.info({ accessCode, userId, questionId }, 'No answer submitted by this participant for this question.');
+                    // logger.info({ accessCode, userId, questionUid }, 'No answer submitted by this participant for this question.');
                     continue;
                 }
                 let isCorrect = false;
@@ -428,25 +428,25 @@ async function calculateScores(accessCode, questionId) {
                 // Add/Update participant in the leaderboard sorted set
                 const scoreForZadd = participant.score;
                 const userIdForZadd = userId;
-                logger.debug({ accessCode, questionId, userId, scoreForZadd, leaderboardKey }, `[GameStateService] Attempting ZADD to leaderboard for user ${userIdForZadd} with score ${scoreForZadd}.`);
+                logger.debug({ accessCode, questionUid, userId, scoreForZadd, leaderboardKey }, `[GameStateService] Attempting ZADD to leaderboard for user ${userIdForZadd} with score ${scoreForZadd}.`);
                 try {
                     const zaddResult = await redis_1.redisClient.zadd(leaderboardKey, scoreForZadd, userIdForZadd);
-                    logger.debug({ accessCode, questionId, userId, totalScore: scoreForZadd, zaddResult, leaderboardKey }, `[GameStateService] ZADD result for user ${userIdForZadd}: ${zaddResult}. Added/Updated in leaderboard ZSET.`);
+                    logger.debug({ accessCode, questionUid, userId, totalScore: scoreForZadd, zaddResult, leaderboardKey }, `[GameStateService] ZADD result for user ${userIdForZadd}: ${zaddResult}. Added/Updated in leaderboard ZSET.`);
                 }
                 catch (err) {
-                    logger.error({ accessCode, questionId, userId, scoreForZadd, leaderboardKey, error: err }, `[GameStateService] ERROR during ZADD for user ${userIdForZadd}.`);
+                    logger.error({ accessCode, questionUid, userId, scoreForZadd, leaderboardKey, error: err }, `[GameStateService] ERROR during ZADD for user ${userIdForZadd}.`);
                 }
-                // logger.info({ accessCode, userId, questionId, points, newScore: participant.score, isCorrect }, 'Score calculated and updated for participant');
+                // logger.info({ accessCode, userId, questionUid, points, newScore: participant.score, isCorrect }, 'Score calculated and updated for participant');
             }
             catch (e) {
-                logger.error({ accessCode, userId, questionId, error: e.message, participantData: participant, stack: e.stack }, 'Error processing score for a single participant');
+                logger.error({ accessCode, userId, questionUid, error: e.message, participantData: participant, stack: e.stack }, 'Error processing score for a single participant');
             }
         }
-        logger.info({ accessCode, questionId }, 'Scores calculated for question');
+        logger.info({ accessCode, questionUid }, 'Scores calculated for question');
         return true;
     }
     catch (error) {
-        logger.error({ accessCode, questionId, error: error.message, stack: error.stack }, 'Error calculating scores for question');
+        logger.error({ accessCode, questionUid, error: error.message, stack: error.stack }, 'Error calculating scores for question');
         return false;
     }
 }

@@ -35,9 +35,9 @@ async function handleTimerAction(
     io: Server,
     socket: Socket,
     prisma: PrismaClient,
-    { status, questionId, timeLeft, quizId, tournamentCode }: TimerActionPayload
+    { status, questionUid, timeLeft, quizId, tournamentCode }: TimerActionPayload
 ): Promise<void> {
-    logger.info(`[TimerAction] Received: quizId=${quizId}, status=${status}, questionId=${questionId}, timeLeft=${timeLeft}`);
+    logger.info(`[TimerAction] Received: quizId=${quizId}, status=${status}, questionUid=${questionUid}, timeLeft=${timeLeft}`);
 
     if (!quizState[quizId]) {
         logger.error(`[TimerAction] No quiz state found for quizId=${quizId}`);
@@ -45,20 +45,20 @@ async function handleTimerAction(
     }
 
     // Update question-specific timer
-    updateQuestionTimer(quizId, questionId, status, timeLeft);
+    updateQuestionTimer(quizId, questionUid, status, timeLeft);
 
     // Calculate precise time remaining
-    const preciseTimeLeft = calculateQuestionRemainingTime(quizId, questionId);
-    logger.info(`[TimerAction] Calculated precise time left: ${preciseTimeLeft} for questionId=${questionId}`);
+    const preciseTimeLeft = calculateQuestionRemainingTime(quizId, questionUid);
+    logger.info(`[TimerAction] Calculated precise time left: ${preciseTimeLeft} for questionUid=${questionUid}`);
 
     // Update global quiz state with timer info
     quizState[quizId].timerStatus = status;
-    quizState[quizId].timerQuestionId = questionId;
+    quizState[quizId].timerQuestionUid = questionUid;
     quizState[quizId].timerTimeLeft = preciseTimeLeft;
     quizState[quizId].timerTimestamp = Date.now();
 
     // Emit timer update to all connected clients for this quiz
-    emitQuizTimerUpdate(io, quizId, status, questionId, preciseTimeLeft);
+    emitQuizTimerUpdate(io, quizId, status, questionUid, preciseTimeLeft);
     logger.info(`[TimerAction] Emitted quiz_timer_update with status=${status}, timeLeft=${preciseTimeLeft}`);
 
     // Trigger tournament timer action if a tournament code is provided
@@ -74,7 +74,7 @@ async function handleTimerAction(
     try {
         // Convert string status to the expected type
         const timerAction = status as 'play' | 'pause' | 'stop';
-        triggerQuizTimerAction(io, quizId, questionId, timerAction, preciseTimeLeft);
+        triggerQuizTimerAction(io, quizId, questionUid, timerAction, preciseTimeLeft);
     } catch (e) {
         logger.error(`[TimerAction] Error triggering quiz timer actions: ${e instanceof Error ? e.message : String(e)}`);
     }

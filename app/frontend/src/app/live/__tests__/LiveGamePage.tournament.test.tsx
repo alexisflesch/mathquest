@@ -19,7 +19,7 @@ import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import { useParams, useRouter } from 'next/navigation';
 import LiveGamePage from '../[code]/page';
 import { useAuth } from '@/components/AuthProvider';
-import { useStudentGameSocket } from '@/hooks/migrations';
+import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
 import '@testing-library/jest-dom';
 
 // Mock dependencies
@@ -136,13 +136,13 @@ const createMockGameQuestionPayload = (questionData: any = {}) => ({
 });
 
 const createMockCorrectAnswersPayload = () => ({
-    questionId: 'test-question-1',
+    questionUid: 'test-question-1',
     correctAnswers: [false, true, false, false], // Answer index 1 is correct
     explanation: 'Five plus three equals eight: 5 + 3 = 8'
 });
 
 const createMockFeedbackPayload = () => ({
-    questionId: 'test-question-1',
+    questionUid: 'test-question-1',
     feedbackRemaining: 3,
     explanation: 'Five plus three equals eight: 5 + 3 = 8'
 });

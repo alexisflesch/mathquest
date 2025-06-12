@@ -8,7 +8,7 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useTeacherQuizSocket } from '../migrations/useTeacherQuizSocketMigrated';
+import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 
 // Enable fake timers for precise timer testing
 jest.useFakeTimers();
@@ -437,7 +437,7 @@ describe('Timer Countdown Behavior Test', () => {
 
         await act(async () => {
             await waitFor(() => {
-                expect(result.current.timerQuestionId).toBe('question-1');
+                expect(result.current.timerQuestionUid).toBe('question-1');
                 expect(result.current.timeLeftMs).toBe(30000);
                 expect(result.current.timerStatus).toBe('play');
             });
@@ -475,7 +475,7 @@ describe('Timer Countdown Behavior Test', () => {
 
         await act(async () => {
             await waitFor(() => {
-                expect(result.current.timerQuestionId).toBe('question-2');
+                expect(result.current.timerQuestionUid).toBe('question-2');
                 expect(result.current.timeLeftMs).toBe(45000);
                 expect(result.current.timerStatus).toBe('play');
             });
@@ -493,7 +493,7 @@ describe('Timer Countdown Behavior Test', () => {
         });
 
         expect(result.current.timeLeftMs).toBe(30000);
-        expect(result.current.timerQuestionId).toBe('question-2');
+        expect(result.current.timerQuestionUid).toBe('question-2');
         console.log('✓ Question 2 timer at 30 seconds');
 
         console.log('✅ Timer question changes work correctly!');

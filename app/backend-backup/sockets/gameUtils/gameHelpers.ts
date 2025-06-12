@@ -102,6 +102,6 @@ export async function sendQuestionWithState(
         index: questionIndex,
         total: state.questions.length,
         timeLimit: question.time,
-        questionId: question.uid
+        questionUid: question.uid
     });
 }

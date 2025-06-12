@@ -1,212 +1,137 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+/**
+ * Projection Quiz Socket Hook
+ * 
+ * Provides projection display functionality using the unified system
+ * for timer and socket management with clean, production-ready code.
+ */
+
+import { useEffect, useState, useCallback } from 'react';
 import { createLogger } from '@/clientLogger';
-import { SOCKET_CONFIG } from '@/config';
+import { useProjectionGameManager } from './useUnifiedGameManager';
+import type { QuizState } from './useTeacherQuizSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
-import { STORAGE_KEYS } from '@/constants/auth';
-import { useProjectionTimer } from './useGameTimer';
 
 // Import core types
-import type {
-    TimerUpdatePayload,
-    GameTimerUpdatePayload,
-    TimerStatus
-} from '@shared/types/core';
-
-import type {
-    ErrorPayload,
-    ServerToClientEvents,
-    ClientToServerEvents,
-    InterServerEvents,
-    SocketData
-} from '@shared/types/socketEvents';
-import {
-    createSafeEventHandler,
-    type ProjectorState,
-    type ProjectorJoinedRoomPayload,
-    type ProjectorConnectedCountPayload,
-    type ProjectorTimerUpdatePayload,
-    isProjectorState,
-    isProjectorJoinedRoomPayload,
-    isProjectorConnectedCountPayload,
-    isProjectorTimerUpdatePayload
-} from '@/types/socketTypeGuards';
+import type { Question } from '@shared/types/core';
+import type { QuestionData } from '@shared/types/socketEvents';
 
 const logger = createLogger('useProjectionQuizSocket');
 
+/**
+ * Projection Quiz Socket Hook
+ * 
+ * Provides projection display functionality with timer animations
+ * and real-time synchronization for quiz projection screens.
+ * 
+ * @param gameId - The game/quiz ID
+ * @param tournamentCode - Optional tournament code for tournament mode
+ * @returns Complete projection interface
+ */
 export function useProjectionQuizSocket(gameId: string | null, tournamentCode: string | null) {
-    const [gameSocket, setGameSocket] = useState<Socket | null>(null);
-    const [gameState, setGameState] = useState<ProjectorState | null>(null);
-    const [connectedCount, setConnectedCount] = useState<number>(1);
-
-    // Use unified timer system for projection display with smooth animations
-    const gameTimer = useProjectionTimer(gameSocket, {
-        autoStart: false,
-        smoothCountdown: true,
-        showMilliseconds: false,
-        enableLocalAnimation: true,
-        updateThreshold: 200 // 200ms threshold for UI updates
+    // Use the unified game manager internally
+    const gameManager = useProjectionGameManager(gameId, {
+        timerConfig: {
+            autoStart: true,
+            smoothCountdown: true,
+            showMilliseconds: true,
+            enableLocalAnimation: true
+        }
     });
 
-    // Legacy timer state for backward compatibility - keep in milliseconds internally
-    const timerStatus = gameTimer.timerState.status;
-    const timerQuestionId = gameTimer.timerState.questionId || null;
-    const timeLeftMs = gameTimer.timerState.timeLeftMs; // Keep in milliseconds
-    const localTimeLeftMs = gameTimer.timerState.localTimeLeftMs; // Keep in milliseconds
+    // State management
+    const [gameState, setGameState] = useState<QuizState | null>(null);
+    const [localTimeLeftMs, setLocalTimeLeft] = useState<number | null>(null);
 
+    // Map unified game state to projection format
     useEffect(() => {
-        if (!gameId) return;
-        logger.info(`Initializing socket connection for projection: ${gameId} to ${SOCKET_CONFIG.url}`);
-        // Connect to backend using complete centralized configuration
-        const s = io(SOCKET_CONFIG.url, SOCKET_CONFIG);
-        setGameSocket(s);
-        const teacherId = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.TEACHER_ID) : null;
-        const cookie_id = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.COOKIE_ID) : null;
-        logger.info(`[DEBUG][CLIENT] Emitting join_projector for gameId=${gameId}, teacherId=${teacherId}, cookie_id=${cookie_id}`);
-        s.emit(SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTOR, gameId);
-        s.on(SOCKET_EVENTS.CONNECT, () => {
-            logger.info(`Socket connected: ${s.id}`);
-            // Note: The initial state is sent automatically upon joining the projector room
-        });
-        s.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
-            logger.warn(`Socket disconnected: ${reason}`);
-            setGameState(null);
-            // Reset timer through unified system
-            gameTimer.stop();
-        });
-        s.on(SOCKET_EVENTS.CONNECT_ERROR, (err) => {
-            logger.error("Socket connection error:", err);
-        });
-        s.on(SOCKET_EVENTS.PROJECTOR.JOINED_ROOM, createSafeEventHandler(
-            ({ room, socketId }: ProjectorJoinedRoomPayload) => {
-                logger.debug("Server confirms join", { room, socketId });
-            },
-            isProjectorJoinedRoomPayload,
-            'PROJECTOR.JOINED_ROOM'
-        ));
-        s.onAny((event, ...args) => {
-            logger.debug(`Socket event received: ${event}`, args);
-        });
-        return () => {
-            logger.info(`Disconnecting socket for projection: ${gameId}`);
-            s.disconnect();
-            setGameSocket(null);
-        };
-    }, [gameId]);
+        const unifiedState = gameManager.gameState;
 
+        if (unifiedState.gameId) {
+            setGameState(prev => ({
+                currentQuestionidx: unifiedState.currentQuestionIndex,
+                currentQuestionUid: unifiedState.currentQuestionUid || null,
+                questions: prev?.questions || [],
+                chrono: {
+                    timeLeftMs: unifiedState.timer.timeLeftMs,
+                    running: unifiedState.isTimerRunning,
+                    status: unifiedState.timer.status
+                },
+                locked: false,
+                ended: unifiedState.gameStatus === 'finished',
+                stats: prev?.stats || {},
+                profSocketId: null,
+                timerStatus: unifiedState.timer.status,
+                timerQuestionUid: unifiedState.timer.questionUid,
+                timerTimeLeft: unifiedState.timer.timeLeftMs,
+                timerTimestamp: unifiedState.timer.timestamp ?? undefined,
+            }));
+        }
+    }, [gameManager.gameState]);
+
+    // Sync local time left for smooth animations
     useEffect(() => {
-        if (!gameSocket) return;
-        logger.info('Socket info', { id: gameSocket.id });
-        gameSocket.on(SOCKET_EVENTS.PROJECTOR.JOINED_ROOM, createSafeEventHandler(
-            ({ room, socketId }: ProjectorJoinedRoomPayload) => {
-                logger.info('joined_room with runtime validation', { room, socketId });
-            },
-            isProjectorJoinedRoomPayload,
-            'PROJECTOR.JOINED_ROOM'
-        ));
-        gameSocket.onAny((event, ...args) => {
-            logger.debug(`[SOCKET EVENT RECEIVED]`, event, args);
-        });
-        const handleGameState = createSafeEventHandler(
-            (state: ProjectorState) => {
-                logger.debug('Processing projector_state', state);
-                setGameState(state);
+        setLocalTimeLeft(gameManager.timer.getDisplayTime());
+    }, [gameManager.timer]);
 
-                // Sync timer with backend state through unified system
-                if (state.timerStatus === 'stop' ||
-                    (state.chrono && state.chrono.timeLeftMs === 0 && state.chrono.running === false)) {
-                    gameTimer.stop();
-                    return;
-                }
+    // Set up projection-specific event handlers
+    useEffect(() => {
+        if (!gameManager.socket.instance) return;
 
-                // Handle timer from state
-                if (state.timerQuestionId && state.timerTimeLeft !== undefined && state.timerTimeLeft !== null) {
-                    // Use timer from state
-                    const timerPayload = {
-                        timeLeftMs: state.timerTimeLeft * 1000, // Convert to milliseconds
-                        running: state.timerStatus === 'play',
-                        questionId: state.timerQuestionId,
-                        status: (state.timerStatus || 'stop') as TimerStatus
-                    };
-                    gameTimer.syncWithBackend(timerPayload);
-                } else if (state.currentQuestionIdx !== null && typeof state.currentQuestionIdx === 'number' &&
-                    state.questions[state.currentQuestionIdx] && state.chrono) {
-                    // Use chrono from current question
-                    const currentQuestion = state.questions[state.currentQuestionIdx];
-                    const timerPayload = {
-                        timeLeftMs: (state.chrono.timeLeftMs || 0) * 1000, // Convert to milliseconds
-                        running: state.chrono.running,
-                        questionId: currentQuestion.uid,
-                        status: (state.chrono.running ? 'play' : 'pause') as TimerStatus
-                    };
-                    gameTimer.syncWithBackend(timerPayload);
-                } else {
-                    gameTimer.stop();
-                }
-            },
-            isProjectorState,
-            'PROJECTOR.PROJECTOR_STATE'
-        );
-        const handleTimerUpdate = createSafeEventHandler(
-            (data: ProjectorTimerUpdatePayload) => {
-                logger.debug('Received projection_timer_updated with runtime validation', data);
+        const cleanupFunctions: (() => void)[] = [];
 
-                if (data.timer) {
-                    const { startedAt, duration, isPaused } = data.timer;
+        // Projector state handler
+        if (gameManager.socket.instance) {
+            const projectorStateHandler = (...args: unknown[]) => {
+                const state = args[0] as any;
+                logger.debug('Received projector_state', state);
+                setGameState(prev => ({
+                    ...prev,
+                    ...state,
+                    chrono: {
+                        timeLeftMs: state.chrono?.timeLeft ?? state.timerTimeLeft ?? 0,
+                        running: state.chrono?.running ?? (state.timerStatus === 'play')
+                    }
+                }));
+            };
 
-                    // Calculate current remaining time in milliseconds
-                    const elapsed = Date.now() - startedAt;
-                    const remaining = Math.max(0, duration - elapsed); // Keep in milliseconds
+            gameManager.socket.instance.on('projector_state', projectorStateHandler);
+            cleanupFunctions.push(() => {
+                gameManager.socket.instance?.off('projector_state', projectorStateHandler);
+            });
+        }
 
-                    const timerPayload = {
-                        timeLeftMs: remaining, // Already in milliseconds
-                        running: !isPaused,
-                        status: (isPaused ? 'pause' : 'play') as TimerStatus
-                    };
-                    gameTimer.syncWithBackend(timerPayload);
-                } else {
-                    // Timer stopped/cleared
-                    gameTimer.stop();
-                }
-            },
-            isProjectorTimerUpdatePayload,
-            'PROJECTOR.PROJECTION_TIMER_UPDATED'
-        );
-        gameSocket.on(SOCKET_EVENTS.PROJECTOR.PROJECTOR_STATE, handleGameState);
-        gameSocket.on(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, handleTimerUpdate);
-        gameSocket.on(SOCKET_EVENTS.PROJECTOR.PROJECTOR_CONNECTED_COUNT, createSafeEventHandler(
-            (data: ProjectorConnectedCountPayload) => {
-                logger.debug('Received projector_connected_count with runtime validation', data);
-                setConnectedCount(data.count);
-            },
-            isProjectorConnectedCountPayload,
-            'PROJECTOR.PROJECTOR_CONNECTED_COUNT'
-        ));
-        gameSocket.on(SOCKET_EVENTS.CONNECT, () => {
-            logger.info("Reconnected, projector state will be sent automatically.");
-        });
         return () => {
-            gameSocket.off(SOCKET_EVENTS.PROJECTOR.PROJECTOR_STATE, handleGameState);
-            gameSocket.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, handleTimerUpdate);
-            gameSocket.off(SOCKET_EVENTS.PROJECTOR.PROJECTOR_CONNECTED_COUNT);
-            gameSocket.off(SOCKET_EVENTS.CONNECT);
-            gameSocket.offAny();
+            cleanupFunctions.forEach(cleanup => cleanup());
         };
-    }, [gameSocket, gameId]);
+    }, [gameManager.socket.instance]);
 
+    // Timer setter for manual animations
+    const setLocalTimeLeftCallback = useCallback((time: number | null) => {
+        setLocalTimeLeft(time);
+    }, []);
+
+    // Auto-request state on connection
+    useEffect(() => {
+        if (gameManager.gameState.connected && gameManager.actions.getState) {
+            logger.info('Projection connected, requesting state');
+            gameManager.actions.getState();
+        }
+    }, [gameManager.gameState.connected, gameManager.actions.getState]);
+
+    // Return interface
     return {
-        gameSocket,
+        // Socket instance
+        gameSocket: gameManager.socket.instance,
+
+        // State
         gameState,
-        timerStatus,
-        timerQuestionId,
-        timeLeftMs,
+        timerStatus: gameManager.gameState.timer.status,
+        timerQuestionUid: gameManager.gameState.timer.questionUid,
+        timeLeftMs: gameManager.gameState.timer.timeLeftMs,
         localTimeLeftMs,
-        setLocalTimeLeft: (value: number | null) => {
-            // Compatibility function - delegate to unified timer system
-            if (value !== null) {
-                gameTimer.setDuration(value * 1000); // Convert to milliseconds
-            }
-        },
-        connectedCount,
+        connectedCount: gameManager.gameState.connectedCount,
+
+        // Timer setter for animations
+        setLocalTimeLeft: setLocalTimeLeftCallback
     };
 }

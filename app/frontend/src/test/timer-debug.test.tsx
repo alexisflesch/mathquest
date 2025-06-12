@@ -7,7 +7,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useTeacherQuizSocket } from '@/hooks/migrations/useTeacherQuizSocketMigrated';
+import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
 import type { TimerStatus } from '@shared/types/core/timer';
 
 // Mock the logger
@@ -33,7 +33,7 @@ const mockTimerState = {
     status: 'stop' as TimerStatus,
     timeLeftMs: 0,
     durationMs: 30000,
-    questionId: undefined as string | null | undefined,
+    questionUid: undefined as string | null | undefined,
     timestamp: null as number | null,
     localTimeLeftMs: null as number | null
 };
@@ -47,7 +47,7 @@ const mockGameManager = {
         error: null,
         timer: mockTimerState,
         isTimerRunning: false,
-        currentQuestionId: null,
+        currentQuestionUid: null,
         currentQuestionIndex: null,
         currentQuestionData: null,
         totalQuestions: 0,
@@ -86,7 +86,7 @@ function TimerTestComponent({ accessCode, token, gameId }: { accessCode: string 
         quizSocket,
         quizState,
         timerStatus,
-        timerQuestionId,
+        timerQuestionUid,
         timeLeftMs,
         localTimeLeftMs,
         connectedCount,
@@ -96,13 +96,13 @@ function TimerTestComponent({ accessCode, token, gameId }: { accessCode: string 
     return (
         <div data-testid="timer-test">
             <div data-testid="timer-status">{timerStatus}</div>
-            <div data-testid="timer-question-id">{timerQuestionId || 'none'}</div>
+            <div data-testid="timer-question-id">{timerQuestionUid || 'none'}</div>
             <div data-testid="time-left">{timeLeftMs}</div>
             <div data-testid="local-time-left">{localTimeLeftMs}</div>
             <div data-testid="connected-count">{connectedCount}</div>
             <button
                 data-testid="start-timer"
-                onClick={() => emitTimerAction({ status: 'play', questionId: 'test-q1', timeLeftMs: 30000 })}
+                onClick={() => emitTimerAction({ status: 'play', questionUid: 'test-q1', timeLeftMs: 30000 })}
             >
                 Start Timer
             </button>
@@ -148,7 +148,7 @@ describe('Timer Debug Test', () => {
             status: 'play',
             timeLeftMs: 25000, // 25 seconds in milliseconds
             durationMs: 30000,
-            questionId: 'test-q1',
+            questionUid: 'test-q1',
             timestamp: Date.now(),
             localTimeLeftMs: 25000
         };
@@ -184,7 +184,7 @@ describe('Timer Debug Test', () => {
             status: 'stop',
             timeLeftMs: 0,
             durationMs: 30000,
-            questionId: 'test-q1',
+            questionUid: 'test-q1',
             timestamp: Date.now(),
             localTimeLeftMs: 0
         };
@@ -308,7 +308,7 @@ describe('Backend Event Simulation Test', () => {
             status: 'play',
             timeLeftMs: 15000,
             durationMs: 30000,
-            questionId: 'test-q1',
+            questionUid: 'test-q1',
             timestamp: Date.now(),
             localTimeLeftMs: 15000
         };

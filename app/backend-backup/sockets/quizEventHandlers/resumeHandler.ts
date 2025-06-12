@@ -78,7 +78,7 @@ function handleResume(
     io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
 
     // Then emit the timer update separately for precise timing
-    const currentQuestionUid = quizState[quizId].timerQuestionId || quizState[quizId].currentQuestionUid;
+    const currentQuestionUid = quizState[quizId].timerQuestionUid || quizState[quizId].currentQuestionUid;
     // Ensure timeLeft and currentQuestionUid are not null/undefined
     const safeTimeLeft = typeof timeLeft === 'number' ? timeLeft : 0;
 

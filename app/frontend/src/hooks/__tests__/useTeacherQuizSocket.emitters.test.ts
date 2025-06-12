@@ -120,7 +120,7 @@ describe('useTeacherQuizSocket Emitters', () => {
 
     it('should emit "quiz_timer_action" with "stop" when emitTimerAction is called with stop status', () => {
         const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
-        const payload = { status: 'stop' as const, questionId: "q_stop_test", timeLeftMs: 0 };
+        const payload = { status: 'stop' as const, questionUid: "q_stop_test", timeLeftMs: 0 };
         act(() => {
             result.current.emitTimerAction(payload);
         });

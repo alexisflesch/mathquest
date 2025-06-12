@@ -383,7 +383,7 @@ describe('Game Handler', () => {
     //     playerSocket.emit('game_answer', {
     //         accessCode: TEST_ACCESS_CODE,
     //         userId: 'player-123',
-    //         questionId: questionUidFromEvent, // Use the UID from the game_question event
+    //         questionUid: questionUidFromEvent, // Use the UID from the game_question event
     //         answer: [1], 
     //         timeTakenMs: 1500
     //     });
@@ -397,7 +397,7 @@ describe('Game Handler', () => {
     //         fail(`Player received game_error: ${JSON.stringify(answerResponse)}`);
     //     }
     //     expect(answerResponse).toBeDefined();
-    //     expect(answerResponse.questionId).toBe(questionUidFromEvent);
+    //     expect(answerResponse.questionUid).toBe(questionUidFromEvent);
     //     expect(answerResponse.isCorrect).toBe(true); 
     // });
     test('Multiple players can join a game and see each other', async () => {

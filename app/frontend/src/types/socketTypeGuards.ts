@@ -21,11 +21,22 @@ import type {
 
 import type {
     SetQuestionPayload,
-    QuizTimerActionPayload as TeacherTimerActionPayload
+    QuizTimerActionPayload as TeacherTimerActionPayload,
+    DashboardQuestionChangedPayload,
+    DashboardAnswersLockChangedPayload,
+    DashboardGameStatusChangedPayload,
+    ConnectedCountPayload
 } from '@shared/types/socket/payloads';
 
 // Re-export payload types for use by other modules
-export type { SetQuestionPayload, QuizTimerActionPayload as TeacherTimerActionPayload } from '@shared/types/socket/payloads';
+export type {
+    SetQuestionPayload,
+    QuizTimerActionPayload as TeacherTimerActionPayload,
+    DashboardQuestionChangedPayload,
+    DashboardAnswersLockChangedPayload,
+    DashboardGameStatusChangedPayload,
+    ConnectedCountPayload
+} from '@shared/types/socket/payloads';
 
 // Import consolidated types from core
 import type {
@@ -89,7 +100,7 @@ export function isGameAnswerPayload(data: unknown): data is GameAnswerPayload {
     return (
         typeof a.accessCode === 'string' &&
         typeof a.userId === 'string' &&
-        typeof a.questionId === 'string' &&
+        typeof a.questionUid === 'string' &&
         typeof a.timeSpent === 'number'
     );
 }
@@ -178,7 +189,7 @@ export interface GameErrorDetails {
     message?: string;
     details?: string;
     error?: string;
-    questionId?: string;
+    questionUid?: string;
 }
 
 export interface LobbyErrorPayload {
@@ -186,24 +197,11 @@ export interface LobbyErrorPayload {
     message?: string;
 }
 
-export interface ConnectedCountPayload {
-    count: number;
-}
-
-export interface DashboardQuestionChangedPayload {
-    questionUid: string;
-    timer?: {
-        timeRemaining?: number;
-    };
-}
-
-export interface DashboardAnswersLockChangedPayload {
-    answersLocked: boolean;
-}
-
-export interface DashboardGameStatusChangedPayload {
-    status: string;
-}
+// Note: Dashboard payloads now imported from shared types
+// - DashboardQuestionChangedPayload
+// - DashboardAnswersLockChangedPayload  
+// - DashboardGameStatusChangedPayload
+// - ConnectedCountPayload
 
 // Type guards for teacher quiz socket types
 export function isSetQuestionPayload(data: unknown): data is SetQuestionPayload {
@@ -285,7 +283,7 @@ export interface TeacherQuizState {
     stats: Record<string, unknown>;
     profSocketId?: string | null;
     timerStatus?: 'play' | 'pause' | 'stop' | null;
-    timerQuestionId?: string | null;
+    timerQuestionUid?: string | null;
     timerTimeLeft?: number | null;
     timerTimestamp?: number;
     questionStates?: Record<string, boolean>;
@@ -315,7 +313,7 @@ export interface TournamentAnswerReceived {
     received?: boolean;
     message?: string;
     correct?: boolean;
-    questionId?: string;
+    questionUid?: string;
     timeSpent?: number;
     correctAnswers?: number[];
     explanation?: string;
@@ -337,7 +335,7 @@ export interface TournamentGameUpdatePayload {
 }
 
 export interface TournamentCorrectAnswersPayload {
-    questionId: string;
+    questionUid?: string;
     correctAnswers: number[];
 }
 
@@ -395,7 +393,7 @@ export function isTournamentCorrectAnswersPayload(data: unknown): data is Tourna
 
     const c = data as Record<string, unknown>;
     return (
-        typeof c.questionId === 'string' &&
+        typeof c.questionUid === 'string' &&
         Array.isArray(c.correctAnswers)
     );
 }
@@ -445,7 +443,7 @@ export interface ProjectorState {
         running: boolean;
     };
     timerStatus?: 'play' | 'pause' | 'stop';
-    timerQuestionId?: string | null;
+    timerQuestionUid?: string | null;
     timerTimeLeft?: number | null;
     locked?: boolean;
     ended?: boolean;
@@ -474,7 +472,7 @@ export interface ProjectorTimerUpdatePayload {
 
 export interface LegacyQuizTimerUpdatePayload {
     status: 'play' | 'pause' | 'stop';
-    questionId: string;
+    questionUid?: string;
     timeLeftMs: number;
     timestamp: number;
 }
@@ -546,7 +544,7 @@ export function isLegacyQuizTimerUpdatePayload(data: unknown): data is LegacyQui
     return (
         typeof l.status === 'string' &&
         ['play', 'pause', 'stop'].includes(l.status as string) &&
-        typeof l.questionId === 'string' &&
+        typeof l.questionUid === 'string' &&
         typeof l.timeLeftMs === 'number' &&
         typeof l.timestamp === 'number'
     );
@@ -555,7 +553,7 @@ export function isLegacyQuizTimerUpdatePayload(data: unknown): data is LegacyQui
 // --- Answer Received Type Guards ---
 
 export interface AnswerReceivedPayload {
-    questionId: string;
+    questionUid?: string;
     timeSpent: number;
     correct?: boolean;
     correctAnswers?: boolean[];
@@ -567,7 +565,7 @@ export function isAnswerReceivedPayload(data: unknown): data is AnswerReceivedPa
 
     const a = data as Record<string, unknown>;
     return (
-        typeof a.questionId === 'string' &&
+        typeof a.questionUid === 'string' &&
         typeof a.timeSpent === 'number'
     );
 }
@@ -604,20 +602,20 @@ export function isGameEndedPayload(data: unknown): data is GameEndedPayload {
 // --- Correct Answers Display Type Guards ---
 
 export interface CorrectAnswersPayload {
-    questionId: string;
+    questionUid?: string;
 }
 
 export function isCorrectAnswersPayload(data: unknown): data is CorrectAnswersPayload {
     if (!data || typeof data !== 'object') return false;
 
     const c = data as Record<string, unknown>;
-    return typeof c.questionId === 'string';
+    return typeof c.questionUid === 'string';
 }
 
 // --- Feedback Event Type Guards (for practice mode) ---
 
 export interface FeedbackEventPayload {
-    questionId: string;
+    questionUid?: string;
     feedbackRemaining: number;
 }
 
@@ -626,7 +624,7 @@ export function isFeedbackEventPayload(data: unknown): data is FeedbackEventPayl
 
     const f = data as Record<string, unknown>;
     return (
-        typeof f.questionId === 'string' &&
+        typeof f.questionUid === 'string' &&
         typeof f.feedbackRemaining === 'number'
     );
 }

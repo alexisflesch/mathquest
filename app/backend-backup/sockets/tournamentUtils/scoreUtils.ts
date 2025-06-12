@@ -45,7 +45,7 @@ export function calculateScore(
 ): ScoreCalculationResult {
     if (!question || !answer || totalQuestionsInEvent <= 0) {
         logger.warn('[calculateScore] Missing question, processed answer object, or invalid totalQuestionsInEvent.', {
-            questionId: question?.uid, answerProvided: !!answer, totalQuestionsInEvent
+            questionUid: question?.uid, answerProvided: !!answer, totalQuestionsInEvent
         });
         return { scoreBeforePenalty: 0, timePenalty: 0, normalizedQuestionScore: 0 };
     }

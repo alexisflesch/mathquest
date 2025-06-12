@@ -177,17 +177,17 @@ describe('Self-Paced (Practice) Mode', () => {
         expect(firstQ).toBeDefined();
         expect(firstQ.text).toContain('1+1');
         // 4. Answer first question
-        socket.emit('game_answer', { accessCode, userId: playerId, questionId: firstQ.uid, answer: 1, timeSpent: 1000 });
+        socket.emit('game_answer', { accessCode, userId: playerId, questionUid: firstQ.uid, answer: 1, timeSpent: 1000 });
         const feedback1 = await waitForEvent(socket, 'answer_received');
         expect(feedback1.correct).toBe(true);
         // 5. Request next question
-        socket.emit('request_next_question', { accessCode, userId: playerId, currentQuestionId: firstQ.uid });
+        socket.emit('request_next_question', { accessCode, userId: playerId, currentQuestionUid: firstQ.uid });
         // 6. Should receive second question
         const secondQ = await waitForEvent(socket, 'game_question');
         expect(secondQ.question.text).toContain('2+2');
         // 7. Answer second question
-        console.log('Answering second question:', { accessCode, userId: playerId, questionId: secondQ.question.uid, answer: 1, timeSpent: 1200 });
-        socket.emit('game_answer', { accessCode, userId: playerId, questionId: secondQ.question.uid, answer: 1, timeSpent: 1200 });
+        console.log('Answering second question:', { accessCode, userId: playerId, questionUid: secondQ.question.uid, answer: 1, timeSpent: 1200 });
+        socket.emit('game_answer', { accessCode, userId: playerId, questionUid: secondQ.question.uid, answer: 1, timeSpent: 1200 });
         const feedback2 = await waitForEvent(socket, 'answer_received');
         console.log('Received feedback for second question:', feedback2);
         expect(feedback2.correct).toBe(true);
@@ -199,7 +199,7 @@ describe('Self-Paced (Practice) Mode', () => {
         });
         // 8. Explicitly request to proceed after the last question (player has reviewed feedback)
         console.log('Requesting to proceed after last question...');
-        socket.emit('request_next_question', { accessCode, userId: playerId, currentQuestionId: secondQ.uid });
+        socket.emit('request_next_question', { accessCode, userId: playerId, currentQuestionUid: secondQ.uid });
         // 9. Should receive final score since there are no more questions
         console.log('Waiting for game_ended event after requesting next question...');
         const finalScore = await waitForEvent(socket, 'game_ended', 15000); // Increase timeout to 15 seconds

@@ -27,4 +27,7 @@ export interface Question extends BaseQuestion {
     // New fields for answer options and correct answers
     answerOptions?: string[]; // List of possible answers
     correctAnswers?: boolean[]; // List of booleans indicating correct answers
+
+    // Frontend compatibility: answers array with text and correct properties
+    answers: Answer[]; // Required for frontend compatibility
 }

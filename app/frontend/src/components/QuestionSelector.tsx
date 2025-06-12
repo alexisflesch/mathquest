@@ -27,9 +27,9 @@ import { QuestionsFiltersResponseSchema, QuestionsResponseSchema } from '@/types
 // Remove local interface Question and use QuestionData everywhere
 interface TimerProps {
     timerStatus: 'play' | 'pause' | 'stop';
-    timerQuestionId: string | null;
+    timerQuestionUid: string | null;
     timeLeftMs: number;
-    onTimerAction: (info: { status: 'play' | 'pause' | 'stop'; questionId: string; timeLeftMs: number }) => void;
+    onTimerAction: (info: { status: 'play' | 'pause' | 'stop'; questionUid: string; timeLeftMs: number }) => void;
 }
 
 interface QuestionSelectorProps extends TimerProps {
@@ -44,7 +44,7 @@ interface QuestionSelectorProps extends TimerProps {
 
 export default function QuestionSelector({
     onSelect, selectedQuestionIds, externalFilter,
-    timerStatus, timerQuestionId, timeLeftMs,
+    timerStatus, timerQuestionUid, timeLeftMs,
     onTimerAction
 }: QuestionSelectorProps) {
     const [questions, setQuestions] = useState<QuestionData[]>([]);

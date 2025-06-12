@@ -28,7 +28,7 @@ import QuestionCard from '@/components/QuestionCard';
 import type { TournamentQuestion } from '@shared/types';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
-import { useStudentGameSocket } from '@/hooks/migrations';
+import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import InfinitySpin from '@/components/InfinitySpin';
 
@@ -222,7 +222,7 @@ export default function LiveGamePage() {
                 }
             }
 
-            setFeedbackText(feedbackMessage);
+            setFeedbackText(feedbackMessage || "");
             setFeedbackDuration(gameState.feedbackRemaining);
             setShowFeedbackOverlay(true);
 
@@ -258,13 +258,13 @@ export default function LiveGamePage() {
     }, [socketError]);
 
     // Reset selected answers when question changes
-    const currentQuestionId = gameState.currentQuestion?.uid;
+    const currentQuestionUid = gameState.currentQuestion?.uid;
     useEffect(() => {
         setSelectedAnswer(null);
         setSelectedAnswers([]);
         setSnackbarOpen(false);
         setShowFeedbackOverlay(false); // Hide feedback when question changes
-    }, [currentQuestionId]);
+    }, [currentQuestionUid]);
 
     // Determine game mode for display
     const gameMode = useMemo(() => {
@@ -297,7 +297,7 @@ export default function LiveGamePage() {
 
         const clientTimestamp = Date.now();
         logger.debug('Submitting single choice answer', {
-            questionId: gameState.currentQuestion.uid,
+            questionUid: gameState.currentQuestion.uid,
             answer: idx,
             clientTimestamp,
             gameMode
@@ -321,7 +321,7 @@ export default function LiveGamePage() {
 
         const clientTimestamp = Date.now();
         logger.debug('Submitting multiple choice answers', {
-            questionId: gameState.currentQuestion.uid,
+            questionUid: gameState.currentQuestion.uid,
             answers: selectedAnswers,
             clientTimestamp,
             gameMode

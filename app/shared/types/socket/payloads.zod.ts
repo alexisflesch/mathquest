@@ -11,7 +11,7 @@ export const setQuestionPayloadSchema = z.object({
 
 export const timerActionPayloadSchema = z.object({
   status: z.union([z.literal("play"), z.literal("pause"), z.literal("stop")]),
-  questionId: z.string(),
+  questionUid: z.string(),
   timeLeftMs: z.number().optional(),
   quizId: z.string(),
   teacherId: z.string().optional(),
@@ -104,7 +104,7 @@ export const quizTimerActionPayloadSchema = z.object({
     z.literal("stop"),
     z.literal("set_duration"),
   ]),
-  questionId: z.string().optional(),
+  questionUid: z.string().optional(),
   durationMs: z.number().optional(),
 });
 

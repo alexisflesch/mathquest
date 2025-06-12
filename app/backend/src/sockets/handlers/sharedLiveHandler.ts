@@ -21,7 +21,7 @@ interface JoinPayload {
 interface AnswerPayload {
     accessCode: string;
     userId: string;
-    questionId: string;
+    questionUid: string;
     answer: any;
     timeSpent: number;
     playMode?: 'quiz' | 'tournament' | 'practice'; // playMode is optional
@@ -76,14 +76,14 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 accessCode: gs.accessCode,
                 status: gs.status,
                 currentQuestionIndex: gs.currentQuestionIndex,
-                totalQuestions: gs.questionIds.length,
+                totalQuestions: gs.questionUids.length,
                 timer: gs.timer || null,
                 question: null
             };
-            if (gs.currentQuestionIndex >= 0 && gs.currentQuestionIndex < gs.questionIds.length) {
+            if (gs.currentQuestionIndex >= 0 && gs.currentQuestionIndex < gs.questionUids.length) {
                 const prisma = await import('@/db/prisma').then(m => m.prisma);
-                const questionId = gs.questionIds[gs.currentQuestionIndex];
-                const question = await prisma.question.findUnique({ where: { uid: questionId } });
+                const questionUid = gs.questionUids[gs.currentQuestionIndex];
+                const question = await prisma.question.findUnique({ where: { uid: questionUid } });
                 if (question) {
                     const patchedQuestion = {
                         ...question,
@@ -105,14 +105,14 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                     let shouldSendCorrectAnswers = false;
                     let shouldSendFeedback = false;
                     let feedbackRemaining = 0;
-                    if (gs.timer && typeof gs.timer.startedAt === 'number' && typeof gs.timer.duration === 'number') {
+                    if (gs.timer && typeof gs.timer.startedAt === 'number' && typeof gs.timer.durationMs === 'number') {
                         const now = Date.now();
                         const elapsed = now - gs.timer.startedAt;
-                        const remaining = Math.max(0, gs.timer.duration - elapsed);
+                        const remaining = Math.max(0, gs.timer.durationMs - elapsed);
                         if (remaining <= 0) {
                             shouldSendCorrectAnswers = true;
                             if (patchedQuestion.feedbackWaitTime && patchedQuestion.feedbackWaitTime > 0) {
-                                const feedbackStart = gs.timer.startedAt + gs.timer.duration;
+                                const feedbackStart = gs.timer.startedAt + gs.timer.durationMs;
                                 const feedbackEnd = feedbackStart + patchedQuestion.feedbackWaitTime * 1000;
                                 if (now < feedbackEnd) {
                                     shouldSendFeedback = true;
@@ -122,11 +122,11 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                         }
                     }
                     if (shouldSendCorrectAnswers) {
-                        socket.emit('correct_answers', { questionId });
+                        socket.emit('correct_answers', { questionUid });
                     }
                     if (shouldSendFeedback) {
                         const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
-                        socket.emit('feedback', { questionId, feedbackRemaining: safeFeedbackRemaining });
+                        socket.emit('feedback', { questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining });
                     }
                 }
             }
@@ -184,9 +184,9 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
         if (gameStateRaw && gameStateRaw.gameState && typeof gameStateRaw.gameState.currentQuestionIndex === 'number' && gameStateRaw.gameState.currentQuestionIndex >= 0) {
             const currentIndex = gameStateRaw.gameState.currentQuestionIndex;
-            const questionId = gameStateRaw.gameState.questionIds[currentIndex];
+            const questionUid = gameStateRaw.gameState.questionUids[currentIndex];
             const prisma = await import('@/db/prisma').then(m => m.prisma);
-            const question = await prisma.question.findUnique({ where: { uid: questionId } });
+            const question = await prisma.question.findUnique({ where: { uid: questionUid } });
             if (question) {
                 const patchedQuestion = {
                     ...question,
@@ -219,20 +219,20 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                     if (timerObj.isPaused) {
                         if (playMode === 'quiz') {
                             questionState = 'paused';
-                            timer = typeof timerObj.timeRemaining === 'number' ? Math.ceil(timerObj.timeRemaining / 1000) : timer;
+                            timer = typeof timerObj.timeRemainingMs === 'number' ? Math.ceil(timerObj.timeRemainingMs / 1000) : timer;
                         } else {
                             questionState = 'stopped';
-                            timer = typeof timerObj.timeRemaining === 'number' ? Math.ceil(timerObj.timeRemaining / 1000) : 0;
+                            timer = typeof timerObj.timeRemainingMs === 'number' ? Math.ceil(timerObj.timeRemainingMs / 1000) : 0;
                             if (timer <= 0) phase = 'show_answers';
                         }
-                    } else if (typeof timerObj.startedAt === 'number' && typeof timerObj.duration === 'number') {
+                    } else if (typeof timerObj.startedAt === 'number' && typeof timerObj.durationMs === 'number') {
                         const elapsed = Date.now() - timerObj.startedAt;
-                        const remaining = Math.max(0, timerObj.duration - elapsed);
+                        const remaining = Math.max(0, timerObj.durationMs - elapsed);
                         timer = Math.ceil(remaining / 1000);
                         if (remaining <= 0) {
                             timer = 0;
                             if (playMode === 'quiz' && actualFeedbackWaitTime > 0) {
-                                const feedbackStart = timerObj.startedAt + timerObj.duration;
+                                const feedbackStart = timerObj.startedAt + timerObj.durationMs;
                                 const now = Date.now();
                                 const feedbackWaitMs = actualFeedbackWaitTime * 1000;
                                 const feedbackEnd = feedbackStart + feedbackWaitMs;
@@ -268,7 +268,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 const liveQuestionPayload: any = {
                     question: filteredQuestion,
                     questionIndex: currentIndex,
-                    totalQuestions: gameStateRaw.gameState.questionIds.length,
+                    totalQuestions: gameStateRaw.gameState.questionUids.length,
                     questionState,
                     timer
                 };
@@ -284,26 +284,26 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 const socketIds = roomMembers ? Array.from(roomMembers) : [];
                 logger.info({ accessCode, userId, socketId: socket.id, liveRoom, socketIds }, '[DEBUG] Late joiner socket and current live room members before emitting game_question');
                 socket.emit('game_question', liveQuestionPayload);
-                logger.info({ accessCode, userId, currentIndex, questionId, questionState, timer, playMode, phase, feedbackRemaining }, '[DEBUG] Emitted game_question to late joiner');
+                logger.info({ accessCode, userId, currentIndex, questionUid, questionState, timer, playMode, phase, feedbackRemaining }, '[DEBUG] Emitted game_question to late joiner');
 
                 if (questionState === 'stopped' || (playMode === 'quiz' && questionState === 'paused' && phase === 'feedback')) {
-                    socket.emit('correct_answers', { questionId });
-                    logger.info({ accessCode, userId, questionId, playMode, questionState, phase }, '[DEBUG] Emitted correct_answers to late joiner');
+                    socket.emit('correct_answers', { questionUid });
+                    logger.info({ accessCode, userId, questionUid: questionUid, playMode, questionState, phase }, '[DEBUG] Emitted correct_answers to late joiner');
                 }
                 if (playMode === 'quiz' && phase === 'feedback') {
                     const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
-                    socket.emit('feedback', { questionId, feedbackRemaining: safeFeedbackRemaining });
-                    logger.info({ accessCode, userId, questionId, feedbackRemaining: safeFeedbackRemaining, playMode }, '[DEBUG] Emitted feedback to late joiner (quiz feedback phase, always)');
+                    socket.emit('feedback', { questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining });
+                    logger.info({ accessCode, userId, questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining, playMode }, '[DEBUG] Emitted feedback to late joiner (quiz feedback phase, always)');
                 }
             }
         }
     };
 
     const answerHandler = async (payload: AnswerPayload) => {
-        const { accessCode, userId, questionId, answer, timeSpent } = payload;
+        const { accessCode, userId, questionUid, answer, timeSpent } = payload;
         let { playMode } = payload;
 
-        logger.info({ accessCode, userId, questionId, answer, timeSpent, receivedPlayMode: playMode, socketId: socket.id }, '[SHARED_LIVE_HANDLER] game_answer received');
+        logger.info({ accessCode, userId, questionUid, answer, timeSpent, receivedPlayMode: playMode, socketId: socket.id }, '[SHARED_LIVE_HANDLER] game_answer received');
 
         if (!playMode) {
             try {
@@ -329,14 +329,14 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
             }
         }
 
-        logger.info({ accessCode, userId, questionId, answer, timeSpent, finalPlayMode: playMode, socketId: socket.id }, '[SHARED_LIVE_HANDLER] Processing game_answer with playMode');
+        logger.info({ accessCode, userId, questionUid, answer, timeSpent, finalPlayMode: playMode, socketId: socket.id }, '[SHARED_LIVE_HANDLER] Processing game_answer with playMode');
 
         const currentPlayMode = playMode || 'quiz';
         const room = `game_${accessCode}`;
 
         const fullGameState = await getFullGameState(accessCode);
         if (!fullGameState || !fullGameState.gameState) {
-            logger.warn({ accessCode, userId, questionId }, 'Game state not found for answer validation.');
+            logger.warn({ accessCode, userId, questionUid }, 'Game state not found for answer validation.');
             socket.emit('answer_feedback', {
                 status: 'error',
                 code: 'GAME_NOT_FOUND',
@@ -348,7 +348,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         const { gameState } = fullGameState;
 
         if (gameState.status !== 'active') {
-            logger.warn({ accessCode, userId, questionId, gameStatus: gameState.status, playMode: currentPlayMode }, 'Answer submitted but game is not active.');
+            logger.warn({ accessCode, userId, questionUid, gameStatus: gameState.status, playMode: currentPlayMode }, 'Answer submitted but game is not active.');
             socket.emit('answer_feedback', {
                 status: 'error',
                 code: 'GAME_NOT_ACTIVE',
@@ -358,7 +358,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         }
 
         if (gameState.answersLocked) {
-            logger.warn({ accessCode, userId, questionId }, 'Answers are locked. Submission rejected.');
+            logger.warn({ accessCode, userId, questionUid }, 'Answers are locked. Submission rejected.');
             socket.emit('answer_feedback', {
                 status: 'error',
                 code: 'ANSWERS_LOCKED',
@@ -370,11 +370,11 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         // Check if timer has expired for this question (tournament mode)
         if (currentPlayMode === 'tournament') {
             const timerObj = gameState.timer;
-            if (timerObj && typeof timerObj.startedAt === 'number' && typeof timerObj.duration === 'number') {
+            if (timerObj && typeof timerObj.startedAt === 'number' && typeof timerObj.durationMs === 'number') {
                 const elapsed = Date.now() - timerObj.startedAt;
-                const remaining = Math.max(0, timerObj.duration - elapsed);
+                const remaining = Math.max(0, timerObj.durationMs - elapsed);
                 if (remaining <= 0) {
-                    logger.warn({ accessCode, userId, questionId }, 'Answer submitted after timer expired (tournament mode).');
+                    logger.warn({ accessCode, userId, questionUid }, 'Answer submitted after timer expired (tournament mode).');
                     socket.emit('answer_feedback', {
                         status: 'error',
                         code: 'TIME_EXPIRED',
@@ -385,8 +385,8 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
             }
         }
 
-        if (!gameState.questionIds || gameState.currentQuestionIndex === undefined || questionId !== gameState.questionIds[gameState.currentQuestionIndex]) {
-            logger.warn({ accessCode, userId, questionId, currentQId: gameState.questionIds ? gameState.questionIds[gameState.currentQuestionIndex] : 'N/A' }, 'Answer submitted for wrong question.');
+        if (!gameState.questionUids || gameState.currentQuestionIndex === undefined || questionUid !== gameState.questionUids[gameState.currentQuestionIndex]) {
+            logger.warn({ accessCode, userId, questionUid, currentQId: gameState.questionUids ? gameState.questionUids[gameState.currentQuestionIndex] : 'N/A' }, 'Answer submitted for wrong question.');
             socket.emit('answer_feedback', {
                 status: 'error',
                 code: 'WRONG_QUESTION',
@@ -410,23 +410,23 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 participantData = { userId, username: 'Unknown (from answer)', score: 0, answers: [] };
             }
 
-            const existingAnswer = participantData.answers.find((a: any) => a.questionId === questionId);
+            const existingAnswer = participantData.answers.find((a: any) => a.questionUid === questionUid);
             if (existingAnswer) {
-                logger.info({ accessCode, userId, questionId }, 'Participant already answered this question. Updating answer.');
+                logger.info({ accessCode, userId, questionUid }, 'Participant already answered this question. Updating answer.');
                 existingAnswer.answer = answer;
                 existingAnswer.timeSpent = timeSpent;
             } else {
-                participantData.answers.push({ questionId, answer, timeSpent });
+                participantData.answers.push({ questionUid, answer, timeSpent });
             }
 
             await redis.hset(participantKey, userId, JSON.stringify(participantData));
 
             // Fetch question details to pass to calculateScore
             const prisma = await import('@/db/prisma').then(m => m.prisma);
-            const question = await prisma.question.findUnique({ where: { uid: questionId } });
+            const question = await prisma.question.findUnique({ where: { uid: questionUid } });
 
             if (!question) {
-                logger.error({ accessCode, userId, questionId }, "Question not found for scoring");
+                logger.error({ accessCode, userId, questionUid }, "Question not found for scoring");
                 socket.emit('answer_feedback', {
                     status: 'error',
                     code: 'QUESTION_NOT_FOUND',
@@ -463,11 +463,11 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
             await redis.zadd(`mathquest:game:leaderboard:${accessCode}`, 'INCR', score, userId);
 
-            socket.emit('answer_feedback', { status: 'ok', questionId, scoreAwarded: score });
-            logger.info({ accessCode, userId, questionId, scoreAwarded: score }, 'Answer processed, feedback sent');
+            socket.emit('answer_feedback', { status: 'ok', questionUid, scoreAwarded: score });
+            logger.info({ accessCode, userId, questionUid, scoreAwarded: score }, 'Answer processed, feedback sent');
 
             if (currentPlayMode === 'quiz') {
-                const collected = await collectAnswers(accessCode, questionId);
+                const collected = await collectAnswers(accessCode, questionUid);
                 io.to(`teacher_control_${gameState.gameId}`).emit('quiz_answer_update', collected);
             }
 
@@ -475,7 +475,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
             io.to(room).emit('leaderboard_update', { leaderboard });
 
         } catch (error: any) {
-            logger.error({ accessCode: payload.accessCode, userId: payload.userId, questionId: payload.questionId, error: error.message, stack: error.stack }, 'Error processing answer in sharedLiveHandler');
+            logger.error({ accessCode: payload.accessCode, userId: payload.userId, questionUid: payload.questionUid, error: error.message, stack: error.stack }, 'Error processing answer in sharedLiveHandler');
             socket.emit('answer_feedback', {
                 status: 'error',
                 code: 'PROCESSING_ERROR',

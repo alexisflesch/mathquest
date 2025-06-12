@@ -23,7 +23,7 @@ export const baseQuizStateSchema = z.object({
   chrono: chronoSchema,
   locked: z.boolean(),
   ended: z.boolean(),
-  currentQuestionIdx: z.number().optional().nullable(),
+  currentQuestionidx: z.number().optional().nullable(),
 });
 
 export const extendedQuizStateSchema = baseQuizStateSchema.extend({
@@ -36,7 +36,7 @@ export const extendedQuizStateSchema = baseQuizStateSchema.extend({
   timerStatus: z
     .union([z.literal("play"), z.literal("pause"), z.literal("stop")])
     .optional(),
-  timerQuestionId: z.string().optional().nullable(),
+  timerQuestionUid: z.string().optional().nullable(),
   timerTimeLeftMs: z.number().optional().nullable(),
   timerTimestamp: z.number().optional().nullable(),
   timerInitialValueMs: z.number().optional().nullable(),

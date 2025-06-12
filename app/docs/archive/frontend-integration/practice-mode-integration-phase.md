@@ -109,7 +109,7 @@ socket.on('game_question', (question) => {
 socket.emit('game_answer', {
   accessCode: practiceCode,
   userId: student.id,
-  questionId: currentQuestion.uid,
+  questionUid: currentQuestion.uid,
   answer: selectedAnswer,
   timeSpent: timeUsed
 });
@@ -123,7 +123,7 @@ socket.on('answer_received', (feedback) => {
 socket.emit('request_next_question', {
   accessCode: practiceCode,
   userId: student.id,
-  currentQuestionId: currentQuestion.uid
+  currentQuestionUid: currentQuestion.uid
 });
 
 // 6. Game completion

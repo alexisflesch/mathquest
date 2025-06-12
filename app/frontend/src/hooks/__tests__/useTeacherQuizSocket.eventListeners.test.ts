@@ -30,7 +30,7 @@ interface QuizState {
     stats: Record<string, unknown>;
     profSocketId?: string | null;
     timerStatus?: 'play' | 'pause' | 'stop' | null;
-    timerQuestionId?: string | null;
+    timerQuestionUid?: string | null;
     timerTimeLeft?: number | null;
     timerTimestamp?: number;
     questionStates?: Record<string, boolean>;
@@ -132,12 +132,12 @@ describe('useTeacherQuizSocket Event Listeners', () => {
 
         // Test passes if no errors are thrown and state is updated
         expect(result.current.quizState).toBeDefined();
-        expect(result.current.quizState?.currentQuestionIdx).toBe(0);
+        expect(result.current.quizState?.currentQuestionidx).toBe(0);
     });
 
     it('should handle "dashboard_timer_updated" event without errors', () => {
         const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
-        const mockTimerData = { questionId: 'q1', timeLeftMs: 15000, status: 'play', running: true, duration: 15000 }; // ms, not s, and running/duration required
+        const mockTimerData = { questionUid: 'q1', timeLeftMs: 15000, status: 'play', running: true, duration: 15000 }; // ms, not s, and running/duration required
 
         act(() => {
             // Trigger both dashboard_timer_updated and quiz_timer_update for robustness
@@ -149,7 +149,7 @@ describe('useTeacherQuizSocket Event Listeners', () => {
 
         // Wait for timer state to update
         return waitFor(() => {
-            expect(result.current.timerQuestionId).toBe('q1');
+            expect(result.current.timerQuestionUid).toBe('q1');
             expect(result.current.timerStatus).toBe('play');
         });
     });

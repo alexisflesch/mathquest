@@ -56,7 +56,7 @@ export interface AnswerReceived {
     received?: boolean;
     message?: string;
     correct?: boolean;
-    questionId?: string;
+    questionUid?: string;
     timeSpent?: number;
     correctAnswers?: boolean[];
     explanation?: string;
@@ -109,8 +109,8 @@ export interface StudentGameSocketHook {
 
     // Actions
     joinGame: () => void;
-    submitAnswer: (questionId: string, answer: GameAnswerPayload['answer'], timeSpent: number) => void;
-    requestNextQuestion: (currentQuestionId: string) => void;
+    submitAnswer: (questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => void;
+    requestNextQuestion: (currentQuestionUid: string) => void;
 }
 
 export function useStudentGameSocket({
@@ -421,7 +421,7 @@ export function useStudentGameSocket({
                     correct: payload.correct,
                     explanation: payload.explanation,
                     correctAnswers: payload.correctAnswers,
-                    questionId: payload.questionId
+                    questionUid: payload.questionUid
                 };
 
                 logger.info('=== FEEDBACK SET ===', feedback);
@@ -516,27 +516,27 @@ export function useStudentGameSocket({
         socket.emit('join_game', payload);
     }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
 
-    const submitAnswer = useCallback((questionId: string, answer: GameAnswerPayload['answer'], timeSpent: number) => {
+    const submitAnswer = useCallback((questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => {
         if (!socket || !accessCode || !userId) {
             logger.warn("Cannot submit answer: missing socket or parameters");
             return;
         }
 
-        logger.info("Submitting answer", { questionId, answer, timeSpent });
+        logger.info("Submitting answer", { questionUid, answer, timeSpent });
 
-        const payload: GameAnswerPayload = { accessCode, userId, questionId, answer, timeSpent };
+        const payload: GameAnswerPayload = { accessCode, userId, questionUid, answer, timeSpent };
         socket.emit('game_answer', payload);
     }, [socket, accessCode, userId]);
 
-    const requestNextQuestion = useCallback((currentQuestionId: string) => {
+    const requestNextQuestion = useCallback((currentQuestionUid: string) => {
         if (!socket || !accessCode || !userId) {
             logger.warn("Cannot request next question: missing socket or parameters");
             return;
         }
 
-        logger.info("Requesting next question", { currentQuestionId });
+        logger.info("Requesting next question", { currentQuestionUid });
 
-        const payload: Parameters<ClientToServerEvents['request_next_question']>[0] = { accessCode, userId, currentQuestionId };
+        const payload: Parameters<ClientToServerEvents['request_next_question']>[0] = { accessCode, userId, currentQuestionUid };
         socket.emit('request_next_question', payload);
     }, [socket, accessCode, userId]);
 

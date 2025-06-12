@@ -39,7 +39,7 @@ export interface GameTimerHook {
     isRunning: boolean;
 
     // Actions
-    start: (questionId: string, duration?: number) => void;
+    start: (questionUid: string, duration?: number) => void;
     pause: () => void;
     resume: () => void;
     stop: () => void;
@@ -118,7 +118,7 @@ export function useGameTimer(
         status: 'stop',
         timeLeftMs: 0,
         durationMs: TIMER_CONFIG.DEFAULT_QUESTION_TIME,
-        questionId: undefined,
+        questionUid: undefined,
         timestamp: null,
         localTimeLeftMs: null
     });
@@ -235,8 +235,8 @@ export function useGameTimer(
     }, [enableLocalAnimation, startAnimationLoop]);
 
     // --- Timer Actions ---
-    const start = useCallback((questionId: string, duration?: number) => {
-        logger.info(`[${role.toUpperCase()}] Starting timer for question ${questionId}`);
+    const start = useCallback((questionUid: string, duration?: number) => {
+        logger.info(`[${role.toUpperCase()}] Starting timer for question ${questionUid}`);
 
         cleanup();
 
@@ -246,7 +246,7 @@ export function useGameTimer(
         setTimerState((prev: GameTimerState) => ({
             ...prev,
             status: 'play',
-            questionId,
+            questionUid,
             durationMs: timerDuration,
             timeLeftMs: timerDuration,
             timestamp: now,
@@ -302,7 +302,7 @@ export function useGameTimer(
             status: 'stop',
             timeLeftMs: 0,
             localTimeLeftMs: 0,
-            questionId: undefined,
+            questionUid: undefined,
             timestamp: null
         }));
     }, [role, cleanup]);
@@ -362,7 +362,7 @@ export function useGameTimer(
                 runningType: typeof timerUpdate.running,
                 status: timerUpdate.status,
                 durationMs: timerUpdate.durationMs,
-                questionId: timerUpdate.questionId
+                questionUid: timerUpdate.questionUid
             });
 
             // Always use status from payload if present, fallback to running
@@ -381,7 +381,7 @@ export function useGameTimer(
                 status: newStatus,
                 timeLeftMs: timeLeftInMs,
                 durationMs: timerUpdate.durationMs || timerState.durationMs,
-                questionId: timerUpdate.questionId || timerState.questionId || undefined,
+                questionUid: timerUpdate.questionUid || timerState.questionUid || undefined,
                 timestamp: Date.now(),
                 localTimeLeftMs: timeLeftInMs // timeLeftMs is in milliseconds
             };
@@ -483,7 +483,7 @@ export function useGameTimer(
                 status,
                 timeLeftMs: timeLeftMs,
                 durationMs: timer.durationMs || prev.durationMs,
-                questionId: gameTimerUpdate.questionUid || prev.questionId,
+                questionUid: gameTimerUpdate.questionUid || prev.questionUid,
                 timestamp: Date.now(),
                 localTimeLeftMs: timeLeftMs
             }));

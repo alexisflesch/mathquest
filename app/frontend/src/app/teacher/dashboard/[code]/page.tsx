@@ -5,7 +5,7 @@
         quizSocket,
         quizState,
         timerStatus,
-        timerQuestionId,
+        timerQuestionUid,
         timeLeftMs,
         localTimeLeftMs,
         connectedCount,
@@ -20,7 +20,7 @@
         quizSocket,
         quizState,
         timerStatus,
-        timerQuestionId,
+        timerQuestionUid,
         timeLeftMs,
         localTimeLeftMs,
         connectedCount,
@@ -42,7 +42,7 @@ import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
 import CodeManager from '@/components/CodeManager'; // Import new component
-import { useTeacherQuizSocket } from '@/hooks/migrations';
+import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { UsersRound } from "lucide-react";
 import { log } from "console";
@@ -160,7 +160,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         quizSocket,
         quizState,
         timerStatus,
-        timerQuestionId,
+        timerQuestionUid,
         timeLeftMs,
         localTimeLeftMs,
         connectedCount,
@@ -177,7 +177,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
     useEffect(() => {
         logTimerState('dashboard_timer_values_changed', {
             timerStatus,
-            timerQuestionId,
+            timerQuestionUid,
             timeLeftMs,
             timeLeftType: typeof timeLeftMs,
             localTimeLeftMs,
@@ -189,7 +189,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             quizStateTimerStatus: quizState?.timerStatus,
             quizStateTimerTimeLeft: quizState?.timerTimeLeft
         });
-    }, [timerStatus, timerQuestionId, timeLeftMs, localTimeLeftMs, quizSocket?.connected, quizState?.chrono, quizState?.timerStatus, quizState?.timerTimeLeft]);
+    }, [timerStatus, timerQuestionUid, timeLeftMs, localTimeLeftMs, quizSocket?.connected, quizState?.chrono, quizState?.timerStatus, quizState?.timerTimeLeft]);
 
     // --- Stats state for answer histograms ---
     type StatsData = { stats: number[]; totalAnswers: number };
@@ -349,11 +349,11 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
     // --- Sync UI Active Question with Hook's Timer State ---
     // This ensures the UI highlights the correct question based on the *actual* running timer
     useEffect(() => {
-        if (timerQuestionId) {
-            setQuestionActiveUid(timerQuestionId); // Synchronise toujours sur l'UID
+        if (timerQuestionUid) {
+            setQuestionActiveUid(timerQuestionUid); // Synchronise toujours sur l'UID
         }
         // DO NOT mutate expandedUids here or in any effect!
-    }, [timerQuestionId]);
+    }, [timerQuestionUid]);
 
     // --- Memoize mapped questions to prevent unnecessary re-renders ---
     const mappedQuestions = useMemo(() => {
@@ -429,7 +429,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             gameId,
             currentTournamentCode,
             timerStatus,
-            timerQuestionId,
+            timerQuestionUid,
             socketConnected: !!quizSocket?.connected
         });
 
@@ -439,7 +439,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             logger.warn(`[DASHBOARD] Available question UIDs:`, mappedQuestions.map(q => q.uid));
             return;
         }
-        const currentQuestionUid = timerQuestionId;
+        const currentQuestionUid = timerQuestionUid;
         const isTimerRunningOrPaused = timerStatus === 'play' || timerStatus === 'pause';
 
         if (currentQuestionUid === questionToPlay.uid) {
@@ -488,11 +488,11 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             currentTournamentCode
         });
 
-        // Send timer action with questionId - backend will handle question switching automatically
+        // Send timer action with questionUid - backend will handle question switching automatically
         // Convert startTime from seconds to milliseconds for timer action
         emitTimerAction({
             status: 'play',
-            questionId: questionToPlay.uid,
+            questionUid: questionToPlay.uid,
             timeLeftMs: startTime * 1000 // Convert seconds to milliseconds
         });
     }, [mappedQuestions, emitPauseQuiz, emitResumeQuiz, emitSetQuestion]); // Updated to use mappedQuestions
@@ -509,18 +509,18 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
     const handleStop = useCallback(() => {
         // Use current timer state from closure - avoid dependencies that cause re-renders
-        if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
+        if (timerQuestionUid && (timerStatus === 'play' || timerStatus === 'pause')) {
             logger.info(`[DASHBOARD] About to emit stop timer action:`, {
-                timerQuestionId,
+                timerQuestionUid,
                 timerStatus,
                 accessCode: code,
                 gameId,
                 currentTournamentCode,
                 socketConnected: !!quizSocket?.connected
             });
-            emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeftMs: 0 });
+            emitTimerAction({ status: 'stop', questionUid: timerQuestionUid, timeLeftMs: 0 });
         }
-    }, [emitTimerAction, timerQuestionId, timerStatus]); // Include timer state but optimized for essential logic
+    }, [emitTimerAction, timerQuestionUid, timerStatus]); // Include timer state but optimized for essential logic
 
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
         const question = questions.find(q => q.uid === uid);
@@ -532,7 +532,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         // Do NOT call emitTimerAction({ status: 'play', ... }) here. Only resume on explicit user action.
     }, [questions, emitSetTimer]); // Removed frequently changing timer states
 
-    const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeftMs: number }) => {
+    const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionUid: string, timeLeftMs: number }) => {
         logger.info(`[DASHBOARD] About to emit timer action:`, {
             action,
             accessCode: code,
@@ -545,9 +545,9 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
         // Force synchronization after emitting the action - REMOVED LEGACY_QUIZ.GET_TIMER
         // if (action.status === 'play') {
-        //     quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.GET_TIMER, { quizId: action.questionId }, (response: { timeLeftMs?: number }) => {
+        //     quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.GET_TIMER, { quizId: action.questionUid }, (response: { timeLeftMs?: number }) => {
         //         logger.info(`[DASHBOARD] Timer synchronized after play action:`, response);
-        //         setQuestions(prev => prev.map(q => q.uid === action.questionId ? { ...q, temps: response.timeLeftMs } : q));
+        //         setQuestions(prev => prev.map(q => q.uid === action.questionUid ? { ...q, temps: response.timeLeftMs } : q));
         //     });
         // }
     }, [emitTimerAction]); // Removed quizSocket from dependencies
@@ -560,7 +560,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             currentTournamentCode,
             socketConnected: !!quizSocket?.connected
         });
-        emitTimerAction({ status: 'stop', questionId: uid, timeLeftMs: 0 });
+        emitTimerAction({ status: 'stop', questionUid: uid, timeLeftMs: 0 });
         // quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.CLOSE_QUESTION, { quizId, tournamentCode: currentTournamentCode, questionUid: uid }); // REMOVED
         // Consider if emitLockAnswers(true) is needed here or if stopping timer is sufficient
     }, [emitTimerAction]); // Removed frequently changing dependencies
@@ -582,8 +582,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         setShowConfirm(false);
         if (pendingPlayIdx !== null) {
             const questionToPlay = questions[pendingPlayIdx];
-            if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
-                emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeftMs: 0 });
+            if (timerQuestionUid && (timerStatus === 'play' || timerStatus === 'pause')) {
+                emitTimerAction({ status: 'stop', questionUid: timerQuestionUid, timeLeftMs: 0 });
             }
             if (questionToPlay) {
                 setQuestionActiveUid(questionToPlay.uid);
@@ -705,12 +705,12 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
                             <DraggableQuestionsList
                                 quizSocket={quizSocket}
                                 questions={mappedQuestions}
-                                currentQuestionIdx={quizState?.currentQuestionIdx}
+                                currentQuestionIdx={quizState?.currentQuestionidx}
                                 isChronoRunning={quizState?.chrono?.running}
                                 isQuizEnded={quizState?.ended}
                                 questionActiveUid={questionActiveUid}
                                 timerStatus={timerStatus}
-                                timerQuestionId={timerQuestionId}
+                                timerQuestionUid={timerQuestionUid}
                                 timeLeftMs={effectiveTimeLeft}
                                 onSelect={handleSelect}
                                 onPlay={handlePlay}

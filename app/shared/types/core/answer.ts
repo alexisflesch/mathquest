@@ -12,7 +12,7 @@
  */
 export interface BaseAnswer {
     /** Question identifier */
-    questionId: string;
+    questionUid: string;
     /** Answer value (flexible to support different question types) */
     value: any;
     /** Time spent on question in milliseconds */
@@ -74,8 +74,8 @@ export interface AnswerSubmissionPayload {
     accessCode: string;
     /** User ID submitting answer */
     userId: string;
-    /** Question ID being answered */
-    questionId: string;
+    /** Question UID being answered */
+    questionUid: string;
     /** Answer value */
     answer: any;
     /** Time spent on question */
@@ -88,7 +88,7 @@ export interface AnswerSubmissionPayload {
  */
 export interface AnswerResponsePayload {
     /** Question that was answered */
-    questionId: string;
+    questionUid: string;
     /** Time spent on question */
     timeSpent: number;
     /** Whether answer was correct */
@@ -143,7 +143,7 @@ export interface AnswerStats {
  */
 export interface QuestionAnswerSummary {
     /** Question identifier */
-    questionId: string;
+    questionUid: string;
     /** All answers for this question */
     answers: GameAnswer[];
     /** Answer statistics */
@@ -162,7 +162,7 @@ export interface QuestionAnswerSummary {
 export interface GameAnswerPayload {
     accessCode: string;
     userId: string;
-    questionId: string;
+    questionUid: string;
     answer: any;
     timeSpent: number;
 }
@@ -171,7 +171,7 @@ export interface GameAnswerPayload {
  * @deprecated Use AnswerResponsePayload instead
  */
 export interface LegacyAnswerResponse {
-    questionId: string;
+    questionUid: string;
     timeSpent: number;
     correct?: boolean;
     correctAnswers?: boolean[];

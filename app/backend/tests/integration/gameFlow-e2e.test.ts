@@ -275,7 +275,7 @@ describe('Game Flow E2E Test', () => {
         studentSocket.emit('game_answer', {
             accessCode: TEST_ACCESS_CODE,
             userId: 'student-e2e-001',
-            questionId: question1Uid,
+            questionUid: question1Uid,
             answer: [0], // Wrong answer initially (index 0 = "6")
             timeTakenMs: 3000
         });
@@ -289,7 +289,7 @@ describe('Game Flow E2E Test', () => {
         studentSocket.emit('game_answer', {
             accessCode: TEST_ACCESS_CODE,
             userId: 'student-e2e-001',
-            questionId: question1Uid,
+            questionUid: question1Uid,
             answer: [1], // Correct answer (index 1 = "8")
             timeTakenMs: 5000
         });
@@ -329,7 +329,7 @@ describe('Game Flow E2E Test', () => {
         studentSocket.emit('game_answer', {
             accessCode: TEST_ACCESS_CODE,
             userId: 'student-e2e-001',
-            questionId: question2Uid,
+            questionUid: question2Uid,
             answer: [1], // Correct answer (index 1 = "8")
             timeTakenMs: 2500
         });

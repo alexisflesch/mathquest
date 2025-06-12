@@ -303,7 +303,7 @@ export class GameParticipantService {
 
             // Update the answers
             const answers = [...currentAnswers, {
-                questionUid: data.questionId, // Map questionId to questionUid for DB storage
+                questionUid: data.questionUid, // Map questionUid to questionUid for DB storage
                 answer: data.answer,
                 timeTakenMs: data.timeSpent, // Map timeSpent to timeTakenMs for DB storage
                 timestamp: new Date().toISOString()
@@ -324,7 +324,7 @@ export class GameParticipantService {
             const gameInstance = await prisma.gameInstance.findUnique({ where: { id: gameInstanceId } });
             if (gameInstance) {
                 // Use the same structure as scoring expects
-                const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${data.questionId}`; // Use questionId
+                const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${data.questionUid}`; // Use questionUid
                 // Use userId as the field (or socketId if available, but userId is unique per participant)
                 await import('@/config/redis').then(({ redisClient }) =>
                     redisClient.hset(

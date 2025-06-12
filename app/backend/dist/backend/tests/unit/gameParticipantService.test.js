@@ -242,7 +242,7 @@ describe('Game Participant Service', () => {
             const answerData = {
                 accessCode: 'test-code',
                 userId: 'player-123',
-                questionId: 'question-1',
+                questionUid: 'question-1',
                 answer: 'option-B',
                 timeSpent: 5000
             };
@@ -255,7 +255,7 @@ describe('Game Participant Service', () => {
                 answers: [
                     // Already has one answer
                     {
-                        questionId: 'question-0',
+                        questionUid: 'question-0',
                         answer: 'option-A',
                         isCorrect: true,
                         timeSpent: 3000,
@@ -292,7 +292,7 @@ describe('Game Participant Service', () => {
             const answerData = {
                 accessCode: 'test-code',
                 userId: 'invalid-id',
-                questionId: 'question-1',
+                questionUid: 'question-1',
                 answer: 'option-B',
                 timeSpent: 5000
             };
@@ -307,7 +307,7 @@ describe('Game Participant Service', () => {
             const answerData = {
                 accessCode: 'test-code',
                 userId: 'participant-123',
-                questionId: 'question-1',
+                questionUid: 'question-1',
                 answer: 'option-B',
                 timeSpent: 5000
             };

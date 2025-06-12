@@ -151,7 +151,7 @@ describe('usePracticeGameSocket', () => {
         const { result } = renderHook(() => usePracticeGameSocket(defaultProps));
 
         const answerData = {
-            questionId: 'question-123',
+            questionUid: 'question-123',
             timeSpent: 1000,
             correct: true,
             correctAnswers: [false, true, false],
@@ -166,7 +166,7 @@ describe('usePracticeGameSocket', () => {
         expect(result.current.gameState.feedback).toEqual({
             correct: true,
             explanation: 'The correct answer is 2.',
-            questionId: 'question-123',
+            questionUid: 'question-123',
             timeSpent: 1000,
             correctAnswers: [false, true, false],
             correctAnswersText: [],
@@ -226,7 +226,7 @@ describe('usePracticeGameSocket', () => {
         expect(mockSocket.emit).toHaveBeenCalledWith('game_answer', {
             accessCode: 'PRACTICE',
             userId: 'test-user-123',
-            questionId: 'question-123',
+            questionUid: 'question-123',
             answer: 1,
             timeSpent: 1500
         });
@@ -242,7 +242,7 @@ describe('usePracticeGameSocket', () => {
         expect(mockSocket.emit).toHaveBeenCalledWith('request_next_question', {
             accessCode: 'PRACTICE',
             userId: 'test-user-123',
-            currentQuestionId: 'question-123'
+            currentQuestionUid: 'question-123'
         });
     });
 

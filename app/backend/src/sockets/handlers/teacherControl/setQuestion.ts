@@ -113,9 +113,9 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
             }
 
             // Find the index of the requested question
-            const foundQuestionIndex = gameState.questionIds.findIndex(id => id === questionUid);
+            const foundQuestionIndex = gameState.questionUids.findIndex(id => id === questionUid);
             if (foundQuestionIndex === -1) {
-                logger.warn({ gameId, questionUid, questionIds: gameState.questionIds }, 'Question UID not found in gameState');
+                logger.warn({ gameId, questionUid, questionUids: gameState.questionUids }, 'Question UID not found in gameState');
                 socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'QUESTION_NOT_FOUND',
                     message: 'Question not found in this game',
@@ -132,7 +132,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
 
             // Store old question UID for notification
             const oldQuestionUid = gameState.currentQuestionIndex >= 0 ?
-                gameState.questionIds[gameState.currentQuestionIndex] : null;
+                gameState.questionUids[gameState.currentQuestionIndex] : null;
 
             // Update the current question index in the game state
             gameState.currentQuestionIndex = foundQuestionIndex;
@@ -159,7 +159,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                     // Keep timer running but update duration
                     gameState.timer = {
                         startedAt: Date.now(), // Reset start time for new question
-                        duration,
+                        durationMs: duration,
                         isPaused: false // Keep running
                     };
                     logger.info({ gameId, questionUid, duration }, 'Timer was running, keeping it active for new question');
@@ -167,7 +167,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                     // Default: start paused so teacher can control when to begin
                     gameState.timer = {
                         startedAt: Date.now(),
-                        duration,
+                        durationMs: duration,
                         isPaused: true
                     };
                     logger.info({ gameId, questionUid, duration }, 'Timer was paused, keeping it paused for new question');
@@ -196,7 +196,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
             // Notify dashboard about question change
             const dashboardRoom = `dashboard_${gameId}`;
             io.to(dashboardRoom).emit('dashboard_question_changed', {
-                questionUid,
+                questionUid: questionUid,
                 oldQuestionUid,
                 timer: gameState.timer
             });
@@ -214,7 +214,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                     question: filteredQuestion,
                     timer: gameState.timer,
                     questionIndex: foundQuestionIndex,
-                    totalQuestions: gameState.questionIds.length
+                    totalQuestions: gameState.questionUids.length
                 };
 
                 // Send the question to the live room
@@ -238,9 +238,9 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
             // Broadcast to projection room if needed
             const projectionRoom = `projection_${gameId}`;
             io.to(projectionRoom).emit('projection_question_changed', {
-                questionUid,
+                questionUid: questionUid,
                 questionIndex: foundQuestionIndex,
-                totalQuestions: gameState.questionIds.length,
+                totalQuestions: gameState.questionUids.length,
                 timer: gameState.timer
             });
 

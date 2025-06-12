@@ -71,7 +71,7 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
             const firstQuestion = firstQuestionInTemplate.question;
 
             // Send first question
-            logger.info({ socketId: socket.id, questionId: firstQuestion.uid }, 'Sending first question');
+            logger.info({ socketId: socket.id, questionUid: firstQuestion.uid }, 'Sending first question');
 
             // ⚠️ SECURITY: Filter question to remove sensitive data (correctAnswers, explanation, etc.)
             const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');

@@ -142,7 +142,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             // Initialize timer with safe defaults if undefined
             let timer = gameState.timer ? { ...gameState.timer } : {
                 startedAt: 0,
-                duration: 30000, // Default 30 seconds
+                durationMs: 30000, // Default 30 seconds
                 isPaused: true
             };
 
@@ -166,14 +166,14 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             const now = Date.now();
             const startedAt = timer.startedAt || 0;
             const elapsed = now - startedAt;
-            const timeRemaining = Math.max(0, timer.duration - elapsed);
+            const timeRemaining = Math.max(0, timer.durationMs - elapsed);
 
             // Pause the timer
             timer = {
                 ...timer,
                 isPaused: true,
                 pausedAt: now,
-                timeRemaining
+                timeRemainingMs: timeRemaining
             };
 
             // Update game state

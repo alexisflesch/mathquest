@@ -364,21 +364,21 @@ function sendQuestionWithState(
         return;
     }
 
-    const questionId = question.uid;
-    state.currentQuestionUid = questionId;
+    const questionUid = question.uid;
+    state.currentQuestionUid = questionUid;
     state.currentIndex = questionIndex; // Ensure current index is set
     state.currentQuestionIndex = questionIndex; // For backward compatibility
     state.questionStart = Date.now(); // Set the question start time
 
     const timer = state.settings?.timer || 60;
-    logger.info(`[sendQuestionWithState] Preparing to send question ${questionId} to tournament ${code} with timer=${timer}s`);
+    logger.info(`[sendQuestionWithState] Preparing to send question ${questionUid} to tournament ${code} with timer=${timer}s`);
 
     // Initialize or update the question timer with the full time
     if (!state.questionTimers) {
         state.questionTimers = {};
     }
 
-    state.questionTimers[questionId] = {
+    state.questionTimers[questionUid] = {
         timeLeft: timer,
         initialTime: timer,
         lastUpdateTime: Date.now(),
@@ -391,7 +391,7 @@ function sendQuestionWithState(
     // Prepare mode-specific data
     const modeSpecificData = {
         tournoiState: state.paused ? 'paused' : state.stopped ? 'stopped' : 'running',
-        // questionId: questionId, // questionId is part of FilteredQuestion in shared sendQuestion
+        // questionUid: questionUid, // questionUid is part of FilteredQuestion in shared sendQuestion
         code: code // Include tournament code if needed by client for this event
     };
 
@@ -410,15 +410,15 @@ function sendQuestionWithState(
         logger.error(`[sendQuestionWithState] Error sending question via shared function: ${err instanceof Error ? err.message : String(err)}`);
     }
 
-    logger.info(`[sendQuestionWithState] Successfully initiated sending question ${questionId} to room ${roomName} for tournament ${code}`);
+    logger.info(`[sendQuestionWithState] Successfully initiated sending question ${questionUid} to room ${roomName} for tournament ${code}`);
 
     // For logging and debugging
     const participantsCount = state.participants?.length || 0;
     const answeredCount = state.participants?.filter((p: TournamentParticipant) =>
-        p.answers?.some((a: TournamentAnswer) => a.questionUid === questionId)
+        p.answers?.some((a: TournamentAnswer) => a.questionUid === questionUid)
     ).length || 0;
 
-    logger.debug(`[sendQuestionWithState] Tournament ${code} has ${participantsCount} participants, ${answeredCount} have answered question ${questionId}`);
+    logger.debug(`[sendQuestionWithState] Tournament ${code} has ${participantsCount} participants, ${answeredCount} have answered question ${questionUid}`);
 }
 
 /**

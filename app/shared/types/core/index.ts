@@ -58,3 +58,6 @@ export type {
     QuestionCreationPayload,
     QuestionUpdatePayload
 } from './question';
+
+// Re-export dashboard payloads for convenience
+export * from '../socket/dashboardPayloads';

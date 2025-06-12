@@ -12,7 +12,7 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useTeacherQuizSocket } from '../migrations/useTeacherQuizSocketMigrated';
+import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 
 // Mock dependencies
 jest.mock('@/clientLogger', () => ({
@@ -107,7 +107,7 @@ describe('Timer Integration Test', () => {
                 isPaused: false,
                 timeRemaining: 45000      // Backend format: timeRemaining (not timeLeftMs)
             },
-            questionUid: 'question-1'     // Backend format: questionUid (not questionId)
+            questionUid: 'question-1'     // Backend format: questionUid (not questionUid)
         };
 
         act(() => {
@@ -146,13 +146,13 @@ describe('Timer Integration Test', () => {
             console.log('🔍 Current state:', {
                 timeLeftMs: result.current.timeLeftMs,
                 timerStatus: result.current.timerStatus,
-                timerQuestionId: result.current.timerQuestionId,
+                timerQuestionUid: result.current.timerQuestionUid,
                 localTimeLeftMs: result.current.localTimeLeftMs
             });
 
             expect(result.current.timeLeftMs).toBe(45000);
             expect(result.current.timerStatus).toBe('play');
-            expect(result.current.timerQuestionId).toBe('question-1');
+            expect(result.current.timerQuestionUid).toBe('question-1');
         }, { timeout: 3000 });
 
         console.log('✓ Timer state updated correctly');
@@ -163,7 +163,7 @@ describe('Timer Integration Test', () => {
         act(() => {
             result.current.emitTimerAction({
                 status: 'pause',
-                questionId: 'question-1',
+                questionUid: 'question-1',
                 timeLeftMs: 30000
             });
         });
@@ -219,7 +219,7 @@ describe('Timer Integration Test', () => {
         act(() => {
             result.current.emitTimerAction({
                 status: 'play',
-                questionId: 'question-1',
+                questionUid: 'question-1',
                 timeLeftMs: 30000
             });
         });
@@ -283,12 +283,12 @@ describe('Timer Integration Test', () => {
             console.log('🔍 Question change state:', {
                 timeLeftMs: result.current.timeLeftMs,
                 timerStatus: result.current.timerStatus,
-                timerQuestionId: result.current.timerQuestionId
+                timerQuestionUid: result.current.timerQuestionUid
             });
 
             expect(result.current.timeLeftMs).toBe(60000);
             expect(result.current.timerStatus).toBe('play'); // Should preserve running state
-            expect(result.current.timerQuestionId).toBe('question-2');
+            expect(result.current.timerQuestionUid).toBe('question-2');
         }, { timeout: 3000 });
 
         console.log('✓ Question change with timer preservation works correctly');
@@ -299,7 +299,7 @@ describe('Timer Integration Test', () => {
         act(() => {
             result.current.emitTimerAction({
                 status: 'stop',
-                questionId: 'question-2'
+                questionUid: 'question-2'
             });
         });
 
@@ -419,7 +419,7 @@ describe('Timer Integration Test', () => {
         act(() => {
             result.current.emitTimerAction({
                 status: 'play',
-                questionId: 'q1',
+                questionUid: 'q1',
                 timeLeftMs: 60000
             });
         });

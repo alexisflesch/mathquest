@@ -140,9 +140,9 @@ function setQuestionHandler(io, socket) {
                 logger.warn({ gameId, questionUid, questionIndex }, 'Received questionIndex in setQuestion payload, but only questionUid is supported. Ignoring questionIndex.');
             }
             // Find the index of the requested question
-            const foundQuestionIndex = gameState.questionIds.findIndex(id => id === questionUid);
+            const foundQuestionIndex = gameState.questionUids.findIndex(id => id === questionUid);
             if (foundQuestionIndex === -1) {
-                logger.warn({ gameId, questionUid, questionIds: gameState.questionIds }, 'Question UID not found in gameState');
+                logger.warn({ gameId, questionUid, questionUids: gameState.questionUids }, 'Question UID not found in gameState');
                 socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'QUESTION_NOT_FOUND',
                     message: 'Question not found in this game',
@@ -158,7 +158,7 @@ function setQuestionHandler(io, socket) {
             }
             // Store old question UID for notification
             const oldQuestionUid = gameState.currentQuestionIndex >= 0 ?
-                gameState.questionIds[gameState.currentQuestionIndex] : null;
+                gameState.questionUids[gameState.currentQuestionIndex] : null;
             // Update the current question index in the game state
             gameState.currentQuestionIndex = foundQuestionIndex;
             // If the game was pending, mark it as active
@@ -179,7 +179,7 @@ function setQuestionHandler(io, socket) {
                     // Keep timer running but update duration
                     gameState.timer = {
                         startedAt: Date.now(), // Reset start time for new question
-                        duration,
+                        durationMs: duration,
                         isPaused: false // Keep running
                     };
                     logger.info({ gameId, questionUid, duration }, 'Timer was running, keeping it active for new question');
@@ -188,7 +188,7 @@ function setQuestionHandler(io, socket) {
                     // Default: start paused so teacher can control when to begin
                     gameState.timer = {
                         startedAt: Date.now(),
-                        duration,
+                        durationMs: duration,
                         isPaused: true
                     };
                     logger.info({ gameId, questionUid, duration }, 'Timer was paused, keeping it paused for new question');
@@ -212,7 +212,7 @@ function setQuestionHandler(io, socket) {
             // Notify dashboard about question change
             const dashboardRoom = `dashboard_${gameId}`;
             io.to(dashboardRoom).emit('dashboard_question_changed', {
-                questionUid,
+                questionUid: questionUid,
                 oldQuestionUid,
                 timer: gameState.timer
             });
@@ -227,7 +227,7 @@ function setQuestionHandler(io, socket) {
                     question: filteredQuestion,
                     timer: gameState.timer,
                     questionIndex: foundQuestionIndex,
-                    totalQuestions: gameState.questionIds.length
+                    totalQuestions: gameState.questionUids.length
                 };
                 // Send the question to the live room
                 // --- DEBUG: Log sockets in the live room before emitting ---
@@ -249,9 +249,9 @@ function setQuestionHandler(io, socket) {
             // Broadcast to projection room if needed
             const projectionRoom = `projection_${gameId}`;
             io.to(projectionRoom).emit('projection_question_changed', {
-                questionUid,
+                questionUid: questionUid,
                 questionIndex: foundQuestionIndex,
-                totalQuestions: gameState.questionIds.length,
+                totalQuestions: gameState.questionUids.length,
                 timer: gameState.timer
             });
             logger.info({ gameId, questionUid, questionIndex: foundQuestionIndex }, 'Question set successfully');

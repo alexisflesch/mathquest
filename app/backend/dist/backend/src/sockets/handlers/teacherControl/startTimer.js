@@ -158,7 +158,7 @@ function startTimerHandler(io, socket) {
             // Initialize timer with safe defaults if undefined
             let timer = gameState.timer ? { ...gameState.timer } : {
                 startedAt: 0,
-                duration: 30000, // Default 30 seconds
+                durationMs: 30000, // Default 30 seconds
                 isPaused: true
             };
             // Validate duration if provided
@@ -166,7 +166,7 @@ function startTimerHandler(io, socket) {
             // Start the timer
             timer = {
                 startedAt: Date.now(),
-                duration: validDuration ? validDuration : timer.duration,
+                durationMs: validDuration ? validDuration : timer.durationMs,
                 isPaused: false
             };
             // Update game state

@@ -123,7 +123,7 @@ function timerActionHandler(io, socket) {
             // Initialize timer with safe defaults if undefined
             let timer = gameState.timer ? { ...gameState.timer } : {
                 startedAt: 0,
-                duration: 30000, // Default 30 seconds
+                durationMs: 30000, // Default 30 seconds
                 isPaused: true
             };
             const now = Date.now();
@@ -135,9 +135,9 @@ function timerActionHandler(io, socket) {
                     logger.info({ gameId, action, now, validDurationMs, timer }, '[TIMER_ACTION] Processing start action');
                     timer = {
                         startedAt: now,
-                        duration: validDurationMs || (timer.duration || 30000), // Use durationMs directly (already in ms)
+                        durationMs: validDurationMs || (timer.durationMs || 30000), // Use durationMs directly (already in ms)
                         isPaused: false,
-                        timeRemaining: validDurationMs || (timer.duration || 30000)
+                        timeRemainingMs: validDurationMs || (timer.durationMs || 30000)
                     };
                     logger.info({ gameId, action, timer }, '[TIMER_ACTION] Timer object after start processing');
                     // Update game status to 'active' when starting a timer (game has started)
@@ -155,47 +155,47 @@ function timerActionHandler(io, socket) {
                 case 'pause':
                     if (!timer.isPaused) {
                         const elapsed = timer.startedAt ? now - timer.startedAt : 0;
-                        const timeRemaining = Math.max(0, (timer.duration || 30000) - elapsed);
+                        const timeRemaining = Math.max(0, (timer.durationMs || 30000) - elapsed);
                         // 🔥 PAUSE DEBUG: Log the pause calculation
                         logger.warn('🔥 PAUSE DEBUG: Backend pause calculation', {
                             now,
                             'timer.startedAt': timer.startedAt,
                             elapsed,
-                            'timer.duration': timer.duration,
+                            'timer.durationMs': timer.durationMs,
                             timeRemaining,
                             'timeRemaining === 0': timeRemaining === 0,
-                            'elapsed >= timer.duration': elapsed >= (timer.duration || 30000)
+                            'elapsed >= timer.durationMs': elapsed >= (timer.durationMs || 30000)
                         });
                         timer = {
                             ...timer,
                             isPaused: true,
                             pausedAt: now,
-                            timeRemaining
+                            timeRemainingMs: timeRemaining
                         };
                     }
                     break;
                 case 'resume':
                     // Handle resume even if timeRemaining is not defined
                     if (timer.isPaused) {
-                        const remainingTime = timer.timeRemaining || timer.duration || 30000;
+                        const remainingTime = timer.timeRemainingMs || timer.durationMs || 30000;
                         // 🔥 RESUME DEBUG: Log the resume calculation
                         logger.warn('🔥 RESUME DEBUG: Backend resume calculation', {
                             now,
-                            'timer.timeRemaining (before)': timer.timeRemaining,
-                            'timer.duration (before)': timer.duration,
+                            'timer.timeRemainingMs (before)': timer.timeRemainingMs,
+                            'timer.durationMs (before)': timer.durationMs,
                             remainingTime,
                             'remainingTime in seconds': remainingTime / 1000
                         });
                         timer = {
                             startedAt: now,
-                            duration: timer.duration || 30000, // Keep original duration
+                            durationMs: timer.durationMs || 30000, // Keep original duration
                             isPaused: false,
-                            timeRemaining: remainingTime // Set remaining time correctly
+                            timeRemainingMs: remainingTime // Set remaining time correctly
                         };
                         logger.warn('🔥 RESUME DEBUG: Backend resume result', {
                             'timer.startedAt (after)': timer.startedAt,
-                            'timer.duration (after)': timer.duration,
-                            'timer.timeRemaining (after)': timer.timeRemaining,
+                            'timer.durationMs (after)': timer.durationMs,
+                            'timer.timeRemainingMs (after)': timer.timeRemainingMs,
                             'timer.isPaused (after)': timer.isPaused
                         });
                     }
@@ -203,18 +203,18 @@ function timerActionHandler(io, socket) {
                 case 'stop':
                     timer = {
                         startedAt: 0,
-                        duration: timer.duration || 30000,
+                        durationMs: timer.durationMs || 30000,
                         isPaused: true,
-                        timeRemaining: 0
+                        timeRemainingMs: 0
                     };
                     break;
                 case 'set_duration':
                     if (validDurationMs) {
                         timer = {
                             ...timer,
-                            duration: validDurationMs, // durationMs is already in milliseconds
+                            durationMs: validDurationMs, // durationMs is already in milliseconds
                             // If timer is stopped/paused, update timeRemaining to match new duration
-                            timeRemaining: timer.isPaused ? validDurationMs : timer.timeRemaining
+                            timeRemainingMs: timer.isPaused ? validDurationMs : timer.timeRemainingMs
                         };
                     }
                     break;
@@ -230,26 +230,26 @@ function timerActionHandler(io, socket) {
                 'payload questionUid': questionUid,
                 'targetQuestionUid': targetQuestionUid,
                 'gameState.currentQuestionIndex': gameState.currentQuestionIndex,
-                'gameState.questionIds': gameState.questionIds,
-                'gameState.questionIds length': gameState.questionIds ? gameState.questionIds.length : 'null'
+                'gameState.questionUids': gameState.questionUids,
+                'gameState.questionUids length': gameState.questionUids ? gameState.questionUids.length : 'null'
             });
             if (targetQuestionUid) {
                 // Check if this is a different question than currently active
                 const currentQuestionUid = gameState.currentQuestionIndex >= 0 &&
-                    gameState.questionIds &&
-                    gameState.questionIds[gameState.currentQuestionIndex]
-                    ? gameState.questionIds[gameState.currentQuestionIndex] || null
+                    gameState.questionUids &&
+                    gameState.questionUids[gameState.currentQuestionIndex]
+                    ? gameState.questionUids[gameState.currentQuestionIndex] || null
                     : null;
                 logger.warn('🔥 CRITICAL DEBUG: Current vs target question comparison', {
                     currentQuestionUid,
                     targetQuestionUid,
                     'are they different': currentQuestionUid !== targetQuestionUid,
                     'gameState.currentQuestionIndex': gameState.currentQuestionIndex,
-                    'questionIds at currentIndex': gameState.questionIds?.[gameState.currentQuestionIndex]
+                    'questionUids at currentIndex': gameState.questionUids?.[gameState.currentQuestionIndex]
                 });
                 if (currentQuestionUid !== targetQuestionUid) {
                     // Switch to the new question
-                    const targetQuestionIndex = gameState.questionIds?.indexOf(targetQuestionUid);
+                    const targetQuestionIndex = gameState.questionUids?.indexOf(targetQuestionUid);
                     if (targetQuestionIndex !== undefined && targetQuestionIndex >= 0) {
                         logger.info({ gameId, action, oldQuestion: currentQuestionUid, newQuestion: targetQuestionUid }, '[TIMER_ACTION] Switching to new question for timer action');
                         // Update current question index
@@ -270,7 +270,7 @@ function timerActionHandler(io, socket) {
                                 question: filteredQuestion,
                                 timer: timer,
                                 questionIndex: targetQuestionIndex,
-                                totalQuestions: gameState.questionIds.length
+                                totalQuestions: gameState.questionUids.length
                             };
                             // Send the question to the live room
                             const liveRoom = `game_${gameInstance.accessCode}`;
@@ -287,7 +287,7 @@ function timerActionHandler(io, socket) {
                         logger.info({ gameId, targetQuestionUid, targetQuestionIndex }, '[TIMER_ACTION] Question switched and dashboard notified');
                     }
                     else {
-                        logger.warn({ gameId, targetQuestionUid, availableQuestions: gameState.questionIds }, '[TIMER_ACTION] Target question UID not found in game questions');
+                        logger.warn({ gameId, targetQuestionUid, availableQuestions: gameState.questionUids }, '[TIMER_ACTION] Target question UID not found in game questions');
                         // Continue with timer action but don't switch questions
                     }
                 }
@@ -295,9 +295,9 @@ function timerActionHandler(io, socket) {
             else {
                 // No specific question requested, use current question
                 const currentQuestionFromState = gameState.currentQuestionIndex >= 0 &&
-                    gameState.questionIds &&
-                    gameState.questionIds[gameState.currentQuestionIndex]
-                    ? gameState.questionIds[gameState.currentQuestionIndex]
+                    gameState.questionUids &&
+                    gameState.questionUids[gameState.currentQuestionIndex]
+                    ? gameState.questionUids[gameState.currentQuestionIndex]
                     : null;
                 targetQuestionUid = currentQuestionFromState || undefined;
             }

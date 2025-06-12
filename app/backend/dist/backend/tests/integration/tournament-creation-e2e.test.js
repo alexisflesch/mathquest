@@ -262,7 +262,7 @@ describe('Tournament Creation and Game Flow E2E Test', () => {
         studentSocket.emit('game_answer', {
             accessCode: tournamentAccessCode,
             userId: 'student-tournament-001',
-            questionId: firstQuestionData.question.uid,
+            questionUid: firstQuestionData.question.uid,
             answer: [0], // First option
             timeTakenMs: 3000
         });
@@ -274,7 +274,7 @@ describe('Tournament Creation and Game Flow E2E Test', () => {
         studentSocket.emit('game_answer', {
             accessCode: tournamentAccessCode,
             userId: 'student-tournament-001',
-            questionId: firstQuestionData.question.uid,
+            questionUid: firstQuestionData.question.uid,
             answer: [1], // Change to second option
             timeTakenMs: 5000
         });

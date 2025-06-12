@@ -314,14 +314,14 @@ describe('Tournament Flow - Basic Tests', () => {
         socket1.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player1.id,
-            questionId: q1p1.question.uid,
+            questionUid: q1p1.question.uid,
             answer: correctAnswer,
             timeSpent: 2
         });
         socket2.emit('tournament_answer', {
             accessCode: accessCode1,
             userId: player2.id,
-            questionId: q1p2.question.uid,
+            questionUid: q1p2.question.uid,
             answer: wrongAnswer,
             timeSpent: 2
         });
@@ -441,14 +441,14 @@ describe('Tournament Flow - Basic Tests', () => {
         socket1.emit('tournament_answer', {
             accessCode: accessCode2,
             userId: player1.id,
-            questionId: q1p1.question.uid,
+            questionUid: q1p1.question.uid,
             answer: correctAnswer,
             timeSpent: 2
         });
         socket2.emit('tournament_answer', {
             accessCode: accessCode2,
             userId: player2.id,
-            questionId: q1p2.question.uid,
+            questionUid: q1p2.question.uid,
             answer: wrongAnswer,
             timeSpent: 2
         });

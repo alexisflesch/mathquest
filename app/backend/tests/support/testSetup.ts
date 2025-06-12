@@ -48,9 +48,9 @@ export const setup = async (): Promise<void> => {
         });
         // Link question to template
         await prisma.questionsInGameTemplate.upsert({
-            where: { gameTemplateId_questionUid: { gameTemplateId: template.id, questionUid: questionUids[i] } },
+            where: { gameTemplateId_questionUid: { gameTemplateId: template.id, questionUids: questionUids[i] } },
             update: { sequence: i },
-            create: { gameTemplateId: template.id, questionUid: questionUids[i], sequence: i },
+            create: { gameTemplateId: template.id, questionUids: questionUids[i], sequence: i },
         });
     }
     // Optionally, create a game instance for this template

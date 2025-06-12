@@ -98,7 +98,7 @@ export function handleTimerExpiration(
 
     // Emit time's up event
     io.to(`game_${accessCode}`).emit("game_question_end", {
-        questionId: state.currentQuestionUid,
+        questionUid: state.currentQuestionUid,
         timeIsUp: true
     });
 
@@ -143,7 +143,7 @@ export function triggerGameNextQuestion(
 
     // Emit question end event
     io.to(`game_${accessCode}`).emit("game_question_end", {
-        questionId: state.currentQuestionUid,
+        questionUid: state.currentQuestionUid,
         timeIsUp: false,
         manualAdvance: true
     });

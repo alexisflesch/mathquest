@@ -42,16 +42,8 @@ export interface ResumeTournamentPayload {
 
 /**
  * Quiz/Teacher Control Payloads
+ * Note: SetQuestionPayload and other dashboard payloads are now in ./dashboardPayloads.ts
  */
-export interface SetQuestionPayload {
-    /** Game access code (legacy, optional for new backend) */
-    accessCode?: string;
-    /** Game ID for new backend (optional, for migration) */
-    gameId?: string;
-    questionUid: string;
-    questionIndex: number;
-    teacherId?: string;
-}
 
 export interface QuizTimerActionPayload {
     /** Game access code (legacy, optional for new backend) */
@@ -85,3 +77,24 @@ export type SocketEventHandler = (
     socket: Socket,
     payload: Record<string, unknown>
 ) => void | Promise<void>;
+
+// Re-export dashboard payloads
+export * from './dashboardPayloads';
+
+// Re-export for backward compatibility
+export type {
+    JoinDashboardPayload,
+    SetQuestionPayload as DashboardSetQuestionPayload,
+    LockAnswersPayload,
+    EndGamePayload,
+    DashboardQuestionChangedPayload,
+    DashboardTimerUpdatedPayload,
+    DashboardAnswersLockChangedPayload,
+    DashboardGameStatusChangedPayload,
+    DashboardParticipantUpdatePayload,
+    DashboardAnswerStatsUpdatePayload,
+    DashboardJoinedPayload,
+    ConnectedCountPayload,
+    QuestionForDashboard,
+    GameControlStatePayload
+} from './dashboardPayloads';

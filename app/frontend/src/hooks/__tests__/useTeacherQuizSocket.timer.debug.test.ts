@@ -13,7 +13,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { useTeacherQuizSocket } from '../migrations/useTeacherQuizSocketMigrated';
+import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 import { createMockSocket } from '../__mocks__/socketMock';
 import { waitFor } from '@testing-library/react';
 
@@ -43,12 +43,12 @@ describe('Timer Debug Tests', () => {
                     status: 'stop',
                     timeLeftMs: 0,
                     durationMs: 30000,
-                    questionId: null,
+                    questionUid: null,
                     timestamp: null,
                     localTimeLeftMs: null
                 },
                 isTimerRunning: false,
-                currentQuestionId: null,
+                currentQuestionUid: null,
                 currentQuestionIndex: null,
                 currentQuestionData: null,
                 totalQuestions: 0,
@@ -104,7 +104,7 @@ describe('Timer Debug Tests', () => {
                 timeLeftMs: result.current.timeLeftMs,
                 localTimeLeftMs: result.current.localTimeLeftMs,
                 timerStatus: result.current.timerStatus,
-                timerQuestionId: result.current.timerQuestionId
+                timerQuestionUid: result.current.timerQuestionUid
             });
 
             expect(result.current.timeLeftMs).toBe(0);
@@ -144,13 +144,13 @@ describe('Timer Debug Tests', () => {
                     timeLeftMs: result.current.timeLeftMs,
                     localTimeLeftMs: result.current.localTimeLeftMs,
                     timerStatus: result.current.timerStatus,
-                    timerQuestionId: result.current.timerQuestionId
+                    timerQuestionUid: result.current.timerQuestionUid
                 });
             });
 
             // Verify the timer state is correctly updated
             expect(result.current.timerStatus).toBe('play');
-            expect(result.current.timerQuestionId).toBe('question-123');
+            expect(result.current.timerQuestionUid).toBe('question-123');
             expect(result.current.timeLeftMs).toBe(25000); // Should be in milliseconds
             expect(result.current.localTimeLeftMs).toBe(25000);
 

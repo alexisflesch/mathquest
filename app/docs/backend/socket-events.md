@@ -297,7 +297,7 @@ Game events handle student interactions during gameplay.
 {
   accessCode: string;
   userId: string;
-  questionId: string;
+  questionUid: string;
   answer: boolean[] | number[];  // Answer selection
   timeSpent: number;            // Time taken to answer
 }
@@ -331,7 +331,7 @@ Game events handle student interactions during gameplay.
 {
   accessCode: string;
   userId: string;
-  currentQuestionId: string | null;
+  currentQuestionUid: string | null;
 }
 ```
 
@@ -428,7 +428,7 @@ Game events handle student interactions during gameplay.
 **Payload:**
 ```typescript
 {
-  questionId: string;
+  questionUid: string;
   timeSpent: number;
   correct?: boolean;
   correctAnswers?: boolean[];

@@ -9,7 +9,7 @@
    - Does **not** immediately update the leaderboard or score.
 3. **sharedGameFlow.ts** (runGameFlow):
    - After the question timer, emits `correct_answers` event.
-   - Calls `gameStateService.calculateScores(accessCode, questionId)`.
+   - Calls `gameStateService.calculateScores(accessCode, questionUid)`.
    - This function:
      - Loads all participants and their answers from Redis.
      - Calculates correctness and score for each participant.

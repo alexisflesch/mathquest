@@ -227,7 +227,7 @@ class gameTemplateService {
             await prisma_1.prisma.questionsInGameTemplate.create({
                 data: {
                     gameTemplateId,
-                    questionUid,
+                    questionUid: questionUid,
                     sequence: actualSequence
                 }
             });
@@ -259,7 +259,7 @@ class gameTemplateService {
                 where: {
                     gameTemplateId_questionUid: {
                         gameTemplateId,
-                        questionUid
+                        questionUid: questionUid
                     }
                 }
             });

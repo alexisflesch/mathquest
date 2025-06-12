@@ -15,6 +15,9 @@
     "start": "concurrently \"cd backend && npm run start && cd ..\" \"cd frontend && npm run start && cd ..\"",
     "lint": "concurrently \"cd backend && npm run lint && cd ..\" \"cd frontend && npm run lint && cd ..\"",
     "type-check": "concurrently \"cd backend && npm run type-check && cd ..\" \"cd frontend && npm run type-check && cd ..\"",
+    "type-check:unified": "npx tsc --project tsconfig.check.json --noEmit --pretty",
+    "type-check:build": "npx tsc --build --verbose",
+    "type-check:all": "npm run type-check:unified && npm run type-check:build",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug"

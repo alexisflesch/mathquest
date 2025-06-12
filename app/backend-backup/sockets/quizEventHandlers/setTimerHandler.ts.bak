@@ -122,18 +122,18 @@ function handleSetTimer(
 
     // Handle editing a paused timer: update value, emit pause, and return
     if (quizState[quizId].chrono.running === false && quizState[quizId].chrono.status === 'pause') {
-        const pausedTargetQuestionId = questionUid || quizState[quizId].currentQuestionUid;
-        const pausedTargetQuestion = quizState[quizId].questions.find((q: Question) => q.uid === pausedTargetQuestionId);
+        const pausedTargetQuestionUid = questionUid || quizState[quizId].currentQuestionUid;
+        const pausedTargetQuestion = quizState[quizId].questions.find((q: Question) => q.uid === pausedTargetQuestionUid);
         if (pausedTargetQuestion) {
             pausedTargetQuestion.temps = timeLeft;
         } else {
-            logger.warn(`[SetTimer] Question UID ${pausedTargetQuestionId} not found in quiz ${quizId}`);
+            logger.warn(`[SetTimer] Question UID ${pausedTargetQuestionUid} not found in quiz ${quizId}`);
         }
 
         // Emit timer update with status 'pause'
         const timerUpdatePayload = {
             status: 'pause' as const,
-            questionId: pausedTargetQuestionId,
+            questionUid: pausedTargetQuestionUid,
             timeLeft: timeLeft,
             timestamp: Date.now()
         };
@@ -146,7 +146,7 @@ function handleSetTimer(
             tournamentState[c] && tournamentState[c].linkedQuizId === quizId
         );
 
-        if (code && tournamentState[code] && tournamentState[code].currentQuestionUid === pausedTargetQuestionId) {
+        if (code && tournamentState[code] && tournamentState[code].currentQuestionUid === pausedTargetQuestionUid) {
             let questionState = 'paused';
             if (tournamentState[code].stopped) questionState = 'stopped';
 
@@ -195,7 +195,7 @@ function handleSetTimer(
                 timer.initialTime = timeLeft;
                 if (timer.status !== 'play') {
                     timer.timeLeft = timeLeft;
-                    logger.info(`[SetTimer] Updated question timer timeLeft=${timeLeft} for questionId=${targetQuestionUid}, status=${timer.status}`);
+                    logger.info(`[SetTimer] Updated question timer timeLeft=${timeLeft} for questionUid=${targetQuestionUid}, status=${timer.status}`);
                 }
             }
 
@@ -206,7 +206,7 @@ function handleSetTimer(
             const timerStatus = quizState[quizId].chrono.running ? 'play' : 'pause';
             const timerUpdatePayload = {
                 status: timerStatus,
-                questionId: targetQuestionUid,
+                questionUid: targetQuestionUid,
                 timeLeft: timeLeft
             };
 

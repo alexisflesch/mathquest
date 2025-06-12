@@ -1,0 +1,35 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "exactOptionalPropertyTypes": false,
+        "preserveWatchOutput": true,
+        "pretty": true,
+        "esModuleInterop": true
+    },
+    "include": [
+        "shared/**/*.ts",
+        "shared/**/*.tsx",
+        "backend/src/**/*.ts",
+        "backend/src/**/*.tsx",
+        "frontend/src/**/*.ts",
+        "frontend/src/**/*.tsx",
+        "frontend/**/*.d.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/node_modules",
+        "dist",
+        "**/dist",
+        "coverage",
+        "**/coverage",
+        "**/*.js",
+        "tests/**",
+        "**/tests/**",
+        "**/*.spec.ts"
+    ]
+}

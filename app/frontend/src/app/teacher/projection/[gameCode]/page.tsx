@@ -5,12 +5,12 @@
  * q    // Listen for show    // Clear correctAnswers when a new question is set
     const lastQuestionIdRef = useRef<string | null>(null);
     useEffect(() => {
-        if (!gameState || !timerQuestionId) return;
-        if (lastQuestionIdRef.current !== timerQuestionId) {
+        if (!gameState || !timerQuestionUid) return;
+        if (lastQuestionIdRef.current !== timerQuestionUid) {
             debugSetCorrectAnswers([], 'new question detected');
-            lastQuestionIdRef.current = timerQuestionId;
+            lastQuestionIdRef.current = timerQuestionUid;
         }
-    }, [gameState, timerQuestionId]);ts toggle
+    }, [gameState, timerQuestionUid]);ts toggle
     useEffect(() => {
         if (!gameSocket) return;
         const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
@@ -36,7 +36,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import "@/app/globals.css";
 import { createLogger } from '@/clientLogger';
-import { useProjectionQuizSocket } from '@/hooks/migrations';
+import { useProjectionQuizSocket } from '@/hooks/useProjectionQuizSocket';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import QuestionCard from '@/components/QuestionCard';
@@ -93,7 +93,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         gameSocket,
         gameState,
         timerStatus,
-        timerQuestionId,
+        timerQuestionUid,
         localTimeLeftMs,
         setLocalTimeLeft, // <-- Now available
         connectedCount,
@@ -101,9 +101,12 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
 
     // Extract tournament code from game state when available
     useEffect(() => {
-        if (gameState && gameState.accessCode && !currentTournamentCode) {
-            logger.info('Setting tournament code from game state:', gameState.accessCode);
-            setCurrentTournamentCode(gameState.accessCode);
+        if (gameState && (gameState.tournament_code || gameState.id) && !currentTournamentCode) {
+            const code = gameState.tournament_code || gameState.id;
+            logger.info('Setting tournament code from game state:', code);
+            if (code) {
+                setCurrentTournamentCode(code);
+            }
         }
     }, [gameState, currentTournamentCode]);
 
@@ -163,12 +166,12 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     // Clear correctAnswers when a new question is set
     const lastQuestionIdRef = useRef<string | null>(null);
     useEffect(() => {
-        if (!gameState || !timerQuestionId) return;
-        if (lastQuestionIdRef.current !== timerQuestionId) {
+        if (!gameState || !timerQuestionUid) return;
+        if (lastQuestionIdRef.current !== timerQuestionUid) {
             debugSetCorrectAnswers([], 'new question');
-            lastQuestionIdRef.current = timerQuestionId;
+            lastQuestionIdRef.current = timerQuestionUid;
         }
-    }, [gameState, timerQuestionId]);
+    }, [gameState, timerQuestionUid]);
 
     // --- Patch: Ensure timer is set to 0 and countdown is stopped when quiz is stopped ---
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -306,11 +309,11 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
 
     // Get current question from game state
     const getCurrentQuestion = (): QuestionData | null => {
-        if (!gameState || !timerQuestionId) {
+        if (!gameState || !timerQuestionUid) {
             return null;
         }
-        const found = gameState.questions.find((q: QuestionData) => q.uid === timerQuestionId) || null;
-        return found;
+        const found = gameState.questions.find((q: any) => q.uid === timerQuestionUid) || null;
+        return found as QuestionData | null;
     };
 
     // Empty handler functions (needed for props but won't be used because of readonly mode)
@@ -440,7 +443,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                         <QuestionCard
                                             key={questionKey}
                                             currentQuestion={currentTournamentQuestion}
-                                            questionIndex={gameState?.questions.findIndex(q => q.uid === currentTournamentQuestion?.uid) ?? 0}
+                                            questionIndex={gameState?.questions.findIndex((q: any) => q.uid === currentTournamentQuestion?.uid) ?? 0}
                                             totalQuestions={gameState?.questions.length ?? 0}
                                             isMultipleChoice={currentTournamentQuestion?.type === 'choix_multiple'}
                                             selectedAnswer={null}

@@ -105,7 +105,7 @@ router.post('/', async (req, res) => {
     try {
         // Log the received request body for debugging
         logger.info({ body: req.body, user: req.user }, 'Received request for game template creation');
-        const { name, discipline, gradeLevel, themes, questions, questionIds, description, defaultMode } = req.body;
+        const { name, discipline, gradeLevel, themes, questions, questionUids, description, defaultMode } = req.body;
         // Try to get userId from req.user first, then from headers for frontend API route compatibility
         let userId = req.user?.userId;
         if (!userId && req.headers['x-user-id']) {
@@ -125,7 +125,7 @@ router.post('/', async (req, res) => {
             missingFields.push('gradeLevel (string)');
         if (!themes || !Array.isArray(themes) || themes.length === 0)
             missingFields.push('themes (array of strings)');
-        // Validate questions structure if provided, or questionIds
+        // Validate questions structure if provided, or questionUids
         if (questions) {
             if (!Array.isArray(questions)) {
                 missingFields.push('questions (must be an array if provided)');
@@ -143,12 +143,12 @@ router.post('/', async (req, res) => {
                 }
             }
         }
-        else if (questionIds) {
-            if (!Array.isArray(questionIds)) {
-                missingFields.push('questionIds (must be an array if provided)');
+        else if (questionUids) {
+            if (!Array.isArray(questionUids)) {
+                missingFields.push('questionUids (must be an array if provided)');
             }
-            else if (questionIds.some(id => typeof id !== 'string')) {
-                missingFields.push('questionIds (must be array of strings)');
+            else if (questionUids.some(id => typeof id !== 'string')) {
+                missingFields.push('questionUids (must be array of strings)');
             }
         }
         if (missingFields.length > 0) {
@@ -172,7 +172,7 @@ router.post('/', async (req, res) => {
             gradeLevel,
             themes,
             questions, // Pass questions through as validated
-            questionIds, // Pass questionIds through as validated
+            questionUids, // Pass questionUids through as validated
             description,
             defaultMode
         };

@@ -243,7 +243,7 @@ Located at `/prisma/schema.prisma`. The schema has been refactored to improve cl
     *   Relation: `questions` (many-to-many with `Question` via `QuestionsInQuizTemplate` to define order).
 
 3.  **`QuestionsInQuizTemplate`** (Join Table)
-    *   Primary keys: `quizTemplateId`, `questionId`
+    *   Primary keys: `quizTemplateId`, `questionUid`
     *   Field: `order` (integer, for question sequencing).
     *   Relations: `quizTemplate` (links to `QuizTemplate`), `question` (links to `Question`).
 

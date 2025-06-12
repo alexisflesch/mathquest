@@ -41,7 +41,7 @@ describe('Socket Event Test', () => {
             socket.on('game_answer', (data) => {
                 console.log('Server received game_answer event with data:', data);
                 socket.emit('answer_received', {
-                    questionId: data.questionId,
+                    questionUid: data.questionUid,
                     timeSpent: data.timeSpent
                 });
             });
@@ -156,7 +156,7 @@ describe('Socket Event Test', () => {
         const testPayload = {
             accessCode: 'TEST123',
             userId: 'test-user',
-            questionId: 'q123',
+            questionUid: 'q123',
             answer: 'A',
             timeSpent: 1000
         };
@@ -170,7 +170,7 @@ describe('Socket Event Test', () => {
 
         // Verify
         expect(response).toEqual({
-            questionId: 'q123',
+            questionUid: 'q123',
             timeSpent: 1000
         });
     });

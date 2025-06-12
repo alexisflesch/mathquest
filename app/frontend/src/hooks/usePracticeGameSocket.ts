@@ -50,7 +50,7 @@ export interface PracticeGameState {
     feedback: {
         correct?: boolean;
         explanation?: string;
-        questionId?: string;
+        questionUid?: string;
         timeSpent?: number;
         correctAnswers?: boolean[];
         correctAnswersText?: string[];
@@ -82,8 +82,8 @@ export interface PracticeGameSocketHook {
 
     // Actions
     startPracticeSession: () => void;
-    submitAnswer: (questionId: string, answer: AnswerValue, timeSpent: number) => void;
-    requestNextQuestion: (currentQuestionId: string) => void;
+    submitAnswer: (questionUid: string, answer: AnswerValue, timeSpent: number) => void;
+    requestNextQuestion: (currentQuestionUid: string) => void;
     endPracticeSession: () => void;
 
     // UI helpers
@@ -230,7 +230,7 @@ export function usePracticeGameSocket({
                 const feedback = {
                     correct: payload.correct,
                     explanation: payload.explanation,
-                    questionId: payload.questionId,
+                    questionUid: payload.questionUid,
                     timeSpent: payload.timeSpent,
                     correctAnswers: payload.correctAnswers,
                     correctAnswersText,
@@ -365,7 +365,7 @@ export function usePracticeGameSocket({
         });
     }, [socket, userId, username, avatarEmoji, discipline, level, themes, questionLimit]);
 
-    const submitAnswer = useCallback((questionId: string, answer: AnswerValue, timeSpent: number) => {
+    const submitAnswer = useCallback((questionUid: string, answer: AnswerValue, timeSpent: number) => {
         if (!socket || !userId) {
             logger.warn("Cannot submit practice answer: missing socket or parameters");
             return;
@@ -373,18 +373,18 @@ export function usePracticeGameSocket({
 
         const accessCode = practiceAccessCodeRef.current || 'PRACTICE';
 
-        logger.info("Submitting practice answer", { questionId, answer, timeSpent });
+        logger.info("Submitting practice answer", { questionUid, answer, timeSpent });
 
         socket.emit(SOCKET_EVENTS.GAME.GAME_ANSWER, {
             accessCode,
             userId,
-            questionId,
+            questionUid,
             answer,
             timeSpent
         });
     }, [socket, userId]);
 
-    const requestNextQuestion = useCallback((currentQuestionId: string) => {
+    const requestNextQuestion = useCallback((currentQuestionUid: string) => {
         if (!socket || !userId) {
             logger.warn("Cannot request next practice question: missing socket or parameters");
             return;
@@ -392,12 +392,12 @@ export function usePracticeGameSocket({
 
         const accessCode = practiceAccessCodeRef.current || 'PRACTICE';
 
-        logger.info("Requesting next practice question", { currentQuestionId });
+        logger.info("Requesting next practice question", { currentQuestionUid });
 
         socket.emit(SOCKET_EVENTS.GAME.REQUEST_NEXT_QUESTION, {
             accessCode,
             userId,
-            currentQuestionId
+            currentQuestionUid
         });
     }, [socket, userId]);
 

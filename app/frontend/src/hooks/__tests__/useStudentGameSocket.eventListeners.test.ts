@@ -249,7 +249,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
         const answerResponse: AnswerReceived = {
             received: true,
             correct: true,
-            questionId: 'q1'
+            questionUid: 'q1'
         };
 
         act(() => {
@@ -294,7 +294,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         const correctAnswersPayload = {
-            questionId: 'q1'
+            questionUid: 'q1'
         };
 
         act(() => {

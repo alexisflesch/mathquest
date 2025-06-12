@@ -111,10 +111,10 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
                 accessCode,
                 status: 'active', // Set to active so clients joining live room see it as active
                 currentQuestionIndex: -1, // Indicate that countdown is happening before Q0
-                questionIds: actualQuestions.map(q => q.uid),
+                questionUids: actualQuestions.map(q => q.uid),
                 timer: {
                     startedAt: Date.now(), // Placeholder, will be updated by game flow
-                    duration: 0,
+                    durationMs: 0,
                     isPaused: true
                 },
                 settings: {

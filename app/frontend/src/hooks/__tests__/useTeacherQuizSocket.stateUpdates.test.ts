@@ -30,7 +30,7 @@ export interface QuizState { // Export if needed by other test files, or keep lo
     stats: Record<string, unknown>;
     profSocketId?: string | null;
     timerStatus?: 'play' | 'pause' | 'stop' | null;
-    timerQuestionId?: string | null;
+    timerQuestionUid?: string | null;
     timerTimeLeft?: number | null;
     timerTimestamp?: number;
     questionStates?: Record<string, boolean>;
@@ -125,14 +125,14 @@ describe('useTeacherQuizSocket State Updates', () => {
             if (gameControlCallback) gameControlCallback(initialState);
         });
         // Now send quiz_timer_update
-        const mockTimerUpdate = { questionId: 'q1', timeLeftMs: 10000, status: 'pause' as 'play' | 'pause' | 'stop', running: false }; // ms, not s
+        const mockTimerUpdate = { questionUid: 'q1', timeLeftMs: 10000, status: 'pause' as 'play' | 'pause' | 'stop', running: false }; // ms, not s
         act(() => {
             const callback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
             if (callback) callback(mockTimerUpdate);
         });
         expect(result.current.timeLeftMs).toBe(10000); // ms
         expect(result.current.timerStatus).toBe(mockTimerUpdate.status);
-        expect(result.current.timerQuestionId).toBe(mockTimerUpdate.questionId);
+        expect(result.current.timerQuestionUid).toBe(mockTimerUpdate.questionUid);
     });
 
     it('should update connectedCount when "quiz_connected_count" event is received', () => {

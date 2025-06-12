@@ -197,7 +197,7 @@ router.get('/:accessCode', async (req, res) => {
     try {
         const { accessCode } = req.params;
         // Validate access code format
-        if (!accessCode || accessCode.length < 6) {
+        if (!accessCode || accessCode.length < 4) {
             res.status(400).json({ error: 'Invalid access code format' });
             return;
         }
@@ -426,7 +426,7 @@ router.get('/:code/state', async (req, res) => {
     logger.info('GET /api/v1/games/:code/state called', { accessCode: code });
     try {
         // Validate access code format
-        if (!code || code.length < 6) {
+        if (!code || code.length < 4) {
             res.status(400).json({ error: 'Invalid access code format' });
             return;
         }
@@ -462,10 +462,10 @@ router.get('/:code/state', async (req, res) => {
                 const gameStateRaw = await (0, gameStateService_1.getFullGameState)(code);
                 if (gameStateRaw && gameStateRaw.gameState) {
                     redisGameState = gameStateRaw.gameState;
-                    const { currentQuestionIndex, questionIds, questionData, timer, status } = redisGameState;
+                    const { currentQuestionIndex, questionUids, questionData, timer, status } = redisGameState;
                     gameStateData = {
                         currentQuestionIndex,
-                        questionId: questionIds && questionIds[currentQuestionIndex] ? questionIds[currentQuestionIndex] : null,
+                        questionUids: questionUids && questionUids[currentQuestionIndex] ? questionUids[currentQuestionIndex] : null,
                         questionData,
                         timer,
                         redisStatus: status

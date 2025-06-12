@@ -148,7 +148,7 @@ socket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_QUESTION_CHANGED, ({ questionUid, time
 });
 
 // Updated timer control with Phase 8 action mapping
-emitTimerAction: (action: 'play'|'pause'|'stop', questionId, timeLeft?) => {
+emitTimerAction: (action: 'play'|'pause'|'stop', questionUid, timeLeft?) => {
     const backendAction = action === 'play' ? 'start' : action;
     quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, {
         gameId: quizId, 

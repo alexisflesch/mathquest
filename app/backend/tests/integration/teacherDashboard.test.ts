@@ -236,7 +236,7 @@ describe('Teacher Dashboard & Game Control', () => {
         if (!fullState || !fullState.gameState) {
             throw new Error('Game state is null or undefined');
         }
-        expect(fullState.gameState.questionIds).toEqual(
+        expect(fullState.gameState.questionUids).toEqual(
             expect.arrayContaining(seededQuestionUids)
         );
     });

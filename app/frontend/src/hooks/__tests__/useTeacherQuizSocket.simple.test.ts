@@ -73,7 +73,7 @@ describe('useTeacherQuizSocket Simple Tests', () => {
         expect(result.current.connectedCount).toBe(1); // Professor is connected by default
         expect(result.current.timeLeftMs).toBe(0); // timeLeftMs is initialized to 0
         expect(result.current.timerStatus).toBe('stop'); // timerStatus is initialized to 'stop'
-        expect(result.current.timerQuestionId).toBeNull();
+        expect(result.current.timerQuestionUid).toBeNull();
         expect(typeof result.current.emitSetQuestion).toBe('function');
         expect(typeof result.current.emitEndQuiz).toBe('function');
         expect(typeof result.current.emitPauseQuiz).toBe('function');

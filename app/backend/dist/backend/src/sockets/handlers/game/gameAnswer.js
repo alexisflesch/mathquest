@@ -37,9 +37,9 @@ function gameAnswerHandler(io, socket) {
             socket.emit('game_error', errorPayload);
             return;
         }
-        const { accessCode, userId, questionId, answer, timeSpent } = parseResult.data;
+        const { accessCode, userId, questionUid, answer, timeSpent } = parseResult.data;
         try {
-            logger.debug({ accessCode, userId, questionId, answer, timeSpent }, 'Looking up gameInstance');
+            logger.debug({ accessCode, userId, questionUid, answer, timeSpent }, 'Looking up gameInstance');
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
                 where: { accessCode },
                 select: {
@@ -55,7 +55,7 @@ function gameAnswerHandler(io, socket) {
             if (!gameInstance) {
                 logger.warn({ socketId: socket.id, error: 'Game not found', accessCode }, 'EARLY RETURN: Game instance not found');
                 const errorPayload = { message: 'Game not found.' };
-                logger.warn({ errorPayload, accessCode, userId, questionId }, 'Emitting game_error: game not found');
+                logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: game not found');
                 socket.emit('game_error', errorPayload);
                 return;
             }
@@ -68,13 +68,13 @@ function gameAnswerHandler(io, socket) {
                 if (!inDifferedWindow) {
                     logger.warn({ socketId: socket.id, error: 'Differed mode not available', accessCode }, 'EARLY RETURN: Differed window not available');
                     const errorPayload = { message: 'Differed mode not available at this time.' };
-                    logger.warn({ errorPayload, accessCode, userId, questionId }, 'Emitting game_error: differed window not available');
+                    logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: differed window not available');
                     socket.emit('game_error', errorPayload);
                     return;
                 }
             }
             // Extra logging before participant lookup
-            logger.debug({ accessCode, userId, questionId }, 'Looking up participant');
+            logger.debug({ accessCode, userId, questionUid }, 'Looking up participant');
             let participant;
             try {
                 participant = await prisma_1.prisma.gameParticipant.findFirst({
@@ -83,7 +83,7 @@ function gameAnswerHandler(io, socket) {
                 });
             }
             catch (err) {
-                logger.error({ err, accessCode, userId, questionId }, 'Error during participant lookup');
+                logger.error({ err, accessCode, userId, questionUid }, 'Error during participant lookup');
                 socket.emit('game_error', { message: 'Error looking up participant.' });
                 return;
             }
@@ -91,7 +91,7 @@ function gameAnswerHandler(io, socket) {
             if (!participant) {
                 logger.warn({ socketId: socket.id, error: 'Participant not found', userId, gameInstanceId: gameInstance.id }, 'EARLY RETURN: Participant not found');
                 const errorPayload = { message: 'Participant not found.' };
-                logger.warn({ errorPayload, accessCode, userId, questionId }, 'Emitting game_error: participant not found');
+                logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: participant not found');
                 socket.emit('game_error', errorPayload);
                 return;
             }
@@ -103,19 +103,19 @@ function gameAnswerHandler(io, socket) {
                 return;
             }
             const participantService = new gameParticipantService_1.GameParticipantService();
-            logger.debug({ userId, gameInstanceId: gameInstance.id, questionId, answer, timeSpent }, 'Calling participantService.submitAnswer');
+            logger.debug({ userId, gameInstanceId: gameInstance.id, questionUid, answer, timeSpent }, 'Calling participantService.submitAnswer');
             await participantService.submitAnswer(gameInstance.id, userId, {
-                questionId: questionId, // Use questionId to match AnswerSubmissionPayload
+                questionUid: questionUid, // Use questionUid to match AnswerSubmissionPayload
                 answer,
                 timeSpent: timeSpent, // Use timeSpent to match AnswerSubmissionPayload
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
             });
             // Determine if the answer is correct
-            const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionId } });
+            const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
             if (question && Array.isArray(question.correctAnswers) && typeof answer === 'number' && answer >= 0 && answer < question.correctAnswers.length) {
                 isCorrect = question.correctAnswers[answer] === true;
-                logger.debug({ isCorrect, questionId, answer }, 'Determined answer correctness');
+                logger.debug({ isCorrect, questionUid, answer }, 'Determined answer correctness');
             }
             // Refetch participant to get updated score
             const updatedParticipant = await prisma_1.prisma.gameParticipant.findUnique({
@@ -137,10 +137,10 @@ function gameAnswerHandler(io, socket) {
             if (gameInstance.isDiffered) {
                 // Self-paced mode: no leaderboard, use only documented events
                 // 1. Get the current question and check correctness
-                const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionId } });
+                const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
                 // 2. Send answer_received (always) with correctness info and correct answers
                 socket.emit('answer_received', {
-                    questionId,
+                    questionUid,
                     timeSpent,
                     correct: isCorrect,
                     correctAnswers: question && Array.isArray(question.correctAnswers) ? question.correctAnswers : undefined,
@@ -160,7 +160,7 @@ function gameAnswerHandler(io, socket) {
                 const answersArr = Array.isArray(participant.answers) ? participant.answers : [];
                 // For practice mode, we don't automatically send the next question
                 // Instead, the client will request the next question after showing feedback
-                logger.info({ accessCode, userId, questionId }, 'Waiting for client to request next question via request_next_question event');
+                logger.info({ accessCode, userId, questionUid }, 'Waiting for client to request next question via request_next_question event');
                 // Count total answered questions to determine if this was the last one
                 console.log(`[GAME_ANSWER] Raw answers array:`, JSON.stringify(answersArr));
                 // More robust extraction of questionUid
@@ -171,9 +171,9 @@ function gameAnswerHandler(io, socket) {
                     }
                 }
                 // Add the current question if it's missing from the answers array
-                if (questionId && !answeredQuestions.includes(questionId)) {
-                    console.log(`[GAME_ANSWER] Adding current questionId ${questionId} to answered questions`);
-                    answeredQuestions.push(questionId);
+                if (questionUid && !answeredQuestions.includes(questionUid)) {
+                    console.log(`[GAME_ANSWER] Adding current questionUid ${questionUid} to answered questions`);
+                    answeredQuestions.push(questionUid);
                 }
                 const answeredSet = new Set(answeredQuestions);
                 const totalQuestions = allQuestions.length;
@@ -195,7 +195,7 @@ function gameAnswerHandler(io, socket) {
                     // This is the last question - but we'll wait for the player to request the end of game
                     // after they've reviewed the feedback for the last question
                     console.log(`[GAME_ANSWER] All questions answered! Waiting for player to request game end via request_next_question`);
-                    logger.info({ accessCode, userId, questionId }, 'All questions answered, waiting for request_next_question to complete game');
+                    logger.info({ accessCode, userId, questionUid }, 'All questions answered, waiting for request_next_question to complete game');
                     // We've answered all questions, but we don't automatically send game_ended
                     // The client will call request_next_question after showing feedback, 
                     // and that handler will detect that there are no more questions and end the game
@@ -217,12 +217,12 @@ function gameAnswerHandler(io, socket) {
             }
             // We've already sent the answer_received event for differed mode, so only emit it here for non-differed mode
             if (!gameInstance.isDiffered) {
-                logger.info({ questionId, timeSpent }, 'Emitting answer_received for non-differed mode');
+                logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode');
                 try {
                     // Make sure we send back a response even if something fails
                     // Use the isCorrect value if available, otherwise default to false
-                    socket.emit('answer_received', { questionId, timeSpent, correct: isCorrect !== undefined ? isCorrect : false });
-                    console.log(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionId} to socket ${socket.id}`);
+                    socket.emit('answer_received', { questionUid, timeSpent, correct: isCorrect !== undefined ? isCorrect : false });
+                    console.log(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
                 }
                 catch (emitError) {
                     logger.error({ emitError, socketId: socket.id }, 'Error emitting answer_received');
@@ -231,14 +231,14 @@ function gameAnswerHandler(io, socket) {
             }
         }
         catch (err) {
-            logger.error({ err, accessCode, userId, questionId }, 'Unexpected error in gameAnswerHandler');
+            logger.error({ err, accessCode, userId, questionUid }, 'Unexpected error in gameAnswerHandler');
             try {
                 // Try to send error response
                 socket.emit('game_error', { message: 'Unexpected error during answer submission.' });
                 // Also send back answer_received to unblock the client
-                if (questionId && timeSpent !== undefined) {
-                    socket.emit('answer_received', { questionId, timeSpent, correct: false });
-                    console.log(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionId}`);
+                if (questionUid && timeSpent !== undefined) {
+                    socket.emit('answer_received', { questionUid, timeSpent, correct: false });
+                    console.log(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
                 }
             }
             catch (emitError) {

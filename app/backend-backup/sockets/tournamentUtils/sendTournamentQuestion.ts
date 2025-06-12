@@ -25,7 +25,7 @@ export interface TournamentQuestionPayload { // Added export
     tournoiState: 'running' | 'paused' | 'stopped';
     questionIndex: number;
     totalQuestions?: number; // Added totalQuestions
-    questionId: string;
+    questionUid: string;
 }
 
 /**

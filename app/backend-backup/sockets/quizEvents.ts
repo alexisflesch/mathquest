@@ -60,7 +60,7 @@ async function ensureQuizTemplateDashboardStateInitialized( // Renamed function
             profSocketId: (role === 'prof' || role === 'teacher') ? socket.id : undefined,
             profTeacherId: (role === 'prof' || role === 'teacher') ? teacherId || '' : '',
             timerStatus: undefined,
-            timerQuestionId: null,
+            timerQuestionUid: null,
             timerTimeLeft: null,
             timerTimestamp: null,
             connectedSockets: new Set<string>(),
@@ -118,13 +118,13 @@ async function ensureQuizTemplateDashboardStateInitialized( // Renamed function
             logger.error(`[ensureQuizTemplateDashboardStateInitialized] Error loading quiz template ${quizTemplateId} questions:`, e);
         }
     } else {
-        // CRITICAL FIX: If state already exists, ensure currentQuestionUid and timerQuestionId are in sync if timer is active
+        // CRITICAL FIX: If state already exists, ensure currentQuestionUid and timerQuestionUid are in sync if timer is active
         if (quizState[quizTemplateId].timerStatus === 'play' &&
-            quizState[quizTemplateId].timerQuestionId &&
-            quizState[quizTemplateId].currentQuestionUid !== quizState[quizTemplateId].timerQuestionId) {
+            quizState[quizTemplateId].timerQuestionUid &&
+            quizState[quizTemplateId].currentQuestionUid !== quizState[quizTemplateId].timerQuestionUid) {
 
-            logger.warn(`[ensureQuizTemplateDashboardStateInitialized] Fixing mismatch: currentQuestionUid=${quizState[quizTemplateId].currentQuestionUid}, active timerQuestionId=${quizState[quizTemplateId].timerQuestionId}`);
-            quizState[quizTemplateId].currentQuestionUid = quizState[quizTemplateId].timerQuestionId;
+            logger.warn(`[ensureQuizTemplateDashboardStateInitialized] Fixing mismatch: currentQuestionUid=${quizState[quizTemplateId].currentQuestionUid}, active timerQuestionUid=${quizState[quizTemplateId].timerQuestionUid}`);
+            quizState[quizTemplateId].currentQuestionUid = quizState[quizTemplateId].timerQuestionUid;
         }
 
         // Ensure quizTemplateId is set as 'id' property

@@ -24,7 +24,7 @@ function mapBackendTimerToCore(backendTimer) {
             status: 'stop',
             timeLeftMs: 0,
             durationMs: 30000, // 30 seconds in milliseconds
-            questionId: undefined,
+            questionUid: undefined,
             timestamp: null,
             localTimeLeftMs: 0
         };
@@ -35,23 +35,23 @@ function mapBackendTimerToCore(backendTimer) {
     let status = 'stop';
     if (backendTimer.isPaused) {
         status = 'pause';
-        timeLeft = backendTimer.timeRemaining || 0; // Keep in milliseconds
+        timeLeft = backendTimer.timeRemainingMs || 0; // Keep in milliseconds
     }
     else if (backendTimer.startedAt && backendTimer.startedAt > 0) {
         status = 'play';
         const elapsed = Date.now() - backendTimer.startedAt;
-        const remaining = Math.max(0, backendTimer.duration - elapsed);
+        const remaining = Math.max(0, backendTimer.durationMs - elapsed);
         timeLeft = remaining; // Keep in milliseconds
     }
     else {
         status = 'stop';
-        timeLeft = backendTimer.duration || 30000; // Default 30 seconds = 30000ms
+        timeLeft = backendTimer.durationMs || 30000; // Default 30 seconds = 30000ms
     }
     return {
         status,
         timeLeftMs: timeLeft,
-        durationMs: backendTimer.duration || 30000, // Keep in milliseconds
-        questionId: undefined, // Backend timer doesn't store question ID
+        durationMs: backendTimer.durationMs || 30000, // Keep in milliseconds
+        questionUid: undefined, // Backend timer doesn't store question ID
         timestamp: Date.now(),
         localTimeLeftMs: timeLeft
     };
@@ -132,9 +132,9 @@ async function getGameControlState(gameId, userId, isTestEnvironment = false) {
         const participantCount = await redis_1.redisClient.hlen(`mathquest:game:participants:${gameInstance.accessCode}`);
         // Determine current question UID
         const currentQuestionUid = gameState.currentQuestionIndex >= 0 &&
-            gameState.questionIds &&
-            gameState.questionIds[gameState.currentQuestionIndex]
-            ? gameState.questionIds[gameState.currentQuestionIndex]
+            gameState.questionUids &&
+            gameState.questionUids[gameState.currentQuestionIndex]
+            ? gameState.questionUids[gameState.currentQuestionIndex]
             : null;
         // Get answer stats for current question if available
         let answerStats = undefined;

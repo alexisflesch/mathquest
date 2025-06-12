@@ -12,7 +12,7 @@ export const joinGamePayloadSchema = z.object({
 export const gameAnswerPayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
   userId: z.string().min(1, { message: "Player ID cannot be empty." }),
-  questionId: z.string().min(1, { message: "Question ID cannot be empty." }),
+  questionUid: z.string().min(1, { message: "Question UID cannot be empty." }),
   answer: z.union([
     z.string(),
     z.number(),
@@ -169,7 +169,7 @@ export const serverToClientEventsSchema = z.object({
     .function()
     .args(
       z.object({
-        questionId: z.string().min(1),
+        questionUid: z.string().min(1),
         timeSpent: z.number().int().nonnegative(),
       }),
     )

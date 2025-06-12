@@ -68,11 +68,11 @@ function exampleSocketHandler(io: Server, socket: Socket, payload: QuestionLike)
 // For this example file (within the types package), we use relative imports:
 import { assertDefined, assertType } from '../util/typeErrors';
 
-function processQuestion(questionId: string, data: QuestionLike) {
+function processQuestion(questionUid: string, data: QuestionLike) {
     try {
-        // Assert that questionId is defined and of the right type
-        assertDefined(questionId, 'questionId');
-        assertType<string>(questionId, 'string', 'questionId');
+        // Assert that questionUid is defined and of the right type
+        assertDefined(questionUid, 'questionUid');
+        assertType<string>(questionUid, 'string', 'questionUid');
 
         // Use the mapToStandardQuestion utility to ensure consistent structure
         const question = mapToStandardQuestion(data);

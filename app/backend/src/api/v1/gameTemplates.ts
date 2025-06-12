@@ -117,7 +117,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
         // Log the received request body for debugging
         logger.info({ body: req.body, user: req.user }, 'Received request for game template creation');
 
-        const { name, discipline, gradeLevel, themes, questions, questionIds, description, defaultMode } = req.body as GameTemplateCreationData;
+        const { name, discipline, gradeLevel, themes, questions, questionUids, description, defaultMode } = req.body as GameTemplateCreationData;
 
         // Try to get userId from req.user first, then from headers for frontend API route compatibility
         let userId = req.user?.userId;
@@ -136,7 +136,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
         if (!gradeLevel) missingFields.push('gradeLevel (string)');
         if (!themes || !Array.isArray(themes) || themes.length === 0) missingFields.push('themes (array of strings)');
 
-        // Validate questions structure if provided, or questionIds
+        // Validate questions structure if provided, or questionUids
         if (questions) {
             if (!Array.isArray(questions)) {
                 missingFields.push('questions (must be an array if provided)');
@@ -152,11 +152,11 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
                     }
                 }
             }
-        } else if (questionIds) {
-            if (!Array.isArray(questionIds)) {
-                missingFields.push('questionIds (must be an array if provided)');
-            } else if (questionIds.some(id => typeof id !== 'string')) {
-                missingFields.push('questionIds (must be array of strings)');
+        } else if (questionUids) {
+            if (!Array.isArray(questionUids)) {
+                missingFields.push('questionUids (must be an array if provided)');
+            } else if (questionUids.some(id => typeof id !== 'string')) {
+                missingFields.push('questionUids (must be array of strings)');
             }
         }
 
@@ -183,7 +183,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
             gradeLevel,
             themes,
             questions, // Pass questions through as validated
-            questionIds, // Pass questionIds through as validated
+            questionUids, // Pass questionUids through as validated
             description,
             defaultMode
         };

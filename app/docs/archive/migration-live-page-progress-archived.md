@@ -86,7 +86,7 @@
 
 ### From Latest Logs Analysis:
 1. ✅ **Timer Working:** Counts down correctly (5→4→3→2→1→0)
-2. ✅ **Feedback Event Received:** Backend sends `{questionId: 'TEST-add-2', feedbackRemaining: 5}`
+2. ✅ **Feedback Event Received:** Backend sends `{questionUid: 'TEST-add-2', feedbackRemaining: 5}`
 3. ✅ **Phase Transitions:** feedback → question → show_answers → finished
 4. ✅ **Game End Normal:** After last question feedback (expected behavior)
 5. ✅ **Build Success:** Both backend and frontend compile without errors
@@ -111,7 +111,7 @@
 **Root Cause Analysis:**
 - ✅ **Test Questions Have Explanations:** Verified in database (`explanation` field exists)
 - ✅ **Backend Code Sends Explanations:** `sharedGameFlow.ts` includes `explanation: questions[i].explanation` in feedback event
-- ❌ **Frontend Not Receiving Explanations:** Logs show `{questionId: 'TEST-add-1', feedbackRemaining: 5}` (missing explanation field)
+- ❌ **Frontend Not Receiving Explanations:** Logs show `{questionUid: 'TEST-add-1', feedbackRemaining: 5}` (missing explanation field)
 
 **Next Steps:**
 1. Add detailed frontend logging to see complete feedback event payload
@@ -383,11 +383,11 @@ const gameMode = useMemo(() => {
 
 ```typescript
 // Current (incomplete):
-io.to(`game_${accessCode}`).emit('correct_answers', { questionId: questions[i].uid });
+io.to(`game_${accessCode}`).emit('correct_answers', { questionUid: questions[i].uid });
 
 // Proposed (complete):
 io.to(`game_${accessCode}`).emit('correct_answers', { 
-    questionId: questions[i].uid,
+    questionUid: questions[i].uid,
     correctAnswers: questions[i].correctAnswers 
 });
 ```
@@ -493,7 +493,7 @@ Track these metrics to validate the migration:
 **What We Know:**
 - Database has correct explanations: "Two plus three equals five: 2 + 3 = 5" and "One plus one equals two: 1 + 1 = 2"
 - Backend code in `sharedGameFlow.ts` line 123 should send: `explanation: questions[i].explanation`
-- Frontend logs show: `{questionId: 'TEST-add-1', feedbackRemaining: 5}` (missing explanation field)
+- Frontend logs show: `{questionUid: 'TEST-add-1', feedbackRemaining: 5}` (missing explanation field)
 - Frontend generates generic fallback messages instead of using real explanations
 
 **Root Cause Unknown:**

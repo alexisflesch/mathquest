@@ -95,9 +95,9 @@ router.post('/:accessCode/question', auth_1.teacherAuth, async (req, res) => {
                     type: updatedGameState.questionData.questionType,
                     answers: updatedGameState.questionData.answerOptions
                 },
-                timer: updatedGameState.timer.duration / 1000, // Convert ms to seconds
+                timer: updatedGameState.timer.durationMs / 1000, // Convert ms to seconds
                 questionIndex: questionIndex,
-                totalQuestions: updatedGameState.questionIds.length,
+                totalQuestions: updatedGameState.questionUids.length,
                 questionState: 'active'
             });
             // Emit to teacher control room as well
@@ -109,7 +109,7 @@ router.post('/:accessCode/question', auth_1.teacherAuth, async (req, res) => {
         res.status(200).json({
             success: true,
             questionIndex,
-            questionId: updatedGameState.questionIds[questionIndex],
+            questionUid: updatedGameState.questionUids[questionIndex],
             timer: updatedGameState.timer
         });
     }
@@ -150,8 +150,8 @@ router.post('/:accessCode/end-question', auth_1.teacherAuth, async (req, res) =>
         }
         // Process and calculate scores
         if (updatedGameState.currentQuestionIndex >= 0) {
-            const questionId = updatedGameState.questionIds[updatedGameState.currentQuestionIndex];
-            await gameStateService_1.default.calculateScores(accessCode, questionId);
+            const questionUid = updatedGameState.questionUids[updatedGameState.currentQuestionIndex];
+            await gameStateService_1.default.calculateScores(accessCode, questionUid);
         }
         // Get updated game state with leaderboard
         const fullGameState = await gameStateService_1.default.getFullGameState(accessCode);

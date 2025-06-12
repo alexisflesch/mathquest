@@ -2,7 +2,13 @@
  * useUnifiedGameManager - Complete Game State Management Hook
  * 
  * This hook combines the unified timer and socket management into a single
- * comprehensive interface that replaces the individual role-specific hooks.
+ * comprehensive interface that         setDerivedState(prev => ({
+            ...prev,
+            timer: timer.timerState,
+            isTimerRunning: timer.isRunning,
+            currentQuestionUid: timer.timerState.questionUid ?? null
+        }));
+    }, [timer.timerState, timer.isRunning, timer.timerState.timeLeftMs, timer.timerState.questionUid, timer.timerState.status]);s the individual role-specific hooks.
  * 
  * Phase 2 of the Frontend Modernization Plan
  * Integration layer for useGameTimer + useGameSocket
@@ -44,7 +50,7 @@ export interface GameState {
     isTimerRunning: boolean;
 
     // Question state
-    currentQuestionId: string | null;
+    currentQuestionUid: string | null;
     currentQuestionIndex: number | null;
     currentQuestionData: any | null; // Full question data from backend
     totalQuestions: number;
@@ -91,7 +97,7 @@ export interface UnifiedGameManagerHook {
 
     // Timer controls
     timer: {
-        start: (questionId: string, duration?: number) => void;
+        start: (questionUid: string, duration?: number) => void;
         pause: () => void;
         resume: () => void;
         stop: () => void;
@@ -113,14 +119,14 @@ export interface UnifiedGameManagerHook {
     // Game actions (role-specific)
     actions: {
         // Teacher actions
-        setQuestion?: (questionId: string, duration?: number) => void;
+        setQuestion?: (questionUid: string, duration?: number) => void;
         endGame?: () => void;
         lockAnswers?: () => void;
         unlockAnswers?: () => void;
 
         // Student actions
         joinGame?: () => void;
-        submitAnswer?: (questionId: string, answer: unknown, timeSpent: number) => void;
+        submitAnswer?: (questionUid: string, answer: unknown, timeSpent: number) => void;
 
         // Projection actions
         getState?: () => void;
@@ -155,7 +161,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
         error: socket.socketState.error,
         timer: timer.timerState,
         isTimerRunning: timer.isRunning,
-        currentQuestionId: timer.timerState.questionId ?? null,
+        currentQuestionUid: timer.timerState.questionUid ?? null,
         currentQuestionIndex: null,
         currentQuestionData: null,
         totalQuestions: 0,
@@ -181,9 +187,9 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
             ...prev,
             timer: timer.timerState,
             isTimerRunning: timer.isRunning,
-            currentQuestionId: timer.timerState.questionId ?? null
+            currentQuestionUid: timer.timerState.questionUid ?? null
         }));
-    }, [timer.timerState, timer.isRunning, timer.timerState.timeLeftMs, timer.timerState.questionId, timer.timerState.status]);
+    }, [timer.timerState, timer.isRunning, timer.timerState.timeLeftMs, timer.timerState.questionUid, timer.timerState.status]);
 
     // --- Teacher Dashboard Connection ---
     useEffect(() => {
@@ -209,7 +215,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
                         ...timerUpdate,
                         timeLeftMs: timerUpdate.timeLeftMs === undefined ? null : timerUpdate.timeLeftMs,
                         running: !!timerUpdate.running,
-                        questionId: timerUpdate.questionId === null ? undefined : timerUpdate.questionId
+                        questionUid: timerUpdate.questionUid === null ? undefined : timerUpdate.questionUid
                     };
                     timer.syncWithBackend(fixedTimerUpdate);
                 }
@@ -305,7 +311,7 @@ function setupTeacherEvents(
         SOCKET_EVENTS.TEACHER.DASHBOARD_QUESTION_CHANGED as keyof ServerToClientEvents,
         (payload: any) => {
             // dashboard_question_changed: { questionUid: string }
-            setGameState(prev => ({ ...prev, currentQuestionId: payload.questionUid }));
+            setGameState(prev => ({ ...prev, currentQuestionUid: payload.questionUid }));
         }
     );
     cleanupFunctions.push(() => {
@@ -330,7 +336,7 @@ function setupStudentEvents(
             logger.debug('Student received game_question', payload);
             setGameState(prev => ({
                 ...prev,
-                currentQuestionId: payload.question?.uid,
+                currentQuestionUid: payload.question?.uid,
                 currentQuestionIndex: payload.questionIndex ?? null,
                 currentQuestionData: payload, // Store full payload including question data
                 totalQuestions: payload.totalQuestions ?? 0,
@@ -339,7 +345,7 @@ function setupStudentEvents(
                 answered: false
             }));
             if (payload.question?.uid && payload.timer) {
-                logger.debug('Starting timer for question', { questionId: payload.question.uid, timer: payload.timer });
+                logger.debug('Starting timer for question', { questionUid: payload.question.uid, timer: payload.timer });
                 timer.start(payload.question.uid, payload.timer);
             }
         }
@@ -391,7 +397,7 @@ function setupProjectionEvents(
                 currentQuestionIndex: state.currentQuestionIdx,
                 totalQuestions: state.questions?.length || 0,
                 gameStatus: state.ended ? 'finished' : 'active',
-                currentQuestionId: state.timerQuestionId ||
+                currentQuestionUid: state.timerQuestionUid ||
                     (state.currentQuestionIdx !== null && state.questions?.[state.currentQuestionIdx]?.uid)
             }));
         }
@@ -416,7 +422,7 @@ function setupTournamentEvents(
             setGameState(prev => ({
                 ...prev,
                 gameStatus: state.stopped ? 'finished' : 'active',
-                currentQuestionId: state.currentQuestionUid
+                currentQuestionUid: state.currentQuestionUid
             }));
         }
     );
@@ -432,7 +438,7 @@ function setupTournamentEvents(
             // Store full question data similar to game_question
             setGameState(prev => ({
                 ...prev,
-                currentQuestionId: data.uid || data.question?.uid,
+                currentQuestionUid: data.uid || data.question?.uid,
                 currentQuestionIndex: data.index ?? null,
                 currentQuestionData: {
                     question: {
@@ -471,16 +477,16 @@ function createRoleSpecificActions(
 ) {
     const actions: any = {};
     if (role === 'teacher') {
-        actions.setQuestion = (questionId: string, duration?: number) => {
+        actions.setQuestion = (questionUid: string, duration?: number) => {
             // Always provide a non-optional gameId (string)
             const payload: import('@shared/types/socket/payloads').SetQuestionPayload = {
                 gameId: String(config.gameId),
-                questionUid: questionId,
+                questionUid: questionUid,
                 questionIndex: 0 // TODO: Replace with actual index if available
             };
-            // Only include accessCode if present (legacy support)
-            if (config.accessCode) {
-                payload.accessCode = config.accessCode;
+            // Only include gameId if present (using gameId instead of accessCode)
+            if (config.gameId) {
+                payload.gameId = config.gameId;
             }
             socket.socket?.emit(
                 SOCKET_EVENTS.TEACHER.SET_QUESTION as keyof ClientToServerEvents,
@@ -523,13 +529,13 @@ function createRoleSpecificActions(
                 );
             }
         };
-        actions.submitAnswer = (questionId: string, answer: unknown, timeSpent: number) => {
+        actions.submitAnswer = (questionUid: string, answer: unknown, timeSpent: number) => {
             socket.socket?.emit(
                 SOCKET_EVENTS.GAME.GAME_ANSWER as keyof ClientToServerEvents,
                 {
                     accessCode: config.accessCode!,
                     userId: config.userId!,
-                    questionId,
+                    questionUid: questionUid,
                     answer,
                     timeSpent
                 } as GameAnswerPayload

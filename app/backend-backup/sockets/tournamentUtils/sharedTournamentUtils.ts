@@ -24,10 +24,10 @@ export function sendTournamentQuestion(
         timer: number;
         tournoiState: 'running' | 'paused' | 'stopped';
         questionIndex: number;
-        questionId: string;
+        questionUid: string;
     }
 ): void {
-    const { code, questionId } = payload;
+    const { code, questionUid } = payload;
 
     // Create filtered payload without sensitive data
     const filteredPayload = {
@@ -43,7 +43,7 @@ export function sendTournamentQuestion(
     };
 
     // Log what we're sending
-    logger.info(`[sendTournamentQuestion] Emitting tournament_question to tournament ${code} with question ${questionId}`);
+    logger.info(`[sendTournamentQuestion] Emitting tournament_question to tournament ${code} with question ${questionUid}`);
 
     // Emit to the already targeted emitter
     targetEmitter.emit('tournament_question', filteredPayload);

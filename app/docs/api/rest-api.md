@@ -215,7 +215,7 @@ This document outlines the REST API endpoints available in the MathQuest applica
     "name": "string",
     "description": "string",
     "themes": ["string"],
-    "questionIds": ["string"]
+    "questionUids": ["string"]
   }
   ```
 - **Responses:**

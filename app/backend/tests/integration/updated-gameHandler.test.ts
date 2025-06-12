@@ -135,7 +135,7 @@ describe('Game Handler (Updated Tests)', () => {
             accessCode: 'TEST123',
             status: 'active',
             currentQuestionIndex: 0,
-            questionIds: ['q1', 'q2'],
+            questionUids: ['q1', 'q2'],
             timer: {
                 startedAt: Date.now(),
                 duration: 30000,
@@ -154,7 +154,7 @@ describe('Game Handler (Updated Tests)', () => {
         expect(parsedState).toBeDefined();
         expect(parsedState.gameId).toBe('test-game-id');
         expect(parsedState.accessCode).toBe('TEST123');
-        expect(parsedState.questionIds).toHaveLength(2);
+        expect(parsedState.questionUids).toHaveLength(2);
 
         // Clean up
         await redisClient.del('mathquest:test:gamestate');

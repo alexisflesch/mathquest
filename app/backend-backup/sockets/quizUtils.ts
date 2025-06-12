@@ -85,19 +85,19 @@ export async function emitQuizConnectedCount(
  * @param io - Socket.IO server instance
  * @param quizId - Quiz ID
  * @param status - Timer status ('play', 'pause', 'stop')
- * @param questionId - Question ID
+ * @param questionUid - Question ID
  * @param timeLeft - Time left in seconds
  */
 export function emitQuizTimerUpdate(
     io: Server,
     quizId: string,
     status: 'play' | 'pause' | 'stop',
-    questionId: string,
+    questionUid: string,
     timeLeft: number
 ): void {
-    io.to(quizId).emit('quiz_timer_update', { quizId, status, questionId, timeLeft });
+    io.to(quizId).emit('quiz_timer_update', { quizId, status, questionUid, timeLeft });
     // Also emit to the dashboard room for this quiz
-    io.to(`dashboard_${quizId}`).emit('quiz_timer_update', { quizId, status, questionId, timeLeft });
+    io.to(`dashboard_${quizId}`).emit('quiz_timer_update', { quizId, status, questionUid, timeLeft });
 }
 
 /**
@@ -121,10 +121,10 @@ export function patchQuizStateForBroadcast(state: QuizState): QuizState & { curr
     const quizIdForLog = state.id || 'UNKNOWN_QUIZ_ID';
     logger.info(`[patchQuizStateForBroadcast] Patching state for quizId: ${quizIdForLog}, currentQuestionUid: ${state.currentQuestionUid}, currentQuestionIdx: ${state.currentQuestionIdx}`);
 
-    // CRITICAL FIX: If timerQuestionId exists and is different from currentQuestionUid, sync them
-    if (state.timerQuestionId && state.timerStatus === 'play' && state.currentQuestionUid !== state.timerQuestionId) {
-        logger.warn(`[patchQuizStateForBroadcast] Fixing mismatch: currentQuestionUid=${state.currentQuestionUid}, active timerQuestionId=${state.timerQuestionId}`);
-        state.currentQuestionUid = state.timerQuestionId;
+    // CRITICAL FIX: If timerQuestionUid exists and is different from currentQuestionUid, sync them
+    if (state.timerQuestionUid && state.timerStatus === 'play' && state.currentQuestionUid !== state.timerQuestionUid) {
+        logger.warn(`[patchQuizStateForBroadcast] Fixing mismatch: currentQuestionUid=${state.currentQuestionUid}, active timerQuestionUid=${state.timerQuestionUid}`);
+        state.currentQuestionUid = state.timerQuestionUid;
     }
 
     let currentQuestionObject: Question | null = null;
@@ -152,8 +152,8 @@ export function patchQuizStateForBroadcast(state: QuizState): QuizState & { curr
     const now = Date.now();
     let patchedState: QuizState & { currentQuestion?: Question | null } = { ...state, currentQuestion: currentQuestionObject };
 
-    if (state.timerQuestionId) {
-        const questionTimer = getQuestionTimer(quizIdForLog, state.timerQuestionId); // Use quizIdForLog
+    if (state.timerQuestionUid) {
+        const questionTimer = getQuestionTimer(quizIdForLog, state.timerQuestionUid); // Use quizIdForLog
 
         if (questionTimer && questionTimer.status === 'play' && questionTimer.timestamp) {
             const elapsed = (now - questionTimer.timestamp) / 1000;
@@ -161,7 +161,7 @@ export function patchQuizStateForBroadcast(state: QuizState): QuizState & { curr
             const remaining = Math.max(original - elapsed, 0);
             const remainingPrecise = Math.round(remaining * 10) / 10;
 
-            logger.info(`[patchQuizStateForBroadcast] Recalculating PLAYING timer for quiz ${quizIdForLog}, qUID ${state.timerQuestionId}: initial=${original}, elapsed=${elapsed.toFixed(1)}, remaining=${remainingPrecise}`);
+            logger.info(`[patchQuizStateForBroadcast] Recalculating PLAYING timer for quiz ${quizIdForLog}, qUID ${state.timerQuestionUid}: initial=${original}, elapsed=${elapsed.toFixed(1)}, remaining=${remainingPrecise}`);
 
             patchedState = {
                 ...patchedState,
@@ -233,28 +233,28 @@ export function calculateRemainingTime(chrono?: Chrono | null, timestamp?: numbe
 /**
  * Updates a question's timer state
  * @param quizId - The quiz ID
- * @param questionId - The question ID
+ * @param questionUid - The question ID
  * @param status - The timer status ('play', 'pause', or 'stop')
  * @param timeLeft - The remaining time in seconds
  */
 export function updateQuestionTimer(
     quizId: string,
-    questionId: string,
+    questionUid: string,
     status: 'play' | 'pause' | 'stop',
     timeLeft?: number
 ): void {
-    console.debug(`[updateQuestionTimer] Debug: Called with quizId=${quizId}, questionId=${questionId}, action=${status}, timeLeft=${timeLeft}`);
+    console.debug(`[updateQuestionTimer] Debug: Called with quizId=${quizId}, questionUid=${questionUid}, action=${status}, timeLeft=${timeLeft}`);
 
-    const questionTimer = getQuestionTimer(quizId, questionId);
+    const questionTimer = getQuestionTimer(quizId, questionUid);
     console.debug(`[updateQuestionTimer] Debug: Timer before update:`, JSON.stringify(questionTimer));
 
     if (!questionTimer) {
-        console.error(`[updateQuestionTimer] Timer for question ${questionId} in quiz ${quizId} not found`);
+        console.error(`[updateQuestionTimer] Timer for question ${questionUid} in quiz ${quizId} not found`);
         return;
     }
 
     const prevStatus = questionTimer.status;
-    console.info(`[updateQuestionTimer][BEFORE] quizId=${quizId}, questionId=${questionId}, status=${status}, prevStatus=${prevStatus}, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}`);
+    console.info(`[updateQuestionTimer][BEFORE] quizId=${quizId}, questionUid=${questionUid}, status=${status}, prevStatus=${prevStatus}, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}`);
 
     // Log all timers for this quiz for debugging
     if (quizState[quizId] && quizState[quizId].questionTimers) {
@@ -266,14 +266,14 @@ export function updateQuestionTimer(
 
     // Strict state transition guards for quiz timers
     if (status === 'play') {
-        console.info(`[updateQuestionTimer][ACTION] Setting questionId=${questionId} in quizId=${quizId} to PLAY`);
+        console.info(`[updateQuestionTimer][ACTION] Setting questionUid=${questionUid} in quizId=${quizId} to PLAY`);
         if (prevStatus === 'play' && questionTimer.timeLeft > 0) {
-            console.warn(`[updateQuestionTimer] Ignoring play: timer already running for quizId=${quizId}, questionId=${questionId}`);
+            console.warn(`[updateQuestionTimer] Ignoring play: timer already running for quizId=${quizId}, questionUid=${questionUid}`);
             return;
         }
         if (prevStatus === 'pause') {
             if (typeof questionTimer.timeLeft !== 'number' || questionTimer.timeLeft <= 0) {
-                console.error(`[updateQuestionTimer] Cannot resume: paused timer has invalid timeLeft for quizId=${quizId}, questionId=${questionId}`);
+                console.error(`[updateQuestionTimer] Cannot resume: paused timer has invalid timeLeft for quizId=${quizId}, questionUid=${questionUid}`);
                 return;
             }
         } else {
@@ -281,57 +281,57 @@ export function updateQuestionTimer(
         }
         questionTimer.status = 'play';
         questionTimer.timestamp = Date.now();
-        console.info(`[updateQuestionTimer][PLAY] quizId=${quizId}, questionId=${questionId}, timeLeft=${questionTimer.timeLeft}`);
+        console.info(`[updateQuestionTimer][PLAY] quizId=${quizId}, questionUid=${questionUid}, timeLeft=${questionTimer.timeLeft}`);
     } else if (status === 'pause') {
-        console.info(`[updateQuestionTimer][ACTION] Setting questionId=${questionId} in quizId=${quizId} to PAUSE`);
+        console.info(`[updateQuestionTimer][ACTION] Setting questionUid=${questionUid} in quizId=${quizId} to PAUSE`);
         if (prevStatus !== 'play' || !questionTimer.timestamp) {
-            console.warn(`[updateQuestionTimer] Cannot pause: timer not running for quizId=${quizId}, questionId=${questionId}, prevStatus=${prevStatus}`);
+            console.warn(`[updateQuestionTimer] Cannot pause: timer not running for quizId=${quizId}, questionUid=${questionUid}, prevStatus=${prevStatus}`);
             return;
         }
         const elapsed = (Date.now() - questionTimer.timestamp) / 1000;
         questionTimer.timeLeft = Math.max(0, questionTimer.timeLeft - elapsed);
         questionTimer.status = 'pause';
         questionTimer.timestamp = null;
-        console.info(`[updateQuestionTimer][PAUSE] quizId=${quizId}, questionId=${questionId}, elapsed=${elapsed}, newTimeLeft=${questionTimer.timeLeft}`);
+        console.info(`[updateQuestionTimer][PAUSE] quizId=${quizId}, questionUid=${questionUid}, elapsed=${elapsed}, newTimeLeft=${questionTimer.timeLeft}`);
     } else if (status === 'stop') {
-        console.info(`[updateQuestionTimer][ACTION] Setting questionId=${questionId} in quizId=${quizId} to STOP`);
+        console.info(`[updateQuestionTimer][ACTION] Setting questionUid=${questionUid} in quizId=${quizId} to STOP`);
         questionTimer.status = 'stop';
         questionTimer.timeLeft = questionTimer.initialTime;
         questionTimer.timestamp = null;
-        console.info(`[updateQuestionTimer][STOP] quizId=${quizId}, questionId=${questionId}, reset to initialTime=${questionTimer.initialTime}`);
+        console.info(`[updateQuestionTimer][STOP] quizId=${quizId}, questionUid=${questionUid}, reset to initialTime=${questionTimer.initialTime}`);
     } else {
-        console.warn(`[updateQuestionTimer] Unknown status=${status} for quizId=${quizId}, questionId=${questionId}`);
+        console.warn(`[updateQuestionTimer] Unknown status=${status} for quizId=${quizId}, questionUid=${questionUid}`);
         return;
     }
 
     console.debug(`[updateQuestionTimer] Debug: Timer after update:`, JSON.stringify(questionTimer));
-    console.info(`[updateQuestionTimer][AFTER] quizId=${quizId}, questionId=${questionId}, status=${questionTimer.status}, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}`);
+    console.info(`[updateQuestionTimer][AFTER] quizId=${quizId}, questionUid=${questionUid}, status=${questionTimer.status}, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}`);
 
     // Additional log to trace status changes
-    console.debug(`[updateQuestionTimer] Debug: Timer status change for questionId=${questionId}: status=${questionTimer.status}`);
+    console.debug(`[updateQuestionTimer] Debug: Timer status change for questionUid=${questionUid}: status=${questionTimer.status}`);
 }
 
 /**
  * Calculates the precise remaining time for a question
  * @param quizId - The quiz ID
- * @param questionId - The question ID
+ * @param questionUid - The question ID
  * @returns The remaining time in seconds
  */
-export function calculateQuestionRemainingTime(quizId: string, questionId: string): number {
-    const questionTimer = getQuestionTimer(quizId, questionId);
+export function calculateQuestionRemainingTime(quizId: string, questionUid: string): number {
+    const questionTimer = getQuestionTimer(quizId, questionUid);
     if (!questionTimer) {
-        console.error(`[calculateQuestionRemainingTime] Timer for question ${questionId} in quiz ${quizId} not found`);
+        console.error(`[calculateQuestionRemainingTime] Timer for question ${questionUid} in quiz ${quizId} not found`);
         return 0;
     }
 
     if (questionTimer.status === 'play' && questionTimer.timestamp) {
         const elapsed = (Date.now() - questionTimer.timestamp) / 1000;
         const remaining = Math.max(0, questionTimer.timeLeft - elapsed);
-        console.info(`[calculateQuestionRemainingTime] quizId=${quizId}, questionId=${questionId}, status=play, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}, elapsed=${elapsed}, remaining=${remaining}`);
+        console.info(`[calculateQuestionRemainingTime] quizId=${quizId}, questionUid=${questionUid}, status=play, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}, elapsed=${elapsed}, remaining=${remaining}`);
         return remaining;
     }
 
-    console.info(`[calculateQuestionRemainingTime] quizId=${quizId}, questionId=${questionId}, status=${questionTimer.status}, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}`);
+    console.info(`[calculateQuestionRemainingTime] quizId=${quizId}, questionUid=${questionUid}, status=${questionTimer.status}, timeLeft=${questionTimer.timeLeft}, timestamp=${questionTimer.timestamp}`);
     return questionTimer.timeLeft;
 }
 
@@ -357,15 +357,15 @@ export function synchronizeTimerValues(quizId: string, tournamentCode: string, t
     }
 
     // Get the current question being timed
-    const questionId = quizState[quizId].timerQuestionId;
-    if (!questionId) {
+    const questionUid = quizState[quizId].timerQuestionUid;
+    if (!questionUid) {
         console.warn(`[synchronizeTimerValues] No active question in quiz ${quizId}`);
         return;
     }
 
     // Update tournament state with the question ID and duration
-    tournamentState[tournamentCode].currentQuestionUid = questionId;
+    tournamentState[tournamentCode].currentQuestionUid = questionUid;
     tournamentState[tournamentCode].currentQuestionDuration = timeLeft;
 
-    console.info(`[synchronizeTimerValues] Synchronized timer values between quiz ${quizId} and tournament ${tournamentCode}: questionId=${questionId}, timeLeft=${timeLeft}`);
+    console.info(`[synchronizeTimerValues] Synchronized timer values between quiz ${quizId} and tournament ${tournamentCode}: questionUid=${questionUid}, timeLeft=${timeLeft}`);
 }

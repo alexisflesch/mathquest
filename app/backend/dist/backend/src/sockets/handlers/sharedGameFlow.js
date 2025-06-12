@@ -37,7 +37,7 @@ async function runGameFlow(io, accessCode, questions, options) {
             const timeLimitSec = questions[i].timeLimit || 30;
             const timer = {
                 startedAt: Date.now(),
-                duration: timeLimitSec * 1000,
+                durationMs: timeLimitSec * 1000,
                 isPaused: false
             };
             // Fetch and update game state
@@ -69,19 +69,19 @@ async function runGameFlow(io, accessCode, questions, options) {
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
             options.onQuestionStart?.(i);
             await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
-            logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionId: questions[i].uid }, '[DEBUG] Emitting correct_answers');
+            logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionUid: questions[i].uid }, '[DEBUG] Emitting correct_answers');
             // Send correct answers with the event (not filtered out like in game_question)
             const correctAnswersPayload = {
-                questionId: questions[i].uid,
+                questionUid: questions[i].uid,
                 correctAnswers: questions[i].correctAnswers || []
             };
             io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
             logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: questions[i].correctAnswers }, '[TRACE] Emitted correct_answers');
             options.onQuestionEnd?.(i);
             if (questions[i] && questions[i].uid) {
-                logger.info({ accessCode, questionId: questions[i].uid }, '[SharedGameFlow] Calculating scores for question');
+                logger.info({ accessCode, questionUid: questions[i].uid }, '[SharedGameFlow] Calculating scores for question');
                 await gameStateService_1.default.calculateScores(accessCode, questions[i].uid);
-                logger.info({ accessCode, questionId: questions[i].uid }, '[SharedGameFlow] Scores calculated');
+                logger.info({ accessCode, questionUid: questions[i].uid }, '[SharedGameFlow] Scores calculated');
             }
             else {
                 logger.warn({ accessCode, questionIndex: i }, '[SharedGameFlow] Question UID missing, cannot calculate scores.');
@@ -96,10 +96,10 @@ async function runGameFlow(io, accessCode, questions, options) {
             // Wait for the delay between correct answers and feedback
             await new Promise((resolve) => setTimeout(resolve, correctAnswersToFeedbackDelay * 1000));
             // Emit feedback event with the full feedback display duration and explanation
-            logger.info({ room: `game_${accessCode}`, event: 'feedback', questionId: questions[i].uid, feedbackDisplayDuration }, '[DEBUG] Emitting feedback');
+            logger.info({ room: `game_${accessCode}`, event: 'feedback', questionUid: questions[i].uid, feedbackDisplayDuration }, '[DEBUG] Emitting feedback');
             // DETAILED LOGGING: Debug explanation transmission
             const feedbackPayload = {
-                questionId: questions[i].uid,
+                questionUid: questions[i].uid,
                 feedbackRemaining: feedbackDisplayDuration,
                 explanation: questions[i].explanation || undefined // Include explanation in feedback event
             };

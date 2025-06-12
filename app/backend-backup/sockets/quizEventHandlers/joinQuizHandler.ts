@@ -94,7 +94,7 @@ async function handleJoinQuizTemplateDashboard(
             profSocketId: socket.id,
             profTeacherId: teacherId,
             timerStatus: 'stop',
-            timerQuestionId: null,
+            timerQuestionUid: null,
             timerTimeLeft: null,
             timerTimestamp: null,
             connectedSockets: new Set<string>(), // Initialize connectedSockets here

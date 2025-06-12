@@ -57,7 +57,7 @@ The timer system follows a centralized architecture where the backend is the sin
     duration: number | null;
     isPaused: boolean;
     timeRemaining: number | null;
-    questionId: string;
+    questionUid: string;
   }
   ```
 

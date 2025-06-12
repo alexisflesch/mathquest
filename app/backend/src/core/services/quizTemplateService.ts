@@ -277,7 +277,7 @@ export class gameTemplateService {
             await prisma.questionsInGameTemplate.create({
                 data: {
                     gameTemplateId,
-                    questionUid,
+                    questionUid: questionUid,
                     sequence: actualSequence
                 }
             });
@@ -312,7 +312,7 @@ export class gameTemplateService {
                 where: {
                     gameTemplateId_questionUid: {
                         gameTemplateId,
-                        questionUid
+                        questionUid: questionUid
                     }
                 }
             });

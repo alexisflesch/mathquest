@@ -115,18 +115,18 @@ describe('useStudentGameSocket - Emitters', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionId = 'q1';
+        const questionUid = 'q1';
         const answer = 'Option B';
         const timeSpent = 15000;
 
         act(() => {
-            result.current.submitAnswer(questionId, answer, timeSpent);
+            result.current.submitAnswer(questionUid, answer, timeSpent);
         });
 
         expect(mockSocket.emit).toHaveBeenCalledWith('game_answer', {
             accessCode: 'TEST123',
             userId: 'user-123',
-            questionId: 'q1',
+            questionUid: 'q1',
             answer: 'Option B',
             timeSpent: 15000
         });
@@ -141,18 +141,18 @@ describe('useStudentGameSocket - Emitters', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const questionId = 'q2';
+        const questionUid = 'q2';
         const answer = ['Option A', 'Option C'];
         const timeSpent = 20000;
 
         act(() => {
-            result.current.submitAnswer(questionId, answer, timeSpent);
+            result.current.submitAnswer(questionUid, answer, timeSpent);
         });
 
         expect(mockSocket.emit).toHaveBeenCalledWith('game_answer', {
             accessCode: 'TEST123',
             userId: 'user-123',
-            questionId: 'q2',
+            questionUid: 'q2',
             answer: ['Option A', 'Option C'],
             timeSpent: 20000
         });
@@ -183,16 +183,16 @@ describe('useStudentGameSocket - Emitters', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        const currentQuestionId = 'q1';
+        const currentQuestionUid = 'q1';
 
         act(() => {
-            result.current.requestNextQuestion(currentQuestionId);
+            result.current.requestNextQuestion(currentQuestionUid);
         });
 
         expect(mockSocket.emit).toHaveBeenCalledWith('request_next_question', {
             accessCode: 'TEST123',
             userId: 'user-123',
-            currentQuestionId: 'q1'
+            currentQuestionUid: 'q1'
         });
     });
 
@@ -231,15 +231,15 @@ describe('useStudentGameSocket - Emitters', () => {
         expect(mockSocket.emit).toHaveBeenCalledTimes(4);
         expect(mockSocket.emit).toHaveBeenNthCalledWith(1, 'join_game', expect.any(Object));
         expect(mockSocket.emit).toHaveBeenNthCalledWith(2, 'game_answer', expect.objectContaining({
-            questionId: 'q1',
+            questionUid: 'q1',
             answer: 'answer1'
         }));
         expect(mockSocket.emit).toHaveBeenNthCalledWith(3, 'game_answer', expect.objectContaining({
-            questionId: 'q2',
+            questionUid: 'q2',
             answer: 'answer2'
         }));
         expect(mockSocket.emit).toHaveBeenNthCalledWith(4, 'request_next_question', expect.objectContaining({
-            currentQuestionId: 'q2'
+            currentQuestionUid: 'q2'
         }));
     });
 
@@ -299,7 +299,7 @@ describe('useStudentGameSocket - Emitters', () => {
         expect(mockSocket.emit).toHaveBeenCalledWith('game_answer', {
             accessCode: 'TEST123',
             userId: 'user-123',
-            questionId: 'q1',
+            questionUid: 'q1',
             answer: 42,
             timeSpent: 5000
         });

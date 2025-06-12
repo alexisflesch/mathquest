@@ -52,15 +52,33 @@ class GameTemplateService {
         return gameTemplate;
     }
     async creategameTemplate(userId, data) {
-        const { questions, questionIds, ...rest } = data;
-        // Convert questionIds to questions format if provided
+        const { questions, questionUids, ...rest } = data;
+        // Convert questionUids to questions format if provided
         let questionData = questions;
-        if (questionIds && questionIds.length > 0) {
-            questionData = questionIds.map((questionUid, index) => ({
-                questionUid,
+        if (questionUids && questionUids.length > 0) {
+            questionData = questionUids.map((questionUid, index) => ({
+                questionUid, // unified naming
                 sequence: index
             }));
         }
+        logger.info({
+            userId,
+            questionData,
+            rest,
+            fullCreateData: {
+                ...rest,
+                creatorId: userId,
+                defaultMode: data.defaultMode,
+                ...(questionData ? {
+                    questions: {
+                        create: questionData.map(q => ({
+                            questionUid: q.questionUid,
+                            sequence: q.sequence
+                        }))
+                    }
+                } : {})
+            }
+        }, 'About to create gameTemplate with questions');
         return prisma_1.prisma.gameTemplate.create({
             data: {
                 ...rest,
@@ -69,8 +87,8 @@ class GameTemplateService {
                 ...(questionData ? {
                     questions: {
                         create: questionData.map(q => ({
-                            questionUid: q.questionUid, // Corrected: use q.questionUid from input
-                            sequence: q.sequence // Corrected: use q.sequence from input
+                            questionUid: q.questionUid, // unified naming
+                            sequence: q.sequence
                         }))
                     }
                 } : {})
@@ -161,7 +179,7 @@ class GameTemplateService {
         await prisma_1.prisma.questionsInGameTemplate.create({
             data: {
                 gameTemplateId: id,
-                questionUid,
+                questionUid: questionUid,
                 sequence: sequence || 1
             }
         });
@@ -185,7 +203,7 @@ class GameTemplateService {
             where: {
                 gameTemplateId_questionUid: {
                     gameTemplateId: id,
-                    questionUid
+                    questionUid: questionUid
                 }
             }
         });
@@ -209,7 +227,7 @@ class GameTemplateService {
                 where: {
                     gameTemplateId_questionUid: {
                         gameTemplateId: id,
-                        questionUid
+                        questionUid: questionUid
                     }
                 },
                 data: { sequence }

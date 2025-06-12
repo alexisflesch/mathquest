@@ -27,7 +27,7 @@ export interface TournamentQuestionPayload { // Added export
     timer: number;
     tournoiState: 'running' | 'paused' | 'stopped';
     questionIndex: number;
-    questionId: string;
+    questionUid: string;
 }
 
 /**
@@ -79,13 +79,13 @@ function sendTournamentQuestion(
     targetEmitter: BroadcastOperator<any, any>, // Changed type to BroadcastOperator
     payload: TournamentQuestionPayload
 ): void {
-    const { code, questionId } = payload;
+    const { code, questionUid } = payload;
 
     // Create filtered payload without sensitive data
     const filteredPayload = createFilteredQuestionData(payload);
 
     // Log what we're sending
-    logger.info(`[sendTournamentQuestion] Emitting tournament_question to tournament ${code} (room derived by caller) with question ${questionId}`);
+    logger.info(`[sendTournamentQuestion] Emitting tournament_question to tournament ${code} (room derived by caller) with question ${questionUid}`);
     logger.debug(`[sendTournamentQuestion] Payload metadata: questionIndex=${filteredPayload.index}, timer=${filteredPayload.timer}, state=${filteredPayload.tournoiState}`);
 
     // Emit to the already targeted emitter

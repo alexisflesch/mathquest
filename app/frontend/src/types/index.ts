@@ -2,25 +2,20 @@
  * Frontend type definitions - now using shared types where possible
  */
 import {
-    BaseQuizState,
+    ExtendedQuizState as SharedQuizState,
     Logger as BaseLogger,
     Question as SharedQuestion // Import shared Question
 } from '@shared/types';
-// BaseQuestion is not directly used here anymore for defining a local Question.
-// If it's needed for other local types, it can be re-added.
-// import { BaseQuestion } from '@shared/types/question';
 
 // Re-export shared types
 export type { Question } from '@shared/types'; // Re-export the shared Question type
 
-// Frontend-specific QuizState extensions
-export interface QuizState extends BaseQuizState {
-    // Ensure frontend expected properties are defined
-    currentQuestionIdx: number | null;
-    stats: Record<string, unknown>;
-    // Frontend uses a slightly different chrono structure - REMOVED to use shared Chrono from BaseQuizState
-    // chrono: { timeLeftMs?: number | null; running: boolean };
-}
+// Use shared ExtendedQuizState as frontend QuizState
+export type QuizState = SharedQuizState & {
+    // Add any frontend-specific properties if needed
+    currentQuestionIdx?: number | null; // Alias for currentQuestionidx
+    accessCode?: string; // Common property needed by frontend
+};
 
 /**
  * Re-export the shared Logger interface

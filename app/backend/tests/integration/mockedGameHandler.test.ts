@@ -96,7 +96,7 @@ function createMockIO(): MockIO {
 interface GameAnswerPayload {
     accessCode: string;
     userId: string;
-    questionId: string;
+    questionUid: string;
     answer: number; // strictly index for multiple choice
     timeSpent: number;
 }
@@ -520,11 +520,11 @@ describe('Mocked Game Handler', () => {
             accessCode: TEST_ACCESS_CODE,
             status: 'active',
             currentQuestionIndex: 0,
-            questionIds: [question.uid],
+            questionUids: [question.uid],
             answersLocked: false,
             timer: {
                 startedAt: Date.now(),
-                duration: 20000,
+                durationMs: 20000,
                 isPaused: false
             },
             settings: {
@@ -565,7 +565,7 @@ describe('Mocked Game Handler', () => {
         // Now trigger the game_answer event
         await socket.triggerEvent('game_answer', {
             accessCode: TEST_ACCESS_CODE,
-            questionId: question.uid,
+            questionUid: question.uid,
             answer: { selectedOption: 'b' },
             timeSpent: 5000
         });
@@ -827,12 +827,12 @@ describe('Mocked Game Handler', () => {
             await socket.triggerEvent('game_answer', {
                 accessCode: differedAccessCode,
                 userId: uniqueId('player-3'),
-                questionId: question.uid,
+                questionUid: question.uid,
                 answer: 'b',
                 timeSpent: 2000
             });
             // In differed mode, only 'answer_received' is emitted, not 'leaderboard_update'
-            expect(socket.emit).toHaveBeenCalledWith('answer_received', expect.objectContaining({ questionId: question.uid, timeSpent: 2000 }));
+            expect(socket.emit).toHaveBeenCalledWith('answer_received', expect.objectContaining({ questionUid: question.uid, timeSpent: 2000 }));
         });
     });
 
@@ -856,18 +856,18 @@ describe('Mocked Game Handler', () => {
         const gameTemplate = await prisma.gameTemplate.findFirst({ where: { id: gameInstance.gameTemplateId } });
         const questionsInTemplate = await prisma.questionsInGameTemplate.findMany({ where: { gameTemplateId: gameTemplate?.id } });
         const questionUid = questionsInTemplate[0]?.questionUid;
-        // Ensure game state in Redis is initialized with correct questionIds
-        const questionIds = questionsInTemplate.map(q => q.questionUid);
+        // Ensure game state in Redis is initialized with correct questionUids
+        const questionUids = questionsInTemplate.map(q => q.questionUid);
         await gameStateService.updateGameState(TEST_ACCESS_CODE, {
             gameId: gameInstance.id,
             accessCode: TEST_ACCESS_CODE,
             status: 'active',
             currentQuestionIndex: 0,
-            questionIds,
+            questionUids,
             answersLocked: false,
             timer: {
                 startedAt: Date.now(),
-                duration: 20000,
+                durationMs: 20000,
                 isPaused: false
             },
             settings: {
@@ -876,8 +876,8 @@ describe('Mocked Game Handler', () => {
             }
         });
         const fullState = await gameStateService.getFullGameState(TEST_ACCESS_CODE);
-        const questionIndex = Array.isArray(fullState?.gameState.questionIds)
-            ? fullState.gameState.questionIds.findIndex((uid) => uid === questionUid)
+        const questionIndex = Array.isArray(fullState?.gameState.questionUids)
+            ? fullState.gameState.questionUids.findIndex((uid) => uid === questionUid)
             : undefined;
         expect(typeof questionIndex).toBe('number');
         expect(questionIndex).toBeGreaterThanOrEqual(0);
@@ -890,14 +890,14 @@ describe('Mocked Game Handler', () => {
         const answerPayload: GameAnswerPayload = {
             accessCode: TEST_ACCESS_CODE,
             userId: uniqueId('player-1'),
-            questionId: questionUid,
+            questionUid: questionUid,
             answer: 1, // correct answer index for the seeded question (['3', '4', '5', '22'])
             timeSpent: 5000
         };
         await socket.triggerEvent('game_answer', answerPayload);
 
         // The handler should have emitted an answer_received event
-        expect(socket.emit).toHaveBeenCalledWith('answer_received', expect.objectContaining({ questionId: questionUid, timeSpent: 5000 }));
+        expect(socket.emit).toHaveBeenCalledWith('answer_received', expect.objectContaining({ questionUid: questionUid, timeSpent: 5000 }));
 
         // Instead of checking Redis (which is only updated by scoring), check the DB for the answer
         const participant = await prisma.gameParticipant.findFirst({

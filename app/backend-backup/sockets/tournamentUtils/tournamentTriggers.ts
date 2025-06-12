@@ -98,7 +98,7 @@ function triggerTournamentQuestion(
         timer: state.settings?.timer || 60,
         tournoiState: state.paused ? 'paused' : state.stopped ? 'stopped' : 'running' as 'paused' | 'stopped' | 'running',
         questionIndex: targetIndex,
-        questionId: questionUid
+        questionUid: questionUid
     };
 
     // Call sendTournamentQuestion with the constructed payload
@@ -114,7 +114,7 @@ function triggerTournamentQuestion(
             io.to(teacherSocketId).emit('quiz_timer_update', {
                 timeLeft: initialTime,
                 status: 'pause', // Always start paused, the start event will change this
-                questionId: questionUid
+                questionUid: questionUid
             });
         } else {
             logger.warn(`[TriggerQuestion] No teacher socket ID found for linkedQuizId=${linkedQuizId}`);

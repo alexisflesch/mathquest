@@ -136,7 +136,7 @@ async generateUniqueAccessCode(): Promise<string> {
 ```typescript
 // Backend: sharedGameFlow.ts
 const feedbackPayload = {
-    questionId: questions[i].uid,
+    questionUid: questions[i].uid,
     feedbackRemaining: feedbackDisplayDuration,
     explanation: questions[i].explanation || undefined
 };

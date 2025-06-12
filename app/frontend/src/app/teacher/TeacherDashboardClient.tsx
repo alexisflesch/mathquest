@@ -63,7 +63,7 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
                         onSelect={setSelectedQuestions}
                         selectedQuestionIds={selectedQuestions}
                         timerStatus="stop"
-                        timerQuestionId={null}
+                        timerQuestionUid={null}
                         timeLeftMs={0}
                         onTimerAction={() => { }}
                     />

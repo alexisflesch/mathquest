@@ -54,7 +54,7 @@ async function handleSetQuestion(
             profSocketId: socket.id,
             profTeacherId: teacherId || '',
             timerStatus: 'stop',
-            timerQuestionId: null,
+            timerQuestionUid: null,
             timerTimeLeft: null,
             timerTimestamp: null,
             connectedSockets: new Set<string>(),
@@ -121,7 +121,7 @@ async function handleSetQuestion(
 
         // Update state with timer info from this question
         quizState[quizTemplateId].timerStatus = 'stop';
-        quizState[quizTemplateId].timerQuestionId = questionUid;
+        quizState[quizTemplateId].timerQuestionUid = questionUid;
         quizState[quizTemplateId].timerTimeLeft = quizState[quizTemplateId].questionTimers[questionUid].timeLeft;
         quizState[quizTemplateId].timerTimestamp = null;
 
@@ -152,7 +152,7 @@ async function handleSetQuestion(
         }
 
         quizState[quizTemplateId].timerStatus = 'stop';
-        quizState[quizTemplateId].timerQuestionId = questionUid;
+        quizState[quizTemplateId].timerQuestionUid = questionUid;
         quizState[quizTemplateId].timerTimeLeft = startTime;
         quizState[quizTemplateId].timerTimestamp = null;
 

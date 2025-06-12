@@ -35,7 +35,7 @@ A **hook** is a special function in React (introduced in React 16.8) that lets y
 - **Returns:**
   - `quizSocket`: The socket instance
   - `quizState`: Current quiz state object
-  - `timerStatus`, `timerQuestionId`, `localTimeLeft`: Timer state
+  - `timerStatus`, `timerQuestionUid`, `localTimeLeft`: Timer state
   - `connectedCount`: Number of connected clients
   - `emitSetQuestion`, `emitEndQuiz`, `emitPauseQuiz`, `emitResumeQuiz`, `emitSetTimer`, `emitTimerAction`, `emitUpdateTournamentCode`: Action emitters
 
@@ -47,7 +47,7 @@ A **hook** is a special function in React (introduced in React 16.8) that lets y
   - Listens for all relevant events for the projector view
   - Exposes setters for local timer state (for animation)
 - **Returns:**
-  - `quizSocket`, `quizState`, `timerStatus`, `timerQuestionId`, `timeLeft`, `localTimeLeft`, `setLocalTimeLeft`, `connectedCount`
+  - `quizSocket`, `quizState`, `timerStatus`, `timerQuestionUid`, `timeLeft`, `localTimeLeft`, `setLocalTimeLeft`, `connectedCount`
 
 ### `useAuth`
 - **Purpose:** Provides authentication and identity context for teachers and students.

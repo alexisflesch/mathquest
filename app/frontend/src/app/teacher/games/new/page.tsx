@@ -369,7 +369,7 @@ export default function CreateActivityPage() {
             // Create a game template with the selected questions
             console.log('Creating game template with data:', {
                 name: activityName,
-                questionIds: selectedQuestions.map(q => q.uid),
+                questionUids: selectedQuestions.map(q => q.uid), // FIXED: use questionUids (plural)
                 levels: activityMeta.levels,
                 themes: activityMeta.themes,
                 discipline: selectedDisciplines[0] || 'Mathématiques',
@@ -381,7 +381,7 @@ export default function CreateActivityPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: activityName,
-                    questionIds: selectedQuestions.map(q => q.uid),
+                    questionUids: selectedQuestions.map(q => q.uid), // FIXED: use questionUids (plural)
                     themes: activityMeta.themes,
                     discipline: selectedDisciplines[0] || 'Mathématiques',
                     gradeLevel: activityMeta.levels[0] || 'Niveau non spécifié'

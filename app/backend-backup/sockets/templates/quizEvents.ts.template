@@ -50,7 +50,7 @@ async function ensureQuizStateInitialized(
       profSocketId: (role === 'prof' || role === 'teacher') ? socket.id : null,
       profTeacherId: (role === 'prof' || role === 'teacher') ? teacherId : null,
       timerStatus: null,
-      timerQuestionId: null,
+      timerQuestionUid: null,
       timerTimeLeft: null,
       timerTimestamp: null,
       connectedSockets: new Set(),

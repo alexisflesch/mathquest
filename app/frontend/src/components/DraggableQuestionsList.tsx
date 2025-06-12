@@ -46,9 +46,9 @@ interface DraggableQuestionsListProps {
     onEditTimer: (uid: string, newTime: number) => void;
     onReorder?: (newQuestions: Question[]) => void;
     timerStatus?: 'play' | 'pause' | 'stop';
-    timerQuestionId?: string | null;
+    timerQuestionUid?: string | null;
     timeLeftMs?: number;
-    onTimerAction?: (info: { status: 'play' | 'pause' | 'stop'; questionId: string; timeLeftMs: number }) => void;
+    onTimerAction?: (info: { status: 'play' | 'pause' | 'stop'; questionUid: string; timeLeftMs: number }) => void;
     onImmediateUpdateActiveTimer?: (newTime: number) => void;
     disabled?: boolean;
     onShowResults?: (uid: string) => void;
@@ -75,7 +75,7 @@ export default function DraggableQuestionsList({
     onEditTimer,
     onReorder,
     timerStatus,
-    timerQuestionId,
+    timerQuestionUid,
     timeLeftMs,
     onTimerAction,
     onImmediateUpdateActiveTimer,
@@ -89,18 +89,18 @@ export default function DraggableQuestionsList({
 }: DraggableQuestionsListProps) {
     const [confirmDialog, setConfirmDialog] = useState<{
         isOpen: boolean;
-        questionId: string;
+        questionUid: string;
         startTime: number;
     }>({
         isOpen: false,
-        questionId: "",
+        questionUid: "",
         startTime: 0
     });
 
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
-    //     logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionId}, Time left: ${timeLeftMs}`);
-    // }, [timerStatus, timerQuestionId, timeLeftMs]);
+    //     logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionUid}, Time left: ${timeLeftMs}`);
+    // }, [timerStatus, timerQuestionUid, timeLeftMs]);
 
     // Remove render check logging that causes excessive re-renders
     // React.useEffect(() => {
@@ -111,13 +111,13 @@ export default function DraggableQuestionsList({
     const effectiveTimeLeft = timeLeftMs ?? 0;
 
     // Memoize the pause check function to prevent unnecessary re-renders
-    const isQuestionPaused = useCallback((questionId: string): boolean => {
+    const isQuestionPaused = useCallback((questionUid: string): boolean => {
         return (
-            timerQuestionId === questionId &&
+            timerQuestionUid === questionUid &&
             timerStatus === 'pause' &&
             (typeof effectiveTimeLeft === 'number' && effectiveTimeLeft > 0)
         );
-    }, [timerQuestionId, timerStatus, effectiveTimeLeft]);
+    }, [timerQuestionUid, timerStatus, effectiveTimeLeft]);
 
     // Ref to store the fallback timeout
     const fallbackResetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -132,22 +132,22 @@ export default function DraggableQuestionsList({
         };
     }, []);
 
-    const handlePlay = useCallback((questionId: string, startTime: number) => {
-        logger.info(`handlePlay called for questionId: ${questionId}, startTime: ${startTime}`);
+    const handlePlay = useCallback((questionUid: string, startTime: number) => {
+        logger.info(`handlePlay called for questionUid: ${questionUid}, startTime: ${startTime}`);
 
         // Check if the current question's timer has naturally expired
-        const timerHasExpired = timerQuestionId &&
+        const timerHasExpired = timerQuestionUid &&
             (effectiveTimeLeft === 0 || effectiveTimeLeft === null) &&
             timerStatus !== 'play';
 
         // If the timer for the current question has reached zero, no need for confirmation
         if (timerHasExpired) {
-            logger.info(`Current question timer has expired, switching directly to: ${questionId}`);
-            onSelect(questionId);
+            logger.info(`Current question timer has expired, switching directly to: ${questionUid}`);
+            onSelect(questionUid);
             if (onTimerAction) {
                 onTimerAction({
                     status: 'play',
-                    questionId,
+                    questionUid,
                     timeLeftMs: startTime,
                 });
             }
@@ -156,15 +156,15 @@ export default function DraggableQuestionsList({
 
         // If there is an active question with a running or paused timer with time left,
         // confirm the switch to avoid accidental question changes
-        if (timerQuestionId &&
-            timerQuestionId !== questionId &&
+        if (timerQuestionUid &&
+            timerQuestionUid !== questionUid &&
             ((timerStatus === 'play' && effectiveTimeLeft > 0) ||
                 (timerStatus === 'pause' && effectiveTimeLeft > 0))) {
 
             // Open the confirmation dialog instead of using window.confirm()
             setConfirmDialog({
                 isOpen: true,
-                questionId: questionId,
+                questionUid: questionUid,
                 startTime: startTime
             });
             return;
@@ -173,19 +173,19 @@ export default function DraggableQuestionsList({
             if (onTimerAction) {
                 // When resuming a paused question, always use the timeLeftMs from server state
                 // This ensures we don't reset the timer to the full duration
-                if (timerQuestionId === questionId && timerStatus === 'pause' && effectiveTimeLeft !== null) {
-                    logger.info(`Resuming paused question: ${questionId}, using server timeLeftMs?: ${effectiveTimeLeft}s`);
+                if (timerQuestionUid === questionUid && timerStatus === 'pause' && effectiveTimeLeft !== null) {
+                    logger.info(`Resuming paused question: ${questionUid}, using server timeLeftMs?: ${effectiveTimeLeft}s`);
                     onTimerAction({
                         status: 'play',
-                        questionId,
+                        questionUid,
                         timeLeftMs: effectiveTimeLeft, // Use the server's timeLeft value for consistency
                     });
                 } else {
                     // Normal start - for non-paused questions
-                    logger.info(`Starting question: ${questionId}, timeLeftMs?: ${startTime}s`);
+                    logger.info(`Starting question: ${questionUid}, timeLeftMs?: ${startTime}s`);
                     onTimerAction({
                         status: 'play',
-                        questionId,
+                        questionUid,
                         timeLeftMs: startTime,
                     });
                 }
@@ -193,44 +193,44 @@ export default function DraggableQuestionsList({
                 logger.warn('onTimerAction is not defined. Cannot emit quiz_set_question.');
             }
 
-            logger.info(`Setting active question in UI to: ${questionId}`);
-            onSelect(questionId);
+            logger.info(`Setting active question in UI to: ${questionUid}`);
+            onSelect(questionUid);
 
-            if (timerQuestionId === questionId) {
+            if (timerQuestionUid === questionUid) {
                 if (timerStatus === 'play') {
-                    logger.info(`Pausing question: ${questionId}`);
+                    logger.info(`Pausing question: ${questionUid}`);
                     if (onPause) onPause();
                 } else if (timerStatus === 'pause') {
-                    logger.info(`Resuming question: ${questionId}`);
+                    logger.info(`Resuming question: ${questionUid}`);
                     // When resuming from pause, use the backend's timeLeftMs value
-                    if (onPlay) onPlay(questionId, effectiveTimeLeft ?? startTime);
+                    if (onPlay) onPlay(questionUid, effectiveTimeLeft ?? startTime);
                 } else {
-                    logger.info(`Starting question: ${questionId} from stopped state, timeLeftMs?: ${startTime}s`);
-                    if (onPlay) onPlay(questionId, startTime);
+                    logger.info(`Starting question: ${questionUid} from stopped state, timeLeftMs?: ${startTime}s`);
+                    if (onPlay) onPlay(questionUid, startTime);
                 }
             } else {
-                logger.info(`Playing new question: ${questionId}, timeLeftMs?: ${startTime}s`);
-                if (onPlay) onPlay(questionId, startTime);
+                logger.info(`Playing new question: ${questionUid}, timeLeftMs?: ${startTime}s`);
+                if (onPlay) onPlay(questionUid, startTime);
             }
         }
-    }, [timerQuestionId, timerStatus, effectiveTimeLeft, onPause, onPlay, onTimerAction, onSelect, quizSocket]);
+    }, [timerQuestionUid, timerStatus, effectiveTimeLeft, onPause, onPlay, onTimerAction, onSelect, quizSocket]);
 
     // Handler for confirmation dialog confirm action
     const handleConfirmationConfirm = useCallback(() => {
-        const { questionId, startTime } = confirmDialog;
+        const { questionUid, startTime } = confirmDialog;
 
-        logger.info(`User confirmed switch to question ${questionId}`);
+        logger.info(`User confirmed switch to question ${questionUid}`);
 
         if (onTimerAction) {
             onTimerAction({
                 status: 'play',
-                questionId,
+                questionUid,
                 timeLeftMs: startTime,
             });
         }
 
-        logger.info(`Setting active question in UI to: ${questionId}`);
-        onSelect(questionId);
+        logger.info(`Setting active question in UI to: ${questionUid}`);
+        onSelect(questionUid);
 
         // Close the dialog
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
@@ -238,9 +238,9 @@ export default function DraggableQuestionsList({
 
     // Handler for confirmation dialog cancel action
     const handleConfirmationCancel = useCallback(() => {
-        logger.info(`User canceled switch to question ${confirmDialog.questionId}`);
+        logger.info(`User canceled switch to question ${confirmDialog.questionUid}`);
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-    }, [confirmDialog.questionId]);
+    }, [confirmDialog.questionUid]);
 
     const handlePause = useCallback(() => {
         logger.info('handlePause called');
@@ -250,13 +250,13 @@ export default function DraggableQuestionsList({
             logger.info('Emitting quiz_timer_action for pause');
             onTimerAction({
                 status: 'pause',
-                questionId: timerQuestionId || '',
+                questionUid: timerQuestionUid || '',
                 timeLeftMs: effectiveTimeLeft || 0,
             });
         } else {
             logger.warn('onTimerAction is not defined. Cannot emit quiz_timer_action for pause.');
         }
-    }, [onTimerAction, timerQuestionId, effectiveTimeLeft]);
+    }, [onTimerAction, timerQuestionUid, effectiveTimeLeft]);
 
     const handleStop = useCallback(() => {
         logger.info('handleStop called');
@@ -266,7 +266,7 @@ export default function DraggableQuestionsList({
             logger.info('Emitting quiz_timer_action for stop');
             onTimerAction({
                 status: 'stop',
-                questionId: timerQuestionId || '',
+                questionUid: timerQuestionUid || '',
                 timeLeftMs: 0,
             });
         } else {
@@ -278,7 +278,7 @@ export default function DraggableQuestionsList({
         } else {
             logger.warn('onStop is not defined. Cannot handle stop action.');
         }
-    }, [onTimerAction, timerQuestionId, onStop]);
+    }, [onTimerAction, timerQuestionUid, onStop]);
 
     // --- Drag and drop logic is now disabled. ---
     // const sensors = useSensors(

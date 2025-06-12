@@ -85,7 +85,7 @@ async function handlePause(
             io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
 
             // Then emit the timer update separately for precise timing
-            const currentQuestionUid = quizState[quizId].timerQuestionId || quizState[quizId].currentQuestionUid;
+            const currentQuestionUid = quizState[quizId].timerQuestionUid || quizState[quizId].currentQuestionUid;
             // Ensure currentQuestionUid is not null
             if (currentQuestionUid) {
                 emitQuizTimerUpdate(io, quizId, 'pause', currentQuestionUid, remaining);
@@ -153,7 +153,7 @@ async function handlePause(
     io.to(`projection_${quizId}`).emit("quiz_state", quizState[quizId]);
 
     // Then emit the timer update separately for precise timing
-    const currentQuestionUid = quizState[quizId].timerQuestionId || quizState[quizId].currentQuestionUid;
+    const currentQuestionUid = quizState[quizId].timerQuestionUid || quizState[quizId].currentQuestionUid;
     // Ensure currentQuestionUid is not null
     if (currentQuestionUid) {
         emitQuizTimerUpdate(io, quizId, 'pause', currentQuestionUid, remaining);
@@ -165,7 +165,7 @@ async function handlePause(
     // Pause only the current question's timer in quiz mode
     if (currentQuestionUid !== null) {
         triggerQuizTimerAction(io, quizId, currentQuestionUid, 'pause');
-        logger.info(`[PauseQuiz] Paused timer for quizId=${quizId}, questionId=${currentQuestionUid}`);
+        logger.info(`[PauseQuiz] Paused timer for quizId=${quizId}, questionUid=${currentQuestionUid}`);
     }
 
     logger.debug(`[PauseQuiz] Emitted quiz_state and timer update for ${quizId}`);
