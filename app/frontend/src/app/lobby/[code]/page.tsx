@@ -40,7 +40,7 @@ interface GameState {
         score?: number;
     }>;
     timer?: {
-        timeLeft: number;
+        timeLeftMs?: number;
         running: boolean;
     };
     question?: {
@@ -384,122 +384,44 @@ export default function LobbyPage() {
             logger.debug("Participant left", { id: participant.id, username: participant.username });
         });
 
-        // Listen for redirect_to_game event (new backend event for game start)
-        socket.on(SOCKET_EVENTS.LOBBY.REDIRECT_TO_GAME, ({ accessCode, gameId }) => {
-            const targetCode = accessCode || code;
-            logger.info(`Received redirect_to_game event, redirecting immediately to ${targetCode}`);
-
-            // Add direct console.log for visibility in browser console
-            console.log(`%c⚠️ REDIRECT TO GAME EVENT RECEIVED! Redirecting to /live/${targetCode}`, 'background: #ff0000; color: white; font-size: 16px; padding: 5px;');
-
-            // Force-leave the lobby room before redirecting
-            socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: targetCode });
-
-            // Use immediate window.location navigation instead of Next.js router to ensure redirection
-            console.log('Executing window.location navigation now...');
-            window.location.href = `/live/${targetCode}`;
-
-            // Also try the Next.js router as a fallback
-            try {
-                router.replace(`/live/${targetCode}`);
-            } catch (err) {
-                logger.error(`Router redirect error: ${err}`);
-            }
-        });
-
-        // Listen for game_started event (new backend event)
+        // Listen for game_started event - unified 5-second countdown for all game types
         socket.on(SOCKET_EVENTS.LOBBY.GAME_STARTED, ({ accessCode, gameId }) => {
             const targetCode = accessCode || code;
-            logger.info(`Game started (code: ${targetCode}), beginning countdown`);
-            setCountdown(5);
-            const interval = setInterval(() => {
-                setCountdown((prev) => {
-                    if (prev === null) return null;
-                    if (prev <= 1) {
-                        clearInterval(interval);
-                        logger.info(`Countdown complete, will redirect to /live/${targetCode}`);
-
-                        // Force-leave the lobby room before redirecting
-                        socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: targetCode });
-
-                        // Use immediate window.location navigation for more reliable redirects
-                        window.location.href = `/live/${targetCode}`;
-
-                        // Also try router as fallback
-                        try {
-                            router.replace(`/live/${targetCode}`);
-                        } catch (err) {
-                            logger.error(`Router redirect error: ${err}`);
-                        }
-
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
+            logger.info(`Game started (code: ${targetCode}), waiting for backend countdown events`);
+            // Don't start our own countdown timer - wait for backend events
         });
 
-        // Keep legacy support for old events during transition
-        // Listen for redirect_to_tournament event (legacy support - immediate redirect for quiz-triggered tournaments)
-        socket.on(SOCKET_EVENTS.TOURNAMENT.REDIRECT_TO_TOURNAMENT, ({ code: redirectCode }) => {
-            const targetCode = redirectCode || code;
-            logger.info(`Received redirect_to_tournament event, redirecting immediately to ${targetCode}`);
+        // Listen for backend countdown events
+        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_STARTING, ({ countdown }) => {
+            logger.info(`Tournament starting countdown: ${countdown} seconds`);
+            setCountdown(countdown);
+        });
 
-            // Add direct console.log for visibility in browser console
-            console.log(`%c⚠️ REDIRECT EVENT RECEIVED! Redirecting to /live/${targetCode}`, 'background: #ff0000; color: white; font-size: 16px; padding: 5px;');
+        socket.on(SOCKET_EVENTS.TOURNAMENT.COUNTDOWN_TICK, ({ countdown }) => {
+            logger.debug(`Countdown tick: ${countdown}`);
+            setCountdown(countdown);
+        });
+
+        socket.on(SOCKET_EVENTS.TOURNAMENT.COUNTDOWN_COMPLETE, () => {
+            logger.info(`Countdown complete, redirecting to /live/${code}`);
+            setCountdown(0);
 
             // Force-leave the lobby room before redirecting
-            socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: targetCode });
+            socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: code });
 
-            // Use immediate window.location navigation instead of Next.js router to ensure redirection
-            console.log('Executing window.location navigation now...');
-            window.location.href = `/live/${targetCode}`;
+            // Use immediate window.location navigation for more reliable redirects
+            window.location.href = `/live/${code}`;
 
-            // Also try the Next.js router as a fallback
+            // Also try router as fallback
             try {
-                router.replace(`/live/${targetCode}`);
+                router.replace(`/live/${code}`);
             } catch (err) {
                 logger.error(`Router redirect error: ${err}`);
             }
         });
-
-        // Additional check for tournament status on connection to catch cases where
-        // the tournament started but we missed the start event
 
         // Check status initially
         checkTournamentStatus();
-
-        // Listen for tournament_started event from server (legacy - normal tournaments with countdown)
-        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_STARTED, (data) => {
-            const tournamentCode = data?.code || code; // Use provided code or current code
-            logger.info(`Tournament started (code: ${tournamentCode}), beginning countdown`);
-            setCountdown(5);
-            const interval = setInterval(() => {
-                setCountdown((prev) => {
-                    if (prev === null) return null;
-                    if (prev <= 1) {
-                        clearInterval(interval);
-                        logger.info(`Countdown complete, will redirect to /live/${tournamentCode}`);
-
-                        // Force-leave the lobby room before redirecting
-                        socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: tournamentCode });
-
-                        // Use immediate window.location navigation for more reliable redirects
-                        window.location.href = `/live/${tournamentCode}`;
-
-                        // Also try router as fallback
-                        try {
-                            router.replace(`/live/${tournamentCode}`);
-                        } catch (err) {
-                            logger.error(`Router redirect error: ${err}`);
-                        }
-
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        });
 
         // Listen for the event indicating the tournament already started
         socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_ALREADY_STARTED, ({ code: tournamentCode, status }) => {
@@ -546,35 +468,6 @@ export default function LobbyPage() {
             logger.debug(`Socket event: ${event}`, args);
         });
 
-        // Add global notification handler to catch tournament notifications
-        socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_NOTIFICATION, (data) => {
-            logger.info(`Received tournament_notification: ${JSON.stringify(data)}`);
-
-            if (data.type === "redirect" && data.code === code) {
-                logger.info(`Global notification to redirect to tournament ${data.code}. isQuizMode=${data.isQuizMode}, immediate=${data.immediate}`);
-
-                // Skip countdown for quiz mode - force an immediate redirect
-                if (data.isQuizMode || data.immediate) {
-                    logger.info(`QUIZ MODE REDIRECT: Forcing immediate redirect to /live/${data.code}`);
-                    // Force-leave the lobby first
-                    socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: code });
-
-                    // Force a hard navigation (most reliable)
-                    window.location.href = `/live/${data.code}`;
-
-                    try {
-                        router.replace(`/live/${data.code}`);
-                    } catch (err) {
-                        logger.error(`Router redirect error: ${err}`);
-                    }
-                } else {
-                    // For non-quiz tournaments, we might show countdown (handled by tournament_started event)
-                    logger.info(`Regular tournament redirect notification received for code ${data.code}`);
-                    window.location.href = `/live/${data.code}`;
-                }
-            }
-        });
-
         // Add safeguards to explicitly ignore live tournament-specific events
         // that should not be processed in the lobby context
         socket.on(SOCKET_EVENTS.TOURNAMENT.TOURNAMENT_QUESTION, () => {
@@ -596,22 +489,7 @@ export default function LobbyPage() {
         };
     }, [code, userState, userProfile.username, userProfile.avatar, isLoading]); // Only depend on stable values
 
-    useEffect(() => {
-        if (countdown === 0) {
-            // Redirect to tournament page when countdown ends
-            logger.info(`Countdown reached zero, redirecting to live/${code}`);
-
-            // Force redirect with window.location for reliability
-            window.location.href = `/live/${code}`;
-
-            // Also try Next.js router as backup
-            try {
-                router.replace(`/live/${code}`);
-            } catch (err) {
-                logger.error(`Router redirect error: ${err}`);
-            }
-        }
-    }, [countdown, code, router]);
+    // Note: Removed old countdown effect - redirect now handled by COUNTDOWN_COMPLETE event
 
     useEffect(() => {
         if (!socketRef.current) {

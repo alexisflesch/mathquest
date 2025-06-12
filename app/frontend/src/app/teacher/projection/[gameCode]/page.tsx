@@ -94,7 +94,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         gameState,
         timerStatus,
         timerQuestionId,
-        localTimeLeft,
+        localTimeLeftMs,
         setLocalTimeLeft, // <-- Now available
         connectedCount,
     } = useProjectionQuizSocket(gameCode, null); // Use gameCode directly
@@ -178,23 +178,23 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
             clearInterval(timerRef.current);
             timerRef.current = null;
         }
-    }, [timerStatus, localTimeLeft]);
+    }, [timerStatus, localTimeLeftMs]);
 
-    // --- Force timer to zero if stopped, even if localTimeLeft is not zero ---
+    // --- Force timer to zero if stopped, even if localTimeLeftMs is not zero ---
     useEffect(() => {
-        if (timerStatus === 'stop' && localTimeLeft !== 0) {
-            logger.debug('[Projection] Forcing localTimeLeft to 0 because timerStatus is stop. Previous value:', localTimeLeft);
+        if (timerStatus === 'stop' && localTimeLeftMs !== 0) {
+            logger.debug('[Projection] Forcing localTimeLeftMs to 0 because timerStatus is stop. Previous value:', localTimeLeftMs);
             setLocalTimeLeft(0);
         }
-    }, [timerStatus, localTimeLeft]);
+    }, [timerStatus, localTimeLeftMs]);
 
     // Log every timer update for debugging the blinking effect
     useEffect(() => {
         logger.debug('[Projection] Timer display update:', {
             timerStatus,
-            localTimeLeft,
+            localTimeLeftMs,
         });
-    }, [timerStatus, localTimeLeft]);
+    }, [timerStatus, localTimeLeftMs]);
 
     // Set the base URL for QR code generation
     useEffect(() => {
@@ -399,7 +399,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                     lineHeight: '1',
                                 }}
                             >
-                                {formatTimer(localTimeLeft)}
+                                {formatTimer(localTimeLeftMs)}
                             </span>
                         </div>
                     </div>

@@ -51,7 +51,7 @@ const createMockGameManager = (overrides: Partial<import('../../useUnifiedGameMa
             connected: true,
             connecting: false,
             error: null,
-            timer: { timeLeft: 60, status: 'stopped' as TimerStatus, questionId: 'q1', duration: 60, timestamp: Date.now(), localTimeLeft: 60 },
+            timer: { timeLeftMs: 60, status: 'stopped' as TimerStatus, questionId: 'q1', durationMs: 60, timestamp: Date.now(), localTimeLeftMs: 60 },
             isTimerRunning: false,
             currentQuestionId: 'q1',
             currentQuestionIndex: 0,

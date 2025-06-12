@@ -1,0 +1,5 @@
+interface TournamentTimerProps {
+    /** Timer value in seconds for display */
+    timerS: number | null;
+    isMobile: boolean;
+}

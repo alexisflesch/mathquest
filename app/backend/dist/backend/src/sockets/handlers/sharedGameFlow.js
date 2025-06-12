@@ -95,13 +95,26 @@ async function runGameFlow(io, accessCode, questions, options) {
                 : 5; // Default to 5 seconds when feedbackWaitTime is null
             // Wait for the delay between correct answers and feedback
             await new Promise((resolve) => setTimeout(resolve, correctAnswersToFeedbackDelay * 1000));
-            // Emit feedback event with the full feedback display duration
+            // Emit feedback event with the full feedback display duration and explanation
             logger.info({ room: `game_${accessCode}`, event: 'feedback', questionId: questions[i].uid, feedbackDisplayDuration }, '[DEBUG] Emitting feedback');
-            io.to(`game_${accessCode}`).emit('feedback', {
+            // DETAILED LOGGING: Debug explanation transmission
+            const feedbackPayload = {
                 questionId: questions[i].uid,
-                feedbackRemaining: feedbackDisplayDuration
+                feedbackRemaining: feedbackDisplayDuration,
+                explanation: questions[i].explanation || undefined // Include explanation in feedback event
+            };
+            logger.info('=== BACKEND FEEDBACK PAYLOAD DEBUG ===', {
+                accessCode,
+                questionIndex: i,
+                questionUid: questions[i].uid,
+                questionExplanation: questions[i].explanation,
+                explanationLength: questions[i].explanation ? questions[i].explanation.length : 0,
+                explanationExists: !!questions[i].explanation,
+                payloadExplanation: feedbackPayload.explanation,
+                fullPayload: JSON.stringify(feedbackPayload)
             });
-            logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid, feedbackDisplayDuration }, '[TRACE] Emitted feedback');
+            io.to(`game_${accessCode}`).emit('feedback', feedbackPayload);
+            logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid, feedbackDisplayDuration, hasExplanation: !!questions[i].explanation }, '[TRACE] Emitted feedback');
             options.onFeedback?.(i);
             // Wait for feedback display duration before proceeding to next question
             await new Promise((resolve) => setTimeout(resolve, feedbackDisplayDuration * 1000));

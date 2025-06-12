@@ -171,3 +171,13 @@ export function createLogger(context: string): Logger {
 
 // Create a default logger for quick access
 export const logger = createLogger('App');
+
+// Create a method to make a logger instance quiet (put at top of your component if it renders too much during development)
+export function quietLogger(context: string): Logger {
+    return {
+        debug: () => { },
+        info: () => { },
+        warn: () => { },
+        error: () => { }
+    };
+}

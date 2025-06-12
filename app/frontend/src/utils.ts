@@ -1,9 +1,16 @@
 import { STORAGE_KEYS } from '@/constants/auth';
 import { SocketConfig } from '@/types/socket';
 
-export function formatTime(seconds: number): string {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+/**
+ * Format time for display (expects milliseconds, converts to MM:SS format)
+ * @param timeInMs - Time in milliseconds
+ * @returns Formatted time string in MM:SS format
+ */
+export function formatTime(timeInMs: number): string {
+    // Convert milliseconds to seconds
+    const totalSeconds = Math.ceil(timeInMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = totalSeconds % 60;
     const paddedMinutes = String(minutes).padStart(2, '0');
     const paddedSeconds = String(remainingSeconds).padStart(2, '0');
     return `${paddedMinutes}:${paddedSeconds}`;
@@ -59,3 +66,31 @@ export function createSocketConfig(baseConfig: SocketConfig): SocketConfig {
         query: auth || undefined
     };
 }
+/**
+ * Explicit Timer Unit Conversion Utilities
+ * These functions make unit conversions explicit and prevent confusion
+ */
+export const timerConversions = {
+    /** Convert milliseconds to seconds for display (rounds up) */
+    msToSecondsDisplay: (ms: number | null): number => {
+        if (ms === null) return 0;
+        return Math.ceil(ms / 1000);
+    },
+    
+    /** Convert seconds to milliseconds for internal use */
+    secondsToMsInternal: (seconds: number): number => {
+        return seconds * 1000;
+    },
+    
+    /** Format milliseconds as MM:SS or SS display string */
+    formatMsAsSeconds: (ms: number | null): string => {
+        if (ms === null) return '-';
+        const seconds = Math.ceil(ms / 1000);
+        if (seconds >= 60) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+        return seconds.toString();
+    }
+};

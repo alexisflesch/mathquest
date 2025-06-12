@@ -95,7 +95,7 @@ describe('useTeacherQuizSocket State Updates', () => {
             accessCode: mockAccessCode,
             currentQuestionIdx: 1,
             questions: [{ uid: 'q2', text: 'Another question', questionType: 'single_choice', answerOptions: [], correctAnswers: [], timeLimit: 60 }] as QuestionData[],
-            chrono: { timeLeft: 60, running: true, status: 'play' },
+            chrono: { timeLeftMs: 60, running: true, status: 'play' },
             locked: true,
             ended: false,
             stats: { q1: { correct: 1 } },
@@ -115,7 +115,7 @@ describe('useTeacherQuizSocket State Updates', () => {
         const initialState: QuizState = {
             currentQuestionIdx: 0,
             questions: [{ uid: 'q1', text: 'Q1', questionType: 'multiple_choice', answerOptions: [], correctAnswers: [], timeLimit: 20 }] as QuestionData[],
-            chrono: { timeLeft: 20, running: true, status: 'play' },
+            chrono: { timeLeftMs: 20, running: true, status: 'play' },
             locked: false,
             ended: false,
             stats: {},
@@ -125,12 +125,12 @@ describe('useTeacherQuizSocket State Updates', () => {
             if (gameControlCallback) gameControlCallback(initialState);
         });
         // Now send quiz_timer_update
-        const mockTimerUpdate = { questionId: 'q1', timeLeft: 10000, status: 'pause' as 'play' | 'pause' | 'stop', running: false }; // ms, not s
+        const mockTimerUpdate = { questionId: 'q1', timeLeftMs: 10000, status: 'pause' as 'play' | 'pause' | 'stop', running: false }; // ms, not s
         act(() => {
             const callback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
             if (callback) callback(mockTimerUpdate);
         });
-        expect(result.current.timeLeft).toBe(10000); // ms
+        expect(result.current.timeLeftMs).toBe(10000); // ms
         expect(result.current.timerStatus).toBe(mockTimerUpdate.status);
         expect(result.current.timerQuestionId).toBe(mockTimerUpdate.questionId);
     });

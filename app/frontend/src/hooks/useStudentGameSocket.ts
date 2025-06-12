@@ -45,7 +45,7 @@ const logger = createLogger('useStudentGameSocket');
 // --- Extended Types Based on Core Types ---
 
 export interface GameUpdate {
-    timeLeft?: number;
+    timeLeftMs?: number;
     status?: 'play' | 'pause' | 'stop';
     questionState?: 'active' | 'paused' | 'stopped';
 }
@@ -151,20 +151,20 @@ export function useStudentGameSocket({
         enableLocalAnimation: true
     });
 
-    // Legacy timer state for backward compatibility - now derived from unified timer
-    // Use localTimeLeft (in seconds) if available, otherwise convert timeLeft (milliseconds) to seconds
-    const timer = Math.floor(gameTimer.timerState.localTimeLeft || (gameTimer.timerState.timeLeft / 1000));
+    // Legacy timer state for backward compatibility - keep in milliseconds internally
+    // Convert to seconds only for display purposes when needed
+    const timer = gameTimer.timerState.localTimeLeftMs || gameTimer.timerState.timeLeftMs; // Keep in milliseconds
     const timerStatus = gameTimer.timerState.status;
 
     // Sync unified timer state with game state for backward compatibility
     useEffect(() => {
         setGameState(prev => ({
             ...prev,
-            timer: gameTimer.timerState.localTimeLeft ?? gameTimer.timerState.timeLeft, // always ms
+            timer: gameTimer.timerState.localTimeLeftMs ?? gameTimer.timerState.timeLeftMs, // always ms
             timerStatus: timerStatus,
             gameStatus: timerStatus === 'play' ? 'active' :
                 timerStatus === 'pause' ? 'paused' :
-                    (timerStatus === 'stop' && (gameTimer.timerState.localTimeLeft ?? gameTimer.timerState.timeLeft) === 0) ? 'waiting' : prev.gameStatus
+                    (timerStatus === 'stop' && (gameTimer.timerState.localTimeLeftMs ?? gameTimer.timerState.timeLeftMs) === 0) ? 'waiting' : prev.gameStatus
         }));
     }, [timer, timerStatus]);
 
@@ -385,10 +385,10 @@ export function useStudentGameSocket({
         }, isLiveQuestionPayload, 'game_question'));
         socket.on('timer_update', createSafeEventHandler<TimerUpdatePayload>((data) => {
             gameTimer.syncWithBackend(data);
-            if (typeof data.timeLeft === 'number' && data.timeLeft !== null) {
+            if (typeof data.timeLeftMs === 'number' && data.timeLeftMs !== null) {
                 setGameState(prev => ({
                     ...prev,
-                    gameStatus: data.running && !!data.timeLeft && data.timeLeft > 0 ? 'active' : 'waiting'
+                    gameStatus: data.running && !!data.timeLeftMs && data.timeLeftMs > 0 ? 'active' : 'waiting'
                 }));
             }
         }, isTimerUpdatePayload, 'timer_update'));

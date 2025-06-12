@@ -14,7 +14,7 @@ export interface BaseQuestion {
     text: string; // Renamed from texte - Primary field for question text
     questionType: string; // Canonical field, matches DB and API
     answers: Answer[]; // CHANGED: Array of possible answers, now mandatory
-    time?: number; // Renamed from temps - Time limit for the question in seconds
+    timeLimitSeconds?: number; // Time limit for the question in seconds (explicit unit)
     explanation?: string; // Renamed from explication - Explanation for the correct answer
     tags?: string[]; // ADDED: Tags for categorizing the question
     // Remove legacy 'type' field, use only 'questionType' for questions

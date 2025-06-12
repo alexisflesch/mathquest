@@ -91,7 +91,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
             eventHandlers['timer_update']?.({
-                timeLeft: 30000,
+                timeLeftMs: 30000,
                 running: true,
                 status: 'play'
             });
@@ -158,7 +158,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
             eventHandlers['timer_update']?.({
-                timeLeft: 3000,
+                timeLeftMs: 3000,
                 running: true,
                 status: 'play'
             });
@@ -209,7 +209,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
             eventHandlers['timer_update']?.({
-                timeLeft: 30000,
+                timeLeftMs: 30000,
                 running: false,
                 status: 'pause'
             });
@@ -261,7 +261,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
             eventHandlers['timer_update']?.({
-                timeLeft: 30000,
+                timeLeftMs: 30000,
                 running: true,
                 status: 'play'
             });
@@ -280,7 +280,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Pause the timer
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 25000, // ms
+                timeLeftMs: 25000, // ms
                 running: false,
                 status: 'pause'
             });
@@ -318,7 +318,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Start with paused state
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 20000, // ms
+                timeLeftMs: 20000, // ms
                 running: false,
                 status: 'pause'
             });
@@ -331,7 +331,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Resume the timer
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 20000, // ms
+                timeLeftMs: 20000, // ms
                 running: true,
                 status: 'play'
             });
@@ -369,11 +369,11 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Set timer to specific value
         act(() => {
             eventHandlers['timer_set']?.({
-                timeLeft: 15000, // ms
+                timeLeftMs: 15000, // ms
                 questionState: 'active'
             });
             eventHandlers['timer_update']?.({
-                timeLeft: 15000,
+                timeLeftMs: 15000,
                 running: true,
                 status: 'play'
             });
@@ -410,7 +410,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Stop the timer
         act(() => {
             eventHandlers['timer_set']?.({
-                timeLeft: 0,
+                timeLeftMs: 0,
                 questionState: 'stopped'
             });
         });
@@ -451,7 +451,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
             eventHandlers['timer_update']?.({
-                timeLeft: 30000,
+                timeLeftMs: 30000,
                 running: true,
                 status: 'play'
             });
@@ -488,11 +488,11 @@ describe('useStudentGameSocket - Timer Management', () => {
         // Start with active timer
         act(() => {
             eventHandlers['game_update']?.({
-                timeLeft: 20000, // ms
+                timeLeftMs: 20000, // ms
                 status: 'play'
             });
             eventHandlers['timer_update']?.({
-                timeLeft: 20000,
+                timeLeftMs: 20000,
                 running: true,
                 status: 'play'
             });
@@ -508,7 +508,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 status: 'stop'
             });
             eventHandlers['timer_update']?.({
-                timeLeft: 0,
+                timeLeftMs: 0,
                 running: false,
                 status: 'stop'
             });

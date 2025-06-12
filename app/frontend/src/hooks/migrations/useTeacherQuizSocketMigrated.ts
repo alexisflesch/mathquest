@@ -4,7 +4,10 @@
  * This file provides a backward-compatible interface for useTeacherQuizSocket
  * while using the new unified system internally and core types.
  * 
- * Phase 3: Frontend Type Consolidation - Migration Layer
+ * Phase 3: Frontend Type Consolidation - Migrat            // Add duration if provided
+            if (timeLeftMs !== undefined) {
+                socketPayload.durationMs = timeLeftMs;
+            }Layer
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -31,8 +34,8 @@ const logger = createLogger('useTeacherQuizSocketMigrated');
  * @returns The same interface as original useTeacherQuizSocket
  */
 export function useTeacherQuizSocket(accessCode: string | null, token: string | null, quizId?: string | null) {
-    // Use the unified game manager internally
-    const gameManager = useTeacherGameManager(accessCode, token, {
+    // Use the unified game manager internally - FIXED: Use quizId (actual game ID) not accessCode
+    const gameManager = useTeacherGameManager(quizId || null, token, {
         timerConfig: {
             autoStart: false,
             smoothCountdown: false,
@@ -43,7 +46,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
 
     // Legacy state that needs to be maintained for backward compatibility
     const [quizState, setQuizState] = useState<QuizState | null>(null);
-    const [localTimeLeft, setLocalTimeLeft] = useState<number | null>(null);
+    const [localTimeLeftMs, setLocalTimeLeft] = useState<number | null>(null);
 
     // Optimize state mapping to reduce excessive re-renders
     useEffect(() => {
@@ -56,7 +59,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
                     currentQuestionIdx: unifiedState.currentQuestionIndex,
                     questions: prev?.questions || [], // Keep existing questions array
                     chrono: {
-                        timeLeft: unifiedState.timer.timeLeft,
+                        timeLeftMs: unifiedState.timer.timeLeftMs,
                         running: unifiedState.isTimerRunning
                     },
                     locked: prev?.locked ?? false, // Preserve lock state
@@ -65,7 +68,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
                     profSocketId: gameManager.socket.instance?.id || null,
                     timerStatus: unifiedState.timer.status,
                     timerQuestionId: unifiedState.timer.questionId,
-                    timerTimeLeft: unifiedState.timer.timeLeft,
+                    timerTimeLeft: unifiedState.timer.timeLeftMs,
                     timerTimestamp: unifiedState.timer.timestamp ?? undefined,
                     questionStates: prev?.questionStates || {}
                 };
@@ -73,7 +76,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
                 // Only update if there are meaningful changes
                 if (!prev ||
                     prev.currentQuestionIdx !== newState.currentQuestionIdx ||
-                    prev.chrono.timeLeft !== newState.chrono.timeLeft ||
+                    prev.chrono.timeLeftMs !== newState.chrono.timeLeftMs ||
                     prev.chrono.running !== newState.chrono.running ||
                     prev.ended !== newState.ended ||
                     prev.timerStatus !== newState.timerStatus ||
@@ -85,17 +88,17 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             });
         }
     }, [gameManager.gameState.gameId, gameManager.gameState.currentQuestionIndex,
-    gameManager.gameState.timer.timeLeft, gameManager.gameState.isTimerRunning,
+    gameManager.gameState.timer.timeLeftMs, gameManager.gameState.isTimerRunning,
     gameManager.gameState.gameStatus, gameManager.gameState.timer.status,
     gameManager.gameState.timer.questionId, gameManager.socket.instance?.id]);
 
     // Optimize local time sync to reduce re-renders
     useEffect(() => {
         const displayTime = gameManager.timer.getDisplayTime();
-        if (displayTime !== localTimeLeft) {
+        if (displayTime !== localTimeLeftMs) {
             setLocalTimeLeft(displayTime);
         }
-    }, [gameManager.timer.getDisplayTime, localTimeLeft]);
+    }, [gameManager.timer.getDisplayTime, localTimeLeftMs]);
 
     // Set up additional legacy event handlers that aren't covered by unified system
     useEffect(() => {
@@ -111,7 +114,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
                     ...prev,
                     ...state,
                     chrono: {
-                        timeLeft: state.chrono?.timeLeft ?? state.timerTimeLeft ?? 0,
+                        timeLeftMs: state.chrono?.timeLeft ?? state.timerTimeLeft ?? 0,
                         running: state.chrono?.running ?? (state.timerStatus === 'play')
                     }
                 }));
@@ -197,30 +200,72 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         }
     }, [gameManager.timer.setDuration, gameManager.socket.instance, quizId]);
 
-    const emitTimerAction = useCallback((payload: { status: string; questionId?: string; timeLeft?: number }) => {
+    const emitTimerAction = useCallback((payload: { status: string; questionId?: string; timeLeftMs?: number }) => {
         logger.info('Legacy emitTimerAction called', payload);
 
-        const { status, questionId, timeLeft } = payload;
+        const { status, questionId, timeLeftMs } = payload;
 
+        // Update local timer state first
         switch (status) {
             case 'play':
-                if (questionId && timeLeft) {
-                    gameManager.timer.start(questionId, timeLeft);
+                if (questionId && timeLeftMs) {
+                    gameManager.timer.start(questionId, timeLeftMs);
                 } else {
                     gameManager.timer.resume();
                 }
-                gameManager.socket.emitTimerAction('start', timeLeft);
                 break;
             case 'pause':
                 gameManager.timer.pause();
-                gameManager.socket.emitTimerAction('pause');
                 break;
             case 'stop':
                 gameManager.timer.stop();
-                gameManager.socket.emitTimerAction('stop');
                 break;
         }
-    }, [gameManager.timer, gameManager.socket.emitTimerAction]);
+
+        // Now emit the timer action with the questionId if available
+        if (gameManager.socket.instance && quizId) {
+            // Simple mapping of status to backend action - no complex logic
+            let backendAction: 'start' | 'pause' | 'resume' | 'stop';
+            switch (status) {
+                case 'play':
+                    // Simple rule: if we have timeLeftMs, it's a start, otherwise resume
+                    backendAction = (timeLeftMs !== undefined) ? 'start' : 'resume';
+                    break;
+                case 'pause':
+                    backendAction = 'pause';
+                    break;
+                case 'stop':
+                    backendAction = 'stop';
+                    break;
+                default:
+                    backendAction = 'stop';
+            }
+
+            const socketPayload: any = {
+                gameId: quizId,
+                action: backendAction
+            };
+
+            // Add questionUid if provided
+            if (questionId) {
+                socketPayload.questionUid = questionId;
+            }
+
+            // Add duration if provided
+            if (timeLeftMs !== undefined) {
+                socketPayload.duration = timeLeftMs;
+            }
+
+            logger.debug('Migration layer emitting timer action', {
+                action: backendAction,
+                questionUid: questionId,
+                duration: timeLeftMs
+            });
+
+            // Emit directly to socket with questionUid preserved
+            gameManager.socket.instance.emit('quiz_timer_action', socketPayload);
+        }
+    }, [gameManager.timer, gameManager.socket.instance, quizId]);
 
     const emitUpdateTournamentCode = useCallback((tournamentCode: string) => {
         logger.info('Legacy emitUpdateTournamentCode called', { tournamentCode });
@@ -241,8 +286,8 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         quizState,
         timerStatus: gameManager.gameState.timer.status,
         timerQuestionId: gameManager.gameState.timer.questionId,
-        timeLeft: gameManager.gameState.timer.timeLeft,
-        localTimeLeft,
+        timeLeftMs: gameManager.gameState.timer.timeLeftMs,
+        localTimeLeftMs,
         connectedCount: gameManager.gameState.connectedCount,
 
         // Legacy setters for local time left (for animations)

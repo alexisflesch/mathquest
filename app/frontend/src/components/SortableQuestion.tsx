@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react"; // Ajout de useEffect, useRef
+import { timerConversions } from "@/utils";
+import React, { useState, useEffect, useRef, useMemo } from "react"; // Ajout de useEffect, useRef, useMemo
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Check, X } from 'lucide-react';
@@ -85,7 +86,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     };
 
     // --- États et Refs pour l'édition du timer (conservés ici) ---
-    // SUPPRESSION de localTimeLeft pour l'affichage du timer (utilise liveTimeLeft)
+    // SUPPRESSION de localTimeLeftMs pour l'affichage du timer (utilise liveTimeLeft)
     const [editingTimer, setEditingTimer] = useState(false);
     const [editTimerValue, setEditTimerValue] = useState<string>("");
     const timerInputRef = useRef<HTMLInputElement>(null);
@@ -133,26 +134,32 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         }
     }, [isActive, liveStatus, liveTimeLeft, q.timeLimit, q.uid]);
 
-    // Optimize displayedTimeLeft logic
-    let displayedTimeLeft: number;
-    if (pendingTimeValue !== null && liveTimeLeft === pendingTimeValue) {
-        // Clear pendingTimeValue once backend confirms the update
-        setPendingTimeValue(null);
-    }
-    if (isActive) {
-        if (liveStatus === 'stop') {
-            displayedTimeLeft = liveTimeLeft ?? q.timeLimit ?? 0;
-        } else if (liveStatus === 'pause' || liveStatus === 'play') {
-            displayedTimeLeft = liveTimeLeft ?? q.timeLimit ?? 0;
+    // Optimize displayedTimeLeft logic - use useMemo to prevent recalculation
+    const displayedTimeLeft = React.useMemo(() => {
+        if (isActive) {
+            if (liveStatus === 'stop') {
+                // liveTimeLeft is in milliseconds, q.timeLimit is in seconds from database
+                return liveTimeLeft ?? ((q.timeLimit ?? 0) * 1000);
+            } else if (liveStatus === 'pause' || liveStatus === 'play') {
+                // liveTimeLeft is in milliseconds, q.timeLimit is in seconds from database
+                return liveTimeLeft ?? ((q.timeLimit ?? 0) * 1000);
+            } else {
+                return (q.timeLimit ?? 0) * 1000;
+            }
         } else {
-            displayedTimeLeft = q.timeLimit ?? 0;
+            return (q.timeLimit ?? 0) * 1000;
         }
-    } else {
-        displayedTimeLeft = q.timeLimit ?? 0;
-    }
+    }, [isActive, liveStatus, liveTimeLeft, q.timeLimit]);
+
+    // Clear pendingTimeValue when backend confirms the update - moved to useEffect
+    useEffect(() => {
+        if (pendingTimeValue !== null && liveTimeLeft === pendingTimeValue) {
+            setPendingTimeValue(null);
+        }
+    }, [pendingTimeValue, liveTimeLeft]);
 
     // --- Effets (conservés ici pour la synchro et l'édition) ---
-    // Effet pour synchroniser localTimeLeft avec liveTimeLeft (si active) ou q.time
+    // Effet pour synchroniser localTimeLeftMs avec liveTimeLeft (si active) ou q.time
     useEffect(() => {
         // Ne pas synchroniser pendant l'édition du timer pour éviter de réinitialiser
         // la valeur que l'utilisateur est en train de modifier
@@ -161,22 +168,18 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         }
 
         if (isActive && typeof liveTimeLeft === 'number') {
-            logger.debug(`Syncing active question timer ${q.uid}: localTimeLeft <- liveTimeLeft (${liveTimeLeft})`);
-            setEditTimerValue(String(liveTimeLeft));
-        } else if (!isActive && q.timeLimit !== undefined && editTimerValue !== String(q.timeLimit)) {
-            logger.debug(`Syncing inactive question timer ${q.uid}: localTimeLeft <- q.time (${q.timeLimit})`);
-            setEditTimerValue(String(q.timeLimit));
+            // Removed excessive debug logging - only log critical changes
+            const newValue = String(Math.ceil(liveTimeLeft / 1000));
+            if (editTimerValue !== newValue) {
+                setEditTimerValue(newValue);
+            }
+        } else if (!isActive && q.timeLimit !== undefined) {
+            // Removed excessive debug logging - only log critical changes
+            if (editTimerValue !== String(q.timeLimit)) {
+                setEditTimerValue(String(q.timeLimit));
+            }
         }
-        // Assurons-nous que toutes les dépendances sont explicitement listées
-        // et que chaque valeur est de type stable (convertir les nombres en string si nécessaire)
-    }, [isActive, liveTimeLeft, q.timeLimit, editTimerValue, q.uid, editingTimer]);
-
-    // Ajouter un logging explicite pour déboguer le problème de sélection
-    useEffect(() => {
-        if (isActive) {
-            logger.debug(`Question ${q.uid} is ACTIVE, liveStatus=${liveStatus}, liveTimeLeft=${liveTimeLeft}`);
-        }
-    }, [isActive, liveStatus, liveTimeLeft, q.uid]);
+    }, [isActive, liveTimeLeft, q.timeLimit, q.uid, editingTimer]); // Remove editTimerValue from deps
 
     // Effet pour la molette sur l'input d'édition
     useEffect(() => {
@@ -199,35 +202,23 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     // Effet pour focus et initialiser l'input d'édition
     useEffect(() => {
         if (editingTimer) {
-            // Utilise la valeur du timer serveur pour initialiser l'édition
-            setEditTimerValue(liveTimeLeft !== undefined && liveTimeLeft !== null ? String(liveTimeLeft) : String(q.timeLimit ?? 0));
+            // Convert milliseconds to seconds for display in edit input
+            const initialValue = liveTimeLeft !== undefined && liveTimeLeft !== null
+                ? Math.ceil(liveTimeLeft / 1000)
+                : Math.ceil((q.timeLimit ?? 0));
+            setEditTimerValue(String(initialValue));
             setTimeout(() => timerInputRef.current?.focus(), 0);
         }
-    }, [editingTimer, liveTimeLeft, q.timeLimit]); // Added q.time as fallback
+    }, [editingTimer, liveTimeLeft, q.timeLimit]); // Using q.timeLimit for consistency
 
-    // Effet pour réinitialiser la valeur en attente une fois que liveTimeLeft correspond
-    useEffect(() => {
-        // Si une valeur est en attente et que la valeur du serveur correspond maintenant à cette valeur,
-        // on peut réinitialiser l'état pendingTimeValue
-        if (pendingTimeValue !== null && liveTimeLeft === pendingTimeValue) {
-            logger.debug(`Server value now matches pending value (${pendingTimeValue}), clearing pending state`);
-            setPendingTimeValue(null);
-        }
-    }, [pendingTimeValue, liveTimeLeft]);
+    // Remove duplicate useEffect that was already handled above
 
-    // Reduce logging for syncing timers
+    // Refine logging for timer updates - remove displayedTimeLeft from dependencies
     useEffect(() => {
-        if (isActive && liveStatus === 'pause' && typeof liveTimeLeft === 'number') {
-            setPausedTimeLeftByUid(prev => ({ ...prev, [q.uid]: liveTimeLeft }));
+        if (isActive && liveTimeLeft !== undefined && liveTimeLeft !== null) {
+            logger.info(`Question ${q.uid}: Timer updated to ${liveTimeLeft}ms`);
         }
-    }, [isActive, liveStatus, liveTimeLeft, q.uid]);
-
-    // Refine logging for timer updates
-    useEffect(() => {
-        if (isActive && Math.abs((liveTimeLeft ?? 0) - (displayedTimeLeft ?? 0)) >= 1) {
-            logger.info(`Question ${q.uid}: Timer updated to ${liveTimeLeft}s`);
-        }
-    }, [isActive, liveTimeLeft, displayedTimeLeft, q.uid]);
+    }, [isActive, liveTimeLeft, q.uid]); // Removed displayedTimeLeft dependency
 
     // --- Handlers (conservés ici) ---
     const pauseHandler = () => { onPause(); }; // Simple wrapper
@@ -258,13 +249,14 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         if (!isNaN(newTime) && newTime >= 0) {
             logger.info(`Validating timer edit for question ${q.uid}: ${newTime}s`);
 
-            // Emit the new timer value to the backend
+            // onEditTimer expects seconds (user input), not milliseconds
             onEditTimer(newTime);
 
             // Wait for backend confirmation before clearing pendingTimeValue
-            setPendingTimeValue(newTime);
+            // Convert to milliseconds for internal tracking since liveTimeLeft is in ms
+            setPendingTimeValue(newTime * 1000);
 
-            logger.debug(`Pending time value set to ${newTime} for question ${q.uid}`);
+            logger.debug(`Pending time value set to ${newTime * 1000}ms for question ${q.uid}`);
 
             // Close the edit mode
             setEditingTimer(false);
@@ -276,21 +268,20 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         }
     };
 
-    // Handler for PLAY (now passes the displayed timer value)
+    // Handler for PLAY (convert milliseconds to seconds for parent)
     const handlePlayWithCurrentTime = () => {
-        const currentTimer = displayedTimeLeft;
-        logger.info(`Playing question ${q.uid} with current timer value: ${currentTimer}s`);
-        onPlay(q.uid, currentTimer); // Pass the value directly
+        // displayedTimeLeft is in milliseconds, but onPlay expects seconds
+        const currentTimerInSeconds = timerConversions.msToSecondsDisplay(displayedTimeLeft);
+
+        logger.debug('SortableQuestion handlePlayWithCurrentTime - Question UID:', q.uid);
+
+        onPlay(q.uid, currentTimerInSeconds); // Convert to seconds for parent
     };
 
     // --- Rendu ---
 
     // Helper to map canonical Question to legacy shape for QuestionDisplay
     function toLegacyQuestionShape(q: any) {
-        logger.info('[DEBUG toLegacyQuestionShape] Input question:', q);
-        logger.info('[DEBUG toLegacyQuestionShape] answerOptions:', q.answerOptions);
-        logger.info('[DEBUG toLegacyQuestionShape] correctAnswers:', q.correctAnswers);
-
         // Handle nested question structure from API
         const questionData = q.question || q;
 
@@ -306,11 +297,9 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 text,
                 correct: correctAnswers?.[i] || false
             })) : [],
-            time: q.timeLimit || questionData.timeLimit,
+            timeLimitSeconds: q.timeLimit || questionData.timeLimit, // Use explicit unit suffix from BaseQuestion
         };
 
-        logger.info('[DEBUG toLegacyQuestionShape] Output question:', result);
-        logger.info('[DEBUG toLegacyQuestionShape] Output answers:', result.answers);
         return result;
     }
 
@@ -323,7 +312,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 isOpen={open}
                 onToggleOpen={setOpen}
                 timerStatus={(isActive ? liveStatus : 'stop') ?? 'stop'}
-                timeLeft={displayedTimeLeft}
+                timeLeftMs={displayedTimeLeft}
                 onPlay={handlePlayWithCurrentTime}
                 onPause={pauseHandler}
                 onStop={onStop}
@@ -419,7 +408,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         isOpen={open}
                         onToggleOpen={setOpen}
                         timerStatus={(isActive ? liveStatus : 'stop') ?? 'stop'}
-                        timeLeft={displayedTimeLeft}
+                        timeLeftMs={displayedTimeLeft}
                         onPlay={handlePlayWithCurrentTime}
                         onPause={pauseHandler}
                         onStop={onStop}

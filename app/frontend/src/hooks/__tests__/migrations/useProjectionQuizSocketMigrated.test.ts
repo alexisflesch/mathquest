@@ -46,12 +46,12 @@ const createMockGameManager = (overrides = {}) => {
             connecting: false,
             error: null,
             timer: {
-                timeLeft: 60,
+                timeLeftMs: 60,
                 status: 'stopped' as TimerStatus,
                 questionId: 'q1',
-                duration: 60,
+                durationMs: 60,
                 timestamp: Date.now(),
-                localTimeLeft: 60
+                localTimeLeftMs: 60
             },
             isTimerRunning: false,
             currentQuestionId: 'q1',
@@ -121,7 +121,7 @@ describe('useProjectionQuizSocket (modern migration)', () => {
                 gameState: expect.any(Object),
                 timerStatus: expect.any(String),
                 timerQuestionId: expect.any(String),
-                localTimeLeft: expect.any(Number),
+                localTimeLeftMs: expect.any(Number),
                 setLocalTimeLeft: expect.any(Function)
             })
         );

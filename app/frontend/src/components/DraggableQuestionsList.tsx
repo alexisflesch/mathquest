@@ -6,7 +6,9 @@
  * 
  * - Question reordering via drag and drop
  * - Play/pause/stop controls for each question
- * - Editing question timers (duration)
+ * - Editing    // *** ADDED: Define the handler to immediately update the parent's localTimeLeftMs ***
+    const handleImmediateLocalTimeUpdate = useCallback((newTime: number) => {
+        logger.debug(`DraggableQuestionsList: Immediately setting localTimeLeftMs to ${newTime}`);estion timers (duration)
  * - Detailed question preview with correct/incorrect answers
  * - Real-time synchronization with quiz state
  * - Visual indicators for the currently active question
@@ -45,8 +47,8 @@ interface DraggableQuestionsListProps {
     onReorder?: (newQuestions: Question[]) => void;
     timerStatus?: 'play' | 'pause' | 'stop';
     timerQuestionId?: string | null;
-    timeLeft?: number;
-    onTimerAction?: (info: { status: 'play' | 'pause' | 'stop'; questionId: string; timeLeft: number }) => void;
+    timeLeftMs?: number;
+    onTimerAction?: (info: { status: 'play' | 'pause' | 'stop'; questionId: string; timeLeftMs: number }) => void;
     onImmediateUpdateActiveTimer?: (newTime: number) => void;
     disabled?: boolean;
     onShowResults?: (uid: string) => void;
@@ -74,7 +76,7 @@ export default function DraggableQuestionsList({
     onReorder,
     timerStatus,
     timerQuestionId,
-    timeLeft,
+    timeLeftMs,
     onTimerAction,
     onImmediateUpdateActiveTimer,
     disabled,
@@ -97,16 +99,16 @@ export default function DraggableQuestionsList({
 
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
-    //     logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionId}, Time left: ${timeLeft}`);
-    // }, [timerStatus, timerQuestionId, timeLeft]);
+    //     logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionId}, Time left: ${timeLeftMs}`);
+    // }, [timerStatus, timerQuestionId, timeLeftMs]);
 
     // Remove render check logging that causes excessive re-renders
     // React.useEffect(() => {
-    //     logger.debug(`[RENDER CHECK] DraggableQuestionsList re-rendered with timeLeft: ${timeLeft}`);
-    // }, [timeLeft]);
+    //     logger.debug(`[RENDER CHECK] DraggableQuestionsList re-rendered with timeLeftMs?: ${timeLeftMs}`);
+    // }, [timeLeftMs]);
 
-    // Ensure timeLeft has a default value
-    const effectiveTimeLeft = timeLeft ?? 0;
+    // Ensure timeLeftMs has a default value
+    const effectiveTimeLeft = timeLeftMs ?? 0;
 
     // Memoize the pause check function to prevent unnecessary re-renders
     const isQuestionPaused = useCallback((questionId: string): boolean => {
@@ -146,7 +148,7 @@ export default function DraggableQuestionsList({
                 onTimerAction({
                     status: 'play',
                     questionId,
-                    timeLeft: startTime,
+                    timeLeftMs: startTime,
                 });
             }
             return;
@@ -169,22 +171,22 @@ export default function DraggableQuestionsList({
         } else {
             // Regular scenario - no active question or same question
             if (onTimerAction) {
-                // When resuming a paused question, always use the timeLeft from server state
+                // When resuming a paused question, always use the timeLeftMs from server state
                 // This ensures we don't reset the timer to the full duration
                 if (timerQuestionId === questionId && timerStatus === 'pause' && effectiveTimeLeft !== null) {
-                    logger.info(`Resuming paused question: ${questionId}, using server timeLeft: ${effectiveTimeLeft}s`);
+                    logger.info(`Resuming paused question: ${questionId}, using server timeLeftMs?: ${effectiveTimeLeft}s`);
                     onTimerAction({
                         status: 'play',
                         questionId,
-                        timeLeft: effectiveTimeLeft, // Use the server's timeLeft value for consistency
+                        timeLeftMs: effectiveTimeLeft, // Use the server's timeLeft value for consistency
                     });
                 } else {
                     // Normal start - for non-paused questions
-                    logger.info(`Starting question: ${questionId}, timeLeft: ${startTime}s`);
+                    logger.info(`Starting question: ${questionId}, timeLeftMs?: ${startTime}s`);
                     onTimerAction({
                         status: 'play',
                         questionId,
-                        timeLeft: startTime,
+                        timeLeftMs: startTime,
                     });
                 }
             } else {
@@ -200,14 +202,14 @@ export default function DraggableQuestionsList({
                     if (onPause) onPause();
                 } else if (timerStatus === 'pause') {
                     logger.info(`Resuming question: ${questionId}`);
-                    // When resuming from pause, use the backend's timeLeft value
+                    // When resuming from pause, use the backend's timeLeftMs value
                     if (onPlay) onPlay(questionId, effectiveTimeLeft ?? startTime);
                 } else {
-                    logger.info(`Starting question: ${questionId} from stopped state, timeLeft: ${startTime}s`);
+                    logger.info(`Starting question: ${questionId} from stopped state, timeLeftMs?: ${startTime}s`);
                     if (onPlay) onPlay(questionId, startTime);
                 }
             } else {
-                logger.info(`Playing new question: ${questionId}, timeLeft: ${startTime}s`);
+                logger.info(`Playing new question: ${questionId}, timeLeftMs?: ${startTime}s`);
                 if (onPlay) onPlay(questionId, startTime);
             }
         }
@@ -223,7 +225,7 @@ export default function DraggableQuestionsList({
             onTimerAction({
                 status: 'play',
                 questionId,
-                timeLeft: startTime,
+                timeLeftMs: startTime,
             });
         }
 
@@ -249,7 +251,7 @@ export default function DraggableQuestionsList({
             onTimerAction({
                 status: 'pause',
                 questionId: timerQuestionId || '',
-                timeLeft: effectiveTimeLeft || 0,
+                timeLeftMs: effectiveTimeLeft || 0,
             });
         } else {
             logger.warn('onTimerAction is not defined. Cannot emit quiz_timer_action for pause.');
@@ -265,7 +267,7 @@ export default function DraggableQuestionsList({
             onTimerAction({
                 status: 'stop',
                 questionId: timerQuestionId || '',
-                timeLeft: 0,
+                timeLeftMs: 0,
             });
         } else {
             logger.warn('onTimerAction is not defined. Cannot emit quiz_timer_action for stop.');
@@ -292,9 +294,9 @@ export default function DraggableQuestionsList({
     //     if (onReorder) onReorder(newQuestions);
     // }, [questions, onReorder]); // Add dependencies
 
-    // *** ADDED: Define the handler to immediately update the parent's localTimeLeft ***
+    // *** ADDED: Define the handler to immediately update the parent's localTimeLeftMs ***
     const handleImmediateUpdate = useCallback((newTime: number) => {
-        logger.debug(`DraggableQuestionsList: Immediately setting localTimeLeft to ${newTime}`);
+        logger.debug(`DraggableQuestionsList: Immediately setting localTimeLeftMs to ${newTime}`);
         // Suppression de l'ancien état local du timer
         // setLocalTimeLeft(newTime);
     }, []);

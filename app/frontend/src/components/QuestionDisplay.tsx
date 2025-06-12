@@ -21,14 +21,14 @@ export interface QuestionDisplayProps {
         themes?: string[]; // Gardé, à vérifier si cela doit être mappé sur tags
         theme?: string;
         explanation?: string; // Renommé depuis 'justification'
-        time?: number; // Renommé depuis 'temps'
+        timeLimitSeconds?: number; // Time limit in seconds (using explicit unit suffix)
         tags?: string[]; // Ajouté pour correspondre à BaseQuestion
     };
     // Props pour le contrôle externe
     isOpen?: boolean;
     onToggleOpen?: () => void;
     timerStatus?: "play" | "pause" | "stop";
-    timeLeft?: number;
+    timeLeftMs?: number;
     onPlay?: () => void;
     onPause?: () => void;
     onStop?: () => void;
@@ -53,7 +53,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     isOpen = false,
     onToggleOpen,
     timerStatus = "stop",
-    timeLeft = question.time ?? 0, // Modifié: question.temps -> question.time
+    timeLeftMs = (question.timeLimitSeconds ?? 0) * 1000, // Convert database seconds to milliseconds for internal use
     onPlay,
     onPause,
     onStop,
@@ -132,7 +132,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const baseMetaFontSize = '0.75rem'; // Assuming text-xs for metadata
 
     // Affichage du timer (non éditable dans ce composant)
-    const roundedTimeLeft = typeof timeLeft === 'number' ? Math.floor(timeLeft) : 0;
+    const roundedTimeLeft = typeof timeLeftMs === 'number' ? Math.floor(timeLeftMs) : 0;
     const timerDisplay = (
         <span className="flex items-center gap-1">
             <span
@@ -433,14 +433,14 @@ export default React.memo(QuestionDisplay, (prevProps, nextProps) => {
     if (prevProps.timerStatus !== nextProps.timerStatus) return false;
     if (prevProps.showResultsDisabled !== nextProps.showResultsDisabled) return false;
 
-    // Only compare timeLeft if there's a meaningful difference (>= 1 second)
-    const timeDiff = Math.abs((prevProps.timeLeft ?? 0) - (nextProps.timeLeft ?? 0));
+    // Only compare timeLeftMs if there's a meaningful difference (>= 1 second)
+    const timeDiff = Math.abs((prevProps.timeLeftMs ?? 0) - (nextProps.timeLeftMs ?? 0));
     if (timeDiff >= 1) return false;
 
     // Compare question object - only key fields that affect display
     if (prevProps.question.uid !== nextProps.question.uid) return false;
     if (prevProps.question.text !== nextProps.question.text) return false;
-    if (prevProps.question.time !== nextProps.question.time) return false;
+    if (prevProps.question.timeLimitSeconds !== nextProps.question.timeLimitSeconds) return false;
 
     // Compare answers array length and content
     if (prevProps.question.answers?.length !== nextProps.question.answers?.length) return false;

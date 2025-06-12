@@ -12,7 +12,8 @@
     "prettier:fix": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "test:init-db": "node tests/support/initTestDb.js",
-    "test:clean": "npm run test:init-db && jest"
+    "test:clean": "npm run test:init-db && jest",
+    "type-check": "tsc --project tsconfig.json --noEmit --pretty"
   },
   "_moduleAliases": {
     "@": "src"

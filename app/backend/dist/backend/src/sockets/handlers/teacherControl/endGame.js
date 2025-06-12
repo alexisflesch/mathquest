@@ -24,11 +24,17 @@ function endGameHandler(io, socket) {
         console.log('[endGame] Handler called with:', { gameId, userId });
         console.log('[endGame] Socket data:', socket.data);
         try {
-            // Verify authorization
+            // Verify authorization - user must be either the game initiator or the template creator
             const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
-                    initiatorUserId: userId
+                    OR: [
+                        { initiatorUserId: userId },
+                        { gameTemplate: { creatorId: userId } }
+                    ]
+                },
+                include: {
+                    gameTemplate: true
                 }
             });
             if (!gameInstance) {

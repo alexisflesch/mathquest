@@ -45,12 +45,12 @@ const createMockGameManager = (overrides = {}) => {
             connecting: false,
             error: null,
             timer: {
-                timeLeft: 30,
+                timeLeftMs: 30,
                 status: 'stopped' as TimerStatus,
                 questionId: 'q1',
-                duration: 30,
+                durationMs: 30,
                 timestamp: Date.now(),
-                localTimeLeft: 30
+                localTimeLeftMs: 30
             },
             isTimerRunning: false,
             currentQuestionId: 'q1',
@@ -102,7 +102,7 @@ describe('useTeacherQuizSocket (modern migration)', () => {
 
     it('should initialize with unified game manager', () => {
         mockedUseTeacherGameManager.mockReturnValue(createMockGameManager());
-        renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        renderHook(() => useTeacherQuizSocket('access-code', mockToken, mockQuizId));
         expect(mockedUseTeacherGameManager).toHaveBeenCalledWith(
             mockQuizId,
             mockToken,
@@ -112,14 +112,14 @@ describe('useTeacherQuizSocket (modern migration)', () => {
 
     it('should return the expected interface structure', () => {
         mockedUseTeacherGameManager.mockReturnValue(createMockGameManager());
-        const { result } = renderHook(() => useTeacherQuizSocket(mockQuizId, mockToken));
+        const { result } = renderHook(() => useTeacherQuizSocket('access-code', mockToken, mockQuizId));
         expect(result.current).toEqual(
             expect.objectContaining({
                 quizSocket: expect.any(Object),
                 quizState: expect.any(Object),
                 timerStatus: expect.any(String),
                 timerQuestionId: expect.any(String),
-                localTimeLeft: expect.any(Number),
+                localTimeLeftMs: expect.any(Number),
                 emitSetQuestion: expect.any(Function),
                 emitEndQuiz: expect.any(Function),
                 emitPauseQuiz: expect.any(Function),

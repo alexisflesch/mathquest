@@ -19,7 +19,7 @@ export interface BaseQuestion {
     text: string;
     /** Question type classification */
     questionType: string;
-    /** Time limit in seconds */
+    /** Time limit in seconds (for user input/database storage) */
     timeLimit?: number | null;
     /** Feedback wait time in milliseconds */
     feedbackWaitTime?: number | null;

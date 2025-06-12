@@ -64,7 +64,7 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
                         selectedQuestionIds={selectedQuestions}
                         timerStatus="stop"
                         timerQuestionId={null}
-                        timeLeft={0}
+                        timeLeftMs={0}
                         onTimerAction={() => { }}
                     />
                     <input

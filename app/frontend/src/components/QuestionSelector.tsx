@@ -28,8 +28,8 @@ import { QuestionsFiltersResponseSchema, QuestionsResponseSchema } from '@/types
 interface TimerProps {
     timerStatus: 'play' | 'pause' | 'stop';
     timerQuestionId: string | null;
-    timeLeft: number;
-    onTimerAction: (info: { status: 'play' | 'pause' | 'stop'; questionId: string; timeLeft: number }) => void;
+    timeLeftMs: number;
+    onTimerAction: (info: { status: 'play' | 'pause' | 'stop'; questionId: string; timeLeftMs: number }) => void;
 }
 
 interface QuestionSelectorProps extends TimerProps {
@@ -44,7 +44,7 @@ interface QuestionSelectorProps extends TimerProps {
 
 export default function QuestionSelector({
     onSelect, selectedQuestionIds, externalFilter,
-    timerStatus, timerQuestionId, timeLeft,
+    timerStatus, timerQuestionId, timeLeftMs,
     onTimerAction
 }: QuestionSelectorProps) {
     const [questions, setQuestions] = useState<QuestionData[]>([]);

@@ -33,7 +33,7 @@ export interface TournamentAnswerReceived extends AnswerResponsePayload {
 export interface TournamentGameState {
     gameStatus: 'waiting' | 'active' | 'paused' | 'finished';
     currentQuestion: TournamentQuestion | null;
-    timer: { timeLeft: number; isRunning: boolean } | null;
+    timer: { timeLeftMs?: number; isRunning: boolean } | null;
     feedback: any | null;
     waiting: boolean;
     answered: boolean;
@@ -98,7 +98,7 @@ export function useTournamentSocket(props: TournamentSocketHookProps): Tournamen
         gameStatus: gameManager.gameState.gameStatus,
         currentQuestion,
         timer: gameManager.gameState.isTimerRunning ? {
-            timeLeft: gameManager.timer.getDisplayTime(),
+            timeLeftMs: gameManager.timer.getDisplayTime(),
             isRunning: gameManager.gameState.isTimerRunning
         } : null,
         feedback,

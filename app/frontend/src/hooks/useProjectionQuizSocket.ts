@@ -29,8 +29,7 @@ import {
     isProjectorState,
     isProjectorJoinedRoomPayload,
     isProjectorConnectedCountPayload,
-    isProjectorTimerUpdatePayload,
-    migrateProjectorTimerUpdate
+    isProjectorTimerUpdatePayload
 } from '@/types/socketTypeGuards';
 
 const logger = createLogger('useProjectionQuizSocket');
@@ -49,11 +48,11 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
         updateThreshold: 200 // 200ms threshold for UI updates
     });
 
-    // Legacy timer state for backward compatibility - now derived from unified timer
+    // Legacy timer state for backward compatibility - keep in milliseconds internally
     const timerStatus = gameTimer.timerState.status;
     const timerQuestionId = gameTimer.timerState.questionId || null;
-    const timeLeft = Math.floor(gameTimer.timerState.timeLeft / 1000);
-    const localTimeLeft = gameTimer.timerState.localTimeLeft ? Math.floor(gameTimer.timerState.localTimeLeft / 1000) : null;
+    const timeLeftMs = gameTimer.timerState.timeLeftMs; // Keep in milliseconds
+    const localTimeLeftMs = gameTimer.timerState.localTimeLeftMs; // Keep in milliseconds
 
     useEffect(() => {
         if (!gameId) return;
@@ -112,10 +111,10 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
             (state: ProjectorState) => {
                 logger.debug('Processing projector_state', state);
                 setGameState(state);
-                
+
                 // Sync timer with backend state through unified system
-                if (state.timerStatus === 'stop' || 
-                    (state.chrono && state.chrono.timeLeft === 0 && state.chrono.running === false)) {
+                if (state.timerStatus === 'stop' ||
+                    (state.chrono && state.chrono.timeLeftMs === 0 && state.chrono.running === false)) {
                     gameTimer.stop();
                     return;
                 }
@@ -124,18 +123,18 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                 if (state.timerQuestionId && state.timerTimeLeft !== undefined && state.timerTimeLeft !== null) {
                     // Use timer from state
                     const timerPayload = {
-                        timeLeft: state.timerTimeLeft * 1000, // Convert to milliseconds
+                        timeLeftMs: state.timerTimeLeft * 1000, // Convert to milliseconds
                         running: state.timerStatus === 'play',
                         questionId: state.timerQuestionId,
                         status: (state.timerStatus || 'stop') as TimerStatus
                     };
                     gameTimer.syncWithBackend(timerPayload);
-                } else if (state.currentQuestionIdx !== null && typeof state.currentQuestionIdx === 'number' && 
-                           state.questions[state.currentQuestionIdx] && state.chrono) {
+                } else if (state.currentQuestionIdx !== null && typeof state.currentQuestionIdx === 'number' &&
+                    state.questions[state.currentQuestionIdx] && state.chrono) {
                     // Use chrono from current question
                     const currentQuestion = state.questions[state.currentQuestionIdx];
                     const timerPayload = {
-                        timeLeft: (state.chrono.timeLeft || 0) * 1000, // Convert to milliseconds
+                        timeLeftMs: (state.chrono.timeLeftMs || 0) * 1000, // Convert to milliseconds
                         running: state.chrono.running,
                         questionId: currentQuestion.uid,
                         status: (state.chrono.running ? 'play' : 'pause') as TimerStatus
@@ -155,12 +154,12 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                 if (data.timer) {
                     const { startedAt, duration, isPaused } = data.timer;
 
-                    // Calculate current remaining time
+                    // Calculate current remaining time in milliseconds
                     const elapsed = Date.now() - startedAt;
-                    const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+                    const remaining = Math.max(0, duration - elapsed); // Keep in milliseconds
 
                     const timerPayload = {
-                        timeLeft: remaining * 1000, // Convert to milliseconds
+                        timeLeftMs: remaining, // Already in milliseconds
                         running: !isPaused,
                         status: (isPaused ? 'pause' : 'play') as TimerStatus
                     };
@@ -200,8 +199,8 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
         gameState,
         timerStatus,
         timerQuestionId,
-        timeLeft,
-        localTimeLeft,
+        timeLeftMs,
+        localTimeLeftMs,
         setLocalTimeLeft: (value: number | null) => {
             // Compatibility function - delegate to unified timer system
             if (value !== null) {

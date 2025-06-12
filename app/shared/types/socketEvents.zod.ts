@@ -208,9 +208,9 @@ export const serverToClientEventsSchema = z.object({
     .function()
     .args(
       z.object({
-        timeLeft: z.number().int().nonnegative().nullable(),
+        timeLeftMs: z.number().int().nonnegative().nullable(),
         running: z.boolean(),
-        duration: z.number().int().positive().optional(),
+        durationMs: z.number().int().positive().optional(),
       }),
     )
     .returns(z.void()),

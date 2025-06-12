@@ -21,7 +21,7 @@ interface QuestionForCreatePage {
     discipline?: string;
     themes?: string[]; // Plural, to align with shared type
     explanation?: string;
-    time?: number;
+    timeLimitSeconds?: number; // Using explicit unit suffix from BaseQuestion
     tags?: string[];
 }
 
@@ -117,7 +117,7 @@ export default function CreateQuizPage() {
                     discipline: apiQuestion.discipline || apiQuestion.category || apiQuestion.subject, // From API, with fallbacks
                     themes: apiQuestion.themes, // From API (should be plural)
                     explanation: q.explanation, // From BaseQuestion
-                    time: q.time, // From BaseQuestion
+                    timeLimitSeconds: q.timeLimitSeconds, // From BaseQuestion with explicit unit suffix
                     tags: q.tags, // From BaseQuestion
                 };
             });

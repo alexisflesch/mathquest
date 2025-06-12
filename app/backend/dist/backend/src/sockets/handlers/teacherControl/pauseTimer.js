@@ -34,7 +34,8 @@ function pauseTimerHandler(io, socket) {
             // Find the game instance by gameId or accessCode
             if (gameId) {
                 gameInstance = await prisma_1.prisma.gameInstance.findUnique({
-                    where: { id: gameId }
+                    where: { id: gameId },
+                    include: { gameTemplate: true }
                 });
                 if (gameInstance) {
                     gameAccessCode = gameInstance.accessCode;
@@ -42,7 +43,8 @@ function pauseTimerHandler(io, socket) {
             }
             else if (accessCode) {
                 gameInstance = await prisma_1.prisma.gameInstance.findUnique({
-                    where: { accessCode }
+                    where: { accessCode },
+                    include: { gameTemplate: true }
                 });
                 if (gameInstance) {
                     gameAccessCode = accessCode;
@@ -76,7 +78,10 @@ function pauseTimerHandler(io, socket) {
                 }
                 return;
             }
-            if (gameInstance.initiatorUserId !== userId) {
+            // Check authorization - user must be either the game initiator or the template creator
+            const isAuthorized = gameInstance.initiatorUserId === userId ||
+                gameInstance.gameTemplate?.creatorId === userId;
+            if (!isAuthorized) {
                 socket.emit('error_dashboard', {
                     code: 'NOT_AUTHORIZED',
                     message: 'You are not authorized to control this game',

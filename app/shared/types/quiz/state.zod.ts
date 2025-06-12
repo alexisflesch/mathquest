@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 export const chronoSchema = z.object({
-  timeLeft: z.number().nullable(),
+  timeLeftMs: z.number().nullable(),
   running: z.boolean(),
   status: z
     .union([z.literal("play"), z.literal("pause"), z.literal("stop")])
@@ -11,8 +11,8 @@ export const chronoSchema = z.object({
 
 export const questionTimerSchema = z.object({
   status: z.union([z.literal("play"), z.literal("pause"), z.literal("stop")]),
-  timeLeft: z.number(),
-  initialTime: z.number(),
+  timeLeftMs: z.number(),
+  initialTimeMs: z.number(),
   timestamp: z.number().nullable(),
 });
 
@@ -37,9 +37,9 @@ export const extendedQuizStateSchema = baseQuizStateSchema.extend({
     .union([z.literal("play"), z.literal("pause"), z.literal("stop")])
     .optional(),
   timerQuestionId: z.string().optional().nullable(),
-  timerTimeLeft: z.number().optional().nullable(),
+  timerTimeLeftMs: z.number().optional().nullable(),
   timerTimestamp: z.number().optional().nullable(),
-  timerInitialValue: z.number().optional().nullable(),
+  timerInitialValueMs: z.number().optional().nullable(),
   tournament_code: z.string().optional().nullable(),
   connectedSockets: z.set(z.string()).optional(),
   questionTimers: z.record(questionTimerSchema).optional(),

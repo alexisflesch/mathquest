@@ -1,5 +1,9 @@
 /**
- * Frontend test for LiveGamePage tournament mode
+ * Frontend test for LiveGamePage tourjest.mock('@/components/TournamentTimer', () => {
+    return function TournamentTimer({ timerS }: { timerS: number | null }) {
+        return <div data-testid="tournament-timer">{timerS}</div>;
+    };
+});t mode
  * 
  * Tests the complete tournament flow using mocked socket payloads:
  * - Question display with proper answer options

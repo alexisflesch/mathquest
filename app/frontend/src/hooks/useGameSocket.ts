@@ -296,7 +296,7 @@ export function useGameSocket(
             socket.emit('quiz_timer_action', {
                 gameId: gameId!,
                 action,
-                duration
+                durationMs: duration
             });
         }
         // Add other roles as needed

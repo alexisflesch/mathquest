@@ -24,11 +24,17 @@ export function lockAnswersHandler(io: SocketIOServer, socket: Socket) {
         logger.info({ gameId, userId, lock }, 'Answer lock requested');
 
         try {
-            // Verify authorization
+            // Verify authorization - user must be either the game initiator or the template creator
             const gameInstance = await prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
-                    initiatorUserId: userId
+                    OR: [
+                        { initiatorUserId: userId },
+                        { gameTemplate: { creatorId: userId } }
+                    ]
+                },
+                include: {
+                    gameTemplate: true
                 }
             });
 

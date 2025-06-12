@@ -121,7 +121,7 @@ export function isTimerUpdatePayload(data: unknown): data is TimerUpdatePayload 
 
     const t = data as Record<string, unknown>;
     return (
-        (typeof t.timeLeft === 'number' || t.timeLeft === null) &&
+        (typeof t.timeLeftMs === 'number' || t.timeLeftMs === null) &&
         typeof t.running === 'boolean'
     );
 }
@@ -166,31 +166,6 @@ export function createSafeEventHandler<T>(
         if (validatedData) {
             handler(validatedData);
         }
-    };
-}
-
-// --- Migration Helper Types ---
-
-// Temporary bridge type for timer events during migration
-export interface LegacyTimerUpdate {
-    timeLeft: number;
-    status?: 'play' | 'pause' | 'stop';
-    timestamp?: number;
-}
-
-export function isLegacyTimerUpdate(data: unknown): data is LegacyTimerUpdate {
-    if (!data || typeof data !== 'object') return false;
-
-    const t = data as Record<string, unknown>;
-    return typeof t.timeLeft === 'number';
-}
-
-// Migration utility to convert legacy timer updates to shared format
-export function migrateLegacyTimerUpdate(legacy: LegacyTimerUpdate): TimerUpdatePayload {
-    return {
-        timeLeft: legacy.timeLeft,
-        running: legacy.status === 'play',
-        status: legacy.status || 'stop'
     };
 }
 
@@ -304,7 +279,7 @@ export function isDashboardGameStatusChangedPayload(data: unknown): data is Dash
 export interface TeacherQuizState {
     currentQuestionIdx: number | null;
     questions: QuestionData[];
-    chrono: { timeLeft: number | null; running: boolean };
+    chrono: { timeLeftMs: number | null; running: boolean };
     locked: boolean;
     ended: boolean;
     stats: Record<string, unknown>;
@@ -328,37 +303,6 @@ export function isTeacherQuizState(data: unknown): data is TeacherQuizState {
         typeof q.locked === 'boolean' &&
         typeof q.ended === 'boolean'
     );
-}
-
-// --- Migration Helper for Teacher Quiz Timer Updates ---
-
-export interface TeacherTimerUpdatePayload {
-    status: 'play' | 'pause' | 'stop';
-    questionId: string;
-    timeLeft: number;
-    timestamp?: number;
-}
-
-export function isTeacherTimerUpdatePayload(data: unknown): data is TeacherTimerUpdatePayload {
-    if (!data || typeof data !== 'object') return false;
-
-    const t = data as Record<string, unknown>;
-    return (
-        typeof t.status === 'string' &&
-        ['play', 'pause', 'stop'].includes(t.status as string) &&
-        typeof t.questionId === 'string' &&
-        typeof t.timeLeft === 'number'
-    );
-}
-
-// Convert teacher timer update to shared format
-export function migrateTeacherTimerUpdate(teacher: TeacherTimerUpdatePayload): TimerUpdatePayload {
-    return {
-        timeLeft: teacher.timeLeft,
-        running: teacher.status === 'play',
-        status: teacher.status,
-        questionId: teacher.questionId
-    };
 }
 
 // --- Tournament-specific Type Guards and Interfaces ---
@@ -491,14 +435,13 @@ export interface ProjectorQuestion extends QuestionData {
     explanation?: string;
     tags?: string[];
     // Additional fields for projection display
-    temps?: number; // Legacy timer field
 }
 
 export interface ProjectorState {
     currentQuestionIdx: number | null;
     questions: ProjectorQuestion[];
     chrono?: {
-        timeLeft: number | null;
+        timeLeftMs: number | null;
         running: boolean;
     };
     timerStatus?: 'play' | 'pause' | 'stop';
@@ -532,7 +475,7 @@ export interface ProjectorTimerUpdatePayload {
 export interface LegacyQuizTimerUpdatePayload {
     status: 'play' | 'pause' | 'stop';
     questionId: string;
-    timeLeft: number;
+    timeLeftMs: number;
     timestamp: number;
 }
 
@@ -604,49 +547,9 @@ export function isLegacyQuizTimerUpdatePayload(data: unknown): data is LegacyQui
         typeof l.status === 'string' &&
         ['play', 'pause', 'stop'].includes(l.status as string) &&
         typeof l.questionId === 'string' &&
-        typeof l.timeLeft === 'number' &&
+        typeof l.timeLeftMs === 'number' &&
         typeof l.timestamp === 'number'
     );
-}
-
-// Migration helpers for projector timer formats
-
-export function migrateProjectorTimerUpdate(projector: ProjectorTimerUpdatePayload): TimerUpdatePayload {
-    if (!projector.timer) {
-        return {
-            timeLeft: 0,
-            running: false,
-            status: 'stop'
-        };
-    }
-
-    const timer = projector.timer;
-    let timeLeft = 0;
-    let running = !timer.isPaused;
-
-    if (timer.isPaused) {
-        timeLeft = typeof timer.timeRemaining === 'number' ? Math.ceil(timer.timeRemaining / 1000) : 0;
-    } else if (typeof timer.startedAt === 'number' && typeof timer.duration === 'number') {
-        const elapsed = Date.now() - timer.startedAt;
-        const remaining = Math.max(0, timer.duration - elapsed);
-        timeLeft = Math.ceil(remaining / 1000);
-        running = timeLeft > 0;
-    }
-
-    return {
-        timeLeft,
-        running,
-        status: running ? 'play' : (timer.isPaused ? 'pause' : 'stop')
-    };
-}
-
-export function migrateLegacyQuizTimerUpdate(legacy: LegacyQuizTimerUpdatePayload): TimerUpdatePayload {
-    return {
-        timeLeft: legacy.timeLeft,
-        running: legacy.status === 'play',
-        status: legacy.status,
-        questionId: legacy.questionId
-    };
 }
 
 // --- Answer Received Type Guards ---

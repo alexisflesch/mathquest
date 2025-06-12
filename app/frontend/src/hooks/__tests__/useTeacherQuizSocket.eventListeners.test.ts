@@ -119,7 +119,7 @@ describe('useTeacherQuizSocket Event Listeners', () => {
         const mockState: QuizState = {
             currentQuestionIdx: 0,
             questions: [{ uid: 'q1', text: 'Test question', questionType: 'multiple_choice', answerOptions: ['Answer 1'], correctAnswers: [true], timeLimit: 30 }] as QuestionData[],
-            chrono: { timeLeft: 30, running: false, status: 'stop' },
+            chrono: { timeLeftMs: 30, running: false, status: 'stop' },
             locked: false,
             ended: false,
             stats: {},
@@ -137,7 +137,7 @@ describe('useTeacherQuizSocket Event Listeners', () => {
 
     it('should handle "dashboard_timer_updated" event without errors', () => {
         const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
-        const mockTimerData = { questionId: 'q1', timeLeft: 15000, status: 'play', running: true, duration: 15000 }; // ms, not s, and running/duration required
+        const mockTimerData = { questionId: 'q1', timeLeftMs: 15000, status: 'play', running: true, duration: 15000 }; // ms, not s, and running/duration required
 
         act(() => {
             // Trigger both dashboard_timer_updated and quiz_timer_update for robustness

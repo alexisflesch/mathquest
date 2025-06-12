@@ -28,7 +28,10 @@ jest.mock('@/clientLogger', () => ({
 jest.mock('@/config/gameConfig', () => ({
     TIMER_CONFIG: {
         DEFAULT_QUESTION_TIME: 30,
-        UI_UPDATE_INTERVAL: 100,
+        UI_UPDATE_INTERVAL: 1000, // Updated to 1 second default
+        UI_UPDATE_INTERVAL_TEACHER: 1000,
+        UI_UPDATE_INTERVAL_STUDENT: 1000,
+        UI_UPDATE_INTERVAL_PROJECTION: 100,
     },
     UI_CONFIG: {
         LEADERBOARD_UPDATE_INTERVAL: 500,
@@ -45,8 +48,8 @@ describe('useGameTimer Hook', () => {
             const { result } = renderHook(() => useGameTimer('student'));
 
             expect(result.current.timerState.status).toBe('stop');
-            expect(result.current.timerState.timeLeft).toBe(0);
-            expect(result.current.timerState.duration).toBe(30);
+            expect(result.current.timerState.timeLeftMs).toBe(0);
+            expect(result.current.timerState.durationMs).toBe(30);
             expect(result.current.isRunning).toBe(false);
         });
 
@@ -58,7 +61,7 @@ describe('useGameTimer Hook', () => {
             });
 
             expect(result.current.timerState.status).toBe('play');
-            expect(result.current.timerState.duration).toBe(60);
+            expect(result.current.timerState.durationMs).toBe(60);
             expect(result.current.timerState.questionId).toBe('question-1');
             expect(result.current.isRunning).toBe(true);
         });
@@ -126,7 +129,7 @@ describe('useGameTimer Hook', () => {
             // Simulate a timer update
             act(() => {
                 timerUpdateHandler({
-                    timeLeft: 25000, // ms, not s
+                    timeLeftMs: 25000, // ms, not s
                     running: true,
                     status: 'play',
                     questionId: 'q1'
@@ -134,7 +137,7 @@ describe('useGameTimer Hook', () => {
             });
 
             expect(result.current.timerState.status).toBe('play');
-            expect(result.current.timerState.timeLeft).toBe(25000);
+            expect(result.current.timerState.timeLeftMs).toBe(25000);
         });
     });
 
@@ -177,7 +180,7 @@ describe('useGameTimer Hook', () => {
 
             act(() => {
                 result.current.syncWithBackend({
-                    timeLeft: 45000, // ms, not s
+                    timeLeftMs: 45000, // ms, not s
                     running: true,
                     status: 'play',
                     questionId: 'question-2'
@@ -185,7 +188,7 @@ describe('useGameTimer Hook', () => {
             });
 
             expect(result.current.timerState.status).toBe('play');
-            expect(result.current.timerState.timeLeft).toBe(45000);
+            expect(result.current.timerState.timeLeftMs).toBe(45000);
             expect(result.current.timerState.questionId).toBe('question-2');
         });
     });

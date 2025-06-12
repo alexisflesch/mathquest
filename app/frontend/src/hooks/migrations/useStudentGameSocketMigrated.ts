@@ -156,29 +156,29 @@ export function useStudentGameSocket(props: StudentGameSocketHookProps): Student
             logger.info('=== GAME TIMER UPDATED ===', data);
             if (data && data.timer) {
                 const timer = data.timer;
-                let timeLeft = 0;
+                let timeLeftMs = 0; // Keep in milliseconds
 
                 if (timer.isPaused) {
-                    timeLeft = timer.timeRemaining ? Math.ceil(timer.timeRemaining / 1000) : 0;
-                } else if (timer.startedAt && timer.duration) {
+                    timeLeftMs = timer.timeRemaining || 0; // Keep in milliseconds
+                } else if (timer.startedAt && timer.durationMs) {
                     const elapsed = Date.now() - timer.startedAt;
-                    const remaining = Math.max(0, timer.duration - elapsed);
-                    timeLeft = Math.ceil(remaining / 1000);
+                    const remaining = Math.max(0, timer.durationMs - elapsed);
+                    timeLeftMs = remaining; // Keep in milliseconds
                 } else {
-                    timeLeft = timer.duration ? Math.ceil(timer.duration / 1000) : 0;
+                    timeLeftMs = timer.durationMs || 0; // Keep in milliseconds
                 }
 
                 // CRITICAL FIX: Start frontend countdown timer
-                if (timeLeft > 0) {
-                    setFrontendTimer(timeLeft);
+                if (timeLeftMs > 0) {
+                    setFrontendTimer(timeLeftMs);
                     setTimerStartTime(Date.now());
-                    logger.info('=== FRONTEND TIMER STARTED FROM GAME_TIMER_UPDATED ===', { timeLeft, startTime: Date.now() });
+                    logger.info('=== FRONTEND TIMER STARTED FROM GAME_TIMER_UPDATED ===', { timeLeftMs, startTime: Date.now() });
                 } else {
                     setFrontendTimer(null);
                     setTimerStartTime(null);
                 }
 
-                logger.info('=== TIMER UPDATED ===', { timeLeft, timerObject: timer });
+                logger.info('=== TIMER UPDATED ===', { timeLeftMs, timerObject: timer });
             }
         };
 
@@ -190,7 +190,7 @@ export function useStudentGameSocket(props: StudentGameSocketHookProps): Student
             if (data && data.timer && typeof data.timer === 'number' && data.timer > 0) {
                 setFrontendTimer(data.timer);
                 setTimerStartTime(Date.now());
-                logger.info('=== FRONTEND TIMER STARTED FROM QUESTION ===', { timeLeft: data.timer, startTime: Date.now() });
+                logger.info('=== FRONTEND TIMER STARTED FROM QUESTION ===', { timeLeftMs: data.timer, startTime: Date.now() });
             }
 
             // Let the unified game manager handle the question data
@@ -492,11 +492,11 @@ export function useStudentGameSocket(props: StudentGameSocketHookProps): Student
             if (questionData.timer && typeof questionData.timer === 'number' && questionData.timer > 0) {
                 setFrontendTimer(questionData.timer);
                 setTimerStartTime(Date.now());
-                logger.info('=== FRONTEND TIMER STARTED FROM QUESTION DATA ===', { timeLeft: questionData.timer, startTime: Date.now() });
+                logger.info('=== FRONTEND TIMER STARTED FROM QUESTION DATA ===', { timeLeftMs: questionData.timer, startTime: Date.now() });
             } else if (newQuestion.timeLimit && typeof newQuestion.timeLimit === 'number' && newQuestion.timeLimit > 0) {
                 setFrontendTimer(newQuestion.timeLimit);
                 setTimerStartTime(Date.now());
-                logger.info('=== FRONTEND TIMER STARTED FROM QUESTION TIME LIMIT ===', { timeLeft: newQuestion.timeLimit, startTime: Date.now() });
+                logger.info('=== FRONTEND TIMER STARTED FROM QUESTION TIME LIMIT ===', { timeLeftMs: newQuestion.timeLimit, startTime: Date.now() });
             }
 
             // Backend provides index and totalQuestions
@@ -699,7 +699,7 @@ export function useStudentGameSocket(props: StudentGameSocketHookProps): Student
             logger.debug('Timer state (final countdown):', {
                 frontendTimer,
                 currentTimerValue,
-                gameManagerTimer: gameManager.gameState.timer?.timeLeft,
+                gameManagerTimer: gameManager.gameState.timer?.timeLeftMs,
                 isTimerRunning: gameManager.gameState.isTimerRunning
             });
         }

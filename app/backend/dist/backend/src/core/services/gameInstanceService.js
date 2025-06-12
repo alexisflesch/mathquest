@@ -287,33 +287,38 @@ class GameInstanceService {
         }
     }
     /**
-     * Generate a unique 6-character access code
-     * The code consists of uppercase letters and numbers, avoiding
-     * easily confused characters like 0, O, 1, I
+     * Generate a unique sequential access code
+     * Uses sequential numbering starting from 1 with no digit limit
      */
-    async generateUniqueAccessCode(length = 6) {
-        // Characters to use in access code (avoid confusing characters)
-        const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        // Maximum attempts to prevent infinite loop
-        const maxAttempts = 10;
-        let attempts = 0;
-        while (attempts < maxAttempts) {
-            let accessCode = '';
-            for (let i = 0; i < length; i++) {
-                const randomIndex = Math.floor(Math.random() * characters.length);
-                accessCode += characters.charAt(randomIndex);
-            }
-            // Check if this code is already in use
-            const existingGame = await prisma_1.prisma.gameInstance.findUnique({
-                where: { accessCode }
+    async generateUniqueAccessCode() {
+        try {
+            // Get all game instances and find the highest numeric access code
+            const allGames = await prisma_1.prisma.gameInstance.findMany({
+                select: {
+                    accessCode: true
+                }
             });
-            if (!existingGame) {
-                return accessCode;
+            // Filter to only numeric codes and find the highest
+            let maxCode = 0;
+            for (const game of allGames) {
+                const code = game.accessCode;
+                // Check if it's a numeric string (any number of digits)
+                if (/^\d+$/.test(code)) {
+                    const numericCode = parseInt(code, 10);
+                    if (numericCode > maxCode) {
+                        maxCode = numericCode;
+                    }
+                }
             }
-            attempts++;
+            // Generate next sequential code, starting from 3141
+            const nextCode = maxCode > 0 ? maxCode + 1 : 3141;
+            // Return as string (no padding, no digit limit)
+            return nextCode.toString();
         }
-        // If we couldn't generate a unique code after max attempts
-        throw new Error('Unable to generate unique access code after multiple attempts');
+        catch (error) {
+            logger.error('Error generating access code:', error);
+            throw new Error('Unable to generate unique access code');
+        }
     }
     /**
      * Get active games created by a teacher

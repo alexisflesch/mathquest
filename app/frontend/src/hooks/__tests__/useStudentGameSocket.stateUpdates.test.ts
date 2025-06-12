@@ -80,7 +80,7 @@ describe('useStudentGameSocket - State Updates', () => {
         // Simulate timer update from backend
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 45,
+                timeLeftMs: 45,
                 status: 'play',
                 running: true
             });
@@ -130,7 +130,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
-            eventHandlers['timer_update']?.({ timeLeft: 30, status: 'play', running: true });
+            eventHandlers['timer_update']?.({ timeLeftMs: 30, status: 'play', running: true });
         });
 
         await waitFor(() => {
@@ -183,7 +183,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
-            eventHandlers['timer_update']?.({ timeLeft: 30, status: 'play', running: true });
+            eventHandlers['timer_update']?.({ timeLeftMs: 30, status: 'play', running: true });
         });
 
         await waitFor(() => {
@@ -218,7 +218,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(multipleChoicePayload);
-            eventHandlers['timer_update']?.({ timeLeft: 60, status: 'play', running: true });
+            eventHandlers['timer_update']?.({ timeLeftMs: 60, status: 'play', running: true });
         });
 
         await waitFor(() => {
@@ -256,7 +256,7 @@ describe('useStudentGameSocket - State Updates', () => {
         // Transition to paused
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 15,
+                timeLeftMs: 15,
                 status: 'pause',
                 running: false
             });
@@ -294,7 +294,7 @@ describe('useStudentGameSocket - State Updates', () => {
         // Update timer to play
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 30,
+                timeLeftMs: 30,
                 status: 'play',
                 running: true
             });
@@ -307,7 +307,7 @@ describe('useStudentGameSocket - State Updates', () => {
         // Update timer to pause
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 25,
+                timeLeftMs: 25,
                 status: 'pause',
                 running: false
             });
@@ -320,7 +320,7 @@ describe('useStudentGameSocket - State Updates', () => {
         // Update timer to stop
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 0,
+                timeLeftMs: 0,
                 status: 'stop',
                 running: false
             });
@@ -393,7 +393,7 @@ describe('useStudentGameSocket - State Updates', () => {
         // Error should persist until cleared or new connection
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 30,
+                timeLeftMs: 30,
                 status: 'play'
             });
         });
@@ -427,7 +427,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
-            eventHandlers['timer_update']?.({ timeLeft: 0, status: 'stop', running: false });
+            eventHandlers['timer_update']?.({ timeLeftMs: 0, status: 'stop', running: false });
         });
 
         await waitFor(() => {

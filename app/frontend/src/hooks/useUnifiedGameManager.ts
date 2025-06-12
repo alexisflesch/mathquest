@@ -24,6 +24,7 @@ import type {
     GameAnswerPayload
 } from '@shared/types/socketEvents';
 import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
+import { logTimerEvent, logTimerState, logTimerCalculation, logTimerError } from '@/utils/timerDebugLogger';
 
 const logger = createLogger('useUnifiedGameManager');
 
@@ -182,7 +183,16 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
             isTimerRunning: timer.isRunning,
             currentQuestionId: timer.timerState.questionId ?? null
         }));
-    }, [timer.timerState, timer.isRunning]);
+    }, [timer.timerState, timer.isRunning, timer.timerState.timeLeftMs, timer.timerState.questionId, timer.timerState.status]);
+
+    // --- Teacher Dashboard Connection ---
+    useEffect(() => {
+        if (!socket.socket || !socket.socketState.connected || role !== 'teacher' || !gameId) return;
+
+        logger.info('Teacher socket connected, joining dashboard room', { gameId });
+        // Use type assertion to bypass TypeScript error for the emit
+        (socket.socket.emit as any)('join_dashboard', { gameId });
+    }, [socket.socket, socket.socketState.connected, role, gameId]);
 
     // --- Socket Event Handlers ---
     useEffect(() => {
@@ -197,7 +207,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
                 if (timerUpdate && typeof timerUpdate === 'object' && 'running' in timerUpdate) {
                     const fixedTimerUpdate = {
                         ...timerUpdate,
-                        timeLeft: timerUpdate.timeLeft === undefined ? null : timerUpdate.timeLeft,
+                        timeLeftMs: timerUpdate.timeLeftMs === undefined ? null : timerUpdate.timeLeftMs,
                         running: !!timerUpdate.running,
                         questionId: timerUpdate.questionId === null ? undefined : timerUpdate.questionId
                     };
@@ -222,7 +232,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
 
         // Role-specific event handlers
         if (role === 'teacher') {
-            setupTeacherEvents(socket, setGameState, cleanupFunctions);
+            setupTeacherEvents(socket, setGameState, timer, cleanupFunctions);
         } else if (role === 'student') {
             setupStudentEvents(socket, setGameState, timer, cleanupFunctions);
         } else if (role === 'projection') {
@@ -268,6 +278,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
 function setupTeacherEvents(
     socket: GameSocketHook,
     setGameState: React.Dispatch<React.SetStateAction<GameState>>,
+    timer: GameTimerHook,
     cleanupFunctions: (() => void)[]
 ) {
     if (!socket.socket) return;
@@ -300,6 +311,8 @@ function setupTeacherEvents(
     cleanupFunctions.push(() => {
         socket.socket?.off(SOCKET_EVENTS.TEACHER.DASHBOARD_QUESTION_CHANGED as keyof ServerToClientEvents);
     });
+
+    // Note: dashboard_timer_updated is handled by useGameTimer.ts to avoid conflicts
 }
 
 function setupStudentEvents(
@@ -428,7 +441,7 @@ function setupTournamentEvents(
                         type: data.type || 'multiple_choice',
                         answers: data.answers || []
                     },
-                    timer: data.remainingTime || data.timeLeft,
+                    timer: data.remainingTime || data.timeLeftMs,
                     questionIndex: data.index,
                     totalQuestions: data.total,
                     questionState: data.questionState || 'active'
@@ -439,8 +452,8 @@ function setupTournamentEvents(
                 answered: false
             }));
 
-            if ((data.uid || data.question?.uid) && (data.remainingTime || data.timeLeft)) {
-                timer.start(data.uid || data.question?.uid, data.remainingTime || data.timeLeft);
+            if ((data.uid || data.question?.uid) && (data.remainingTime || data.timeLeftMs)) {
+                timer.start(data.uid || data.question?.uid, data.remainingTime || data.timeLeftMs);
             }
         }
     );

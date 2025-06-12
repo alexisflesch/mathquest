@@ -26,7 +26,7 @@ export interface BaseTimer {
     /** Current timer status */
     status: TimerStatus;
     /** Time remaining in milliseconds (null if not set) */
-    timeLeft: number | null;
+    timeLeftMs: number | null;
     /** Whether timer is currently running */
     running: boolean;
 }
@@ -36,8 +36,8 @@ export interface BaseTimer {
  * Used for quiz timing and general chronometer functionality
  */
 export interface Chrono extends BaseTimer {
-    /** Optional duration for reference */
-    duration?: number;
+    /** Optional duration for reference in milliseconds */
+    durationMs?: number;
     /** Question ID associated with this timer */
     questionId?: string;
 }
@@ -50,9 +50,9 @@ export interface QuestionTimer {
     /** Timer status */
     status: TimerStatus;
     /** Time remaining in milliseconds */
-    timeLeft: number;
-    /** Initial timer duration */
-    initialTime: number;
+    timeLeftMs: number;
+    /** Initial timer duration in milliseconds */
+    initialTimeMs: number;
     /** Timestamp when timer was last updated */
     timestamp: number | null;
     /** Question ID this timer is associated with */
@@ -67,15 +67,15 @@ export interface GameTimerState {
     /** Timer status */
     status: TimerStatus;
     /** Time remaining in milliseconds */
-    timeLeft: number;
-    /** Total timer duration */
-    duration: number;
+    timeLeftMs: number;
+    /** Total timer duration in milliseconds */
+    durationMs: number;
     /** Question ID associated with timer */
     questionId: string | null | undefined;
     /** Server timestamp for synchronization */
     timestamp: number | null;
-    /** Local countdown time for smooth UI updates */
-    localTimeLeft: number | null;
+    /** Local countdown time for smooth UI updates in milliseconds */
+    localTimeLeftMs: number | null;
 }
 
 /**
@@ -103,11 +103,11 @@ export interface TimerConfig {
  */
 export interface TimerUpdatePayload {
     /** Time remaining in milliseconds */
-    timeLeft: number | null;
+    timeLeftMs: number | null;
     /** Whether timer is running */
     running: boolean;
-    /** Timer duration (optional) */
-    duration?: number;
+    /** Timer duration in milliseconds (optional) */
+    durationMs?: number;
     /** Associated question ID */
     questionId?: string;
     /** Timer status */
@@ -124,12 +124,14 @@ export interface GameTimerUpdatePayload {
         /** Whether timer is paused */
         isPaused: boolean;
         /** Time remaining in milliseconds */
-        timeRemaining?: number;
+        timeRemainingMs?: number;
         /** When timer was started (timestamp) */
         startedAt?: number;
         /** Timer duration in milliseconds */
-        duration?: number;
+        durationMs?: number;
     };
+    /** Question UID associated with the timer */
+    questionUid?: string;
 }
 
 /**
@@ -143,8 +145,10 @@ export interface TimerActionPayload {
     gameId?: string;
     /** Action to perform on timer */
     action: 'start' | 'pause' | 'resume' | 'stop' | 'set_duration';
-    /** Duration in seconds (for start/set_duration actions) */
-    duration?: number;
+    /** Duration in milliseconds (converted from user input seconds) */
+    durationMs?: number;
+    /** Question UID for question-specific timer operations */
+    questionUid?: string;
 }
 
 /**

@@ -12,7 +12,7 @@ export const setQuestionPayloadSchema = z.object({
 export const timerActionPayloadSchema = z.object({
   status: z.union([z.literal("play"), z.literal("pause"), z.literal("stop")]),
   questionId: z.string(),
-  timeLeft: z.number().optional(),
+  timeLeftMs: z.number().optional(),
   quizId: z.string(),
   teacherId: z.string().optional(),
   tournamentCode: z.string().optional(),
@@ -20,7 +20,7 @@ export const timerActionPayloadSchema = z.object({
 
 export const setTimerPayloadSchema = z.object({
   quizId: z.string(),
-  timeLeft: z.number(),
+  timeLeftMs: z.number(),
   teacherId: z.string().optional(),
   tournamentCode: z.string().optional(),
   questionUid: z.string().optional(),
@@ -82,6 +82,42 @@ export const tournamentAnswerPayloadSchema = z.object({
   answerIdx: z.union([z.number(), z.array(z.number())]),
   clientTimestamp: z.number(),
   isDeferred: z.boolean().optional(),
+});
+
+export const updateTournamentCodePayloadSchema = z.object({
+  quizId: z.string(),
+  newCode: z.string(),
+  teacherId: z.string().optional(),
+});
+
+export const updateAvatarPayloadSchema = z.object({
+  tournamentCode: z.string(),
+  newAvatar: z.string(),
+});
+
+export const quizTimerActionPayloadSchema = z.object({
+  gameId: z.string(),
+  action: z.union([
+    z.literal("start"),
+    z.literal("pause"),
+    z.literal("resume"),
+    z.literal("stop"),
+    z.literal("set_duration"),
+  ]),
+  questionId: z.string().optional(),
+  durationMs: z.number().optional(),
+});
+
+export const gameTimerUpdatePayloadSchema = z.object({
+  questionUid: z.string().optional(),
+  timer: z
+    .object({
+      startedAt: z.number().optional(),
+      durationMs: z.number().optional(),
+      isPaused: z.boolean().optional(),
+      timeRemainingMs: z.number().optional(),
+    })
+    .optional(),
 });
 
 export const startTournamentPayloadSchema = z.object({

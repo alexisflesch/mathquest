@@ -1,12 +1,16 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/gameStateService';
+import { GameInstanceService } from '@/core/services/gameInstanceService';
 import createLogger from '@/utils/logger';
 import { SetQuestionPayload } from './types';
 import { TEACHER_EVENTS } from '@shared/types/socket/events';
 
 // Create a handler-specific logger
 const logger = createLogger('SetQuestionHandler');
+
+// Create game instance service
+const gameInstanceService = new GameInstanceService();
 
 export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: SetQuestionPayload, callback?: (data: any) => void) => {
@@ -41,11 +45,17 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
         logger.info({ gameId, userId: effectiveuserId, questionUid }, 'Setting question');
 
         try {
-            // Verify authorization
+            // Verify authorization - user must be either the game initiator or the template creator
             const gameInstance = await prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
-                    initiatorUserId: effectiveuserId
+                    OR: [
+                        { initiatorUserId: effectiveuserId },
+                        { gameTemplate: { creatorId: effectiveuserId } }
+                    ]
+                },
+                include: {
+                    gameTemplate: true
                 }
             });
 
@@ -141,11 +151,27 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 const timeMultiplier = gameState.settings?.timeMultiplier || 1.0;
                 const duration = (question.timeLimit || 30) * 1000 * timeMultiplier; // Convert to milliseconds
 
-                gameState.timer = {
-                    startedAt: Date.now(),
-                    duration,
-                    isPaused: true // Start paused so teacher can control when to begin
-                };
+                // CRITICAL FIX: Preserve timer state if currently running
+                const currentTimer = gameState.timer;
+                const isCurrentlyRunning = currentTimer && !currentTimer.isPaused;
+
+                if (isCurrentlyRunning) {
+                    // Keep timer running but update duration
+                    gameState.timer = {
+                        startedAt: Date.now(), // Reset start time for new question
+                        duration,
+                        isPaused: false // Keep running
+                    };
+                    logger.info({ gameId, questionUid, duration }, 'Timer was running, keeping it active for new question');
+                } else {
+                    // Default: start paused so teacher can control when to begin
+                    gameState.timer = {
+                        startedAt: Date.now(),
+                        duration,
+                        isPaused: true
+                    };
+                    logger.info({ gameId, questionUid, duration }, 'Timer was paused, keeping it paused for new question');
+                }
 
                 // Reset answersLocked to false for the new question
                 gameState.answersLocked = false;
@@ -153,6 +179,19 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
 
             // Update the game state in Redis
             await gameStateService.updateGameState(gameInstance.accessCode, gameState);
+
+            // Update game status to 'active' when setting the first question (game has started)
+            if (gameInstance.status === 'pending') {
+                logger.info({ gameId, questionUid }, 'Setting game status to active as first question is being set');
+                await gameInstanceService.updateGameStatus(gameId, { status: 'active' });
+
+                // Emit game status change to dashboard
+                const dashboardRoom = `dashboard_${gameId}`;
+                io.to(dashboardRoom).emit('dashboard_game_status_changed', {
+                    status: 'active',
+                    ended: false
+                });
+            }
 
             // Notify dashboard about question change
             const dashboardRoom = `dashboard_${gameId}`;

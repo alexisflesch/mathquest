@@ -11,7 +11,7 @@
  * Goal: Create unified timer management with role-based behavior
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { TIMER_CONFIG, UI_CONFIG } from '@/config/gameConfig';
@@ -24,6 +24,7 @@ import type {
     GameTimerState,
     TimerConfig
 } from '@shared/types';
+import { logTimerEvent, logTimerState, logTimerCalculation, logTimerError } from '@/utils/timerDebugLogger';
 
 // Export types for use by other components
 export type { TimerRole, TimerStatus, GameTimerState as TimerState } from '@shared/types';
@@ -58,10 +59,10 @@ const DEFAULT_CONFIGS: Record<TimerRole, TimerConfig> = {
     teacher: {
         role: 'teacher',
         autoStart: false,
-        smoothCountdown: false,
+        smoothCountdown: true, // Enable smooth countdown for teacher dashboard
         showMilliseconds: false,
-        enableLocalAnimation: false,
-        updateThreshold: 1000 // Reduce teacher timer updates to 1 second intervals
+        enableLocalAnimation: true, // Enable local countdown animation for teacher dashboard
+        updateThreshold: TIMER_CONFIG.UI_UPDATE_INTERVAL_TEACHER // Use role-specific interval
     },
     student: {
         role: 'student',
@@ -69,7 +70,7 @@ const DEFAULT_CONFIGS: Record<TimerRole, TimerConfig> = {
         smoothCountdown: true,
         showMilliseconds: false,
         enableLocalAnimation: true,
-        updateThreshold: TIMER_CONFIG.UI_UPDATE_INTERVAL
+        updateThreshold: TIMER_CONFIG.UI_UPDATE_INTERVAL_STUDENT // Use role-specific interval
     },
     projection: {
         role: 'projection',
@@ -77,7 +78,7 @@ const DEFAULT_CONFIGS: Record<TimerRole, TimerConfig> = {
         smoothCountdown: true,
         showMilliseconds: true,
         enableLocalAnimation: true,
-        updateThreshold: TIMER_CONFIG.UI_UPDATE_INTERVAL
+        updateThreshold: TIMER_CONFIG.UI_UPDATE_INTERVAL_PROJECTION // Use role-specific interval for smooth animations
     },
     tournament: {
         role: 'tournament',
@@ -85,7 +86,7 @@ const DEFAULT_CONFIGS: Record<TimerRole, TimerConfig> = {
         smoothCountdown: true,
         showMilliseconds: false,
         enableLocalAnimation: true,
-        updateThreshold: TIMER_CONFIG.UI_UPDATE_INTERVAL
+        updateThreshold: TIMER_CONFIG.UI_UPDATE_INTERVAL_STUDENT // Tournaments are student-facing, use student interval
     }
 };
 
@@ -106,20 +107,20 @@ export function useGameTimer(
     customConfig?: Partial<TimerConfig>
 ): GameTimerHook {
 
-    // Merge default config with custom overrides
-    const config: TimerConfig = {
+    // Merge default config with custom overrides - memoize to prevent infinite re-renders
+    const config: TimerConfig = useMemo(() => ({
         ...DEFAULT_CONFIGS[role],
         ...customConfig
-    };
+    }), [role, customConfig]);
 
     // --- Timer State ---
     const [timerState, setTimerState] = useState<GameTimerState>({
         status: 'stop',
-        timeLeft: 0,
-        duration: TIMER_CONFIG.DEFAULT_QUESTION_TIME,
+        timeLeftMs: 0,
+        durationMs: TIMER_CONFIG.DEFAULT_QUESTION_TIME,
         questionId: undefined,
         timestamp: null,
-        localTimeLeft: null
+        localTimeLeftMs: null
     });
 
     // --- Timer References for Animation ---
@@ -148,6 +149,16 @@ export function useGameTimer(
     }, []);
 
     // --- Timer Update Function with Throttling ---
+    const updateThreshold = useMemo(() =>
+        config.updateThreshold || UI_CONFIG.LEADERBOARD_UPDATE_INTERVAL,
+        [config.updateThreshold]
+    );
+
+    const enableLocalAnimation = useMemo(() =>
+        config.enableLocalAnimation,
+        [config.enableLocalAnimation]
+    );
+
     const updateLocalTimeLeft = useCallback((newTimeLeftMs: number) => {
         const now = Date.now();
         const previousValue = localTimeLeftRef.current;
@@ -155,91 +166,60 @@ export function useGameTimer(
         // Always update the ref value
         localTimeLeftRef.current = newTimeLeftMs;
 
-        // Only update state if enough time has passed or value changed significantly
-        const threshold = config.updateThreshold || UI_CONFIG.LEADERBOARD_UPDATE_INTERVAL;
+        // Only update state if value changed significantly to prevent excessive re-renders
+        const valueChange = Math.abs((previousValue || 0) - newTimeLeftMs);
 
-        // In test environment, always update for immediate feedback
-        const isTestEnv = process.env.NODE_ENV === 'test' || typeof jest !== 'undefined';
-
-        if (
-            isTestEnv ||
-            now - lastUpdateTimeRef.current >= threshold ||
-            Math.abs((previousValue || 0) - newTimeLeftMs) > 1
-        ) {
+        // Update if this is the first time or if value changed by at least 100ms
+        if (previousValue === null || valueChange >= 100) {
             setTimerState((prev: GameTimerState) => ({
                 ...prev,
-                timeLeft: newTimeLeftMs,
-                localTimeLeft: newTimeLeftMs
+                timeLeftMs: newTimeLeftMs,
+                localTimeLeftMs: newTimeLeftMs
             }));
             lastUpdateTimeRef.current = now;
         }
-    }, [config.updateThreshold]);
+    }, []); // No dependencies to avoid recreation
 
     // --- Animation Loop for Smooth Countdown ---
     const startAnimationLoop = useCallback(() => {
-        if (!config.enableLocalAnimation) return;
+        if (!enableLocalAnimation) return;
 
-        // Detect test environment - use setInterval for Jest compatibility
-        const isTestEnv = process.env.NODE_ENV === 'test' || typeof jest !== 'undefined';
+        // Use role-specific update interval from config
+        const intervalMs = config.updateThreshold || TIMER_CONFIG.UI_UPDATE_INTERVAL;
 
-        if (isTestEnv) {
-            // Use setInterval for Jest fake timers compatibility
-            const intervalTick = () => {
-                if (startTimeRef.current === null || initialDurationRef.current === null) return;
+        const intervalTick = () => {
+            if (startTimeRef.current === null || initialDurationRef.current === null) return;
 
-                const now = Date.now();
-                const elapsedMs = now - startTimeRef.current;
-                const remainingMs = Math.max(initialDurationRef.current - elapsedMs, 0);
-                updateLocalTimeLeft(remainingMs);
+            const now = Date.now();
+            const elapsedMs = now - startTimeRef.current;
+            const remainingMs = Math.max(initialDurationRef.current - elapsedMs, 0);
+            updateLocalTimeLeft(remainingMs);
 
-                if (remainingMs <= 0) {
-                    // Timer expired
-                    setTimerState((prev: GameTimerState) => ({
-                        ...prev,
-                        status: 'stop',
-                        timeLeft: 0,
-                        localTimeLeft: 0
-                    }));
-                    cleanup();
-                }
-            };
+            if (remainingMs <= 0) {
+                // Timer expired
+                setTimerState((prev: GameTimerState) => ({
+                    ...prev,
+                    status: 'stop',
+                    timeLeftMs: 0,
+                    localTimeLeftMs: 0
+                }));
+                cleanup();
+            }
+        };
 
-            // Run the first tick immediately to set initial state
-            intervalTick();
-
-            // Use 500ms intervals for teacher dashboard (2 FPS for less frequent updates)
-            timerRef.current = setInterval(intervalTick, role === 'teacher' ? 500 : 100);
-        } else {
-            // Use requestAnimationFrame for production (60 FPS)
-            const tick = () => {
-                if (startTimeRef.current === null || initialDurationRef.current === null) return;
-
-                const now = Date.now();
-                const elapsedMs = now - startTimeRef.current;
-                const remainingMs = Math.max(initialDurationRef.current - elapsedMs, 0);
-                updateLocalTimeLeft(remainingMs);
-
-                if (remainingMs > 0 && timerState.status === 'play') {
-                    animationFrameRef.current = requestAnimationFrame(tick);
-                } else if (remainingMs <= 0) {
-                    // Timer expired
-                    setTimerState((prev: GameTimerState) => ({
-                        ...prev,
-                        status: 'stop',
-                        timeLeft: 0,
-                        localTimeLeft: 0
-                    }));
-                    cleanup();
-                }
-            };
-
-            animationFrameRef.current = requestAnimationFrame(tick);
+        // Set initial state immediately
+        if (startTimeRef.current !== null && initialDurationRef.current !== null) {
+            updateLocalTimeLeft(initialDurationRef.current);
         }
-    }, [config.enableLocalAnimation, timerState.status, updateLocalTimeLeft, cleanup]);
+
+        // Start the interval and run the first tick immediately
+        intervalTick(); // Run first tick immediately to avoid delay
+        timerRef.current = setInterval(intervalTick, intervalMs);
+    }, [enableLocalAnimation, updateLocalTimeLeft, cleanup, config.updateThreshold]);
 
     // --- Local Countdown Function ---
     const startLocalCountdown = useCallback((timeLeftMs: number) => {
-        if (config.enableLocalAnimation) {
+        if (enableLocalAnimation) {
             const now = Date.now();
             startTimeRef.current = now;
             initialDurationRef.current = timeLeftMs;
@@ -248,11 +228,11 @@ export function useGameTimer(
             // Simple countdown without animation
             setTimerState((prev: GameTimerState) => ({
                 ...prev,
-                timeLeft: timeLeftMs,
-                localTimeLeft: timeLeftMs
+                timeLeftMs: timeLeftMs,
+                localTimeLeftMs: timeLeftMs
             }));
         }
-    }, [config.enableLocalAnimation, startAnimationLoop]);
+    }, [enableLocalAnimation, startAnimationLoop]);
 
     // --- Timer Actions ---
     const start = useCallback((questionId: string, duration?: number) => {
@@ -260,17 +240,17 @@ export function useGameTimer(
 
         cleanup();
 
-        const timerDuration = duration || timerState.duration || TIMER_CONFIG.DEFAULT_QUESTION_TIME;
+        const timerDuration = duration || timerState.durationMs || TIMER_CONFIG.DEFAULT_QUESTION_TIME;
         const now = Date.now();
 
         setTimerState((prev: GameTimerState) => ({
             ...prev,
             status: 'play',
             questionId,
-            duration: timerDuration,
-            timeLeft: timerDuration,
+            durationMs: timerDuration,
+            timeLeftMs: timerDuration,
             timestamp: now,
-            localTimeLeft: timerDuration
+            localTimeLeftMs: timerDuration
         }));
 
         if (config.enableLocalAnimation) {
@@ -278,7 +258,7 @@ export function useGameTimer(
             initialDurationRef.current = timerDuration;
             startAnimationLoop();
         }
-    }, [role, timerState.duration, cleanup, config.enableLocalAnimation, startAnimationLoop]);
+    }, [role, timerState.durationMs, cleanup, config.enableLocalAnimation, startAnimationLoop]);
 
     const pause = useCallback(() => {
         logger.info(`[${role.toUpperCase()}] Pausing timer`);
@@ -295,7 +275,7 @@ export function useGameTimer(
     const resume = useCallback(() => {
         logger.info(`[${role.toUpperCase()}] Resuming timer`);
 
-        if (timerState.localTimeLeft && timerState.localTimeLeft > 0) {
+        if (timerState.localTimeLeftMs && timerState.localTimeLeftMs > 0) {
             const now = Date.now();
 
             setTimerState((prev: GameTimerState) => ({
@@ -306,11 +286,11 @@ export function useGameTimer(
 
             if (config.enableLocalAnimation) {
                 startTimeRef.current = now;
-                initialDurationRef.current = timerState.localTimeLeft;
+                initialDurationRef.current = timerState.localTimeLeftMs;
                 startAnimationLoop();
             }
         }
-    }, [role, timerState.localTimeLeft, config.enableLocalAnimation, startAnimationLoop]);
+    }, [role, timerState.localTimeLeftMs, config.enableLocalAnimation, startAnimationLoop]);
 
     const stop = useCallback(() => {
         logger.info(`[${role.toUpperCase()}] Stopping timer`);
@@ -320,8 +300,8 @@ export function useGameTimer(
         setTimerState((prev: GameTimerState) => ({
             ...prev,
             status: 'stop',
-            timeLeft: 0,
-            localTimeLeft: 0,
+            timeLeftMs: 0,
+            localTimeLeftMs: 0,
             questionId: undefined,
             timestamp: null
         }));
@@ -332,57 +312,98 @@ export function useGameTimer(
 
         cleanup();
 
-        const newDuration = duration || timerState.duration || TIMER_CONFIG.DEFAULT_QUESTION_TIME;
+        const newDuration = duration || timerState.durationMs || TIMER_CONFIG.DEFAULT_QUESTION_TIME;
 
         setTimerState((prev: GameTimerState) => ({
             ...prev,
             status: 'stop',
-            timeLeft: newDuration,
-            duration: newDuration,
-            localTimeLeft: newDuration,
+            timeLeftMs: newDuration,
+            durationMs: newDuration,
+            localTimeLeftMs: newDuration,
             timestamp: null
         }));
-    }, [role, timerState.duration, cleanup]);
+    }, [role, timerState.durationMs, cleanup]);
 
     const setDuration = useCallback((duration: number) => {
         logger.info(`[${role.toUpperCase()}] Setting timer duration to ${duration}s`);
 
         setTimerState((prev: GameTimerState) => ({
             ...prev,
-            duration,
-            timeLeft: prev.status === 'stop' ? duration : prev.timeLeft,
-            localTimeLeft: prev.status === 'stop' ? duration : prev.localTimeLeft
+            durationMs: duration,
+            timeLeftMs: prev.status === 'stop' ? duration : prev.timeLeftMs,
+            localTimeLeftMs: prev.status === 'stop' ? duration : prev.localTimeLeftMs
         }));
     }, [role]);
 
     // --- Backend Synchronization ---
     const syncWithBackend = useCallback((payload: TimerUpdatePayload | GameTimerUpdatePayload) => {
+        logTimerEvent('syncWithBackend_called', {
+            role,
+            payload,
+            payloadType: typeof payload,
+            payloadKeys: payload ? Object.keys(payload) : null,
+            hasTimeLeftMs: 'timeLeftMs' in payload,
+            hasRunning: 'running' in payload,
+            hasTimer: 'timer' in payload
+        });
+
+        logTimerState('syncWithBackend_current_state_before', timerState);
+
         logger.debug(`[${role.toUpperCase()}] Syncing timer with backend`, payload);
 
         // Handle TimerUpdatePayload (standardized format)
-        if ('timeLeft' in payload && 'running' in payload) {
+        if ('timeLeftMs' in payload && 'running' in payload) {
             const timerUpdate = payload as TimerUpdatePayload;
+
+            logTimerCalculation('processing_timer_update_payload', {
+                timeLeftMs: timerUpdate.timeLeftMs,
+                timeLeftType: typeof timerUpdate.timeLeftMs,
+                running: timerUpdate.running,
+                runningType: typeof timerUpdate.running,
+                status: timerUpdate.status,
+                durationMs: timerUpdate.durationMs,
+                questionId: timerUpdate.questionId
+            });
 
             // Always use status from payload if present, fallback to running
             let newStatus: TimerStatus = timerUpdate.status || (timerUpdate.running ? 'play' : 'stop');
 
-            // TimerUpdatePayload.timeLeft is expected to be in milliseconds
-            const timeLeftInMs = timerUpdate.timeLeft || 0;
+            // TimerUpdatePayload.timeLeftMs is expected to be in milliseconds
+            const timeLeftInMs = timerUpdate.timeLeftMs || 0;
 
-            setTimerState((prev: GameTimerState) => ({
-                ...prev,
+            logTimerCalculation('calculated_timer_state', {
+                newStatus,
+                timeLeftInMs,
+                willStartCountdown: timerUpdate.running && timeLeftInMs > 0
+            });
+
+            const newTimerState = {
                 status: newStatus,
-                timeLeft: timeLeftInMs,
-                duration: timerUpdate.duration || prev.duration,
-                questionId: timerUpdate.questionId || prev.questionId || undefined,
+                timeLeftMs: timeLeftInMs,
+                durationMs: timerUpdate.durationMs || timerState.durationMs,
+                questionId: timerUpdate.questionId || timerState.questionId || undefined,
                 timestamp: Date.now(),
-                localTimeLeft: timeLeftInMs // timeLeft is in milliseconds
-            }));
+                localTimeLeftMs: timeLeftInMs // timeLeftMs is in milliseconds
+            };
+
+            logTimerState('setting_new_timer_state', newTimerState);
+
+            setTimerState((prev: GameTimerState) => {
+                logTimerState('setTimerState_prev', prev);
+                const result = {
+                    ...prev,
+                    ...newTimerState
+                };
+                logTimerState('setTimerState_result', result);
+                return result;
+            });
 
             // Start/stop local countdown based on running state
             if (timerUpdate.running && timeLeftInMs > 0) {
-                startLocalCountdown(timeLeftInMs); // timeLeft is in milliseconds
+                logTimerEvent('starting_local_countdown', { timeLeftInMs });
+                startLocalCountdown(timeLeftInMs); // timeLeftMs is in milliseconds
             } else {
+                logTimerEvent('cleanup_called', { running: timerUpdate.running, timeLeftInMs });
                 cleanup();
             }
         }
@@ -390,33 +411,86 @@ export function useGameTimer(
         // Handle GameTimerUpdatePayload (backend timer object format)
         else if ('timer' in payload) {
             const gameTimerUpdate = payload as GameTimerUpdatePayload;
+
+            // 🚨 EXTREME DEBUG: Log raw backend data
+            console.warn('🚨 SYNC DEBUG: Raw backend timer data received', {
+                'gameTimerUpdate': gameTimerUpdate,
+                'gameTimerUpdate.timer': gameTimerUpdate.timer,
+                'gameTimerUpdate.timer.timeRemainingMs': gameTimerUpdate.timer?.timeRemainingMs,
+                'gameTimerUpdate.timer.isPaused': gameTimerUpdate.timer?.isPaused,
+                'typeof gameTimerUpdate.timer?.timeRemainingMs': typeof gameTimerUpdate.timer?.timeRemainingMs,
+                'JSON.stringify(gameTimerUpdate)': JSON.stringify(gameTimerUpdate)
+            });
+
             const timer = gameTimerUpdate.timer;
 
-            let timeLeft = 0;
+            let timeLeftMs = 0;
             let status: TimerStatus = 'stop';
 
             if (timer.isPaused) {
                 status = 'pause';
-                timeLeft = typeof timer.timeRemaining === 'number' ? Math.ceil(timer.timeRemaining / 1000) : 0;
-            } else if (typeof timer.startedAt === 'number' && typeof timer.duration === 'number') {
+                timeLeftMs = typeof timer.timeRemainingMs === 'number' ? timer.timeRemainingMs : 0;
+
+                // Log frontend pause processing
+                logger.debug('Frontend processing paused timer', {
+                    'timer.isPaused': timer.isPaused,
+                    'timer.timeRemainingMs': timer.timeRemainingMs,
+                    'timer.timeRemainingMs type': typeof timer.timeRemainingMs,
+                    'typeof timer.timeRemainingMs === "number"': typeof timer.timeRemainingMs === 'number',
+                    'timer.timeRemainingMs > 0': typeof timer.timeRemainingMs === 'number' ? timer.timeRemainingMs > 0 : false,
+                    'calculated timeLeftMs': timeLeftMs,
+                    'timeLeftMs type': typeof timeLeftMs,
+                    'timeLeftMs === 0': timeLeftMs === 0,
+                    'timeLeftMs > 0': timeLeftMs > 0,
+                    'about to check if timeLeftMs === 0': true,
+                    'full timer object': timer
+                });
+
+                // If paused and time is 0, it should be stopped
+                if (timeLeftMs === 0) {
+                    logger.debug('Converting pause to stop because timeLeftMs === 0', {
+                        'timeLeftMs': timeLeftMs,
+                        'timer.timeRemainingMs': timer.timeRemainingMs,
+                        'this should not happen if backend sent correct data': true
+                    });
+                    status = 'stop';
+                }
+            } else if (typeof timer.timeRemainingMs === 'number') {
+                // Prioritize timeRemainingMs from backend when available
+                timeLeftMs = timer.timeRemainingMs;
+                status = timeLeftMs > 0 ? 'play' : 'stop';
+
+                // Log resume processing
+                logger.debug('Frontend processing resumed/playing timer', {
+                    'timer.isPaused': timer.isPaused,
+                    'timer.timeRemainingMs': timer.timeRemainingMs,
+                    'timer.timeRemainingMs type': typeof timer.timeRemainingMs,
+                    'calculated timeLeftMs': timeLeftMs,
+                    'calculated status': status,
+                    'timeLeftMs in seconds': timeLeftMs / 1000,
+                    'full timer object': timer
+                });
+            } else if (typeof timer.startedAt === 'number' && typeof timer.durationMs === 'number') {
+                // Fallback to calculation if timeRemaining not provided
                 const elapsed = Date.now() - timer.startedAt;
-                const remaining = Math.max(0, timer.duration - elapsed);
-                timeLeft = Math.ceil(remaining / 1000);
-                status = timeLeft > 0 ? 'play' : 'stop';
+                const remaining = Math.max(0, timer.durationMs - elapsed);
+                timeLeftMs = remaining;
+                status = timeLeftMs > 0 ? 'play' : 'stop';
             }
 
             setTimerState((prev: GameTimerState) => ({
                 ...prev,
                 status,
-                timeLeft,
-                duration: timer.duration ? Math.ceil(timer.duration / 1000) : prev.duration,
+                timeLeftMs: timeLeftMs,
+                durationMs: timer.durationMs || prev.durationMs,
+                questionId: gameTimerUpdate.questionUid || prev.questionId,
                 timestamp: Date.now(),
-                localTimeLeft: timeLeft
+                localTimeLeftMs: timeLeftMs
             }));
 
             // Start/stop local countdown based on status
-            if (status === 'play' && timeLeft > 0) {
-                startLocalCountdown(timeLeft);
+            if (status === 'play' && timeLeftMs > 0) {
+                startLocalCountdown(timeLeftMs);
             } else {
                 cleanup();
             }
@@ -448,6 +522,17 @@ export function useGameTimer(
             'game_timer_updated'
         );
 
+        const handleDashboardTimerUpdate = createSafeEventHandler(
+            (payload: GameTimerUpdatePayload) => {
+                logger.debug(`[${role.toUpperCase()}] Received dashboard timer update`, payload);
+                syncWithBackend(payload);
+            },
+            (data: unknown): data is GameTimerUpdatePayload => {
+                return !!(data && typeof data === 'object' && 'timer' in data);
+            },
+            'dashboard_timer_updated'
+        );
+
         // Register role-specific socket events
         const events: Array<{ event: string; handler: (data: unknown) => void }> = [];
 
@@ -455,7 +540,7 @@ export function useGameTimer(
             case 'teacher':
                 events.push(
                     { event: SOCKET_EVENTS.TEACHER.TIMER_UPDATE, handler: handleTimerUpdate },
-                    { event: SOCKET_EVENTS.TEACHER.DASHBOARD_TIMER_UPDATED, handler: handleGameTimerUpdate }
+                    { event: SOCKET_EVENTS.TEACHER.DASHBOARD_TIMER_UPDATED, handler: handleDashboardTimerUpdate }
                 );
                 break;
             case 'student':
@@ -507,13 +592,13 @@ export function useGameTimer(
 
     // --- Get Display Time (with role-specific logic) ---
     const getDisplayTime = useCallback((): number => {
-        // For roles with local animation, prefer localTimeLeft
-        if (config.enableLocalAnimation && timerState.localTimeLeft !== null) {
-            return timerState.localTimeLeft;
+        // For roles with local animation, prefer localTimeLeftMs
+        if (config.enableLocalAnimation && timerState.localTimeLeftMs !== null) {
+            return timerState.localTimeLeftMs;
         }
-        // Fallback to timeLeft
-        return timerState.timeLeft;
-    }, [config.enableLocalAnimation, timerState.localTimeLeft, timerState.timeLeft]);
+        // Fallback to timeLeftMs
+        return timerState.timeLeftMs;
+    }, [config.enableLocalAnimation, timerState.localTimeLeftMs, timerState.timeLeftMs]);
 
     // --- Cleanup on unmount ---
     useEffect(() => {

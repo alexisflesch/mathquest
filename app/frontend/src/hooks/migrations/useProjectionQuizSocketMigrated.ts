@@ -42,7 +42,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
 
     // Legacy state that needs to be maintained for backward compatibility
     const [gameState, setGameState] = useState<QuizState | null>(null);
-    const [localTimeLeft, setLocalTimeLeft] = useState<number | null>(null);
+    const [localTimeLeftMs, setLocalTimeLeft] = useState<number | null>(null);
 
     // Map unified game state to legacy format
     useEffect(() => {
@@ -53,7 +53,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                 currentQuestionIdx: unifiedState.currentQuestionIndex,
                 questions: prev?.questions || [],
                 chrono: {
-                    timeLeft: unifiedState.timer.timeLeft,
+                    timeLeftMs: unifiedState.timer.timeLeftMs,
                     running: unifiedState.isTimerRunning
                 },
                 locked: false,
@@ -62,7 +62,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                 profSocketId: null, // Not relevant for projection
                 timerStatus: unifiedState.timer.status,
                 timerQuestionId: unifiedState.timer.questionId,
-                timerTimeLeft: unifiedState.timer.timeLeft,
+                timerTimeLeft: unifiedState.timer.timeLeftMs,
                 timerTimestamp: unifiedState.timer.timestamp ?? undefined,
                 questionStates: prev?.questionStates || {}
             }));
@@ -89,7 +89,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                     ...prev,
                     ...state,
                     chrono: {
-                        timeLeft: state.chrono?.timeLeft ?? state.timerTimeLeft ?? 0,
+                        timeLeftMs: state.chrono?.timeLeft ?? state.timerTimeLeft ?? 0,
                         running: state.chrono?.running ?? (state.timerStatus === 'play')
                     }
                 }));
@@ -149,8 +149,8 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
         gameState,
         timerStatus: gameManager.gameState.timer.status,
         timerQuestionId: gameManager.gameState.timer.questionId,
-        timeLeft: gameManager.gameState.timer.timeLeft,
-        localTimeLeft,
+        timeLeftMs: gameManager.gameState.timer.timeLeftMs,
+        localTimeLeftMs,
         connectedCount: gameManager.gameState.connectedCount,
 
         // Legacy setter for local time left (used by animations)

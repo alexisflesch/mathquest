@@ -1,8 +1,37 @@
 /**
  * Teacher Dashboard Page Component - Refactored
  *
- * Uses useTeacherQuizSocket hook for real-time logic and CodeManager
- * component for code handling.
+ * Uses useTeacherQuizSocket hook for real-time logic and CodeManag    const token = get    const {
+        quizSocket,
+        quizState,
+        timerStatus,
+        timerQuestionId,
+        timeLeftMs,
+        localTimeLeftMs,
+        connectedCount,
+        emitSetQuestion,
+        emitEndQuiz,
+        emitPauseQuiz,
+        emitResumeQuiz,
+        emitSetTimer,
+        emitTimerAction,
+        emitUpdateTournamentCode
+    } = useTeacherQuizSocket(accessCode, token, gameId); const {
+        quizSocket,
+        quizState,
+        timerStatus,
+        timerQuestionId,
+        timeLeftMs,
+        localTimeLeftMs,
+        connectedCount,
+        emitSetQuestion,
+        emitEndQuiz,
+        emitPauseQuiz,
+        emitResumeQuiz,
+        emitSetTimer,
+        emitTimerAction,
+        emitUpdateTournamentCode,
+    } = useTeacherQuizSocket(currentTournamentCode, token, gameId); // Pass accessCode, token, gameId (actual database ID)or code handling.
  */
 
 "use client";
@@ -21,6 +50,7 @@ import { makeApiRequest } from '@/config/api';
 import { QuizListResponseSchema, TeacherQuizQuestionsResponseSchema, TournamentCodeResponseSchema, TournamentVerificationResponseSchema, type QuizListResponse, type TeacherQuizQuestionsResponse, type TournamentCodeResponse, type TournamentVerificationResponse, type Question } from '@/types/api';
 import { STORAGE_KEYS } from '@/constants/auth';
 import InfinitySpin from '@/components/InfinitySpin';
+import { logTimerEvent, logTimerState, logTimerCalculation, logTimerError } from '@/utils/timerDebugLogger';
 
 // Create a logger for this component
 const logger = createLogger('TeacherDashboardPage');
@@ -56,17 +86,12 @@ function mapToCanonicalQuestion(q: any) {
         logger.warn('[DEBUG mapToCanonicalQuestion] No recognizable answer format found');
     }
 
-    // Fixed timer extraction - prioritize nested question.timeLimit over fallbacks
-    const timeLimit = questionData.timeLimit ?? questionData.time ?? questionData.temps ??
-        q.timeLimit ?? q.time ?? q.temps ?? 60;
+    // Extract timer value from standard timeLimit field only
+    const timeLimit = questionData.timeLimit ?? q.timeLimit ?? 60;
 
     logger.info('[DEBUG mapToCanonicalQuestion] Timer extraction:', {
         'questionData.timeLimit': questionData.timeLimit,
-        'questionData.time': questionData.time,
-        'questionData.temps': questionData.temps,
         'q.timeLimit': q.timeLimit,
-        'q.time': q.time,
-        'q.temps': q.temps,
         'final timeLimit': timeLimit
     });
 
@@ -84,10 +109,11 @@ function mapToCanonicalQuestion(q: any) {
     return result;
 }
 
-export default function TeacherDashboardPage({ params }: { params: Promise<{ quizId: string }> }) {
-    const { quizId } = React.use(params);
+export default function TeacherDashboardPage({ params }: { params: Promise<{ code: string }> }) {
+    const { code } = React.use(params); // This is now the access code like "379CCT"
     const [questions, setQuestions] = useState<Question[]>([]); // Keep local question state for UI ordering/editing
     const [quizName, setQuizName] = useState<string>("");
+    const [gameId, setGameId] = useState<string | null>(null); // Store the actual database UUID
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null); // UI state for selected question
@@ -121,13 +147,22 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     };
 
     const token = getAuthToken();
+
+    // Log access code and gameId resolution for debugging
+    useEffect(() => {
+        logger.info('TeacherDashboardPage - URL params:', {
+            code, // This is the access code from URL
+            gameId // This will be the resolved database UUID
+        });
+    }, [code, gameId]);
+
     const {
         quizSocket,
         quizState,
         timerStatus,
         timerQuestionId,
-        timeLeft,
-        localTimeLeft,
+        timeLeftMs,
+        localTimeLeftMs,
         connectedCount,
         emitSetQuestion,
         emitEndQuiz,
@@ -136,7 +171,25 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         emitSetTimer,
         emitTimerAction,
         emitUpdateTournamentCode,
-    } = useTeacherQuizSocket(currentTournamentCode, token, quizId); // Pass accessCode, token, quizId
+    } = useTeacherQuizSocket(code, token, gameId); // Pass accessCode (from URL), token, gameId (database UUID)
+
+    // Comprehensive timer state debugging
+    useEffect(() => {
+        logTimerState('dashboard_timer_values_changed', {
+            timerStatus,
+            timerQuestionId,
+            timeLeftMs,
+            timeLeftType: typeof timeLeftMs,
+            localTimeLeftMs,
+            localTimeLeftType: typeof localTimeLeftMs,
+            connectedCount,
+            quizSocketConnected: !!quizSocket?.connected,
+            quizStateExists: !!quizState,
+            quizStateChrono: quizState?.chrono,
+            quizStateTimerStatus: quizState?.timerStatus,
+            quizStateTimerTimeLeft: quizState?.timerTimeLeft
+        });
+    }, [timerStatus, timerQuestionId, timeLeftMs, localTimeLeftMs, quizSocket?.connected, quizState?.chrono, quizState?.timerStatus, quizState?.timerTimeLeft]);
 
     // --- Stats state for answer histograms ---
     type StatsData = { stats: number[]; totalAnswers: number };
@@ -210,21 +263,30 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         };
     }, []);
 
-    // --- Initial Data Fetching (Quiz Name, Questions, Initial Code) ---
+    // --- Initial Data Fetching (Resolve access code to game UUID, fetch questions, etc.) ---
     useEffect(() => {
         let isMounted = true;
         setLoading(true);
         setError(null);
-        setInitialTournamentCode(null); // Reset on quizId change
+        setGameId(null); // Reset on code change
 
         const fetchQuizData = async () => {
             try {
-                // First, fetch the game instance to get the template ID and access code
+                // First, resolve the access code to get the game instance UUID
+                logger.info(`[DEBUG] Resolving access code to game instance:`, { code });
 
-                const gameInstanceData = await makeApiRequest<{ gameInstance: { id: string, name: string, gameTemplateId: string, accessCode?: string } }>(`games/id/${quizId}`);
+                const gameInstanceData = await makeApiRequest<{ gameInstance: { id: string, name: string, gameTemplateId: string, accessCode?: string } }>(`games/${code}`);
                 const gameInstance = gameInstanceData.gameInstance;
 
-                if (isMounted) setQuizName(gameInstance.name || "Quiz");
+                if (isMounted) {
+                    setQuizName(gameInstance.name || "Quiz");
+                    setGameId(gameInstance.id); // Store the actual database UUID
+                    logger.info(`[DEBUG] Resolved game instance:`, {
+                        accessCode: code,
+                        gameId: gameInstance.id,
+                        gameName: gameInstance.name
+                    });
+                }
 
                 // Fetch the game template with questions using the template ID
                 const gameTemplateData = await makeApiRequest<{ gameTemplate: { id: string, name: string, questions: any[] } }>(`game-templates/${gameInstance.gameTemplateId}`);
@@ -237,23 +299,20 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 const initialQuestions = (gameTemplateData.gameTemplate.questions || []).map((q: any, index: number) => {
                     logger.info(`[DEBUG] Processing question ${index}:`, q);
 
-                    // Extract timer values from nested question structure
+                    // Extract timer values from nested question structure using standard timeLimit field
                     const questionData = q.question || q;
-                    const timeLimit = questionData.timeLimit ?? questionData.time ?? questionData.temps ??
-                        q.timeLimit ?? q.time ?? q.temps ?? 60;
+                    const timeLimit = questionData.timeLimit ?? q.timeLimit ?? 60;
 
                     const processedQuestion = {
                         ...q,
                         type: q.questionType || questionData.questionType || 'choix_simple', // Default type if not provided
-                        temps: timeLimit, // Use extracted timeLimit for backward compatibility
-                        timeLimit: timeLimit, // Also set timeLimit for consistency
+                        timeLimit: timeLimit, // Use standard timeLimit field only
                         feedbackWaitTime: questionData.feedbackWaitTime ?? q.feedbackWaitTime ?? 3000 // Default to 3s if null
                     };
 
                     logger.info(`[DEBUG] Processed question ${index} timer:`, {
                         'questionData.timeLimit': questionData.timeLimit,
-                        'questionData.time': questionData.time,
-                        'questionData.temps': questionData.temps,
+                        'q.timeLimit': q.timeLimit,
                         'final timeLimit': timeLimit
                     });
                     logger.info(`[DEBUG] Processed question ${index}:`, processedQuestion);
@@ -263,18 +322,11 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                 logger.info('[DEBUG] Final initialQuestions:', initialQuestions);
                 if (isMounted) setQuestions(initialQuestions);
 
-                // Set tournament code from game instance access code
-                if (gameInstance.accessCode) {
-                    if (isMounted) {
-                        logger.info(`Using game instance access code: ${gameInstance.accessCode}`);
-                        setInitialTournamentCode(gameInstance.accessCode);
-                        setCurrentTournamentCode(gameInstance.accessCode);
-                    }
-                } else {
-                    if (isMounted) {
-                        setInitialTournamentCode(null);
-                        setCurrentTournamentCode(null);
-                    }
+                // Set tournament code - the code from URL is the access code
+                if (isMounted) {
+                    logger.info(`Using access code from URL: ${code}`);
+                    setInitialTournamentCode(code);
+                    setCurrentTournamentCode(code);
                 }
             } catch (err: unknown) {
                 logger.error("Error fetching initial data:", err);
@@ -284,14 +336,14 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             }
         };
 
-        if (quizId) {
+        if (code) {
             fetchQuizData();
         } else {
-            setLoading(false); // No quizId, nothing to load
+            setLoading(false); // No code, nothing to load
         }
 
         return () => { isMounted = false; };
-    }, [quizId, token]); // Add token as dependency to refetch when token changes
+    }, [code, token]); // Add token as dependency to refetch when token changes
 
 
     // --- Sync UI Active Question with Hook's Timer State ---
@@ -308,20 +360,43 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         return questions.map(mapToCanonicalQuestion);
     }, [questions]);
 
-    // --- Compute effective timeLeft for DraggableQuestionsList with throttling ---
+    // --- Compute effective timeLeftMs for DraggableQuestionsList with throttling ---
     const [throttledTimeLeft, setThrottledTimeLeft] = useState<number>(0);
 
     // Throttle timer updates for better performance
     useEffect(() => {
-        const newTimeLeft = timerStatus === 'stop' ? 0 : (localTimeLeft ?? timeLeft ?? 0);
+        const newTimeLeft = timerStatus === 'stop' ? 0 : (localTimeLeftMs ?? timeLeftMs ?? 0);
+
+        logTimerCalculation('dashboard_effective_time_calculation', {
+            timerStatus,
+            localTimeLeftMs,
+            timeLeftMs,
+            newTimeLeft,
+            throttledTimeLeft,
+            willUpdate: Math.abs(newTimeLeft - throttledTimeLeft) >= 1,
+            difference: Math.abs(newTimeLeft - throttledTimeLeft)
+        });
 
         // Only update if there's a meaningful change (1 second or more)
         if (Math.abs(newTimeLeft - throttledTimeLeft) >= 1) {
+            logTimerEvent('dashboard_throttled_time_updated', {
+                from: throttledTimeLeft,
+                to: newTimeLeft
+            });
             setThrottledTimeLeft(newTimeLeft);
         }
-    }, [timerStatus, localTimeLeft, timeLeft, throttledTimeLeft]);
+    }, [timerStatus, localTimeLeftMs, timeLeftMs, throttledTimeLeft]);
 
     const effectiveTimeLeft = throttledTimeLeft;
+
+    // Log effective time for debugging
+    useEffect(() => {
+        logTimerState('dashboard_effective_time_left', {
+            effectiveTimeLeft,
+            throttledTimeLeft,
+            displayValue: effectiveTimeLeft
+        });
+    }, [effectiveTimeLeft, throttledTimeLeft]);
 
     // --- Handlers (using hook emitters) ---
 
@@ -347,8 +422,21 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     }, []);
 
     const handlePlay = useCallback((uid: string, startTime: number) => {
-        const questionToPlay = questions.find(q => q.uid === uid);
+        logger.info(`[DASHBOARD] handlePlay called:`, {
+            uid,
+            startTime,
+            accessCode: code,
+            gameId,
+            currentTournamentCode,
+            timerStatus,
+            timerQuestionId,
+            socketConnected: !!quizSocket?.connected
+        });
+
+        const questionToPlay = mappedQuestions.find(q => q.uid === uid);
         if (!questionToPlay) {
+            logger.warn(`[DASHBOARD] Question not found for uid: ${uid}`);
+            logger.warn(`[DASHBOARD] Available question UIDs:`, mappedQuestions.map(q => q.uid));
             return;
         }
         const currentQuestionUid = timerQuestionId;
@@ -356,10 +444,22 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
 
         if (currentQuestionUid === questionToPlay.uid) {
             if (timerStatus === 'play') {
+                logger.info(`[DASHBOARD] Pausing currently playing question:`, {
+                    questionUid: questionToPlay.uid,
+                    accessCode: code,
+                    gameId,
+                    currentTournamentCode
+                });
                 emitPauseQuiz();
                 return;
             }
             if (timerStatus === 'pause') {
+                logger.info(`[DASHBOARD] Resuming currently paused question:`, {
+                    questionUid: questionToPlay.uid,
+                    accessCode: code,
+                    gameId,
+                    currentTournamentCode
+                });
                 emitResumeQuiz();
                 return;
             }
@@ -371,51 +471,96 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
             return;
         }
 
-        if (timerStatus === 'stop' || timerStatus === 'pause') {
-            setQuestionActiveUid(questionToPlay.uid);
-            emitSetQuestion(questionToPlay.uid); // Do not send startTime to avoid resetting backend timer
-        } else {
-            setQuestionActiveUid(questionToPlay.uid);
-            emitSetQuestion(questionToPlay.uid, startTime);
-        }
-    }, [questions, emitPauseQuiz, emitResumeQuiz, emitSetQuestion]); // Removed frequently changing values
+        // Use the new unified timer action approach that handles question switching automatically
+        setQuestionActiveUid(questionToPlay.uid);
+
+        logger.debug('handlePlay about to call emitTimerAction', {
+            'questionToPlay.uid': questionToPlay.uid,
+            'questionToPlay.uid type': typeof questionToPlay.uid,
+            'questionToPlay object': questionToPlay,
+            'startTime': startTime,
+            'startTime type': typeof startTime,
+            uid,
+            'uid type': typeof uid,
+            'uid === questionToPlay.uid': uid === questionToPlay.uid,
+            accessCode: code,
+            gameId,
+            currentTournamentCode
+        });
+
+        // Send timer action with questionId - backend will handle question switching automatically
+        // Convert startTime from seconds to milliseconds for timer action
+        emitTimerAction({
+            status: 'play',
+            questionId: questionToPlay.uid,
+            timeLeftMs: startTime * 1000 // Convert seconds to milliseconds
+        });
+    }, [mappedQuestions, emitPauseQuiz, emitResumeQuiz, emitSetQuestion]); // Updated to use mappedQuestions
 
     const handlePause = useCallback(() => {
+        logger.info(`[DASHBOARD] About to emit pause:`, {
+            accessCode: code,
+            gameId,
+            currentTournamentCode,
+            socketConnected: !!quizSocket?.connected
+        });
         emitPauseQuiz();
     }, [emitPauseQuiz]); // Keep minimal dependencies
 
     const handleStop = useCallback(() => {
         // Use current timer state from closure - avoid dependencies that cause re-renders
         if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
-            emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeft: 0 });
+            logger.info(`[DASHBOARD] About to emit stop timer action:`, {
+                timerQuestionId,
+                timerStatus,
+                accessCode: code,
+                gameId,
+                currentTournamentCode,
+                socketConnected: !!quizSocket?.connected
+            });
+            emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeftMs: 0 });
         }
     }, [emitTimerAction, timerQuestionId, timerStatus]); // Include timer state but optimized for essential logic
 
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
         const question = questions.find(q => q.uid === uid);
         if (!question) return;
-        setQuestions(prev => prev.map(q => q.uid === uid ? { ...q, temps: newTime } : q));
+        setQuestions(prev => prev.map(q => q.uid === uid ? { ...q, timeLimit: newTime } : q));
         // Only emitSetTimer for paused or inactive timer edits. Do NOT auto-resume.
         emitSetTimer(newTime, question.uid);
         logger.info(`[DASHBOARD] Timer updated for question ${question.uid}: ${newTime}`);
         // Do NOT call emitTimerAction({ status: 'play', ... }) here. Only resume on explicit user action.
     }, [questions, emitSetTimer]); // Removed frequently changing timer states
 
-    const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeft: number }) => {
+    const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeftMs: number }) => {
+        logger.info(`[DASHBOARD] About to emit timer action:`, {
+            action,
+            accessCode: code,
+            gameId,
+            currentTournamentCode,
+            socketConnected: !!quizSocket?.connected
+        });
         emitTimerAction(action);
         logger.info(`[DASHBOARD] Timer action emitted:`, action);
 
         // Force synchronization after emitting the action - REMOVED LEGACY_QUIZ.GET_TIMER
         // if (action.status === 'play') {
-        //     quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.GET_TIMER, { quizId: action.questionId }, (response: { timeLeft: number }) => {
+        //     quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.GET_TIMER, { quizId: action.questionId }, (response: { timeLeftMs?: number }) => {
         //         logger.info(`[DASHBOARD] Timer synchronized after play action:`, response);
-        //         setQuestions(prev => prev.map(q => q.uid === action.questionId ? { ...q, temps: response.timeLeft } : q));
+        //         setQuestions(prev => prev.map(q => q.uid === action.questionId ? { ...q, temps: response.timeLeftMs } : q));
         //     });
         // }
     }, [emitTimerAction]); // Removed quizSocket from dependencies
 
     const handleShowResults = useCallback((uid: string) => {
-        emitTimerAction({ status: 'stop', questionId: uid, timeLeft: 0 });
+        logger.info(`[DASHBOARD] About to emit show results (stop) action:`, {
+            uid,
+            accessCode: code,
+            gameId,
+            currentTournamentCode,
+            socketConnected: !!quizSocket?.connected
+        });
+        emitTimerAction({ status: 'stop', questionId: uid, timeLeftMs: 0 });
         // quizSocket?.emit(SOCKET_EVENTS.LEGACY_QUIZ.CLOSE_QUESTION, { quizId, tournamentCode: currentTournamentCode, questionUid: uid }); // REMOVED
         // Consider if emitLockAnswers(true) is needed here or if stopping timer is sufficient
     }, [emitTimerAction]); // Removed frequently changing dependencies
@@ -438,7 +583,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
         if (pendingPlayIdx !== null) {
             const questionToPlay = questions[pendingPlayIdx];
             if (timerQuestionId && (timerStatus === 'play' || timerStatus === 'pause')) {
-                emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeft: 0 });
+                emitTimerAction({ status: 'stop', questionId: timerQuestionId, timeLeftMs: 0 });
             }
             if (questionToPlay) {
                 setQuestionActiveUid(questionToPlay.uid);
@@ -493,7 +638,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
     // --- Render Logic ---
     if (loading) return <div className="p-8">Chargement du tableau de bord...</div>;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
-    if (!quizId) return <div className="p-8 text-orange-600">Aucun ID de quiz fourni.</div>;
+    if (!code) return <div className="p-8 text-orange-600">Aucun code d'accès fourni.</div>;
 
     return (
         <div className="main-content">
@@ -516,7 +661,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                             <div>
                                 <CodeManager
-                                    quizId={quizId}
+                                    quizId={gameId || ''}
                                     quizSocket={quizSocket}
                                     quizState={quizState}
                                     initialTournamentCode={initialTournamentCode}
@@ -566,14 +711,14 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ qui
                                 questionActiveUid={questionActiveUid}
                                 timerStatus={timerStatus}
                                 timerQuestionId={timerQuestionId}
-                                timeLeft={effectiveTimeLeft}
+                                timeLeftMs={effectiveTimeLeft}
                                 onSelect={handleSelect}
                                 onPlay={handlePlay}
                                 onPause={handlePause}
                                 onStop={handleStop}
                                 onEditTimer={handleEditTimer}
                                 onReorder={handleReorderMemoized}
-                                quizId={quizId}
+                                quizId={gameId || ''}
                                 currentTournamentCode={currentTournamentCode || ''}
                                 onTimerAction={handleTimerAction}
                                 disabled={!quizSocket || !quizSocket.connected || quizState?.ended}

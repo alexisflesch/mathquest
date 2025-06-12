@@ -19,7 +19,7 @@ export interface QuizState extends BaseQuizState {
     currentQuestionIdx: number | null;
     stats: Record<string, unknown>;
     // Frontend uses a slightly different chrono structure - REMOVED to use shared Chrono from BaseQuizState
-    // chrono: { timeLeft: number | null; running: boolean };
+    // chrono: { timeLeftMs?: number | null; running: boolean };
 }
 
 /**

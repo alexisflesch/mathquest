@@ -2,8 +2,8 @@
 import { z } from "zod";
 
 export const questionTimerStateSchema = z.object({
-  timeLeft: z.number(),
-  initialTime: z.number(),
+  timeLeftMs: z.number(),
+  initialTimeMs: z.number(),
   lastUpdateTime: z.number(),
   status: z.union([z.literal("play"), z.literal("pause"), z.literal("stop")]),
 });

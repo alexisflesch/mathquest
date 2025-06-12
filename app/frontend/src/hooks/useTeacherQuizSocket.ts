@@ -32,14 +32,12 @@ import {
     isTimerUpdatePayload,
     isGameTimerUpdatePayload,
     isTeacherQuizState,
-    isTeacherTimerUpdatePayload,
     isGameErrorDetails,
     isLobbyErrorPayload,
     isConnectedCountPayload,
     isDashboardQuestionChangedPayload,
     isDashboardAnswersLockChangedPayload,
     isDashboardGameStatusChangedPayload,
-    migrateTeacherTimerUpdate,
     validateEventPayload,
     createSafeEventHandler,
     type SetQuestionPayload,
@@ -50,8 +48,7 @@ import {
     type DashboardQuestionChangedPayload,
     type DashboardAnswersLockChangedPayload,
     type DashboardGameStatusChangedPayload,
-    type TeacherQuizState,
-    type TeacherTimerUpdatePayload
+    type TeacherQuizState
 } from '@/types/socketTypeGuards';
 
 const logger = createLogger('useTeacherQuizSocket');
@@ -63,7 +60,7 @@ const logger = createLogger('useTeacherQuizSocket');
 export interface QuizState {
     currentQuestionIdx: number | null;
     questions: QuestionData[];
-    chrono: { timeLeft: number | null; running: boolean };
+    chrono: { timeLeftMs?: number | null; running: boolean };
     locked: boolean;
     ended: boolean;
     stats: Record<string, unknown>;
@@ -76,7 +73,7 @@ export interface QuizState {
     accessCode?: string; // <-- Add this line for tournament code support
 }
 
-export function useTeacherQuizSocket(accessCode: string | null, token: string | null, quizId?: string | null) {
+export function useTeacherQuizSocket(accessCode: string | null, token: string | null, gameId?: string | null) {
     const [quizSocket, setQuizSocket] = useState<Socket | null>(null);
     const [quizState, setQuizState] = useState<QuizState | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(1);
@@ -92,23 +89,23 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
     // Unified timer state only
     const timerStatus = gameTimer.timerState.status;
     const timerQuestionId = gameTimer.timerState.questionId || null;
-    const timeLeft = gameTimer.timerState.timeLeft;
-    const localTimeLeft = gameTimer.timerState.localTimeLeft;
+    const timeLeftMs = gameTimer.timerState.timeLeftMs;
+    const localTimeLeftMs = gameTimer.timerState.localTimeLeftMs;
 
     useEffect(() => {
-        if (!quizId || !token) return;
-        logger.info(`Initializing socket connection for quiz: ${quizId} to ${SOCKET_CONFIG.url}`);
+        if (!gameId || !token) return;
+        logger.info(`Initializing socket connection for quiz: ${gameId} to ${SOCKET_CONFIG.url}`);
         const socketConfig = createSocketConfig(SOCKET_CONFIG);
         const s = io(SOCKET_CONFIG.url, socketConfig);
         s.connect();
         setQuizSocket(s);
         s.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info(`Socket connected: ${s.id}`);
-            s.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { gameId: quizId });
+            s.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { gameId: gameId });
         });
         s.on('connect', () => {
             logger.info(`Socket connected: ${s.id}`);
-            s.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { gameId: quizId });
+            s.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { gameId: gameId });
         });
         s.on('disconnect', (reason) => {
             logger.warn(`Socket disconnected: ${reason}`);
@@ -122,29 +119,39 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             logger.debug("Server confirms dashboard join", { room, socketId });
         });
         return () => {
-            logger.info(`Disconnecting socket for quiz: ${quizId}`);
+            logger.info(`Disconnecting socket for quiz: ${gameId}`);
             s.disconnect();
             setQuizSocket(null);
         };
-    }, [quizId, token, gameTimer]);
+    }, [gameId, token, gameTimer]);
 
     useEffect(() => {
         if (!quizSocket) return;
         const handleGameControlState = createSafeEventHandler(
             (state: TeacherQuizState) => {
                 logger.debug('Processing game_control_state', state);
-                setQuizState({ ...state, questions: state.questions as QuestionData[] });
+                setQuizState({
+                    ...state,
+                    questions: state.questions as QuestionData[],
+                    chrono: {
+                        timeLeftMs: state.chrono.timeLeftMs,
+                        running: state.chrono.running
+                    }
+                });
                 if (state && state.timerStatus && state.timerQuestionId) {
+                    // Convert timer values from seconds to milliseconds for unified timer system
+                    const timerTimeInMs = (state.timerTimeLeft ?? 0) * 1000;
+
                     if (state.timerStatus === 'play') {
-                        gameTimer.start(state.timerQuestionId, state.timerTimeLeft ?? 0);
+                        gameTimer.start(state.timerQuestionId, timerTimeInMs);
                     } else if (state.timerStatus === 'pause') {
-                        gameTimer.start(state.timerQuestionId, state.timerTimeLeft ?? 0);
+                        gameTimer.start(state.timerQuestionId, timerTimeInMs);
                         gameTimer.pause();
                     } else if (state.timerStatus === 'stop') {
                         const timerPayload: TimerUpdatePayload = {
                             running: false,
                             status: 'stop',
-                            timeLeft: state.timerTimeLeft ?? 0, // always ms
+                            timeLeftMs: timerTimeInMs, // converted to ms
                             questionId: state.timerQuestionId
                         };
                         gameTimer.syncWithBackend(timerPayload);
@@ -159,7 +166,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         const handleTimerUpdate = (data: unknown) => {
             const sharedTimer = validateEventPayload(data, isTimerUpdatePayload, 'timer_update_shared');
             if (sharedTimer) {
-                // Always pass timeLeft as-is (milliseconds)
+                // Always pass timeLeftMs as-is (milliseconds)
                 gameTimer.syncWithBackend(sharedTimer);
                 return;
             }
@@ -220,7 +227,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         quizSocket.on(SOCKET_EVENTS.DISCONNECT, handleDisconnect);
         quizSocket.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info("Reconnected, rejoining dashboard with gameId.");
-            quizSocket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { gameId: quizId });
+            quizSocket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { gameId: gameId });
         });
         quizSocket.on(SOCKET_EVENTS.TEACHER.CONNECTED_COUNT, handleConnectCount);
         return () => {
@@ -235,52 +242,158 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             quizSocket.off(SOCKET_EVENTS.CONNECT);
             quizSocket.off(SOCKET_EVENTS.TEACHER.CONNECTED_COUNT, handleConnectCount);
         };
-    }, [quizSocket, quizId, gameTimer]);
+    }, [quizSocket, gameId, gameTimer]);
 
     // --- Emitter Functions ---
-    const emitSetQuestion = useCallback((payload: SetQuestionPayload) => {
+    const emitSetQuestion = useCallback((questionUid: string, startTime?: number) => {
+        if (!gameId) {
+            logger.warn('Cannot emit set question: no gameId available');
+            return;
+        }
+        const payload: SetQuestionPayload = {
+            gameId: gameId,
+            questionUid,
+            questionIndex: 0 // Backend expects this field but we're using UIDs primarily
+        };
         logger.info(`Emitting set_question`, payload);
         quizSocket?.emit(SOCKET_EVENTS.TEACHER.SET_QUESTION, payload);
-        logger.info(`Waiting for backend confirmation of question ${payload.questionUid}`);
-    }, [quizSocket]);
+        logger.info(`Waiting for backend confirmation of question ${questionUid}`);
+    }, [quizSocket, gameId]);
 
-    const emitEndQuiz = useCallback((payload: { gameId: string; accessCode?: string }) => {
+    const emitEndQuiz = useCallback(() => {
+        if (!gameId) {
+            logger.warn('Cannot emit end game: no gameId available');
+            return;
+        }
+        const payload = { gameId: gameId };
         logger.info('Emitting end_game', payload);
         quizSocket?.emit(SOCKET_EVENTS.TEACHER.END_GAME, payload);
-    }, [quizSocket]);
+    }, [quizSocket, gameId]);
 
-    const emitPauseQuiz = useCallback((payload: TimerActionPayload) => {
+    const emitPauseQuiz = useCallback(() => {
+        if (!gameId) {
+            logger.warn('Cannot emit pause: no gameId available');
+            return;
+        }
+        const payload: TimerActionPayload = {
+            gameId: gameId,
+            action: 'pause'
+        };
         logger.info('Emitting quiz_timer_action with action=pause', payload);
         quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, payload);
-    }, [quizSocket]);
+    }, [quizSocket, gameId]);
 
-    const emitResumeQuiz = useCallback((payload: TimerActionPayload) => {
+    const emitResumeQuiz = useCallback(() => {
+        if (!gameId) {
+            logger.warn('Cannot emit resume: no gameId available');
+            return;
+        }
+        const payload: TimerActionPayload = {
+            gameId: gameId,
+            action: 'resume'
+        };
         logger.info('Emitting quiz_timer_action with action=resume', payload);
         quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, payload);
-    }, [quizSocket]);
+    }, [quizSocket, gameId]);
 
-    const emitSetTimer = useCallback((payload: TimerActionPayload) => {
+    const emitSetTimer = useCallback((duration: number, questionUid?: string) => {
+        if (!gameId) {
+            logger.warn('Cannot emit set timer: no gameId available');
+            return;
+        }
+        const payload: TimerActionPayload = {
+            gameId: gameId,
+            action: 'set_duration',
+            durationMs: duration
+        };
         logger.info('Emitting quiz_timer_action with action=set_duration', payload);
         quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, payload);
-    }, [quizSocket]);
+    }, [quizSocket, gameId]);
 
-    const emitTimerAction = useCallback((payload: TimerActionPayload) => {
-        logger.info('Emitting quiz_timer_action', payload);
+    const emitTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionId: string, timeLeftMs?: number }) => {
+        logger.info('[EMIT] emitTimerAction called with:', {
+            action,
+            availableAccessCode: accessCode,
+            availableGameId: gameId,
+            'typeof accessCode': typeof accessCode,
+            'typeof gameId': typeof gameId,
+            'gameId is database UUID': true
+        });
+
+        if (!gameId) {
+            logger.warn('Cannot emit timer action: no gameId available', { accessCode, gameId });
+            return;
+        }
+
+        // CRITICAL DEBUG: Log the exact question ID being sent
+        logger.debug('emitTimerAction questionId check', {
+            'action.questionId': action.questionId,
+            'action.questionId type': typeof action.questionId,
+            'action.questionId length': action.questionId ? action.questionId.length : 'null/undefined',
+            'full action object': action,
+            'JSON.stringify(action)': JSON.stringify(action)
+        });
+
+        // Convert status to action format expected by backend
+        let backendAction: 'start' | 'pause' | 'resume' | 'stop';
+        switch (action.status) {
+            case 'play':
+                backendAction = 'start';
+                break;
+            case 'pause':
+                backendAction = 'pause';
+                break;
+            case 'stop':
+                backendAction = 'stop';
+                break;
+            default:
+                backendAction = 'stop';
+        }
+
+        const payload: TimerActionPayload = {
+            gameId: gameId, // gameId IS the database UUID 
+            action: backendAction,
+            questionUid: action.questionId // Add question UID to payload
+        };
+
+        // Add duration if provided
+        if (action.timeLeftMs !== undefined) {
+            payload.durationMs = action.timeLeftMs;
+        }
+
+        logger.debug('Final payload being sent', {
+            payload,
+            'payload.gameId': payload.gameId,
+            'payload.action': payload.action,
+            'payload.durationMs': payload.durationMs,
+            'payload.questionUid': payload.questionUid,
+            'payload.questionUid type': typeof payload.questionUid,
+            'payload.questionUid length': payload.questionUid ? payload.questionUid.length : 'null/undefined',
+            socketEvent: SOCKET_EVENTS.TEACHER.TIMER_ACTION,
+            socketConnected: !!quizSocket?.connected,
+            'JSON.stringify(payload)': JSON.stringify(payload)
+        });
+
         quizSocket?.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION, payload);
-    }, [quizSocket]);
+    }, [quizSocket, accessCode, gameId]);
 
-    const emitLockAnswers = useCallback((payload: { gameId: string; lock: boolean; accessCode?: string }) => {
+    const emitLockAnswers = useCallback((lock: boolean) => {
+        if (!gameId) {
+            logger.warn('Cannot emit lock answers: no gameId available');
+            return;
+        }
+        const payload = { gameId: gameId, lock };
         logger.info(`Emitting lock_answers`, payload);
         quizSocket?.emit(SOCKET_EVENTS.TEACHER.LOCK_ANSWERS, payload);
-    }, [quizSocket]);
+    }, [quizSocket, gameId]);
 
     return {
         quizSocket,
         quizState,
         timerStatus,
         timerQuestionId,
-        timeLeft,
-        localTimeLeft,
+        timeLeftMs,
+        localTimeLeftMs,
         connectedCount,
         emitSetQuestion,
         emitEndQuiz,
@@ -289,6 +402,6 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         emitSetTimer,
         emitTimerAction,
         emitLockAnswers,
-        _debug: { timerStatus, timerQuestionId, timeLeft, localTimeLeft }
+        _debug: { timerStatus, timerQuestionId, timeLeftMs, localTimeLeftMs }
     };
 }

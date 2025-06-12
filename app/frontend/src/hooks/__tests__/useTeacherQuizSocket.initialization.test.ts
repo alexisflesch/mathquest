@@ -111,7 +111,7 @@ describe('useTeacherQuizSocket Initialization', () => {
 
         // Check initial state values
         expect(result.current.connectedCount).toBe(1); // Professor connected by default
-        expect(result.current.timeLeft).toBe(0);
+        expect(result.current.timeLeftMs).toBe(0);
         expect(result.current.timerStatus).toBe('stop');
         expect(result.current.quizState).toBeDefined();
         expect(typeof result.current.emitSetQuestion).toBe('function');

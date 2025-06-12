@@ -67,17 +67,12 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
             return;
         }
 
-        // Emit redirect_to_game to both lobby and game rooms BEFORE activating game state
-        // This gives clients a head start to navigate.
+        // Emit game_started to lobby for 5-second countdown (unified for all tournament/quiz modes)
         const tournamentRoom = `game_${accessCode}`;
         const lobbyRoom = `lobby_${accessCode}`;
-        logger.debug({ accessCode, tournamentRoom, lobbyRoom, socketId: socket.id }, '[DEBUG] Emitting redirect_to_game to tournament and lobby rooms');
-        io.to(tournamentRoom).emit('redirect_to_game');
-        io.to(lobbyRoom).emit('redirect_to_game');
 
-        // Also emit lobby-specific events
+        logger.debug({ accessCode, playMode: gameInstance.playMode, socketId: socket.id }, '[DEBUG] Emitting unified 5-second countdown for all tournament types');
         io.to(lobbyRoom).emit(LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId: gameInstance.id });
-        io.to(lobbyRoom).emit(LOBBY_EVENTS.REDIRECT_TO_GAME, { accessCode, gameId: gameInstance.id });
 
         // Short delay to allow clients to process redirect before game state changes affect them
         await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
@@ -144,18 +139,21 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, '[DEBUG] Updated game status to active (countdown phase)');
         logger.info({ room: liveRoom, duration: countdownDuration, accessCode, socketId: socket.id }, `[TournamentHandler] Emitting tournament_starting and waiting ${countdownDuration}s before starting game.`);
 
-        // Start countdown with ticking
+        // Start countdown with ticking - emit to both lobby and game rooms
         io.to(liveRoom).emit('tournament_starting', { countdown: countdownDuration });
+        io.to(lobbyRoom).emit('tournament_starting', { countdown: countdownDuration });
 
-        // Emit countdown tick every second
+        // Emit countdown tick every second to both rooms
         for (let i = countdownDuration; i > 0; i--) {
             logger.debug({ accessCode, countdown: i, socketId: socket.id }, `[TournamentHandler] Countdown tick: ${i}`);
             io.to(liveRoom).emit('countdown_tick', { countdown: i });
+            io.to(lobbyRoom).emit('countdown_tick', { countdown: i });
             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
         }
 
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown complete. About to start game flow.`);
         io.to(liveRoom).emit('countdown_complete');
+        io.to(lobbyRoom).emit('countdown_complete');
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown finished. Calling runGameFlow.`);
 
         // Update currentQuestionIndex to 0 before starting game flow

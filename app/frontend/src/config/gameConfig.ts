@@ -27,7 +27,15 @@ export const TIMER_CONFIG = {
 
     // Timer intervals and thresholds (in milliseconds)
     COUNTDOWN_INTERVAL: parseIntEnv(process.env.NEXT_PUBLIC_COUNTDOWN_INTERVAL, 1000),
-    UI_UPDATE_INTERVAL: parseIntEnv(process.env.NEXT_PUBLIC_TIMER_UI_UPDATE_INTERVAL, 100),
+
+    // Role-based UI update intervals - students only see seconds, so they don't need frequent updates
+    UI_UPDATE_INTERVAL_TEACHER: parseIntEnv(process.env.NEXT_PUBLIC_TIMER_UI_UPDATE_INTERVAL_TEACHER, 1000), // 1 second for teachers
+    UI_UPDATE_INTERVAL_STUDENT: parseIntEnv(process.env.NEXT_PUBLIC_TIMER_UI_UPDATE_INTERVAL_STUDENT, 1000), // 1 second for students
+    UI_UPDATE_INTERVAL_PROJECTION: parseIntEnv(process.env.NEXT_PUBLIC_TIMER_UI_UPDATE_INTERVAL_PROJECTION, 100), // 100ms for smooth projection animations
+
+    // Legacy fallback
+    UI_UPDATE_INTERVAL: parseIntEnv(process.env.NEXT_PUBLIC_TIMER_UI_UPDATE_INTERVAL, 1000), // Default to 1 second
+
     WARNING_THRESHOLD: parseIntEnv(process.env.NEXT_PUBLIC_WARNING_THRESHOLD, 10), // seconds
     CRITICAL_THRESHOLD: parseIntEnv(process.env.NEXT_PUBLIC_CRITICAL_THRESHOLD, 5), // seconds
 

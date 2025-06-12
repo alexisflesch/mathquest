@@ -39,10 +39,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setQuestionHandler = setQuestionHandler;
 const prisma_1 = require("@/db/prisma");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
+const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('SetQuestionHandler');
+// Create game instance service
+const gameInstanceService = new gameInstanceService_1.GameInstanceService();
 function setQuestionHandler(io, socket) {
     return async (payload, callback) => {
         const { gameId, questionUid, questionIndex } = payload;
@@ -74,11 +77,17 @@ function setQuestionHandler(io, socket) {
         }
         logger.info({ gameId, userId: effectiveuserId, questionUid }, 'Setting question');
         try {
-            // Verify authorization
+            // Verify authorization - user must be either the game initiator or the template creator
             const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
-                    initiatorUserId: effectiveuserId
+                    OR: [
+                        { initiatorUserId: effectiveuserId },
+                        { gameTemplate: { creatorId: effectiveuserId } }
+                    ]
+                },
+                include: {
+                    gameTemplate: true
                 }
             });
             if (!gameInstance) {
@@ -163,16 +172,43 @@ function setQuestionHandler(io, socket) {
             if (question) {
                 const timeMultiplier = gameState.settings?.timeMultiplier || 1.0;
                 const duration = (question.timeLimit || 30) * 1000 * timeMultiplier; // Convert to milliseconds
-                gameState.timer = {
-                    startedAt: Date.now(),
-                    duration,
-                    isPaused: true // Start paused so teacher can control when to begin
-                };
+                // CRITICAL FIX: Preserve timer state if currently running
+                const currentTimer = gameState.timer;
+                const isCurrentlyRunning = currentTimer && !currentTimer.isPaused;
+                if (isCurrentlyRunning) {
+                    // Keep timer running but update duration
+                    gameState.timer = {
+                        startedAt: Date.now(), // Reset start time for new question
+                        duration,
+                        isPaused: false // Keep running
+                    };
+                    logger.info({ gameId, questionUid, duration }, 'Timer was running, keeping it active for new question');
+                }
+                else {
+                    // Default: start paused so teacher can control when to begin
+                    gameState.timer = {
+                        startedAt: Date.now(),
+                        duration,
+                        isPaused: true
+                    };
+                    logger.info({ gameId, questionUid, duration }, 'Timer was paused, keeping it paused for new question');
+                }
                 // Reset answersLocked to false for the new question
                 gameState.answersLocked = false;
             }
             // Update the game state in Redis
             await gameStateService_1.default.updateGameState(gameInstance.accessCode, gameState);
+            // Update game status to 'active' when setting the first question (game has started)
+            if (gameInstance.status === 'pending') {
+                logger.info({ gameId, questionUid }, 'Setting game status to active as first question is being set');
+                await gameInstanceService.updateGameStatus(gameId, { status: 'active' });
+                // Emit game status change to dashboard
+                const dashboardRoom = `dashboard_${gameId}`;
+                io.to(dashboardRoom).emit('dashboard_game_status_changed', {
+                    status: 'active',
+                    ended: false
+                });
+            }
             // Notify dashboard about question change
             const dashboardRoom = `dashboard_${gameId}`;
             io.to(dashboardRoom).emit('dashboard_question_changed', {

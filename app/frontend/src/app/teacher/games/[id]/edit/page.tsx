@@ -42,8 +42,8 @@ interface QuestionForCreatePage {
     discipline?: string;
     themes?: string[];
     explanation?: string;
-    time?: number;
-    timeLimit?: number;
+    timeLimitSeconds?: number; // Using explicit unit suffix from BaseQuestion
+    timeLimit?: number; // Keep for backward compatibility during migration
     tags?: string[];
     author?: string;
 }
@@ -153,8 +153,8 @@ function SortableCartQuestion({
                             type="number"
                             min="10"
                             max="300"
-                            value={question.customTimeLimit || question.timeLimit || question.time || 30}
-                            onChange={(e) => onUpdateTime(question.cartId, parseInt(e.target.value) || (question.timeLimit || question.time || 30))}
+                            value={question.customTimeLimit || question.timeLimit || question.timeLimitSeconds || 30}
+                            onChange={(e) => onUpdateTime(question.cartId, parseInt(e.target.value) || (question.timeLimit || question.timeLimitSeconds || 30))}
                             className="input input-xs input-bordered w-20 text-xs"
                         />
                         <span className="text-xs text-base-content/60">sec</span>
@@ -555,7 +555,7 @@ export default function EditActivityPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Clock size={14} className="text-base-content/60" />
-                                                <span className="text-xs text-base-content/60">{question.timeLimit || question.time || 30}s</span>
+                                                <span className="text-xs text-base-content/60">{question.timeLimit || question.timeLimitSeconds || 30}s</span>
                                                 <span className="badge badge-outline badge-sm">{question.level || question.gradeLevel}</span>
                                                 <span className="badge badge-outline badge-sm">{question.discipline}</span>
                                             </div>
@@ -771,7 +771,7 @@ export default function EditActivityPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-2">
                                             <Clock size={14} className="text-base-content/60" />
-                                            <span className="text-xs text-base-content/60">{question.timeLimit || question.time || 30}s</span>
+                                            <span className="text-xs text-base-content/60">{question.timeLimit || question.timeLimitSeconds || 30}s</span>
                                             <span className="badge badge-outline badge-sm">{question.level || question.gradeLevel}</span>
                                         </div>
                                         <p className="font-medium text-sm mb-2 line-clamp-2">{question.text}</p>

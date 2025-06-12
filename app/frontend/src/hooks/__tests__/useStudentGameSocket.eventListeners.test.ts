@@ -105,7 +105,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
             eventHandlers['timer_update']?.({
-                timeLeft: 30000,
+                timeLeftMs: 30000,
                 running: true,
                 status: 'play'
             });
@@ -149,7 +149,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
             eventHandlers['timer_update']?.({
-                timeLeft: 30000,
+                timeLeftMs: 30000,
                 running: false,
                 status: 'pause'
             });
@@ -172,7 +172,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 15000, // ms
+                timeLeftMs: 15000, // ms
                 status: 'play',
                 running: true
             });
@@ -195,7 +195,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         act(() => {
             eventHandlers['timer_update']?.({
-                timeLeft: 10000, // ms
+                timeLeftMs: 10000, // ms
                 status: 'pause',
                 running: false
             });
@@ -218,14 +218,14 @@ describe('useStudentGameSocket - Event Listeners', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         const gameUpdate = {
-            timeLeft: 20000, // ms
+            timeLeftMs: 20000, // ms
             status: 'play' as const
         };
 
         act(() => {
             eventHandlers['game_update']?.(gameUpdate);
             eventHandlers['timer_update']?.({
-                timeLeft: 20000,
+                timeLeftMs: 20000,
                 running: true,
                 status: 'play'
             });
@@ -389,7 +389,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         const timerSetPayload = {
-            timeLeft: 0,
+            timeLeftMs: 0,
             questionState: 'stopped' as const
         };
 

@@ -41,7 +41,7 @@ interface QuestionForCreatePage {
     discipline?: string;
     themes?: string[]; // Plural, to align with shared type
     explanation?: string;
-    time?: number;
+    timeLimitSeconds?: number; // Using explicit unit suffix from BaseQuestion
     tags?: string[];
 }
 
@@ -70,7 +70,7 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
     };
 
     const [editingTime, setEditingTime] = useState(false);
-    const [timeValue, setTimeValue] = useState(question.customTime || question.time || 30);
+    const [timeValue, setTimeValue] = useState(question.customTime || question.timeLimitSeconds || 30);
 
     return (
         <div ref={setNodeRef} style={style} className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg p-3 mb-2 shadow-sm">
@@ -116,7 +116,7 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
                             className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
                         >
                             <Clock size={12} />
-                            {question.customTime || question.time || 30}s
+                            {question.customTime || question.timeLimitSeconds || 30}s
                         </button>
                     )}
 
@@ -253,7 +253,7 @@ export default function CreateActivityPage() {
                     discipline: apiQuestion.discipline || apiQuestion.category || apiQuestion.subject,
                     themes: apiQuestion.themes,
                     explanation: q.explanation,
-                    time: q.time || apiQuestion.timeLimit,
+                    timeLimitSeconds: q.timeLimitSeconds || apiQuestion.timeLimit,
                     tags: q.tags,
                 };
             });
@@ -522,7 +522,7 @@ export default function CreateActivityPage() {
                                                 </div>
                                                 <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] mt-2">
                                                     <Clock size={12} />
-                                                    <span>{q.time || 30}s</span>
+                                                    <span>{q.timeLimitSeconds || 30}s</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -650,7 +650,7 @@ export default function CreateActivityPage() {
                                                 </div>
                                                 <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] mt-2">
                                                     <Clock size={12} />
-                                                    <span>{q.time || 30}s</span>
+                                                    <span>{q.timeLimitSeconds || 30}s</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -723,7 +723,7 @@ export default function CreateActivityPage() {
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <span className="text-xs text-[color:var(--muted-foreground)]">
-                                                            {question.customTime || question.time || 30}s
+                                                            {question.customTime || question.timeLimitSeconds || 30}s
                                                         </span>
                                                         <button
                                                             onClick={() => removeFromCart(question.uid)}

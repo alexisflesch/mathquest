@@ -75,7 +75,7 @@ describe('useTeacherQuizSocket Timer Functionality', () => {
     // Local timer decrement logic might be minimal or non-existent if the server is the source of truth.
     // These tests will focus on how the hook's timer state reacts to these events.
 
-    it('should update timer states (timeLeft, timerStatus, timerQuestionId) based on "quiz_timer_update" events', async () => {
+    it('should update timer states (timeLeftMs, timerStatus, timerQuestionId) based on "quiz_timer_update" events', async () => {
         jest.useRealTimers(); // Use real timers for this test only
         const { result, rerender } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
 
@@ -94,7 +94,7 @@ describe('useTeacherQuizSocket Timer Functionality', () => {
         const initialGameState: HookQuizState = {
             currentQuestionIdx: 0,
             questions: initialQuestions,
-            chrono: { timeLeft: 60000, running: false }, // ms
+            chrono: { timeLeftMs: 60000, running: false }, // ms
             locked: false,
             ended: false,
             stats: {},
@@ -110,11 +110,11 @@ describe('useTeacherQuizSocket Timer Functionality', () => {
         });
 
         expect(result.current.timerQuestionId).toBe('q1');
-        expect(result.current.timeLeft).toBe(60000); // Initial timeLeft from game_control_state (ms)
+        expect(result.current.timeLeftMs).toBe(60000); // Initial timeLeftMs from game_control_state (ms)
         expect(result.current.timerStatus).toBe('stop');
 
         // 3. Now, simulate quiz_timer_update for q1
-        const timerUpdate1 = { questionId: 'q1', timeLeft: 20000, status: 'play' as 'play' | 'pause' | 'stop', running: true, timestamp: Date.now() };
+        const timerUpdate1 = { questionId: 'q1', timeLeftMs: 20000, status: 'play' as 'play' | 'pause' | 'stop', running: true, timestamp: Date.now() };
         act(() => {
             const timerUpdateCallback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
             if (timerUpdateCallback) timerUpdateCallback(timerUpdate1);
@@ -122,34 +122,34 @@ describe('useTeacherQuizSocket Timer Functionality', () => {
 
         // Wait for timer state to update, with longer timeout and debug log
         await waitFor(() => {
-            if (result.current.timerStatus !== 'play' || result.current.timeLeft !== 20000) {
+            if (result.current.timerStatus !== 'play' || result.current.timeLeftMs !== 20000) {
                 // eslint-disable-next-line no-console
                 console.log('DEBUG TIMER STATE:', result.current);
             }
             expect(result.current.timerQuestionId).toBe('q1');
             expect(result.current.timerStatus).toBe('play');
-            expect(result.current.timeLeft).toBe(20000);
+            expect(result.current.timeLeftMs).toBe(20000);
         }, { timeout: 2000 });
 
         // 4. Simulate another quiz_timer_update for q1 (e.g., pause)
-        const timerUpdate2 = { questionId: 'q1', timeLeft: 10000, status: 'pause' as 'play' | 'pause' | 'stop', running: false, timestamp: Date.now() };
+        const timerUpdate2 = { questionId: 'q1', timeLeftMs: 10000, status: 'pause' as 'play' | 'pause' | 'stop', running: false, timestamp: Date.now() };
         act(() => {
             const timerUpdateCallback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
             if (timerUpdateCallback) timerUpdateCallback(timerUpdate2);
         });
         expect(result.current.timerQuestionId).toBe('q1');
         expect(result.current.timerStatus).toBe('pause');
-        expect(result.current.timeLeft).toBe(10000);
+        expect(result.current.timeLeftMs).toBe(10000);
 
         // 5. Simulate quiz_timer_update for a different question, q2
-        const timerUpdate3 = { questionId: 'q2', timeLeft: 30000, status: 'play' as 'play' | 'pause' | 'stop', running: true, timestamp: Date.now() };
+        const timerUpdate3 = { questionId: 'q2', timeLeftMs: 30000, status: 'play' as 'play' | 'pause' | 'stop', running: true, timestamp: Date.now() };
         act(() => {
             const timerUpdateCallback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
             if (timerUpdateCallback) timerUpdateCallback(timerUpdate3);
         });
         expect(result.current.timerQuestionId).toBe('q2');
         expect(result.current.timerStatus).toBe('play');
-        expect(result.current.timeLeft).toBe(30000);
+        expect(result.current.timeLeftMs).toBe(30000);
     });
 
     it('should initialize timer-related states from an initial game_control_state', () => {
@@ -166,7 +166,7 @@ describe('useTeacherQuizSocket Timer Functionality', () => {
         const initialQuizStateWithTimer: HookQuizState = {
             currentQuestionIdx: 0,
             questions: [{ uid: 'q1', text: 'Test', questionType: 'multiple_choice', answerOptions: [], correctAnswers: [], timeLimit: 25000 }], // ms
-            chrono: { timeLeft: 25000, running: true }, // ms
+            chrono: { timeLeftMs: 25000, running: true }, // ms
             locked: false,
             ended: false,
             stats: {},
@@ -182,7 +182,7 @@ describe('useTeacherQuizSocket Timer Functionality', () => {
             if (callback) callback(initialQuizStateWithTimer);
         });
 
-        expect(result.current.timeLeft).toBe(25000); // ms
+        expect(result.current.timeLeftMs).toBe(25000); // ms
         expect(result.current.timerStatus).toBe(initialQuizStateWithTimer.timerStatus);
         expect(result.current.timerQuestionId).toBe(initialQuizStateWithTimer.timerQuestionId);
     });

@@ -53,12 +53,12 @@ const createMockUnifiedGameManager = (overrides = {}) => ({
         connecting: false,
         error: null,
         timer: {
-            timeLeft: 30,
+            timeLeftMs: 30,
             status: 'stopped' as TimerStatus,
             questionId: null,
-            duration: 30,
+            durationMs: 30,
             timestamp: Date.now(),
-            localTimeLeft: 30
+            localTimeLeftMs: 30
         },
         isTimerRunning: false,
         currentQuestionId: null,

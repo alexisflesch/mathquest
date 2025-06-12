@@ -22,37 +22,38 @@ function mapBackendTimerToCore(backendTimer) {
     if (!backendTimer) {
         return {
             status: 'stop',
-            timeLeft: 0,
-            duration: 30,
+            timeLeftMs: 0,
+            durationMs: 30000, // 30 seconds in milliseconds
             questionId: undefined,
             timestamp: null,
-            localTimeLeft: 0
+            localTimeLeftMs: 0
         };
     }
     // Calculate current time left if timer is running
+    // Keep all timer values in milliseconds internally
     let timeLeft = 0;
     let status = 'stop';
     if (backendTimer.isPaused) {
         status = 'pause';
-        timeLeft = backendTimer.timeRemaining ? Math.ceil(backendTimer.timeRemaining / 1000) : 0;
+        timeLeft = backendTimer.timeRemaining || 0; // Keep in milliseconds
     }
     else if (backendTimer.startedAt && backendTimer.startedAt > 0) {
         status = 'play';
         const elapsed = Date.now() - backendTimer.startedAt;
         const remaining = Math.max(0, backendTimer.duration - elapsed);
-        timeLeft = Math.ceil(remaining / 1000);
+        timeLeft = remaining; // Keep in milliseconds
     }
     else {
         status = 'stop';
-        timeLeft = backendTimer.duration ? Math.ceil(backendTimer.duration / 1000) : 30;
+        timeLeft = backendTimer.duration || 30000; // Default 30 seconds = 30000ms
     }
     return {
         status,
-        timeLeft,
-        duration: backendTimer.duration ? Math.ceil(backendTimer.duration / 1000) : 30,
+        timeLeftMs: timeLeft,
+        durationMs: backendTimer.duration || 30000, // Keep in milliseconds
         questionId: undefined, // Backend timer doesn't store question ID
         timestamp: Date.now(),
-        localTimeLeft: timeLeft
+        localTimeLeftMs: timeLeft
     };
 }
 /**
@@ -66,10 +67,18 @@ async function getGameControlState(gameId, userId, isTestEnvironment = false) {
     try {
         logger.info({ gameId, userId, isTestEnvironment }, 'Fetching game control state');
         // Fetch the game instance
-        const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
+        const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
             where: {
                 id: gameId,
-                ...(isTestEnvironment ? {} : { initiatorUserId: userId }) // Skip teacher ID check in test environment
+                ...(isTestEnvironment ? {} : {
+                    OR: [
+                        { initiatorUserId: userId },
+                        { gameTemplate: { creatorId: userId } }
+                    ]
+                })
+            },
+            include: {
+                gameTemplate: true
             }
         });
         if (!gameInstance) {
@@ -111,7 +120,7 @@ async function getGameControlState(gameId, userId, isTestEnvironment = false) {
                 title: question.title,
                 text: question.text,
                 questionType: question.questionType,
-                timeLimit: question.timeLimit,
+                timeLimit: question.timeLimit ? question.timeLimit * 1000 : 30000, // Convert seconds to milliseconds (database storage → internal processing)
                 difficulty: question.difficulty,
                 discipline: question.discipline,
                 themes: Array.isArray(question.themes) ? question.themes : [],

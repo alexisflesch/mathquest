@@ -9,6 +9,7 @@ globals_1.jest.mock('@/db/prisma', () => ({
         gameInstance: {
             create: globals_1.jest.fn(),
             findUnique: globals_1.jest.fn(),
+            findFirst: globals_1.jest.fn(),
             findMany: globals_1.jest.fn(),
             update: globals_1.jest.fn()
         }
@@ -229,33 +230,36 @@ describe('GameInstanceService', () => {
         });
     });
     describe('generateUniqueAccessCode', () => {
-        it('should generate a unique access code', async () => {
-            // Mock that the first code is already taken, the second one is available
-            prisma_1.prisma.gameInstance.findUnique
-                .mockResolvedValueOnce({ id: 'existing-game' })
-                .mockResolvedValueOnce(null);
-            // Temporarily replace Math.random to make the test deterministic
-            const originalMathRandom = Math.random;
-            try {
-                // First call to Math.random will generate a code that's already taken
-                // Second call will generate an available code
-                Math.random = globals_1.jest.fn().mockImplementation(() => 0.1);
-                // We don't need to mock specific return values since we're just checking
-                // the number of calls to findUnique
-                // Call the method (don't need the actual result)
-                await gameInstanceService.generateUniqueAccessCode();
-                // Verify that findUnique was called twice (first code taken, second available)
-                expect(prisma_1.prisma.gameInstance.findUnique).toHaveBeenCalledTimes(2);
-            }
-            finally {
-                // Restore original Math.random
-                Math.random = originalMathRandom;
-            }
+        it('should generate sequential access codes', async () => {
+            // Mock that no existing codes found (start with 100000)
+            prisma_1.prisma.gameInstance.findFirst.mockResolvedValue(null);
+            const code = await gameInstanceService.generateUniqueAccessCode();
+            expect(code).toBe('100000');
+            expect(prisma_1.prisma.gameInstance.findFirst).toHaveBeenCalledWith({
+                where: {
+                    accessCode: {
+                        regex: '^[0-9]{6}$'
+                    }
+                },
+                orderBy: {
+                    accessCode: 'desc'
+                },
+                select: {
+                    accessCode: true
+                }
+            });
         });
-        it('should throw error if unable to generate unique code', async () => {
-            // Mock that all generated codes are already taken
-            prisma_1.prisma.gameInstance.findUnique.mockResolvedValue({ id: 'existing-game' });
-            await expect(gameInstanceService.generateUniqueAccessCode()).rejects.toThrow('Unable to generate unique access code');
+        it('should increment from existing highest code', async () => {
+            // Mock existing highest code
+            prisma_1.prisma.gameInstance.findFirst.mockResolvedValue({ accessCode: '123456' });
+            const code = await gameInstanceService.generateUniqueAccessCode();
+            expect(code).toBe('123457');
+        });
+        it('should throw error if access code range exhausted', async () => {
+            // Mock that maximum code already exists
+            prisma_1.prisma.gameInstance.findFirst.mockResolvedValue({ accessCode: '999999' });
+            await expect(gameInstanceService.generateUniqueAccessCode())
+                .rejects.toThrow('Access code range exhausted');
         });
     });
     describe('getTeacherActiveGames', () => {
