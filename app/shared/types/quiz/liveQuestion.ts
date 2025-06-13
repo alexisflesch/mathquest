@@ -11,10 +11,9 @@
 export interface FilteredQuestion {
     uid: string;
     text: string;             // The question text
-    type: string;             // Question type (choix_simple, choix_multiple, etc.)
+    questionType: string;     // Question type (choix_simple, choix_multiple, etc.) - CANONICAL FIELD NAME
     answerOptions: string[];  // Answer options - CANONICAL FIELD NAME
     // Additional properties required by frontend components
-    questionType?: string;      // Alternative field name for type
     explanation?: string;       // Question explanation for feedback
     correctAnswers?: boolean[]; // Correct answer flags (optional, for feedback)
     timeLimit?: number;         // Time limit for this question
@@ -53,11 +52,10 @@ export function filterQuestionForClient(questionObject: any): FilteredQuestion {
 
     return {
         uid: questionObject.uid,
-        type: questionObject.questionType || questionObject.type,
+        questionType: questionObject.questionType || questionObject.type,
         text: questionObject.text,
         answerOptions: questionObject.answerOptions || [],
         // Additional properties for frontend compatibility
-        questionType: questionObject.questionType || questionObject.type,
         explanation: questionObject.explanation,
         correctAnswers: questionObject.correctAnswers,
         timeLimit: questionObject.timeLimit,

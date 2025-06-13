@@ -183,9 +183,8 @@ export default function PracticeSessionPage() {
                                     question: {
                                         uid: gameState.currentQuestion.uid,
                                         text: gameState.currentQuestion.text,
-                                        type: gameState.currentQuestion.questionType,
-                                        answerOptions: gameState.currentQuestion.answerOptions || [],
-                                        questionType: gameState.currentQuestion.questionType
+                                        questionType: gameState.currentQuestion.questionType,
+                                        answerOptions: gameState.currentQuestion.answerOptions || []
                                     }
                                 }}
                                 questionIndex={gameState.questionIndex}

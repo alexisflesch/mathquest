@@ -10,9 +10,8 @@
 export interface FilteredQuestion {
     uid: string;
     text: string;
-    type: string;
+    questionType: string;
     answerOptions: string[];
-    questionType?: string;
     explanation?: string;
     correctAnswers?: boolean[];
     timeLimit?: number;

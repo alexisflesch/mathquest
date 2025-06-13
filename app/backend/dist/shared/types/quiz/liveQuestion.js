@@ -20,11 +20,10 @@ function filterQuestionForClient(questionObject) {
     }
     return {
         uid: questionObject.uid,
-        type: questionObject.questionType || questionObject.type,
+        questionType: questionObject.questionType || questionObject.type,
         text: questionObject.text,
         answerOptions: questionObject.answerOptions || [],
         // Additional properties for frontend compatibility
-        questionType: questionObject.questionType || questionObject.type,
         explanation: questionObject.explanation,
         correctAnswers: questionObject.correctAnswers,
         timeLimit: questionObject.timeLimit,

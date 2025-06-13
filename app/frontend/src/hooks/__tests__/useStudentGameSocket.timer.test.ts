@@ -79,7 +79,7 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                type: 'choix_simple',
+                questionType: 'choix_simple',
                 answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
             timer: 30000, // ms
@@ -146,7 +146,7 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                type: 'choix_simple',
+                questionType: 'choix_simple',
                 answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
             timer: 3000, // ms
@@ -197,7 +197,7 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                type: 'choix_simple',
+                questionType: 'choix_simple',
                 answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
             timer: 30000, // ms
@@ -249,7 +249,7 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                type: 'choix_simple',
+                questionType: 'choix_simple',
                 answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
             timer: 30000, // ms
@@ -439,7 +439,7 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                type: 'choix_simple',
+                questionType: 'choix_simple',
                 answerOptions: ['3', '4', '5', '6']
             },
             timer: 30000, // ms

@@ -106,7 +106,7 @@ router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Resp
                 question: {
                     uid: updatedGameState.questionData.uid,
                     text: updatedGameState.questionData.text,
-                    type: updatedGameState.questionData.questionType,
+                    questionType: updatedGameState.questionData.questionType,
                     answerOptions: updatedGameState.questionData.answerOptions
                 },
                 timer: updatedGameState.timer.durationMs / 1000, // Convert ms to seconds

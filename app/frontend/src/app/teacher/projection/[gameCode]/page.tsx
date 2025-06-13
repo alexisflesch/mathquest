@@ -288,9 +288,8 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
             question: {
                 uid: currentQuestion.uid,
                 text: currentQuestion.text,
-                type: currentQuestion.questionType,
-                answerOptions: currentQuestion.answerOptions || [],
-                questionType: currentQuestion.questionType
+                questionType: currentQuestion.questionType,
+                answerOptions: currentQuestion.answerOptions || []
             }
         }
         : null;

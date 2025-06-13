@@ -111,7 +111,7 @@ export function requestNextQuestionHandler(
                     question: {
                         uid: nextQuestion.uid,
                         text: nextQuestion.text,
-                        type: nextQuestion.questionType || 'multiple_choice_single_answer',
+                        questionType: nextQuestion.questionType || 'multiple_choice_single_answer',
                         answerOptions: nextQuestion.answerOptions || []
                     },
                     timer: nextQuestion.timeLimit || 30,

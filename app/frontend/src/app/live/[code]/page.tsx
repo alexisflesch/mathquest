@@ -360,7 +360,7 @@ export default function LiveGamePage() {
         const convertedQuestion: FilteredQuestion = {
             uid: gameState.currentQuestion.uid,
             text: gameState.currentQuestion.text,
-            type: gameState.currentQuestion.questionType || 'multiple_choice',
+            questionType: gameState.currentQuestion.questionType || 'multiple_choice',
             answerOptions: gameState.currentQuestion.answerOptions || []
         };
 

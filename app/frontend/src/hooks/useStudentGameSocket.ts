@@ -279,7 +279,7 @@ export function useStudentGameSocket({
                     ? {
                         uid: data.currentQuestion.uid,
                         text: data.currentQuestion.text,
-                        type: data.currentQuestion.questionType,
+                        questionType: data.currentQuestion.questionType,
                         answerOptions: data.currentQuestion.answerOptions || []
                     }
                     : prev.currentQuestion
