@@ -443,83 +443,6 @@ router.get('/teacher/active', auth_1.teacherAuth, async (req, res) => {
     }
 });
 /**
- * Create a tournament (legacy format support for existing frontend)
- * POST /api/v1/games/tournament
- * Supports the legacy frontend format with action: 'create'
- */
-router.post('/tournament', auth_1.optionalAuth, async (req, res) => {
-    try {
-        const { action, nom, questions_ids, type, niveau, categorie, themes, cree_par_id, username, avatar } = req.body;
-        // Validate required fields for legacy format
-        if (action !== 'create') {
-            res.status(400).json({ error: 'Invalid action. Expected "create"' });
-            return;
-        }
-        if (!nom || !questions_ids || !Array.isArray(questions_ids) || questions_ids.length === 0) {
-            res.status(400).json({
-                error: 'Required fields missing',
-                required: ['nom', 'questions_ids (array)']
-            });
-            return;
-        }
-        // Get or set user ID
-        let userId = req.user?.userId;
-        if (!userId && cree_par_id) {
-            // For student-created tournaments, use cookie ID as user identifier
-            userId = cree_par_id;
-        }
-        if (!userId) {
-            res.status(401).json({ error: 'User identification required' });
-            return;
-        }
-        logger.info('Creating tournament with legacy format', {
-            nom,
-            questionCount: questions_ids.length,
-            niveau,
-            categorie,
-            themes,
-            userId
-        });
-        // Create a game template on-the-fly for this tournament
-        const gameTemplateService = new gameTemplateService_1.GameTemplateService();
-        const gameTemplate = await gameTemplateService.createStudentGameTemplate({
-            userId,
-            gradeLevel: niveau,
-            discipline: categorie,
-            themes: Array.isArray(themes) ? themes : [themes].filter(Boolean),
-            nbOfQuestions: questions_ids.length
-        });
-        // Create the game instance
-        const gameInstance = await getGameInstanceService().createGameInstanceUnified({
-            name: nom,
-            gameTemplateId: gameTemplate.id,
-            playMode: 'tournament',
-            settings: {
-                type,
-                avatar,
-                username
-            },
-            initiatorUserId: userId
-        });
-        // Initialize game state in Redis
-        await (0, gameStateService_1.initializeGameState)(gameInstance.id);
-        logger.info('Tournament created successfully', {
-            gameInstanceId: gameInstance.id,
-            accessCode: gameInstance.accessCode,
-            templateId: gameTemplate.id
-        });
-        // Return in the format expected by the frontend
-        res.status(201).json({
-            code: gameInstance.accessCode,
-            message: 'Tournament created successfully'
-        });
-    }
-    catch (error) {
-        logger.error({ error }, 'Error creating tournament');
-        res.status(500).json({ error: 'An error occurred while creating the tournament' });
-    }
-});
-/**
  * Get a game instance by ID with full template data (for editing)
  * GET /api/v1/games/instance/:id/edit
  * Requires teacher authentication
@@ -657,4 +580,5 @@ router.delete('/:id', auth_1.teacherAuth, async (req, res) => {
         }
     }
 });
+// The legacy POST /api/v1/games/tournament endpoint and its handler have been removed as part of legacy cleanup.
 exports.default = router;

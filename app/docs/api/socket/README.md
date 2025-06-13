@@ -2,6 +2,9 @@
 
 This document provides an overview of the real-time Socket.IO API for MathQuest, including event structure, authentication, and navigation to resource-specific event documentation.
 
+## Game System Overview
+- [Game System & Socket Rooms Overview](./game-system-overview.md)
+
 ## Connection & Authentication
 - Socket.IO endpoint: `/api/socket.io`
 - Authentication is required for most events (see backend for details).

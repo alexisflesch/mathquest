@@ -149,10 +149,8 @@ export function gameAnswerHandler(
             const leaderboard = await calculateLeaderboard(accessCode);
             logger.debug({ leaderboard }, 'Leaderboard data');
             if (gameInstance.isDiffered) {
-                // Self-paced mode: no leaderboard, use only documented events
-                // 1. Get the current question and check correctness
+                // Practice mode: send correctAnswers and feedback immediately
                 const question = await prisma.question.findUnique({ where: { uid: questionUid } });
-                // 2. Send answer_received (always) with correctness info and correct answers
                 socket.emit('answer_received', {
                     questionUid,
                     timeSpent,
@@ -226,6 +224,8 @@ export function gameAnswerHandler(
                     console.log(`[GAME_ANSWER] Not all questions answered yet. Waiting for client to request next question.`);
                 }
             } else {
+                // Tournament and quiz mode: DO NOT send correctAnswers or feedback here
+                // Only emit answer_received (without correctAnswers/explanation)
                 let roomName = accessCode;
                 if (gameInstance.playMode === 'quiz' && gameInstance.initiatorUserId) {
                     roomName = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
@@ -234,13 +234,9 @@ export function gameAnswerHandler(
                 }
                 logger.info({ leaderboard, roomName }, 'Emitting leaderboard_update to room');
                 io.to(roomName).emit('leaderboard_update', { leaderboard });
-            }
-            // We've already sent the answer_received event for differed mode, so only emit it here for non-differed mode
-            if (!gameInstance.isDiffered) {
+                // Only emit answer_received with minimal info
                 logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode');
                 try {
-                    // Make sure we send back a response even if something fails
-                    // Use the isCorrect value if available, otherwise default to false
                     socket.emit('answer_received', { questionUid, timeSpent, correct: isCorrect !== undefined ? isCorrect : false });
                     console.log(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
                 } catch (emitError) {
