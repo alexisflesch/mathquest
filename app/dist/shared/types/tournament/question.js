@@ -26,10 +26,6 @@ function isTournamentQuestion(data) {
  * Helper function to extract question UID from various question formats
  */
 function getQuestionUid(tournamentQuestion) {
-    // Check if uid is directly available
-    if (tournamentQuestion.uid) {
-        return tournamentQuestion.uid;
-    }
     // Extract from question object
     const { question } = tournamentQuestion;
     if (typeof question === 'object' && question !== null) {
@@ -51,10 +47,6 @@ function getQuestionText(tournamentQuestion) {
         if ('text' in question && typeof question.text === 'string') {
             return question.text;
         }
-        // Fallback for legacy 'question' field
-        if ('question' in question && typeof question.question === 'string') {
-            return question.question;
-        }
     }
     return 'Question text not available';
 }
@@ -62,10 +54,6 @@ function getQuestionText(tournamentQuestion) {
  * Helper function to extract answer options from various question formats
  */
 function getQuestionAnswers(tournamentQuestion) {
-    // Check direct answers field first
-    if (Array.isArray(tournamentQuestion.answers)) {
-        return tournamentQuestion.answers;
-    }
     // Extract from question object
     const { question } = tournamentQuestion;
     if (typeof question === 'object' && question !== null) {

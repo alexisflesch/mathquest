@@ -68,6 +68,8 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: { side
             mq.addEventListener('change', handler);
             return () => mq.removeEventListener('change', handler);
         }
+        // Return empty cleanup function for SSR
+        return () => { };
     }, []);
 
     useEffect(() => {

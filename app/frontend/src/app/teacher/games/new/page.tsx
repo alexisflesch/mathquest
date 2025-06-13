@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import QuestionDisplay from '@/components/QuestionDisplay';
-import type { BaseQuestion as SharedQuestion, Answer as SharedAnswer } from '@shared/types/question'; // Import shared types
+import type { Question } from '@shared/types/core/question'; // Use canonical shared type
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
@@ -31,22 +31,10 @@ import { GripVertical, ShoppingCart, X, Clock } from 'lucide-react';
 import Snackbar from '@/components/Snackbar';
 import InfinitySpin from '@/components/InfinitySpin';
 
-// Local interface for questions on this page, compatible with QuestionDisplayProps
-interface QuestionForCreatePage {
-    uid: string;
-    title?: string;
-    text: string; // Changed from question: string to text: string
-    answers: Array<{ text: string; correct: boolean }>; // Must match QuestionDisplay
-    level?: string | string[]; // This will be populated from shared type's gradeLevel or API's level/niveaux
-    discipline?: string;
-    themes?: string[]; // Plural, to align with shared type
-    explanation?: string;
-    timeLimitSeconds?: number; // Using explicit unit suffix from BaseQuestion
-    tags?: string[];
-}
+// Use canonical shared Question type directly - no more local interfaces!
 
-// Interface for selected questions in the cart
-interface CartQuestion extends QuestionForCreatePage {
+// Interface for selected questions in the cart  
+interface CartQuestion extends Question {
     customTime?: number; // Custom timer for this specific question
 }
 
@@ -70,7 +58,7 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
     };
 
     const [editingTime, setEditingTime] = useState(false);
-    const [timeValue, setTimeValue] = useState(question.customTime || question.timeLimitSeconds || 30);
+    const [timeValue, setTimeValue] = useState(question.customTime || question.timeLimit || 30);
 
     return (
         <div ref={setNodeRef} style={style} className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg p-3 mb-2 shadow-sm">
@@ -116,7 +104,7 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
                             className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
                         >
                             <Clock size={12} />
-                            {question.customTime || question.timeLimitSeconds || 30}s
+                            {question.customTime || question.timeLimit || 30}s
                         </button>
                     )}
 
@@ -160,7 +148,7 @@ export default function CreateActivityPage() {
     const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
     const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
-    const [questions, setQuestions] = useState<QuestionForCreatePage[]>([]);
+    const [questions, setQuestions] = useState<Question[]>([]);
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [openUid, setOpenUid] = useState<string | null>(null);
     const BATCH_SIZE = 20;
@@ -204,78 +192,83 @@ export default function CreateActivityPage() {
             setOffset(0); // Reset offset for new filter/initial load
         }
 
-        let url = 'questions?';
-        const params = [];
-        if (selectedLevels.length > 0) params.push(`level=${selectedLevels.map(encodeURIComponent).join(',')}`);
-        if (selectedDisciplines.length > 0) params.push(`discipline=${selectedDisciplines.map(encodeURIComponent).join(',')}`);
-        if (selectedThemes.length > 0) params.push(`theme=${selectedThemes.map(encodeURIComponent).join(',')}`);
-        if (selectedAuthors.length > 0) params.push(`author=${selectedAuthors.map(encodeURIComponent).join(',')}`);
-        params.push(`limit=${BATCH_SIZE}`);
-        params.push(`offset=${reset ? 0 : offset}`);
-        params.push('shuffle=false');
-        if (params.length > 0) url += params.join('&');
+        try {
+            let url = 'questions?';
+            const params = [];
+            if (selectedLevels.length > 0) params.push(`level=${selectedLevels.map(encodeURIComponent).join(',')}`);
+            if (selectedDisciplines.length > 0) params.push(`discipline=${selectedDisciplines.map(encodeURIComponent).join(',')}`);
+            if (selectedThemes.length > 0) params.push(`theme=${selectedThemes.map(encodeURIComponent).join(',')}`);
+            if (selectedAuthors.length > 0) params.push(`author=${selectedAuthors.map(encodeURIComponent).join(',')}`);
+            params.push(`limit=${BATCH_SIZE}`);
+            params.push(`offset=${reset ? 0 : offset}`);
+            params.push('shuffle=false');
+            if (params.length > 0) url += params.join('&');
 
-        const data = await makeApiRequest<QuestionsResponse>(url, undefined, undefined, QuestionsResponseSchema);
+            const data = await makeApiRequest<QuestionsResponse>(url, undefined, undefined, QuestionsResponseSchema);
 
-        const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as SharedQuestion[];
+            const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as any[];
 
-        const transformedQuestions: QuestionForCreatePage[] = newQuestionsFromApi
-            .filter((q: SharedQuestion) => {
-                const apiQuestion = q as any;
-                return typeof q.text === 'string' && q.text.trim() !== '' &&
-                    (Array.isArray(q.answers) || Array.isArray(apiQuestion.answerOptions));
-            })
-            .map((q: SharedQuestion) => {
-                const apiQuestion = q as any;
+            const transformedQuestions: Question[] = newQuestionsFromApi
+                .filter((q: any) =>
+                    typeof q.text === 'string' && q.text.trim() !== '' &&
+                    (Array.isArray(q.answers) || Array.isArray(q.answerOptions))
+                )
+                .map((q: any) => {
+                    // Convert API format to canonical Question format
+                    let answerOptions: string[] = [];
+                    let correctAnswers: boolean[] = [];
 
-                // Create answers array from database fields or legacy format
-                let answers: { text: string; correct: boolean }[] = [];
-                if (Array.isArray(q.answers)) {
-                    // Legacy format
-                    answers = q.answers.map((a: SharedAnswer) => ({
-                        text: a.text || '',
-                        correct: a.correct || false
-                    }));
-                } else if (Array.isArray(apiQuestion.answerOptions)) {
-                    // Database format
-                    answers = apiQuestion.answerOptions.map((text: string, index: number) => ({
-                        text: text || '',
-                        correct: apiQuestion.correctAnswers?.[index] || false
-                    }));
-                }
+                    if (Array.isArray(q.answers)) {
+                        // Legacy format with {text, correct} objects
+                        answerOptions = q.answers.map((a: any) => a.text || a.texte || '');
+                        correctAnswers = q.answers.map((a: any) => Boolean(a.correct));
+                    } else if (Array.isArray(q.answerOptions)) {
+                        // Database format with separate arrays
+                        answerOptions = q.answerOptions;
+                        correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [];
+                    }
 
-                return {
-                    uid: q.uid,
-                    title: apiQuestion.title || apiQuestion.titre,
-                    text: q.text as string,
-                    answers,
-                    level: apiQuestion.gradeLevel || apiQuestion.level || apiQuestion.niveaux,
-                    discipline: apiQuestion.discipline || apiQuestion.category || apiQuestion.subject,
-                    themes: apiQuestion.themes,
-                    explanation: q.explanation,
-                    timeLimitSeconds: q.timeLimitSeconds || apiQuestion.timeLimit,
-                    tags: q.tags,
-                };
-            });
+                    return {
+                        uid: q.uid,
+                        title: q.title || q.titre,
+                        text: q.text || q.question,
+                        questionType: q.questionType || q.type || 'choix_simple',
+                        answerOptions,
+                        correctAnswers,
+                        gradeLevel: q.gradeLevel || q.level || q.niveaux,
+                        discipline: q.discipline || q.category || q.subject,
+                        themes: q.themes,
+                        explanation: q.explanation || q.justification,
+                        timeLimit: q.timeLimit || q.timeLimit || q.temps,
+                        tags: q.tags,
+                        difficulty: q.difficulty || q.difficulte,
+                        author: q.author || q.auteur,
+                    } satisfies Question;
+                });
 
-        if (reset) {
-            setQuestions(transformedQuestions);
-            setOffset(transformedQuestions.length); // Next offset starts after these questions
-        } else {
-            setQuestions(prev => {
-                const existingUids = new Set(prev.map(pq => pq.uid));
-                const filteredNew = transformedQuestions.filter(nq => !existingUids.has(nq.uid));
-                return [...prev, ...filteredNew];
-            });
-            setOffset(prevOffset => prevOffset + transformedQuestions.length); // Increment offset by number of new questions fetched
+            if (reset) {
+                setQuestions(transformedQuestions);
+                setOffset(transformedQuestions.length); // Next offset starts after these questions
+            } else {
+                setQuestions(prev => {
+                    const existingUids = new Set(prev.map(pq => pq.uid));
+                    const filteredNew = transformedQuestions.filter(nq => !existingUids.has(nq.uid));
+                    return [...prev, ...filteredNew];
+                });
+                setOffset(prevOffset => prevOffset + transformedQuestions.length); // Increment offset by number of new questions fetched
+            }
+            setHasMore(transformedQuestions.length === BATCH_SIZE);
+            setLoadingQuestions(false);
+            setLoadingMore(false);
+        } catch (error) {
+            console.error('Error fetching questions:', error);
+            setLoadingQuestions(false);
+            setLoadingMore(false);
         }
-        setHasMore(transformedQuestions.length === BATCH_SIZE);
-        setLoadingQuestions(false);
-        setLoadingMore(false);
     }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors, offset, loadingQuestions, loadingMore]); // Added offset to dependencies
 
     // Helper functions for cart management
-    const addToCart = (question: QuestionForCreatePage) => {
+    const addToCart = (question: Question) => {
         setSelectedQuestions(prev => {
             if (prev.some(q => q.uid === question.uid)) return prev;
             const cartQuestion: CartQuestion = { ...question };
@@ -299,7 +292,7 @@ export default function CreateActivityPage() {
     };
 
     const updateActivityMeta = (questions: CartQuestion[]) => {
-        const levels = Array.from(new Set(questions.map(q => q.level).filter((v): v is string => Boolean(v))));
+        const levels = Array.from(new Set(questions.map(q => q.gradeLevel).filter((v): v is string => Boolean(v))));
         const themes = Array.from(new Set(questions.flatMap(q => q.themes || []).filter((v): v is string => Boolean(v))));
         setActivityMeta({ levels, themes });
     };
@@ -486,7 +479,7 @@ export default function CreateActivityPage() {
                                             const tags = [
                                                 ...(q.tags || []),
                                                 q.themes,
-                                                q.level,
+                                                q.gradeLevel,
                                                 q.discipline,
                                                 q.title,
                                                 q.text
@@ -522,7 +515,7 @@ export default function CreateActivityPage() {
                                                 </div>
                                                 <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] mt-2">
                                                     <Clock size={12} />
-                                                    <span>{q.timeLimitSeconds || 30}s</span>
+                                                    <span>{q.timeLimit || 30}s</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -614,7 +607,7 @@ export default function CreateActivityPage() {
                                             const tags = [
                                                 ...(q.tags || []),
                                                 q.themes,
-                                                q.level,
+                                                q.gradeLevel,
                                                 q.discipline,
                                                 q.title,
                                                 q.text
@@ -650,7 +643,7 @@ export default function CreateActivityPage() {
                                                 </div>
                                                 <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] mt-2">
                                                     <Clock size={12} />
-                                                    <span>{q.timeLimitSeconds || 30}s</span>
+                                                    <span>{q.timeLimit || 30}s</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -723,7 +716,7 @@ export default function CreateActivityPage() {
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <span className="text-xs text-[color:var(--muted-foreground)]">
-                                                            {question.customTime || question.timeLimitSeconds || 30}s
+                                                            {question.customTime || question.timeLimit || 30}s
                                                         </span>
                                                         <button
                                                             onClick={() => removeFromCart(question.uid)}

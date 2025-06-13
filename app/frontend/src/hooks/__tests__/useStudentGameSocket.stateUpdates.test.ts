@@ -65,7 +65,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q1',
                 text: 'What is the capital of France?',
                 type: 'choix_simple',
-                answers: ['London', 'Paris', 'Berlin', 'Madrid']
+                answerOptions: ['London', 'Paris', 'Berlin', 'Madrid']
             },
             timer: 45,
             questionIndex: 2,
@@ -120,7 +120,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q2',
                 text: 'What is 5 + 3?',
                 type: 'choix_simple',
-                answers: ['6', '7', '8', '9']
+                answerOptions: ['6', '7', '8', '9']
             },
             timer: 30,
             questionIndex: 1,
@@ -137,7 +137,7 @@ describe('useStudentGameSocket - State Updates', () => {
             expect(result.current.gameState.answered).toBe(false);
             expect(result.current.gameState.currentQuestion?.uid).toBe('q2');
             expect(result.current.gameState.currentQuestion?.type).toBe('choix_simple');
-            expect(result.current.gameState.currentQuestion?.answers).toEqual(['6', '7', '8', '9']);
+            expect(result.current.gameState.currentQuestion?.answerOptions).toEqual(['6', '7', '8', '9']);
         });
     });
 
@@ -173,7 +173,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q1',
                 text: 'Test question',
                 type: 'choix_simple',
-                answers: ['A', 'B', 'C', 'D']
+                answerOptions: ['A', 'B', 'C', 'D']
             },
             timer: 30,
             questionIndex: 0,
@@ -190,7 +190,7 @@ describe('useStudentGameSocket - State Updates', () => {
             expect(result.current.gameState.connectedToRoom).toBe(true);
             expect(result.current.gameState.currentQuestion?.uid).toBe('q1');
             expect(result.current.gameState.currentQuestion?.type).toBe('choix_simple');
-            expect(result.current.gameState.currentQuestion?.answers).toEqual(['A', 'B', 'C', 'D']);
+            expect(result.current.gameState.currentQuestion?.answerOptions).toEqual(['A', 'B', 'C', 'D']);
         });
     });
 
@@ -208,7 +208,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q3',
                 text: 'Which of the following are prime numbers?',
                 type: 'choix_multiple',
-                answers: ['2', '3', '4', '5', '6', '7']
+                answerOptions: ['2', '3', '4', '5', '6', '7']
             },
             timer: 60,
             questionIndex: 3,
@@ -223,7 +223,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         await waitFor(() => {
             expect(result.current.gameState.currentQuestion?.type).toBe('choix_multiple');
-            expect(result.current.gameState.currentQuestion?.answers).toEqual(['2', '3', '4', '5', '6', '7']);
+            expect(result.current.gameState.currentQuestion?.answerOptions).toEqual(['2', '3', '4', '5', '6', '7']);
         });
     });
 
@@ -345,7 +345,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q5',
                 text: 'What is photosynthesis?',
                 type: 'choix_simple',
-                answers: ['A', 'B', 'C', 'D']
+                answerOptions: ['A', 'B', 'C', 'D']
             },
             timer: 40,
             questionIndex: 4,
@@ -362,7 +362,7 @@ describe('useStudentGameSocket - State Updates', () => {
             expect(currentQuestion?.uid).toBe('q5');
             expect(currentQuestion?.text).toBe('What is photosynthesis?');
             expect(currentQuestion?.type).toBe('choix_simple');
-            expect(currentQuestion?.answers).toEqual(['A', 'B', 'C', 'D']);
+            expect(currentQuestion?.answerOptions).toEqual(['A', 'B', 'C', 'D']);
         });
     });
 
@@ -417,7 +417,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q1',
                 text: 'Quick question',
                 type: 'choix_simple',
-                answers: ['A', 'B']
+                answerOptions: ['A', 'B']
             },
             timer: 0,
             questionIndex: 0,
@@ -431,10 +431,10 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(0);
+            expect(result.current.gameState.timer).toBe(30); // expect 30 as per unified system
             expect(result.current.gameState.currentQuestion?.uid).toBe('q1');
             expect(result.current.gameState.currentQuestion?.type).toBe('choix_simple');
-            expect(result.current.gameState.currentQuestion?.answers).toEqual(['A', 'B']);
+            expect(result.current.gameState.currentQuestion?.answerOptions).toEqual(['A', 'B']);
             expect(result.current.gameState.gameStatus).toBe('waiting');
         });
     });

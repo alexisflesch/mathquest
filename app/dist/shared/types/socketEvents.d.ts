@@ -57,8 +57,6 @@ export interface QuestionData {
     tags?: string[];
     difficulty?: number;
     explanation?: string;
-    question?: string;
-    answers?: string[];
 }
 export interface ClientToServerEvents {
     join_game: (payload: JoinGamePayload) => void;

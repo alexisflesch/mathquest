@@ -204,8 +204,8 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 };
                 const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
                 const filteredQuestion = filterQuestionForClient(patchedQuestion);
-                if (!Array.isArray(filteredQuestion.answers)) {
-                    filteredQuestion.answers = [];
+                if (!Array.isArray(filteredQuestion.answerOptions)) {
+                    filteredQuestion.answerOptions = [];
                 }
 
                 let questionState: 'pending' | 'active' | 'paused' | 'stopped' | 'finished' = 'active';

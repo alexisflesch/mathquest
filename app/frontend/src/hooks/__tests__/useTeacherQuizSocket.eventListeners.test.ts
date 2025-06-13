@@ -107,13 +107,6 @@ describe('useTeacherQuizSocket Event Listeners', () => {
         expect(mockSocket.on).toHaveBeenCalledWith('quiz_connected_count', expect.any(Function));
     });
 
-    it('should register event listener for "dashboard_joined"', () => {
-        renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
-
-        // Verify that the event listener was registered
-        expect(mockSocket.on).toHaveBeenCalledWith('dashboard_joined', expect.any(Function));
-    });
-
     it('should handle "game_control_state" event without errors', () => {
         const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
         const mockState: QuizState = {

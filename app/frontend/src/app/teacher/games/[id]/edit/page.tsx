@@ -28,25 +28,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { Clock, GripVertical, X, ShoppingCart, Plus } from 'lucide-react';
-
-// Local interface for questions on this page, compatible with QuestionDisplayProps
-interface QuestionForCreatePage {
-    uid: string;
-    title?: string;
-    text: string;
-    answers?: Array<{ text: string; correct: boolean }>;
-    answerOptions?: string[];
-    correctAnswers?: boolean[];
-    level?: string | string[];
-    gradeLevel?: string;
-    discipline?: string;
-    themes?: string[];
-    explanation?: string;
-    timeLimitSeconds?: number; // Using explicit unit suffix from BaseQuestion
-    timeLimit?: number; // Keep for backward compatibility during migration
-    tags?: string[];
-    author?: string;
-}
+import type { Question } from '@shared/types/core/question'; // Use canonical shared type
 
 // Filter request interface
 interface FilterQuestionRequest {
@@ -57,8 +39,8 @@ interface FilterQuestionRequest {
     search?: string;
 }
 
-// Cart question interface extending the base question
-interface CartQuestion extends QuestionForCreatePage {
+// Cart question interface extending the canonical shared Question type
+interface CartQuestion extends Question {
     cartId: string;
     customTimeLimit?: number;
 }
@@ -94,7 +76,7 @@ interface GameInstance {
         questions: Array<{
             id: string;
             sequence: number;
-            question: QuestionForCreatePage;
+            question: Question;
         }>;
     };
 }
@@ -153,8 +135,8 @@ function SortableCartQuestion({
                             type="number"
                             min="10"
                             max="300"
-                            value={question.customTimeLimit || question.timeLimit || question.timeLimitSeconds || 30}
-                            onChange={(e) => onUpdateTime(question.cartId, parseInt(e.target.value) || (question.timeLimit || question.timeLimitSeconds || 30))}
+                            value={question.customTimeLimit || question.timeLimit || 30}
+                            onChange={(e) => onUpdateTime(question.cartId, parseInt(e.target.value) || (question.timeLimit || 30))}
                             className="input input-xs input-bordered w-20 text-xs"
                         />
                         <span className="text-xs text-base-content/60">sec</span>
@@ -206,7 +188,7 @@ export default function EditActivityPage() {
     });
 
     // State for questions and filters
-    const [availableQuestions, setAvailableQuestions] = useState<QuestionForCreatePage[]>([]);
+    const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
     const [selectedQuestions, setSelectedQuestions] = useState<CartQuestion[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -323,7 +305,7 @@ export default function EditActivityPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(filters)
-            }) as { questions: QuestionForCreatePage[] };
+            }) as { questions: Question[] };
 
             setAvailableQuestions(response.questions || []);
         } catch (err) {
@@ -332,11 +314,11 @@ export default function EditActivityPage() {
         }
     };
 
-    const handleAddQuestion = (question: QuestionForCreatePage) => {
+    const handleAddQuestion = (question: Question) => {
         const cartQuestion: CartQuestion = {
             ...question,
             cartId: `cart-${Date.now()}-${Math.random()}`,
-            customTimeLimit: question.timeLimit
+            customTimeLimit: question.timeLimit || undefined
         };
         setSelectedQuestions(prev => [...prev, cartQuestion]);
     };
@@ -555,8 +537,8 @@ export default function EditActivityPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Clock size={14} className="text-base-content/60" />
-                                                <span className="text-xs text-base-content/60">{question.timeLimit || question.timeLimitSeconds || 30}s</span>
-                                                <span className="badge badge-outline badge-sm">{question.level || question.gradeLevel}</span>
+                                                <span className="text-xs text-base-content/60">{question.timeLimit || 30}s</span>
+                                                <span className="badge badge-outline badge-sm">{question.gradeLevel}</span>
                                                 <span className="badge badge-outline badge-sm">{question.discipline}</span>
                                             </div>
                                             <p className="font-medium text-sm mb-2 line-clamp-2">{question.text}</p>
@@ -771,8 +753,8 @@ export default function EditActivityPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-2">
                                             <Clock size={14} className="text-base-content/60" />
-                                            <span className="text-xs text-base-content/60">{question.timeLimit || question.timeLimitSeconds || 30}s</span>
-                                            <span className="badge badge-outline badge-sm">{question.level || question.gradeLevel}</span>
+                                            <span className="text-xs text-base-content/60">{question.timeLimit || 30}s</span>
+                                            <span className="badge badge-outline badge-sm">{question.gradeLevel}</span>
                                         </div>
                                         <p className="font-medium text-sm mb-2 line-clamp-2">{question.text}</p>
                                         <div className="flex flex-wrap gap-1">

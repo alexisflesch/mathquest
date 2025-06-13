@@ -94,7 +94,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'multiple_choice_single_answer',
-                answers: ['3', '4', '5', '6']
+                answerOptions: ['3', '4', '5', '6']
             },
             timer: 30000, // ms
             questionIndex: 0,
@@ -138,7 +138,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'multiple_choice_single_answer',
-                answers: ['3', '4', '5', '6']
+                answerOptions: ['3', '4', '5', '6']
             },
             timer: 30000, // ms
             questionIndex: 0,

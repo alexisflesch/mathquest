@@ -180,12 +180,12 @@ export default function PracticeSessionPage() {
                         <>
                             <QuestionCard
                                 currentQuestion={{
-                                    uid: gameState.currentQuestion.uid,
                                     question: {
                                         uid: gameState.currentQuestion.uid,
                                         text: gameState.currentQuestion.text,
                                         type: gameState.currentQuestion.questionType,
-                                        answers: gameState.currentQuestion.answerOptions || [],
+                                        answerOptions: gameState.currentQuestion.answerOptions || [],
+                                        questionType: gameState.currentQuestion.questionType
                                     }
                                 }}
                                 questionIndex={gameState.questionIndex}

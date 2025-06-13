@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import QuestionDisplay from '@/components/QuestionDisplay';
-import type { BaseQuestion as SharedQuestion, Answer as SharedAnswer } from '@shared/types/question'; // Import shared types
+import type { Question } from '@shared/types/core/question'; // Use canonical shared type
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
@@ -11,19 +11,7 @@ import { makeApiRequest } from '@/config/api';
 import { QuestionsResponseSchema, QuizCreationResponseSchema, type QuestionsResponse, type QuizCreationResponse } from '@/types/api';
 import { Search } from 'lucide-react';
 
-// Local interface for questions on this page, compatible with QuestionDisplayProps
-interface QuestionForCreatePage {
-    uid: string;
-    title?: string;
-    text: string; // Changed from question: string to text: string
-    answers: Array<{ text: string; correct: boolean }>; // Must match QuestionDisplay
-    level?: string | string[]; // This will be populated from shared type's gradeLevel or API's level/niveaux
-    discipline?: string;
-    themes?: string[]; // Plural, to align with shared type
-    explanation?: string;
-    timeLimitSeconds?: number; // Using explicit unit suffix from BaseQuestion
-    tags?: string[];
-}
+// Use canonical shared Question type directly - no more local interfaces!
 
 export default function CreateQuizPage() {
     // Access guard: Require teacher access for quiz creation
@@ -48,7 +36,7 @@ export default function CreateQuizPage() {
     const [selectedLevel, setSelectedLevel] = useState(''); // Renamed selectedNiveau to selectedLevel
     const [selectedDiscipline, setSelectedDiscipline] = useState('');
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
-    const [questions, setQuestions] = useState<QuestionForCreatePage[]>([]); // Use new local type
+    const [questions, setQuestions] = useState<Question[]>([]); // Use canonical shared type
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [openUid, setOpenUid] = useState<string | null>(null);
     const BATCH_SIZE = 20;
@@ -96,30 +84,38 @@ export default function CreateQuizPage() {
 
         const data = await makeApiRequest<QuestionsResponse>(url, undefined, undefined, QuestionsResponseSchema);
 
-        const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as SharedQuestion[];
+        const newQuestionsFromApi = (Array.isArray(data) ? data : data.questions || []) as any[];
 
-        const transformedQuestions: QuestionForCreatePage[] = newQuestionsFromApi
-            .filter((q: SharedQuestion) => // q is BaseQuestion
-                typeof q.text === 'string' && q.text.trim() !== '' && // Use q.text from BaseQuestion
-                Array.isArray(q.answers) // Use q.answers from BaseQuestion
+        const transformedQuestions: Question[] = newQuestionsFromApi
+            .filter((q: any) =>
+                typeof q.text === 'string' && q.text.trim() !== '' &&
+                Array.isArray(q.answers)
             )
-            .map((q: SharedQuestion) => { // q is BaseQuestion
-                const apiQuestion = q as any; // Cast to any to access fields potentially not in BaseQuestion but from API
+            .map((q: any) => {
+                // Convert API format to canonical Question format
+                const answerOptions = Array.isArray(q.answers)
+                    ? q.answers.map((a: any) => a.text || a.texte || '')
+                    : [];
+                const correctAnswers = Array.isArray(q.answers)
+                    ? q.answers.map((a: any) => Boolean(a.correct))
+                    : [];
+
                 return {
-                    uid: q.uid, // From BaseQuestion
-                    title: apiQuestion.title || apiQuestion.titre, // From API, fallback to French
-                    text: q.text as string, // Changed from question: q.text to text: q.text
-                    answers: q.answers!.map((a: SharedAnswer) => ({ // a is Answer from BaseQuestion
-                        text: a.text || '',
-                        correct: a.correct || false // Use a.correct from Answer
-                    })),
-                    level: apiQuestion.gradeLevel || apiQuestion.level || apiQuestion.niveaux, // Prioritize gradeLevel from shared, then API's level/niveaux
-                    discipline: apiQuestion.discipline || apiQuestion.category || apiQuestion.subject, // From API, with fallbacks
-                    themes: apiQuestion.themes, // From API (should be plural)
-                    explanation: q.explanation, // From BaseQuestion
-                    timeLimitSeconds: q.timeLimitSeconds, // From BaseQuestion with explicit unit suffix
-                    tags: q.tags, // From BaseQuestion
-                };
+                    uid: q.uid,
+                    title: q.title || q.titre,
+                    text: q.text || q.question,
+                    questionType: q.questionType || q.type || 'choix_simple',
+                    answerOptions,
+                    correctAnswers,
+                    gradeLevel: q.gradeLevel || q.level || q.niveaux,
+                    discipline: q.discipline || q.category || q.subject,
+                    themes: q.themes,
+                    explanation: q.explanation || q.justification,
+                    timeLimit: q.timeLimit || q.timeLimitSeconds || q.temps,
+                    tags: q.tags,
+                    difficulty: q.difficulty || q.difficulte,
+                    author: q.author || q.auteur,
+                } satisfies Question;
             });
 
         if (reset) {
@@ -257,7 +253,7 @@ export default function CreateQuizPage() {
                                             const tags = [
                                                 ...(q.tags || []),
                                                 q.themes,
-                                                q.level, // Use level
+                                                q.gradeLevel, // Use canonical gradeLevel field
                                                 q.discipline,
                                                 q.title, // Use title
                                                 q.text // Changed from q.question to q.text
@@ -279,7 +275,7 @@ export default function CreateQuizPage() {
                                                             }
                                                             setQuizMeta(() => { // Removed 'meta' param to avoid shadowing
                                                                 const selectedQs = questions.filter(qq => next.includes(qq.uid));
-                                                                const levels = Array.from(new Set(selectedQs.map(qq => qq.level).filter((v): v is string => Boolean(v)))); // Use levels and qq.level
+                                                                const levels = Array.from(new Set(selectedQs.map(qq => qq.gradeLevel).filter((v): v is string => Boolean(v)))); // Use gradeLevel
                                                                 // Updated to use only qq.themes as qq.theme is removed
                                                                 const themes = Array.from(new Set(selectedQs.flatMap(qq => qq.themes || []).filter((v): v is string => Boolean(v))));
                                                                 return { levels, themes }; // Removed categories

@@ -14,9 +14,6 @@ export interface TournamentQuestion extends Omit<LiveQuestionPayload, 'question'
     code?: string;
     remainingTime?: number;
     tournoiState?: 'pending' | 'running' | 'paused' | 'stopped' | 'finished';
-    uid?: string;
-    type?: string;
-    answers?: string[];
 }
 /**
  * Type guard to check if a question object is a TournamentQuestion

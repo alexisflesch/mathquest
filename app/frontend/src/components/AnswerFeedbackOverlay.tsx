@@ -62,6 +62,9 @@ const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
             }, duration * 1000);
             return () => clearTimeout(timeout);
         }
+
+        // Return empty cleanup function for consistency
+        return () => { };
     }, [duration, showTimer, allowManualClose]);
 
     if (!visible) return null;

@@ -93,7 +93,7 @@ router.post('/:accessCode/question', auth_1.teacherAuth, async (req, res) => {
                     uid: updatedGameState.questionData.uid,
                     text: updatedGameState.questionData.text,
                     type: updatedGameState.questionData.questionType,
-                    answers: updatedGameState.questionData.answerOptions
+                    answerOptions: updatedGameState.questionData.answerOptions
                 },
                 timer: updatedGameState.timer.durationMs / 1000, // Convert ms to seconds
                 questionIndex: questionIndex,

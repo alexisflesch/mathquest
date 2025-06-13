@@ -80,7 +80,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6'] // No correct answers - filtered for security
+                answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
             timer: 30000, // ms
             questionIndex: 0,
@@ -147,7 +147,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6'] // No correct answers - filtered for security
+                answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
             timer: 3000, // ms
             questionIndex: 0,
@@ -198,7 +198,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6'] // No correct answers - filtered for security
+                answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
             timer: 30000, // ms
             questionIndex: 0,
@@ -250,7 +250,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6'] // No correct answers - filtered for security
+                answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
             },
             timer: 30000, // ms
             questionIndex: 0,
@@ -440,7 +440,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 uid: 'q1',
                 text: 'What is 2+2?',
                 type: 'choix_simple',
-                answers: ['3', '4', '5', '6']
+                answerOptions: ['3', '4', '5', '6']
             },
             timer: 30000, // ms
             questionIndex: 0,

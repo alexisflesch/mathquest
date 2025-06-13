@@ -107,13 +107,13 @@ export declare const joinQuizPayloadSchema: z.ZodObject<{
     teacherId: z.ZodOptional<z.ZodString>;
     studentId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    role: "teacher" | "student" | "projector";
     quizId: string;
+    role: "teacher" | "student" | "projector";
     teacherId?: string | undefined;
     studentId?: string | undefined;
 }, {
-    role: "teacher" | "student" | "projector";
     quizId: string;
+    role: "teacher" | "student" | "projector";
     teacherId?: string | undefined;
     studentId?: string | undefined;
 }>;
@@ -147,20 +147,20 @@ export declare const joinTournamentPayloadSchema: z.ZodObject<{
     cookieId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     code: string;
-    userId?: string | undefined;
     username?: string | undefined;
     avatar?: string | undefined;
     isDeferred?: boolean | undefined;
-    cookieId?: string | undefined;
+    userId?: string | undefined;
     classId?: string | undefined;
+    cookieId?: string | undefined;
 }, {
     code: string;
-    userId?: string | undefined;
     username?: string | undefined;
     avatar?: string | undefined;
     isDeferred?: boolean | undefined;
-    cookieId?: string | undefined;
+    userId?: string | undefined;
     classId?: string | undefined;
+    cookieId?: string | undefined;
 }>;
 export declare const tournamentAnswerPayloadSchema: z.ZodObject<{
     code: z.ZodString;
@@ -169,14 +169,14 @@ export declare const tournamentAnswerPayloadSchema: z.ZodObject<{
     clientTimestamp: z.ZodNumber;
     isDeferred: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    code: string;
     questionUid: string;
+    code: string;
     answerIdx: number | number[];
     clientTimestamp: number;
     isDeferred?: boolean | undefined;
 }, {
-    code: string;
     questionUid: string;
+    code: string;
     answerIdx: number | number[];
     clientTimestamp: number;
     isDeferred?: boolean | undefined;
@@ -210,13 +210,13 @@ export declare const quizTimerActionPayloadSchema: z.ZodObject<{
     questionUid: z.ZodOptional<z.ZodString>;
     durationMs: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    action: "pause" | "stop" | "start" | "resume" | "set_duration";
     gameId: string;
+    action: "pause" | "stop" | "start" | "resume" | "set_duration";
     questionUid?: string | undefined;
     durationMs?: number | undefined;
 }, {
-    action: "pause" | "stop" | "start" | "resume" | "set_duration";
     gameId: string;
+    action: "pause" | "stop" | "start" | "resume" | "set_duration";
     questionUid?: string | undefined;
     durationMs?: number | undefined;
 }>;

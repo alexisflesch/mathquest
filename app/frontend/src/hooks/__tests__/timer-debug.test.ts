@@ -306,18 +306,18 @@ describe('Timer Debug Test Suite', () => {
 
             console.log('Step 2 - Processed data:', processedData);
 
-            // Step 3: Data flows to migrated hook (legacy format conversion)
-            const legacyFormat = {
+            // Step 3: Data flows to unified timer system
+            const timerData = {
                 timerStatus: processedData.running ? 'play' : 'stop',
                 timerQuestionUid: processedData.questionUid,
-                timeLeftMs: processedData.timeLeftMs, // Still in milliseconds
+                timeLeftMs: processedData.timeLeftMs,
                 localTimeLeftMs: processedData.timeLeftMs
             };
 
-            console.log('Step 3 - Legacy format:', legacyFormat);
+            console.log('Step 3 - Timer data:', timerData);
 
             // Step 4: Dashboard calculates display time
-            const effectiveTimeLeft = legacyFormat.timerStatus === 'stop' ? 0 : (legacyFormat.localTimeLeftMs ?? legacyFormat.timeLeftMs ?? 0);
+            const effectiveTimeLeft = timerData.timerStatus === 'stop' ? 0 : (timerData.localTimeLeftMs ?? timerData.timeLeftMs ?? 0);
             const displaySeconds = Math.ceil(effectiveTimeLeft / 1000);
 
             console.log('Step 4 - Final display:');
@@ -327,7 +327,7 @@ describe('Timer Debug Test Suite', () => {
             // Verify the complete flow
             expect(processedData.timeLeftMs).toBe(18000);
             expect(processedData.running).toBe(true);
-            expect(legacyFormat.timerStatus).toBe('play');
+            expect(timerData.timerStatus).toBe('play');
             expect(effectiveTimeLeft).toBe(18000);
             expect(displaySeconds).toBe(18);
 

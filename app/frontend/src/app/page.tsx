@@ -50,6 +50,8 @@ export default function Home() {
       // Clear timeout on unmount
       return () => clearTimeout(timeoutId);
     }
+    // Return empty cleanup function for consistency
+    return () => { };
   }, [refreshAuth]);
 
   // No automatic redirects - let users navigate from the main landing page

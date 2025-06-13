@@ -246,6 +246,9 @@ export default function LiveGamePage() {
             setShowFeedbackOverlay(false);
             setFeedbackText("");
         }
+
+        // Return empty cleanup function for consistency
+        return () => { };
     }, [gameState.phase, gameState.feedbackRemaining, gameState.currentQuestion, gameState.gameMode, gameState.lastAnswerFeedback, gameState.correctAnswers]);
 
     // Handle socket errors
@@ -358,7 +361,7 @@ export default function LiveGamePage() {
             uid: gameState.currentQuestion.uid,
             text: gameState.currentQuestion.text,
             type: gameState.currentQuestion.questionType || 'multiple_choice',
-            answers: gameState.currentQuestion.answerOptions || gameState.currentQuestion.answers || []
+            answerOptions: gameState.currentQuestion.answerOptions || []
         };
 
         return {
@@ -389,11 +392,11 @@ export default function LiveGamePage() {
                         onClose={() => setShowFeedbackOverlay(false)}
                         isCorrect={gameState.lastAnswerFeedback?.correct}
                         correctAnswers={gameState.currentQuestion?.correctAnswers ?
-                            (gameState.currentQuestion.answerOptions || gameState.currentQuestion.answers || [])?.map((_: string, index: number) =>
+                            (gameState.currentQuestion.answerOptions || [])?.map((_: string, index: number) =>
                                 gameState.currentQuestion?.correctAnswers?.[index] || false
                             ) : undefined
                         }
-                        answerOptions={gameState.currentQuestion?.answerOptions || gameState.currentQuestion?.answers}
+                        answerOptions={gameState.currentQuestion?.answerOptions}
                         showTimer={gameMode !== 'practice'} // Hide timer for practice mode
                         mode={gameMode}
                         allowManualClose={gameMode === 'practice'}

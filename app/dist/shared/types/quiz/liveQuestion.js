@@ -22,10 +22,9 @@ function filterQuestionForClient(questionObject) {
         uid: questionObject.uid,
         type: questionObject.questionType || questionObject.type,
         text: questionObject.text,
-        answers: questionObject.answerOptions || questionObject.answers || [],
+        answerOptions: questionObject.answerOptions || [],
         // Additional properties for frontend compatibility
         questionType: questionObject.questionType || questionObject.type,
-        answerOptions: questionObject.answerOptions || questionObject.answers || [],
         explanation: questionObject.explanation,
         correctAnswers: questionObject.correctAnswers,
         timeLimit: questionObject.timeLimit,

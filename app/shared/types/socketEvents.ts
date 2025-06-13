@@ -28,7 +28,6 @@ export interface JoinGamePayload {
 export type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload } from './core';
 export type { LeaderboardEntry as LeaderboardEntryData } from './core';
 
-// Legacy alias for GameAnswerPayload
 export type { AnswerSubmissionPayload as GameAnswerPayload } from './core';
 
 // Placeholder for other payloads - we'll add more as we identify them.
@@ -99,10 +98,6 @@ export interface QuestionData {
     tags?: string[]; // Question tags
     difficulty?: number; // Difficulty level
     explanation?: string; // Question explanation
-
-    // Legacy/alternative field names for backward compatibility
-    question?: string; // Alternative field for question text
-    answers?: string[]; // Legacy field for answer options
 }
 
 // --- Core Socket.IO Event Definitions ---

@@ -7,22 +7,32 @@ import { createLogger } from '@/clientLogger';
 // Create a logger for this component
 const logger = createLogger('QuestionDisplay');
 
-// Types (simplifiés pour l'affichage)
+// Helper function to convert modern question format to display format
+function getAnswersForDisplay(question: QuestionDisplayProps['question']) {
+    if (!question.answerOptions || !question.correctAnswers) {
+        return [];
+    }
+
+    return question.answerOptions.map((text, index) => ({
+        text,
+        correct: question.correctAnswers[index] || false
+    }));
+}
+
+// Types (modernized to use canonical question format)
 export interface QuestionDisplayProps {
     question: {
         uid: string;
-        title?: string; // Renommé depuis 'titre'
-        text: string; // Changed from question to text
-        answers: { text: string; correct: boolean }[]; // Renommé depuis 'reponses' et 'texte'
-        levels?: string[]; // Renommé depuis 'niveaux'
-        level?: string | string[]; // Renommé depuis 'niveau'
-        categories?: string[]; // Gardé, à vérifier si cela doit être mappé sur tags
+        title?: string;
+        text: string;
+        answerOptions: string[]; // Modern canonical field
+        correctAnswers: boolean[]; // Modern canonical field
+        level?: string | string[];
         discipline?: string;
-        themes?: string[]; // Gardé, à vérifier si cela doit être mappé sur tags
-        theme?: string;
-        explanation?: string; // Renommé depuis 'justification'
-        timeLimitSeconds?: number; // Time limit in seconds (using explicit unit suffix)
-        tags?: string[]; // Ajouté pour correspondre à BaseQuestion
+        themes?: string[];
+        explanation?: string;
+        timeLimit?: number | null; // Time limit in seconds (nullable from database)
+        tags?: string[];
     };
     // Props pour le contrôle externe
     isOpen?: boolean;
@@ -53,7 +63,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     isOpen = false,
     onToggleOpen,
     timerStatus = "stop",
-    timeLeftMs = (question.timeLimitSeconds ?? 0) * 1000, // Convert database seconds to milliseconds for internal use
+    timeLeftMs = (question.timeLimit ?? 0) * 1000, // Convert database seconds to milliseconds for internal use
     onPlay,
     onPause,
     onStop,
@@ -72,7 +82,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 }) => {
     // Debug: Log the question data received
     logger.info('[DEBUG QuestionDisplay] Received question:', question);
-    logger.info('[DEBUG QuestionDisplay] Question answers:', question.answers);
+    const answersForDisplay = getAnswersForDisplay(question);
+    logger.info('[DEBUG QuestionDisplay] Question answerOptions:', question.answerOptions);
+    logger.info('[DEBUG QuestionDisplay] Question correctAnswers:', question.correctAnswers);
+    logger.info('[DEBUG QuestionDisplay] Computed answers for display:', answersForDisplay);
     logger.info('[DEBUG QuestionDisplay] Question text:', question.text);
 
     // Détermine l'état effectif des boutons play/pause
@@ -158,9 +171,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     );
 
     const metaString = [
-        question.level || (question.levels && question.levels.join(', ')), // Modifié: niveau -> level, niveaux -> levels
-        question.discipline || (question.categories && question.categories.join(', ')),
-        question.theme || (question.themes && question.themes.join(', '))
+        question.level && (Array.isArray(question.level) ? question.level.join(', ') : question.level),
+        question.discipline,
+        question.themes && question.themes.join(', ')
     ].filter(Boolean).join(' · ');
 
     // --- Stats display toggle state (for ChartBarBig) ---
@@ -299,8 +312,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     >
                                         <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
                                     </li>
-                                    {Array.isArray(question.answers) && question.answers.length > 0 // Modifié: question.reponses -> question.answers
-                                        ? question.answers.map((r, idx) => ( // Modifié: question.reponses -> question.answers
+                                    {Array.isArray(question.answerOptions) && question.answerOptions.length > 0
+                                        ? question.answerOptions.map((answerText, idx) => (
                                             <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                 <div className="flex gap-2 items-center relative z-10 w-full">
                                                     {/* Percentage before icon, rounded to nearest integer */}
@@ -310,7 +323,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                         </span>
                                                     )}
                                                     <span className="answer-icon flex items-center">
-                                                        {r.correct ? (
+                                                        {question.correctAnswers && question.correctAnswers[idx] ? (
                                                             <Check size={18} strokeWidth={3} className="text-primary" />
                                                         ) : (
                                                             <X size={18} strokeWidth={3} className="text-secondary" />
@@ -333,7 +346,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                     )}
                                                     <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
                                                         <MathJaxWrapper>
-                                                            <span className="answer-text">{r.text}</span> {/* Modifié: r.texte -> r.text */}
+                                                            <span className="answer-text">{answerText}</span>
                                                         </MathJaxWrapper>
                                                     </div>
                                                 </div>
@@ -364,8 +377,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                             isOpen ? "no-top-border" : ""
                                         ].join(" ")}
                                     >
-                                        {Array.isArray(question.answers) && question.answers.length > 0 // Modifié: question.reponses -> question.answers
-                                            ? question.answers.map((r, idx) => ( // Modifié: question.reponses -> question.answers
+                                        {Array.isArray(question.answerOptions) && question.answerOptions.length > 0
+                                            ? question.answerOptions.map((answerText, idx) => (
                                                 <li key={idx} className="flex items-center ml-4 relative" style={{ minHeight: '2.25rem' }}>
                                                     <div className="flex gap-2 items-center relative z-10 w-full">
                                                         {/* Percentage before icon, rounded to nearest integer */}
@@ -375,7 +388,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                             </span>
                                                         )}
                                                         <span className="answer-icon flex items-center">
-                                                            {r.correct ? (
+                                                            {question.correctAnswers && question.correctAnswers[idx] ? (
                                                                 <Check size={18} strokeWidth={3} className="text-primary" />
                                                             ) : (
                                                                 <X size={18} strokeWidth={3} className="text-secondary" />
@@ -398,7 +411,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                                         )}
                                                         <div style={{ fontSize: `calc(${baseAnswerFontSize} * ${zoomFactor})` }}>
                                                             <MathJaxWrapper>
-                                                                <span className="answer-text">{r.text}</span> {/* Modifié: r.texte -> r.text */}
+                                                                <span className="answer-text">{answerText}</span>
                                                             </MathJaxWrapper>
                                                         </div>
                                                     </div>
@@ -440,10 +453,10 @@ export default React.memo(QuestionDisplay, (prevProps, nextProps) => {
     // Compare question object - only key fields that affect display
     if (prevProps.question.uid !== nextProps.question.uid) return false;
     if (prevProps.question.text !== nextProps.question.text) return false;
-    if (prevProps.question.timeLimitSeconds !== nextProps.question.timeLimitSeconds) return false;
+    if (prevProps.question.timeLimit !== nextProps.question.timeLimit) return false;
 
     // Compare answers array length and content
-    if (prevProps.question.answers?.length !== nextProps.question.answers?.length) return false;
+    if (prevProps.question.answerOptions?.length !== nextProps.question.answerOptions?.length) return false;
 
     // Compare stats array for meaningful changes
     if (prevProps.stats?.length !== nextProps.stats?.length) return false;

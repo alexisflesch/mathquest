@@ -210,8 +210,8 @@ function registerSharedLiveHandlers(io, socket) {
                 };
                 const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/quiz/liveQuestion')));
                 const filteredQuestion = filterQuestionForClient(patchedQuestion);
-                if (!Array.isArray(filteredQuestion.answers)) {
-                    filteredQuestion.answers = [];
+                if (!Array.isArray(filteredQuestion.answerOptions)) {
+                    filteredQuestion.answerOptions = [];
                 }
                 let questionState = 'active';
                 let timer = question.timeLimit || 30;

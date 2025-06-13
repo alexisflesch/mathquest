@@ -5,7 +5,6 @@ import WrongAnswer from '@/components/WrongAnswer';
 import type { Question, Answer } from '@shared/types/quiz/question'; // Corrected import
 import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import type { QuestionData, TournamentQuestion } from '@shared/types/socketEvents';
-import { getQuestionText, getQuestionAnswers, getQuestionUid } from '@shared/types/tournament/question';
 import { createLogger } from '@/clientLogger';
 
 const logger = createLogger('QuestionCard');
@@ -48,12 +47,23 @@ const getQuestionType = (q: FilteredQuestion | QuestionData | string): string | 
     return undefined;
 };
 
-// Updated helper functions using shared type utilities
+// Updated helper functions using canonical shared type fields directly
 const getQuestionTextToRender = (payload: TournamentQuestion | null): string => {
     if (!payload) return "Question non disponible";
     try {
-        const text = getQuestionText(payload);
-        return text === 'Question text not available' ? "Question mal formatée" : text;
+        const { question } = payload;
+
+        if (typeof question === 'string') {
+            return question;
+        }
+
+        if (typeof question === 'object' && question !== null) {
+            if ('text' in question && typeof question.text === 'string') {
+                return question.text;
+            }
+        }
+
+        return "Question mal formatée";
     } catch (error) {
         logger.warn('[QuestionCard] Error extracting question text:', error);
         return "Question mal formatée";
@@ -63,7 +73,16 @@ const getQuestionTextToRender = (payload: TournamentQuestion | null): string => 
 const getAnswersToRender = (payload: TournamentQuestion | null): string[] => {
     if (!payload) return [];
     try {
-        return getQuestionAnswers(payload);
+        const { question } = payload;
+
+        if (typeof question === 'object' && question !== null) {
+            // Use canonical answerOptions field only
+            if ('answerOptions' in question && Array.isArray(question.answerOptions)) {
+                return question.answerOptions;
+            }
+        }
+
+        return [];
     } catch (error) {
         logger.warn('[QuestionCard] Error extracting answers:', error);
         return [];

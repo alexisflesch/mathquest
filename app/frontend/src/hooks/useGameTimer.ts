@@ -424,57 +424,18 @@ export function useGameTimer(
 
             const timer = gameTimerUpdate.timer;
 
+            // Accept timeRemainingMs from backend
             let timeLeftMs = 0;
-            let status: TimerStatus = 'stop';
-
-            if (timer.isPaused) {
-                status = 'pause';
-                timeLeftMs = typeof timer.timeRemainingMs === 'number' ? timer.timeRemainingMs : 0;
-
-                // Log frontend pause processing
-                logger.debug('Frontend processing paused timer', {
-                    'timer.isPaused': timer.isPaused,
-                    'timer.timeRemainingMs': timer.timeRemainingMs,
-                    'timer.timeRemainingMs type': typeof timer.timeRemainingMs,
-                    'typeof timer.timeRemainingMs === "number"': typeof timer.timeRemainingMs === 'number',
-                    'timer.timeRemainingMs > 0': typeof timer.timeRemainingMs === 'number' ? timer.timeRemainingMs > 0 : false,
-                    'calculated timeLeftMs': timeLeftMs,
-                    'timeLeftMs type': typeof timeLeftMs,
-                    'timeLeftMs === 0': timeLeftMs === 0,
-                    'timeLeftMs > 0': timeLeftMs > 0,
-                    'about to check if timeLeftMs === 0': true,
-                    'full timer object': timer
-                });
-
-                // If paused and time is 0, it should be stopped
-                if (timeLeftMs === 0) {
-                    logger.debug('Converting pause to stop because timeLeftMs === 0', {
-                        'timeLeftMs': timeLeftMs,
-                        'timer.timeRemainingMs': timer.timeRemainingMs,
-                        'this should not happen if backend sent correct data': true
-                    });
-                    status = 'stop';
-                }
-            } else if (typeof timer.timeRemainingMs === 'number') {
-                // Prioritize timeRemainingMs from backend when available
+            if (typeof timer.timeRemainingMs === 'number') {
                 timeLeftMs = timer.timeRemainingMs;
-                status = timeLeftMs > 0 ? 'play' : 'stop';
+            } else {
+                timeLeftMs = 0;
+            }
 
-                // Log resume processing
-                logger.debug('Frontend processing resumed/playing timer', {
-                    'timer.isPaused': timer.isPaused,
-                    'timer.timeRemainingMs': timer.timeRemainingMs,
-                    'timer.timeRemainingMs type': typeof timer.timeRemainingMs,
-                    'calculated timeLeftMs': timeLeftMs,
-                    'calculated status': status,
-                    'timeLeftMs in seconds': timeLeftMs / 1000,
-                    'full timer object': timer
-                });
-            } else if (typeof timer.startedAt === 'number' && typeof timer.durationMs === 'number') {
-                // Fallback to calculation if timeRemaining not provided
-                const elapsed = Date.now() - timer.startedAt;
-                const remaining = Math.max(0, timer.durationMs - elapsed);
-                timeLeftMs = remaining;
+            let status: TimerStatus = 'stop';
+            if (timer.isPaused) {
+                status = timeLeftMs === 0 ? 'stop' : 'pause';
+            } else {
                 status = timeLeftMs > 0 ? 'play' : 'stop';
             }
 

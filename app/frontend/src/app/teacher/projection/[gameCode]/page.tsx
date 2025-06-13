@@ -2,25 +2,7 @@
  * Teacher Projection Page Component
  *
  * This page provides a full-screen projection view for teachers to display
- * q    // Listen for show    // Clear correctAnswers when a new question is set
-    const lastQuestionIdRef = useRef<string | null>(null);
-    useEffect(() => {
-        if (!gameState || !timerQuestionUid) return;
-        if (lastQuestionIdRef.current !== timerQuestionUid) {
-            debugSetCorrectAnswers([], 'new question detected');
-            lastQuestionIdRef.current = timerQuestionUid;
-        }
-    }, [gameState, timerQuestionUid]);ts toggle
-    useEffect(() => {
-        if (!gameSocket) return;
-        const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
-            setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
-        };
-        gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
-        return () => {
-            gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
-        };
-    }, [gameSocket]);nts on a larger screen (projector, interactive whiteboard, etc.)
+ * quiz content on a larger screen (projector, interactive whiteboard, etc.)
  * Features:
  * - Draggable and resizable components
  * - Real-time updates via socket connection
@@ -47,6 +29,20 @@ import ZoomControls from '@/components/ZoomControls'; // Import du nouveau compo
 import { Question } from '@/types'; // Remove unused QuizState import
 import type { TournamentQuestion } from '@shared/types';
 import type { QuestionData } from '@shared/types/socketEvents';
+import { getQuestionUid } from '@shared/types/tournament/question';
+
+// Helper to check if a TournamentQuestion is multiple choice
+const isQuestionMultipleChoice = (tq: TournamentQuestion | null): boolean => {
+    if (!tq?.question) return false;
+    if (typeof tq.question === 'string') return false;
+    if (typeof tq.question === 'object' && 'type' in tq.question) {
+        return tq.question.type === 'choix_multiple';
+    }
+    if (typeof tq.question === 'object' && 'questionType' in tq.question) {
+        return tq.question.questionType === 'choix_multiple';
+    }
+    return false;
+};
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const logger = createLogger('ProjectionPage');
@@ -115,53 +111,6 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         logger.debug(`[Projection] setCorrectAnswers called`, { val, reason });
         setCorrectAnswers(val);
     };
-
-    // --- Legacy event listeners removed: migrate to new event system or use quizState ---
-    // useEffect(() => {
-    //     if (!gameSocket) return;
-    //     const handleResults = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
-    //         logger.info('[Projection] Received quiz_question_results', data);
-    //         setLeaderboard(data.leaderboard || []);
-    //         debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_results');
-    //         setPodiumKey(k => k + 1); // Remount ClassementPodium for animation
-    //     };
-    //     gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_RESULTS, handleResults);
-    //     return () => {
-    //         gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_RESULTS, handleResults);
-    //     };
-    // }, [gameSocket]);
-    // useEffect(() => {
-    //     if (!gameSocket) return;
-    //     const handleClosed = (data: { leaderboard: { username: string; avatar: string; score: number }[]; correctAnswers: number[] }) => {
-    //         logger.info('[Projection] Received quiz_question_closed', data);
-    //         setLeaderboard(data.leaderboard || []);
-    //         debugSetCorrectAnswers(data.correctAnswers || [], 'quiz_question_closed');
-    //     };
-    //     gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_CLOSED, handleClosed);
-    //     return () => {
-    //         gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.QUESTION_CLOSED, handleClosed);
-    //     };
-    // }, [gameSocket]);
-    // useEffect(() => {
-    //     if (!gameSocket) return;
-    //     const handleStatsUpdate = (data: { questionUid: string; stats: number[]; totalAnswers: number }) => {
-    //         setQuestionStats(prev => ({ ...prev, [data.questionUid]: { stats: data.stats, totalAnswers: data.totalAnswers } }));
-    //     };
-    //     gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
-    //     return () => {
-    //         gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.ANSWER_STATS_UPDATE, handleStatsUpdate);
-    //     };
-    // }, [gameSocket]);
-    // useEffect(() => {
-    //     if (!gameSocket) return;
-    //     const handleToggleStats = (data: { quizId: string; questionUid: string; show: boolean }) => {
-    //         setShowStats(prev => ({ ...prev, [data.questionUid]: data.show }));
-    //     };
-    //     gameSocket.on(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
-    //     return () => {
-    //         gameSocket.off(SOCKET_EVENTS.LEGACY_QUIZ.TOGGLE_STATS, handleToggleStats);
-    //     };
-    // }, [gameSocket]);
 
     // Clear correctAnswers when a new question is set
     const lastQuestionIdRef = useRef<string | null>(null);
@@ -333,18 +282,19 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     if (!layout || layout.length === 0) return <div className="p-8 text-orange-600">Aucun layout défini pour la projection.</div>;
 
     const currentQuestion = getCurrentQuestion();
-    // Map to QuestionCard's expected format
+    // Map to TournamentQuestion's expected format
     const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
         ? {
-            uid: currentQuestion.uid,
-            question: currentQuestion.text,
-            type: currentQuestion.questionType,
-            answers: Array.isArray(currentQuestion.answerOptions)
-                ? currentQuestion.answerOptions
-                : [],
+            question: {
+                uid: currentQuestion.uid,
+                text: currentQuestion.text,
+                type: currentQuestion.questionType,
+                answerOptions: currentQuestion.answerOptions || [],
+                questionType: currentQuestion.questionType
+            }
         }
         : null;
-    const currentQuestionUid = currentTournamentQuestion?.uid;
+    const currentQuestionUid = currentTournamentQuestion ? getQuestionUid(currentTournamentQuestion) : undefined;
     const statsToShow = currentQuestionUid && showStats[currentQuestionUid] ? questionStats[currentQuestionUid] : undefined;
     const showStatsFlag = !!(currentQuestionUid && showStats[currentQuestionUid]);
 
@@ -443,9 +393,9 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                         <QuestionCard
                                             key={questionKey}
                                             currentQuestion={currentTournamentQuestion}
-                                            questionIndex={gameState?.questions.findIndex((q: any) => q.uid === currentTournamentQuestion?.uid) ?? 0}
+                                            questionIndex={gameState?.questions.findIndex((q: any) => q.uid === currentQuestionUid) ?? 0}
                                             totalQuestions={gameState?.questions.length ?? 0}
-                                            isMultipleChoice={currentTournamentQuestion?.type === 'choix_multiple'}
+                                            isMultipleChoice={isQuestionMultipleChoice(currentTournamentQuestion)}
                                             selectedAnswer={null}
                                             setSelectedAnswer={noopSetState}
                                             selectedAnswers={[]}

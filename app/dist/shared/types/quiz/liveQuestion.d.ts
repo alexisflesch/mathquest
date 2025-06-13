@@ -11,9 +11,8 @@ export interface FilteredQuestion {
     uid: string;
     text: string;
     type: string;
-    answers: string[];
+    answerOptions: string[];
     questionType?: string;
-    answerOptions?: string[];
     explanation?: string;
     correctAnswers?: boolean[];
     timeLimit?: number;

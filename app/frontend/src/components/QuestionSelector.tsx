@@ -256,7 +256,7 @@ export default function QuestionSelector({
                                     className="mt-1.5"
                                 />
                                 <span className="flex-1 select-none ml-1 mr-1">
-                                    <MathJaxWrapper>{q.question}</MathJaxWrapper>
+                                    <MathJaxWrapper>{q.text}</MathJaxWrapper>
                                 </span>
                                 <span className="text-xs text-muted mt-1.5">[{q.discipline} - {q.gradeLevel} - {(q.themes || []).join(', ')}]</span>
                                 <span className={`ml-2 mt-1 transition-transform couleur-global-neutral-400 ${expanded[q.uid] ? 'rotate-90' : ''}`}>▼</span>

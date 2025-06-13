@@ -41,6 +41,8 @@ const Snackbar: React.FC<SnackbarProps> = ({
       const timer = setTimeout(onClose, duration);
       return () => clearTimeout(timer);
     }
+    // Return empty cleanup function for consistency
+    return () => { };
   }, [open, onClose, duration]);
 
   // Determine background color based on type

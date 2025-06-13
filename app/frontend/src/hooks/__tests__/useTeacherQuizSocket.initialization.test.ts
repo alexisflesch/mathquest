@@ -86,7 +86,6 @@ describe('useTeacherQuizSocket Initialization', () => {
         expect(mockSocket.on).toHaveBeenCalledWith('game_control_state', expect.any(Function));
         expect(mockSocket.on).toHaveBeenCalledWith('quiz_timer_update', expect.any(Function));
         expect(mockSocket.on).toHaveBeenCalledWith('quiz_connected_count', expect.any(Function));
-        expect(mockSocket.on).toHaveBeenCalledWith('dashboard_joined', expect.any(Function));
     });
 
     it('should emit "join_dashboard" on connect', () => {

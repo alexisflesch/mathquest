@@ -8,20 +8,20 @@ export declare const participantSchema: z.ZodObject<{
     socketId: z.ZodOptional<z.ZodString>;
     scoredQuestions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
-    username: string;
     id: string;
+    username: string;
     avatar: string;
     score: number;
-    socketId?: string | undefined;
     isDeferred?: boolean | undefined;
+    socketId?: string | undefined;
     scoredQuestions?: Record<string, number> | undefined;
 }, {
-    username: string;
     id: string;
+    username: string;
     avatar: string;
     score: number;
-    socketId?: string | undefined;
     isDeferred?: boolean | undefined;
+    socketId?: string | undefined;
     scoredQuestions?: Record<string, number> | undefined;
 }>;
 export declare const tournamentAnswerSchema: z.ZodObject<{
@@ -38,10 +38,10 @@ export declare const tournamentAnswerSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     questionUid?: string | undefined;
     value?: any;
-    score?: number | undefined;
     timestamp?: number | undefined;
     answerIdx?: number | number[] | undefined;
     clientTimestamp?: number | undefined;
+    score?: number | undefined;
     timePenalty?: number | undefined;
     baseScore?: number | undefined;
     timeMs?: number | undefined;
@@ -49,10 +49,10 @@ export declare const tournamentAnswerSchema: z.ZodObject<{
 }, {
     questionUid?: string | undefined;
     value?: any;
-    score?: number | undefined;
     timestamp?: number | undefined;
     answerIdx?: number | number[] | undefined;
     clientTimestamp?: number | undefined;
+    score?: number | undefined;
     timePenalty?: number | undefined;
     baseScore?: number | undefined;
     timeMs?: number | undefined;
@@ -81,10 +81,10 @@ export declare const tournamentParticipantSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         questionUid?: string | undefined;
         value?: any;
-        score?: number | undefined;
         timestamp?: number | undefined;
         answerIdx?: number | number[] | undefined;
         clientTimestamp?: number | undefined;
+        score?: number | undefined;
         timePenalty?: number | undefined;
         baseScore?: number | undefined;
         timeMs?: number | undefined;
@@ -92,54 +92,54 @@ export declare const tournamentParticipantSchema: z.ZodObject<{
     }, {
         questionUid?: string | undefined;
         value?: any;
-        score?: number | undefined;
         timestamp?: number | undefined;
         answerIdx?: number | number[] | undefined;
         clientTimestamp?: number | undefined;
+        score?: number | undefined;
         timePenalty?: number | undefined;
         baseScore?: number | undefined;
         timeMs?: number | undefined;
         isCorrect?: boolean | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
-    username: string;
     id: string;
+    username: string;
     avatar: string;
     score: number;
     answers?: {
         questionUid?: string | undefined;
         value?: any;
-        score?: number | undefined;
         timestamp?: number | undefined;
         answerIdx?: number | number[] | undefined;
         clientTimestamp?: number | undefined;
+        score?: number | undefined;
         timePenalty?: number | undefined;
         baseScore?: number | undefined;
         timeMs?: number | undefined;
         isCorrect?: boolean | undefined;
     }[] | undefined;
-    socketId?: string | undefined;
     isDeferred?: boolean | undefined;
+    socketId?: string | undefined;
     scoredQuestions?: Record<string, number> | undefined;
 }, {
-    username: string;
     id: string;
+    username: string;
     avatar: string;
     score: number;
     answers?: {
         questionUid?: string | undefined;
         value?: any;
-        score?: number | undefined;
         timestamp?: number | undefined;
         answerIdx?: number | number[] | undefined;
         clientTimestamp?: number | undefined;
+        score?: number | undefined;
         timePenalty?: number | undefined;
         baseScore?: number | undefined;
         timeMs?: number | undefined;
         isCorrect?: boolean | undefined;
     }[] | undefined;
-    socketId?: string | undefined;
     isDeferred?: boolean | undefined;
+    socketId?: string | undefined;
     scoredQuestions?: Record<string, number> | undefined;
 }>;
 export declare const leaderboardEntrySchema: z.ZodObject<{
@@ -148,13 +148,13 @@ export declare const leaderboardEntrySchema: z.ZodObject<{
     avatar: z.ZodOptional<z.ZodString>;
     score: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    username: string;
     id: string;
+    username: string;
     score: number;
     avatar?: string | undefined;
 }, {
-    username: string;
     id: string;
+    username: string;
     score: number;
     avatar?: string | undefined;
 }>;

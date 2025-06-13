@@ -470,13 +470,6 @@ export interface ProjectorTimerUpdatePayload {
     };
 }
 
-export interface LegacyQuizTimerUpdatePayload {
-    status: 'play' | 'pause' | 'stop';
-    questionUid?: string;
-    timeLeftMs: number;
-    timestamp: number;
-}
-
 // Type Guards for Projector Events
 
 export function isProjectorQuestion(data: unknown): data is ProjectorQuestion {
@@ -534,19 +527,6 @@ export function isProjectorTimerUpdatePayload(data: unknown): data is ProjectorT
         typeof timer.startedAt === 'number' &&
         typeof timer.duration === 'number' &&
         typeof timer.isPaused === 'boolean'
-    );
-}
-
-export function isLegacyQuizTimerUpdatePayload(data: unknown): data is LegacyQuizTimerUpdatePayload {
-    if (!data || typeof data !== 'object') return false;
-
-    const l = data as Record<string, unknown>;
-    return (
-        typeof l.status === 'string' &&
-        ['play', 'pause', 'stop'].includes(l.status as string) &&
-        typeof l.questionUid === 'string' &&
-        typeof l.timeLeftMs === 'number' &&
-        typeof l.timestamp === 'number'
     );
 }
 

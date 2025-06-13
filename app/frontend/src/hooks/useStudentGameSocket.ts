@@ -151,129 +151,21 @@ export function useStudentGameSocket({
         enableLocalAnimation: true
     });
 
-    // Legacy timer state for backward compatibility - keep in milliseconds internally
-    // Convert to seconds only for display purposes when needed
-    const timer = gameTimer.timerState.localTimeLeftMs || gameTimer.timerState.timeLeftMs; // Keep in milliseconds
+    // Only use unified timer state
+    const timer = gameTimer.timerState.localTimeLeftMs || gameTimer.timerState.timeLeftMs; // ms
     const timerStatus = gameTimer.timerState.status;
 
-    // Sync unified timer state with game state for backward compatibility
+    // Sync unified timer state with game state
     useEffect(() => {
         setGameState(prev => ({
             ...prev,
-            timer: gameTimer.timerState.localTimeLeftMs ?? gameTimer.timerState.timeLeftMs, // always ms
+            timer: timer, // always ms
             timerStatus: timerStatus,
             gameStatus: timerStatus === 'play' ? 'active' :
                 timerStatus === 'pause' ? 'paused' :
-                    (timerStatus === 'stop' && (gameTimer.timerState.localTimeLeftMs ?? gameTimer.timerState.timeLeftMs) === 0) ? 'waiting' : prev.gameStatus
+                    (timerStatus === 'stop' && timer === 0) ? 'waiting' : prev.gameStatus
         }));
     }, [timer, timerStatus]);
-
-    // TIMER MANAGEMENT OVERHAUL: Only feedback timer remains - main timer handled by unified system
-    const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const mainTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Start local main countdown timer
-    const startLocalTimer = useCallback((initialTime: number) => {
-        // Clear any existing main timer
-        if (mainTimerRef.current) {
-            clearInterval(mainTimerRef.current);
-            mainTimerRef.current = null;
-        }
-
-        if (initialTime <= 0) return;
-
-        // Set initial timer value immediately
-        setGameState(prev => ({
-            ...prev,
-            timer: initialTime,
-            timerStatus: 'play'
-        }));
-
-        // Use a local countdown variable to avoid React state race conditions
-        let countdown = initialTime;
-
-        // Start new countdown timer
-        mainTimerRef.current = setInterval(() => {
-            countdown = Math.max(countdown - 1, 0);
-
-            // Stop timer when reaching zero
-            if (countdown === 0) {
-                if (mainTimerRef.current) {
-                    clearInterval(mainTimerRef.current);
-                    mainTimerRef.current = null;
-                }
-                setGameState(prev => ({
-                    ...prev,
-                    timer: 0,
-                    timerStatus: 'stop'
-                }));
-            } else {
-                setGameState(prev => ({
-                    ...prev,
-                    timer: countdown
-                }));
-            }
-        }, 1000);
-    }, []);
-
-    // Stop local main countdown timer
-    const stopLocalTimer = useCallback(() => {
-        if (mainTimerRef.current) {
-            clearInterval(mainTimerRef.current);
-            mainTimerRef.current = null;
-        }
-    }, []);
-
-    // Start local feedback countdown timer
-    const startFeedbackTimer = useCallback((initialTime: number) => {
-        // Clear any existing feedback timer
-        if (feedbackTimerRef.current) {
-            clearInterval(feedbackTimerRef.current);
-            feedbackTimerRef.current = null;
-        }
-
-        if (initialTime <= 0) return;
-
-        // Set initial feedback timer value immediately
-        setGameState(prev => ({
-            ...prev,
-            feedbackRemaining: initialTime
-        }));
-
-        // Use a local countdown variable to avoid React state race conditions
-        let feedbackCountdown = initialTime;
-
-        // Start new feedback countdown timer
-        feedbackTimerRef.current = setInterval(() => {
-            feedbackCountdown = Math.max(feedbackCountdown - 1, 0);
-
-            // Stop timer when reaching zero
-            if (feedbackCountdown === 0) {
-                if (feedbackTimerRef.current) {
-                    clearInterval(feedbackTimerRef.current);
-                    feedbackTimerRef.current = null;
-                }
-                setGameState(prev => ({
-                    ...prev,
-                    feedbackRemaining: 0,
-                    phase: 'show_answers'
-                }));
-            } else {
-                setGameState(prev => ({
-                    ...prev,
-                    feedbackRemaining: feedbackCountdown
-                }));
-            }
-        }, 1000);
-    }, []);
-
-    // Stop local feedback countdown timer
-    const stopFeedbackTimer = useCallback(() => {
-        if (feedbackTimerRef.current) {
-            clearInterval(feedbackTimerRef.current);
-            feedbackTimerRef.current = null;
-        }
-    }, []);
 
     // --- Socket Connection ---
     useEffect(() => {
@@ -332,14 +224,6 @@ export function useStudentGameSocket({
 
         return () => {
             logger.info(`Disconnecting student socket for game: ${accessCode}`);
-            if (feedbackTimerRef.current) {
-                clearInterval(feedbackTimerRef.current);
-                feedbackTimerRef.current = null;
-            }
-            if (mainTimerRef.current) {
-                clearInterval(mainTimerRef.current);
-                mainTimerRef.current = null;
-            }
             s.disconnect();
             setSocket(null);
             setConnected(false);
@@ -359,11 +243,6 @@ export function useStudentGameSocket({
         }, isGameJoinedPayload, 'game_joined'));
         socket.on('game_question', createSafeEventHandler<LiveQuestionPayload>((payload) => {
             logger.info('Received game_question', payload);
-
-            // Start timer with the duration from the payload
-            const timerDuration = payload.timer || 30; // Default to 30 seconds if not provided
-            logger.info('Starting local timer', { timerDuration });
-
             setGameState(prev => ({
                 ...prev,
                 currentQuestion: payload.question,
@@ -375,13 +254,9 @@ export function useStudentGameSocket({
                 feedbackRemaining: null,
                 correctAnswers: null,
                 connectedToRoom: true,
-                timer: timerDuration, // Set the initial timer value
-                timerStatus: 'play' // Set timer as running
+                timer: payload.timer || 30, // ms
+                timerStatus: 'play'
             }));
-
-            // Start a simple local countdown timer
-            startLocalTimer(timerDuration);
-            stopFeedbackTimer();
         }, isLiveQuestionPayload, 'game_question'));
         socket.on('timer_update', createSafeEventHandler<TimerUpdatePayload>((data) => {
             gameTimer.syncWithBackend(data);
@@ -405,9 +280,7 @@ export function useStudentGameSocket({
                         uid: data.currentQuestion.uid,
                         text: data.currentQuestion.text,
                         type: data.currentQuestion.questionType,
-                        answers: Array.isArray(data.currentQuestion.answerOptions)
-                            ? data.currentQuestion.answerOptions
-                            : (data.currentQuestion.answers || [])
+                        answerOptions: data.currentQuestion.answerOptions || []
                     }
                     : prev.currentQuestion
             }));
@@ -469,11 +342,6 @@ export function useStudentGameSocket({
                 phase: 'feedback',
                 feedbackRemaining: payload.feedbackRemaining
             }));
-
-            // Start local feedback countdown
-            if (payload.feedbackRemaining > 0) {
-                startFeedbackTimer(payload.feedbackRemaining);
-            }
         }, isFeedbackEventPayload, 'feedback'));
 
         socket.on('game_error', createSafeEventHandler<ErrorPayload>((error) => {
@@ -484,10 +352,6 @@ export function useStudentGameSocket({
         }, (d): d is GameAlreadyPlayedPayload => true, 'game_already_played'));
         // No legacy or backward compatibility event listeners remain
         return () => {
-            if (feedbackTimerRef.current) {
-                clearInterval(feedbackTimerRef.current);
-                feedbackTimerRef.current = null;
-            }
             socket.off('game_joined');
             socket.off('game_question');
             socket.off('timer_update');

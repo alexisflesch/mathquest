@@ -153,10 +153,6 @@ export interface QuestionAnswerSummary {
 }
 
 /**
- * Legacy answer interfaces for backward compatibility
- */
-
-/**
  * @deprecated Use AnswerSubmissionPayload instead
  */
 export interface GameAnswerPayload {
@@ -165,15 +161,4 @@ export interface GameAnswerPayload {
     questionUid: string;
     answer: any;
     timeSpent: number;
-}
-
-/**
- * @deprecated Use AnswerResponsePayload instead
- */
-export interface LegacyAnswerResponse {
-    questionUid: string;
-    timeSpent: number;
-    correct?: boolean;
-    correctAnswers?: boolean[];
-    explanation?: string;
 }

@@ -150,68 +150,6 @@ router.post('/', optionalAuth, async (req: Request, res: Response): Promise<void
 });
 
 /**
- * Legacy route for backward compatibility
- * GET /api/v1/games/game-status?code=XXXXX
- * @deprecated Use GET /api/v1/games/:code/state instead
- */
-router.get('/game-status', async (req: Request, res: Response): Promise<void> => {
-    logger.info('GET /api/v1/games/game-status called (DEPRECATED - use /:code/state instead)', { query: req.query });
-    try {
-        const { code } = req.query;
-
-        if (!code || typeof code !== 'string') {
-            res.status(400).json({ error: 'Access code is required' });
-            return;
-        }
-
-        // Forward to the consolidated state route by making an internal call
-        // Create a new request object for the state route
-        const stateReq = {
-            ...req,
-            params: { code },
-            url: `/api/v1/games/${code}/state`
-        };
-
-        // Get the consolidated state data
-        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
-        if (!gameInstance) {
-            res.status(404).json({ error: 'Game not found' });
-            return;
-        }
-
-        // Map status to legacy format
-        let legacyStatus = 'en préparation';
-        switch (gameInstance.status) {
-            case 'pending':
-                legacyStatus = 'en préparation';
-                break;
-            case 'active':
-                legacyStatus = 'en cours';
-                break;
-            case 'completed':
-            case 'archived':
-                legacyStatus = 'terminé';
-                break;
-            case 'paused':
-                legacyStatus = 'en pause';
-                break;
-        }
-
-        // Return legacy format for backward compatibility
-        res.status(200).json({
-            status: gameInstance.status,
-            statut: legacyStatus,
-            currentQuestionIndex: gameInstance.currentQuestionIndex || 0,
-            accessCode: gameInstance.accessCode,
-            name: gameInstance.name
-        });
-    } catch (error) {
-        logger.error({ error }, 'Error in legacy game-status route');
-        res.status(500).json({ error: 'An error occurred while fetching game status' });
-    }
-});
-
-/**
  * Get a game by access code
  * GET /api/v1/games/:accessCode
  * Public endpoint - no authentication required
@@ -480,24 +418,6 @@ router.get('/:code/state', async (req: Request, res: Response) => {
             return;
         }
 
-        // Map the new status to legacy format for frontend compatibility
-        let legacyStatus = 'en préparation'; // Default
-        switch (gameInstance.status) {
-            case 'pending':
-                legacyStatus = 'en préparation';
-                break;
-            case 'active':
-                legacyStatus = 'en cours';
-                break;
-            case 'completed':
-            case 'archived':
-                legacyStatus = 'terminé';
-                break;
-            case 'paused':
-                legacyStatus = 'en pause';
-                break;
-        }
-
         // Try to get detailed game state from Redis (for active games)
         let gameStateData = null;
         let redisGameState = null;
@@ -524,11 +444,10 @@ router.get('/:code/state', async (req: Request, res: Response) => {
             }
         }
 
-        // Return comprehensive response that includes both basic info and detailed state
+        // Return comprehensive response with modern status format
         const response = {
-            // Basic game info (from database) - for backward compatibility with /game-status
+            // Basic game info (from database)
             status: gameInstance.status,
-            statut: legacyStatus,
             currentQuestionIndex: gameInstance.currentQuestionIndex || 0,
             accessCode: gameInstance.accessCode,
             name: gameInstance.name,

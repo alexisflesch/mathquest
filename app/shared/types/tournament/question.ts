@@ -20,11 +20,6 @@ export interface TournamentQuestion extends Omit<LiveQuestionPayload, 'question'
     code?: string;                      // Tournament access code
     remainingTime?: number;             // Time remaining for the current question
     tournoiState?: 'pending' | 'running' | 'paused' | 'stopped' | 'finished'; // Tournament state
-
-    // Legacy compatibility fields for older components
-    uid?: string;                       // Question UID (for components that expect this directly)
-    type?: string;                      // Question type (for components that expect this directly)
-    answers?: string[];                 // Array of answer texts (fallback/legacy support)
 }
 
 /**
@@ -48,11 +43,6 @@ export function isTournamentQuestion(data: unknown): data is TournamentQuestion 
  * Helper function to extract question UID from various question formats
  */
 export function getQuestionUid(tournamentQuestion: TournamentQuestion): string | undefined {
-    // Check if uid is directly available
-    if (tournamentQuestion.uid) {
-        return tournamentQuestion.uid;
-    }
-
     // Extract from question object
     const { question } = tournamentQuestion;
 
@@ -79,10 +69,6 @@ export function getQuestionText(tournamentQuestion: TournamentQuestion): string 
         if ('text' in question && typeof question.text === 'string') {
             return question.text;
         }
-        // Fallback for legacy 'question' field
-        if ('question' in question && typeof question.question === 'string') {
-            return question.question;
-        }
     }
 
     return 'Question text not available';
@@ -92,11 +78,6 @@ export function getQuestionText(tournamentQuestion: TournamentQuestion): string 
  * Helper function to extract answer options from various question formats
  */
 export function getQuestionAnswers(tournamentQuestion: TournamentQuestion): string[] {
-    // Check direct answers field first
-    if (Array.isArray(tournamentQuestion.answers)) {
-        return tournamentQuestion.answers;
-    }
-
     // Extract from question object
     const { question } = tournamentQuestion;
 
