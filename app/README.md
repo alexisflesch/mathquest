@@ -1,10 +1,98 @@
-# MathQuest App - AI Agent Coding Guidelines
+# 🎯 MathQuest - Real-Time Educational Quiz Platform
 
-Welcome to the MathQuest codebase! This project uses an AI agent to help automate and improve development. Please follow these guidelines to ensure high-quality, maintainable code:
+> **A modern, type-safe, real-time quiz platform built with Next.js, Node.js, and WebSockets**
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](#)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)](#)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](#)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?logo=socket.io&logoColor=white)](#)
+
+---
+
+## 🚀 **Quick Start**
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start development servers
+npm run dev
+```
+
+🌐 **Access**: Frontend (http://localhost:3000) | Backend (http://localhost:5000)  
+📚 **Documentation**: [Complete Documentation Hub](#-documentation-hub) | [Instructions](instructions.md)
+
+---
 
 
-## 🤖 AI Agent Usage
-This project uses AI coding agents (e.g. GitHub Copilot, ChatGPT) to assist in development. To ensure consistent behavior:
+## 🏗️ **Project Architecture**
+
+```
+app/
+├── frontend/          # Next.js 14 + React + TypeScript
+├── backend/           # Node.js + Express + Socket.IO + Prisma  
+├── shared/            # Shared TypeScript types & constants
+├── tests/             # E2E tests with Playwright
+└── docs/              # Comprehensive documentation
+```
+
+**Key Features**: Real-time multiplayer quizzes • Tournament mode • Teacher dashboard • Student interface • Practice mode
+
+## 📂 **Project Configuration Files**
+
+### **Root Level**
+- `package.json` - Root dependencies and workspace scripts
+- `tsconfig.json` / `tsconfig.base.json` / `tsconfig.check.json` - TypeScript configurations
+- `eslint.config.mjs` - ESLint configuration
+- `playwright.config.ts` - End-to-end test configuration
+
+### **Backend Configuration**
+- `backend/package.json` - Backend dependencies and scripts
+- `backend/tsconfig.json` - Backend TypeScript configuration
+- `backend/.env` / `.env.test` - Environment variables (not in git)
+- `backend/eslint.config.mjs` - Backend-specific ESLint rules
+- `backend/jest.config.js` - Backend testing configuration
+- `backend/nodemon.json` - Development server configuration
+- `backend/.prettierrc.json` - Code formatting rules
+
+### **Frontend Configuration**
+- `frontend/package.json` - Frontend dependencies and scripts
+- `frontend/tsconfig.json` / `tsconfig.jest.json` - Frontend TypeScript configurations
+- `frontend/.env` / `.env.example` - Environment variables (not in git)
+- `frontend/next.config.ts` - Next.js configuration
+- `frontend/tailwind.config.mjs` - Tailwind CSS configuration
+- `frontend/postcss.config.mjs` - PostCSS configuration
+- `frontend/jest.config.js` - Frontend testing configuration
+- `frontend/eslint.config.mjs` / `.eslintrc.*` - ESLint configurations
+
+---
+
+## 📚 **Documentation Hub**
+
+### **🚀 Essential Guides**
+- [⚡ Quick Start Guide](docs/QUICK_START.md) - Get running in 5 minutes  
+- [👨‍💻 Developer Onboarding](docs/guides/developer-onboarding.md) - Complete new developer setup
+- [📋 Project Instructions](instructions.md) - AI agent guidelines & modernization rules
+
+### **🏛️ Architecture & API**
+- [🏗️ System Architecture](docs/architecture/overview.md) - High-level system design
+- [🔌 WebSocket Events](docs/api/socket-events.md) - Real-time events catalog
+- [📋 Data Contracts](docs/api/data-contracts.md) - TypeScript interfaces & validation
+
+### **💻 Development Guides**  
+- [⚛️ Frontend Guide](docs/frontend/) - React components, state management, testing
+- [⚙️ Backend Guide](docs/backend/) - Services, handlers, database integration
+- [🔗 Shared Types](docs/shared/) - Type system, constants, validation schemas
+
+### **🚀 Operations**
+- [🧪 Testing Strategy](docs/testing/) - Unit, integration, E2E testing
+- [🚀 Deployment Guide](docs/deployment/) - Production setup & monitoring
+- [📖 Reference](docs/reference/) - Coding standards, troubleshooting, glossary
+
+---
+## 🤖 **AI Agent Guidelines**
+
+This project uses AI coding agents to assist development. **Critical guidelines**:
 
 - Always read this README before writing or modifying code.
 - Avoid guessing or renaming variables. Stick to existing naming conventions.
@@ -12,6 +100,27 @@ This project uses AI coding agents (e.g. GitHub Copilot, ChatGPT) to assist in d
 - Keep API contracts strict and centralized.
 - Don't go through the codebase to figure out how things work. Use the documentation first, then the code if needed.
 
+
+## 🛠️ **Development Commands**
+
+```bash
+# Development
+npm run dev                 # Start both frontend & backend
+npm run dev:frontend        # Start frontend only (port 3000)  
+npm run dev:backend         # Start backend only (port 5000)
+
+# Building & Type Checking
+npm run build              # Build both frontend & backend
+npm run type-check         # Check types in all modules
+npm run type-check:all     # Comprehensive type checking
+
+# Testing & Quality
+npm run test               # Run all tests
+npm run lint               # Lint all code
+./test-auth-flow.sh        # Test authentication flow
+```
+
+---
 
 ## Documentation
 - All documentation is located in the `docs/` folder.

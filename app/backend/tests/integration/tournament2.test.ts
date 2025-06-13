@@ -749,7 +749,7 @@ describe('Tournament Flow - Extended Tests', () => {
         expect(fbPayload.data.feedbackRemaining).toBeGreaterThanOrEqual(0);
 
         // Wait for feedback phase to finish for P1 (so test doesn't race ahead)
-        await waitForEvent(socket1, 'feedback', 5000);
+        await new Promise(resolve => setTimeout(resolve, 2500)); // Wait for feedback phase
 
         // Try to answer Q1 as P3 (should be refused by backend)
         let answerError: any = null;

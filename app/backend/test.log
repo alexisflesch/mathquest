@@ -7821,3 +7821,2627 @@ PASS tests/integration/gameHandler.test.ts
 
       at log (src/utils/logger.ts:102:21)
 
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:36:55.995] [32mINFO [0m [SharedGameFlow] {
+      "room": "game_DIFF123",
+      "event": "correct_answers",
+      "questionUid": "bb65cbc5-8967-4e7f-939e-c64dc5f0fbff"
+    } [DEBUG] Emitting correct_answers".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:92:20)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:36:55.998] [32mINFO [0m [SharedGameFlow] {
+      "accessCode": "DIFF123",
+      "event": "correct_answers",
+      "questionUid": "bb65cbc5-8967-4e7f-939e-c64dc5f0fbff",
+      "correctAnswers": [
+        false,
+        true
+      ]
+    } [TRACE] Emitted correct_answers".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:99:20)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:36:55.999] [32mINFO [0m [SharedGameFlow] {
+      "accessCode": "DIFF123",
+      "questionUid": "bb65cbc5-8967-4e7f-939e-c64dc5f0fbff"
+    } [SharedGameFlow] Calculating scores for question".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:102:24)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:36:56.002] [33mWARN [0m [GameStateService] {
+      "accessCode": "DIFF123",
+      "questionUid": "bb65cbc5-8967-4e7f-939e-c64dc5f0fbff"
+    } Question not found for scoring".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as warn] (src/utils/logger.ts:119:35)
+      at Object.warn [as calculateScores] (src/core/gameStateService.ts:425:20)
+      at runGameFlow (src/sockets/handlers/sharedGameFlow.ts:103:17)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:36:56.003] [32mINFO [0m [SharedGameFlow] {
+      "accessCode": "DIFF123",
+      "questionUid": "bb65cbc5-8967-4e7f-939e-c64dc5f0fbff"
+    } [SharedGameFlow] Scores calculated".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:104:24)
+
+PASS tests/integration/tournament.test.ts (19.243 s)
+  ● Console
+
+    console.log
+      [2025-06-13 13:36:38.524] [32mINFO [0m [Server] Successfully connected to Redis.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.643] [32mINFO [0m [GamesAPI] Games POST request body debug {
+        "fullBody": {
+          "name": "Test Tournament",
+          "playMode": "tournament",
+          "gameTemplateId": "ed682d4b-f8e1-4b32-8574-6d6948a55851",
+          "discipline": "math",
+          "nbOfQuestions": 1
+        },
+        "keys": [
+          "name",
+          "playMode",
+          "gameTemplateId",
+          "discipline",
+          "nbOfQuestions"
+        ],
+        "user": {
+          "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "username": "p1-basic",
+          "role": "STUDENT",
+          "iat": 1749814598,
+          "exp": 1749818198
+        },
+        "headers": {
+          "host": "localhost:33821",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1MTk1NjE4My1kNWEyLTQ2NDAtOGIxOS1lOTM5NzBkNzZmNzEiLCJ1c2VybmFtZSI6InAxLWJhc2ljIiwicm9sZSI6IlNUVURFTlQiLCJpYXQiOjE3NDk4MTQ1OTgsImV4cCI6MTc0OTgxODE5OH0.ZNXci3TCHssM7iEiL4G1Q5Ne7TJWtD6jdEXjHKIRtp0",
+          "content-length": "144",
+          "connection": "close"
+        }
+      }
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.643] [32mINFO [0m [GamesAPI] Games validation debug {
+        "name": "Test Tournament",
+        "finalgameTemplateId": "ed682d4b-f8e1-4b32-8574-6d6948a55851",
+        "playMode": "tournament",
+        "nameCheck": true,
+        "templateIdCheck": true,
+        "playModeCheck": true
+      }
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.650] [32mINFO [0m [GameStateService] {
+        "gameInstanceId": "3e78fa9c-75b5-4240-9ebf-cfb717e07ba0",
+        "accessCode": "3141"
+      } Game state initialized in Redis
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.780] [32mINFO [0m [GameParticipantService] {
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "accessCode": "3141",
+        "participantId": "9c387fd0-582d-4f89-8bb7-47dd074d3f47"
+      } Created new participant
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.788] [32mINFO [0m [GameParticipantService] {
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "accessCode": "3141",
+        "participantId": "ae8a41bd-2d1a-4d85-b99c-2b515f996f6c"
+      } Created new participant
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.793] [32mINFO [0m [ConnectionHandlers] {
+        "socketId": "Wx23hJ1m593KeiqQAAAC",
+        "user": {
+          "id": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "username": "p1-basic",
+          "role": "STUDENT"
+        },
+        "address": "::ffff:127.0.0.1"
+      } New socket connection established
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.798] [32mINFO [0m [GameHandlers] {
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } Registering game handlers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.798] [32mINFO [0m [GameAnswerHandler] {
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } gameAnswerHandler registered
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.798] [32mINFO [0m [TeacherControlHandler] {
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } teacherControlHandler called
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [DEBUG] registerTeacherControlHandlers called for socket: Wx23hJ1m593KeiqQAAAC
+
+      at log (src/sockets/handlers/teacherControl/index.ts:22:13)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] {
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } Registering teacher control handlers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] {
+        "event": "join_dashboard"
+      } Registering join_dashboard handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] {
+        "event": "set_question"
+      } Registering set_question handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] {
+        "event": "quiz_timer_action"
+      } Registering timer_action handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] {
+        "event": "lock_answers"
+      } Registering lock_answers handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] {
+        "event": "end_game"
+      } Registering end_game handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] {
+        "event": "start_timer"
+      } Registering start_timer handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] {
+        "event": "pause_timer"
+      } Registering pause_timer handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.799] [32mINFO [0m [TeacherControlIndex] Registering disconnect handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.800] [32mINFO [0m [TeacherControlHandler] {
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } teacherControlHandler registration complete
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.801] [32mINFO [0m [ConnectionHandlers] {
+        "socketId": "IialwpUgE4HcuRhmAAAD",
+        "user": {
+          "id": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+          "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+          "username": "p2-basic",
+          "role": "STUDENT"
+        },
+        "address": "::ffff:127.0.0.1"
+      } New socket connection established
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.801] [32mINFO [0m [GameHandlers] {
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } Registering game handlers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.801] [32mINFO [0m [GameAnswerHandler] {
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } gameAnswerHandler registered
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.801] [32mINFO [0m [TeacherControlHandler] {
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } teacherControlHandler called
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [DEBUG] registerTeacherControlHandlers called for socket: IialwpUgE4HcuRhmAAAD
+
+      at log (src/sockets/handlers/teacherControl/index.ts:22:13)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] {
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } Registering teacher control handlers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] {
+        "event": "join_dashboard"
+      } Registering join_dashboard handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] {
+        "event": "set_question"
+      } Registering set_question handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] {
+        "event": "quiz_timer_action"
+      } Registering timer_action handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] {
+        "event": "lock_answers"
+      } Registering lock_answers handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] {
+        "event": "end_game"
+      } Registering end_game handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] {
+        "event": "start_timer"
+      } Registering start_timer handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] {
+        "event": "pause_timer"
+      } Registering pause_timer handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlIndex] Registering disconnect handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.802] [32mINFO [0m [TeacherControlHandler] {
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } teacherControlHandler registration complete
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.803] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3141",
+        "playMode": "tournament",
+        "username": "p1-basic"
+      } [DEBUG] Attempting to join room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.803] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3141",
+        "playMode": "tournament",
+        "username": "p1-basic"
+      } [DEBUG] Attempting to join room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.803] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3141",
+        "playMode": "tournament"
+      } [DEBUG] Joined room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.803] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3141",
+        "playMode": "tournament"
+      } [DEBUG] Joined room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.804] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3141",
+        "playMode": "tournament",
+        "username": "p2-basic"
+      } [DEBUG] Attempting to join room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.804] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3141",
+        "playMode": "tournament",
+        "username": "p2-basic"
+      } [DEBUG] Attempting to join room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.804] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3141",
+        "playMode": "tournament"
+      } [DEBUG] Joined room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.804] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3141",
+        "playMode": "tournament"
+      } [DEBUG] Joined room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.805] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3141",
+        "playMode": "tournament",
+        "gameJoinPayload": {
+          "gameId": "3e78fa9c-75b5-4240-9ebf-cfb717e07ba0",
+          "accessCode": "3141",
+          "status": "pending",
+          "currentQuestionIndex": -1,
+          "totalQuestions": 1,
+          "timer": {
+            "startedAt": 0,
+            "durationMs": 0,
+            "isPaused": true
+          },
+          "question": null
+        }
+      } [DEBUG] Emitted game_joined with timer and state
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.805] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3141",
+        "playMode": "tournament",
+        "gameJoinPayload": {
+          "gameId": "3e78fa9c-75b5-4240-9ebf-cfb717e07ba0",
+          "accessCode": "3141",
+          "status": "pending",
+          "currentQuestionIndex": -1,
+          "totalQuestions": 1,
+          "timer": {
+            "startedAt": 0,
+            "durationMs": 0,
+            "isPaused": true
+          },
+          "question": null
+        }
+      } [DEBUG] Emitted game_joined with timer and state
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.806] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3141",
+        "playMode": "tournament",
+        "gameJoinPayload": {
+          "gameId": "3e78fa9c-75b5-4240-9ebf-cfb717e07ba0",
+          "accessCode": "3141",
+          "status": "pending",
+          "currentQuestionIndex": -1,
+          "totalQuestions": 1,
+          "timer": {
+            "startedAt": 0,
+            "durationMs": 0,
+            "isPaused": true
+          },
+          "question": null
+        }
+      } [DEBUG] Emitted game_joined with timer and state
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.806] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3141",
+        "playMode": "tournament",
+        "gameJoinPayload": {
+          "gameId": "3e78fa9c-75b5-4240-9ebf-cfb717e07ba0",
+          "accessCode": "3141",
+          "status": "pending",
+          "currentQuestionIndex": -1,
+          "totalQuestions": 1,
+          "timer": {
+            "startedAt": 0,
+            "durationMs": 0,
+            "isPaused": true
+          },
+          "question": null
+        }
+      } [DEBUG] Emitted game_joined with timer and state
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.807] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "playMode": "tournament"
+      } Participant joined live room via sharedLiveHandler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.808] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "playMode": "tournament"
+      } Participant joined live room via sharedLiveHandler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.808] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "playMode": "tournament"
+      } Participant joined live room via sharedLiveHandler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.808] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "playMode": "tournament"
+      } Participant joined live room via sharedLiveHandler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:38.816] [32mINFO [0m [TournamentHandler] {
+        "gameInstanceId": "3e78fa9c-75b5-4240-9ebf-cfb717e07ba0",
+        "templateId": "ed682d4b-f8e1-4b32-8574-6d6948a55851",
+        "initiator": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "playMode": "tournament",
+        "nbQuestionsFromTemplate": 1,
+        "nbParticipants": 2,
+        "accessCode": "3141",
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } [TournamentHandler] Fetched gameInstance for start_tournament
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:39.017] [32mINFO [0m [GameStateService] {
+        "accessCode": "3141"
+      } Game state updated
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:39.026] [32mINFO [0m [TournamentHandler] {
+        "room": "game_3141",
+        "duration": 5,
+        "accessCode": "3141",
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } [TournamentHandler] Emitting tournament_starting and waiting 5s before starting game.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.038] [32mINFO [0m [GameStateService] {
+        "accessCode": "3141"
+      } Game state updated
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.052] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141"
+      } [SharedGameFlow] runGameFlow entry
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.053] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "playMode": "tournament",
+        "questionCount": 1
+      } [SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.053] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141"
+      } [SharedGameFlow] Proceeding with first question immediately.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.056] [32mINFO [0m [GameStateService] {
+        "accessCode": "3141"
+      } Game state updated
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.057] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "room": "game_3141",
+        "socketIds": [
+          "Wx23hJ1m593KeiqQAAAC",
+          "IialwpUgE4HcuRhmAAAD"
+        ]
+      } [DEBUG] Sockets in live room before emitting first game_question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.057] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "questionIndex": 0,
+        "questionUid": "q-late-1"
+      } [DEBUG] Preparing to emit game_question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.057] [32mINFO [0m [SharedGameFlow] {
+        "room": "game_3141",
+        "event": "game_question",
+        "payload": {
+          "question": {
+            "uid": "q-late-1",
+            "questionType": "single_correct",
+            "text": "What is 10 + 5?",
+            "answerOptions": [
+              "12",
+              "13",
+              "14",
+              "15"
+            ],
+            "explanation": null,
+            "correctAnswers": [
+              false,
+              false,
+              false,
+              true
+            ],
+            "timeLimit": 2,
+            "gradeLevel": "elementary",
+            "difficulty": 1,
+            "themes": [
+              "arithmetic"
+            ]
+          },
+          "index": 0,
+          "feedbackWaitTime": 2,
+          "timer": 2
+        }
+      } [DEBUG] Emitting game_question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.058] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "event": "game_question",
+        "questionUid": "q-late-1"
+      } [TRACE] Emitted game_question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.059] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "answer": "15",
+        "timeSpent": 2,
+        "receivedPlayMode": "tournament",
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } [SHARED_LIVE_HANDLER] game_answer received
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.059] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "answer": "15",
+        "timeSpent": 2,
+        "finalPlayMode": "tournament",
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } [SHARED_LIVE_HANDLER] Processing game_answer with playMode
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.060] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "answer": "15",
+        "timeSpent": 2,
+        "receivedPlayMode": "tournament",
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } [SHARED_LIVE_HANDLER] game_answer received
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.060] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "answer": "15",
+        "timeSpent": 2,
+        "finalPlayMode": "tournament",
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } [SHARED_LIVE_HANDLER] Processing game_answer with playMode
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.060] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "answer": "12",
+        "timeSpent": 2,
+        "receivedPlayMode": "tournament",
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } [SHARED_LIVE_HANDLER] game_answer received
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.060] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "answer": "12",
+        "timeSpent": 2,
+        "finalPlayMode": "tournament",
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } [SHARED_LIVE_HANDLER] Processing game_answer with playMode
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.061] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "answer": "12",
+        "timeSpent": 2,
+        "receivedPlayMode": "tournament",
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } [SHARED_LIVE_HANDLER] game_answer received
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.061] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "answer": "12",
+        "timeSpent": 2,
+        "finalPlayMode": "tournament",
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } [SHARED_LIVE_HANDLER] Processing game_answer with playMode
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.062] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1"
+      } Participant already answered this question. Updating answer.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.066] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "scoreAwarded": 0
+      } Answer processed, feedback sent
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.067] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "scoreAwarded": 0
+      } Answer processed, feedback sent
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.067] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "scoreAwarded": 0
+      } Answer processed, feedback sent
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:44.074] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3141",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "scoreAwarded": 0
+      } Answer processed, feedback sent
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.058] [32mINFO [0m [SharedGameFlow] {
+        "room": "game_3141",
+        "event": "correct_answers",
+        "questionUid": "q-late-1"
+      } [DEBUG] Emitting correct_answers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.059] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "event": "correct_answers",
+        "questionUid": "q-late-1",
+        "correctAnswers": [
+          false,
+          false,
+          false,
+          true
+        ]
+      } [TRACE] Emitted correct_answers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.059] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "questionUid": "q-late-1"
+      } [SharedGameFlow] Calculating scores for question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.064] [32mINFO [0m [GameStateService] {
+        "accessCode": "3141",
+        "questionUid": "q-late-1"
+      } Scores calculated for question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.064] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "questionUid": "q-late-1"
+      } [SharedGameFlow] Scores calculated
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.066] [33mWARN [0m [GameStateService] {
+        "accessCode": "3141",
+        "userId": "07831c57-8eb8-4c83-8206-d00c5e8ed901"
+      } Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.066] [33mWARN [0m [GameStateService] {
+        "accessCode": "3141",
+        "userId": "837078cd-69c7-4d89-800c-ed1c238832aa"
+      } Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.067] [33mWARN [0m [GameStateService] {
+        "accessCode": "3141",
+        "userId": "07831c57-8eb8-4c83-8206-d00c5e8ed901"
+      } User details not found in DB for leaderboard entry.
+
+      at log (src/utils/logger.ts:102:21)
+          at async Promise.all (index 1)
+
+    console.log
+      [2025-06-13 13:36:46.067] [33mWARN [0m [GameStateService] {
+        "accessCode": "3141",
+        "userId": "837078cd-69c7-4d89-800c-ed1c238832aa"
+      } User details not found in DB for leaderboard entry.
+
+      at log (src/utils/logger.ts:102:21)
+          at async Promise.all (index 2)
+
+    console.log
+      [2025-06-13 13:36:46.072] [32mINFO [0m [GameStateService] {
+        "accessCode": "3141",
+        "count": 4
+      } Formatted leaderboard from Redis/DB.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      Leaderboard response: [
+        {
+          "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "username": "p1-basic",
+          "score": 980,
+          "rank": 1
+        },
+        {
+          "userId": "07831c57-8eb8-4c83-8206-d00c5e8ed901",
+          "username": "Unknown Player",
+          "score": 980,
+          "rank": 2
+        },
+        {
+          "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+          "username": "p2-basic",
+          "score": 0,
+          "rank": 3
+        },
+        {
+          "userId": "837078cd-69c7-4d89-800c-ed1c238832aa",
+          "username": "Unknown Player",
+          "score": 0,
+          "rank": 4
+        }
+      ]
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:342:17)
+
+    console.log
+      [2025-06-13 13:36:46.088] [32mINFO [0m [GamesAPI] Games POST request body debug {
+        "fullBody": {
+          "name": "Test Tournament",
+          "playMode": "tournament",
+          "gameTemplateId": "12ed7d14-21fd-41e0-897f-934935a11e77",
+          "discipline": "math",
+          "nbOfQuestions": 1
+        },
+        "keys": [
+          "name",
+          "playMode",
+          "gameTemplateId",
+          "discipline",
+          "nbOfQuestions"
+        ],
+        "user": {
+          "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "username": "p1-basic",
+          "role": "STUDENT",
+          "iat": 1749814598,
+          "exp": 1749818198
+        },
+        "headers": {
+          "host": "localhost:33821",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1MTk1NjE4My1kNWEyLTQ2NDAtOGIxOS1lOTM5NzBkNzZmNzEiLCJ1c2VybmFtZSI6InAxLWJhc2ljIiwicm9sZSI6IlNUVURFTlQiLCJpYXQiOjE3NDk4MTQ1OTgsImV4cCI6MTc0OTgxODE5OH0.ZNXci3TCHssM7iEiL4G1Q5Ne7TJWtD6jdEXjHKIRtp0",
+          "content-length": "144",
+          "connection": "close"
+        }
+      }
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.088] [32mINFO [0m [GamesAPI] Games validation debug {
+        "name": "Test Tournament",
+        "finalgameTemplateId": "12ed7d14-21fd-41e0-897f-934935a11e77",
+        "playMode": "tournament",
+        "nameCheck": true,
+        "templateIdCheck": true,
+        "playModeCheck": true
+      }
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.095] [32mINFO [0m [GameStateService] {
+        "gameInstanceId": "dd0ae1e2-d122-4589-8099-ea37813d0fb9",
+        "accessCode": "3142"
+      } Game state initialized in Redis
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.214] [32mINFO [0m [GameParticipantService] {
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "accessCode": "3142",
+        "participantId": "854ca818-656b-4bd7-8cbd-e842b83c6ff2"
+      } Created new participant
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.227] [32mINFO [0m [GameParticipantService] {
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "accessCode": "3142",
+        "participantId": "4391e226-0d59-4bb8-ac53-e63d0967867c"
+      } Created new participant
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.232] [32mINFO [0m [ConnectionHandlers] {
+        "socketId": "1AR5WfQkM-O9JAd6AAAG",
+        "user": {
+          "id": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "username": "p1-basic",
+          "role": "STUDENT"
+        },
+        "address": "::ffff:127.0.0.1"
+      } New socket connection established
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.232] [32mINFO [0m [GameHandlers] {
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } Registering game handlers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.233] [32mINFO [0m [GameAnswerHandler] {
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } gameAnswerHandler registered
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.233] [32mINFO [0m [TeacherControlHandler] {
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } teacherControlHandler called
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [DEBUG] registerTeacherControlHandlers called for socket: 1AR5WfQkM-O9JAd6AAAG
+
+      at log (src/sockets/handlers/teacherControl/index.ts:22:13)
+
+    console.log
+      [2025-06-13 13:36:46.233] [32mINFO [0m [TeacherControlIndex] {
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } Registering teacher control handlers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.233] [32mINFO [0m [TeacherControlIndex] {
+        "event": "join_dashboard"
+      } Registering join_dashboard handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.233] [32mINFO [0m [TeacherControlIndex] {
+        "event": "set_question"
+      } Registering set_question handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.233] [32mINFO [0m [TeacherControlIndex] {
+        "event": "quiz_timer_action"
+      } Registering timer_action handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.234] [32mINFO [0m [TeacherControlIndex] {
+        "event": "lock_answers"
+      } Registering lock_answers handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.234] [32mINFO [0m [TeacherControlIndex] {
+        "event": "end_game"
+      } Registering end_game handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.234] [32mINFO [0m [TeacherControlIndex] {
+        "event": "start_timer"
+      } Registering start_timer handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.234] [32mINFO [0m [TeacherControlIndex] {
+        "event": "pause_timer"
+      } Registering pause_timer handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.234] [32mINFO [0m [TeacherControlIndex] Registering disconnect handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.234] [32mINFO [0m [TeacherControlHandler] {
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } teacherControlHandler registration complete
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.235] [32mINFO [0m [ConnectionHandlers] {
+        "socketId": "iE_njxiMmNurkEqxAAAH",
+        "user": {
+          "id": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+          "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+          "username": "p2-basic",
+          "role": "STUDENT"
+        },
+        "address": "::ffff:127.0.0.1"
+      } New socket connection established
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.235] [32mINFO [0m [GameHandlers] {
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } Registering game handlers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.235] [32mINFO [0m [GameAnswerHandler] {
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } gameAnswerHandler registered
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlHandler] {
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } teacherControlHandler called
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [DEBUG] registerTeacherControlHandlers called for socket: iE_njxiMmNurkEqxAAAH
+
+      at log (src/sockets/handlers/teacherControl/index.ts:22:13)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlIndex] {
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } Registering teacher control handlers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlIndex] {
+        "event": "join_dashboard"
+      } Registering join_dashboard handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlIndex] {
+        "event": "set_question"
+      } Registering set_question handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlIndex] {
+        "event": "quiz_timer_action"
+      } Registering timer_action handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlIndex] {
+        "event": "lock_answers"
+      } Registering lock_answers handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlIndex] {
+        "event": "end_game"
+      } Registering end_game handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlIndex] {
+        "event": "start_timer"
+      } Registering start_timer handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.236] [32mINFO [0m [TeacherControlIndex] {
+        "event": "pause_timer"
+      } Registering pause_timer handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.237] [32mINFO [0m [TeacherControlIndex] Registering disconnect handler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.237] [32mINFO [0m [TeacherControlHandler] {
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } teacherControlHandler registration complete
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.244] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3142",
+        "playMode": "tournament",
+        "username": "p1-basic"
+      } [DEBUG] Attempting to join room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.245] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3142",
+        "playMode": "tournament",
+        "username": "p1-basic"
+      } [DEBUG] Attempting to join room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.245] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3142",
+        "playMode": "tournament"
+      } [DEBUG] Joined room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.245] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3142",
+        "playMode": "tournament"
+      } [DEBUG] Joined room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.246] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3142",
+        "playMode": "tournament",
+        "username": "p2-basic"
+      } [DEBUG] Attempting to join room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.246] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3142",
+        "playMode": "tournament",
+        "username": "p2-basic"
+      } [DEBUG] Attempting to join room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.246] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3142",
+        "playMode": "tournament"
+      } [DEBUG] Joined room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.246] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3142",
+        "playMode": "tournament"
+      } [DEBUG] Joined room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.247] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3142",
+        "playMode": "tournament",
+        "gameJoinPayload": {
+          "gameId": "dd0ae1e2-d122-4589-8099-ea37813d0fb9",
+          "accessCode": "3142",
+          "status": "pending",
+          "currentQuestionIndex": -1,
+          "totalQuestions": 1,
+          "timer": {
+            "startedAt": 0,
+            "durationMs": 0,
+            "isPaused": true
+          },
+          "question": null
+        }
+      } [DEBUG] Emitted game_joined with timer and state
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.247] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "room": "game_3142",
+        "playMode": "tournament",
+        "gameJoinPayload": {
+          "gameId": "dd0ae1e2-d122-4589-8099-ea37813d0fb9",
+          "accessCode": "3142",
+          "status": "pending",
+          "currentQuestionIndex": -1,
+          "totalQuestions": 1,
+          "timer": {
+            "startedAt": 0,
+            "durationMs": 0,
+            "isPaused": true
+          },
+          "question": null
+        }
+      } [DEBUG] Emitted game_joined with timer and state
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.247] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3142",
+        "playMode": "tournament",
+        "gameJoinPayload": {
+          "gameId": "dd0ae1e2-d122-4589-8099-ea37813d0fb9",
+          "accessCode": "3142",
+          "status": "pending",
+          "currentQuestionIndex": -1,
+          "totalQuestions": 1,
+          "timer": {
+            "startedAt": 0,
+            "durationMs": 0,
+            "isPaused": true
+          },
+          "question": null
+        }
+      } [DEBUG] Emitted game_joined with timer and state
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.248] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "room": "game_3142",
+        "playMode": "tournament",
+        "gameJoinPayload": {
+          "gameId": "dd0ae1e2-d122-4589-8099-ea37813d0fb9",
+          "accessCode": "3142",
+          "status": "pending",
+          "currentQuestionIndex": -1,
+          "totalQuestions": 1,
+          "timer": {
+            "startedAt": 0,
+            "durationMs": 0,
+            "isPaused": true
+          },
+          "question": null
+        }
+      } [DEBUG] Emitted game_joined with timer and state
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.249] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "playMode": "tournament"
+      } Participant joined live room via sharedLiveHandler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.249] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "playMode": "tournament"
+      } Participant joined live room via sharedLiveHandler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.250] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "playMode": "tournament"
+      } Participant joined live room via sharedLiveHandler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.250] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "playMode": "tournament"
+      } Participant joined live room via sharedLiveHandler
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.261] [32mINFO [0m [TournamentHandler] {
+        "gameInstanceId": "dd0ae1e2-d122-4589-8099-ea37813d0fb9",
+        "templateId": "12ed7d14-21fd-41e0-897f-934935a11e77",
+        "initiator": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "playMode": "tournament",
+        "nbQuestionsFromTemplate": 1,
+        "nbParticipants": 2,
+        "accessCode": "3142",
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } [TournamentHandler] Fetched gameInstance for start_tournament
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.463] [32mINFO [0m [GameStateService] {
+        "accessCode": "3142"
+      } Game state updated
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:46.472] [32mINFO [0m [TournamentHandler] {
+        "room": "game_3142",
+        "duration": 5,
+        "accessCode": "3142",
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } [TournamentHandler] Emitting tournament_starting and waiting 5s before starting game.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:47.564] [32mINFO [0m [SharedGameFlow] {
+        "room": "game_3141",
+        "event": "feedback",
+        "questionUid": "q-late-1",
+        "feedbackDisplayDuration": 2
+      } [DEBUG] Emitting feedback
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:47.564] [32mINFO [0m [SharedGameFlow] === BACKEND FEEDBACK PAYLOAD DEBUG === {
+        "accessCode": "3141",
+        "questionIndex": 0,
+        "questionUid": "q-late-1",
+        "questionExplanation": null,
+        "explanationLength": 0,
+        "explanationExists": false,
+        "fullPayload": "{\"questionUid\":\"q-late-1\",\"feedbackRemaining\":2}"
+      }
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:47.565] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "event": "feedback",
+        "questionUid": "q-late-1",
+        "feedbackDisplayDuration": 2,
+        "hasExplanation": false
+      } [TRACE] Emitted feedback
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:49.565] [32mINFO [0m [SharedGameFlow] {
+        "room": "game_3141",
+        "event": "game_end"
+      } [DEBUG] Emitting game_end
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:49.566] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141",
+        "event": "game_end"
+      } [TRACE] Emitted game_end
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:49.567] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3141"
+      } [SharedGameFlow] Game flow completed and cleaned up
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.486] [32mINFO [0m [GameStateService] {
+        "accessCode": "3142"
+      } Game state updated
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.492] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142"
+      } [SharedGameFlow] runGameFlow entry
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.492] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "playMode": "tournament",
+        "questionCount": 1
+      } [SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.493] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142"
+      } [SharedGameFlow] Proceeding with first question immediately.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.494] [32mINFO [0m [GameStateService] {
+        "accessCode": "3142"
+      } Game state updated
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.495] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "room": "game_3142",
+        "socketIds": [
+          "1AR5WfQkM-O9JAd6AAAG",
+          "iE_njxiMmNurkEqxAAAH"
+        ]
+      } [DEBUG] Sockets in live room before emitting first game_question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.495] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "questionIndex": 0,
+        "questionUid": "q-late-1"
+      } [DEBUG] Preparing to emit game_question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.495] [32mINFO [0m [SharedGameFlow] {
+        "room": "game_3142",
+        "event": "game_question",
+        "payload": {
+          "question": {
+            "uid": "q-late-1",
+            "questionType": "single_correct",
+            "text": "What is 10 + 5?",
+            "answerOptions": [
+              "12",
+              "13",
+              "14",
+              "15"
+            ],
+            "explanation": null,
+            "correctAnswers": [
+              false,
+              false,
+              false,
+              true
+            ],
+            "timeLimit": 2,
+            "gradeLevel": "elementary",
+            "difficulty": 1,
+            "themes": [
+              "arithmetic"
+            ]
+          },
+          "index": 0,
+          "feedbackWaitTime": 2,
+          "timer": 2
+        }
+      } [DEBUG] Emitting game_question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.496] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "event": "game_question",
+        "questionUid": "q-late-1"
+      } [TRACE] Emitted game_question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.498] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "answer": "15",
+        "timeSpent": 2,
+        "receivedPlayMode": "tournament",
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } [SHARED_LIVE_HANDLER] game_answer received
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.498] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "answer": "15",
+        "timeSpent": 2,
+        "finalPlayMode": "tournament",
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } [SHARED_LIVE_HANDLER] Processing game_answer with playMode
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.498] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "answer": "15",
+        "timeSpent": 2,
+        "receivedPlayMode": "tournament",
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } [SHARED_LIVE_HANDLER] game_answer received
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.499] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "answer": "15",
+        "timeSpent": 2,
+        "finalPlayMode": "tournament",
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } [SHARED_LIVE_HANDLER] Processing game_answer with playMode
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.499] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "answer": "12",
+        "timeSpent": 2,
+        "receivedPlayMode": "tournament",
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } [SHARED_LIVE_HANDLER] game_answer received
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.499] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "answer": "12",
+        "timeSpent": 2,
+        "finalPlayMode": "tournament",
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } [SHARED_LIVE_HANDLER] Processing game_answer with playMode
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.499] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "answer": "12",
+        "timeSpent": 2,
+        "receivedPlayMode": "tournament",
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } [SHARED_LIVE_HANDLER] game_answer received
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.500] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "answer": "12",
+        "timeSpent": 2,
+        "finalPlayMode": "tournament",
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } [SHARED_LIVE_HANDLER] Processing game_answer with playMode
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.504] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1"
+      } Participant already answered this question. Updating answer.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.506] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "scoreAwarded": 0
+      } Answer processed, feedback sent
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.507] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "questionUid": "q-late-1",
+        "scoreAwarded": 0
+      } Answer processed, feedback sent
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.507] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "scoreAwarded": 0
+      } Answer processed, feedback sent
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:51.510] [32mINFO [0m [SharedLiveHandler] {
+        "accessCode": "3142",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "questionUid": "q-late-1",
+        "scoreAwarded": 0
+      } Answer processed, feedback sent
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.496] [32mINFO [0m [SharedGameFlow] {
+        "room": "game_3142",
+        "event": "correct_answers",
+        "questionUid": "q-late-1"
+      } [DEBUG] Emitting correct_answers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.497] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "event": "correct_answers",
+        "questionUid": "q-late-1",
+        "correctAnswers": [
+          false,
+          false,
+          false,
+          true
+        ]
+      } [TRACE] Emitted correct_answers
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.498] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "questionUid": "q-late-1"
+      } [SharedGameFlow] Calculating scores for question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.503] [32mINFO [0m [GameStateService] {
+        "accessCode": "3142",
+        "questionUid": "q-late-1"
+      } Scores calculated for question
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.503] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "questionUid": "q-late-1"
+      } [SharedGameFlow] Scores calculated
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.505] [33mWARN [0m [GameStateService] {
+        "accessCode": "3142",
+        "userId": "07831c57-8eb8-4c83-8206-d00c5e8ed901"
+      } Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.506] [33mWARN [0m [GameStateService] {
+        "accessCode": "3142",
+        "userId": "837078cd-69c7-4d89-800c-ed1c238832aa"
+      } Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.511] [33mWARN [0m [GameStateService] {
+        "accessCode": "3142",
+        "userId": "07831c57-8eb8-4c83-8206-d00c5e8ed901"
+      } User details not found in DB for leaderboard entry.
+
+      at log (src/utils/logger.ts:102:21)
+          at async Promise.all (index 1)
+
+    console.log
+      [2025-06-13 13:36:53.513] [33mWARN [0m [GameStateService] {
+        "accessCode": "3142",
+        "userId": "837078cd-69c7-4d89-800c-ed1c238832aa"
+      } User details not found in DB for leaderboard entry.
+
+      at log (src/utils/logger.ts:102:21)
+          at async Promise.all (index 2)
+
+    console.log
+      [2025-06-13 13:36:53.513] [32mINFO [0m [GameStateService] {
+        "accessCode": "3142",
+        "count": 4
+      } Formatted leaderboard from Redis/DB.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      Leaderboard response: [
+        {
+          "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "username": "p1-basic",
+          "score": 980,
+          "rank": 1
+        },
+        {
+          "userId": "07831c57-8eb8-4c83-8206-d00c5e8ed901",
+          "username": "Unknown Player",
+          "score": 980,
+          "rank": 2
+        },
+        {
+          "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+          "username": "p2-basic",
+          "score": 0,
+          "rank": 3
+        },
+        {
+          "userId": "837078cd-69c7-4d89-800c-ed1c238832aa",
+          "username": "Unknown Player",
+          "score": 0,
+          "rank": 4
+        }
+      ]
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:469:17)
+
+    console.log
+      Starting afterAll cleanup...
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:77:17)
+
+    console.log
+      Processing socket1...
+
+      at disconnectSocket (tests/integration/tournament.test.ts:85:21)
+
+    console.log
+      socket1 is connected. Attempting graceful disconnect...
+
+      at disconnectSocket (tests/integration/tournament.test.ts:90:25)
+
+    console.log
+      socket1 disconnected. Reason: io client disconnect
+
+      at Socket.<anonymous> (tests/integration/tournament.test.ts:100:37)
+
+    console.log
+      socket1 processing complete.
+
+      at disconnectSocket (tests/integration/tournament.test.ts:116:21)
+
+    console.log
+      Processing socket2...
+
+      at disconnectSocket (tests/integration/tournament.test.ts:85:21)
+
+    console.log
+      socket2 is connected. Attempting graceful disconnect...
+
+      at disconnectSocket (tests/integration/tournament.test.ts:90:25)
+
+    console.log
+      socket2 disconnected. Reason: io client disconnect
+
+      at Socket.<anonymous> (tests/integration/tournament.test.ts:100:37)
+
+    console.log
+      socket2 processing complete.
+
+      at disconnectSocket (tests/integration/tournament.test.ts:116:21)
+
+    console.log
+      [2025-06-13 13:36:53.519] [32mINFO [0m [DisconnectHandler] {
+        "socketId": "1AR5WfQkM-O9JAd6AAAG",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "accessCode": "3142",
+        "reason": "client namespace disconnect"
+      } Client disconnected
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.519] [32mINFO [0m [DisconnectHandler] {
+        "socketId": "iE_njxiMmNurkEqxAAAH",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "accessCode": "3142",
+        "reason": "client namespace disconnect"
+      } Client disconnected
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.520] [32mINFO [0m [DisconnectHandler] {
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "accessCode": "3142",
+        "socketId": "1AR5WfQkM-O9JAd6AAAG"
+      } Disconnected socket was the last known active socket for the user.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.521] [32mINFO [0m [DisconnectHandler] {
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "accessCode": "3142",
+        "socketId": "iE_njxiMmNurkEqxAAAH"
+      } Disconnected socket was the last known active socket for the user.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.521] [32mINFO [0m [DisconnectHandler] {
+        "playerLeftPayload": {
+          "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "socketId": "1AR5WfQkM-O9JAd6AAAG"
+        },
+        "room": "game_3142"
+      } Emitting player_left_game to room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.522] [32mINFO [0m [DisconnectHandler] {
+        "playerLeftPayload": {
+          "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+          "socketId": "iE_njxiMmNurkEqxAAAH"
+        },
+        "room": "game_3142"
+      } Emitting player_left_game to room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.524] [32mINFO [0m [ParticipantCountUtils] {
+        "accessCode": "3142",
+        "gameId": "dd0ae1e2-d122-4589-8099-ea37813d0fb9",
+        "lobbyCount": 0,
+        "gameCount": 0,
+        "totalCount": 0
+      } Emitting participant count to dashboard
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:53.524] [32mINFO [0m [ParticipantCountUtils] {
+        "accessCode": "3142",
+        "gameId": "dd0ae1e2-d122-4589-8099-ea37813d0fb9",
+        "lobbyCount": 0,
+        "gameCount": 0,
+        "totalCount": 0
+      } Emitting participant count to dashboard
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      Closing Socket.IO server...
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:127:21)
+
+    console.log
+      [2025-06-13 13:36:54.018] [32mINFO [0m [DisconnectHandler] {
+        "socketId": "Wx23hJ1m593KeiqQAAAC",
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "accessCode": "3141",
+        "reason": "server shutting down"
+      } Client disconnected
+
+      at log (src/utils/logger.ts:102:21)
+          at Map.forEach (<anonymous>)
+          at Array.map (<anonymous>)
+
+    console.log
+      [2025-06-13 13:36:54.018] [32mINFO [0m [DisconnectHandler] {
+        "socketId": "IialwpUgE4HcuRhmAAAD",
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "accessCode": "3141",
+        "reason": "server shutting down"
+      } Client disconnected
+
+      at log (src/utils/logger.ts:102:21)
+          at Map.forEach (<anonymous>)
+          at Array.map (<anonymous>)
+
+    console.log
+      [2025-06-13 13:36:54.021] [32mINFO [0m [DisconnectHandler] {
+        "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+        "accessCode": "3141",
+        "socketId": "Wx23hJ1m593KeiqQAAAC"
+      } Disconnected socket was the last known active socket for the user.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      Socket.IO server closed successfully.
+
+      at Server.<anonymous> (tests/integration/tournament.test.ts:139:33)
+
+    console.log
+      Attempting to close HTTP server...
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:147:17)
+
+    console.log
+      HTTP server was not listening. Assuming already closed or handled by Socket.IO close.
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:167:25)
+
+    console.log
+      Waiting longer for server resources to release before closing Redis...
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:173:17)
+
+    console.log
+      [2025-06-13 13:36:54.022] [32mINFO [0m [DisconnectHandler] {
+        "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+        "accessCode": "3141",
+        "socketId": "IialwpUgE4HcuRhmAAAD"
+      } Disconnected socket was the last known active socket for the user.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:54.023] [32mINFO [0m [DisconnectHandler] {
+        "playerLeftPayload": {
+          "userId": "51956183-d5a2-4640-8b19-e93970d76f71",
+          "socketId": "Wx23hJ1m593KeiqQAAAC"
+        },
+        "room": "game_3141"
+      } Emitting player_left_game to room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:54.024] [32mINFO [0m [DisconnectHandler] {
+        "playerLeftPayload": {
+          "userId": "2c962360-ae7b-4827-8ab1-8c6c453d6119",
+          "socketId": "IialwpUgE4HcuRhmAAAD"
+        },
+        "room": "game_3141"
+      } Emitting player_left_game to room
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:54.026] [32mINFO [0m [ParticipantCountUtils] {
+        "accessCode": "3141",
+        "gameId": "3e78fa9c-75b5-4240-9ebf-cfb717e07ba0",
+        "lobbyCount": 0,
+        "gameCount": 0,
+        "totalCount": 0
+      } Emitting participant count to dashboard
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:54.026] [32mINFO [0m [ParticipantCountUtils] {
+        "accessCode": "3141",
+        "gameId": "3e78fa9c-75b5-4240-9ebf-cfb717e07ba0",
+        "lobbyCount": 0,
+        "gameCount": 0,
+        "totalCount": 0
+      } Emitting participant count to dashboard
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:55.004] [32mINFO [0m [SharedGameFlow] {
+        "room": "game_3142",
+        "event": "feedback",
+        "questionUid": "q-late-1",
+        "feedbackDisplayDuration": 2
+      } [DEBUG] Emitting feedback
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:55.005] [32mINFO [0m [SharedGameFlow] === BACKEND FEEDBACK PAYLOAD DEBUG === {
+        "accessCode": "3142",
+        "questionIndex": 0,
+        "questionUid": "q-late-1",
+        "questionExplanation": null,
+        "explanationLength": 0,
+        "explanationExists": false,
+        "fullPayload": "{\"questionUid\":\"q-late-1\",\"feedbackRemaining\":2}"
+      }
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:55.006] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "event": "feedback",
+        "questionUid": "q-late-1",
+        "feedbackDisplayDuration": 2,
+        "hasExplanation": false
+      } [TRACE] Emitted feedback
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:57.006] [32mINFO [0m [SharedGameFlow] {
+        "room": "game_3142",
+        "event": "game_end"
+      } [DEBUG] Emitting game_end
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:57.007] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142",
+        "event": "game_end"
+      } [TRACE] Emitted game_end
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      [2025-06-13 13:36:57.007] [32mINFO [0m [SharedGameFlow] {
+        "accessCode": "3142"
+      } [SharedGameFlow] Game flow completed and cleaned up
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      Closing SocketIO Redis clients (subClient)...
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:177:17)
+
+    console.log
+      SocketIO Redis clients closed.
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:180:21)
+
+    console.log
+      Closing main Redis client...
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:188:17)
+
+    console.log
+      Main Redis client quit successfully.
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:192:25)
+
+    console.log
+      Cleaning up database...
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:203:17)
+
+    console.log
+      Database cleanup successful.
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:215:21)
+
+    console.warn
+      Error cleaning up Redis keys: Connection is closed.
+
+      225 |             }
+      226 |         } catch (e: any) {
+    > 227 |             console.warn('Error cleaning up Redis keys:', e.message || e);
+          |                     ^
+      228 |         }
+      229 |
+      230 |         await new Promise(resolve => setTimeout(resolve, 300));
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:227:21)
+
+    console.log
+      afterAll cleanup complete.
+
+      at Object.<anonymous> (tests/integration/tournament.test.ts:231:17)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:36:58.124] [32mINFO [0m [SharedGameFlow] {
+      "room": "game_DIFF123",
+      "event": "feedback",
+      "questionUid": "bb65cbc5-8967-4e7f-939e-c64dc5f0fbff",
+      "feedbackDisplayDuration": 5
+    } [DEBUG] Emitting feedback".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:121:20)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:36:58.126] [32mINFO [0m [SharedGameFlow] === BACKEND FEEDBACK PAYLOAD DEBUG === {
+      "accessCode": "DIFF123",
+      "questionIndex": 0,
+      "questionUid": "bb65cbc5-8967-4e7f-939e-c64dc5f0fbff",
+      "questionExplanation": null,
+      "explanationLength": 0,
+      "explanationExists": false,
+      "fullPayload": "{\"questionUid\":\"bb65cbc5-8967-4e7f-939e-c64dc5f0fbff\",\"feedbackRemaining\":5}"
+    }".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:130:20)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:36:58.127] [32mINFO [0m [SharedGameFlow] {
+      "accessCode": "DIFF123",
+      "event": "feedback",
+      "questionUid": "bb65cbc5-8967-4e7f-939e-c64dc5f0fbff",
+      "feedbackDisplayDuration": 5,
+      "hasExplanation": false
+    } [TRACE] Emitted feedback".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:142:20)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:37:03.130] [32mINFO [0m [SharedGameFlow] {
+      "room": "game_DIFF123",
+      "event": "game_end"
+    } [DEBUG] Emitting game_end".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:148:16)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:37:03.133] [32mINFO [0m [SharedGameFlow] {
+      "accessCode": "DIFF123",
+      "event": "game_end"
+    } [TRACE] Emitted game_end".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:150:16)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[2025-06-13 13:37:03.134] [32mINFO [0m [SharedGameFlow] {
+      "accessCode": "DIFF123"
+    } [SharedGameFlow] Game flow completed and cleaned up".
+
+      100 |             });
+      101 |
+    > 102 |             console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
+          |                     ^
+      103 |         }
+      104 |     };
+      105 |
+
+      at console.log (node_modules/@jest/console/build/BufferedConsole.js:156:10)
+      at log (src/utils/logger.ts:102:21)
+      at Object.log [as info] (src/utils/logger.ts:118:35)
+      at info (src/sockets/handlers/sharedGameFlow.ts:158:16)
+
+FAIL tests/integration/tournament-creation-e2e.test.ts (72.106 s)
+  ● Console
+
+    console.log
+      [2025-06-13 13:36:58.132] [32mINFO [0m [Server] Successfully connected to Redis.
+
+      at log (src/utils/logger.ts:102:21)
+
+    console.log
+      === Starting Tournament Creation and Game Flow E2E Test ===
+
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:237:17)
+
+    console.log
+      🏆 Tournament created in database with access code: TEST123
+
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:238:17)
+
+    console.log
+        Niveau: TEST
+
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:239:17)
+
+    console.log
+        Discipline: Mathématiques
+
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:240:17)
+
+    console.log
+        Thèmes: addition
+
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:241:17)
+
+    console.log
+        Number of questions: 2
+
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:242:17)
+
+    console.log
+      === Starting Tournament Security Validation Test ===
+
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:381:17)
+
+  ● Tournament Creation and Game Flow E2E Test › Create Tournament and Run Complete Game Flow
+
+    thrown: "Exceeded timeout of 35000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      234 |     });
+      235 |
+    > 236 |     test('Create Tournament and Run Complete Game Flow', async () => {
+          |     ^
+      237 |         console.log('=== Starting Tournament Creation and Game Flow E2E Test ===');
+      238 |         console.log(`🏆 Tournament created in database with access code: ${tournamentAccessCode}`);
+      239 |         console.log('  Niveau: TEST');
+
+      at tests/integration/tournament-creation-e2e.test.ts:236:5
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:54:1)
+
+  ● Tournament Creation and Game Flow E2E Test › Tournament Security Validation - No Database Fields Exposed
+
+    thrown: "Exceeded timeout of 35000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      378 |     });
+      379 |
+    > 380 |     test('Tournament Security Validation - No Database Fields Exposed', async () => {
+          |     ^
+      381 |         console.log('=== Starting Tournament Security Validation Test ===');
+      382 |
+      383 |         // Create another tournament for isolated security testing
+
+      at tests/integration/tournament-creation-e2e.test.ts:380:5
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:54:1)
+
+
+  ● Test suite failed to run
+
+    PrismaClientKnownRequestError: 
+    Invalid `prisma.user.deleteMany()` invocation in
+    /home/aflesch/mathquest/app/backend/tests/integration/tournament-creation-e2e.test.ts:231:27
+
+      228     }
+      229 });
+      230 
+    → 231 await prisma.user.deleteMany(
+    Foreign key constraint violated on the constraint: `game_templates_creator_id_fkey`
+
+      122 |
+      123 | More Information: https://pris.ly/d/execute-raw
+    > 124 | `)}var Co=({clientMethod:e,activeProvider:r})=>t=>{let n="",i;if(Nn(t))n=t.sql,i={values:Gr(t.values),__prismaRawParameters__:!0};else if(Array.isArray(t)){let[o,...s]=t;n=o,i={values:Gr(s||[]),__prismaRawParameters__:!0}}else switch(r){case"sqlite":case"mysql":{n=t.sql,i={values:Gr(t.values),__prismaRawParameters__:!0};break}case"cockroachdb":case"postgresql":case"postgres":{n=t.text,i={values:Gr(t.values),__prismaRawParameters__:!0};break}case"sqlserver":{n=$l(t),i={values:Gr(t.values),__prismaRawParameters__:!0};break}default:throw new Error(`The ${r} provider does not support ${e}`)}return i?.values?Ul(`prisma.${e}(${n}, ${i.values})`):Ul(`prisma.${e}(${n})`),{query:n,parameters:i}},Ql={requestArgsToMiddlewareArgs(e){return[e.strings,...e.values]},middlewareArgsToRequestArgs(e){let[r,...t]=e;return new oe(r,t)}},Gl={requestArgsToMiddlewareArgs(e){return[e]},middlewareArgsToRequestArgs(e){return e[0]}};function Ao(e){return function(t,n){let i,o=(s=e)=>{try{return s===void 0||s?.kind==="itx"?i??=Wl(t(s)):Wl(t(s))}catch(a){return Promise.reject(a)}};return{get spec(){return n},then(s,a){return o().then(s,a)},catch(s){return o().catch(s)},finally(s){return o().finally(s)},requestTransaction(s){let a=o(s);return a.requestTransaction?a.requestTransaction(s):a},[Symbol.toStringTag]:"PrismaPromise"}}}function Wl(e){return typeof e.then=="function"?e:Promise.resolve(e)}var Pf=bi.split(".")[0],Tf={isEnabled(){return!1},getTraceParent(){return"00-10-10-00"},dispatchEngineSpans(){},getActiveContext(){},runInChildSpan(e,r){return r()}},Io=class{isEnabled(){return this.getGlobalTracingHelper().isEnabled()}getTraceParent(r){return this.getGlobalTracingHelper().getTraceParent(r)}dispatchEngineSpans(r){return this.getGlobalTracingHelper().dispatchEngineSpans(r)}getActiveContext(){return this.getGlobalTracingHelper().getActiveContext()}runInChildSpan(r,t){return this.getGlobalTracingHelper().runInChildSpan(r,t)}getGlobalTracingHelper(){let r=globalThis[`V${Pf}_PRISMA_INSTRUMENTATION`],t=globalThis.PRISMA_INSTRUMENTATION;return r?.helper??t?.helper??Tf}};function Jl(){return new Io}function Hl(e,r=()=>{}){let t,n=new Promise(i=>t=i);return{then(i){return--e===0&&t(r()),i?.(n)}}}function Kl(e){return typeof e=="string"?e:e.reduce((r,t)=>{let n=typeof t=="string"?t:t.level;return n==="query"?r:r&&(t==="info"||r==="info")?"info":n},void 0)}var Jn=class{_middlewares=[];use(r){this._middlewares.push(r)}get(r){return this._middlewares[r]}has(r){return!!this._middlewares[r]}length(){return this._middlewares.length}};var zl=k(ki());function Hn(e){return typeof e.batchRequestIdx=="number"}function Yl(e){if(e.action!=="findUnique"&&e.action!=="findUniqueOrThrow")return;let r=[];return e.modelName&&r.push(e.modelName),e.query.arguments&&r.push(ko(e.query.arguments)),r.push(ko(e.query.selection)),r.join("")}function ko(e){return`(${Object.keys(e).sort().map(t=>{let n=e[t];return typeof n=="object"&&n!==null?`(${t} ${ko(n)})`:t}).join(" ")})`}var Sf={aggregate:!1,aggregateRaw:!1,createMany:!0,createManyAndReturn:!0,createOne:!0,deleteMany:!0,deleteOne:!0,executeRaw:!0,findFirst:!1,findFirstOrThrow:!1,findMany:!1,findRaw:!1,findUnique:!1,findUniqueOrThrow:!1,groupBy:!1,queryRaw:!1,runCommandRaw:!0,updateMany:!0,updateManyAndReturn:!0,updateOne:!0,upsertOne:!0};function Oo(e){return Sf[e]}var Kn=class{constructor(r){this.options=r;this.batches={}}batches;tickActive=!1;request(r){let t=this.options.batchBy(r);return t?(this.batches[t]||(this.batches[t]=[],this.tickActive||(this.tickActive=!0,process.nextTick(()=>{this.dispatchBatches(),this.tickActive=!1}))),new Promise((n,i)=>{this.batches[t].push({request:r,resolve:n,reject:i})})):this.options.singleLoader(r)}dispatchBatches(){for(let r in this.batches){let t=this.batches[r];delete this.batches[r],t.length===1?this.options.singleLoader(t[0].request).then(n=>{n instanceof Error?t[0].reject(n):t[0].resolve(n)}).catch(n=>{t[0].reject(n)}):(t.sort((n,i)=>this.options.batchOrder(n.request,i.request)),this.options.batchLoader(t.map(n=>n.request)).then(n=>{if(n instanceof Error)for(let i=0;i<t.length;i++)t[i].reject(n);else for(let i=0;i<t.length;i++){let o=n[i];o instanceof Error?t[i].reject(o):t[i].resolve(o)}}).catch(n=>{for(let i=0;i<t.length;i++)t[i].reject(n)}))}}get[Symbol.toStringTag](){return"DataLoader"}};function mr(e,r){if(r===null)return r;switch(e){case"bigint":return BigInt(r);case"bytes":{let{buffer:t,byteOffset:n,byteLength:i}=Buffer.from(r,"base64");return new Uint8Array(t,n,i)}case"decimal":return new ve(r);case"datetime":case"date":return new Date(r);case"time":return new Date(`1970-01-01T${r}Z`);case"bigint-array":return r.map(t=>mr("bigint",t));case"bytes-array":return r.map(t=>mr("bytes",t));case"decimal-array":return r.map(t=>mr("decimal",t));case"datetime-array":return r.map(t=>mr("datetime",t));case"date-array":return r.map(t=>mr("date",t));case"time-array":return r.map(t=>mr("time",t));default:return r}}function Yn(e){let r=[],t=Rf(e);for(let n=0;n<e.rows.length;n++){let i=e.rows[n],o={...t};for(let s=0;s<i.length;s++)o[e.columns[s]]=mr(e.types[s],i[s]);r.push(o)}return r}function Rf(e){let r={};for(let t=0;t<e.columns.length;t++)r[e.columns[t]]=null;return r}var Cf=N("prisma:client:request_handler"),zn=class{client;dataloader;logEmitter;constructor(r,t){this.logEmitter=t,this.client=r,this.dataloader=new Kn({batchLoader:il(async({requests:n,customDataProxyFetch:i})=>{let{transaction:o,otelParentCtx:s}=n[0],a=n.map(p=>p.protocolQuery),l=this.client._tracingHelper.getTraceParent(s),u=n.some(p=>Oo(p.protocolQuery.action));return(await this.client._engine.requestBatch(a,{traceparent:l,transaction:Af(o),containsWrite:u,customDataProxyFetch:i})).map((p,d)=>{if(p instanceof Error)return p;try{return this.mapQueryEngineResult(n[d],p)}catch(f){return f}})}),singleLoader:async n=>{let i=n.transaction?.kind==="itx"?Zl(n.transaction):void 0,o=await this.client._engine.request(n.protocolQuery,{traceparent:this.client._tracingHelper.getTraceParent(),interactiveTransaction:i,isWrite:Oo(n.protocolQuery.action),customDataProxyFetch:n.customDataProxyFetch});return this.mapQueryEngineResult(n,o)},batchBy:n=>n.transaction?.id?`transaction-${n.transaction.id}`:Yl(n.protocolQuery),batchOrder(n,i){return n.transaction?.kind==="batch"&&i.transaction?.kind==="batch"?n.transaction.index-i.transaction.index:0}})}async request(r){try{return await this.dataloader.request(r)}catch(t){let{clientMethod:n,callsite:i,transaction:o,args:s,modelName:a}=r;this.handleAndLogRequestError({error:t,clientMethod:n,callsite:i,transaction:o,args:s,modelName:a,globalOmit:r.globalOmit})}}mapQueryEngineResult({dataPath:r,unpacker:t},n){let i=n?.data,o=this.unpack(i,r,t);return process.env.PRISMA_CLIENT_GET_TIME?{data:o}:o}handleAndLogRequestError(r){try{this.handleRequestError(r)}catch(t){throw this.logEmitter&&this.logEmitter.emit("error",{message:t.message,target:r.clientMethod,timestamp:new Date}),t}}handleRequestError({error:r,clientMethod:t,callsite:n,transaction:i,args:o,modelName:s,globalOmit:a}){if(Cf(r),If(r,i))throw r;if(r instanceof z&&kf(r)){let u=Xl(r.meta);An({args:o,errors:[u],callsite:n,errorFormat:this.client._errorFormat,originalMethod:t,clientVersion:this.client._clientVersion,globalOmit:a})}let l=r.message;if(n&&(l=bn({callsite:n,originalMethod:t,isPanic:r.isPanic,showColors:this.client._errorFormat==="pretty",message:l})),l=this.sanitizeMessage(l),r.code){let u=s?{modelName:s,...r.meta}:r.meta;throw new z(l,{code:r.code,clientVersion:this.client._clientVersion,meta:u,batchRequestIdx:r.batchRequestIdx})}else{if(r.isPanic)throw new le(l,this.client._clientVersion);if(r instanceof j)throw new j(l,{clientVersion:this.client._clientVersion,batchRequestIdx:r.batchRequestIdx});if(r instanceof T)throw new T(l,this.client._clientVersion);if(r instanceof le)throw new le(l,this.client._clientVersion)}throw r.clientVersion=this.client._clientVersion,r}sanitizeMessage(r){return this.client._errorFormat&&this.client._errorFormat!=="pretty"?(0,zl.default)(r):r}unpack(r,t,n){if(!r||(r.data&&(r=r.data),!r))return r;let i=Object.keys(r)[0],o=Object.values(r)[0],s=t.filter(u=>u!=="select"&&u!=="include"),a=io(o,s),l=i==="queryRaw"?Yn(a):Tr(a);return n?n(l):l}get[Symbol.toStringTag](){return"RequestHandler"}};function Af(e){if(e){if(e.kind==="batch")return{kind:"batch",options:{isolationLevel:e.isolationLevel}};if(e.kind==="itx")return{kind:"itx",options:Zl(e)};_e(e,"Unknown transaction kind")}}function Zl(e){return{id:e.id,payload:e.payload}}function If(e,r){return Hn(e)&&r?.kind==="batch"&&e.batchRequestIdx!==r.index}function kf(e){return e.code==="P2009"||e.code==="P2012"}function Xl(e){if(e.kind==="Union")return{kind:"Union",errors:e.errors.map(Xl)};if(Array.isArray(e.selectionPath)){let[,...r]=e.selectionPath;return{...e,selectionPath:r}}return e}var eu="6.7.0";var ru=eu;var su=k(Gi());var D=class extends Error{constructor(r){super(r+`
+          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ^
+      125 | Read more at https://pris.ly/d/client-constructor`),this.name="PrismaClientConstructorValidationError"}get[Symbol.toStringTag](){return"PrismaClientConstructorValidationError"}};x(D,"PrismaClientConstructorValidationError");var tu=["datasources","datasourceUrl","errorFormat","adapter","log","transactionOptions","omit","__internal"],nu=["pretty","colorless","minimal"],iu=["info","query","warn","error"],Df={datasources:(e,{datasourceNames:r})=>{if(e){if(typeof e!="object"||Array.isArray(e))throw new D(`Invalid value ${JSON.stringify(e)} for "datasources" provided to PrismaClient constructor`);for(let[t,n]of Object.entries(e)){if(!r.includes(t)){let i=Wr(t,r)||` Available datasources: ${r.join(", ")}`;throw new D(`Unknown datasource ${t} provided to PrismaClient constructor.${i}`)}if(typeof n!="object"||Array.isArray(n))throw new D(`Invalid value ${JSON.stringify(e)} for datasource "${t}" provided to PrismaClient constructor.
+      126 | It should have this form: { url: "CONNECTION_STRING" }`);if(n&&typeof n=="object")for(let[i,o]of Object.entries(n)){if(i!=="url")throw new D(`Invalid value ${JSON.stringify(e)} for datasource "${t}" provided to PrismaClient constructor.
+      127 | It should have this form: { url: "CONNECTION_STRING" }`);if(typeof o!="string")throw new D(`Invalid value ${JSON.stringify(o)} for datasource "${t}" provided to PrismaClient constructor.
+
+      at zn.handleRequestError (src/db/generated/client/runtime/library.js:124:7459)
+      at zn.handleRequestError [as handleAndLogRequestError] (src/db/generated/client/runtime/library.js:124:6784)
+      at zn.handleAndLogRequestError [as request] (src/db/generated/client/runtime/library.js:124:6491)
+      at l (src/db/generated/client/runtime/library.js:133:9778)
+      at Object.<anonymous> (tests/integration/tournament-creation-e2e.test.ts:231:9)
+
+FAIL tests/integration/tournament-flow-e2e.test.ts
+  ● Console
+
+    console.log
+      [2025-06-13 13:38:10.251] [32mINFO [0m [Server] Successfully connected to Redis.
+
+      at log (src/utils/logger.ts:102:21)
+
+  ● Tournament Game Flow E2E Test › Complete Tournament Game Flow
+
+    PrismaClientKnownRequestError: 
+    Invalid `prisma.user.create()` invocation in
+    /home/aflesch/mathquest/app/backend/tests/integration/tournament-flow-e2e.test.ts:68:47
+
+      65 serverCleanup = setup.cleanup;
+      66 
+      67 // Create test teacher
+    → 68 const testTeacher = await prisma.user.create(
+    Unique constraint failed on the fields: (`email`)
+
+      122 |
+      123 | More Information: https://pris.ly/d/execute-raw
+    > 124 | `)}var Co=({clientMethod:e,activeProvider:r})=>t=>{let n="",i;if(Nn(t))n=t.sql,i={values:Gr(t.values),__prismaRawParameters__:!0};else if(Array.isArray(t)){let[o,...s]=t;n=o,i={values:Gr(s||[]),__prismaRawParameters__:!0}}else switch(r){case"sqlite":case"mysql":{n=t.sql,i={values:Gr(t.values),__prismaRawParameters__:!0};break}case"cockroachdb":case"postgresql":case"postgres":{n=t.text,i={values:Gr(t.values),__prismaRawParameters__:!0};break}case"sqlserver":{n=$l(t),i={values:Gr(t.values),__prismaRawParameters__:!0};break}default:throw new Error(`The ${r} provider does not support ${e}`)}return i?.values?Ul(`prisma.${e}(${n}, ${i.values})`):Ul(`prisma.${e}(${n})`),{query:n,parameters:i}},Ql={requestArgsToMiddlewareArgs(e){return[e.strings,...e.values]},middlewareArgsToRequestArgs(e){let[r,...t]=e;return new oe(r,t)}},Gl={requestArgsToMiddlewareArgs(e){return[e]},middlewareArgsToRequestArgs(e){return e[0]}};function Ao(e){return function(t,n){let i,o=(s=e)=>{try{return s===void 0||s?.kind==="itx"?i??=Wl(t(s)):Wl(t(s))}catch(a){return Promise.reject(a)}};return{get spec(){return n},then(s,a){return o().then(s,a)},catch(s){return o().catch(s)},finally(s){return o().finally(s)},requestTransaction(s){let a=o(s);return a.requestTransaction?a.requestTransaction(s):a},[Symbol.toStringTag]:"PrismaPromise"}}}function Wl(e){return typeof e.then=="function"?e:Promise.resolve(e)}var Pf=bi.split(".")[0],Tf={isEnabled(){return!1},getTraceParent(){return"00-10-10-00"},dispatchEngineSpans(){},getActiveContext(){},runInChildSpan(e,r){return r()}},Io=class{isEnabled(){return this.getGlobalTracingHelper().isEnabled()}getTraceParent(r){return this.getGlobalTracingHelper().getTraceParent(r)}dispatchEngineSpans(r){return this.getGlobalTracingHelper().dispatchEngineSpans(r)}getActiveContext(){return this.getGlobalTracingHelper().getActiveContext()}runInChildSpan(r,t){return this.getGlobalTracingHelper().runInChildSpan(r,t)}getGlobalTracingHelper(){let r=globalThis[`V${Pf}_PRISMA_INSTRUMENTATION`],t=globalThis.PRISMA_INSTRUMENTATION;return r?.helper??t?.helper??Tf}};function Jl(){return new Io}function Hl(e,r=()=>{}){let t,n=new Promise(i=>t=i);return{then(i){return--e===0&&t(r()),i?.(n)}}}function Kl(e){return typeof e=="string"?e:e.reduce((r,t)=>{let n=typeof t=="string"?t:t.level;return n==="query"?r:r&&(t==="info"||r==="info")?"info":n},void 0)}var Jn=class{_middlewares=[];use(r){this._middlewares.push(r)}get(r){return this._middlewares[r]}has(r){return!!this._middlewares[r]}length(){return this._middlewares.length}};var zl=k(ki());function Hn(e){return typeof e.batchRequestIdx=="number"}function Yl(e){if(e.action!=="findUnique"&&e.action!=="findUniqueOrThrow")return;let r=[];return e.modelName&&r.push(e.modelName),e.query.arguments&&r.push(ko(e.query.arguments)),r.push(ko(e.query.selection)),r.join("")}function ko(e){return`(${Object.keys(e).sort().map(t=>{let n=e[t];return typeof n=="object"&&n!==null?`(${t} ${ko(n)})`:t}).join(" ")})`}var Sf={aggregate:!1,aggregateRaw:!1,createMany:!0,createManyAndReturn:!0,createOne:!0,deleteMany:!0,deleteOne:!0,executeRaw:!0,findFirst:!1,findFirstOrThrow:!1,findMany:!1,findRaw:!1,findUnique:!1,findUniqueOrThrow:!1,groupBy:!1,queryRaw:!1,runCommandRaw:!0,updateMany:!0,updateManyAndReturn:!0,updateOne:!0,upsertOne:!0};function Oo(e){return Sf[e]}var Kn=class{constructor(r){this.options=r;this.batches={}}batches;tickActive=!1;request(r){let t=this.options.batchBy(r);return t?(this.batches[t]||(this.batches[t]=[],this.tickActive||(this.tickActive=!0,process.nextTick(()=>{this.dispatchBatches(),this.tickActive=!1}))),new Promise((n,i)=>{this.batches[t].push({request:r,resolve:n,reject:i})})):this.options.singleLoader(r)}dispatchBatches(){for(let r in this.batches){let t=this.batches[r];delete this.batches[r],t.length===1?this.options.singleLoader(t[0].request).then(n=>{n instanceof Error?t[0].reject(n):t[0].resolve(n)}).catch(n=>{t[0].reject(n)}):(t.sort((n,i)=>this.options.batchOrder(n.request,i.request)),this.options.batchLoader(t.map(n=>n.request)).then(n=>{if(n instanceof Error)for(let i=0;i<t.length;i++)t[i].reject(n);else for(let i=0;i<t.length;i++){let o=n[i];o instanceof Error?t[i].reject(o):t[i].resolve(o)}}).catch(n=>{for(let i=0;i<t.length;i++)t[i].reject(n)}))}}get[Symbol.toStringTag](){return"DataLoader"}};function mr(e,r){if(r===null)return r;switch(e){case"bigint":return BigInt(r);case"bytes":{let{buffer:t,byteOffset:n,byteLength:i}=Buffer.from(r,"base64");return new Uint8Array(t,n,i)}case"decimal":return new ve(r);case"datetime":case"date":return new Date(r);case"time":return new Date(`1970-01-01T${r}Z`);case"bigint-array":return r.map(t=>mr("bigint",t));case"bytes-array":return r.map(t=>mr("bytes",t));case"decimal-array":return r.map(t=>mr("decimal",t));case"datetime-array":return r.map(t=>mr("datetime",t));case"date-array":return r.map(t=>mr("date",t));case"time-array":return r.map(t=>mr("time",t));default:return r}}function Yn(e){let r=[],t=Rf(e);for(let n=0;n<e.rows.length;n++){let i=e.rows[n],o={...t};for(let s=0;s<i.length;s++)o[e.columns[s]]=mr(e.types[s],i[s]);r.push(o)}return r}function Rf(e){let r={};for(let t=0;t<e.columns.length;t++)r[e.columns[t]]=null;return r}var Cf=N("prisma:client:request_handler"),zn=class{client;dataloader;logEmitter;constructor(r,t){this.logEmitter=t,this.client=r,this.dataloader=new Kn({batchLoader:il(async({requests:n,customDataProxyFetch:i})=>{let{transaction:o,otelParentCtx:s}=n[0],a=n.map(p=>p.protocolQuery),l=this.client._tracingHelper.getTraceParent(s),u=n.some(p=>Oo(p.protocolQuery.action));return(await this.client._engine.requestBatch(a,{traceparent:l,transaction:Af(o),containsWrite:u,customDataProxyFetch:i})).map((p,d)=>{if(p instanceof Error)return p;try{return this.mapQueryEngineResult(n[d],p)}catch(f){return f}})}),singleLoader:async n=>{let i=n.transaction?.kind==="itx"?Zl(n.transaction):void 0,o=await this.client._engine.request(n.protocolQuery,{traceparent:this.client._tracingHelper.getTraceParent(),interactiveTransaction:i,isWrite:Oo(n.protocolQuery.action),customDataProxyFetch:n.customDataProxyFetch});return this.mapQueryEngineResult(n,o)},batchBy:n=>n.transaction?.id?`transaction-${n.transaction.id}`:Yl(n.protocolQuery),batchOrder(n,i){return n.transaction?.kind==="batch"&&i.transaction?.kind==="batch"?n.transaction.index-i.transaction.index:0}})}async request(r){try{return await this.dataloader.request(r)}catch(t){let{clientMethod:n,callsite:i,transaction:o,args:s,modelName:a}=r;this.handleAndLogRequestError({error:t,clientMethod:n,callsite:i,transaction:o,args:s,modelName:a,globalOmit:r.globalOmit})}}mapQueryEngineResult({dataPath:r,unpacker:t},n){let i=n?.data,o=this.unpack(i,r,t);return process.env.PRISMA_CLIENT_GET_TIME?{data:o}:o}handleAndLogRequestError(r){try{this.handleRequestError(r)}catch(t){throw this.logEmitter&&this.logEmitter.emit("error",{message:t.message,target:r.clientMethod,timestamp:new Date}),t}}handleRequestError({error:r,clientMethod:t,callsite:n,transaction:i,args:o,modelName:s,globalOmit:a}){if(Cf(r),If(r,i))throw r;if(r instanceof z&&kf(r)){let u=Xl(r.meta);An({args:o,errors:[u],callsite:n,errorFormat:this.client._errorFormat,originalMethod:t,clientVersion:this.client._clientVersion,globalOmit:a})}let l=r.message;if(n&&(l=bn({callsite:n,originalMethod:t,isPanic:r.isPanic,showColors:this.client._errorFormat==="pretty",message:l})),l=this.sanitizeMessage(l),r.code){let u=s?{modelName:s,...r.meta}:r.meta;throw new z(l,{code:r.code,clientVersion:this.client._clientVersion,meta:u,batchRequestIdx:r.batchRequestIdx})}else{if(r.isPanic)throw new le(l,this.client._clientVersion);if(r instanceof j)throw new j(l,{clientVersion:this.client._clientVersion,batchRequestIdx:r.batchRequestIdx});if(r instanceof T)throw new T(l,this.client._clientVersion);if(r instanceof le)throw new le(l,this.client._clientVersion)}throw r.clientVersion=this.client._clientVersion,r}sanitizeMessage(r){return this.client._errorFormat&&this.client._errorFormat!=="pretty"?(0,zl.default)(r):r}unpack(r,t,n){if(!r||(r.data&&(r=r.data),!r))return r;let i=Object.keys(r)[0],o=Object.values(r)[0],s=t.filter(u=>u!=="select"&&u!=="include"),a=io(o,s),l=i==="queryRaw"?Yn(a):Tr(a);return n?n(l):l}get[Symbol.toStringTag](){return"RequestHandler"}};function Af(e){if(e){if(e.kind==="batch")return{kind:"batch",options:{isolationLevel:e.isolationLevel}};if(e.kind==="itx")return{kind:"itx",options:Zl(e)};_e(e,"Unknown transaction kind")}}function Zl(e){return{id:e.id,payload:e.payload}}function If(e,r){return Hn(e)&&r?.kind==="batch"&&e.batchRequestIdx!==r.index}function kf(e){return e.code==="P2009"||e.code==="P2012"}function Xl(e){if(e.kind==="Union")return{kind:"Union",errors:e.errors.map(Xl)};if(Array.isArray(e.selectionPath)){let[,...r]=e.selectionPath;return{...e,selectionPath:r}}return e}var eu="6.7.0";var ru=eu;var su=k(Gi());var D=class extends Error{constructor(r){super(r+`
+          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ^
+      125 | Read more at https://pris.ly/d/client-constructor`),this.name="PrismaClientConstructorValidationError"}get[Symbol.toStringTag](){return"PrismaClientConstructorValidationError"}};x(D,"PrismaClientConstructorValidationError");var tu=["datasources","datasourceUrl","errorFormat","adapter","log","transactionOptions","omit","__internal"],nu=["pretty","colorless","minimal"],iu=["info","query","warn","error"],Df={datasources:(e,{datasourceNames:r})=>{if(e){if(typeof e!="object"||Array.isArray(e))throw new D(`Invalid value ${JSON.stringify(e)} for "datasources" provided to PrismaClient constructor`);for(let[t,n]of Object.entries(e)){if(!r.includes(t)){let i=Wr(t,r)||` Available datasources: ${r.join(", ")}`;throw new D(`Unknown datasource ${t} provided to PrismaClient constructor.${i}`)}if(typeof n!="object"||Array.isArray(n))throw new D(`Invalid value ${JSON.stringify(e)} for datasource "${t}" provided to PrismaClient constructor.
+      126 | It should have this form: { url: "CONNECTION_STRING" }`);if(n&&typeof n=="object")for(let[i,o]of Object.entries(n)){if(i!=="url")throw new D(`Invalid value ${JSON.stringify(e)} for datasource "${t}" provided to PrismaClient constructor.
+      127 | It should have this form: { url: "CONNECTION_STRING" }`);if(typeof o!="string")throw new D(`Invalid value ${JSON.stringify(o)} for datasource "${t}" provided to PrismaClient constructor.
+
+      at zn.handleRequestError (src/db/generated/client/runtime/library.js:124:7459)
+      at zn.handleRequestError [as handleAndLogRequestError] (src/db/generated/client/runtime/library.js:124:6784)
+      at zn.handleAndLogRequestError [as request] (src/db/generated/client/runtime/library.js:124:6491)
+      at l (src/db/generated/client/runtime/library.js:133:9778)
+      at Object.<anonymous> (tests/integration/tournament-flow-e2e.test.ts:68:29)
+
+  ● Tournament Game Flow E2E Test › Tournament Security Validation - No Database Fields Exposed
+
+    PrismaClientKnownRequestError: 
+    Invalid `prisma.user.create()` invocation in
+    /home/aflesch/mathquest/app/backend/tests/integration/tournament-flow-e2e.test.ts:68:47
+
+      65 serverCleanup = setup.cleanup;
+      66 
+      67 // Create test teacher
+    → 68 const testTeacher = await prisma.user.create(
+    Unique constraint failed on the fields: (`email`)
+
+      122 |
+      123 | More Information: https://pris.ly/d/execute-raw
+    > 124 | `)}var Co=({clientMethod:e,activeProvider:r})=>t=>{let n="",i;if(Nn(t))n=t.sql,i={values:Gr(t.values),__prismaRawParameters__:!0};else if(Array.isArray(t)){let[o,...s]=t;n=o,i={values:Gr(s||[]),__prismaRawParameters__:!0}}else switch(r){case"sqlite":case"mysql":{n=t.sql,i={values:Gr(t.values),__prismaRawParameters__:!0};break}case"cockroachdb":case"postgresql":case"postgres":{n=t.text,i={values:Gr(t.values),__prismaRawParameters__:!0};break}case"sqlserver":{n=$l(t),i={values:Gr(t.values),__prismaRawParameters__:!0};break}default:throw new Error(`The ${r} provider does not support ${e}`)}return i?.values?Ul(`prisma.${e}(${n}, ${i.values})`):Ul(`prisma.${e}(${n})`),{query:n,parameters:i}},Ql={requestArgsToMiddlewareArgs(e){return[e.strings,...e.values]},middlewareArgsToRequestArgs(e){let[r,...t]=e;return new oe(r,t)}},Gl={requestArgsToMiddlewareArgs(e){return[e]},middlewareArgsToRequestArgs(e){return e[0]}};function Ao(e){return function(t,n){let i,o=(s=e)=>{try{return s===void 0||s?.kind==="itx"?i??=Wl(t(s)):Wl(t(s))}catch(a){return Promise.reject(a)}};return{get spec(){return n},then(s,a){return o().then(s,a)},catch(s){return o().catch(s)},finally(s){return o().finally(s)},requestTransaction(s){let a=o(s);return a.requestTransaction?a.requestTransaction(s):a},[Symbol.toStringTag]:"PrismaPromise"}}}function Wl(e){return typeof e.then=="function"?e:Promise.resolve(e)}var Pf=bi.split(".")[0],Tf={isEnabled(){return!1},getTraceParent(){return"00-10-10-00"},dispatchEngineSpans(){},getActiveContext(){},runInChildSpan(e,r){return r()}},Io=class{isEnabled(){return this.getGlobalTracingHelper().isEnabled()}getTraceParent(r){return this.getGlobalTracingHelper().getTraceParent(r)}dispatchEngineSpans(r){return this.getGlobalTracingHelper().dispatchEngineSpans(r)}getActiveContext(){return this.getGlobalTracingHelper().getActiveContext()}runInChildSpan(r,t){return this.getGlobalTracingHelper().runInChildSpan(r,t)}getGlobalTracingHelper(){let r=globalThis[`V${Pf}_PRISMA_INSTRUMENTATION`],t=globalThis.PRISMA_INSTRUMENTATION;return r?.helper??t?.helper??Tf}};function Jl(){return new Io}function Hl(e,r=()=>{}){let t,n=new Promise(i=>t=i);return{then(i){return--e===0&&t(r()),i?.(n)}}}function Kl(e){return typeof e=="string"?e:e.reduce((r,t)=>{let n=typeof t=="string"?t:t.level;return n==="query"?r:r&&(t==="info"||r==="info")?"info":n},void 0)}var Jn=class{_middlewares=[];use(r){this._middlewares.push(r)}get(r){return this._middlewares[r]}has(r){return!!this._middlewares[r]}length(){return this._middlewares.length}};var zl=k(ki());function Hn(e){return typeof e.batchRequestIdx=="number"}function Yl(e){if(e.action!=="findUnique"&&e.action!=="findUniqueOrThrow")return;let r=[];return e.modelName&&r.push(e.modelName),e.query.arguments&&r.push(ko(e.query.arguments)),r.push(ko(e.query.selection)),r.join("")}function ko(e){return`(${Object.keys(e).sort().map(t=>{let n=e[t];return typeof n=="object"&&n!==null?`(${t} ${ko(n)})`:t}).join(" ")})`}var Sf={aggregate:!1,aggregateRaw:!1,createMany:!0,createManyAndReturn:!0,createOne:!0,deleteMany:!0,deleteOne:!0,executeRaw:!0,findFirst:!1,findFirstOrThrow:!1,findMany:!1,findRaw:!1,findUnique:!1,findUniqueOrThrow:!1,groupBy:!1,queryRaw:!1,runCommandRaw:!0,updateMany:!0,updateManyAndReturn:!0,updateOne:!0,upsertOne:!0};function Oo(e){return Sf[e]}var Kn=class{constructor(r){this.options=r;this.batches={}}batches;tickActive=!1;request(r){let t=this.options.batchBy(r);return t?(this.batches[t]||(this.batches[t]=[],this.tickActive||(this.tickActive=!0,process.nextTick(()=>{this.dispatchBatches(),this.tickActive=!1}))),new Promise((n,i)=>{this.batches[t].push({request:r,resolve:n,reject:i})})):this.options.singleLoader(r)}dispatchBatches(){for(let r in this.batches){let t=this.batches[r];delete this.batches[r],t.length===1?this.options.singleLoader(t[0].request).then(n=>{n instanceof Error?t[0].reject(n):t[0].resolve(n)}).catch(n=>{t[0].reject(n)}):(t.sort((n,i)=>this.options.batchOrder(n.request,i.request)),this.options.batchLoader(t.map(n=>n.request)).then(n=>{if(n instanceof Error)for(let i=0;i<t.length;i++)t[i].reject(n);else for(let i=0;i<t.length;i++){let o=n[i];o instanceof Error?t[i].reject(o):t[i].resolve(o)}}).catch(n=>{for(let i=0;i<t.length;i++)t[i].reject(n)}))}}get[Symbol.toStringTag](){return"DataLoader"}};function mr(e,r){if(r===null)return r;switch(e){case"bigint":return BigInt(r);case"bytes":{let{buffer:t,byteOffset:n,byteLength:i}=Buffer.from(r,"base64");return new Uint8Array(t,n,i)}case"decimal":return new ve(r);case"datetime":case"date":return new Date(r);case"time":return new Date(`1970-01-01T${r}Z`);case"bigint-array":return r.map(t=>mr("bigint",t));case"bytes-array":return r.map(t=>mr("bytes",t));case"decimal-array":return r.map(t=>mr("decimal",t));case"datetime-array":return r.map(t=>mr("datetime",t));case"date-array":return r.map(t=>mr("date",t));case"time-array":return r.map(t=>mr("time",t));default:return r}}function Yn(e){let r=[],t=Rf(e);for(let n=0;n<e.rows.length;n++){let i=e.rows[n],o={...t};for(let s=0;s<i.length;s++)o[e.columns[s]]=mr(e.types[s],i[s]);r.push(o)}return r}function Rf(e){let r={};for(let t=0;t<e.columns.length;t++)r[e.columns[t]]=null;return r}var Cf=N("prisma:client:request_handler"),zn=class{client;dataloader;logEmitter;constructor(r,t){this.logEmitter=t,this.client=r,this.dataloader=new Kn({batchLoader:il(async({requests:n,customDataProxyFetch:i})=>{let{transaction:o,otelParentCtx:s}=n[0],a=n.map(p=>p.protocolQuery),l=this.client._tracingHelper.getTraceParent(s),u=n.some(p=>Oo(p.protocolQuery.action));return(await this.client._engine.requestBatch(a,{traceparent:l,transaction:Af(o),containsWrite:u,customDataProxyFetch:i})).map((p,d)=>{if(p instanceof Error)return p;try{return this.mapQueryEngineResult(n[d],p)}catch(f){return f}})}),singleLoader:async n=>{let i=n.transaction?.kind==="itx"?Zl(n.transaction):void 0,o=await this.client._engine.request(n.protocolQuery,{traceparent:this.client._tracingHelper.getTraceParent(),interactiveTransaction:i,isWrite:Oo(n.protocolQuery.action),customDataProxyFetch:n.customDataProxyFetch});return this.mapQueryEngineResult(n,o)},batchBy:n=>n.transaction?.id?`transaction-${n.transaction.id}`:Yl(n.protocolQuery),batchOrder(n,i){return n.transaction?.kind==="batch"&&i.transaction?.kind==="batch"?n.transaction.index-i.transaction.index:0}})}async request(r){try{return await this.dataloader.request(r)}catch(t){let{clientMethod:n,callsite:i,transaction:o,args:s,modelName:a}=r;this.handleAndLogRequestError({error:t,clientMethod:n,callsite:i,transaction:o,args:s,modelName:a,globalOmit:r.globalOmit})}}mapQueryEngineResult({dataPath:r,unpacker:t},n){let i=n?.data,o=this.unpack(i,r,t);return process.env.PRISMA_CLIENT_GET_TIME?{data:o}:o}handleAndLogRequestError(r){try{this.handleRequestError(r)}catch(t){throw this.logEmitter&&this.logEmitter.emit("error",{message:t.message,target:r.clientMethod,timestamp:new Date}),t}}handleRequestError({error:r,clientMethod:t,callsite:n,transaction:i,args:o,modelName:s,globalOmit:a}){if(Cf(r),If(r,i))throw r;if(r instanceof z&&kf(r)){let u=Xl(r.meta);An({args:o,errors:[u],callsite:n,errorFormat:this.client._errorFormat,originalMethod:t,clientVersion:this.client._clientVersion,globalOmit:a})}let l=r.message;if(n&&(l=bn({callsite:n,originalMethod:t,isPanic:r.isPanic,showColors:this.client._errorFormat==="pretty",message:l})),l=this.sanitizeMessage(l),r.code){let u=s?{modelName:s,...r.meta}:r.meta;throw new z(l,{code:r.code,clientVersion:this.client._clientVersion,meta:u,batchRequestIdx:r.batchRequestIdx})}else{if(r.isPanic)throw new le(l,this.client._clientVersion);if(r instanceof j)throw new j(l,{clientVersion:this.client._clientVersion,batchRequestIdx:r.batchRequestIdx});if(r instanceof T)throw new T(l,this.client._clientVersion);if(r instanceof le)throw new le(l,this.client._clientVersion)}throw r.clientVersion=this.client._clientVersion,r}sanitizeMessage(r){return this.client._errorFormat&&this.client._errorFormat!=="pretty"?(0,zl.default)(r):r}unpack(r,t,n){if(!r||(r.data&&(r=r.data),!r))return r;let i=Object.keys(r)[0],o=Object.values(r)[0],s=t.filter(u=>u!=="select"&&u!=="include"),a=io(o,s),l=i==="queryRaw"?Yn(a):Tr(a);return n?n(l):l}get[Symbol.toStringTag](){return"RequestHandler"}};function Af(e){if(e){if(e.kind==="batch")return{kind:"batch",options:{isolationLevel:e.isolationLevel}};if(e.kind==="itx")return{kind:"itx",options:Zl(e)};_e(e,"Unknown transaction kind")}}function Zl(e){return{id:e.id,payload:e.payload}}function If(e,r){return Hn(e)&&r?.kind==="batch"&&e.batchRequestIdx!==r.index}function kf(e){return e.code==="P2009"||e.code==="P2012"}function Xl(e){if(e.kind==="Union")return{kind:"Union",errors:e.errors.map(Xl)};if(Array.isArray(e.selectionPath)){let[,...r]=e.selectionPath;return{...e,selectionPath:r}}return e}var eu="6.7.0";var ru=eu;var su=k(Gi());var D=class extends Error{constructor(r){super(r+`
+          |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ^
+      125 | Read more at https://pris.ly/d/client-constructor`),this.name="PrismaClientConstructorValidationError"}get[Symbol.toStringTag](){return"PrismaClientConstructorValidationError"}};x(D,"PrismaClientConstructorValidationError");var tu=["datasources","datasourceUrl","errorFormat","adapter","log","transactionOptions","omit","__internal"],nu=["pretty","colorless","minimal"],iu=["info","query","warn","error"],Df={datasources:(e,{datasourceNames:r})=>{if(e){if(typeof e!="object"||Array.isArray(e))throw new D(`Invalid value ${JSON.stringify(e)} for "datasources" provided to PrismaClient constructor`);for(let[t,n]of Object.entries(e)){if(!r.includes(t)){let i=Wr(t,r)||` Available datasources: ${r.join(", ")}`;throw new D(`Unknown datasource ${t} provided to PrismaClient constructor.${i}`)}if(typeof n!="object"||Array.isArray(n))throw new D(`Invalid value ${JSON.stringify(e)} for datasource "${t}" provided to PrismaClient constructor.
+      126 | It should have this form: { url: "CONNECTION_STRING" }`);if(n&&typeof n=="object")for(let[i,o]of Object.entries(n)){if(i!=="url")throw new D(`Invalid value ${JSON.stringify(e)} for datasource "${t}" provided to PrismaClient constructor.
+      127 | It should have this form: { url: "CONNECTION_STRING" }`);if(typeof o!="string")throw new D(`Invalid value ${JSON.stringify(o)} for datasource "${t}" provided to PrismaClient constructor.
+
+      at zn.handleRequestError (src/db/generated/client/runtime/library.js:124:7459)
+      at zn.handleRequestError [as handleAndLogRequestError] (src/db/generated/client/runtime/library.js:124:6784)
+      at zn.handleAndLogRequestError [as request] (src/db/generated/client/runtime/library.js:124:6491)
+      at l (src/db/generated/client/runtime/library.js:133:9778)
+      at Object.<anonymous> (tests/integration/tournament-flow-e2e.test.ts:68:29)
+
