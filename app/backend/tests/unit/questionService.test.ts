@@ -1,6 +1,7 @@
 import { QuestionService, QuestionCreationData, QuestionUpdateData } from '@/core/services/questionService';
 import { prisma } from '@/db/prisma';
 import { jest } from '@jest/globals';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 // Mock the prisma client
 jest.mock('@/db/prisma', () => ({
@@ -52,7 +53,7 @@ describe('QuestionService', () => {
                 text: 'What is 2+2?',
                 answerOptions: ['4', '5'],
                 correctAnswers: [true, false],
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic', 'addition'],
                 difficulty: 1
@@ -91,7 +92,7 @@ describe('QuestionService', () => {
                 text: 'What is 2+2?',
                 answerOptions: ['4', '5'],
                 correctAnswers: [true, false],
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic']
             };
@@ -110,7 +111,7 @@ describe('QuestionService', () => {
                 text: 'What is 2+2?',
                 answerOptions: ['4', '5'],
                 correctAnswers: [true, false],
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic'],
                 createdAt: new Date(),
@@ -144,7 +145,7 @@ describe('QuestionService', () => {
                     title: 'Math Question',
                     text: 'What is 2+2?',
                     discipline: 'math',
-                    questionType: 'multiple_choice_single_answer',
+                    questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                     themes: ['arithmetic']
                 },
                 {
@@ -194,7 +195,7 @@ describe('QuestionService', () => {
                     uid: 'question-1',
                     title: 'Advanced Math',
                     discipline: 'math',
-                    questionType: 'multiple_choice_single_answer',
+                    questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                     themes: ['calculus'],
                     difficulty: 3,
                     gradeLevel: '12th Grade'
@@ -209,7 +210,7 @@ describe('QuestionService', () => {
                     difficulty: 3,
                     gradeLevel: '12th Grade',
                     tags: ['advanced'],
-                    questionType: 'multiple_choice_single_answer'
+                    questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER
                 }
             );
             expect(prisma.question.findMany).toHaveBeenCalledWith(expect.objectContaining({
@@ -219,7 +220,7 @@ describe('QuestionService', () => {
                     difficulty: 3,
                     gradeLevel: '12th Grade',
                     tags: { hasSome: ['advanced'] },
-                    questionType: 'multiple_choice_single_answer',
+                    questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                     isHidden: false
                 })
             }));
@@ -282,7 +283,7 @@ describe('QuestionService', () => {
                 text: 'What is 2+2?',
                 answerOptions: ['4', '5'],
                 correctAnswers: [true, false],
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic']
             };

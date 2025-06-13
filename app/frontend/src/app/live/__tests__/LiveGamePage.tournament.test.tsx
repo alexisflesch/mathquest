@@ -21,6 +21,7 @@ import LiveGamePage from '../[code]/page';
 import { useAuth } from '@/components/AuthProvider';
 import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
 import '@testing-library/jest-dom';
+import { QUESTION_TYPES } from '@shared/types';
 
 // Mock dependencies
 jest.mock('next/navigation');
@@ -74,7 +75,7 @@ jest.mock('@/components/QuestionCard', () => {
                 <div data-testid="question-text">{question.text}</div>
                 <div data-testid="question-progress">{questionIndex + 1} / {totalQuestions}</div>
                 <div data-testid="question-answers">
-                    {question.answers?.map((answer: string, index: number) => (
+                    {question.answerOptions?.map((answer: string, index: number) => (
                         <button
                             key={index}
                             data-testid={`answer-option-${index}`}
@@ -125,9 +126,10 @@ const createMockGameQuestionPayload = (questionData: any = {}) => ({
     question: {
         uid: 'test-question-1',
         text: 'What is 5 + 3?',
-        type: 'multiple_choice_single_answer',
-        questionType: 'multiple_choice_single_answer',
+        questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
         answerOptions: ['6', '8', '9', '10'],
+        explanation: 'Five plus three equals eight: 5 + 3 = 8',
+        correctAnswers: [false, true, false, false],
         ...questionData
     },
     timer: 15,
@@ -228,9 +230,8 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionPayload.question.uid,
                     text: questionPayload.question.text,
-                    type: questionPayload.question.type,
-                    answerOptions: questionPayload.question.answerOptions,
-                    questionType: questionPayload.question.questionType
+                    questionType: questionPayload.question.questionType,
+                    answerOptions: questionPayload.question.answerOptions
                 },
                 timer: questionPayload.timer,
                 questionIndex: questionPayload.questionIndex,
@@ -262,7 +263,7 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionPayload.question.uid,
                     text: questionPayload.question.text,
-                    type: questionPayload.question.type,
+                    questionType: questionPayload.question.questionType,
                     answers: questionPayload.question.answers,
                     answerOptions: questionPayload.question.answerOptions
                 },
@@ -300,7 +301,7 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionPayload.question.uid,
                     text: questionPayload.question.text,
-                    type: questionPayload.question.type,
+                    questionType: questionPayload.question.questionType,
                     answers: questionPayload.question.answers,
                     explanation: feedbackPayload.explanation
                 },
@@ -334,8 +335,8 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionPayload.question.uid,
                     text: questionPayload.question.text,
-                    type: questionPayload.question.type,
-                    answers: questionPayload.question.answers,
+                    questionType: questionPayload.question.questionType,
+                    answerOptions: questionPayload.question.answerOptions, // ensure answerOptions is present
                     correctAnswers: correctAnswersPayload.correctAnswers
                 },
                 phase: 'show_answers',
@@ -398,7 +399,7 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionPayload.question.uid,
                     text: questionPayload.question.text,
-                    type: questionPayload.question.type,
+                    questionType: questionPayload.question.questionType,
                     answers: questionPayload.question.answers
                 },
                 timer: null, // No timer in practice mode
@@ -436,7 +437,7 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionPayload.question.uid,
                     text: questionPayload.question.text,
-                    type: questionPayload.question.type,
+                    questionType: questionPayload.question.questionType,
                     answers: questionPayload.question.answers
                 },
                 timer: questionPayload.timer,
@@ -470,7 +471,7 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionWithAnswerOptions.question.uid,
                     text: questionWithAnswerOptions.question.text,
-                    type: questionWithAnswerOptions.question.type,
+                    questionType: questionWithAnswerOptions.question.questionType,
                     answerOptions: questionWithAnswerOptions.question.answerOptions
                 },
                 gameStatus: 'active'
@@ -487,7 +488,7 @@ describe('LiveGamePage - Tournament Mode', () => {
         // Test with answers field (legacy format)
         const questionWithAnswers = createMockGameQuestionPayload({
             answers: ['Legacy A', 'Legacy B'],
-            answerOptions: undefined // No new answerOptions field
+            answerOptions: ['Legacy A', 'Legacy B'] // Provide answerOptions for compatibility
         });
 
         (useStudentGameSocket as jest.Mock).mockReturnValue({
@@ -498,8 +499,9 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionWithAnswers.question.uid,
                     text: questionWithAnswers.question.text,
-                    type: questionWithAnswers.question.type,
-                    answers: questionWithAnswers.question.answers
+                    questionType: questionWithAnswers.question.questionType,
+                    answers: questionWithAnswers.question.answers,
+                    answerOptions: questionWithAnswers.question.answerOptions // ensure answerOptions is present
                 },
                 gameStatus: 'active'
             }
@@ -525,7 +527,7 @@ describe('LiveGamePage - Tournament Mode', () => {
                 currentQuestion: {
                     uid: questionPayload.question.uid,
                     text: questionPayload.question.text,
-                    type: questionPayload.question.type,
+                    questionType: questionPayload.question.questionType,
                     answers: questionPayload.question.answers,
                     answerOptions: questionPayload.question.answerOptions
                 },
@@ -551,7 +553,7 @@ describe('LiveGamePage - Tournament Mode', () => {
         //     expect.objectContaining({
         //         uid: 'test-question-1',
         //         text: 'What is 5 + 3?',
-        //         type: 'multiple_choice', // Changed from 'multiple_choice_single_answer'
+        //         type: QUESTION_TYPES.MULTIPLE_CHOICE_EN, // Changed from QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER
         //         answers: expect.any(Array)
         //     })
         // );

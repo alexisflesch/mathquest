@@ -4,6 +4,7 @@ import Client, { Socket as ClientSocket } from 'socket.io-client';
 import { setupSocketHandlers } from '@/sockets/index';
 import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/gameStateService';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 describe('Projector Mode Socket Handler', () => {
     jest.setTimeout(10000);
@@ -41,7 +42,7 @@ describe('Projector Mode Socket Handler', () => {
             data: {
                 title: 'Addition',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 20,
                 discipline: 'math',

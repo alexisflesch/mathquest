@@ -10,6 +10,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.mapToStandardQuestion = mapToStandardQuestion;
 exports.mapToStandardAnswer = mapToStandardAnswer;
 exports.cloneQuestion = cloneQuestion;
+const questionTypes_1 = require("../../constants/questionTypes");
 /**
  * Maps a question-like object to a standard Question object,
  * handling property name inconsistencies
@@ -19,7 +20,7 @@ function mapToStandardQuestion(input) {
     const question = {
         uid: input.uid || input.id || '',
         text: input.text || '',
-        questionType: input.type || 'choix_simple', // Use questionType as canonical field
+        questionType: input.type || questionTypes_1.QUESTION_TYPES.SINGLE_CHOICE, // Use questionType as canonical field
     }; // Cast to unknown first, then to Question
     // Handle responses/answers with consistent property names
     if (Array.isArray(input.responses)) {

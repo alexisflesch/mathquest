@@ -19,6 +19,7 @@ import { io } from 'socket.io-client';
 import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 import type { QuestionData } from '@shared/types/socketEvents';
 import { Chrono } from '@shared/types/quiz/state';
+import { QUESTION_TYPES } from '@shared/types';
 
 // --- Define QuizState locally ---
 export interface QuizState { // Export if needed by other test files, or keep local
@@ -130,7 +131,7 @@ describe('useTeacherQuizSocket State Updates', () => {
         // First, initialize quizState and questionTimers by simulating game_control_state
         const initialState: QuizState = {
             currentQuestionIdx: 0,
-            questions: [{ uid: 'q1', text: 'Q1', questionType: 'multiple_choice', answerOptions: [], correctAnswers: [], timeLimit: 20 }] as QuestionData[],
+            questions: [{ uid: 'q1', text: 'Q1', questionType: QUESTION_TYPES.MULTIPLE_CHOICE_EN, answerOptions: [], correctAnswers: [], timeLimit: 20 }] as QuestionData[],
             chrono: { timeLeftMs: 20, running: true, status: 'play' },
             locked: false,
             ended: false,

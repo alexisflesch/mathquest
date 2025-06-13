@@ -9,6 +9,7 @@ const redis_1 = require("../../src/config/redis");
 const gameStateService_1 = __importDefault(require("../../src/core/gameStateService"));
 const globals_1 = require("@jest/globals");
 const game_1 = require("../../src/sockets/handlers/game");
+const questionTypes_1 = require("@shared/constants/questionTypes");
 // Add a unique suffix for all test users/teachers to avoid unique constraint errors
 const UNIQUE = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 // Helper functions to generate unique test values
@@ -140,7 +141,7 @@ describe('Mocked Game Handler', () => {
             data: {
                 title: 'Addition',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 20,
                 discipline: 'math',
@@ -543,7 +544,7 @@ describe('Mocked Game Handler', () => {
                 data: {
                     title: 'Diff Q',
                     text: 'What is 1+1?',
-                    questionType: 'multiple_choice_single_answer',
+                    questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                     difficulty: 1,
                     timeLimit: 20,
                     discipline: 'math',

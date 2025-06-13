@@ -17,6 +17,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import QuestionCard from '@/components/QuestionCard';
+import { QUESTION_TYPES } from '@shared/types';
 import { usePracticeGameSocket } from '@/hooks/usePracticeGameSocket';
 import { Answer } from '@shared/types/question';
 
@@ -96,7 +97,7 @@ export default function PracticeSessionPage() {
         setSelectedAnswers([]);
     }, [gameState.currentQuestion?.uid]);
 
-    const isMultipleChoice = gameState.currentQuestion?.questionType === 'choix_multiple';
+    const isMultipleChoice = gameState.currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
 
     const handleSingleChoice = (idx: number) => {
         if (gameState.answered) return; // Prevent changes after answering

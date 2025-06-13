@@ -41,3 +41,5 @@ Object.defineProperty(exports, "TOURNAMENT_EVENTS", { enumerable: true, get: fun
 Object.defineProperty(exports, "LOBBY_EVENTS", { enumerable: true, get: function () { return events_1.LOBBY_EVENTS; } });
 Object.defineProperty(exports, "PROJECTOR_EVENTS", { enumerable: true, get: function () { return events_1.PROJECTOR_EVENTS; } });
 Object.defineProperty(exports, "SOCKET_EVENTS", { enumerable: true, get: function () { return events_1.SOCKET_EVENTS; } });
+// Export shared constants
+__exportStar(require("../constants"), exports);

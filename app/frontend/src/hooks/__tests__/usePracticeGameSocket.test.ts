@@ -3,6 +3,7 @@
  */
 import { renderHook, act } from '@testing-library/react';
 import { usePracticeGameSocket } from '../usePracticeGameSocket';
+import { QUESTION_TYPES } from '@shared/types';
 import { io } from 'socket.io-client';
 
 // Mock socket.io-client
@@ -129,7 +130,7 @@ describe('usePracticeGameSocket', () => {
         const questionData = {
             uid: 'question-123',
             text: 'What is 1+1?',
-            questionType: 'multiple_choice',
+            questionType: QUESTION_TYPES.MULTIPLE_CHOICE_EN,
             answerOptions: ['1', '2', '3'],
             correctAnswers: [false, true, false],
             currentQuestionIndex: 0,

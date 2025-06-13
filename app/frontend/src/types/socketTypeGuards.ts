@@ -619,8 +619,15 @@ export function isLiveQuestionPayload(data: unknown): data is LiveQuestionPayloa
     return (
         typeof q.uid === 'string' &&
         typeof q.text === 'string' &&
-        typeof q.type === 'string' &&
-        Array.isArray(q.answers) &&
+        typeof q.questionType === 'string' &&
+        Array.isArray(q.answerOptions) &&
+        // Optional fields
+        (q.explanation === undefined || typeof q.explanation === 'string') &&
+        (q.correctAnswers === undefined || Array.isArray(q.correctAnswers)) &&
+        (q.timeLimit === undefined || typeof q.timeLimit === 'number') &&
+        (q.gradeLevel === undefined || typeof q.gradeLevel === 'string') &&
+        (q.difficulty === undefined || typeof q.difficulty === 'number') &&
+        (q.themes === undefined || Array.isArray(q.themes)) &&
         (lq.timer === undefined || typeof lq.timer === 'number') &&
         (lq.questionIndex === undefined || typeof lq.questionIndex === 'number') &&
         (lq.totalQuestions === undefined || typeof lq.totalQuestions === 'number') &&

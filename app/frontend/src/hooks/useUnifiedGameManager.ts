@@ -22,6 +22,7 @@ import { useGameSocket as useSocketManager, type SocketConfig } from './useGameS
 import type { GameTimerHook } from './useGameTimer';
 import type { GameSocketHook } from './useGameSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { QUESTION_TYPES } from '@shared/types';
 import type {
     ClientToServerEvents,
     ServerToClientEvents,
@@ -444,7 +445,7 @@ function setupTournamentEvents(
                     question: {
                         uid: data.uid || data.question?.uid,
                         text: data.question || data.text,
-                        type: data.type || 'multiple_choice',
+                        type: data.type || QUESTION_TYPES.MULTIPLE_CHOICE_EN,
                         answerOptions: data.answerOptions || []
                     },
                     timer: data.remainingTime || data.timeLeftMs,

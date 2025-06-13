@@ -30,16 +30,17 @@ import { Question } from '@/types'; // Remove unused QuizState import
 import type { TournamentQuestion } from '@shared/types';
 import type { QuestionData } from '@shared/types/socketEvents';
 import { getQuestionUid } from '@shared/types/tournament/question';
+import { QUESTION_TYPES } from '@shared/types';
 
 // Helper to check if a TournamentQuestion is multiple choice
 const isQuestionMultipleChoice = (tq: TournamentQuestion | null): boolean => {
     if (!tq?.question) return false;
     if (typeof tq.question === 'string') return false;
     if (typeof tq.question === 'object' && 'type' in tq.question) {
-        return tq.question.type === 'choix_multiple';
+        return tq.question.type === QUESTION_TYPES.MULTIPLE_CHOICE;
     }
     if (typeof tq.question === 'object' && 'questionType' in tq.question) {
-        return tq.question.questionType === 'choix_multiple';
+        return tq.question.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
     }
     return false;
 };

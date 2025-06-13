@@ -10,6 +10,7 @@ import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsResponseSchema, QuizCreationResponseSchema, type QuestionsResponse, type QuizCreationResponse } from '@/types/api';
 import { Search } from 'lucide-react';
+import { QUESTION_TYPES } from '@shared/types'; // Import QUESTION_TYPES
 
 // Use canonical shared Question type directly - no more local interfaces!
 
@@ -104,7 +105,7 @@ export default function CreateQuizPage() {
                     uid: q.uid,
                     title: q.title || q.titre,
                     text: q.text || q.question,
-                    questionType: q.questionType || q.type || 'choix_simple',
+                    questionType: q.questionType || q.type || QUESTION_TYPES.SINGLE_CHOICE,
                     answerOptions,
                     correctAnswers,
                     gradeLevel: q.gradeLevel || q.level || q.niveaux,

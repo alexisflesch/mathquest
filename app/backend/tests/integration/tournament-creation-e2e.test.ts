@@ -16,6 +16,7 @@ import ClientIO from 'socket.io-client';
 import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
 import { redisClient } from '../../src/config/redis';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 // Global test variables
 let io: Server;
@@ -80,7 +81,7 @@ describe('Tournament Creation and Game Flow E2E Test', () => {
             data: {
                 title: 'Addition Simple 1',
                 text: '5 + 3 = ?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 15,
                 discipline: 'Mathématiques',
@@ -97,7 +98,7 @@ describe('Tournament Creation and Game Flow E2E Test', () => {
             data: {
                 title: 'Addition Simple 2',
                 text: '7 + 2 = ?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 15,
                 discipline: 'Mathématiques',
@@ -384,7 +385,7 @@ describe('Tournament Creation and Game Flow E2E Test', () => {
             data: {
                 title: 'Security Test Addition',
                 text: '2 + 2 = ?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 10,
                 discipline: 'Mathématiques',

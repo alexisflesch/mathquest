@@ -105,7 +105,7 @@ describe('Timer Integration Test', () => {
                 startedAt: Date.now(),
                 duration: 50000,          // Backend format: duration (not durationMs)
                 isPaused: false,
-                timeRemaining: 45000      // Backend format: timeRemaining (not timeLeftMs)
+                timeLeftMs: 45000      // Canonical: timeLeftMs only
             },
             questionUid: 'question-1'     // Backend format: questionUid (not questionUid)
         };
@@ -184,7 +184,7 @@ describe('Timer Integration Test', () => {
                 startedAt: Date.now() - 15000, // Started 15 seconds ago
                 duration: 50000,
                 isPaused: true,
-                timeRemaining: 30000
+                timeLeftMs: 30000
             },
             questionUid: 'question-1'
         };
@@ -230,7 +230,7 @@ describe('Timer Integration Test', () => {
                 startedAt: Date.now(),
                 duration: 50000,
                 isPaused: false,
-                timeRemaining: 30000
+                timeLeftMs: 30000
             },
             questionUid: 'question-1'
         };
@@ -262,7 +262,7 @@ describe('Timer Integration Test', () => {
                 startedAt: Date.now(),
                 duration: 60000,
                 isPaused: false,
-                timeRemaining: 60000 // New question, full time
+                timeLeftMs: 60000 // New question, full time
             },
             questionUid: 'question-2'
         };
@@ -308,7 +308,7 @@ describe('Timer Integration Test', () => {
                 startedAt: 0,
                 duration: 60000,
                 isPaused: true,
-                timeRemaining: 0
+                timeLeftMs: 0
             },
             questionUid: 'question-2'
         };
@@ -352,7 +352,7 @@ describe('Timer Integration Test', () => {
                 startedAt: Date.now(),
                 duration: 30000,
                 isPaused: false,
-                timeRemaining: 25000
+                timeLeftMs: 25000
             },
             questionUid: 'q1'
         };

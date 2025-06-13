@@ -9,6 +9,7 @@ const prisma_1 = require("../../src/db/prisma");
 const redis_1 = require("../../src/config/redis");
 const gameStateService_1 = __importDefault(require("../../src/core/gameStateService"));
 const jwt_1 = __importDefault(require("../helpers/jwt"));
+const questionTypes_1 = require("@shared/constants/questionTypes");
 // Global test variables
 let io;
 let clientSockets = []; // Initialize as empty array
@@ -106,7 +107,7 @@ describe('Game Handler', () => {
             data: {
                 title: 'Addition',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1, // Easy
                 timeLimit: 20,
                 discipline: 'math',
@@ -121,7 +122,7 @@ describe('Game Handler', () => {
             data: {
                 title: 'Multiplication',
                 text: 'What is 3×3?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1, // Easy
                 timeLimit: 20,
                 discipline: 'math',

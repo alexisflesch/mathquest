@@ -18,6 +18,7 @@ const socket_io_client_1 = __importDefault(require("socket.io-client"));
 const testSetup_1 = require("../testSetup");
 const prisma_1 = require("../../src/db/prisma");
 const redis_1 = require("../../src/config/redis");
+const questionTypes_1 = require("@shared/constants/questionTypes");
 // Global test variables
 let io;
 let teacherSocket;
@@ -80,7 +81,7 @@ describe('Game Flow E2E Test', () => {
             data: {
                 title: 'Basic Addition',
                 text: 'What is 5 + 3?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 15,
                 discipline: 'math',
@@ -96,7 +97,7 @@ describe('Game Flow E2E Test', () => {
             data: {
                 title: 'Simple Multiplication',
                 text: 'What is 4 × 2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 10,
                 discipline: 'math',

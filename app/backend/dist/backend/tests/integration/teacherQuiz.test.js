@@ -8,6 +8,7 @@ const socket_io_client_1 = require("socket.io-client");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken")); // For token generation
 const testSetup_1 = require("../testSetup");
 const prisma_1 = require("../../src/db/prisma");
+const questionTypes_1 = require("@shared/constants/questionTypes");
 // Utility to wait for a specific event - ensure this is robust
 function waitForEvent(socket, event, timeout = 5000) {
     return new Promise((resolve, reject) => {
@@ -76,7 +77,7 @@ describe('Teacher-driven Quiz Flow', () => {
             difficulty: 1, // Corrected: Int?
             discipline: 'math',
             gradeLevel: 'elementary',
-            questionType: 'multiple_choice_single_answer', // Added: String
+            questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER, // Added: String
             themes: ['arithmetic'], // Added example for themes as it's a required array
             // ... other question fields
         };

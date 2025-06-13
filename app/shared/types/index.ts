@@ -35,3 +35,6 @@ export {
 // Explicit exports to avoid naming conflicts
 export type { BaseQuizState, ExtendedQuizState } from './quiz/state';
 export type { TournamentState } from './tournament/state';
+
+// Export shared constants
+export * from '../constants';

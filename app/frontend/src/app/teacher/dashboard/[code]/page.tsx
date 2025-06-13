@@ -51,6 +51,7 @@ import { QuizListResponseSchema, TeacherQuizQuestionsResponseSchema, TournamentC
 import { STORAGE_KEYS } from '@/constants/auth';
 import InfinitySpin from '@/components/InfinitySpin';
 import { logTimerEvent, logTimerState, logTimerCalculation, logTimerError } from '@/utils/timerDebugLogger';
+import { QUESTION_TYPES } from '@shared/types'; // <-- Import QUESTION_TYPES
 
 // Create a logger for this component
 const logger = createLogger('TeacherDashboardPage');
@@ -305,7 +306,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
                     const processedQuestion = {
                         ...q,
-                        type: q.questionType || questionData.questionType || 'choix_simple', // Default type if not provided
+                        type: q.questionType || questionData.questionType || QUESTION_TYPES.SINGLE_CHOICE, // Default type if not provided
                         timeLimit: timeLimit, // Use standard timeLimit field only
                         feedbackWaitTime: questionData.feedbackWaitTime ?? q.feedbackWaitTime ?? 3000 // Default to 3s if null
                     };

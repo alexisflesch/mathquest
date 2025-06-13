@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useStudentGameSocket } from '../useStudentGameSocket';
 import { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
+import { QUESTION_TYPES } from '@shared/types';
 
 // Mock socket.io-client
 jest.mock('socket.io-client');
@@ -79,8 +80,10 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                questionType: 'choix_simple',
-                answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
+                questionType: QUESTION_TYPES.SINGLE_CHOICE,
+                answerOptions: ['3', '4', '5', '6'],
+                explanation: '2 + 2 = 4',
+                correctAnswers: [false, true, false, false]
             },
             timer: 30000, // ms
             questionIndex: 0,
@@ -146,8 +149,10 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                questionType: 'choix_simple',
-                answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
+                questionType: QUESTION_TYPES.SINGLE_CHOICE,
+                answerOptions: ['3', '4', '5', '6'],
+                explanation: '2 + 2 = 4',
+                correctAnswers: [false, true, false, false]
             },
             timer: 3000, // ms
             questionIndex: 0,
@@ -197,8 +202,10 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                questionType: 'choix_simple',
-                answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
+                questionType: QUESTION_TYPES.SINGLE_CHOICE,
+                answerOptions: ['3', '4', '5', '6'],
+                explanation: '2 + 2 = 4',
+                correctAnswers: [false, true, false, false]
             },
             timer: 30000, // ms
             questionIndex: 0,
@@ -249,8 +256,10 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                questionType: 'choix_simple',
-                answerOptions: ['3', '4', '5', '6'] // No correct answers - filtered for security
+                questionType: QUESTION_TYPES.SINGLE_CHOICE,
+                answerOptions: ['3', '4', '5', '6'],
+                explanation: '2 + 2 = 4',
+                correctAnswers: [false, true, false, false]
             },
             timer: 30000, // ms
             questionIndex: 0,
@@ -439,8 +448,10 @@ describe('useStudentGameSocket - Timer Management', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                questionType: 'choix_simple',
-                answerOptions: ['3', '4', '5', '6']
+                questionType: QUESTION_TYPES.SINGLE_CHOICE,
+                answerOptions: ['3', '4', '5', '6'],
+                explanation: '2 + 2 = 4',
+                correctAnswers: [false, true, false, false]
             },
             timer: 30000, // ms
             questionIndex: 0,

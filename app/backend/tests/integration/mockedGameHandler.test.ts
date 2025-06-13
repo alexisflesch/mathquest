@@ -4,6 +4,7 @@ import { redisClient } from '../../src/config/redis';
 import gameStateService from '../../src/core/gameStateService';
 import { jest } from '@jest/globals';
 import { registerGameHandlers } from '../../src/sockets/handlers/game';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 // Add a unique suffix for all test users/teachers to avoid unique constraint errors
 const UNIQUE = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -194,7 +195,7 @@ describe('Mocked Game Handler', () => {
             data: {
                 title: 'Addition',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 20,
                 discipline: 'math',
@@ -684,7 +685,7 @@ describe('Mocked Game Handler', () => {
                 data: {
                     title: 'Diff Q',
                     text: 'What is 1+1?',
-                    questionType: 'multiple_choice_single_answer',
+                    questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                     difficulty: 1,
                     timeLimit: 20,
                     discipline: 'math',

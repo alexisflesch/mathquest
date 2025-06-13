@@ -20,3 +20,4 @@ export * from './util/schemaDefinitions';
 export { TEACHER_EVENTS, GAME_EVENTS, TOURNAMENT_EVENTS, LOBBY_EVENTS, PROJECTOR_EVENTS, SOCKET_EVENTS } from './socket/events';
 export type { BaseQuizState, ExtendedQuizState } from './quiz/state';
 export type { TournamentState } from './tournament/state';
+export * from '../constants';

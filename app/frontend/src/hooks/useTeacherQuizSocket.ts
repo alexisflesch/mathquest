@@ -170,6 +170,23 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             });
         }
 
+        // Dashboard timer updated handler (for timer debug and canonical timer sync)
+        if (gameManager.socket.instance) {
+            const dashboardTimerHandler = (payload: any) => {
+                logger.debug('Received dashboard_timer_updated', payload);
+                if (payload && payload.timer && typeof payload.timer.timeLeftMs === 'number') {
+                    // Canonical: update the actual timer state in the game manager
+                    if (typeof gameManager.timer.setDuration === 'function') {
+                        gameManager.timer.setDuration(payload.timer.timeLeftMs);
+                    }
+                }
+            };
+            gameManager.socket.instance.on('dashboard_timer_updated' as keyof ServerToClientEvents, dashboardTimerHandler);
+            cleanupFunctions.push(() => {
+                gameManager.socket.instance?.off('dashboard_timer_updated' as keyof ServerToClientEvents, dashboardTimerHandler);
+            });
+        }
+
         return () => {
             cleanupFunctions.forEach(cleanup => cleanup());
         };

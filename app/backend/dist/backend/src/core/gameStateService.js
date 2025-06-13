@@ -13,6 +13,7 @@ exports.updateGameState = updateGameState;
 const redis_1 = require("@/config/redis");
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const questionTypes_1 = require("@shared/constants/questionTypes");
 ;
 // Create a service-specific logger
 const logger = (0, logger_1.default)('GameStateService');
@@ -278,7 +279,6 @@ async function getFullGameState(accessCode) {
             if (player) {
                 leaderboard.push({
                     userId,
-                    username: player.username,
                     avatarEmoji: player.avatarEmoji,
                     score
                 });
@@ -352,7 +352,7 @@ async function calculateScores(accessCode, questionUid) {
         let correctAnswerValues = [];
         // Correctly determine correctAnswerValues based on question.questionType and question.correctAnswers
         // This logic needs to be robust for different question types.
-        if (question.questionType === 'multiple_choice_single_answer' || question.questionType === 'single_correct') {
+        if (question.questionType === questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER || question.questionType === 'single_correct') {
             const correctIndex = question.correctAnswers.findIndex(ca => ca === true);
             if (correctIndex !== -1 && question.answerOptions[correctIndex] !== undefined) {
                 correctAnswerValues = [question.answerOptions[correctIndex]];

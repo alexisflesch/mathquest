@@ -122,8 +122,8 @@ export interface GameTimerUpdatePayload {
     timer: {
         /** Whether timer is paused */
         isPaused: boolean;
-        /** Time remaining in milliseconds */
-        timeRemainingMs?: number;
+        /** Time remaining in milliseconds (canonical) */
+        timeLeftMs?: number;
         /** When timer was started (timestamp) */
         startedAt?: number;
         /** Timer duration in milliseconds */

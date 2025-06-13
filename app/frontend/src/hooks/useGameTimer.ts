@@ -416,18 +416,18 @@ export function useGameTimer(
             console.warn('🚨 SYNC DEBUG: Raw backend timer data received', {
                 'gameTimerUpdate': gameTimerUpdate,
                 'gameTimerUpdate.timer': gameTimerUpdate.timer,
-                'gameTimerUpdate.timer.timeRemainingMs': gameTimerUpdate.timer?.timeRemainingMs,
+                'gameTimerUpdate.timer.timeLeftMs': gameTimerUpdate.timer?.timeLeftMs,
                 'gameTimerUpdate.timer.isPaused': gameTimerUpdate.timer?.isPaused,
-                'typeof gameTimerUpdate.timer?.timeRemainingMs': typeof gameTimerUpdate.timer?.timeRemainingMs,
+                'typeof gameTimerUpdate.timer?.timeLeftMs': typeof gameTimerUpdate.timer?.timeLeftMs,
                 'JSON.stringify(gameTimerUpdate)': JSON.stringify(gameTimerUpdate)
             });
 
             const timer = gameTimerUpdate.timer;
 
-            // Accept timeRemainingMs from backend
+            // Accept only canonical timeLeftMs from backend
             let timeLeftMs = 0;
-            if (typeof timer.timeRemainingMs === 'number') {
-                timeLeftMs = timer.timeRemainingMs;
+            if (typeof timer.timeLeftMs === 'number') {
+                timeLeftMs = timer.timeLeftMs;
             } else {
                 timeLeftMs = 0;
             }

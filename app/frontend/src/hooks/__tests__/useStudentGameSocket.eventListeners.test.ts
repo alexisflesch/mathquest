@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useStudentGameSocket, AnswerReceived } from '../useStudentGameSocket';
 import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
+import { QUESTION_TYPES } from '@shared/types';
 
 // Mock socket.io-client
 jest.mock('socket.io-client');
@@ -93,8 +94,10 @@ describe('useStudentGameSocket - Event Listeners', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
-                answerOptions: ['3', '4', '5', '6']
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
+                answerOptions: ['3', '4', '5', '6'],
+                explanation: '2 + 2 = 4',
+                correctAnswers: [false, true, false, false]
             },
             timer: 30000, // ms
             questionIndex: 0,
@@ -137,8 +140,10 @@ describe('useStudentGameSocket - Event Listeners', () => {
             question: {
                 uid: 'q1',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
-                answerOptions: ['3', '4', '5', '6']
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
+                answerOptions: ['3', '4', '5', '6'],
+                explanation: '2 + 2 = 4',
+                correctAnswers: [false, true, false, false]
             },
             timer: 30000, // ms
             questionIndex: 0,

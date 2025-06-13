@@ -5,6 +5,7 @@ import WrongAnswer from '@/components/WrongAnswer';
 import type { Question, Answer } from '@shared/types/quiz/question'; // Corrected import
 import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import type { QuestionData, TournamentQuestion } from '@shared/types/socketEvents';
+import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
 
 const logger = createLogger('QuestionCard');
@@ -112,7 +113,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     const isMultipleChoiceQuestion = React.useMemo(() => {
         if (!currentQuestion) return false;
         const t = getQuestionType(currentQuestion.question);
-        return t === 'choix_multiple';
+        return t === QUESTION_TYPES.MULTIPLE_CHOICE;
     }, [currentQuestion]);
 
     // Use either the passed prop or our computed value

@@ -5,6 +5,7 @@ import { prisma } from '../../src/db/prisma';
 import { redisClient } from '../../src/config/redis';
 import gameStateService from '../../src/core/gameStateService';
 import generateStudentToken from '../helpers/jwt';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 // Global test variables
 let io: Server;
@@ -113,7 +114,7 @@ describe('Game Handler', () => {
             data: {
                 title: 'Addition',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1, // Easy
                 timeLimit: 20,
                 discipline: 'math',
@@ -129,7 +130,7 @@ describe('Game Handler', () => {
             data: {
                 title: 'Multiplication',
                 text: 'What is 3×3?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1, // Easy
                 timeLimit: 20,
                 discipline: 'math',

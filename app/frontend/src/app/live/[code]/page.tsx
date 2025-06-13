@@ -31,6 +31,7 @@ import { makeApiRequest } from '@/config/api';
 import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import InfinitySpin from '@/components/InfinitySpin';
+import { QUESTION_TYPES } from '@shared/types';
 
 // Create a logger for this component
 const logger = createLogger('LiveGamePage');
@@ -360,7 +361,7 @@ export default function LiveGamePage() {
         const convertedQuestion: FilteredQuestion = {
             uid: gameState.currentQuestion.uid,
             text: gameState.currentQuestion.text,
-            questionType: gameState.currentQuestion.questionType || 'multiple_choice',
+            questionType: gameState.currentQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_EN,
             answerOptions: gameState.currentQuestion.answerOptions || []
         };
 

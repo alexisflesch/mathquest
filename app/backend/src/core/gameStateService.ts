@@ -1,6 +1,7 @@
 import { redisClient } from '@/config/redis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 // Define game state interface
 export interface GameState {
@@ -350,7 +351,6 @@ export async function getFullGameState(accessCode: string): Promise<{
             if (player) {
                 leaderboard.push({
                     userId,
-                    username: player.username,
                     avatarEmoji: player.avatarEmoji,
                     score
                 });
@@ -439,7 +439,7 @@ export async function calculateScores(accessCode: string, questionUid: string): 
         let correctAnswerValues: any[] = [];
         // Correctly determine correctAnswerValues based on question.questionType and question.correctAnswers
         // This logic needs to be robust for different question types.
-        if (question.questionType === 'multiple_choice_single_answer' || question.questionType === 'single_correct') {
+        if (question.questionType === QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER || question.questionType === 'single_correct') {
             const correctIndex = question.correctAnswers.findIndex(ca => ca === true);
             if (correctIndex !== -1 && question.answerOptions[correctIndex] !== undefined) {
                 correctAnswerValues = [question.answerOptions[correctIndex]];

@@ -30,6 +30,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ShoppingCart, X, Clock } from 'lucide-react';
 import Snackbar from '@/components/Snackbar';
 import InfinitySpin from '@/components/InfinitySpin';
+import { QUESTION_TYPES } from '@shared/types';
 
 // Use canonical shared Question type directly - no more local interfaces!
 
@@ -232,7 +233,7 @@ export default function CreateActivityPage() {
                         uid: q.uid,
                         title: q.title || q.titre,
                         text: q.text || q.question,
-                        questionType: q.questionType || q.type || 'choix_simple',
+                        questionType: q.questionType || q.type || QUESTION_TYPES.SINGLE_CHOICE,
                         answerOptions,
                         correctAnswers,
                         gradeLevel: q.gradeLevel || q.level || q.niveaux,

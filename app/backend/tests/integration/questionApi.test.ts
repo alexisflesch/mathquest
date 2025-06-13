@@ -20,6 +20,7 @@ import { app, setupServer } from '../../src/server';
 import { QuestionService } from '@/core/services/questionService';
 import { __setQuestionServiceForTesting } from '@/api/v1/questions';
 import { jest } from '@jest/globals';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 describe('Question API Integration Tests', () => {
     jest.setTimeout(3000);
@@ -57,7 +58,7 @@ describe('Question API Integration Tests', () => {
                 text: 'What is 2+2?',
                 answerOptions: ['4'],
                 correctAnswers: [true],
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic']
             };
@@ -124,7 +125,7 @@ describe('Question API Integration Tests', () => {
                 text: 'What is 2+2?',
                 answerOptions: [],
                 correctAnswers: [],
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic'],
                 isHidden: false,
@@ -178,7 +179,7 @@ describe('Question API Integration Tests', () => {
                 text: 'This is a hidden question',
                 answerOptions: [],
                 correctAnswers: [],
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic'],
                 gradeLevel: '6th Grade',
@@ -222,7 +223,7 @@ describe('Question API Integration Tests', () => {
                         text: 'What is 1+1?',
                         answerOptions: [],
                         correctAnswers: [],
-                        questionType: 'multiple_choice_single_answer',
+                        questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                         discipline: 'math',
                         themes: ['arithmetic'],
                         gradeLevel: '6th Grade',
@@ -244,7 +245,7 @@ describe('Question API Integration Tests', () => {
                         text: 'What is 2+2?',
                         answerOptions: [],
                         correctAnswers: [],
-                        questionType: 'multiple_choice_single_answer',
+                        questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                         discipline: 'math',
                         themes: ['arithmetic'],
                         gradeLevel: '6th Grade',
@@ -308,7 +309,7 @@ describe('Question API Integration Tests', () => {
                 text: 'What is 2+2?',
                 answerOptions: [],
                 correctAnswers: [],
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic'],
                 gradeLevel: '6th Grade',

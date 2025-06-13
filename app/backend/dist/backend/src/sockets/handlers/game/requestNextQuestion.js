@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.requestNextQuestionHandler = requestNextQuestionHandler;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const questionTypes_1 = require("@shared/constants/questionTypes");
 const logger = (0, logger_1.default)('RequestNextQuestionHandler');
 function requestNextQuestionHandler(io, socket) {
     return async (payload) => {
@@ -79,7 +80,7 @@ function requestNextQuestionHandler(io, socket) {
                     text: nextQuestion.text,
                     answerOptions: nextQuestion.answerOptions || [],
                     correctAnswers: nextQuestion.correctAnswers || [],
-                    questionType: nextQuestion.questionType || 'multiple_choice_single_answer',
+                    questionType: nextQuestion.questionType || questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                     timeLimit: nextQuestion.timeLimit || 30,
                     themes: nextQuestion.themes || [],
                     difficulty: nextQuestion.difficulty || 1,
@@ -94,7 +95,7 @@ function requestNextQuestionHandler(io, socket) {
                     question: {
                         uid: nextQuestion.uid,
                         text: nextQuestion.text,
-                        questionType: nextQuestion.questionType || 'multiple_choice_single_answer',
+                        questionType: nextQuestion.questionType || questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                         answerOptions: nextQuestion.answerOptions || []
                     },
                     timer: nextQuestion.timeLimit || 30,

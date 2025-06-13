@@ -86,7 +86,7 @@ export interface QuestionData {
     text: string;
     answerOptions: string[]; // Array of text options
     correctAnswers: boolean[]; // Array of booleans indicating correct answers (required everywhere)
-    questionType: string; // e.g., 'multiple_choice_single_answer'
+    questionType: string; // e.g., QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER
     timeLimit?: number; // Time in seconds
     currentQuestionIndex?: number; // 0-based index of the current question
     totalQuestions?: number;     // Total number of questions in the game/quiz

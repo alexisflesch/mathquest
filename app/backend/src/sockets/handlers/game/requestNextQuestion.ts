@@ -3,6 +3,7 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 import { GAME_EVENTS } from '@shared/types/socket/events';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 const logger = createLogger('RequestNextQuestionHandler');
 
@@ -94,7 +95,7 @@ export function requestNextQuestionHandler(
                     text: nextQuestion.text,
                     answerOptions: nextQuestion.answerOptions || [],
                     correctAnswers: nextQuestion.correctAnswers || [],
-                    questionType: nextQuestion.questionType || 'multiple_choice_single_answer',
+                    questionType: nextQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                     timeLimit: nextQuestion.timeLimit || 30,
                     themes: nextQuestion.themes || [],
                     difficulty: nextQuestion.difficulty || 1,
@@ -111,7 +112,7 @@ export function requestNextQuestionHandler(
                     question: {
                         uid: nextQuestion.uid,
                         text: nextQuestion.text,
-                        questionType: nextQuestion.questionType || 'multiple_choice_single_answer',
+                        questionType: nextQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                         answerOptions: nextQuestion.answerOptions || []
                     },
                     timer: nextQuestion.timeLimit || 30,

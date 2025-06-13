@@ -8,6 +8,7 @@ const testSetup_1 = require("../testSetup");
 const prisma_1 = require("../../src/db/prisma");
 const gameStateService_1 = __importDefault(require("../../src/core/gameStateService"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const questionTypes_1 = require("@shared/constants/questionTypes");
 // Helper to wait for an event with timeout
 const waitForEvent = (socket, event, timeoutMs = 10000) => {
     console.log(`Waiting for event: ${event} with timeout ${timeoutMs}ms`);
@@ -67,7 +68,7 @@ describe('Self-Paced (Practice) Mode', () => {
             data: {
                 title: 'Practice Q1',
                 text: 'What is 1+1?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 20,
                 discipline: 'math',
@@ -81,7 +82,7 @@ describe('Self-Paced (Practice) Mode', () => {
             data: {
                 title: 'Practice Q2',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 20,
                 discipline: 'math',

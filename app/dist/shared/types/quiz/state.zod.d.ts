@@ -19,14 +19,14 @@ export declare const questionTimerSchema: z.ZodObject<{
     timestamp: z.ZodNullable<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     status: "play" | "pause" | "stop";
+    timestamp: number | null;
     timeLeftMs: number;
     initialTimeMs: number;
-    timestamp: number | null;
 }, {
     status: "play" | "pause" | "stop";
+    timestamp: number | null;
     timeLeftMs: number;
     initialTimeMs: number;
-    timestamp: number | null;
 }>;
 export declare const baseQuizStateSchema: z.ZodObject<{
     questions: z.ZodArray<z.ZodAny, "many">;
@@ -47,23 +47,23 @@ export declare const baseQuizStateSchema: z.ZodObject<{
     ended: z.ZodBoolean;
     currentQuestionidx: z.ZodNullable<z.ZodOptional<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
+    locked: boolean;
     questions: any[];
     chrono: {
         running: boolean;
         timeLeftMs: number | null;
         status?: "play" | "pause" | "stop" | undefined;
     };
-    locked: boolean;
     ended: boolean;
     currentQuestionidx?: number | null | undefined;
 }, {
+    locked: boolean;
     questions: any[];
     chrono: {
         running: boolean;
         timeLeftMs: number | null;
         status?: "play" | "pause" | "stop" | undefined;
     };
-    locked: boolean;
     ended: boolean;
     currentQuestionidx?: number | null | undefined;
 }>;
@@ -106,14 +106,14 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
         timestamp: z.ZodNullable<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
         status: "play" | "pause" | "stop";
+        timestamp: number | null;
         timeLeftMs: number;
         initialTimeMs: number;
-        timestamp: number | null;
     }, {
         status: "play" | "pause" | "stop";
+        timestamp: number | null;
         timeLeftMs: number;
         initialTimeMs: number;
-        timestamp: number | null;
     }>>>;
     pauseHandled: z.ZodOptional<z.ZodNumber>;
     resumeHandled: z.ZodOptional<z.ZodNumber>;
@@ -122,17 +122,18 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
     participants: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
     askedQuestions: z.ZodOptional<z.ZodSet<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
+    locked: boolean;
     questions: any[];
     chrono: {
         running: boolean;
         timeLeftMs: number | null;
         status?: "play" | "pause" | "stop" | undefined;
     };
-    locked: boolean;
     ended: boolean;
     currentQuestionUid: string | null;
-    currentQuestionidx?: number | null | undefined;
     id?: string | undefined;
+    participants?: Record<string, any> | undefined;
+    currentQuestionidx?: number | null | undefined;
     quizId?: string | undefined;
     stats?: Record<string, any> | undefined;
     profSocketId?: string | null | undefined;
@@ -146,28 +147,28 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
     connectedSockets?: Set<string> | undefined;
     questionTimers?: Record<string, {
         status: "play" | "pause" | "stop";
+        timestamp: number | null;
         timeLeftMs: number;
         initialTimeMs: number;
-        timestamp: number | null;
     }> | undefined;
     pauseHandled?: number | undefined;
     resumeHandled?: number | undefined;
     lockedQuestions?: Record<string, boolean> | undefined;
     socketToJoueur?: Record<string, string> | undefined;
-    participants?: Record<string, any> | undefined;
     askedQuestions?: Set<string> | undefined;
 }, {
+    locked: boolean;
     questions: any[];
     chrono: {
         running: boolean;
         timeLeftMs: number | null;
         status?: "play" | "pause" | "stop" | undefined;
     };
-    locked: boolean;
     ended: boolean;
     currentQuestionUid: string | null;
-    currentQuestionidx?: number | null | undefined;
     id?: string | undefined;
+    participants?: Record<string, any> | undefined;
+    currentQuestionidx?: number | null | undefined;
     quizId?: string | undefined;
     stats?: Record<string, any> | undefined;
     profSocketId?: string | null | undefined;
@@ -181,14 +182,13 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
     connectedSockets?: Set<string> | undefined;
     questionTimers?: Record<string, {
         status: "play" | "pause" | "stop";
+        timestamp: number | null;
         timeLeftMs: number;
         initialTimeMs: number;
-        timestamp: number | null;
     }> | undefined;
     pauseHandled?: number | undefined;
     resumeHandled?: number | undefined;
     lockedQuestions?: Record<string, boolean> | undefined;
     socketToJoueur?: Record<string, string> | undefined;
-    participants?: Record<string, any> | undefined;
     askedQuestions?: Set<string> | undefined;
 }>;

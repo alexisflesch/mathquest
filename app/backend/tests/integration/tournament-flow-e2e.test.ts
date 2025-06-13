@@ -16,6 +16,7 @@ import ClientIO from 'socket.io-client';
 import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
 import { redisClient } from '../../src/config/redis';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 // Global test variables
 let io: Server;
@@ -83,7 +84,7 @@ describe('Tournament Game Flow E2E Test', () => {
                 uid: 'TEST-add-1',
                 title: 'Simple Addition 1',
                 text: 'What is 2 + 3?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'Mathématiques',
                 themes: ['addition'],
                 difficulty: 1,
@@ -96,7 +97,7 @@ describe('Tournament Game Flow E2E Test', () => {
                 uid: 'TEST-add-2',
                 title: 'Simple Addition 2',
                 text: 'What is 1 + 1?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'Mathématiques',
                 themes: ['addition'],
                 difficulty: 1,
@@ -109,7 +110,7 @@ describe('Tournament Game Flow E2E Test', () => {
                 uid: 'TEST-add-3',
                 title: 'Simple Addition 3',
                 text: 'What is 4 + 2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'Mathématiques',
                 themes: ['addition'],
                 difficulty: 1,
@@ -122,7 +123,7 @@ describe('Tournament Game Flow E2E Test', () => {
                 uid: 'TEST-add-4',
                 title: 'Simple Addition 4',
                 text: 'What is 3 + 4?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'Mathématiques',
                 themes: ['addition'],
                 difficulty: 1,
@@ -135,7 +136,7 @@ describe('Tournament Game Flow E2E Test', () => {
                 uid: 'TEST-add-5',
                 title: 'Simple Addition 5',
                 text: 'What is 5 + 3?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'Mathématiques',
                 themes: ['addition'],
                 difficulty: 1,

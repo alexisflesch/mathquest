@@ -8,6 +8,7 @@
 
 import { Question } from '../quiz/question';
 import { BaseQuestion, Answer } from '../question';
+import { QUESTION_TYPES } from '../../constants/questionTypes';
 
 // Define a QuestionLike type that encompasses the various input shapes we might receive
 export interface QuestionLike {
@@ -42,7 +43,7 @@ export function mapToStandardQuestion(input: QuestionLike): Question {
     const question: Question = {
         uid: input.uid || input.id || '',
         text: input.text || '',
-        questionType: input.type || 'choix_simple', // Use questionType as canonical field
+        questionType: input.type || QUESTION_TYPES.SINGLE_CHOICE, // Use questionType as canonical field
     } as unknown as Question; // Cast to unknown first, then to Question
 
     // Handle responses/answers with consistent property names

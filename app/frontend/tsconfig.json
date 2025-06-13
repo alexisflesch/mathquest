@@ -54,6 +54,7 @@
         "src/**/*.tsx",
         ".next/types/**/*.ts",
         "../shared/types/**/*.ts",
+        "../shared/constants/**/*.ts",
         "../shared/logger.ts",
         "../backend-backup/db/index.ts",
         "next.config.ts"

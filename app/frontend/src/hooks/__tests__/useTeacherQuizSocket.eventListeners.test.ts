@@ -19,6 +19,7 @@ import { io } from 'socket.io-client';
 import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 import type { QuestionData } from '@shared/types/socketEvents';
 import { Chrono } from '@shared/types/quiz/state';
+import { QUESTION_TYPES } from '@shared/types';
 
 // --- Define QuizState locally ---
 interface QuizState {
@@ -111,7 +112,7 @@ describe('useTeacherQuizSocket Event Listeners', () => {
         const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
         const mockState: QuizState = {
             currentQuestionIdx: 0,
-            questions: [{ uid: 'q1', text: 'Test question', questionType: 'multiple_choice', answerOptions: ['Answer 1'], correctAnswers: [true], timeLimit: 30 }] as QuestionData[],
+            questions: [{ uid: 'q1', text: 'Test question', questionType: QUESTION_TYPES.MULTIPLE_CHOICE_EN, answerOptions: ['Answer 1'], correctAnswers: [true], timeLimit: 30 }] as QuestionData[],
             chrono: { timeLeftMs: 30, running: false, status: 'stop' },
             locked: false,
             ended: false,

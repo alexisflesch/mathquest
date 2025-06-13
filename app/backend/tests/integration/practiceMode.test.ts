@@ -4,6 +4,7 @@ import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
 import gameStateService from '../../src/core/gameStateService';
 import jwt from 'jsonwebtoken';
+import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 // Helper to wait for an event with timeout
 const waitForEvent = (socket: ReturnType<typeof ClientIO>, event: string, timeoutMs = 10000): Promise<any> => {
@@ -72,7 +73,7 @@ describe('Self-Paced (Practice) Mode', () => {
             data: {
                 title: 'Practice Q1',
                 text: 'What is 1+1?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 20,
                 discipline: 'math',
@@ -86,7 +87,7 @@ describe('Self-Paced (Practice) Mode', () => {
             data: {
                 title: 'Practice Q2',
                 text: 'What is 2+2?',
-                questionType: 'multiple_choice_single_answer',
+                questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 difficulty: 1,
                 timeLimit: 20,
                 discipline: 'math',
