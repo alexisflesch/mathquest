@@ -19,6 +19,11 @@ import {
     leaderboardEntryDataSchema
 } from '@shared/types/socketEvents.zod';
 
+import {
+    timerActionPayloadSchema,
+    gameTimerUpdatePayloadSchema
+} from '@shared/types/socket/payloads.zod';
+
 const logger = createLogger('SocketValidation');
 
 /**
@@ -134,20 +139,15 @@ export const SocketSchemas = {
     joinGame: joinGamePayloadSchema,
     gameAnswer: gameAnswerPayloadSchema,
 
-    // Timer-related schemas
+    // Timer-related schemas - use appropriate schemas for each event type
     timerUpdate: z.object({
         timeLeftMs: z.number().nullable(),
         running: z.boolean(),
-        status: z.enum(['play', 'pause', 'stop']).optional(),
-        questionUid: z.string().optional()
+        durationMs: z.number().optional(),
+        questionUid: z.string().optional(),
+        status: z.enum(['play', 'pause', 'stop']).optional()
     }),
-
-    timerAction: z.object({
-        accessCode: z.string().min(1),
-        action: z.enum(['start', 'pause', 'resume', 'stop', 'set_duration']),
-        durationMs: z.number().positive().optional(),
-        questionUid: z.string().optional()
-    }),
+    timerAction: timerActionPayloadSchema,
 
     // Dashboard-specific schemas
     dashboardQuestionChanged: z.object({

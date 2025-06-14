@@ -37,9 +37,8 @@ class UserService {
                 username,
                 email,
                 role,
+                avatarEmoji: avatarEmoji || '🐼', // Default to panda emoji if not provided
             };
-            if (avatarEmoji)
-                userData.avatarEmoji = avatarEmoji;
             if (cookieId)
                 userData.studentProfile = { create: { cookieId } };
             if (password)
@@ -53,15 +52,24 @@ class UserService {
                     email: true,
                     role: true,
                     avatarEmoji: true,
+                    createdAt: true,
                 },
             });
             // Generate JWT token
             const token = jsonwebtoken_1.default.sign({ userId: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
             return {
+                success: true,
                 token,
-                user: user.email === null
-                    ? { id: user.id, username: user.username, role: user.role, avatarEmoji: user.avatarEmoji }
-                    : { id: user.id, username: user.username, role: user.role, email: user.email, avatarEmoji: user.avatarEmoji },
+                userState: user.role === 'TEACHER' ? 'teacher' : 'student',
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email || undefined,
+                    role: user.role,
+                    avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default if null
+                    createdAt: user.createdAt,
+                    updatedAt: user.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
+                },
             };
         }
         catch (error) {
@@ -83,7 +91,8 @@ class UserService {
                     email: true,
                     passwordHash: true,
                     role: true,
-                    avatarEmoji: true
+                    avatarEmoji: true,
+                    createdAt: true
                 }
             });
             if (!user || !user.passwordHash) {
@@ -95,10 +104,18 @@ class UserService {
             }
             const token = jsonwebtoken_1.default.sign({ userId: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
             return {
+                success: true,
                 token,
-                user: user.email === null
-                    ? { id: user.id, username: user.username, role: user.role, avatarEmoji: user.avatarEmoji }
-                    : { id: user.id, username: user.username, role: user.role, email: user.email, avatarEmoji: user.avatarEmoji },
+                userState: user.role === 'TEACHER' ? 'teacher' : 'student',
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email || undefined,
+                    role: user.role,
+                    avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default if null
+                    createdAt: user.createdAt,
+                    updatedAt: user.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
+                },
             };
         }
         catch (error) {
@@ -294,19 +311,25 @@ class UserService {
                     username: true,
                     email: true,
                     role: true,
-                    avatarEmoji: true
+                    avatarEmoji: true,
+                    createdAt: true
                 }
             });
             // Generate JWT token with new role
             const token = jsonwebtoken_1.default.sign({ userId: updatedUser.id, username: updatedUser.username, role: updatedUser.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
             logger.info({ userId, targetRole, email }, 'User upgraded successfully');
             return {
+                success: true,
                 token,
+                userState: updatedUser.role === 'TEACHER' ? 'teacher' : 'student',
                 user: {
                     id: updatedUser.id,
                     username: updatedUser.username,
                     email: updatedUser.email,
-                    role: updatedUser.role
+                    role: updatedUser.role,
+                    avatarEmoji: updatedUser.avatarEmoji || '🐼', // Fallback to default if null
+                    createdAt: updatedUser.createdAt,
+                    updatedAt: updatedUser.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
                 }
             };
         }

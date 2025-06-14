@@ -1,18 +1,15 @@
 /**
  * Authentication Types
  * 
- * Defines the type system for the 4-state authentication system:
- * - anonymous: No username/avatar set
- * - guest: Username/avatar set, no account
- * - student: Full student account with email/password
- * - teacher: Teacher account with admin privileges
+ * Re-exports shared authentication types and defines frontend-specific
+ * authentication context and profile interfaces.
  */
 
-export type UserState =
-    | 'anonymous'           // Non connecté, pas de pseudo/avatar
-    | 'guest'              // Pseudo/avatar définis, pas de compte
-    | 'student'            // Compte étudiant complet
-    | 'teacher'            // Compte enseignant
+// Import shared auth types instead of defining duplicates
+import type { UserState, GuestProfileData } from '@shared/types';
+
+// Re-export shared types for convenience
+export type { UserState, GuestProfileData } from '@shared/types';
 
 export interface UserProfile {
     username?: string;
@@ -60,8 +57,4 @@ export interface AuthContextType {
     requiresAuth: () => boolean;
 }
 
-export interface GuestProfileData {
-    username: string;
-    avatar: string;
-    cookieId: string;
-}
+// GuestProfileData is now imported from shared types above

@@ -5,7 +5,14 @@ import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
 import { useStudentTimer } from './useGameTimer';
 
-// Import shared types for socket events
+// Import shared types - organized by module
+import type {
+    Question,
+    PlayMode,
+    TimerStatus,
+    GameTimerState
+} from '@shared/types';
+
 import type {
     ServerToClientEvents,
     ClientToServerEvents,
@@ -19,7 +26,11 @@ import type {
     GameTimerUpdatePayload,
     GameStateUpdatePayload
 } from '@shared/types/socketEvents';
-import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+
+import type {
+    LiveQuestionPayload,
+    FilteredQuestion
+} from '@shared/types/quiz/liveQuestion';
 
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
@@ -73,21 +84,31 @@ export interface TournamentAnswerResult {
     updated?: boolean;
 }
 
-export interface GameState {
+/**
+ * Local UI state for student game interface
+ * Separate from shared GameState to maintain clear boundaries
+ */
+export interface StudentGameUIState {
+    // UI-specific game state
     currentQuestion: FilteredQuestion | null;
     questionIndex: number;
     totalQuestions: number;
-    timer: number | null;
-    timerStatus: 'play' | 'pause' | 'stop';
-    gameStatus: 'waiting' | 'active' | 'paused' | 'finished';
     answered: boolean;
     connectedToRoom: boolean;
     phase: 'question' | 'feedback' | 'show_answers';
     feedbackRemaining: number | null;
-    correctAnswers: boolean[] | null; // Backend sends boolean[], not number[]
-    gameMode?: 'tournament' | 'quiz' | 'practice';
-    linkedQuizId?: string | null;
+    correctAnswers: boolean[] | null;
     lastAnswerFeedback?: AnswerReceived | null;
+
+    // Game metadata from shared types
+    gameMode?: PlayMode;
+    linkedQuizId?: string | null;
+
+    // Timer state using shared types
+    timer: GameTimerState | null;
+
+    // Game status aligned with shared types
+    gameStatus: 'pending' | 'active' | 'paused' | 'completed';
 }
 
 export interface StudentGameSocketHookProps {
@@ -100,7 +121,7 @@ export interface StudentGameSocketHookProps {
 
 export interface StudentGameSocketHook {
     socket: Socket<ServerToClientEvents, ClientToServerEvents> | null;
-    gameState: GameState;
+    gameState: StudentGameUIState;
 
     // Connection status
     connected: boolean;
@@ -126,13 +147,12 @@ export function useStudentGameSocket({
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const [gameState, setGameState] = useState<GameState>({
+    const [gameState, setGameState] = useState<StudentGameUIState>({
         currentQuestion: null,
         questionIndex: 0,
         totalQuestions: 0,
         timer: null,
-        timerStatus: 'stop',
-        gameStatus: 'waiting',
+        gameStatus: 'pending',
         answered: false,
         connectedToRoom: false,
         phase: 'question',
@@ -151,21 +171,17 @@ export function useStudentGameSocket({
         enableLocalAnimation: true
     });
 
-    // Only use unified timer state
-    const timer = gameTimer.timerState.localTimeLeftMs || gameTimer.timerState.timeLeftMs; // ms
-    const timerStatus = gameTimer.timerState.status;
-
-    // Sync unified timer state with game state
+    // Sync unified timer state with game state using shared types
     useEffect(() => {
         setGameState(prev => ({
             ...prev,
-            timer: timer, // always ms
-            timerStatus: timerStatus,
-            gameStatus: timerStatus === 'play' ? 'active' :
-                timerStatus === 'pause' ? 'paused' :
-                    (timerStatus === 'stop' && timer === 0) ? 'waiting' : prev.gameStatus
+            timer: gameTimer.timerState, // Use complete GameTimerState
+            gameStatus: gameTimer.timerState.status === 'play' ? 'active' :
+                gameTimer.timerState.status === 'pause' ? 'paused' :
+                    gameTimer.timerState.status === 'stop' && gameTimer.timerState.timeLeftMs === 0 ? 'pending' :
+                        prev.gameStatus
         }));
-    }, [timer, timerStatus]);
+    }, [gameTimer.timerState]);
 
     // --- Socket Connection ---
     useEffect(() => {
@@ -238,7 +254,7 @@ export function useStudentGameSocket({
             setGameState(prev => ({
                 ...prev,
                 connectedToRoom: true,
-                gameStatus: payload.gameStatus === 'active' ? 'active' : 'waiting'
+                gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
             }));
         }, isGameJoinedPayload, 'game_joined'));
         socket.on('game_question', createSafeEventHandler<LiveQuestionPayload>((payload) => {
@@ -263,7 +279,7 @@ export function useStudentGameSocket({
             if (typeof data.timeLeftMs === 'number' && data.timeLeftMs !== null) {
                 setGameState(prev => ({
                     ...prev,
-                    gameStatus: data.running && !!data.timeLeftMs && data.timeLeftMs > 0 ? 'active' : 'waiting'
+                    gameStatus: data.running && !!data.timeLeftMs && data.timeLeftMs > 0 ? 'active' : 'pending'
                 }));
             }
         }, isTimerUpdatePayload, 'timer_update'));
@@ -274,7 +290,6 @@ export function useStudentGameSocket({
         socket.on('game_state_update', createSafeEventHandler<GameStateUpdatePayload>((data) => {
             setGameState(prev => ({
                 ...prev,
-                ...data,
                 currentQuestion: data.currentQuestion
                     ? {
                         uid: data.currentQuestion.uid,
@@ -282,7 +297,16 @@ export function useStudentGameSocket({
                         questionType: data.currentQuestion.questionType,
                         answerOptions: data.currentQuestion.answerOptions || []
                     }
-                    : prev.currentQuestion
+                    : prev.currentQuestion,
+                questionIndex: data.questionIndex ?? prev.questionIndex,
+                totalQuestions: data.totalQuestions ?? prev.totalQuestions,
+                gameStatus: data.status ? (
+                    data.status === 'waiting' ? 'pending' :
+                        data.status === 'finished' ? 'completed' :
+                            data.status as 'active' | 'paused'
+                ) : prev.gameStatus
+                // Don't update timer - use our timer system instead
+                // Keep existing phase and feedbackRemaining values
             }));
         }, (d): d is GameStateUpdatePayload => true, 'game_state_update'));
         socket.on('answer_received', createSafeEventHandler<AnswerReceived>((payload) => {
@@ -312,13 +336,13 @@ export function useStudentGameSocket({
                 typeof a.correct === 'boolean';
         }, 'answer_received'));
         socket.on('game_ended', () => {
-            setGameState(prev => ({ ...prev, gameStatus: 'finished', timer: null }));
+            setGameState(prev => ({ ...prev, gameStatus: 'completed', timer: null }));
         });
 
         // Add missing event listeners that backend emits
         socket.on('game_end', () => {
             logger.info('=== GAME END RECEIVED ===');
-            setGameState(prev => ({ ...prev, gameStatus: 'finished', timer: null }));
+            setGameState(prev => ({ ...prev, gameStatus: 'completed', timer: null }));
         });
 
         socket.on('correct_answers', createSafeEventHandler<CorrectAnswersPayload>((payload) => {
@@ -379,7 +403,7 @@ export function useStudentGameSocket({
 
         logger.info(`Joining game ${accessCode}`, { userId, username, isDiffered });
 
-        const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || undefined, isDiffered };
+        const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼', isDiffered };
         socket.emit('join_game', payload);
     }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
 

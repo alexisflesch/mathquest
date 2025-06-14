@@ -177,7 +177,7 @@ export default function PracticeSessionPage() {
         <div className="main-content">
             <div className="card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6">
                 <MathJaxWrapper>
-                    {gameState.gameStatus !== 'finished' && gameState.currentQuestion && (
+                    {gameState.gameStatus !== 'completed' && gameState.currentQuestion && (
                         <>
                             <QuestionCard
                                 currentQuestion={{
@@ -283,7 +283,7 @@ export default function PracticeSessionPage() {
                 </MathJaxWrapper>
 
                 {/* Practice Complete */}
-                {gameState.gameStatus === 'finished' && (
+                {gameState.gameStatus === 'completed' && (
                     <div className="w-full flex flex-col items-center gap-4 text-center p-8">
                         <h3 className="card-title text-2xl mb-2">Entraînement terminé !</h3>
                         <div className="text-2xl mb-2 font-extrabold">

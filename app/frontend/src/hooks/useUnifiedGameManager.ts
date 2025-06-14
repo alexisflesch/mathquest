@@ -21,8 +21,14 @@ import { useGameTimer, type TimerRole, type TimerState } from './useGameTimer';
 import { useGameSocket as useSocketManager, type SocketConfig } from './useGameSocket';
 import type { GameTimerHook } from './useGameTimer';
 import type { GameSocketHook } from './useGameSocket';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
-import { QUESTION_TYPES } from '@shared/types';
+
+// Consolidated shared type imports
+import {
+    SOCKET_EVENTS,
+    QUESTION_TYPES,
+    type GameTimerState
+} from '@shared/types';
+
 import type {
     ClientToServerEvents,
     ServerToClientEvents,
@@ -35,8 +41,8 @@ import { logTimerEvent, logTimerState, logTimerCalculation, logTimerError } from
 
 const logger = createLogger('useUnifiedGameManager');
 
-// --- Game State Interface ---
-export interface GameState {
+// --- Unified Game State Interface using shared types ---
+export interface UnifiedGameUIState {
     // Game identification
     gameId: string | null;
     role: TimerRole;
@@ -46,8 +52,8 @@ export interface GameState {
     connecting: boolean;
     error: string | null;
 
-    // Timer state
-    timer: TimerState;
+    // Timer state using shared types
+    timer: GameTimerState;
     isTimerRunning: boolean;
 
     // Question state
@@ -56,8 +62,8 @@ export interface GameState {
     currentQuestionData: any | null; // Full question data from backend
     totalQuestions: number;
 
-    // Game flow state
-    gameStatus: 'waiting' | 'active' | 'paused' | 'finished';
+    // Game flow state using shared status values
+    gameStatus: 'pending' | 'active' | 'paused' | 'completed';
     phase: 'question' | 'feedback' | 'results';
 
     // UI state
@@ -94,7 +100,7 @@ export interface UnifiedGameConfig {
 // --- Hook Interface ---
 export interface UnifiedGameManagerHook {
     // State
-    gameState: GameState;
+    gameState: UnifiedGameUIState;
 
     // Timer controls
     timer: {
@@ -154,7 +160,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
     const timer = useGameTimer(role, socket.socket);
 
     // --- Game State Management ---
-    const [gameState, setGameState] = useState<GameState>({
+    const [gameState, setGameState] = useState<UnifiedGameUIState>({
         gameId,
         role,
         connected: socket.socketState.connected,
@@ -166,7 +172,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
         currentQuestionIndex: null,
         currentQuestionData: null,
         totalQuestions: 0,
-        gameStatus: 'waiting',
+        gameStatus: 'pending', // Use shared status values
         phase: 'question',
         connectedCount: 1,
         answered: false
@@ -284,7 +290,7 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
 
 function setupTeacherEvents(
     socket: GameSocketHook,
-    setGameState: React.Dispatch<React.SetStateAction<GameState>>,
+    setGameState: React.Dispatch<React.SetStateAction<UnifiedGameUIState>>,
     timer: GameTimerHook,
     cleanupFunctions: (() => void)[]
 ) {
@@ -299,7 +305,7 @@ function setupTeacherEvents(
                 ...prev,
                 currentQuestionIndex: state.currentQuestionIdx,
                 totalQuestions: state.questions?.length || 0,
-                gameStatus: state.ended ? 'finished' : 'active'
+                gameStatus: state.ended ? 'completed' : 'active'
             }));
         }
     );
@@ -324,7 +330,7 @@ function setupTeacherEvents(
 
 function setupStudentEvents(
     socket: GameSocketHook,
-    setGameState: React.Dispatch<React.SetStateAction<GameState>>,
+    setGameState: React.Dispatch<React.SetStateAction<UnifiedGameUIState>>,
     timer: GameTimerHook,
     cleanupFunctions: (() => void)[]
 ) {
@@ -372,7 +378,7 @@ function setupStudentEvents(
         SOCKET_EVENTS.GAME.GAME_ENDED as keyof ServerToClientEvents,
         (results: any) => {
             logger.debug('Student received game_ended', results);
-            setGameState(prev => ({ ...prev, gameStatus: 'finished', phase: 'results' }));
+            setGameState(prev => ({ ...prev, gameStatus: 'completed', phase: 'results' }));
             timer.stop();
         }
     );
@@ -383,7 +389,7 @@ function setupStudentEvents(
 
 function setupProjectionEvents(
     socket: GameSocketHook,
-    setGameState: React.Dispatch<React.SetStateAction<GameState>>,
+    setGameState: React.Dispatch<React.SetStateAction<UnifiedGameUIState>>,
     timer: GameTimerHook,
     cleanupFunctions: (() => void)[]
 ) {
@@ -397,7 +403,7 @@ function setupProjectionEvents(
                 ...prev,
                 currentQuestionIndex: state.currentQuestionIdx,
                 totalQuestions: state.questions?.length || 0,
-                gameStatus: state.ended ? 'finished' : 'active',
+                gameStatus: state.ended ? 'completed' : 'active',
                 currentQuestionUid: state.timerQuestionUid ||
                     (state.currentQuestionIdx !== null && state.questions?.[state.currentQuestionIdx]?.uid)
             }));
@@ -410,7 +416,7 @@ function setupProjectionEvents(
 
 function setupTournamentEvents(
     socket: GameSocketHook,
-    setGameState: React.Dispatch<React.SetStateAction<GameState>>,
+    setGameState: React.Dispatch<React.SetStateAction<UnifiedGameUIState>>,
     timer: GameTimerHook,
     cleanupFunctions: (() => void)[]
 ) {
@@ -422,7 +428,7 @@ function setupTournamentEvents(
             logger.debug('Tournament received tournament_state_update', state);
             setGameState(prev => ({
                 ...prev,
-                gameStatus: state.stopped ? 'finished' : 'active',
+                gameStatus: state.stopped ? 'completed' : 'active',
                 currentQuestionUid: state.currentQuestionUid
             }));
         }
@@ -525,7 +531,7 @@ function createRoleSpecificActions(
                         accessCode: config.accessCode,
                         userId: config.userId,
                         username: config.username,
-                        avatarEmoji: config.avatarEmoji || undefined
+                        avatarEmoji: config.avatarEmoji || '🐼'
                     } as JoinGamePayload
                 );
             }
@@ -560,7 +566,7 @@ function createRoleSpecificActions(
                         accessCode: config.accessCode,
                         userId: config.userId,
                         username: config.username,
-                        avatarEmoji: config.avatarEmoji || undefined
+                        avatarEmoji: config.avatarEmoji || '🐼'
                     }
                 );
             }

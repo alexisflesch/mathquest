@@ -44,7 +44,7 @@ router.get('/:userId', optionalAuth, async (req: Request, res: Response<PublicUs
             username: user.username,
             email: user.email || undefined,
             role: user.role as any, // Type assertion for enum compatibility
-            avatarEmoji: user.avatarEmoji || undefined,
+            avatarEmoji: user.avatarEmoji || '🐼', // Fallback to default for legacy data
             createdAt: user.createdAt.toISOString(),
             updatedAt: user.createdAt.toISOString() // Use createdAt if updatedAt doesn't exist
         };

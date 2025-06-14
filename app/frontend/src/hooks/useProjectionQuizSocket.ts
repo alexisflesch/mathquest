@@ -57,7 +57,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
                     status: unifiedState.timer.status
                 },
                 locked: false,
-                ended: unifiedState.gameStatus === 'finished',
+                ended: unifiedState.gameStatus === 'completed',
                 stats: prev?.stats || {},
                 profSocketId: null,
                 timerStatus: unifiedState.timer.status,

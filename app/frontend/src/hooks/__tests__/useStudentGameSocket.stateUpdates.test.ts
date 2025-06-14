@@ -296,7 +296,7 @@ describe('useStudentGameSocket - State Updates', () => {
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
         // Initial timer status
-        expect(result.current.gameState.timerStatus).toBe('stop');
+        expect(result.current.gameState.timer?.status).toBe('stop');
 
         // Update timer to play
         act(() => {
@@ -308,7 +308,7 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timerStatus).toBe('play');
+            expect(result.current.gameState.timer?.status).toBe('play');
         });
 
         // Update timer to pause
@@ -321,7 +321,7 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timerStatus).toBe('pause');
+            expect(result.current.gameState.timer?.status).toBe('pause');
         });
 
         // Update timer to stop
@@ -334,7 +334,7 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timerStatus).toBe('stop');
+            expect(result.current.gameState.timer?.status).toBe('stop');
         });
     });
 

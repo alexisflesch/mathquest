@@ -28,23 +28,23 @@ import type {
 } from '@shared/types/socketEvents';
 import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import type { GameTimerState, PlayMode } from '@shared/types';
 
 const logger = createLogger('useEnhancedStudentGameSocket');
 
-// Enhanced game state interface
-export interface EnhancedGameState {
+// Enhanced game state interface using shared types
+export interface EnhancedStudentGameUIState {
     currentQuestion: FilteredQuestion | null;
     questionIndex: number;
     totalQuestions: number;
-    timer: number | null;
-    timerStatus: 'play' | 'pause' | 'stop';
-    gameStatus: 'waiting' | 'active' | 'paused' | 'finished';
+    timer: GameTimerState | null; // Use shared timer type
+    gameStatus: 'pending' | 'active' | 'paused' | 'completed'; // Use shared status values
     answered: boolean;
     connectedToRoom: boolean;
     phase: 'question' | 'feedback' | 'show_answers';
     feedbackRemaining: number | null;
     correctAnswers: boolean[] | null;
-    gameMode?: 'tournament' | 'quiz' | 'practice';
+    gameMode?: PlayMode; // Use shared type
     linkedQuizId?: string | null;
     validationStats?: Record<string, any>; // New: validation statistics
 }
@@ -64,7 +64,7 @@ export interface EnhancedStudentGameSocketHook {
     connected: boolean;
     connecting: boolean;
     error: string | null;
-    gameState: EnhancedGameState;
+    gameState: EnhancedStudentGameUIState;
     joinGame: () => void;
     submitAnswer: (answer: string | number | string[] | number[]) => void;
     getValidationStats: () => Record<string, { success: number; failed: number; lastError?: string }>;
@@ -85,13 +85,12 @@ export function useEnhancedStudentGameSocket({
     const [connected, setConnected] = useState(false);
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [gameState, setGameState] = useState<EnhancedGameState>({
+    const [gameState, setGameState] = useState<EnhancedStudentGameUIState>({
         currentQuestion: null,
         questionIndex: 0,
         totalQuestions: 0,
         timer: null,
-        timerStatus: 'stop',
-        gameStatus: 'waiting',
+        gameStatus: 'pending', // Use shared status values
         answered: false,
         connectedToRoom: false,
         phase: 'question',
@@ -190,7 +189,7 @@ export function useEnhancedStudentGameSocket({
             setGameState(prev => ({
                 ...prev,
                 connectedToRoom: true,
-                gameStatus: payload.gameStatus === 'active' ? 'active' : 'waiting'
+                gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
             }));
         }, SocketSchemas.gameJoined);
 
@@ -207,14 +206,12 @@ export function useEnhancedStudentGameSocket({
             }));
         }, SocketSchemas.question);
 
-        // Timer update with validation
+        // Timer update with validation - keep timer state minimal for now
         middleware.on('timer_update', (payload: TimerUpdatePayload) => {
             logger.info('✅ Validated timer_update event', payload);
-            setGameState(prev => ({
-                ...prev,
-                timer: payload.timeLeftMs,
-                timerStatus: payload.running ? 'play' : 'stop'
-            }));
+            // Note: This hook doesn't fully integrate with unified timer system yet
+            // Timer state updates should be handled by a proper timer hook
+            logger.debug('Timer update received but not processed - use unified timer system');
         }, SocketSchemas.timerUpdate);
 
         // Error handling with validation
@@ -248,7 +245,7 @@ export function useEnhancedStudentGameSocket({
             setGameState(prev => ({
                 ...prev,
                 connectedToRoom: true,
-                gameStatus: payload.gameStatus === 'active' ? 'active' : 'waiting'
+                gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
             }));
         });
 
@@ -281,7 +278,7 @@ export function useEnhancedStudentGameSocket({
             accessCode,
             userId,
             username,
-            avatarEmoji: avatarEmoji || undefined,
+            avatarEmoji: avatarEmoji || '🐼',
             isDiffered
         };
 

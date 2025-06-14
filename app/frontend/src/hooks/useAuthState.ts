@@ -55,7 +55,7 @@ export function useAuthState() {
         },
 
         getDisplayAvatar: () => {
-            return authContext.userProfile.avatar || '👤';
+            return authContext.userProfile.avatar || '�';
         },
 
         getUserRole: () => {

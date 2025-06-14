@@ -17,11 +17,16 @@ describe('User API', () => {
     describe('POST /api/v1/players/register', () => {
         it('should register a new anonymous user (no email/password)', async () => {
             mockUserService.registerUser.mockResolvedValueOnce({
+                success: true,
                 token: 'mock-token',
+                userState: 'student',
                 user: {
                     id: 'user-uuid',
                     username: 'testuser',
                     role: 'STUDENT',
+                    avatarEmoji: '🐼',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 },
             });
             const res = await request(app)
@@ -35,12 +40,17 @@ describe('User API', () => {
 
         it('should register a user with email and password', async () => {
             mockUserService.registerUser.mockResolvedValueOnce({
+                success: true,
                 token: 'mock-token',
+                userState: 'student',
                 user: {
                     id: 'user-uuid',
                     username: 'testuser',
                     email: 'user@example.com',
                     role: 'STUDENT',
+                    avatarEmoji: '🐼',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 },
             });
             const res = await request(app)
@@ -71,12 +81,17 @@ describe('User API', () => {
 
         it('should allow registration with an already taken username', async () => {
             mockUserService.registerUser.mockResolvedValueOnce({
+                success: true,
                 token: 'mock-token',
+                userState: 'student',
                 user: {
                     id: 'user-uuid',
                     username: 'existinguser',
                     email: undefined,
                     role: 'STUDENT',
+                    avatarEmoji: '🐼',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 },
             });
             const res = await request(app)

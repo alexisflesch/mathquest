@@ -368,7 +368,7 @@ export default function LiveGamePage() {
         return {
             code: typeof code === 'string' ? code : '',
             question: convertedQuestion,
-            timer: gameState.timer !== null ? gameState.timer : undefined,
+            remainingTime: gameState.timer?.timeLeftMs ? Math.ceil(gameState.timer.timeLeftMs / 1000) : undefined,
             questionIndex: gameState.questionIndex,
             totalQuestions: gameState.totalQuestions,
             questionState: gameState.gameStatus === 'paused' ? 'paused' :
@@ -378,7 +378,7 @@ export default function LiveGamePage() {
     }, [gameState, code]);    // Determine if component should be readonly (showing answers)
     const isReadonly = useMemo(() => {
         return gameState.phase === 'show_answers' ||
-            gameState.gameStatus === 'finished' ||
+            gameState.gameStatus === 'completed' ||
             (gameState.answered && gameMode === 'practice');
     }, [gameState.phase, gameState.gameStatus, gameState.answered, gameMode]);
 
@@ -409,7 +409,7 @@ export default function LiveGamePage() {
             <div className={`card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6 relative${showFeedbackOverlay ? " blur-sm" : ""}`}>
                 {/* Show timer only for tournament/quiz modes */}
                 {gameMode !== 'practice' && (
-                    <TournamentTimer timerS={gameState.timer ? Math.ceil(gameState.timer / 1000) : null} isMobile={isMobile} />
+                    <TournamentTimer timerS={gameState.timer?.timeLeftMs ? Math.ceil(gameState.timer.timeLeftMs / 1000) : null} isMobile={isMobile} />
                 )}
 
                 <MathJaxWrapper>
@@ -432,7 +432,7 @@ export default function LiveGamePage() {
                         />
                     ) : (
                         <div className="text-center text-lg text-gray-500 p-8">
-                            {gameState.gameStatus === 'finished' ?
+                            {gameState.gameStatus === 'completed' ?
                                 <>
                                     <div className="text-2xl mb-4">🎉 Jeu terminé !</div>
                                     <div>Redirection vers le classement...</div>

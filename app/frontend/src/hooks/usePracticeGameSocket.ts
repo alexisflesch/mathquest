@@ -34,17 +34,20 @@ import {
     type FeedbackEventPayload
 } from '@/types/socketTypeGuards';
 
+// Import shared types
+import type { GameTimerState } from '@shared/types';
+
 const logger = createLogger('usePracticeGameSocket');
 
 // --- Types ---
 
-export interface PracticeGameState {
+export interface PracticeGameUIState {
     currentQuestion: QuestionData | null;
     questionIndex: number;
     totalQuestions: number;
     score: number;
-    timer: number | null;
-    gameStatus: 'waiting' | 'active' | 'paused' | 'finished';
+    timer: GameTimerState | null; // Use shared timer type
+    gameStatus: 'pending' | 'active' | 'paused' | 'completed'; // Use shared status values
     answered: boolean;
     connectedToRoom: boolean;
     feedback: {
@@ -73,7 +76,7 @@ export interface PracticeGameSocketHookProps {
 
 export interface PracticeGameSocketHook {
     socket: Socket | null;
-    gameState: PracticeGameState;
+    gameState: PracticeGameUIState;
 
     // Connection status
     connected: boolean;
@@ -106,13 +109,13 @@ export function usePracticeGameSocket({
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const [gameState, setGameState] = useState<PracticeGameState>({
+    const [gameState, setGameState] = useState<PracticeGameUIState>({
         currentQuestion: null,
         questionIndex: 0,
         totalQuestions: questionLimit,
         score: 0,
         timer: null,
-        gameStatus: 'waiting',
+        gameStatus: 'pending',
         answered: false,
         connectedToRoom: false,
         feedback: null,
@@ -182,7 +185,7 @@ export function usePracticeGameSocket({
                 setGameState(prev => ({
                     ...prev,
                     connectedToRoom: true,
-                    gameStatus: payload.gameStatus === 'active' ? 'active' : 'waiting'
+                    gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
                 }));
             },
             isGameJoinedPayload,
@@ -273,7 +276,7 @@ export function usePracticeGameSocket({
                 logger.debug("Practice game ended", payload);
                 setGameState(prev => ({
                     ...prev,
-                    gameStatus: 'finished',
+                    gameStatus: 'completed',
                     timer: null,
                     score: payload.score ?? prev.score
                 }));
@@ -339,7 +342,7 @@ export function usePracticeGameSocket({
             totalQuestions: questionLimit,
             score: 0,
             timer: null,
-            gameStatus: 'waiting',
+            gameStatus: 'pending',
             answered: false,
             connectedToRoom: false,
             feedback: null,
@@ -353,7 +356,7 @@ export function usePracticeGameSocket({
             accessCode: 'PRACTICE', // Special identifier for practice mode
             userId,
             username,
-            avatarEmoji: avatarEmoji || undefined,
+            avatarEmoji: avatarEmoji || '🐼',
             isDiffered: true,
             practiceMode: true,
             practiceConfig: {
@@ -419,7 +422,7 @@ export function usePracticeGameSocket({
         // Reset local state
         setGameState(prev => ({
             ...prev,
-            gameStatus: 'finished'
+            gameStatus: 'completed'
         }));
     }, [socket, userId]);
 
@@ -441,7 +444,7 @@ export function usePracticeGameSocket({
             totalQuestions: questionLimit,
             score: 0,
             timer: null,
-            gameStatus: 'waiting',
+            gameStatus: 'pending',
             answered: false,
             connectedToRoom: false,
             feedback: null,

@@ -62,7 +62,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
                         status: unifiedState.timer.status
                     },
                     locked: prev?.locked ?? false,
-                    ended: unifiedState.gameStatus === 'finished',
+                    ended: unifiedState.gameStatus === 'completed',
                     stats: prev?.stats || {},
                     profSocketId: gameManager.socket.instance?.id || null,
                     timerStatus: unifiedState.timer.status,

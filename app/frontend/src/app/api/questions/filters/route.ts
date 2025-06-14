@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-
-// Define the response schema for filters
-const QuestionsFiltersResponseSchema = z.object({
-    gradeLevel: z.array(z.string()),
-    disciplines: z.array(z.string()),
-    themes: z.array(z.string())
-});
+import { QuestionsFiltersResponseSchema } from '@shared/types/api/schemas';
 
 export async function GET(request: NextRequest) {
     try {

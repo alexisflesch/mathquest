@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-
-// Define the response schema for count
-const QuestionsCountResponseSchema = z.object({
-    count: z.number()
-});
+import { QuestionsCountResponseSchema } from '@shared/types/api/schemas';
 
 export async function GET(request: NextRequest) {
     try {

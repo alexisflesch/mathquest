@@ -10,7 +10,7 @@ export interface User {
     id: string;
     username: string;
     email?: string;
-    avatarEmoji?: string;
+    avatarEmoji: string; // Mandatory - defaults to 🐼 panda emoji
     role: UserRole;
     cookieId?: string;
     passwordHash?: string;
@@ -23,7 +23,7 @@ export interface PublicUser {
     id: string;
     username: string;
     email?: string;
-    avatarEmoji?: string;
+    avatarEmoji: string; // Mandatory - consistent with User interface
     role: UserRole;
     createdAt: string;
     updatedAt: string;
@@ -65,7 +65,7 @@ export type UserState = 'anonymous' | 'guest' | 'student' | 'teacher';
 // Guest profile data for temporary users
 export interface GuestProfileData {
     username: string;
-    avatar: string;
+    avatar: string; // Mandatory - guests must have an avatar for display
     cookieId?: string;
 }
 

@@ -185,7 +185,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         await waitFor(() => {
             expect(result.current.gameState.timer).toBe(15000);
-            expect(result.current.gameState.timerStatus).toBe('play');
+            expect(result.current.gameState.timer?.status).toBe('play');
         });
     });
 
@@ -208,7 +208,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         await waitFor(() => {
             expect(result.current.gameState.timer).toBe(10000);
-            expect(result.current.gameState.timerStatus).toBe('pause');
+            expect(result.current.gameState.timer?.status).toBe('pause');
             expect(result.current.gameState.gameStatus).toBe('paused');
         });
     });
@@ -238,7 +238,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
 
         await waitFor(() => {
             expect(result.current.gameState.timer).toBe(20000);
-            expect(result.current.gameState.timerStatus).toBe('play');
+            expect(result.current.gameState.timer?.status).toBe('play');
         });
     });
 

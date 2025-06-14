@@ -6,7 +6,7 @@ export interface User {
     id: string;
     username: string;
     email?: string;
-    avatarEmoji?: string;
+    avatarEmoji: string;
     role: UserRole;
     cookieId?: string;
     passwordHash?: string;
@@ -17,7 +17,7 @@ export interface PublicUser {
     id: string;
     username: string;
     email?: string;
-    avatarEmoji?: string;
+    avatarEmoji: string;
     role: UserRole;
     createdAt: string;
     updatedAt: string;

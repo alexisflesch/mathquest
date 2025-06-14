@@ -90,13 +90,13 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
             id: socket.id, // Use socket ID as participant ID for now
             userId: userId,
             username: participantUsername,
-            avatar: participantAvatarEmoji || '👤', // Default avatar if none provided
+            avatar: participantAvatarEmoji || '�', // Default to panda avatar if none provided
             score: 0, // Initial score
             socketId: socket.id,
             online: true,
             joinedAt: new Date().toISOString(),
             isDeferred: false, // TODO: Determine from game instance data
-            avatarEmoji: participantAvatarEmoji // For backward compatibility
+            avatarEmoji: participantAvatarEmoji || '🐼' // For backward compatibility
         };
 
         // Create the correct GameJoinedPayload structure

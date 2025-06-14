@@ -237,7 +237,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                 id: socket.id,
                 userId, // Use userId from socket.data.user
                 username, // Use username from socket.data.user
-                avatarEmoji: avatarEmoji || payload.avatarEmoji,
+                avatarEmoji: avatarEmoji || payload.avatarEmoji || '🐼', // Default to panda if not provided
                 joinedAt: Date.now()
             };
 

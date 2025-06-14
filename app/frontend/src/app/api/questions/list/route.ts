@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-
-// Define the response schema for simple string array of UIDs
-const QuestionsListResponseSchema = z.array(z.string());
+import { QuestionsListResponseSchema } from '@shared/types/api/schemas';
 
 export async function GET(request: NextRequest) {
     try {

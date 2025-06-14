@@ -245,7 +245,16 @@ describe('useStudentGameSocket - Connection', () => {
 
         // Simulate starting a timer by setting initial state
         act(() => {
-            result.current.gameState.timer = 30;
+            // Timer is now a GameTimerState object, not a number
+            result.current.gameState.timer = {
+                status: 'play',
+                timeLeftMs: 30000,
+                durationMs: 30000,
+                questionUid: null,
+                timestamp: Date.now(),
+                localTimeLeftMs: 30000,
+                isRunning: true
+            };
         });
 
         // Disconnect should clear any timers

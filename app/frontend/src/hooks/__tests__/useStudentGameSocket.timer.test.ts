@@ -102,11 +102,11 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         await waitFor(() => {
             expect(result.current.gameState.timer).toBe(30000); // ms
-            expect(result.current.gameState.timerStatus).toBe('play');
+            expect(result.current.gameState.timer?.status).toBe('play');
         });
 
         // Debug: Log the timer state before advancing
-        console.log('Timer before advancing:', result.current.gameState.timer, result.current.gameState.timerStatus);
+        console.log('Timer before advancing:', result.current.gameState.timer, result.current.gameState.timer?.status);
 
         // Advance timer by 5 seconds
         act(() => {
@@ -115,7 +115,7 @@ describe('useStudentGameSocket - Timer Management', () => {
         });
 
         // Debug: Log the timer state after advancing
-        console.log('Timer after advancing 5s:', result.current.gameState.timer, result.current.gameState.timerStatus);
+        console.log('Timer after advancing 5s:', result.current.gameState.timer, result.current.gameState.timer?.status);
 
         await waitFor(() => {
             expect(result.current.gameState.timer).toBe(25000); // ms
@@ -297,7 +297,7 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         await waitFor(() => {
             expect(result.current.gameState.gameStatus).toBe('paused');
-            expect(result.current.gameState.timerStatus).toBe('pause');
+            expect(result.current.gameState.timer?.status).toBe('pause');
         });
 
         // Advance time - timer should not change when paused
@@ -348,7 +348,7 @@ describe('useStudentGameSocket - Timer Management', () => {
 
         await waitFor(() => {
             expect(result.current.gameState.gameStatus).toBe('active');
-            expect(result.current.gameState.timerStatus).toBe('play');
+            expect(result.current.gameState.timer?.status).toBe('play');
         });
 
         // Timer should now countdown

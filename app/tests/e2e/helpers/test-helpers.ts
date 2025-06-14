@@ -88,7 +88,7 @@ export class TestDataHelper {
                 email: userData.email,
                 password: userData.password,
                 role: 'STUDENT',
-                avatar: userData.avatarEmoji || '🐱' // Use a valid animal emoji
+                avatar: userData.avatarEmoji || '�' // Use panda emoji as default
             }
         });
 
@@ -104,7 +104,7 @@ export class TestDataHelper {
             ...userData,
             id: result.user?.id || result.userId,
             defaultMode: 'student',
-            avatarEmoji: userData.avatarEmoji || '🐱'
+            avatarEmoji: userData.avatarEmoji || '�'
         };
     }
 
@@ -258,13 +258,12 @@ export class LoginHelper {
         const allInputs = await this.page.locator('input').all();
         console.log(`🔍 Found ${allInputs.length} input fields after switching to Compte tab`);
 
-        for (let i = 0; i < allInputs.length; i++) {
-            const input = allInputs[i];
-            const defaultMode = await input.getAttribute('defaultMode') || 'text';
-            const name = await input.getAttribute('name') || 'unnamed';
-            const testId = await input.getAttribute('data-testid') || 'no-testid';
-            console.log(`  Input ${i}: type="${defaultMode", name="${name}", testid="${testId}"`);
-        }
+        // for (let i = 0; i < allInputs.length; i++) {
+        //     const input = allInputs[i];
+        //     const defaultMode = await input.getAttribute('defaultMode') || 'text';
+        //     const name = await input.getAttribute('name') || 'unnamed';
+        //     const testId = await input.getAttribute('data-testid') || 'no-testid';
+        // }
 
         // Try to find email input with multiple selectors
         const emailInput = this.page.locator('input[type="email"], input[name="email"], [data-testid="email-input"], input').first();

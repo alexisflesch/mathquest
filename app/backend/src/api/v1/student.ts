@@ -76,6 +76,11 @@ async function handleStudentJoin(req: Request, res: Response<RegisterResponse | 
             avatarEmoji: avatar
         });
 
+        if (!result.user || !result.token) {
+            res.status(500).json({ error: 'Student registration failed' });
+            return;
+        }
+
         logger.info('Student registered successfully', {
             username,
             avatar,
@@ -91,8 +96,11 @@ async function handleStudentJoin(req: Request, res: Response<RegisterResponse | 
             user: {
                 id: result.user.id,
                 username: result.user.username,
-                avatar: avatar,
-                role: result.user.role
+                avatar: result.user.avatarEmoji, // Use the actual avatarEmoji
+                role: result.user.role,
+                email: result.user.email,
+                // createdAt: result.user.createdAt,
+                // updatedAt: result.user.updatedAt
             }
         });
     } catch (error) {

@@ -138,9 +138,9 @@ export function joinGameHandler(
                 id: joinResult.participant.id,
                 userId: joinResult.participant.userId,
                 username: username || 'Unknown',
-                avatar: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '😀', // Use parameter first, then fallback
+                avatar: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '�', // Use parameter first, then user avatar, then default
                 score: joinResult.participant.score ?? 0, // Ensure it's always a number
-                avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji, // Use parameter first, then fallback
+                avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼', // Use parameter first, then user avatar, then default
                 joinedAt: (joinResult.participant as any).joinedAt ?
                     (typeof (joinResult.participant as any).joinedAt === 'string' ?
                         (joinResult.participant as any).joinedAt :
@@ -165,9 +165,9 @@ export function joinGameHandler(
                     id: joinResult.participant.id,
                     userId: joinResult.participant.userId,
                     username: username || 'Unknown',
-                    avatar: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '😀',
+                    avatar: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '�',
                     score: joinResult.participant.score ?? 0, // Ensure it's always a number
-                    avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || undefined,
+                    avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼',
                     joinedAt: (joinResult.participant as any).joinedAt ?
                         (typeof (joinResult.participant as any).joinedAt === 'string' ?
                             (joinResult.participant as any).joinedAt :
@@ -188,9 +188,9 @@ export function joinGameHandler(
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
                         username: username || 'Unknown',
-                        avatar: (joinResult.participant as any).user?.avatarEmoji || '😀',
+                        avatar: (joinResult.participant as any).user?.avatarEmoji || '�',
                         score: joinResult.participant.score ?? 0, // Ensure it's always a number
-                        avatarEmoji: (joinResult.participant as any).user?.avatarEmoji || undefined,
+                        avatarEmoji: (joinResult.participant as any).user?.avatarEmoji || '🐼',
                         online: true
                     }
                 };
@@ -279,9 +279,9 @@ export function joinGameHandler(
                     id: p.id,
                     userId: p.userId,
                     username: p.user?.username || 'Unknown',
-                    avatar: p.user?.avatarEmoji || '😀',
+                    avatar: p.user?.avatarEmoji || '�',
                     score: p.score ?? 0,
-                    avatarEmoji: p.user?.avatarEmoji || undefined,
+                    avatarEmoji: p.user?.avatarEmoji || '🐼',
                     joinedAt: p.joinedAt ? (typeof p.joinedAt === 'string' ? p.joinedAt : p.joinedAt.toISOString()) : new Date().toISOString(),
                     online: true,
                     socketId: undefined // Not tracked here

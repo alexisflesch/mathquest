@@ -22,11 +22,16 @@ describe('Teacher Authentication API', () => {
             // Mock getUserByEmail to throw error (user not found - which is expected for new registration)
             mockUserService.getUserByEmail.mockRejectedValueOnce(new Error('User not found'));
             mockUserService.registerUser.mockResolvedValueOnce({
+                success: true,
+                userState: 'teacher',
                 user: {
                     id: 'teacher-uuid',
                     username: 'testteacher',
                     email: 'test@example.com',
-                    role: 'TEACHER'
+                    role: 'TEACHER',
+                    avatarEmoji: '🐼',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 },
                 token: 'mock-jwt-token'
             });
@@ -53,11 +58,16 @@ describe('Teacher Authentication API', () => {
     describe('POST /api/v1/auth (teacher_login)', () => {
         it('should login a teacher and return a token', async () => {
             mockUserService.loginUser.mockResolvedValueOnce({
+                success: true,
+                userState: 'teacher',
                 user: {
                     id: 'teacher-uuid',
                     username: 'testteacher',
                     email: 'test@example.com',
-                    role: 'TEACHER'
+                    role: 'TEACHER',
+                    avatarEmoji: '🐼',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 },
                 token: 'mock-jwt-token'
             });

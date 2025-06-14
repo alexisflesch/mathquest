@@ -192,7 +192,7 @@ function registerLobbyHandlers(io, socket) {
                 id: socket.id,
                 userId, // Use userId from socket.data.user
                 username, // Use username from socket.data.user
-                avatarEmoji: avatarEmoji || payload.avatarEmoji,
+                avatarEmoji: avatarEmoji || payload.avatarEmoji || '🐼', // Default to panda if not provided
                 joinedAt: Date.now()
             };
             await redis_1.redisClient.hset(`${LOBBY_KEY_PREFIX}${accessCode}`, socket.id, JSON.stringify(participant));

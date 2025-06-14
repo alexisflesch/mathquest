@@ -72,6 +72,10 @@ async function handleUniversalLogin(req, res) {
             password,
         });
         // Return appropriate response format based on user role
+        if (!result.user || !result.token) {
+            res.status(401).json({ error: 'Authentication failed' });
+            return;
+        }
         if (result.user.role === client_1.UserRole.TEACHER) {
             // Set teacher token cookie for middleware
             res.cookie('teacherToken', result.token, {
@@ -86,10 +90,9 @@ async function handleUniversalLogin(req, res) {
                 enseignant: {
                     id: result.user.id,
                     username: result.user.username
-                },
-                enseignantId: result.user.id,
+                }, enseignantId: result.user.id,
                 username: result.user.username,
-                avatar: result.user.avatarEmoji || (0, avatarUtils_1.getRandomAvatar)(),
+                avatar: result.user.avatarEmoji, // avatarEmoji is now mandatory
                 cookie_id: `teacher_${result.user.id}_${Date.now()}`,
                 token: result.token,
                 role: 'TEACHER'
@@ -110,7 +113,7 @@ async function handleUniversalLogin(req, res) {
                     id: result.user.id,
                     email: result.user.email,
                     username: result.user.username,
-                    avatar: result.user.avatarEmoji || (0, avatarUtils_1.getRandomAvatar)(),
+                    avatar: result.user.avatarEmoji, // avatarEmoji is now mandatory
                     role: 'STUDENT'
                 },
                 token: result.token,
@@ -131,7 +134,7 @@ async function handleUniversalLogin(req, res) {
                     id: result.user.id,
                     email: result.user.email,
                     username: result.user.username,
-                    avatar: result.user.avatarEmoji || (0, avatarUtils_1.getRandomAvatar)(),
+                    avatar: result.user.avatarEmoji, // avatarEmoji is now mandatory
                     role: result.user.role
                 },
                 token: result.token,
@@ -165,6 +168,10 @@ async function handleTeacherLogin(req, res) {
             email,
             password,
         });
+        if (!result.user || !result.token) {
+            res.status(401).json({ error: 'Authentication failed' });
+            return;
+        }
         if (result.user.role !== client_1.UserRole.TEACHER) {
             res.status(403).json({ error: 'Not a teacher account' });
             return;
@@ -185,7 +192,7 @@ async function handleTeacherLogin(req, res) {
             },
             enseignantId: result.user.id,
             username: result.user.username,
-            avatar: (0, avatarUtils_1.getRandomAvatar)(), // Use random animal emoji avatar
+            avatar: result.user.avatarEmoji, // Use user's avatar instead of random
             cookie_id: `teacher_${result.user.id}_${Date.now()}`,
             token: result.token
         });
@@ -245,6 +252,10 @@ async function handleTeacherRegister(req, res) {
             role: client_1.UserRole.TEACHER,
             avatarEmoji: validatedAvatar,
         });
+        if (!result.user || !result.token) {
+            res.status(500).json({ error: 'Registration failed' });
+            return;
+        }
         // Set teacher token cookie for middleware
         res.cookie('teacherToken', result.token, {
             httpOnly: true,
@@ -364,6 +375,10 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
             cookieId,
             avatarEmoji: validatedAvatar
         });
+        if (!result.user || !result.token) {
+            res.status(500).json({ error: 'Registration failed' });
+            return;
+        }
         logger.info('User registered successfully', {
             userId: result.user.id,
             username,
@@ -496,6 +511,10 @@ router.post('/upgrade', (0, validation_1.validateRequestBody)(schemas_1.UpgradeA
             password,
             targetRole: targetRole
         });
+        if (!result.user || !result.token) {
+            res.status(500).json({ error: 'User upgrade failed' });
+            return;
+        }
         logger.info('User upgraded successfully', {
             userId: existingUser.id,
             username: existingUser.username,
