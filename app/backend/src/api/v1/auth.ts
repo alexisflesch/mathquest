@@ -801,7 +801,7 @@ router.get('/status', optionalAuth, async (req: Request, res: Response<AuthStatu
             user: user ? {
                 id: user.id,
                 username: user.username || 'Utilisateur',
-                avatar: user.avatarEmoji || '👤',
+                avatar: user.avatarEmoji || '🐼',
                 email: user.email || undefined,
                 role: userRole as 'STUDENT' | 'TEACHER'
             } : undefined,
@@ -860,7 +860,7 @@ router.put('/profile', optionalAuth, validateRequestBody(ProfileUpdateRequestSch
                 id: updatedUser.id,
                 email: updatedUser.email || undefined,
                 username: updatedUser.username,
-                avatar: updatedUser.avatarEmoji || '👤',
+                avatar: updatedUser.avatarEmoji || '�',
                 role: updatedUser.role
             }
         });

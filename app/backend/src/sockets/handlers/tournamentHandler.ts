@@ -131,6 +131,8 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
                 status: 'active', // Set to active so clients joining live room see it as active
                 currentQuestionIndex: -1, // Indicate that countdown is happening before Q0
                 questionUids: actualQuestions.map(q => q.uid),
+                answersLocked: false, // Default to unlocked
+                gameMode: 'tournament', // Tournament mode
                 timer: {
                     status: 'pause', // Paused during countdown
                     timeLeftMs: 0,

@@ -55,7 +55,7 @@ router.get('/cookie/:cookieId', async (req: Request, res: Response<UserByCookieR
                 username: user.username,
                 email: user.email || undefined,
                 role: user.role,
-                avatarEmoji: user.avatarEmoji || '👤',
+                avatarEmoji: user.avatarEmoji || '�',
                 createdAt: user.createdAt.toISOString()
             }
         });

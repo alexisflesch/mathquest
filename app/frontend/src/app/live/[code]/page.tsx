@@ -270,21 +270,21 @@ export default function LiveGamePage() {
         setShowFeedbackOverlay(false); // Hide feedback when question changes
     }, [currentQuestionUid]);
 
-    // Determine game mode for display
+    // Get game mode directly from game state (now mandatory) and map to component mode
     const gameMode = useMemo(() => {
-        // Practice mode: differed=true and typically no linkedQuizId
-        if (isDiffered && !gameState.linkedQuizId) {
-            return 'practice';
+        const playMode = gameState.gameMode;
+        // Map PlayMode to component-expected mode types
+        switch (playMode) {
+            case 'practice':
+                return 'practice';
+            case 'quiz':
+            case 'class': // Map class mode to quiz for component compatibility
+                return 'quiz';
+            case 'tournament':
+            default:
+                return 'tournament';
         }
-        // Quiz mode: has linkedQuizId (teacher-controlled)
-        else if (gameState.linkedQuizId) {
-            return 'quiz';
-        }
-        // Tournament mode: live competition
-        else {
-            return 'tournament';
-        }
-    }, [isDiffered, gameState.linkedQuizId]);
+    }, [gameState.gameMode]);
 
     // Helper: is multiple choice
     const isMultipleChoice = useMemo(() => {

@@ -119,11 +119,11 @@ export interface GameState {
     /** Timestamp when game started */
     startedAt?: number;
     /** Whether answers are currently locked */
-    answersLocked?: boolean;
+    answersLocked: boolean;
     /** Timer state using shared timer interface */
     timer: import('./timer').GameTimerState;
     /** Game mode for this instance */
-    gameMode?: PlayMode;
+    gameMode: PlayMode;
     /** Linked quiz/template ID if applicable */
     linkedQuizId?: string | null;
     /** Game configuration settings */

@@ -162,7 +162,7 @@ export async function getGameControlState(gameId: string | undefined, userId: st
             currentQuestionUid,
             questions,
             timer: mapBackendTimerToCore(gameState.timer),
-            answersLocked: gameState.answersLocked ?? false,
+            answersLocked: gameState.answersLocked,
             participantCount,
             answerStats
         };

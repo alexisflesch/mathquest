@@ -25,30 +25,10 @@ import { Share2 } from "lucide-react";
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { GameState } from '@shared/types/core/game';
 import { makeApiRequest } from '@/config/api';
 import { getSocketAuth } from '@/utils';
 import InfinitySpin from '@/components/InfinitySpin';
-
-// Game state interface for lobby status checking
-interface GameState {
-    status?: string;
-    currentQuestionIndex?: number;
-    participants?: Array<{
-        id: string;
-        username: string;
-        avatar?: string;
-        score?: number;
-    }>;
-    timer?: {
-        timeLeftMs?: number;
-        running: boolean;
-    };
-    question?: {
-        uid: string;
-        text: string;
-        defaultMode: string;
-    };
-}
 
 // Tournament status response interface
 interface TournamentStatusResponse {
