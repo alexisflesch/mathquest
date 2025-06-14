@@ -14,7 +14,6 @@ const redis_1 = require("@/config/redis");
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const questionTypes_1 = require("@shared/constants/questionTypes");
-;
 // Create a service-specific logger
 const logger = (0, logger_1.default)('GameStateService');
 // Redis key prefixes

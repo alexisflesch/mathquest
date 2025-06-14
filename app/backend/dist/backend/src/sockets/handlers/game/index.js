@@ -45,6 +45,7 @@ const disconnect_1 = require("./disconnect");
 const requestNextQuestion_1 = require("./requestNextQuestion");
 const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('GameHandlers');
 function registerGameHandlers(io, socket) {
     logger.info({ socketId: socket.id }, 'Registering game handlers');
@@ -56,9 +57,27 @@ function registerGameHandlers(io, socket) {
     socket.on('disconnect', (0, disconnect_1.disconnectHandler)(io, socket));
     // Direct handler for start_game in practice mode
     socket.on(events_1.GAME_EVENTS.START_GAME, async (payload) => {
-        logger.info({ socketId: socket.id, payload }, 'Start game event received');
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.startGamePayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid startGame payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid startGame payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit(events_1.GAME_EVENTS.GAME_ERROR, errorPayload);
+            return;
+        }
+        const { accessCode, userId } = parseResult.data;
+        logger.info({ socketId: socket.id, accessCode, userId }, 'Start game event received');
         try {
-            const { accessCode, userId } = payload;
             const prismaInstance = (await Promise.resolve().then(() => __importStar(require('@/db/prisma')))).prisma;
             const gameInstance = await prismaInstance.gameInstance.findUnique({
                 where: { accessCode },

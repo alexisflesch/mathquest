@@ -98,3 +98,45 @@ export interface GameInstanceUpdateData {
     startedAt?: Date | null; // Allow null for Prisma compatibility
     endedAt?: Date | null; // Allow null for Prisma compatibility
 }
+
+/**
+ * Game state interface for runtime game management
+ * Used to track active game state in Redis and memory
+ */
+export interface GameState {
+    /** Database ID of the game instance */
+    gameId: string;
+    /** Access code for joining the game */
+    accessCode: string;
+    /** Current status of the game */
+    status: 'pending' | 'active' | 'paused' | 'completed';
+    /** Index of the current question being displayed */
+    currentQuestionIndex: number;
+    /** Array of question UIDs in order */
+    questionUids: string[];
+    /** Data of the current question (sent to clients) */
+    questionData?: any;
+    /** Timestamp when game started */
+    startedAt?: number;
+    /** Whether answers are currently locked */
+    answersLocked?: boolean;
+    /** Timer state using shared timer interface */
+    timer: import('./timer').GameTimerState;
+    /** Game mode for this instance */
+    gameMode?: PlayMode;
+    /** Linked quiz/template ID if applicable */
+    linkedQuizId?: string | null;
+    /** Game configuration settings */
+    settings: {
+        /** Multiplier for question time limits */
+        timeMultiplier: number;
+        /** Whether to show leaderboard between questions */
+        showLeaderboard: boolean;
+    };
+}
+
+/**
+ * Game status enumeration
+ * Represents the current lifecycle state of a game instance
+ */
+export type GameStatus = 'pending' | 'active' | 'paused' | 'completed' | 'archived';

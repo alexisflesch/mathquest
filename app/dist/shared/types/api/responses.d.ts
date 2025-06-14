@@ -180,7 +180,7 @@ export interface QuestionUidsResponse {
     total: number;
 }
 export interface QuestionFiltersResponse {
-    niveaux: (string | null)[];
+    gradeLevel: (string | null)[];
     disciplines: string[];
     themes: string[];
 }

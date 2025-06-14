@@ -12,6 +12,7 @@ import type {
     DashboardQuestionChangedPayload,
     DashboardTimerUpdatedPayload
 } from '@shared/types/socket/dashboardPayloads';
+import { timerActionPayloadSchema } from '@shared/types/socketEvents.zod';
 
 // Create a handler-specific logger
 const logger = createLogger('TimerActionHandler');
@@ -20,20 +21,58 @@ const logger = createLogger('TimerActionHandler');
 const gameInstanceService = new GameInstanceService();
 
 export function timerActionHandler(io: SocketIOServer, socket: Socket) {
-    return async (payload: TimerActionPayload) => {
+    return async (payload: any) => {
+        // Runtime validation with Zod
+        const parseResult = timerActionPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid timerAction payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid timerAction payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
+            return;
+        }
+
+        const validPayload = parseResult.data;
         logger.warn('🔥 CRITICAL DEBUG: Backend timer action received', {
-            payload,
-            'payload.questionUid': payload.questionUid,
-            'payload.questionUid type': typeof payload.questionUid,
-            'payload.questionUid length': payload.questionUid ? payload.questionUid.length : 'null/undefined',
-            'payload.action': payload.action,
-            'payload.gameId': payload.gameId,
-            'JSON.stringify(payload)': JSON.stringify(payload)
+            payload: validPayload,
+            'payload.questionUid': validPayload.questionUid,
+            'payload.questionUid type': typeof validPayload.questionUid,
+            'payload.questionUid length': validPayload.questionUid ? validPayload.questionUid.length : 'null/undefined',
+            'payload.action': validPayload.action,
+            'payload.accessCode': validPayload.accessCode,
+            'JSON.stringify(payload)': JSON.stringify(validPayload)
         });
 
-        logger.info({ payload }, 'Received quiz_timer_action event');
-        // Only support gameId, do not allow quizId for timer actions
-        const { gameId, action, durationMs, questionUid } = payload;
+        logger.info({ payload: validPayload }, 'Received quiz_timer_action event');
+
+        // Look up game instance by access code
+        const { accessCode, action, duration, questionUid } = validPayload;
+        const gameInstance = await prisma.gameInstance.findUnique({
+            where: { accessCode }
+        });
+
+        if (!gameInstance) {
+            logger.warn({ accessCode }, 'Game instance not found');
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
+                code: 'GAME_NOT_FOUND',
+                message: 'Game not found',
+            } as ErrorPayload);
+            return;
+        }
+
+        const gameId = gameInstance.id;
+        const durationMs = duration; // Use duration from schema
         const userId = socket.data?.userId || socket.data?.user?.userId;
 
         logger.warn('🔥 CRITICAL DEBUG: Destructured backend values', {

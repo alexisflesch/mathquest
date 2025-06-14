@@ -36,16 +36,15 @@ describe('GameInstanceService', () => {
         it('should create a game instance successfully', async () => {
             const mockGameData = {
                 name: 'Test Game',
+                accessCode: 'ABC123',
+                status: 'pending',
                 gameTemplateId: 'quiz-123',
                 playMode: 'quiz',
                 settings: { timeLimit: 30 }
             };
             const mockCreatedGame = {
                 id: 'game-123',
-                initiatorUserId: mockuserId, // was 
-                accessCode: 'ABC123',
-                status: 'pending',
-                currentQuestionIndex: null,
+                initiatorUserId: mockuserId,
                 ...mockGameData,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -78,6 +77,8 @@ describe('GameInstanceService', () => {
         it('should handle errors during game instance creation', async () => {
             const mockGameData = {
                 name: 'Test Game',
+                accessCode: 'XYZ789',
+                status: 'pending',
                 gameTemplateId: 'quiz-123',
                 playMode: 'quiz'
             };

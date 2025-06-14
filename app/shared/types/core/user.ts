@@ -58,3 +58,23 @@ export interface UserUpgradeData {
     password: string;
     targetRole: UserRole;
 }
+
+// Authentication state types for frontend
+export type UserState = 'anonymous' | 'guest' | 'student' | 'teacher';
+
+// Guest profile data for temporary users
+export interface GuestProfileData {
+    username: string;
+    avatar: string;
+    cookieId?: string;
+}
+
+// Authentication response interface
+export interface AuthResponse {
+    success: boolean;
+    user?: User;
+    userState: UserState;
+    token?: string;
+    error?: string;
+    message?: string;
+}

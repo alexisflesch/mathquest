@@ -1,8 +1,6 @@
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
-
-// Define PlayMode type to match Prisma schema
-export type PlayMode = 'quiz' | 'tournament' | 'practice';
+import { PlayMode } from '@shared/types/core';
 
 // Create a service-specific logger
 const logger = createLogger('gameTemplateService');

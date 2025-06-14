@@ -75,6 +75,16 @@ export interface GameTimerState {
     timestamp: number | null;
     /** Local countdown time for smooth UI updates in milliseconds */
     localTimeLeftMs: number | null;
+    /** Whether timer is currently running/active */
+    isRunning?: boolean;
+    /** Display format preference for UI */
+    displayFormat?: 'mm:ss' | 'ss' | 'ms';
+    /** Whether to show milliseconds in UI */
+    showMilliseconds?: boolean;
+    /** Timestamp when timer was started */
+    startedAt?: number;
+    /** Timestamp when timer was paused */
+    pausedAt?: number;
 }
 
 /**

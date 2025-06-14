@@ -7,6 +7,7 @@ import { requestNextQuestionHandler } from './requestNextQuestion';
 import { GAME_EVENTS } from '@shared/types/socket/events';
 import createLogger from '@/utils/logger';
 import type { ErrorPayload } from '@shared/types/socketEvents';
+import { startGamePayloadSchema } from '@shared/types/socketEvents.zod';
 
 const logger = createLogger('GameHandlers');
 
@@ -21,12 +22,32 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
     socket.on('disconnect', disconnectHandler(io, socket));
 
     // Direct handler for start_game in practice mode
-    socket.on(GAME_EVENTS.START_GAME, async (payload) => {
-        logger.info({ socketId: socket.id, payload }, 'Start game event received');
+    socket.on(GAME_EVENTS.START_GAME, async (payload: any) => {
+        // Runtime validation with Zod
+        const parseResult = startGamePayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid startGame payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid startGame payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit(GAME_EVENTS.GAME_ERROR, errorPayload);
+            return;
+        }
+
+        const { accessCode, userId } = parseResult.data;
+        logger.info({ socketId: socket.id, accessCode, userId }, 'Start game event received');
 
         try {
-            const { accessCode, userId } = payload;
-
             const prismaInstance = (await import('@/db/prisma')).prisma;
             const gameInstance = await prismaInstance.gameInstance.findUnique({
                 where: { accessCode },

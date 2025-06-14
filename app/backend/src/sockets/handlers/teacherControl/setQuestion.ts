@@ -11,6 +11,7 @@ import type {
     DashboardGameStatusChangedPayload,
     DashboardQuestionChangedPayload
 } from '@shared/types/socket/dashboardPayloads';
+import { setQuestionPayloadSchema } from '@shared/types/socketEvents.zod';
 
 // Create a handler-specific logger
 const logger = createLogger('SetQuestionHandler');
@@ -19,12 +20,74 @@ const logger = createLogger('SetQuestionHandler');
 const gameInstanceService = new GameInstanceService();
 
 export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
-    return async (payload: SetQuestionPayload, callback?: (data: any) => void) => {
-        const { gameId, questionUid, questionIndex } = payload;
+    return async (payload: any, callback?: (data: any) => void) => {
+        // Runtime validation with Zod
+        const parseResult = setQuestionPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid setQuestion payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid setQuestion payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
+            if (callback) {
+                callback({
+                    success: false,
+                    error: 'Invalid payload format'
+                });
+            }
+            return;
+        }
+
+        const validPayload = parseResult.data;
+        const { accessCode, questionUid, questionIndex } = validPayload;
+        let callbackCalled = false;
+
+        // Look up game instance by access code
+        const gameInstance = await prisma.gameInstance.findUnique({
+            where: { accessCode },
+            include: {
+                gameTemplate: {
+                    include: {
+                        questions: {
+                            include: {
+                                question: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!gameInstance) {
+            logger.warn({ accessCode }, 'Game instance not found');
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
+                code: 'GAME_NOT_FOUND',
+                message: 'Game not found',
+            } as ErrorPayload);
+            if (callback && !callbackCalled) {
+                callbackCalled = true;
+                callback({
+                    success: false,
+                    error: 'Game not found'
+                });
+            }
+            return;
+        }
+
+        const gameId = gameInstance.id;
         const userId = socket.data?.userId || socket.data?.user?.userId;
         const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
         let effectiveuserId = userId;
-        let callbackCalled = false;
         if (!effectiveuserId) {
             const testuserId = socket.handshake.auth.userId;
             if (testuserId && socket.handshake.auth.userType === 'teacher') {

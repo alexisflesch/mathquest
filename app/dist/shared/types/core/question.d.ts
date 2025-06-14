@@ -90,6 +90,7 @@ export interface QuestionCreationPayload {
     tags?: string[];
     timeLimit?: number;
     author?: string;
+    isHidden?: boolean;
 }
 /**
  * Question update payload

@@ -1,6 +1,7 @@
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { Prisma } from '@prisma/client';
+import { PlayMode } from '@shared/types/core';
 
 const logger = createLogger('GameTemplateService');
 
@@ -33,8 +34,6 @@ export interface GameTemplateUpdateData {
     defaultMode?: string;
     questions?: any[];
 }
-
-type PlayMode = 'quiz' | 'tournament' | 'practice';
 
 export class GameTemplateService {
     /**

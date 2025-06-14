@@ -3,44 +3,12 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import { UserRole, UserRegistrationData, UserLoginData, UserUpgradeData, AuthResponse } from '@shared/types/core';
 
 const logger = createLogger('UserService');
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret';
 const JWT_EXPIRES_IN = '24h';
-
-export type UserRole = 'STUDENT' | 'TEACHER';
-
-export interface UserRegistrationData {
-    username: string;
-    email?: string;
-    password?: string;
-    role: UserRole;
-    cookieId?: string;
-    avatarEmoji?: string;
-}
-
-export interface UserLoginData {
-    email: string;
-    password: string;
-}
-
-export interface AuthResponse {
-    token: string;
-    user: {
-        id: string;
-        username: string;
-        email?: string;
-        role: UserRole;
-        avatarEmoji?: string | null;
-    };
-}
-
-export interface UserUpgradeData {
-    email: string;
-    password: string;
-    targetRole: UserRole;
-}
 
 export class UserService {
     /**

@@ -10,6 +10,7 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const roomUtils_1 = require("@/sockets/utils/roomUtils");
 const participantCountUtils_1 = require("@/sockets/utils/participantCountUtils");
 const events_1 = require("@shared/types/socket/events");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('LobbyHandler');
 // Redis key prefixes
@@ -82,8 +83,25 @@ function stopGameStatusCheck(accessCode) {
 function registerLobbyHandlers(io, socket) {
     // Join a game lobby
     socket.on(events_1.LOBBY_EVENTS.JOIN_LOBBY, async (payload) => {
-        // const { accessCode, userId, username, avatarEmoji } = payload; // Original
-        const { accessCode } = payload; // Only take accessCode from payload
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.joinLobbyPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid joinLobby payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid joinLobby payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, errorPayload);
+            return;
+        }
+        const { accessCode } = parseResult.data;
         const { userId, username, avatarEmoji } = socket.data.user || {}; // Get user details from authenticated socket data
         logger.info({ accessCode, userId, username, socketId: socket.id }, 'Player joining lobby');
         if (!userId || !username) {
@@ -174,7 +192,7 @@ function registerLobbyHandlers(io, socket) {
                 id: socket.id,
                 userId, // Use userId from socket.data.user
                 username, // Use username from socket.data.user
-                avatarEmoji: avatarEmoji || payload.avatarEmoji, // Use avatarEmoji from socket.data.user or fallback to payload
+                avatarEmoji: avatarEmoji || payload.avatarEmoji,
                 joinedAt: Date.now()
             };
             await redis_1.redisClient.hset(`${LOBBY_KEY_PREFIX}${accessCode}`, socket.id, JSON.stringify(participant));
@@ -231,7 +249,25 @@ function registerLobbyHandlers(io, socket) {
     });
     // Leave a game lobby
     socket.on(events_1.LOBBY_EVENTS.LEAVE_LOBBY, async (payload) => {
-        const { accessCode } = payload;
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.leaveLobbyPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid leaveLobby payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid leaveLobby payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, errorPayload);
+            return;
+        }
+        const { accessCode } = parseResult.data;
         logger.info({ accessCode, socketId: socket.id }, 'Player leaving lobby');
         try {
             // Leave the lobby room
@@ -280,7 +316,25 @@ function registerLobbyHandlers(io, socket) {
     });
     // Request current participants list
     socket.on(events_1.LOBBY_EVENTS.GET_PARTICIPANTS, async (payload) => {
-        const { accessCode } = payload;
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.getParticipantsPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid getParticipants payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid getParticipants payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, errorPayload);
+            return;
+        }
+        const { accessCode } = parseResult.data;
         logger.debug({ accessCode, socketId: socket.id }, 'Getting lobby participants');
         try {
             // Make sure socket is joined to the lobby room

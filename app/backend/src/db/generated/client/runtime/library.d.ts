@@ -208,7 +208,7 @@ declare const ColumnTypeEnum: {
 };
 
 declare type CompactedBatchResponse = {
-    defaultMode: 'compacted';
+    type: 'compacted';
     plan: object;
     arguments: Record<string, {}>[];
     nestedSelection: string[];
@@ -1144,7 +1144,7 @@ declare type Error_2 = {
     id: number;
 } | {
     kind: 'UnsupportedNativeDataType';
-    defaultMode: string;
+    type: string;
 } | {
     kind: 'InvalidIsolationLevel';
     level: string;
@@ -1390,7 +1390,7 @@ declare type Field = ReadonlyDeep_2<{
      * Describes the data type in the same the way it is defined in the Prisma schema:
      * BigInt, Boolean, Bytes, DateTime, Decimal, Float, Int, JSON, String, $ModelName
      */
-    defaultMode: string;
+    type: string;
     /**
      * Native database type, if specified.
      * For example, `@db.VarChar(191)` is encoded as `['VarChar', ['191']]`,
@@ -1820,7 +1820,7 @@ declare type HrTime_2 = [number, number];
 
 declare type Index = ReadonlyDeep_2<{
     model: string;
-    defaultMode: IndexType;
+    type: IndexType;
     isDefinedOnField: boolean;
     name?: string;
     dbName?: string;
@@ -2338,7 +2338,7 @@ export declare type ModelQueryOptionsCbArgs = {
 };
 
 declare type MultiBatchResponse = {
-    defaultMode: 'multi';
+    type: 'multi';
     plans: object[];
 };
 
@@ -2824,7 +2824,7 @@ declare type RawResponse = {
 };
 
 declare type RawTaggedValue = {
-    $defaultMode: 'Raw';
+    $type: 'Raw';
     value: unknown;
 };
 
@@ -3539,7 +3539,7 @@ export declare type TypeMapDef = Record<any, any>;
 
 declare type TypeRef<AllowedLocations extends FieldLocation> = {
     isList: boolean;
-    defaultMode: string;
+    type: string;
     location: AllowedLocations;
     namespace?: FieldNamespace;
 };

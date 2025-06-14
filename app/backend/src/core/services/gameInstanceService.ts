@@ -1,21 +1,12 @@
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import { PlayMode, GameInstanceCreationData, GameState, GameStatus } from '@shared/types/core';
+
+// Re-export for backward compatibility
+export { GameInstanceCreationData } from '@shared/types/core';
 
 // Create a service-specific logger
 const logger = createLogger('GameInstanceService');
-
-// Define the play mode type to match the Prisma schema
-export type PlayMode = 'quiz' | 'tournament' | 'practice';
-
-// Define possible game statuses
-export type GameStatus = 'pending' | 'active' | 'paused' | 'completed' | 'archived';
-
-export interface GameInstanceCreationData {
-    name: string;
-    gameTemplateId: string;
-    playMode: PlayMode;
-    settings?: Record<string, any>;
-}
 
 export interface GameStatusUpdateData {
     status: GameStatus;

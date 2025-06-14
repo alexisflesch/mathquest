@@ -26,7 +26,7 @@ import type { TimerRole, TimerState } from './useGameTimer';
 
 const logger = createLogger('useGameSocket');
 
-// --- Socket Role Configuration ---
+// --- Socket Configuration ---
 export interface SocketConfig {
     role: TimerRole;
     autoConnect?: boolean;

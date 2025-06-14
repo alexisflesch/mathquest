@@ -44,18 +44,30 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = require("@/core/gameStateService");
 const redis_1 = require("@/config/redis");
 const events_1 = require("@shared/types/socket/events");
-// TODO: Import or define types for:
-// - answer_feedback
-// - participant_joined
-// - feedback
-// - correct_answers
-// - leaderboard_update (already present)
-// - GAME_PARTICIPANTS
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('SharedLiveHandler');
 function registerSharedLiveHandlers(io, socket) {
     const joinHandler = async (payload) => {
-        const { accessCode, userId, username, avatarEmoji } = payload;
-        let { playMode } = payload;
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.sharedJoinPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid join payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid join payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit('game_error', errorPayload);
+            return;
+        }
+        const { accessCode, userId, username, avatarEmoji } = parseResult.data;
+        let { playMode } = parseResult.data;
         // Determine playMode if not provided
         if (!playMode) {
             try {
@@ -236,8 +248,30 @@ function registerSharedLiveHandlers(io, socket) {
         logger.info({ accessCode, userId, playMode }, 'Participant joined live room via sharedLiveHandler');
     };
     const answerHandler = async (payload) => {
-        const { accessCode, userId, questionUid, answer, timeSpent } = payload;
-        let { playMode } = payload;
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.sharedAnswerPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid answer payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid answer payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit('answer_feedback', {
+                status: 'error',
+                code: 'VALIDATION_ERROR',
+                message: 'Format de réponse invalide.'
+            });
+            return;
+        }
+        const { accessCode, userId, questionUid, answer, timeSpent } = parseResult.data;
+        let { playMode } = parseResult.data;
         logger.info({ accessCode, userId, questionUid, answer, timeSpent, receivedPlayMode: playMode, socketId: socket.id }, '[SHARED_LIVE_HANDLER] game_answer received');
         if (!playMode) {
             try {
@@ -364,10 +398,12 @@ function registerSharedLiveHandlers(io, socket) {
             if (question.correctAnswers && Array.isArray(question.correctAnswers)) {
                 // Example for multiple choice where answer is an index or array of indices
                 if (Array.isArray(answer)) { // multiple answers possible
-                    isCorrect = JSON.stringify(answer.sort()) === JSON.stringify(question.correctAnswers.sort());
+                    isCorrect = JSON.stringify(answer.sort()) === JSON.stringify(question.correctAnswers.map((_, idx) => question.correctAnswers[idx] ? idx : null).filter(x => x !== null).sort());
                 }
-                else { // single answer
-                    isCorrect = question.correctAnswers.includes(answer);
+                else { // single answer (index)
+                    if (typeof answer === 'number' && answer >= 0 && answer < question.correctAnswers.length) {
+                        isCorrect = question.correctAnswers[answer] === true;
+                    }
                 }
             }
             else if (question.correctAnswers) { // single correct answer not in an array
@@ -402,12 +438,26 @@ function registerSharedLiveHandlers(io, socket) {
         }
     };
     socket.on(events_1.GAME_EVENTS.REQUEST_PARTICIPANTS, async (payload) => {
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.requestParticipantsPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid requestParticipants payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            socket.emit(events_1.GAME_EVENTS.GAME_PARTICIPANTS, { participants: [] });
+            return;
+        }
+        const { accessCode } = parseResult.data;
         try {
-            const participants = await redis_1.redisClient.hvals(`mathquest:game:participants:${payload.accessCode}`);
+            const participants = await redis_1.redisClient.hvals(`mathquest:game:participants:${accessCode}`);
             socket.emit(events_1.GAME_EVENTS.GAME_PARTICIPANTS, { participants: participants.map(p => JSON.parse(p)) });
         }
         catch (error) {
-            logger.error({ accessCode: payload.accessCode, error }, 'Error fetching participants');
+            logger.error({ accessCode, error }, 'Error fetching participants');
             socket.emit(events_1.GAME_EVENTS.GAME_PARTICIPANTS, { participants: [] });
         }
     });

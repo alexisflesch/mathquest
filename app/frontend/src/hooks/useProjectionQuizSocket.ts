@@ -47,7 +47,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
         const unifiedState = gameManager.gameState;
 
         if (unifiedState.gameId) {
-            setGameState(prev => ({
+            setGameState((prev: QuizState | null) => ({
                 currentQuestionidx: unifiedState.currentQuestionIndex,
                 currentQuestionUid: unifiedState.currentQuestionUid || null,
                 questions: prev?.questions || [],
@@ -84,7 +84,7 @@ export function useProjectionQuizSocket(gameId: string | null, tournamentCode: s
             const projectorStateHandler = (...args: unknown[]) => {
                 const state = args[0] as any;
                 logger.debug('Received projector_state', state);
-                setGameState(prev => ({
+                setGameState((prev: QuizState | null) => ({
                     ...prev,
                     ...state,
                     chrono: {

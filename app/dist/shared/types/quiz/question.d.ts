@@ -19,5 +19,8 @@ export interface Question extends BaseQuestion {
     title?: string;
     answerOptions?: string[];
     correctAnswers?: boolean[];
+    timeLimit?: number | null;
+    feedbackWaitTime?: number | null;
+    time?: number;
     answers: Answer[];
 }

@@ -36,6 +36,7 @@ export type { AnswerSubmissionPayload as GameAnswerPayload } from './core';
 export interface ErrorPayload {
     message: string;
     code?: string | number; // Optional error code
+    details?: Record<string, any>; // Optional error details for validation errors
 }
 
 // Payload for when a player has already played/completed a differed game

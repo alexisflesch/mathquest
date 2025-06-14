@@ -9,6 +9,7 @@ const gameStateService_1 = require("@/core/gameStateService");
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('ProjectorHandler');
 /**
  * Handles projector mode socket events for a given gameId.
@@ -19,7 +20,26 @@ function projectorHandler(io, socket) {
      * Join projector room for a specific gameId
      * @param gameId - The database ID of the GameInstance
      */
-    socket.on(events_1.PROJECTOR_EVENTS.JOIN_PROJECTOR, async (gameId) => {
+    socket.on(events_1.PROJECTOR_EVENTS.JOIN_PROJECTOR, async (payload) => {
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.joinProjectorPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid joinProjector payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid joinProjector payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit('projector_error', errorPayload);
+            return;
+        }
+        const { gameId } = parseResult.data;
         const room = `projector_${gameId}`;
         await socket.join(room);
         logger.info(`Projector joined room: ${room}`);
@@ -46,7 +66,26 @@ function projectorHandler(io, socket) {
     /**
      * Leave projector room
      */
-    socket.on(events_1.PROJECTOR_EVENTS.LEAVE_PROJECTOR, (gameId) => {
+    socket.on(events_1.PROJECTOR_EVENTS.LEAVE_PROJECTOR, (payload) => {
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.leaveProjectorPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid leaveProjector payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid leaveProjector payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit('projector_error', errorPayload);
+            return;
+        }
+        const { gameId } = parseResult.data;
         const room = `projector_${gameId}`;
         socket.leave(room);
         logger.info(`Projector left room: ${room}`);

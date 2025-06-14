@@ -7,11 +7,36 @@ exports.startTimerHandler = startTimerHandler;
 const prisma_1 = require("@/db/prisma");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const logger_1 = __importDefault(require("@/utils/logger"));
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('StartTimerHandler');
 function startTimerHandler(io, socket) {
     return async (payload, callback) => {
-        const { duration, gameId, accessCode } = payload;
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.startTimerPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid startTimer payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid startTimer payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit('error_dashboard', errorPayload);
+            if (callback) {
+                callback({
+                    success: false,
+                    error: 'Invalid payload format'
+                });
+            }
+            return;
+        }
+        const { duration, gameId, accessCode } = parseResult.data;
         const userId = socket.data?.userId;
         // Variables that will be needed throughout the function
         let gameInstance = null;

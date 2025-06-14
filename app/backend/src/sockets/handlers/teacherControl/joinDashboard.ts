@@ -6,15 +6,61 @@ import { JoinDashboardPayload } from './types';
 import { DASHBOARD_PREFIX, getGameControlState } from './helpers';
 import { TEACHER_EVENTS } from '@shared/types/socket/events';
 import { getParticipantCount } from '@/sockets/utils/participantCountUtils';
+import { joinDashboardPayloadSchema } from '@shared/types/socketEvents.zod';
+import type { ErrorPayload } from '@shared/types/socketEvents';
 
 // Create a handler-specific logger
 const logger = createLogger('JoinDashboardHandler');
 
 export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
-    return async (payload: JoinDashboardPayload, callback?: (data: any) => void) => {
-        logger.info({ socketId: socket.id, payload }, 'joinDashboardHandler called');
+    return async (payload: any, callback?: (data: any) => void) => {
+        // Runtime validation with Zod
+        const parseResult = joinDashboardPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid joinDashboard payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
 
-        const { gameId, accessCode } = payload;
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid joinDashboard payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
+            if (callback) {
+                callback({
+                    success: false,
+                    error: 'Invalid payload format'
+                });
+            }
+            return;
+        }
+
+        const validPayload = parseResult.data;
+        logger.info({ socketId: socket.id, payload: validPayload }, 'joinDashboardHandler called');
+
+        const { accessCode } = validPayload;
+
+        // Look up game instance by access code
+        const gameInstance = await prisma.gameInstance.findUnique({
+            where: { accessCode }
+        });
+
+        if (!gameInstance) {
+            logger.warn({ accessCode }, 'Game instance not found');
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
+                code: 'GAME_NOT_FOUND',
+                message: 'Game not found',
+            } as ErrorPayload);
+            return;
+        }
+
+        const gameId = gameInstance.id;
 
         // Get userId from socket.data (should be populated by auth middleware)
         let effectiveUserId = socket.data?.userId || socket.data?.user?.userId;

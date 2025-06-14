@@ -42,7 +42,7 @@ export interface AuthContextType {
     // Nouvelles méthodes pour la gestion des invités
     setGuestProfile: (username: string, avatar: string) => Promise<void>;
     clearGuestProfile: () => void;
-    upgradeGuestToAccount: (email: string, password: string) => Promise<import('@/types/api').UpgradeResponse>;
+    upgradeGuestToAccount: (email: string, password: string) => Promise<import('@shared/types/api/responses').UpgradeAccountResponse>;
 
     // Méthodes d'authentification
     universalLogin: (email: string, password: string) => Promise<void>;

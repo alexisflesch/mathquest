@@ -10,6 +10,7 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const sharedLiveHandler_1 = require("./sharedLiveHandler");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('TournamentHandler');
 const gameInstanceService = new gameInstanceService_1.GameInstanceService();
 /**
@@ -22,9 +23,26 @@ function tournamentHandler(io, socket) {
     (0, sharedLiveHandler_1.registerSharedLiveHandlers)(io, socket);
     // Start tournament event (student-creator only)
     socket.on(events_1.TOURNAMENT_EVENTS.START_TOURNAMENT, async (payload) => {
-        logger.debug({ payload, socketId: socket.id }, '[DEBUG] Received start_tournament event');
-        const { accessCode } = payload;
-        logger.debug({ accessCode, socketId: socket.id }, '[DEBUG] Handling start_tournament for accessCode');
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.startTournamentPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid startTournament payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid startTournament payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit(events_1.GAME_EVENTS.GAME_ERROR, errorPayload);
+            return;
+        }
+        const { accessCode } = parseResult.data;
+        logger.debug({ accessCode, socketId: socket.id }, 'Handling start_tournament for accessCode');
         // Fetch game instance, including gameTemplate.questions with actual question data, ordered by sequence
         // Also include participants to check if any are there.
         const gameInstance = await gameInstanceService.getGameInstanceByAccessCode(accessCode, true); // includeParticipants = true

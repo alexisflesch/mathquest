@@ -7,131 +7,131 @@
 import { SchemaFieldType } from './schemaValidation';
 export declare const answerSchema: {
     texte: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     correct: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
 };
 export declare const baseQuestionSchema: {
     uid: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     text: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
-    type: {
-        type: SchemaFieldType;
+    defaultMode: {
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     responses: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
         arrayOf: {
             texte: {
-                type: SchemaFieldType;
+                defaultMode: SchemaFieldType;
                 required: boolean;
             };
             correct: {
-                type: SchemaFieldType;
+                defaultMode: SchemaFieldType;
                 required: boolean;
             };
         };
     };
     time: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     explanation: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
 };
 export declare const questionSchema: {
     correct: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         validator: (value: unknown) => boolean;
         required: boolean;
     };
     themes: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
         arrayOf: SchemaFieldType;
     };
     difficulty: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     gradeLevel: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     discipline: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     question: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     answers: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
         arrayOf: {
             texte: {
-                type: SchemaFieldType;
+                defaultMode: SchemaFieldType;
                 required: boolean;
             };
             correct: {
-                type: SchemaFieldType;
+                defaultMode: SchemaFieldType;
                 required: boolean;
             };
         };
     };
     hidden: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     title: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     uid: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     text: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
-    type: {
-        type: SchemaFieldType;
+    defaultMode: {
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     responses: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
         arrayOf: {
             texte: {
-                type: SchemaFieldType;
+                defaultMode: SchemaFieldType;
                 required: boolean;
             };
             correct: {
-                type: SchemaFieldType;
+                defaultMode: SchemaFieldType;
                 required: boolean;
             };
         };
     };
     time: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
     explanation: {
-        type: SchemaFieldType;
+        defaultMode: SchemaFieldType;
         required: boolean;
     };
 };

@@ -15,7 +15,7 @@ class GameTemplateService {
         // 1. Find random questions matching the filters
         const questions = await prisma_1.prisma.question.findMany({
             where: {
-                gradeLevel: data.levels,
+                gradeLevel: data.gradeLevel,
                 discipline: data.discipline,
                 themes: { hasSome: data.themes },
                 isHidden: false
@@ -34,7 +34,7 @@ class GameTemplateService {
             data: {
                 name: `Student Game (${data.discipline})`,
                 creatorId: data.userId, // Use unified creatorId
-                gradeLevel: data.levels,
+                gradeLevel: data.gradeLevel,
                 themes: data.themes,
                 discipline: data.discipline,
                 defaultMode: 'tournament',

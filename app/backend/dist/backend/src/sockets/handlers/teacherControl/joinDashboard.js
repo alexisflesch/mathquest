@@ -10,12 +10,51 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const helpers_1 = require("./helpers");
 const events_1 = require("@shared/types/socket/events");
 const participantCountUtils_1 = require("@/sockets/utils/participantCountUtils");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('JoinDashboardHandler');
 function joinDashboardHandler(io, socket) {
     return async (payload, callback) => {
-        logger.info({ socketId: socket.id, payload }, 'joinDashboardHandler called');
-        const { gameId, accessCode } = payload;
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.joinDashboardPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid joinDashboard payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid joinDashboard payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
+            if (callback) {
+                callback({
+                    success: false,
+                    error: 'Invalid payload format'
+                });
+            }
+            return;
+        }
+        const validPayload = parseResult.data;
+        logger.info({ socketId: socket.id, payload: validPayload }, 'joinDashboardHandler called');
+        const { accessCode } = validPayload;
+        // Look up game instance by access code
+        const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
+            where: { accessCode }
+        });
+        if (!gameInstance) {
+            logger.warn({ accessCode }, 'Game instance not found');
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
+                code: 'GAME_NOT_FOUND',
+                message: 'Game not found',
+            });
+            return;
+        }
+        const gameId = gameInstance.id;
         // Get userId from socket.data (should be populated by auth middleware)
         let effectiveUserId = socket.data?.userId || socket.data?.user?.userId;
         // Debug authentication data
@@ -87,7 +126,7 @@ function joinDashboardHandler(io, socket) {
             const isAuthorized = gameInstance.initiatorUserId === effectiveUserId ||
                 gameInstance.gameTemplate?.creatorId === effectiveUserId;
             if (!isAuthorized) {
-                logger.warn({ gameId, userId: effectiveUserId, creatorId: gameInstance.initiatorUserId, creatorId: gameInstance.gameTemplate?.creatorId }, 'User not authorized for this game');
+                logger.warn({ gameId, userId: effectiveUserId, initiatorUserId: gameInstance.initiatorUserId, templateCreatorId: gameInstance.gameTemplate?.creatorId }, 'User not authorized for this game');
                 // For test environment, check if we should bypass auth check
                 const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
                 // If we're in a test environment and both IDs exist, we'll allow it

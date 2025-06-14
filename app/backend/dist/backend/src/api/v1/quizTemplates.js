@@ -34,13 +34,13 @@ exports.__setGameTemplateServiceForTesting = __setGameTemplateServiceForTesting;
 router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schemas_1.CreateQuizTemplateRequestSchema), async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
-            res.status(401).defaultMode('application/json').json({ error: 'Authentication required' });
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
         const { name, gradeLevel, themes, discipline, description, defaultMode, questions } = req.body;
         // Basic validation
         if (!name || !themes) {
-            res.status(400).defaultMode('application/json').json({
+            res.status(400).type('application/json').json({
                 error: 'Required fields missing',
                 required: ['name', 'themes']
             });
@@ -55,11 +55,11 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
             defaultMode,
             questions
         });
-        res.status(201).defaultMode('application/json').json({ gameTemplate });
+        res.status(201).type('application/json').json({ gameTemplate });
     }
     catch (error) {
         logger.error({ error }, 'Error creating quiz template');
-        res.status(500).defaultMode('application/json').json({ error: 'An error occurred while creating the quiz template' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while creating the quiz template' });
     }
 });
 /**
@@ -70,26 +70,26 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
 router.get('/:id', auth_1.teacherAuth, async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
-            res.status(401).defaultMode('application/json').json({ error: 'Authentication required' });
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
         const { id } = req.params;
         const includeQuestions = req.query.includeQuestions === 'true';
         const gameTemplate = await getGameTemplateService().getgameTemplateById(id, includeQuestions);
         if (gameTemplate == null) {
-            res.status(404).defaultMode('application/json').json({ error: 'Quiz template not found' });
+            res.status(404).type('application/json').json({ error: 'Quiz template not found' });
             return;
         }
         // Check if the quiz template belongs to the requesting teacher
         if (gameTemplate.creatorId !== req.user.userId) {
-            res.status(403).defaultMode('application/json').json({ error: 'You do not have permission to access this quiz template' });
+            res.status(403).type('application/json').json({ error: 'You do not have permission to access this quiz template' });
             return;
         }
-        res.status(200).defaultMode('application/json').json({ gameTemplate });
+        res.status(200).type('application/json').json({ gameTemplate });
     }
     catch (error) {
         logger.error({ error }, 'Error fetching quiz template');
-        res.status(500).defaultMode('application/json').json({ error: 'An error occurred while fetching the quiz template' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while fetching the quiz template' });
     }
 });
 /**
@@ -100,7 +100,7 @@ router.get('/:id', auth_1.teacherAuth, async (req, res) => {
 router.get('/', auth_1.teacherAuth, async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
-            res.status(401).defaultMode('application/json').json({ error: 'Authentication required' });
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
         const { discipline, themes, gradeLevel, page = '1', pageSize = '20' } = req.query;
@@ -120,11 +120,11 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
             take: Number(pageSize)
         };
         const result = await getGameTemplateService().getgameTemplates(req.user.userId, filters, pagination);
-        res.status(200).defaultMode('application/json').json(result);
+        res.status(200).type('application/json').json(result);
     }
     catch (error) {
         logger.error({ error }, 'Error fetching quiz templates');
-        res.status(500).defaultMode('application/json').json({ error: 'An error occurred while fetching quiz templates' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while fetching quiz templates' });
     }
 });
 /**
@@ -159,7 +159,7 @@ router.delete('/:id/questions/:questionUid', auth_1.teacherAuth, async (req, res
 router.put('/:id/questions-sequence', auth_1.teacherAuth, async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
-            res.status(401).defaultMode('application/json').json({ error: 'Authentication required' });
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
         const { id } = req.params;
@@ -168,19 +168,19 @@ router.put('/:id/questions-sequence', auth_1.teacherAuth, async (req, res) => {
             ...req.body
         };
         const updatedgameTemplate = await getGameTemplateService().updategameTemplate(req.user.userId, updateData);
-        res.status(200).defaultMode('application/json').json({ gameTemplate: updatedgameTemplate });
+        res.status(200).type('application/json').json({ gameTemplate: updatedgameTemplate });
     }
     catch (error) {
         logger.error({ error }, 'Error updating quiz template');
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).defaultMode('application/json').json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).defaultMode('application/json').json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
-        res.status(500).defaultMode('application/json').json({ error: 'An error occurred while updating the quiz template' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while updating the quiz template' });
     }
 });
 /**
@@ -191,24 +191,24 @@ router.put('/:id/questions-sequence', auth_1.teacherAuth, async (req, res) => {
 router.delete('/:id', auth_1.teacherAuth, async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
-            res.status(401).defaultMode('application/json').json({ error: 'Authentication required' });
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
         const { id } = req.params;
         await getGameTemplateService().deletegameTemplate(req.user.userId, id);
-        res.status(200).defaultMode('application/json').json({ success: true });
+        res.status(200).type('application/json').json({ success: true });
     }
     catch (error) {
         logger.error({ error }, 'Error deleting quiz template');
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).defaultMode('application/json').json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).defaultMode('application/json').json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
-        res.status(500).defaultMode('application/json').json({ error: 'An error occurred while deleting the quiz template' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while deleting the quiz template' });
     }
 });
 /**
@@ -219,29 +219,29 @@ router.delete('/:id', auth_1.teacherAuth, async (req, res) => {
 router.post('/:id/questions', auth_1.teacherAuth, async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
-            res.status(401).defaultMode('application/json').json({ error: 'Authentication required' });
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
         const { id } = req.params;
         const { questionUid, sequence } = req.body;
         if (!questionUid) {
-            res.status(400).defaultMode('application/json').json({ error: 'Question ID is required' });
+            res.status(400).type('application/json').json({ error: 'Question ID is required' });
             return;
         }
         const updatedgameTemplate = await getGameTemplateService().addQuestionTogameTemplate(req.user.userId, id, questionUid, sequence);
-        res.status(200).defaultMode('application/json').json({ gameTemplate: updatedgameTemplate });
+        res.status(200).type('application/json').json({ gameTemplate: updatedgameTemplate });
     }
     catch (error) {
         logger.error({ error }, 'Error adding question to quiz template');
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).defaultMode('application/json').json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).defaultMode('application/json').json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
-        res.status(500).defaultMode('application/json').json({ error: 'An error occurred while adding the question' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while adding the question' });
     }
 });
 /**
@@ -252,24 +252,24 @@ router.post('/:id/questions', auth_1.teacherAuth, async (req, res) => {
 router.delete('/:id/questions/:questionUid', auth_1.teacherAuth, async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
-            res.status(401).defaultMode('application/json').json({ error: 'Authentication required' });
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
         const { id, questionUid } = req.params;
         const updatedgameTemplate = await getGameTemplateService().removeQuestionFromgameTemplate(req.user.userId, id, questionUid);
-        res.status(200).defaultMode('application/json').json({ gameTemplate: updatedgameTemplate });
+        res.status(200).type('application/json').json({ gameTemplate: updatedgameTemplate });
     }
     catch (error) {
         logger.error({ error }, 'Error removing question from quiz template');
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).defaultMode('application/json').json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).defaultMode('application/json').json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
-        res.status(500).defaultMode('application/json').json({ error: 'An error occurred while removing the question' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while removing the question' });
     }
 });
 /**
@@ -280,29 +280,29 @@ router.delete('/:id/questions/:questionUid', auth_1.teacherAuth, async (req, res
 router.put('/:id/questions-sequence', auth_1.teacherAuth, async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
-            res.status(401).defaultMode('application/json').json({ error: 'Authentication required' });
+            res.status(401).type('application/json').json({ error: 'Authentication required' });
             return;
         }
         const { id } = req.params;
         const { updates } = req.body;
         if (!updates || !Array.isArray(updates) || updates.length === 0) {
-            res.status(400).defaultMode('application/json').json({ error: 'Updates array is required' });
+            res.status(400).type('application/json').json({ error: 'Updates array is required' });
             return;
         }
         const updatedgameTemplate = await getGameTemplateService().updateQuestionSequence(req.user.userId, id, updates);
-        res.status(200).defaultMode('application/json').json({ gameTemplate: updatedgameTemplate });
+        res.status(200).type('application/json').json({ gameTemplate: updatedgameTemplate });
     }
     catch (error) {
         logger.error({ error }, 'Error updating question sequence');
         if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).defaultMode('application/json').json({ error: error.message });
+            res.status(404).type('application/json').json({ error: error.message });
             return;
         }
         if (error instanceof Error && error.message.includes('permission')) {
-            res.status(403).defaultMode('application/json').json({ error: error.message });
+            res.status(403).type('application/json').json({ error: error.message });
             return;
         }
-        res.status(500).defaultMode('application/json').json({ error: 'An error occurred while updating question sequence' });
+        res.status(500).type('application/json').json({ error: 'An error occurred while updating question sequence' });
     }
 });
 exports.default = router;

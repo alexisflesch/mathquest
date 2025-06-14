@@ -7,11 +7,36 @@ exports.pauseTimerHandler = pauseTimerHandler;
 const prisma_1 = require("@/db/prisma");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const logger_1 = __importDefault(require("@/utils/logger"));
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('PauseTimerHandler');
 function pauseTimerHandler(io, socket) {
     return async (payload, callback) => {
-        const { gameId, accessCode } = payload;
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.pauseTimerPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid pauseTimer payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid pauseTimer payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit('error_dashboard', errorPayload);
+            if (callback) {
+                callback({
+                    success: false,
+                    error: 'Invalid payload format'
+                });
+            }
+            return;
+        }
+        const { gameId, accessCode } = parseResult.data;
         const userId = socket.data?.userId;
         // Variables that will be needed throughout the function
         let gameInstance = null;
@@ -201,7 +226,7 @@ function pauseTimerHandler(io, socket) {
             socket.emit('error_dashboard', {
                 code: 'TIMER_ERROR',
                 message: 'Failed to pause timer',
-                details: error instanceof Error ? error.message : String(error)
+                details: { error: error instanceof Error ? error.message : String(error) }
             });
             // Call the callback with error if provided
             if (callback) {

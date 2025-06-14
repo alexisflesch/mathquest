@@ -1,6 +1,7 @@
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import { GAME_EVENTS } from '@shared/types/socket/events';
+import { GameParticipant } from '@shared/types/core';
 
 // Create a helper-specific logger
 const logger = createLogger('GameHelpers');
@@ -9,17 +10,6 @@ const logger = createLogger('GameHelpers');
 export const GAME_KEY_PREFIX = 'mathquest:game:';
 export const PARTICIPANTS_KEY_PREFIX = 'mathquest:game:participants:';
 export const ANSWERS_KEY_PREFIX = 'mathquest:game:answers:';
-
-// Define the type here since it is not exported from types.ts
-export interface GameParticipant {
-    id: string;
-    userId: string;
-    username: string;
-    avatarEmoji?: string;
-    joinedAt?: number;
-    score?: number;
-    online?: boolean;
-}
 
 /**
  * Helper to get all participants for a game

@@ -6,6 +6,12 @@ import { joinRoom, leaveRoom, getRoomMembers, broadcastToRoom } from '@/sockets/
 import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
 import { LOBBY_EVENTS } from '@shared/types/socket/events';
 import type { ErrorPayload } from '@shared/types/socketEvents';
+import {
+    joinLobbyPayloadSchema,
+    leaveLobbyPayloadSchema,
+    getParticipantsPayloadSchema
+} from '@shared/types/socketEvents.zod';
+import { z } from 'zod';
 
 // Create a handler-specific logger
 const logger = createLogger('LobbyHandler');
@@ -16,30 +22,19 @@ const LOBBY_KEY_PREFIX = 'mathquest:lobby:';
 // Store intervals for game status checking
 const gameStatusCheckIntervals = new Map<string, NodeJS.Timeout>();
 
-// Define types for lobby participants
+// Backend-specific lobby participant type (different from shared type)
 export interface LobbyParticipant {
     id: string;           // Socket ID
-    userId: string;     // Player ID from database
+    userId: string;       // Player ID from database
     username: string;     // Display name
-    avatarEmoji?: string;   // Emoji avatar
+    avatarEmoji?: string; // Emoji avatar
     joinedAt: number;     // Timestamp when joined
 }
 
-// Define event payload types
-export interface JoinLobbyPayload {
-    accessCode: string;   // Game access code
-    userId: string;     // Player ID
-    username: string;     // Display name
-    avatarEmoji?: string;   // Avatar emoji
-}
-
-export interface LeaveLobbyPayload {
-    accessCode: string;   // Game access code
-}
-
-export interface GetParticipantsPayload {
-    accessCode: string;   // Game access code
-}
+// Define event payload types using Zod inference
+export type JoinLobbyPayload = z.infer<typeof joinLobbyPayloadSchema>;
+export type LeaveLobbyPayload = z.infer<typeof leaveLobbyPayloadSchema>;
+export type GetParticipantsPayload = z.infer<typeof getParticipantsPayloadSchema>;
 
 /**
  * Setup periodic game status checking for a lobby
@@ -114,9 +109,29 @@ function stopGameStatusCheck(accessCode: string): void {
  */
 export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void {
     // Join a game lobby
-    socket.on(LOBBY_EVENTS.JOIN_LOBBY, async (payload: JoinLobbyPayload) => {
-        // const { accessCode, userId, username, avatarEmoji } = payload; // Original
-        const { accessCode } = payload; // Only take accessCode from payload
+    socket.on(LOBBY_EVENTS.JOIN_LOBBY, async (payload: any) => {
+        // Runtime validation with Zod
+        const parseResult = joinLobbyPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid joinLobby payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid joinLobby payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit(LOBBY_EVENTS.LOBBY_ERROR, errorPayload);
+            return;
+        }
+
+        const { accessCode } = parseResult.data;
         const { userId, username, avatarEmoji } = socket.data.user || {}; // Get user details from authenticated socket data
 
         logger.info({ accessCode, userId, username, socketId: socket.id }, 'Player joining lobby');
@@ -222,7 +237,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                 id: socket.id,
                 userId, // Use userId from socket.data.user
                 username, // Use username from socket.data.user
-                avatarEmoji: avatarEmoji || payload.avatarEmoji, // Use avatarEmoji from socket.data.user or fallback to payload
+                avatarEmoji: avatarEmoji || payload.avatarEmoji,
                 joinedAt: Date.now()
             };
 
@@ -292,8 +307,29 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
     });
 
     // Leave a game lobby
-    socket.on(LOBBY_EVENTS.LEAVE_LOBBY, async (payload: LeaveLobbyPayload) => {
-        const { accessCode } = payload;
+    socket.on(LOBBY_EVENTS.LEAVE_LOBBY, async (payload: any) => {
+        // Runtime validation with Zod
+        const parseResult = leaveLobbyPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid leaveLobby payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid leaveLobby payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit(LOBBY_EVENTS.LOBBY_ERROR, errorPayload);
+            return;
+        }
+
+        const { accessCode } = parseResult.data;
         logger.info({ accessCode, socketId: socket.id }, 'Player leaving lobby');
 
         try {
@@ -353,8 +389,29 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
     });
 
     // Request current participants list
-    socket.on(LOBBY_EVENTS.GET_PARTICIPANTS, async (payload: GetParticipantsPayload) => {
-        const { accessCode } = payload;
+    socket.on(LOBBY_EVENTS.GET_PARTICIPANTS, async (payload: any) => {
+        // Runtime validation with Zod
+        const parseResult = getParticipantsPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid getParticipants payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid getParticipants payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit(LOBBY_EVENTS.LOBBY_ERROR, errorPayload);
+            return;
+        }
+
+        const { accessCode } = parseResult.data;
         logger.debug({ accessCode, socketId: socket.id }, 'Getting lobby participants');
 
         try {

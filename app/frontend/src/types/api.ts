@@ -197,11 +197,10 @@ import type {
     Question
 } from '@shared/types/core';
 
-// Legacy type aliases for backward compatibility
-export type RegistrationResponse = RegisterResponse;
-export type UpgradeResponse = UpgradeAccountResponse;
-export type UpgradeRequest = UpgradeAccountRequest;
-export type UniversalLoginResponse = z.infer<typeof UniversalLoginResponseSchema>;
+// Re-export commonly used shared types
+export type {
+    UniversalLoginResponse
+} from '@shared/types/api/schemas';
 
 // Legacy question and quiz response types for backward compatibility
 export type QuestionsFiltersResponse = QuestionFiltersResponse;
@@ -258,11 +257,6 @@ export type MyTournamentsResponse = {
         score: number;
     }>;
 };
-
-// Legacy schemas for backward compatibility with existing code
-export const RegistrationResponseSchema = RegisterResponseSchema;
-export const UpgradeResponseSchema = UpgradeAccountResponseSchema;
-export const UpgradeRequestSchema = UpgradeAccountRequestSchema;
 
 // Additional frontend-specific schemas that aren't in shared
 import { questionSchema as QuestionSchema } from '@shared/types/quiz/question.zod';
@@ -328,8 +322,8 @@ export const MyTournamentsResponseSchema = z.object({
 export const API_SCHEMAS = {
     authStatus: AuthStatusResponseSchema,
     universalLogin: UniversalLoginResponseSchema, // Use UniversalLoginResponseSchema for backward compatibility
-    registration: RegistrationResponseSchema,
-    upgrade: UpgradeResponseSchema,
+    registration: RegisterResponseSchema,
+    upgrade: UpgradeAccountResponseSchema,
     profileUpdate: ProfileUpdateResponseSchema,
     logout: LogoutResponseSchema,
     error: ErrorResponseSchema,

@@ -44,3 +44,17 @@ export interface UserUpgradeData {
     password: string;
     targetRole: UserRole;
 }
+export type UserState = 'anonymous' | 'guest' | 'student' | 'teacher';
+export interface GuestProfileData {
+    username: string;
+    avatar: string;
+    cookieId?: string;
+}
+export interface AuthResponse {
+    success: boolean;
+    user?: User;
+    userState: UserState;
+    token?: string;
+    error?: string;
+    message?: string;
+}

@@ -11,39 +11,39 @@ const schemaValidation_1 = require("./schemaValidation");
 // Answer schema
 exports.answerSchema = {
     texte: {
-        type: 'string',
+        defaultMode: 'string',
         required: true
     },
     correct: {
-        type: 'boolean',
+        defaultMode: 'boolean',
         required: true
     }
 };
 // BaseQuestion schema
 exports.baseQuestionSchema = {
     uid: {
-        type: 'string',
+        defaultMode: 'string',
         required: true
     },
     text: {
-        type: 'string',
+        defaultMode: 'string',
         required: true
     },
-    type: {
-        type: 'string',
+    defaultMode: {
+        defaultMode: 'string',
         required: true
     },
     responses: {
-        type: 'array',
+        defaultMode: 'array',
         required: false,
         arrayOf: exports.answerSchema
     },
     time: {
-        type: 'number',
+        defaultMode: 'number',
         required: false
     },
     explanation: {
-        type: 'string',
+        defaultMode: 'string',
         required: false
     }
 };
@@ -60,49 +60,49 @@ const isLevelField = (value) => {
 exports.questionSchema = {
     ...exports.baseQuestionSchema,
     correct: {
-        type: 'custom',
+        defaultMode: 'custom',
         validator: isCorrectField,
         required: false
     },
     themes: {
-        type: 'array',
+        defaultMode: 'array',
         required: false,
         arrayOf: 'string' // Corrected: cast to SchemaFieldType
     },
     difficulty: {
-        type: 'number',
+        defaultMode: 'number',
         required: false
     },
     /* // Old level field using custom validator
     level: { // Renamed from niveau
-        type: 'custom' as SchemaFieldType,
+        defaultMode: 'custom' as SchemaFieldType,
         validator: isLevelField, // Renamed from isNiveauField
         required: false
     },
     */
     gradeLevel: {
-        type: 'string',
+        defaultMode: 'string',
         required: false
     },
     discipline: {
-        type: 'string',
+        defaultMode: 'string',
         required: false
     },
     question: {
-        type: 'string',
+        defaultMode: 'string',
         required: false
     },
     answers: {
-        type: 'array',
+        defaultMode: 'array',
         required: false,
         arrayOf: exports.answerSchema
     },
     hidden: {
-        type: 'boolean',
+        defaultMode: 'boolean',
         required: false
     },
     title: {
-        type: 'string',
+        defaultMode: 'string',
         required: false
     }
     // Removed 'titre' field as it's covered by 'title'

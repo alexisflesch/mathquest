@@ -4,6 +4,7 @@ import createLogger from '@/utils/logger';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData, ErrorPayload } from '@shared/types/socketEvents';
 import { GAME_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
+import { requestNextQuestionPayloadSchema } from '@shared/types/socketEvents.zod';
 
 const logger = createLogger('RequestNextQuestionHandler');
 
@@ -12,8 +13,31 @@ export function requestNextQuestionHandler(
     socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 ) {
     return async (payload: any) => {
+        // Runtime validation with Zod
+        const parseResult = requestNextQuestionPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid requestNextQuestion payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid requestNextQuestion payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit('game_error', errorPayload);
+            return;
+        }
+
+        const validPayload = parseResult.data;
+        const { accessCode, userId, currentQuestionUid } = validPayload;
+
         try {
-            const { accessCode, userId, currentQuestionUid } = payload;
             logger.info({ socketId: socket.id, event: 'request_next_question', accessCode, userId, currentQuestionUid }, 'Player requested next question');
 
             // 1. Get game instance

@@ -1,29 +1,16 @@
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import {
+    QuestionCreationPayload,
+    QuestionUpdatePayload
+} from '@shared/types/core';
+
+// Re-export types for backward compatibility
+export type QuestionCreationData = QuestionCreationPayload;
+export type QuestionUpdateData = QuestionUpdatePayload;
 
 // Create a service-specific logger
 const logger = createLogger('QuestionService');
-
-export interface QuestionCreationData {
-    title?: string;
-    text: string;
-    answerOptions: string[]; // Array of possible answers 
-    correctAnswers: boolean[]; // Array of booleans indicating which answers are correct
-    questionType: string;
-    discipline: string;
-    themes: string[];
-    difficulty?: number;
-    gradeLevel?: string;
-    author?: string;
-    explanation?: string;
-    tags?: string[];
-    timeLimit?: number;
-    isHidden?: boolean;
-}
-
-export interface QuestionUpdateData extends Partial<QuestionCreationData> {
-    uid: string;
-}
 
 /**
  * Question service class for handling question-related operations
@@ -32,7 +19,7 @@ export class QuestionService {
     /**
      * Create a new question
      */
-    async createQuestion(userId: string, data: QuestionCreationData) {
+    async createQuestion(userId: string, data: QuestionCreationPayload) {
         try {
             // Create the question in the database
             const question = await prisma.question.create({
@@ -189,7 +176,7 @@ export class QuestionService {
     /**
      * Update a question
      */
-    async updateQuestion(data: QuestionUpdateData) {
+    async updateQuestion(data: QuestionUpdatePayload) {
         try {
             const { uid, ...updateData } = data;
 

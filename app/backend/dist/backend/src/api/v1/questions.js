@@ -66,8 +66,8 @@ router.get('/filters', async (req, res) => {
     try {
         const { gradeLevel, discipline } = req.query;
         const filterCriteria = {};
-        if (niveau)
-            filterCriteria.gradeLevel = niveau;
+        if (gradeLevel)
+            filterCriteria.gradeLevel = gradeLevel;
         if (discipline)
             filterCriteria.discipline = discipline;
         const filters = await getQuestionService().getAvailableFilters(filterCriteria);
@@ -89,8 +89,8 @@ router.get('/list', async (req, res) => {
         const { gradeLevel, discipline, themes, limit } = req.query;
         // Convert to appropriate types for filtering
         const filters = {};
-        if (niveau)
-            filters.gradeLevel = niveau;
+        if (gradeLevel)
+            filters.gradeLevel = gradeLevel;
         if (discipline)
             filters.discipline = discipline;
         if (themes) {

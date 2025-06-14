@@ -2,24 +2,10 @@ import { redisClient } from '@/config/redis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
-import type { GameTimerState } from '@shared/types/core/timer';
+import { GameState } from '@shared/types/core';
 
-// Define game state interface
-export interface GameState {
-    gameId: string;              // Database ID of the game instance
-    accessCode: string;          // Access code for joining
-    status: 'pending' | 'active' | 'paused' | 'completed';
-    currentQuestionIndex: number; // Index of the current question
-    questionUids: string[];       // IDs of questions in the quiz
-    questionData?: any;          // Data of the current question (sent to clients)
-    startedAt?: number;          // Timestamp when game started
-    answersLocked?: boolean;     // Whether answers are locked
-    timer: GameTimerState;       // Use shared timer state
-    settings: {                  // Game settings
-        timeMultiplier: number;  // Multiplier for question time limits
-        showLeaderboard: boolean; // Whether to show leaderboard between questions
-    };
-};
+// Re-export GameState for backward compatibility
+export { GameState } from '@shared/types/core';
 
 // Create a service-specific logger
 const logger = createLogger('GameStateService');

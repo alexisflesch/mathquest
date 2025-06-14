@@ -9,13 +9,10 @@ import gameStateService from '@/core/gameStateService';
 import { registerSharedLiveHandlers } from './sharedLiveHandler';
 import { GameTimerState } from '@shared/types/core/timer';
 import type { ErrorPayload } from '@shared/types/socketEvents';
+import { startTournamentPayloadSchema } from '@shared/types/socketEvents.zod';
 
 const logger = createLogger('TournamentHandler');
 const gameInstanceService = new GameInstanceService();
-
-interface StartTournamentPayload {
-    accessCode: string;
-}
 
 /**
  * Register all tournament-related socket event handlers
@@ -27,10 +24,30 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
     registerSharedLiveHandlers(io, socket);
 
     // Start tournament event (student-creator only)
-    socket.on(TOURNAMENT_EVENTS.START_TOURNAMENT, async (payload: StartTournamentPayload) => {
-        logger.debug({ payload, socketId: socket.id }, '[DEBUG] Received start_tournament event');
-        const { accessCode } = payload;
-        logger.debug({ accessCode, socketId: socket.id }, '[DEBUG] Handling start_tournament for accessCode');
+    socket.on(TOURNAMENT_EVENTS.START_TOURNAMENT, async (payload: any) => {
+        // Runtime validation with Zod
+        const parseResult = startTournamentPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid startTournament payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+
+            const errorPayload: ErrorPayload = {
+                message: 'Invalid startTournament payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+
+            socket.emit(GAME_EVENTS.GAME_ERROR, errorPayload);
+            return;
+        }
+
+        const { accessCode } = parseResult.data;
+        logger.debug({ accessCode, socketId: socket.id }, 'Handling start_tournament for accessCode');
 
         // Fetch game instance, including gameTemplate.questions with actual question data, ordered by sequence
         // Also include participants to check if any are there.

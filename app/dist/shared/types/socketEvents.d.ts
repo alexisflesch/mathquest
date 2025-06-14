@@ -14,6 +14,7 @@ export type { AnswerSubmissionPayload as GameAnswerPayload } from './core';
 export interface ErrorPayload {
     message: string;
     code?: string | number;
+    details?: Record<string, any>;
 }
 export interface GameAlreadyPlayedPayload {
     accessCode: string;
@@ -31,7 +32,7 @@ export interface PlayerJoinedGamePayload {
 }
 export interface NotificationPayload {
     message: string;
-    type: 'info' | 'warning' | 'error' | 'success';
+    defaultMode: 'info' | 'warning' | 'error' | 'success';
 }
 export interface GameStateUpdatePayload {
     status: 'waiting' | 'active' | 'paused' | 'finished';

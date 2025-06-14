@@ -28,7 +28,7 @@ class QuestionService {
                     discipline: data.discipline,
                     themes: data.themes,
                     difficulty: data.difficulty,
-                    gradeLevel: data.levels,
+                    gradeLevel: data.gradeLevel,
                     author: data.author || userId, // Default to userId if not specified
                     explanation: data.explanation,
                     tags: data.tags || [],

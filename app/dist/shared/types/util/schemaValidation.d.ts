@@ -6,7 +6,7 @@
  */
 export type SchemaFieldType = 'string' | 'number' | 'boolean' | 'array' | 'object' | 'custom';
 export interface SchemaField {
-    type: SchemaFieldType;
+    defaultMode: SchemaFieldType;
     required?: boolean;
     arrayOf?: SchemaFieldType | Schema;
     properties?: Schema;

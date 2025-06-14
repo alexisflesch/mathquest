@@ -15,25 +15,15 @@ function getAnswersForDisplay(question: QuestionDisplayProps['question']) {
 
     return question.answerOptions.map((text, index) => ({
         text,
-        correct: question.correctAnswers[index] || false
+        correct: question.correctAnswers?.[index] || false
     }));
 }
 
-// Types (modernized to use canonical question format)
+import type { Question } from '@shared/types/core/question';
+
+// Types (modernized to use shared question format)
 export interface QuestionDisplayProps {
-    question: {
-        uid: string;
-        title?: string;
-        text: string;
-        answerOptions: string[]; // Modern canonical field
-        correctAnswers: boolean[]; // Modern canonical field
-        level?: string | string[];
-        discipline?: string;
-        themes?: string[];
-        explanation?: string;
-        timeLimit?: number | null; // Time limit in seconds (nullable from database)
-        tags?: string[];
-    };
+    question: Question;
     // Props pour le contrôle externe
     isOpen?: boolean;
     onToggleOpen?: () => void;
@@ -171,7 +161,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     );
 
     const metaString = [
-        question.level && (Array.isArray(question.level) ? question.level.join(', ') : question.level),
+        question.gradeLevel && question.gradeLevel,
         question.discipline,
         question.themes && question.themes.join(', ')
     ].filter(Boolean).join(' · ');

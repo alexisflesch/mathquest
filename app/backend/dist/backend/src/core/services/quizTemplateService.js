@@ -22,7 +22,7 @@ class gameTemplateService {
                 data: {
                     name: data.name,
                     creatorId: userId, // Use unified creatorId
-                    gradeLevel: data.levels,
+                    gradeLevel: data.gradeLevel,
                     themes: data.themes || [],
                     discipline: data.discipline,
                     description: data.description,

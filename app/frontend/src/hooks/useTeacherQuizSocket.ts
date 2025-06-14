@@ -13,31 +13,12 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 // Import core types
 import type { Question } from '@shared/types/core';
 import type { QuestionData, ServerToClientEvents } from '@shared/types/socketEvents';
+import type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
+
+// Re-export QuizState for other files that import it from this hook
+export type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
 
 const logger = createLogger('useTeacherQuizSocket');
-
-// QuizState interface for compatibility
-export interface QuizState {
-    currentQuestionidx?: number | null;
-    currentQuestionUid?: string | null;
-    questions: Question[];
-    chrono: {
-        timeLeftMs: number | null;
-        running: boolean;
-        status: 'play' | 'pause' | 'stop';
-    };
-    locked: boolean;
-    ended: boolean;
-    stats: Record<string, any>;
-    profSocketId?: string | null;
-    timerStatus?: 'play' | 'pause' | 'stop';
-    timerQuestionUid?: string | null;
-    timerTimeLeft?: number | null;
-    timerTimestamp?: number;
-    // Additional properties for projection page compatibility
-    tournament_code?: string | null;
-    id?: string | null;
-}
 
 /**
  * Teacher Quiz Socket Hook

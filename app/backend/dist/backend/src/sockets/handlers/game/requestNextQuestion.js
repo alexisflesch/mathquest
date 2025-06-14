@@ -7,11 +7,31 @@ exports.requestNextQuestionHandler = requestNextQuestionHandler;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const questionTypes_1 = require("@shared/constants/questionTypes");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('RequestNextQuestionHandler');
 function requestNextQuestionHandler(io, socket) {
     return async (payload) => {
+        // Runtime validation with Zod
+        const parseResult = socketEvents_zod_1.requestNextQuestionPayloadSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const errorDetails = parseResult.error.format();
+            logger.warn({
+                socketId: socket.id,
+                error: 'Invalid requestNextQuestion payload',
+                details: errorDetails,
+                payload
+            }, 'Socket payload validation failed');
+            const errorPayload = {
+                message: 'Invalid requestNextQuestion payload',
+                code: 'VALIDATION_ERROR',
+                details: errorDetails
+            };
+            socket.emit('game_error', errorPayload);
+            return;
+        }
+        const validPayload = parseResult.data;
+        const { accessCode, userId, currentQuestionUid } = validPayload;
         try {
-            const { accessCode, userId, currentQuestionUid } = payload;
             logger.info({ socketId: socket.id, event: 'request_next_question', accessCode, userId, currentQuestionUid }, 'Player requested next question');
             // 1. Get game instance
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
