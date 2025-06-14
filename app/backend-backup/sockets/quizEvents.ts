@@ -91,7 +91,7 @@ async function ensureQuizTemplateDashboardStateInitialized( // Renamed function
                     return {
                         uid: question.uid,
                         text: question.text || '',
-                        type: question.questionType,
+                        defaultMode: question.questionType,
                         answers: Array.isArray(question.responses) ?
                             question.responses.map((r: any) => ({
                                 text: r.text || r.texte || '',

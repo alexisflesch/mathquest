@@ -17,5 +17,5 @@ export interface BaseQuestion {
     timeLimitSeconds?: number; // Time limit for the question in seconds (explicit unit)
     explanation?: string; // Renamed from explication - Explanation for the correct answer
     tags?: string[]; // ADDED: Tags for categorizing the question
-    // Remove legacy 'type' field, use only 'questionType' for questions
+    // Remove legacy 'defaultMode' field, use only 'questionType' for questions
 }

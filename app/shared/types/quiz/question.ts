@@ -28,6 +28,11 @@ export interface Question extends BaseQuestion {
     answerOptions?: string[]; // List of possible answers
     correctAnswers?: boolean[]; // List of booleans indicating correct answers
 
+    // Timing fields used in frontend
+    timeLimit?: number | null; // Time limit in seconds (nullable from database)
+    feedbackWaitTime?: number | null; // Feedback wait time in milliseconds (nullable from database)
+    time?: number; // Legacy field for compatibility
+
     // Frontend compatibility: answers array with text and correct properties
     answers: Answer[]; // Required for frontend compatibility
 }

@@ -353,7 +353,7 @@ describe('Game Flow E2E Test', () => {
         expect(gameQuestionEvent).toBeDefined();
         expect(gameQuestionEvent.data.question.uid).toBeDefined();
         expect(gameQuestionEvent.data.question.text).toBeDefined();
-        expect(gameQuestionEvent.data.question.type).toBeDefined();
+        expect(gameQuestionEvent.data.question.defaultMode).toBeDefined();
         expect(gameQuestionEvent.data.question.answers).toBeDefined();
         console.log('=== Security Validation Passed ===');
     });

@@ -1,6 +1,22 @@
 import express, { Request, Response } from 'express'; // Use standard Request
 import { GameTemplateService, GameTemplateCreationData } from '@/core/services/gameTemplateService';
+import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
+import type {
+    GameTemplatesResponse,
+    GameTemplateResponse,
+    GameTemplateCreationResponse,
+    GameTemplateUpdateResponse
+} from '@shared/types/api/responses';
+import type {
+    GameTemplateCreationRequest,
+    GameTemplateUpdateRequest,
+    ErrorResponse
+} from '@shared/types/api/requests';
+import {
+    CreateGameTemplateRequestSchema,
+    UpdateGameTemplateRequestSchema
+} from '@shared/types/api/schemas';
 
 const logger = createLogger('GameTemplatesAPI');
 const router = express.Router();
@@ -19,7 +35,7 @@ const getGameTemplateService = (): GameTemplateService => {
  * GET /api/v1/game-templates
  * Requires teacher authentication
  */
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', async (req: Request, res: Response<GameTemplatesResponse | ErrorResponse>): Promise<void> => {
     try {
         // Extract user ID from either req.user (from middleware) or x-user-id header (from frontend API route)
         const userId = req.user?.userId || req.headers['x-user-id'] as string;
@@ -61,7 +77,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
  * GET /api/v1/game-templates/:id
  * Requires teacher authentication
  */
-router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+router.get('/:id', async (req: Request, res: Response<GameTemplateResponse | ErrorResponse>): Promise<void> => {
     try {
         const { id } = req.params;
         const userId = req.user?.userId || req.headers['x-user-id'] as string;
@@ -112,7 +128,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
  * Allows a teacher/admin to create a game template with specific details.
  * This route should be protected by teacherAuth middleware to ensure req.user is populated.
  */
-router.post('/', async (req: Request, res: Response): Promise<void> => { // Use standard Request type
+router.post('/', validateRequestBody(CreateGameTemplateRequestSchema), async (req: Request<{}, GameTemplateCreationResponse | ErrorResponse, GameTemplateCreationRequest>, res: Response<GameTemplateCreationResponse | ErrorResponse>): Promise<void> => {
     try {
         // Log the received request body for debugging
         logger.info({ body: req.body, user: req.user }, 'Received request for game template creation');
@@ -232,7 +248,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => { // Use 
  * PUT /api/v1/game-templates/:id
  * Allows a teacher to update their game template
  */
-router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+router.put('/:id', validateRequestBody(UpdateGameTemplateRequestSchema), async (req: Request<{ id: string }, GameTemplateUpdateResponse | ErrorResponse, GameTemplateUpdateRequest>, res: Response<GameTemplateUpdateResponse | ErrorResponse>): Promise<void> => {
     try {
         const { id } = req.params;
         const { name, discipline, gradeLevel, themes, description, defaultMode, questions } = req.body;
@@ -285,7 +301,7 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
  * DELETE /api/v1/game-templates/:id
  * Requires teacher authentication
  */
-router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+router.delete('/:id', async (req: Request, res: Response<void | ErrorResponse>): Promise<void> => {
     try {
         // Extract user ID from either req.user (from middleware) or x-user-id header (from frontend API route)
         const userId = req.user?.userId || req.headers['x-user-id'] as string;

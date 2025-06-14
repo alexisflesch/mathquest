@@ -18,7 +18,7 @@
 import React from 'react';
 
 // TODO: Replace with real quiz list logic and props
-export default function QuizList({ quizzes = [], onSelect }: { quizzes?: { id: string; nom: string }[]; onSelect?: (id: string) => void }) {
+export default function QuizList({ quizzes = [], onSelect }: { quizzes?: { id: string; name: string }[]; onSelect?: (id: string) => void }) {
     return (
         <div>
             <h2 className="text-xl font-bold mb-2">Quiz disponibles</h2>
@@ -30,7 +30,7 @@ export default function QuizList({ quizzes = [], onSelect }: { quizzes?: { id: s
                             className="px-4 py-2 bg-blue-100 rounded hover:bg-blue-200"
                             onClick={() => onSelect && onSelect(quiz.id)}
                         >
-                            {quiz.nom}
+                            {quiz.name}
                         </button>
                     </li>
                 ))}

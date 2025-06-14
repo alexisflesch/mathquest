@@ -18,6 +18,72 @@ All shared types and Zod schemas should ideally reside in the `/shared` director
 -   `shared/types/user.ts`
 -   `shared/constants/questionTypes.ts`
 
+### Current Shared Types Structure
+
+The shared types are organized as follows:
+
+- `shared/types/api/requests.ts` - All API request payload types
+- `shared/types/api/responses.ts` - All API response payload types  
+- `shared/types/core/user.ts` - User-related core types (UserRole, etc.)
+- `shared/types/core/game.ts` - Game-related core types (GameTemplate, GameInstance, PlayMode, etc.)
+- `shared/types/core/participant.ts` - Participant and leaderboard types
+- `shared/types/quiz/question.ts` - Question and quiz-related types
+
+### API Contract Enforcement
+
+All backend API endpoints use strictly typed request and response payloads using shared types:
+
+```typescript
+// Backend API endpoint example
+router.post('/', async (req: Request<{}, GameCreationResponse, CreateGameRequest>, res: Response<GameCreationResponse | ErrorResponse>) => {
+    // Request body is typed as CreateGameRequest
+    // Response is typed as GameCreationResponse
+});
+```
+
+### Request Validation with Zod
+
+All API endpoints should use runtime validation with Zod schemas for type safety and input validation:
+
+```typescript
+// Define validation schema
+export const CreateGameRequestSchema = z.object({
+    name: z.string().min(1, 'Game name is required'),
+    gameTemplateId: z.string().uuid('Invalid game template ID').optional(),
+    playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
+    settings: z.record(z.any()).optional()
+});
+
+// Apply validation middleware
+router.post('/', validateRequestBody(CreateGameRequestSchema), async (req, res) => {
+    // req.body is now validated and typed
+});
+```
+
+**Validation Middleware Available:**
+- `validateRequestBody(schema)` - Validates request body
+- `validateRequestParams(schema)` - Validates URL parameters  
+- `validateRequestQuery(schema)` - Validates query parameters
+
+**Current Validation Status:**
+- ✅ `auth.ts` - All 6 endpoints with Zod validation (login, register, upgrade, reset password, profile)
+- ✅ `games.ts` - 3 critical endpoints with Zod validation (create, join, status update)
+- ✅ `gameTemplates.ts` - 2 endpoints with Zod validation (create, update)
+- ✅ `questions.ts` - 2 endpoints with Zod validation (create, update)
+- ✅ `quizTemplates.ts` - 2 endpoints with Zod validation (create, update)
+- ✅ `gameControl.ts` - 1 endpoint with Zod validation (set question)
+- ✅ All other files (`users.ts`, `teachers.ts`, `student.ts`, `players.ts`) - Only GET endpoints, no validation needed
+
+**Backend API Request Validation: 100% Complete ✅**
+
+### Prisma Integration Notes
+
+When designing shared types that map to Prisma models, handle nullable fields correctly:
+
+- Use `| null` for fields that are nullable in Prisma schema (marked with `?`)
+- Ensure database queries include all required fields when using relations
+- Transform `null` to `undefined` only when necessary for frontend consumption
+
 ## Zod Schemas
 
 Zod is used for runtime validation of API requests, responses, and WebSocket payloads. Schemas should be defined alongside their corresponding TypeScript types or directly inferred from them.

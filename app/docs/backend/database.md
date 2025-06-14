@@ -45,6 +45,42 @@ This document describes the database integration and schema for the MathQuest ba
 - Use Prisma migrations to evolve the schema.
 - Sensitive data (e.g., JWT secret, database URL) is managed via environment variables.
 
+### Handling Nullable Fields in Shared Types
+
+When working with Prisma models that have nullable fields (marked with `?` in the schema), ensure that shared TypeScript types match Prisma's type system:
+
+**Problem**: Prisma returns `null` for nullable fields, but TypeScript prefers `undefined` for optional properties.
+
+**Solution**: In shared types, use `| null` for fields that are nullable in Prisma:
+
+```typescript
+// ❌ Incorrect - causes type errors
+export interface GameInstance {
+    currentQuestionIndex?: number;  // TypeScript expects undefined
+    startedAt?: Date;              // TypeScript expects undefined
+}
+
+// ✅ Correct - matches Prisma's nullable fields
+export interface GameInstance {
+    currentQuestionIndex?: number | null;  // Matches Prisma Int?
+    startedAt?: Date | null;              // Matches Prisma DateTime?
+    endedAt?: Date | null;                // Matches Prisma DateTime?
+    initiatorUserId?: string | null;      // Matches Prisma String?
+}
+```
+
+**Key Fields That Are Nullable in Prisma**:
+- `GameInstance.currentQuestionIndex` (Int?)
+- `GameInstance.startedAt` (DateTime?)
+- `GameInstance.endedAt` (DateTime?)
+- `GameInstance.differedAvailableFrom` (DateTime?)
+- `GameInstance.differedAvailableTo` (DateTime?)
+- `GameInstance.initiatorUserId` (String?)
+- `GameTemplate.gradeLevel` (String?)
+- `GameTemplate.discipline` (String?)
+
+**Database Query Considerations**: When including relations in Prisma queries, ensure all required fields are selected to match the shared type interfaces. Use `select` or `include` strategically to avoid partial object type mismatches.
+
 ---
 
 For full schema details, see `backend/prisma/schema.prisma`.

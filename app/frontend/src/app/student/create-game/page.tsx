@@ -27,7 +27,7 @@ import { useAccessGuard } from '@/hooks/useAccessGuard';
 const logger = createLogger('CreateTournament');
 
 interface Filters {
-    niveaux: string[];
+    gradeLevel: string[];
     disciplines: string[];
     themes: string[];
 }
@@ -47,7 +47,7 @@ function StudentCreateTournamentPageInner() {
     }
 
     const [step, setStep] = useState(1);
-    const [filters, setFilters] = useState<Filters>({ niveaux: [], disciplines: [], themes: [] });
+    const [filters, setFilters] = useState<Filters>({ gradeLevel: [], disciplines: [], themes: [] });
     const [niveau, setNiveau] = useState("");
     const [discipline, setDiscipline] = useState("");
     const [themes, setThemes] = useState<string[]>([]);
@@ -64,8 +64,14 @@ function StudentCreateTournamentPageInner() {
     useEffect(() => {
         makeApiRequest<QuestionsFiltersResponse>('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
             .then((data) => {
-                setFilters(data);
-                logger.debug("Loaded filters", data);
+                // Filter out null values to match local Filters interface
+                const cleanedData = {
+                    gradeLevel: data.gradeLevel.filter((n): n is string => n !== null),
+                    disciplines: data.disciplines,
+                    themes: data.themes
+                };
+                setFilters(cleanedData);
+                logger.debug("Loaded filters", cleanedData);
             })
             .catch((err) => {
                 logger.error("Error loading filters", err);
@@ -81,7 +87,7 @@ function StudentCreateTournamentPageInner() {
 
             // Use secure filters API to get disciplines filtered by niveau
             const params = new URLSearchParams();
-            params.append('niveau', niveau);
+            params.append('gradeLevel', niveau);
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
                 .then(data => {
@@ -106,7 +112,7 @@ function StudentCreateTournamentPageInner() {
 
             // Use secure filters API to get themes filtered by niveau and discipline
             const params = new URLSearchParams();
-            params.append('niveau', niveau);
+            params.append('gradeLevel', niveau);
             params.append('discipline', discipline);
 
             makeApiRequest<QuestionsFiltersResponse>(`/api/questions/filters?${params.toString()}`, undefined, undefined, QuestionsFiltersResponseSchema)
@@ -128,11 +134,11 @@ function StudentCreateTournamentPageInner() {
         if (niveau && discipline && themes.length > 0) {
             setLoading(true);
             setError(null);
-            logger.debug("Checking question count for", { niveau, discipline, themes, numQuestions });
+            logger.debug("Checking question count for", { gradeLevel: niveau, discipline, themes, numQuestions });
 
             // Use secure list API to get question UIDs and count them locally
             const listParams = new URLSearchParams({
-                niveau: niveau,
+                gradeLevel: niveau,
                 discipline: discipline,
                 themes: themes.join(',')
             });
@@ -195,10 +201,10 @@ function StudentCreateTournamentPageInner() {
         setLoading(true);
         setError(null);
         try {
-            logger.info("Creating tournament with", { niveau, discipline, themes, numQuestions });
+            logger.info("Creating tournament with", { gradeLevel: niveau, discipline, themes, numQuestions });
             // 1. Fetch question IDs only using secure questions list API
             const listParams = new URLSearchParams({
-                niveau: niveau,
+                gradeLevel: niveau,
                 discipline: discipline,
                 themes: themes.join(','),
                 limit: numQuestions.toString()
@@ -215,7 +221,7 @@ function StudentCreateTournamentPageInner() {
             if (isTraining) {
                 // Only redirect to practice session, do NOT create a tournament
                 const params = new URLSearchParams({
-                    niveau,
+                    gradeLevel: niveau,
                     discipline,
                     themes: themes.join(","),
                     limit: String(numQuestions),
@@ -235,7 +241,7 @@ function StudentCreateTournamentPageInner() {
                 themes: themes,
                 nbOfQuestions: numQuestions,
                 settings: {
-                    type: 'direct',
+                    defaultMode: 'direct',
                     avatar: avatar,
                     username: username
                 }
@@ -307,7 +313,7 @@ function StudentCreateTournamentPageInner() {
                         <div className="w-full flex flex-col gap-4">
                             <CustomDropdown
                                 label="Choisis un niveau"
-                                options={filters.niveaux}
+                                options={filters.gradeLevel}
                                 value={niveau}
                                 onChange={(val) => { setNiveau(val); setStep(2); }}
                                 placeholder="Niveau"
@@ -399,7 +405,7 @@ function StudentCreateTournamentPageInner() {
                             </ul>
                             {error && (
                                 <>
-                                    {logger.debug('Résumé création tournoi', { niveau, discipline, themes, numQuestions, error })}
+                                    {logger.debug('Résumé création tournoi', { gradeLevel: niveau, discipline, themes, numQuestions, error })}
                                     <div className={`alert ${error.startsWith("Attention:") ? "alert-warning" : "alert-error"} justify-center mb-2`}>
                                         {error}
                                     </div>

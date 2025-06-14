@@ -5,6 +5,12 @@
  * across the MathQuest codebase.
  */
 
+// Core user types
+export * from './user';
+
+// Core game types
+export * from './game';
+
 // Core participant types
 export * from './participant';
 
@@ -50,6 +56,27 @@ export type {
     AnswerStats,
     QuestionAnswerSummary
 } from './answer';
+
+export type {
+    UserRole,
+    User,
+    PublicUser,
+    UserRegistrationData,
+    UserLoginData,
+    UserProfileUpdate,
+    UserUpgradeData
+} from './user';
+
+export type {
+    PlayMode,
+    GameTemplate,
+    GameInstance,
+    GameParticipantRecord,
+    GameTemplateCreationData,
+    GameTemplateUpdateData,
+    GameInstanceCreationData,
+    GameInstanceUpdateData
+} from './game';
 
 export type {
     BaseQuestion,

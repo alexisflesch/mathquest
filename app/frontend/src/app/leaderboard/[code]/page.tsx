@@ -17,13 +17,18 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Share2 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
-import { TournamentVerificationResponseSchema, TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentVerificationResponse, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
+import { TournamentVerificationResponseSchema, TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
+import type { TournamentVerificationResponse } from '@shared/types/api/schemas';
+import type { LeaderboardEntry } from '@shared/types/core/participant';
 
-type LeaderboardEntry = { id: string; username: string; avatar: string; score: number; isDiffered?: boolean };
+// Extend shared LeaderboardEntry with tournament-specific fields
+type TournamentLeaderboardEntry = LeaderboardEntry & {
+    isDiffered?: boolean;
+};
 
 export default function TournamentLeaderboardPage() {
     const { code } = useParams();
-    const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+    const [leaderboard, setLeaderboard] = useState<TournamentLeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [canPlayDiffered, setCanPlayDiffered] = useState(false);
@@ -40,7 +45,7 @@ export default function TournamentLeaderboardPage() {
         async function fetchLeaderboard() {
             try {
                 const tournoi = await makeApiRequest<TournamentVerificationResponse>(`tournament?code=${code}`, {}, undefined, TournamentVerificationResponseSchema);
-                if (!tournoi || !tournoi.id) throw new Error('Tournoi introuvable');
+                if (!tournoi || !tournoi.verified) throw new Error('Tournoi introuvable ou non vérifié');
 
                 const lb = await makeApiRequest<TournamentLeaderboardResponse>(`tournament-leaderboard?code=${code}`, {}, undefined, TournamentLeaderboardResponseSchema);
                 setLeaderboard(lb.leaderboard || []);
@@ -139,7 +144,7 @@ export default function TournamentLeaderboardPage() {
                                 p.avatar === currentAvatar;
                             return (
                                 <li
-                                    key={p.id}
+                                    key={p.userId}
                                     className={
                                         "flex items-center gap-4 p-2 rounded " +
                                         (isCurrent

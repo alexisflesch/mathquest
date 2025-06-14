@@ -139,9 +139,12 @@ async function initializeGameState(gameInstanceId) {
             questionUids,
             startedAt: Date.now(),
             timer: {
-                startedAt: 0,
+                status: 'stop',
+                timeLeftMs: 0,
                 durationMs: 0,
-                isPaused: true
+                questionUid: null,
+                timestamp: Date.now(),
+                localTimeLeftMs: null
             },
             settings: {
                 timeMultiplier: typeof gameInstance.settings === 'object' && gameInstance.settings !== null
@@ -217,10 +220,14 @@ async function setCurrentQuestion(accessCode, questionIndex) {
         };
         gameState.questionData = questionData;
         // Reset and start the timer
+        const durationMs = (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1);
         gameState.timer = {
-            startedAt: Date.now(),
-            durationMs: (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1), // Default to 30s if timeLimit is null
-            isPaused: false
+            status: 'play',
+            timeLeftMs: durationMs,
+            durationMs: durationMs,
+            questionUid: questionUid,
+            timestamp: Date.now(),
+            localTimeLeftMs: null
         };
         // Initialize answer collection for this question
         await redis_1.redisClient.del(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionUid}`);
@@ -312,9 +319,9 @@ async function endCurrentQuestion(accessCode) {
         }
         const gameState = JSON.parse(gameStateRaw);
         // Pause the timer
-        gameState.timer.isPaused = true;
-        gameState.timer.pausedAt = Date.now();
-        gameState.timer.timeRemainingMs = Math.max(0, gameState.timer.durationMs - (gameState.timer.pausedAt - gameState.timer.startedAt));
+        gameState.timer.status = 'pause';
+        gameState.timer.timestamp = Date.now();
+        // Keep timeLeftMs as is when pausing
         // Update game state in Redis
         await redis_1.redisClient.set(`${GAME_KEY_PREFIX}${accessCode}`, JSON.stringify(gameState), 'EX', 86400 // 24 hours
         );

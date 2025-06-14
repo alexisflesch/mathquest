@@ -6,6 +6,7 @@ import { disconnectHandler } from './disconnect';
 import { requestNextQuestionHandler } from './requestNextQuestion';
 import { GAME_EVENTS } from '@shared/types/socket/events';
 import createLogger from '@/utils/logger';
+import type { ErrorPayload } from '@shared/types/socketEvents';
 
 const logger = createLogger('GameHandlers');
 
@@ -43,13 +44,13 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
 
             if (!gameInstance || !gameInstance.gameTemplate) {
                 logger.warn({ socketId: socket.id, accessCode }, 'Game instance or template not found');
-                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game not found or template missing.' });
+                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game not found or template missing.' } as ErrorPayload);
                 return;
             }
 
             if (gameInstance.playMode !== 'practice') {
                 logger.warn({ socketId: socket.id, playMode: gameInstance.playMode }, 'start_game is only for practice mode');
-                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'start_game only allowed in practice mode.' });
+                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'start_game only allowed in practice mode.' } as ErrorPayload);
                 return;
             }
 
@@ -62,7 +63,7 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
             // Check if we have questions
             if (gameInstance.gameTemplate.questions.length === 0) {
                 logger.warn({ socketId: socket.id, accessCode }, 'No questions in template');
-                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'No questions available in this game.' });
+                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'No questions available in this game.' } as ErrorPayload);
                 return;
             }
 
@@ -88,7 +89,7 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
 
         } catch (err) {
             logger.error({ socketId: socket.id, error: err }, 'Error in start_game handler');
-            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Failed to start game: ' + (err as Error).message });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Failed to start game: ' + (err as Error).message } as ErrorPayload);
         }
     });
 }

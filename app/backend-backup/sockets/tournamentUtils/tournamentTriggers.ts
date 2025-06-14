@@ -272,7 +272,7 @@ function triggerTournamentAnswer(
 
     // Convert answer to appropriate type if possible
     let processedAnswer: string | number = answer;
-    if (question.type === 'number' || question.type === 'numeric') {
+    if (question.defaultMode === 'number' || question.defaultMode === 'numeric') {
         // Normalize numeric answers
         try {
             // Handle comma as decimal separator

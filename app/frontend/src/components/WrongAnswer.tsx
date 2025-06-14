@@ -24,7 +24,7 @@ const WrongAnswer: React.FC<WrongAnswerProps> = ({ iconColor = "#ef4444", size =
                 animate={{ x: shakeKeyframes, opacity: 1 }}
                 exit={{ x: 0, opacity: 0 }}
                 transition={{
-                    x: { type: "keyframes", times: [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1], duration: 0.5 },
+                    x: { defaultMode: "keyframes", times: [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1], duration: 0.5 },
                     opacity: { duration: 0.2 }
                 }}
                 className={className}

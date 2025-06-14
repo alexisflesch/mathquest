@@ -553,7 +553,7 @@ describe('LiveGamePage - Tournament Mode', () => {
         //     expect.objectContaining({
         //         uid: 'test-question-1',
         //         text: 'What is 5 + 3?',
-        //         type: QUESTION_TYPES.MULTIPLE_CHOICE_EN, // Changed from QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER
+        //         defaultMode: QUESTION_TYPES.MULTIPLE_CHOICE_EN, // Changed from QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER
         //         answers: expect.any(Array)
         //     })
         // );

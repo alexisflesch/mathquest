@@ -31,8 +31,8 @@ async function handlePause(
 ): Promise<void> {
     if (!quizState[quizId] || quizState[quizId].profTeacherId !== teacherId) {
         // Fallback: check DB if teacherId matches quiz owner
-        prisma.quiz.findUnique({ where: { id: quizId }, select: { enseignant_id: true } }).then(async quiz => {
-            if (!quiz || quiz.enseignant_id !== teacherId) {
+        prisma.quiz.findUnique({ where: { id: quizId }, select: { creatorId: true } }).then(async quiz => {
+            if (!quiz || quiz.creatorId !== teacherId) {
                 logger.warn(`[PauseQuiz] Unauthorized attempt for quiz ${quizId} from socket ${socket.id} (teacherId=${teacherId})`);
                 io.to(`dashboard_${quizId}`).emit('quiz_action_response', {
                     status: 'error',

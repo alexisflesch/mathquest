@@ -2,9 +2,16 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { GameParticipantService } from '@/core/services/gameParticipantService';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
-import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData, LeaderboardEntryData } from '@shared/types/socketEvents';
+import {
+    ClientToServerEvents,
+    ServerToClientEvents,
+    InterServerEvents,
+    SocketData,
+    LeaderboardEntryData,
+    ErrorPayload
+} from '@shared/types/socketEvents';
 import { z } from 'zod';
-import { gameAnswerPayloadSchema, errorPayloadSchema } from '@shared/types/socketEvents.zod';
+import { gameAnswerPayloadSchema } from '@shared/types/socketEvents.zod';
 import { calculateLeaderboard } from '../sharedLeaderboard';
 import { collectAnswers } from '../sharedAnswers';
 import { calculateScore } from '../sharedScore';
@@ -13,7 +20,6 @@ import { GAME_EVENTS } from '@shared/types/socket/events';
 const logger = createLogger('GameAnswerHandler');
 
 export type GameAnswerPayload = z.infer<typeof gameAnswerPayloadSchema>;
-export type ErrorPayload = z.infer<typeof errorPayloadSchema>;
 
 export function gameAnswerHandler(
     io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
@@ -42,8 +48,7 @@ export function gameAnswerHandler(
 
             const errorPayload: ErrorPayload = {
                 message: 'Invalid game answer payload',
-                code: 'INVALID_PAYLOAD',
-                details: errorDetails
+                code: 'INVALID_PAYLOAD'
             };
 
             // Emit error response
@@ -234,10 +239,10 @@ export function gameAnswerHandler(
                 }
                 logger.info({ leaderboard, roomName }, 'Emitting leaderboard_update to room');
                 io.to(roomName).emit('leaderboard_update', { leaderboard });
-                // Only emit answer_received with minimal info
-                logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode');
+                // Only emit answer_received with minimal info (NO correct field for tournament/quiz)
+                logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode (without correct field)');
                 try {
-                    socket.emit('answer_received', { questionUid, timeSpent, correct: isCorrect !== undefined ? isCorrect : false });
+                    socket.emit('answer_received', { questionUid, timeSpent });
                     console.log(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
                 } catch (emitError) {
                     logger.error({ emitError, socketId: socket.id }, 'Error emitting answer_received');
@@ -251,9 +256,9 @@ export function gameAnswerHandler(
                 // Try to send error response
                 socket.emit('game_error', { message: 'Unexpected error during answer submission.' });
 
-                // Also send back answer_received to unblock the client
+                // Also send back answer_received to unblock the client (without correct field)
                 if (questionUid && timeSpent !== undefined) {
-                    socket.emit('answer_received', { questionUid, timeSpent, correct: false });
+                    socket.emit('answer_received', { questionUid, timeSpent });
                     console.log(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
                 }
             } catch (emitError) {

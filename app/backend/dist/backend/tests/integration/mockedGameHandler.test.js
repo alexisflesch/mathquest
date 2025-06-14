@@ -724,9 +724,12 @@ describe('Mocked Game Handler', () => {
             questionUids,
             answersLocked: false,
             timer: {
-                startedAt: Date.now(),
+                status: 'play',
+                timeLeftMs: 20000,
                 durationMs: 20000,
-                isPaused: false
+                questionUid: questionUids[0] || null,
+                timestamp: Date.now(),
+                localTimeLeftMs: null
             },
             settings: {
                 timeMultiplier: 1.0,

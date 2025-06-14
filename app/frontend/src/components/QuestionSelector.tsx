@@ -33,7 +33,7 @@ interface TimerProps {
 }
 
 interface QuestionSelectorProps extends TimerProps {
-    onSelect: (selected: string[], meta: { niveaux: string[], categories: string[], themes: string[] }) => void;
+    onSelect: (selected: string[], meta: { gradeLevel: string[], discipline: string[], themes: string[] }) => void;
     selectedQuestionIds: string[];
     externalFilter?: {
         discipline?: string;
@@ -48,14 +48,21 @@ export default function QuestionSelector({
     onTimerAction
 }: QuestionSelectorProps) {
     const [questions, setQuestions] = useState<QuestionData[]>([]);
-    const [filters, setFilters] = useState<{ disciplines: string[]; niveaux: string[]; themes: string[] }>({ disciplines: [], niveaux: [], themes: [] });
-    const [filter, setFilter] = useState({ discipline: '', niveau: '', themes: [] as string[], tag: '' }); // New filter state with themes array
+    const [filters, setFilters] = useState<{ disciplines: string[]; gradeLevel: string[]; themes: string[] }>({ disciplines: [], gradeLevel: [], themes: [] });
+    const [filter, setFilter] = useState({ discipline: '', gradeLevel: '', themes: [] as string[], tag: '' }); // New filter state with themes array
     const [selectedQuestionsMap, setSelectedQuestionsMap] = useState<{ [uid: string]: QuestionData }>({});
     const [expanded, setExpanded] = useState<{ [uid: string]: boolean }>({});
 
     useEffect(() => {
         makeApiRequest('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
-            .then(setFilters)
+            .then(data => {
+                // Filter out null values from niveaux array
+                setFilters({
+                    disciplines: data.disciplines,
+                    gradeLevel: data.gradeLevel.filter((n): n is string => n !== null),
+                    themes: data.themes
+                });
+            })
             .catch(error => {
                 console.error('Error fetching filters:', error);
             });
@@ -70,7 +77,7 @@ export default function QuestionSelector({
         let url = 'questions';
         const params = [];
         if (effectiveFilter.discipline) params.push(`discipline=${encodeURIComponent(effectiveFilter.discipline)}`);
-        if (effectiveFilter.niveau) params.push(`niveau=${encodeURIComponent(effectiveFilter.niveau)}`);
+        if (effectiveFilter.gradeLevel) params.push(`gradeLevel=${encodeURIComponent(effectiveFilter.gradeLevel)}`);
 
         // Gestion du filtrage OU pour les thèmes
         if (effectiveFilter.themes && effectiveFilter.themes.length > 0) { // New themes logic
@@ -93,7 +100,7 @@ export default function QuestionSelector({
             .catch(error => {
                 console.error('Error fetching questions:', error);
             });
-    }, [effectiveFilter.discipline, effectiveFilter.niveau,
+    }, [effectiveFilter.discipline, effectiveFilter.gradeLevel,
     // Use JSON.stringify for array comparison to ensure changes are detected
     JSON.stringify(effectiveFilter.themes) // New themes dependency
     ]);
@@ -145,10 +152,10 @@ export default function QuestionSelector({
         setSelectedQuestionsMap(updatedMap);
         // Compute meta arrays from all selected questions
         const selectedQuestionsMeta = Object.values(updatedMap);
-        const niveaux = Array.from(new Set(selectedQuestionsMeta.map(q => q.gradeLevel).filter(Boolean) as string[]));
-        const categories = Array.from(new Set(selectedQuestionsMeta.map(q => q.discipline).filter(Boolean) as string[]));
+        const gradeLevel = Array.from(new Set(selectedQuestionsMeta.map(q => q.gradeLevel).filter(Boolean) as string[]));
+        const discipline = Array.from(new Set(selectedQuestionsMeta.map(q => q.discipline).filter(Boolean) as string[]));
         const themes = Array.from(new Set(selectedQuestionsMeta.flatMap(q => q.themes || []))); // New themes calculation, ensuring to handle undefined/empty themes
-        onSelect(next, { niveaux, categories, themes });
+        onSelect(next, { gradeLevel, discipline, themes });
     };
 
     // Filter by tag (client-side)
@@ -194,11 +201,11 @@ export default function QuestionSelector({
                     </select>
                     <select
                         className="select select-bordered select-lg w-full"
-                        value={filter.niveau}
-                        onChange={e => setFilter(f => ({ ...f, niveau: e.target.value }))}
+                        value={filter.gradeLevel}
+                        onChange={e => setFilter(f => ({ ...f, gradeLevel: e.target.value }))}
                     >
                         <option value="">Niveau</option>
-                        {filters.niveaux.map((n: string) => <option key={n} value={n}>{n}</option>)}
+                        {filters.gradeLevel.map((n: string) => <option key={n} value={n}>{n}</option>)}
                     </select>
                     <select
                         className="select select-bordered select-lg w-full"

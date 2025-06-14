@@ -172,10 +172,10 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     { label: 'Rejoindre un tournoi', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
                     { label: 'Mes tournois', href: '/my-tournaments' },
-                    { type: 'section', label: 'Enseignant' },
+                    { defaultMode: 'section', label: 'Enseignant' },
                     { label: 'Mes activités', href: '/teacher/games' },
                     { label: 'Créer une activité', href: '/teacher/games/new' },
-                    { type: 'section', label: 'Compte' },
+                    { defaultMode: 'section', label: 'Compte' },
                     { label: 'Mon profil', href: '/profile' },
                 ];
 
@@ -314,7 +314,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                 <nav className={`flex-1 p-1 space-y-1`}>
                     {menu.map((item, index) => {
                         const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
-                        if (item.type === 'section') {
+                        if (item.defaultMode === 'section') {
                             return (
                                 <div key={`section-${index}`} className="pt-4 pb-1 relative h-6 flex items-center">
                                     <div className="flex items-center w-full px-2 relative">
@@ -465,7 +465,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                                 const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
 
                                 // Handle section headers
-                                if (item.type === 'section') {
+                                if (item.defaultMode === 'section') {
                                     return (
                                         <div key={`mobile-section-${index}`} className="pt-3 pb-1">
                                             <div className="flex items-center gap-2 px-2">

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { makeApiRequest } from '@/config/api';
 import { useAuth } from '@/components/AuthProvider';
-import { AuthStatusResponseSchema, LogoutResponseSchema } from '@/types/api';
+import { AuthStatusResponseSchema, LogoutResponseSchema } from '@shared/types/api/schemas';
 
 /**
  * Authentication Debug Page

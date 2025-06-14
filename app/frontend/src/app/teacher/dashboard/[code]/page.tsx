@@ -241,7 +241,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         const handleActionResponse = (data: { message: string; type?: 'info' | 'warning' | 'error' | 'success' }) => { // Updated data type
             logger.info(`[Snackbar] Received notification:`, data);
             setSnackbarMessage(data.message);
-            // Optionally, use data.type to style the snackbar
+            // Optionally, use data.defaultMode to style the snackbar
         };
 
         quizSocket.on('error_dashboard', handleActionResponse); // Use error_dashboard event for notifications
@@ -306,7 +306,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
                     const processedQuestion = {
                         ...q,
-                        type: q.questionType || questionData.questionType || QUESTION_TYPES.SINGLE_CHOICE, // Default type if not provided
+                        defaultMode: q.questionType || questionData.questionType || QUESTION_TYPES.SINGLE_CHOICE, // Default type if not provided
                         timeLimit: timeLimit, // Use standard timeLimit field only
                         feedbackWaitTime: questionData.feedbackWaitTime ?? q.feedbackWaitTime ?? 3000 // Default to 3s if null
                     };

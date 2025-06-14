@@ -35,10 +35,14 @@ async function runGameFlow(io, accessCode, questions, options) {
         for (let i = 0; i < questions.length; i++) {
             // Set and persist timer in game state before emitting question
             const timeLimitSec = questions[i].timeLimit || 30;
+            const durationMs = timeLimitSec * 1000;
             const timer = {
-                startedAt: Date.now(),
-                durationMs: timeLimitSec * 1000,
-                isPaused: false
+                status: 'play',
+                timeLeftMs: durationMs,
+                durationMs: durationMs,
+                questionUid: questions[i].uid,
+                timestamp: Date.now(),
+                localTimeLeftMs: null
             };
             // Fetch and update game state
             const currentState = await gameStateService_1.default.getFullGameState(accessCode);
@@ -67,6 +71,21 @@ async function runGameFlow(io, accessCode, questions, options) {
             logger.info({ room: `game_${accessCode}`, event: 'game_question', payload: gameQuestionPayload }, '[DEBUG] Emitting game_question');
             io.to(`game_${accessCode}`).emit('game_question', gameQuestionPayload);
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
+            // Emit timer update to start frontend countdown
+            const gameTimerUpdatePayload = {
+                questionUid: questions[i].uid,
+                timer: {
+                    status: 'play',
+                    timeLeftMs: timeLimitSec * 1000,
+                    durationMs: timeLimitSec * 1000,
+                    questionUid: questions[i].uid,
+                    timestamp: timer.timestamp,
+                    localTimeLeftMs: null
+                }
+            };
+            logger.info({ room: `game_${accessCode}`, event: 'game_timer_updated', payload: gameTimerUpdatePayload }, '[DEBUG] Emitting game_timer_updated');
+            io.to(`game_${accessCode}`).emit('game_timer_updated', gameTimerUpdatePayload);
+            logger.info({ accessCode, event: 'game_timer_updated', questionUid: questions[i].uid }, '[TRACE] Emitted game_timer_updated');
             options.onQuestionStart?.(i);
             await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
             logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionUid: questions[i].uid }, '[DEBUG] Emitting correct_answers');

@@ -3,6 +3,9 @@ import { UserService } from '@/core/services/userService';
 import { UserRole } from '@/db/generated/client';
 import { teacherAuth } from '@/middleware/auth';
 import createLogger from '@/utils/logger';
+import type {
+    ErrorResponse
+} from '@shared/types/api/requests';
 
 // Create a route-specific logger
 const logger = createLogger('TeachersAPI');
@@ -28,7 +31,7 @@ export const __setUserServiceForTesting = (mockService: UserService): void => {
  * Get the authenticated teacher's profile
  * GET /api/v1/teachers/profile
  */
-router.get('/profile', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/profile', teacherAuth, async (req: Request, res: Response<{ user: any } | ErrorResponse>): Promise<void> => {
     try {
         // Expect req.user to have userId (set by auth middleware)
         if (!req.user?.userId) {

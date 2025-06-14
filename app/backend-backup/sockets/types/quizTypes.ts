@@ -38,7 +38,7 @@ export interface BackendQuizParticipant {
  */
 export type BackendQuizAnswer = {
     questionUid: string; // UID of the question this answer pertains to
-    questionType?: string; // Type of the question (QCU, QCM, LIBRE, etc.) from Question.type
+    questionType?: string; // Type of the question (QCU, QCM, LIBRE, etc.) from Question.defaultMode
 
     // Raw data from client/initial storage
     answer?: number | number[] | string; // The raw answer value (e.g., index, text)

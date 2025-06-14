@@ -35,10 +35,11 @@ router.get('/:userId', auth_1.optionalAuth, async (req, res) => {
         const publicUser = {
             id: user.id,
             username: user.username,
-            email: user.email,
-            role: user.role,
-            avatarEmoji: user.avatarEmoji,
-            createdAt: user.createdAt
+            email: user.email || undefined,
+            role: user.role, // Type assertion for enum compatibility
+            avatarEmoji: user.avatarEmoji || undefined,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.createdAt.toISOString() // Use createdAt if updatedAt doesn't exist
         };
         res.json(publicUser);
     }

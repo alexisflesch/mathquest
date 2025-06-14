@@ -2,6 +2,12 @@ import express, { Request, Response } from 'express';
 import { UserService } from '@/core/services/userService';
 import { UserRole } from '@/db/generated/client';
 import createLogger from '@/utils/logger';
+import type {
+    UserByCookieResponse
+} from '@shared/types/api/responses';
+import type {
+    ErrorResponse
+} from '@shared/types/api/requests';
 
 // Create a route-specific logger
 const logger = createLogger('PlayersAPI');
@@ -27,7 +33,7 @@ export const __setUserServiceForTesting = (mockService: UserService): void => {
  * Get student by cookieId
  * GET /api/v1/players/cookie/:cookieId
  */
-router.get('/cookie/:cookieId', async (req: Request, res: Response): Promise<void> => {
+router.get('/cookie/:cookieId', async (req: Request, res: Response<UserByCookieResponse | ErrorResponse>): Promise<void> => {
     try {
         const { cookieId } = req.params;
 
@@ -43,7 +49,16 @@ router.get('/cookie/:cookieId', async (req: Request, res: Response): Promise<voi
             return;
         }
 
-        res.status(200).json({ user });
+        res.status(200).json({
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email || undefined,
+                role: user.role,
+                avatarEmoji: user.avatarEmoji || '👤',
+                createdAt: user.createdAt.toISOString()
+            }
+        });
     } catch (error) {
         logger.error({ error }, 'Error fetching user by cookieId');
         res.status(500).json({ error: 'An error occurred fetching the user' });

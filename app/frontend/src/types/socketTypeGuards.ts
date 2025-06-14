@@ -583,13 +583,15 @@ export function isGameEndedPayload(data: unknown): data is GameEndedPayload {
 
 export interface CorrectAnswersPayload {
     questionUid?: string;
+    correctAnswers?: boolean[];
 }
 
 export function isCorrectAnswersPayload(data: unknown): data is CorrectAnswersPayload {
     if (!data || typeof data !== 'object') return false;
 
     const c = data as Record<string, unknown>;
-    return typeof c.questionUid === 'string';
+    return typeof c.questionUid === 'string' &&
+        (c.correctAnswers === undefined || Array.isArray(c.correctAnswers));
 }
 
 // --- Feedback Event Type Guards (for practice mode) ---

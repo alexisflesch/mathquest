@@ -20,7 +20,7 @@ function isBaseQuestion(value) {
         typeof value.uid === 'string' &&
         'text' in value &&
         typeof value.text === 'string' &&
-        'type' in value &&
+        'defaultMode' in value &&
         typeof (value.questionType) === 'string');
 }
 /**

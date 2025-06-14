@@ -3,6 +3,12 @@ import { UserService } from '@/core/services/userService';
 import { UserRole } from '@/db/generated/client';
 import { validateAvatar } from '@/utils/avatarUtils';
 import createLogger from '@/utils/logger';
+import type {
+    RegisterResponse
+} from '@shared/types/api/responses';
+import type {
+    ErrorResponse
+} from '@shared/types/api/requests';
 
 // Create a route-specific logger
 const logger = createLogger('StudentAPI');
@@ -23,7 +29,7 @@ const getUserService = (): UserService => {
  * Generic student endpoint that handles multiple actions
  * POST /api/v1/student
  */
-router.post('/', async (req: Request, res: Response): Promise<void> => {
+router.post('/', async (req: Request, res: Response<RegisterResponse | ErrorResponse>): Promise<void> => {
     try {
         const { action, username, avatar, cookie_id } = req.body;
 
@@ -43,7 +49,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 /**
  * Handle student join (registration)
  */
-async function handleStudentJoin(req: Request, res: Response): Promise<void> {
+async function handleStudentJoin(req: Request, res: Response<RegisterResponse | ErrorResponse>): Promise<void> {
     const { username, avatar, cookie_id } = req.body;
 
     // Basic validation
@@ -79,11 +85,14 @@ async function handleStudentJoin(req: Request, res: Response): Promise<void> {
 
         // Return success message
         res.status(201).json({
+            success: true,
             message: 'Student registered successfully',
+            token: result.token,
             user: {
                 id: result.user.id,
                 username: result.user.username,
-                avatar: avatar
+                avatar: avatar,
+                role: result.user.role
             }
         });
     } catch (error) {

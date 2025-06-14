@@ -2,6 +2,7 @@ import { redisClient } from '@/config/redis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
+import type { GameTimerState } from '@shared/types/core/timer';
 
 // Define game state interface
 export interface GameState {
@@ -13,13 +14,7 @@ export interface GameState {
     questionData?: any;          // Data of the current question (sent to clients)
     startedAt?: number;          // Timestamp when game started
     answersLocked?: boolean;     // Whether answers are locked
-    timer: {
-        startedAt: number;       // When the timer started
-        durationMs: number;      // Total duration in milliseconds (unit-explicit)
-        isPaused: boolean;       // Whether timer is paused
-        pausedAt?: number;       // When it was paused
-        timeRemainingMs?: number; // Time remaining when paused (unit-explicit)
-    };
+    timer: GameTimerState;       // Use shared timer state
     settings: {                  // Game settings
         timeMultiplier: number;  // Multiplier for question time limits
         showLeaderboard: boolean; // Whether to show leaderboard between questions
@@ -169,9 +164,12 @@ export async function initializeGameState(gameInstanceId: string): Promise<GameS
             questionUids,
             startedAt: Date.now(),
             timer: {
-                startedAt: 0,
+                status: 'stop',
+                timeLeftMs: 0,
                 durationMs: 0,
-                isPaused: true
+                questionUid: null,
+                timestamp: Date.now(),
+                localTimeLeftMs: null
             },
             settings: {
                 timeMultiplier: typeof gameInstance.settings === 'object' && gameInstance.settings !== null
@@ -266,10 +264,14 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
         gameState.questionData = questionData;
 
         // Reset and start the timer
+        const durationMs = (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1);
         gameState.timer = {
-            startedAt: Date.now(),
-            durationMs: (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1), // Default to 30s if timeLimit is null
-            isPaused: false
+            status: 'play',
+            timeLeftMs: durationMs,
+            durationMs: durationMs,
+            questionUid: questionUid,
+            timestamp: Date.now(),
+            localTimeLeftMs: null
         };
 
         // Initialize answer collection for this question
@@ -387,10 +389,9 @@ export async function endCurrentQuestion(accessCode: string): Promise<GameState 
         const gameState: GameState = JSON.parse(gameStateRaw);
 
         // Pause the timer
-        gameState.timer.isPaused = true;
-        gameState.timer.pausedAt = Date.now();
-        gameState.timer.timeRemainingMs = Math.max(0,
-            gameState.timer.durationMs - (gameState.timer.pausedAt - gameState.timer.startedAt));
+        gameState.timer.status = 'pause';
+        gameState.timer.timestamp = Date.now();
+        // Keep timeLeftMs as is when pausing
 
         // Update game state in Redis
         await redisClient.set(

@@ -192,7 +192,7 @@ function registerLobbyHandlers(io: Server, socket: Socket): void {
 
                         // 3. Global notification
                         io.emit("tournament_notification", {
-                            type: "redirect",
+                            defaultMode: "redirect",
                             code: code,
                             message: "Tournament has started",
                             isQuizMode: true,

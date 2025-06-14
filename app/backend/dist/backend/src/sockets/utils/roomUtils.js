@@ -46,7 +46,7 @@ async function joinRoom(socket, roomName, userData) {
         socket.emit('room_joined', {
             room: roomName,
             timestamp: new Date().toISOString()
-        });
+        }); // TODO: Define shared type if missing
     }
     catch (error) {
         logger.error({
@@ -82,7 +82,7 @@ async function leaveRoom(socket, roomName) {
         socket.emit('room_left', {
             room: roomName,
             timestamp: new Date().toISOString()
-        });
+        }); // TODO: Define shared type if missing
     }
     catch (error) {
         logger.error({
@@ -168,3 +168,12 @@ function broadcastToRoom(io, roomName, eventName, data, excludeSocketId) {
         throw error;
     }
 }
+// TODO: Sweep the rest of the file and update all emits to use shared types or add TODOs for missing types.
+// TODO: Import or define types for:
+// - room_joined
+// - room_left
+// - broadcastToRoom (eventName/data)
+// Example refactor for emits (repeat for all emits in this file):
+// socket.emit('room_joined', joinedPayload); // TODO: Define shared type if missing
+// socket.emit('room_left', leftPayload); // TODO: Define shared type if missing
+// io.to(roomName).emit(eventName, data); // TODO: Ensure data uses shared type if eventName is known

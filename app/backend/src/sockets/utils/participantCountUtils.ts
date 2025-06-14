@@ -1,6 +1,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import type { ConnectedCountPayload } from '@shared/types/socket/dashboardPayloads';
 
 const logger = createLogger('ParticipantCountUtils');
 
@@ -57,7 +58,7 @@ export async function emitParticipantCount(
 
         // Emit to the dashboard room for this game
         const dashboardRoom = `dashboard_${gameId}`;
-        io.to(dashboardRoom).emit('quiz_connected_count', { count: totalCount });
+        io.to(dashboardRoom).emit('quiz_connected_count', { count: totalCount } as ConnectedCountPayload);
 
         logger.debug({
             dashboardRoom,
@@ -121,3 +122,5 @@ export async function getParticipantCount(
         return 0;
     }
 }
+
+// TODO: Sweep the rest of the file and update all emits to use shared types or add TODOs for missing types.

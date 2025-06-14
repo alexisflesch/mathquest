@@ -82,7 +82,7 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
         return;
     }
 
-    logger.info(`Timer expired for question ${currentQuestionUid} (type: ${question.type}) in tournament ${code}`);
+    logger.info(`Timer expired for question ${currentQuestionUid} (defaultMode: ${question.defaultMode}) in tournament ${code}`);
 
     // --- SCORE PROCESSING & INDIVIDUAL UPDATES ---
     const totalQuestionsInEvent = state.questions.length;
@@ -102,7 +102,7 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
             let submittedValue: string | string[] | undefined = undefined;
             let answerIndices: number | number[] | undefined = rawAnswer.answerIdx;
 
-            if (question.type === 'QCU' || (question.type === 'QCM' && question.answers.filter(r => r.correct).length === 1)) {
+            if (question.defaultMode === 'QCU' || (question.defaultMode === 'QCM' && question.answers.filter(r => r.correct).length === 1)) {
                 const correctOptionIndex = question.answers.findIndex(r => r.correct);
                 if (rawAnswer.answerIdx === correctOptionIndex) {
                     isCorrectOverall = true;
@@ -110,7 +110,7 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
                 if (typeof rawAnswer.answerIdx === 'number' && question.answers[rawAnswer.answerIdx]) {
                     submittedValue = question.answers[rawAnswer.answerIdx].text;
                 }
-            } else if (question.type === 'QCM') {
+            } else if (question.defaultMode === 'QCM') {
                 if (Array.isArray(rawAnswer.answerIdx)) {
                     submittedValue = rawAnswer.answerIdx.map(idx => question.answers?.[idx]?.text).filter(t => !!t) as string[];
                 } else if (typeof rawAnswer.answerIdx === 'number' && question.answers?.[rawAnswer.answerIdx]) {
@@ -130,7 +130,7 @@ async function handleTimerExpiration(io: Server, code: string, targetRoom: strin
             const scoreResult = calculateScore(question, processedAnswerForScoring, totalQuestionsInEvent);
             scoreForThisQuestion = scoreResult.normalizedQuestionScore;
 
-            if (question.type === 'QCM') {
+            if (question.defaultMode === 'QCM') {
                 // For QCM, isCorrect should reflect if any points were scored before penalty
                 processedAnswerForScoring.isCorrect = scoreResult.scoreBeforePenalty > 0;
             }

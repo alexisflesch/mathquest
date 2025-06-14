@@ -5,6 +5,12 @@ import { GameInstanceService } from '@/core/services/gameInstanceService';
 import createLogger from '@/utils/logger';
 import { SetQuestionPayload } from './types';
 import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { GameTimerState } from '@shared/types/core/timer';
+import type { ErrorPayload } from '@shared/types/socketEvents';
+import type {
+    DashboardGameStatusChangedPayload,
+    DashboardQuestionChangedPayload
+} from '@shared/types/socket/dashboardPayloads';
 
 // Create a handler-specific logger
 const logger = createLogger('SetQuestionHandler');
@@ -31,7 +37,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
             socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control the game',
-            });
+            } as ErrorPayload);
             if (callback && !callbackCalled) {
                 callback({
                     success: false,
@@ -70,7 +76,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'NOT_AUTHORIZED',
                     message: 'Not authorized to control this game',
-                });
+                } as ErrorPayload);
                 if (callback && !callbackCalled) {
                     callback({
                         success: false,
@@ -94,7 +100,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'STATE_ERROR',
                     message: 'Could not retrieve game state',
-                });
+                } as ErrorPayload);
                 if (callback && !callbackCalled) {
                     callback({
                         success: false,
@@ -119,7 +125,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'QUESTION_NOT_FOUND',
                     message: 'Question not found in this game',
-                });
+                } as ErrorPayload);
                 if (callback && !callbackCalled) {
                     callback({
                         success: false,
@@ -153,23 +159,31 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
 
                 // CRITICAL FIX: Preserve timer state if currently running
                 const currentTimer = gameState.timer;
-                const isCurrentlyRunning = currentTimer && !currentTimer.isPaused;
+                const isCurrentlyRunning = currentTimer && currentTimer.status === 'play';
 
                 if (isCurrentlyRunning) {
-                    // Keep timer running but update duration
-                    gameState.timer = {
-                        startedAt: Date.now(), // Reset start time for new question
+                    // Keep timer running but update duration for new question
+                    const newTimer: GameTimerState = {
+                        status: 'play',
+                        timeLeftMs: duration, // Full duration for new question
                         durationMs: duration,
-                        isPaused: false // Keep running
+                        questionUid: questionUid,
+                        timestamp: Date.now(),
+                        localTimeLeftMs: null
                     };
+                    gameState.timer = newTimer;
                     logger.info({ gameId, questionUid, duration }, 'Timer was running, keeping it active for new question');
                 } else {
                     // Default: start paused so teacher can control when to begin
-                    gameState.timer = {
-                        startedAt: Date.now(),
+                    const pausedTimer: GameTimerState = {
+                        status: 'pause',
+                        timeLeftMs: duration,
                         durationMs: duration,
-                        isPaused: true
+                        questionUid: questionUid,
+                        timestamp: Date.now(),
+                        localTimeLeftMs: null
                     };
+                    gameState.timer = pausedTimer;
                     logger.info({ gameId, questionUid, duration }, 'Timer was paused, keeping it paused for new question');
                 }
 
@@ -190,7 +204,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 io.to(dashboardRoom).emit('dashboard_game_status_changed', {
                     status: 'active',
                     ended: false
-                });
+                } as DashboardGameStatusChangedPayload);
             }
 
             // Notify dashboard about question change
@@ -199,7 +213,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 questionUid: questionUid,
                 oldQuestionUid,
                 timer: gameState.timer
-            });
+            } as DashboardQuestionChangedPayload);
 
             // Also broadcast to the live room (for players)
             const liveRoom = `game_${gameInstance.accessCode}`;
@@ -254,7 +268,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
             socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'UNKNOWN_ERROR',
                 message: 'An unknown error occurred while setting the question',
-            });
+            } as ErrorPayload);
             if (callback && !callbackCalled) {
                 callback({
                     success: false,

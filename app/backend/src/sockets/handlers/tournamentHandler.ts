@@ -7,6 +7,8 @@ import createLogger from '@/utils/logger';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
 import gameStateService from '@/core/gameStateService';
 import { registerSharedLiveHandlers } from './sharedLiveHandler';
+import { GameTimerState } from '@shared/types/core/timer';
+import type { ErrorPayload } from '@shared/types/socketEvents';
 
 const logger = createLogger('TournamentHandler');
 const gameInstanceService = new GameInstanceService();
@@ -37,7 +39,7 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
 
         if (!gameInstance) {
             logger.warn({ accessCode, socketId: socket.id }, '[DEBUG] Tournament not found');
-            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Tournament not found' });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Tournament not found' } as ErrorPayload);
             return;
         }
 
@@ -63,7 +65,7 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
         }, '[DEBUG] Checking authorization for start_tournament');
         if (!authenticatedUserId || gameInstance.initiatorUserId !== authenticatedUserId) {
             logger.warn({ authenticatedUserId, initiatorUserId: gameInstance.initiatorUserId, accessCode, socketId: socket.id }, '[DEBUG] Not authorized to start tournament');
-            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Not authorized to start this tournament' });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Not authorized to start this tournament' } as ErrorPayload);
             return;
         }
 
@@ -72,14 +74,14 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
         const lobbyRoom = `lobby_${accessCode}`;
 
         logger.debug({ accessCode, playMode: gameInstance.playMode, socketId: socket.id }, '[DEBUG] Emitting unified 5-second countdown for all tournament types');
-        io.to(lobbyRoom).emit(LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId: gameInstance.id });
+        io.to(lobbyRoom).emit(LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId: gameInstance.id }); // TODO: Define shared type if missing
 
         // Short delay to allow clients to process redirect before game state changes affect them
         await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
 
         if (!gameInstance.gameTemplate || !gameInstance.gameTemplate.questions || gameInstance.gameTemplate.questions.length === 0) {
             logger.error({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, 'Game instance is missing game template or has no questions');
-            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game configuration error: Missing template or no questions.' });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game configuration error: Missing template or no questions.' } as ErrorPayload);
             return;
         }
 
@@ -89,7 +91,7 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
 
         if (actualQuestions.length === 0) {
             logger.error({ accessCode, gameInstanceId: gameInstance.id }, '[TournamentHandler] No valid questions found after mapping.');
-            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'No questions available for this game.' });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'No questions available for this game.' } as ErrorPayload);
             return;
         }
         logger.debug({ actualQuestionsCount: actualQuestions.length, firstQuestion: actualQuestions[0]?.uid, accessCode, socketId: socket.id }, '[TournamentHandler] Mapped actualQuestions for runGameFlow');
@@ -113,9 +115,12 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
                 currentQuestionIndex: -1, // Indicate that countdown is happening before Q0
                 questionUids: actualQuestions.map(q => q.uid),
                 timer: {
-                    startedAt: Date.now(), // Placeholder, will be updated by game flow
+                    status: 'pause', // Paused during countdown
+                    timeLeftMs: 0,
                     durationMs: 0,
-                    isPaused: true
+                    questionUid: null,
+                    timestamp: Date.now(),
+                    localTimeLeftMs: null
                 },
                 settings: {
                     timeMultiplier: 1.0,
@@ -125,7 +130,7 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
             logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, '[TournamentHandler] Game state updated in Redis prior to starting flow.');
         } catch (error) {
             logger.error({ error, accessCode, socketId: socket.id }, '[TournamentHandler] Failed to update game state in Redis.');
-            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Failed to initialize game state.' });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Failed to initialize game state.' } as ErrorPayload);
             return;
         }
 
@@ -140,20 +145,20 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
         logger.info({ room: liveRoom, duration: countdownDuration, accessCode, socketId: socket.id }, `[TournamentHandler] Emitting tournament_starting and waiting ${countdownDuration}s before starting game.`);
 
         // Start countdown with ticking - emit to both lobby and game rooms
-        io.to(liveRoom).emit('tournament_starting', { countdown: countdownDuration });
-        io.to(lobbyRoom).emit('tournament_starting', { countdown: countdownDuration });
+        io.to(liveRoom).emit('tournament_starting', { countdown: countdownDuration }); // TODO: Define shared type if missing
+        io.to(lobbyRoom).emit('tournament_starting', { countdown: countdownDuration }); // TODO: Define shared type if missing
 
         // Emit countdown tick every second to both rooms
         for (let i = countdownDuration; i > 0; i--) {
             logger.debug({ accessCode, countdown: i, socketId: socket.id }, `[TournamentHandler] Countdown tick: ${i}`);
-            io.to(liveRoom).emit('countdown_tick', { countdown: i });
-            io.to(lobbyRoom).emit('countdown_tick', { countdown: i });
+            io.to(liveRoom).emit('countdown_tick', { countdown: i }); // TODO: Define shared type if missing
+            io.to(lobbyRoom).emit('countdown_tick', { countdown: i }); // TODO: Define shared type if missing
             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
         }
 
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown complete. About to start game flow.`);
-        io.to(liveRoom).emit('countdown_complete');
-        io.to(lobbyRoom).emit('countdown_complete');
+        io.to(liveRoom).emit('countdown_complete'); // TODO: Define shared type if missing
+        io.to(lobbyRoom).emit('countdown_complete'); // TODO: Define shared type if missing
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown finished. Calling runGameFlow.`);
 
         // Update currentQuestionIndex to 0 before starting game flow
@@ -169,10 +174,13 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
             ...currentStateData.gameState, // Spread existing gameState
             currentQuestionIndex: 0,
             status: 'active', // Ensure status is still active
-            timer: { // Reset or confirm timer state for the start of questions
-                ...currentStateData.gameState.timer, // Access timer from gameState
-                startedAt: Date.now(),
-                isPaused: false // Game is starting, timer should not be paused
+            timer: { // Reset timer state for the start of questions
+                status: 'pause', // Will be started by game flow
+                timeLeftMs: 0,
+                durationMs: 0,
+                questionUid: null,
+                timestamp: Date.now(),
+                localTimeLeftMs: null
             }
         });
 

@@ -5,10 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const auth_1 = require("@/middleware/auth");
+const validation_1 = require("@/middleware/validation");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const sockets_1 = require("@/sockets");
 const prisma_1 = require("@/db/prisma");
+const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
 const logger = (0, logger_1.default)('GameControlAPI');
 const router = express_1.default.Router();
@@ -42,7 +44,7 @@ router.get('/:accessCode', auth_1.teacherAuth, async (req, res) => {
             res.status(404).json({ error: 'Game state not found' });
             return;
         }
-        res.status(200).json(gameState);
+        res.status(200).json({ gameState });
     }
     catch (error) {
         logger.error({ error }, 'Error fetching game state');
@@ -54,7 +56,7 @@ router.get('/:accessCode', auth_1.teacherAuth, async (req, res) => {
  * POST /api/v1/game-control/:accessCode/question
  * Requires teacher authentication
  */
-router.post('/:accessCode/question', auth_1.teacherAuth, async (req, res) => {
+router.post('/:accessCode/question', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schemas_1.SetQuestionRequestSchema), async (req, res) => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });

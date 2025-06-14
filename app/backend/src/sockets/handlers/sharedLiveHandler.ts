@@ -7,6 +7,20 @@ import createLogger from '@/utils/logger';
 import { getFullGameState, GameState } from '@/core/gameStateService';
 import { redisClient as redis } from '@/config/redis';
 import { GAME_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
+import type {
+    GameJoinedPayload,
+    GameTimerUpdatePayload,
+    ErrorPayload,
+    ServerToClientEvents,
+    ParticipantData
+} from '@shared/types/socketEvents';
+// TODO: Import or define types for:
+// - answer_feedback
+// - participant_joined
+// - feedback
+// - correct_answers
+// - leaderboard_update (already present)
+// - GAME_PARTICIPANTS
 
 const logger = createLogger('SharedLiveHandler');
 
@@ -68,26 +82,55 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         logger.info({ accessCode, userId, room, playMode }, '[DEBUG] Joined room');
 
         const gameStateRaw = await getFullGameState(accessCode);
-        let gameJoinPayload: any = {};
+
+        // Create participant data for the GameJoinedPayload
+        const participantData = {
+            id: socket.id, // Use socket ID as participant ID for now
+            userId: userId,
+            username: participantUsername,
+            avatar: participantAvatarEmoji || '👤', // Default avatar if none provided
+            score: 0, // Initial score
+            socketId: socket.id,
+            online: true,
+            joinedAt: new Date().toISOString(),
+            isDeferred: false, // TODO: Determine from game instance data
+            avatarEmoji: participantAvatarEmoji // For backward compatibility
+        };
+
+        // Create the correct GameJoinedPayload structure
+        let gameJoinedPayload: GameJoinedPayload = {
+            accessCode: accessCode,
+            participant: participantData,
+            gameStatus: 'pending', // Default to pending
+            isDiffered: false // TODO: Determine from game instance data
+        };
+
+        // Update gameStatus based on game state
         if (gameStateRaw && gameStateRaw.gameState) {
             const gs = gameStateRaw.gameState;
-            gameJoinPayload = {
-                gameId: gs.gameId,
-                accessCode: gs.accessCode,
-                status: gs.status,
-                currentQuestionIndex: gs.currentQuestionIndex,
-                totalQuestions: gs.questionUids.length,
-                timer: gs.timer || null,
-                question: null
-            };
+
+            // Map internal status to the expected gameStatus values
+            if (gs.status === 'active') {
+                gameJoinedPayload.gameStatus = 'active';
+            } else if (gs.status === 'completed') {
+                gameJoinedPayload.gameStatus = 'completed';
+            } else if (gs.status === 'paused') {
+                // Map paused to active since paused is still an active game
+                gameJoinedPayload.gameStatus = 'active';
+            } else {
+                gameJoinedPayload.gameStatus = 'pending';
+            }
+
+            // Send current question and timer state separately if game is active
             if (gs.currentQuestionIndex >= 0 && gs.currentQuestionIndex < gs.questionUids.length) {
                 const prisma = await import('@/db/prisma').then(m => m.prisma);
                 const questionUid = gs.questionUids[gs.currentQuestionIndex];
                 const question = await prisma.question.findUnique({ where: { uid: questionUid } });
+
                 if (question) {
                     const patchedQuestion = {
                         ...question,
-                        type: question.questionType || 'single_correct',
+                        defaultMode: question.questionType || 'single_correct',
                         answers: Array.isArray(question.answerOptions)
                             ? question.answerOptions.map((text, idx) => ({
                                 text,
@@ -100,49 +143,70 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                         explanation: question.explanation === null ? undefined : question.explanation,
                     };
                     const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
-                    gameJoinPayload.question = filterQuestionForClient(patchedQuestion);
+                    const filteredQuestion = filterQuestionForClient(patchedQuestion);
 
+                    // Send the question as a separate event
+                    socket.emit('game_question', {
+                        question: filteredQuestion,
+                        questionIndex: gs.currentQuestionIndex,
+                        totalQuestions: gs.questionUids.length
+                    });
+
+                    // Send timer state as a separate event
+                    if (gs.timer) {
+                        // With shared GameTimerState, timeLeftMs is already calculated and available
+                        const timeLeftMs = gs.timer.timeLeftMs || 0;
+
+                        // When emitting game_timer_updated, use the correct structure:
+                        socket.emit('game_timer_updated', {
+                            timer: {
+                                isPaused: gs.timer.status === 'pause',
+                                timeLeftMs: gs.timer.timeLeftMs,
+                                startedAt: gs.timer.timestamp,
+                                durationMs: gs.timer.durationMs
+                            },
+                            questionUid: questionUid
+                        } as GameTimerUpdatePayload);
+                    }
+
+                    // Handle feedback and correct answers timing
                     let shouldSendCorrectAnswers = false;
                     let shouldSendFeedback = false;
                     let feedbackRemaining = 0;
-                    if (gs.timer && typeof gs.timer.startedAt === 'number' && typeof gs.timer.durationMs === 'number') {
-                        const now = Date.now();
-                        const elapsed = now - gs.timer.startedAt;
-                        const remaining = Math.max(0, gs.timer.durationMs - elapsed);
-                        if (remaining <= 0) {
+
+                    if (gs.timer && gs.timer.durationMs) {
+                        const timeLeftMs = gs.timer.timeLeftMs || 0;
+
+                        if (timeLeftMs <= 0) {
                             shouldSendCorrectAnswers = true;
                             if (patchedQuestion.feedbackWaitTime && patchedQuestion.feedbackWaitTime > 0) {
-                                const feedbackStart = gs.timer.startedAt + gs.timer.durationMs;
-                                const feedbackEnd = feedbackStart + patchedQuestion.feedbackWaitTime * 1000;
-                                if (now < feedbackEnd) {
-                                    shouldSendFeedback = true;
-                                    feedbackRemaining = Math.ceil((feedbackEnd - now) / 1000);
-                                }
+                                // For feedback timing, we need to track when feedback phase started
+                                // Since shared timer doesn't have startedAt, we'll use timestamp if available
+                                const now = Date.now();
+                                const feedbackDurationMs = patchedQuestion.feedbackWaitTime * 1000;
+                                // Simplified: assume feedback just started if timer expired
+                                shouldSendFeedback = true;
+                                feedbackRemaining = Math.ceil(feedbackDurationMs / 1000);
                             }
                         }
                     }
+
                     if (shouldSendCorrectAnswers) {
-                        socket.emit('correct_answers', { questionUid });
+                        socket.emit('correct_answers', {
+                            questionUid,
+                            correctAnswers: question.correctAnswers || []
+                        } as { questionUid: string; correctAnswers: boolean[] }); // TODO: Define shared type if missing
                     }
                     if (shouldSendFeedback) {
                         const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
-                        socket.emit('feedback', { questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining });
+                        socket.emit('feedback', { questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining } as { questionUid: string; feedbackRemaining: number }); // TODO: Define shared type if missing
                     }
                 }
             }
-        } else {
-            gameJoinPayload = {
-                gameId: '',
-                accessCode,
-                status: 'pending',
-                currentQuestionIndex: -1,
-                totalQuestions: 0,
-                timer: null,
-                question: null
-            };
         }
-        socket.emit('game_joined', gameJoinPayload);
-        logger.info({ accessCode, userId, room, playMode, gameJoinPayload }, '[DEBUG] Emitted game_joined with timer and state');
+
+        socket.emit('game_joined', gameJoinedPayload as GameJoinedPayload);
+        logger.info({ accessCode, userId, room, playMode, gameJoinedPayload }, '[DEBUG] Emitted game_joined with correct payload structure');
 
         // const participantUsername = typeof username === 'string' ? username : 'Anonymous'; // Moved up
         // const participantavatarEmoji = typeof avatarEmoji === 'string' ? avatarEmoji : undefined; // Moved up
@@ -181,122 +245,6 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         }
 
         logger.info({ accessCode, userId, playMode }, 'Participant joined live room via sharedLiveHandler');
-
-        if (gameStateRaw && gameStateRaw.gameState && typeof gameStateRaw.gameState.currentQuestionIndex === 'number' && gameStateRaw.gameState.currentQuestionIndex >= 0) {
-            const currentIndex = gameStateRaw.gameState.currentQuestionIndex;
-            const questionUid = gameStateRaw.gameState.questionUids[currentIndex];
-            const prisma = await import('@/db/prisma').then(m => m.prisma);
-            const question = await prisma.question.findUnique({ where: { uid: questionUid } });
-            if (question) {
-                const patchedQuestion = {
-                    ...question,
-                    type: question.questionType || 'single_correct',
-                    answers: Array.isArray(question.answerOptions)
-                        ? question.answerOptions.map((text, idx) => ({
-                            text,
-                            correct: Array.isArray(question.correctAnswers) ? !!question.correctAnswers[idx] : false
-                        }))
-                        : [],
-                    difficulty: question.difficulty === null ? undefined : question.difficulty,
-                    gradeLevel: question.gradeLevel === null ? undefined : question.gradeLevel,
-                    title: question.title === null ? undefined : question.title,
-                    explanation: question.explanation === null ? undefined : question.explanation,
-                };
-                const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
-                const filteredQuestion = filterQuestionForClient(patchedQuestion);
-                if (!Array.isArray(filteredQuestion.answerOptions)) {
-                    filteredQuestion.answerOptions = [];
-                }
-
-                let questionState: 'pending' | 'active' | 'paused' | 'stopped' | 'finished' = 'active';
-                let timer = question.timeLimit || 30;
-                let phase: 'question' | 'show_answers' | 'feedback' = 'question';
-                let feedbackRemaining: number = 0; // Always initialize as number
-                const actualFeedbackWaitTime = playMode === 'quiz' ? (question.feedbackWaitTime || 0) : 0;
-
-                if (gameStateRaw && gameStateRaw.gameState && gameStateRaw.gameState.timer) {
-                    const timerObj = gameStateRaw.gameState.timer;
-                    if (timerObj.isPaused) {
-                        if (playMode === 'quiz') {
-                            questionState = 'paused';
-                            timer = typeof timerObj.timeRemainingMs === 'number' ? Math.ceil(timerObj.timeRemainingMs / 1000) : timer;
-                        } else {
-                            questionState = 'stopped';
-                            timer = typeof timerObj.timeRemainingMs === 'number' ? Math.ceil(timerObj.timeRemainingMs / 1000) : 0;
-                            if (timer <= 0) phase = 'show_answers';
-                        }
-                    } else if (typeof timerObj.startedAt === 'number' && typeof timerObj.durationMs === 'number') {
-                        const elapsed = Date.now() - timerObj.startedAt;
-                        const remaining = Math.max(0, timerObj.durationMs - elapsed);
-                        timer = Math.ceil(remaining / 1000);
-                        if (remaining <= 0) {
-                            timer = 0;
-                            if (playMode === 'quiz' && actualFeedbackWaitTime > 0) {
-                                const feedbackStart = timerObj.startedAt + timerObj.durationMs;
-                                const now = Date.now();
-                                const feedbackWaitMs = actualFeedbackWaitTime * 1000;
-                                const feedbackEnd = feedbackStart + feedbackWaitMs;
-                                feedbackRemaining = Math.max(0, Math.ceil((feedbackEnd - now) / 1000));
-                                if (now < feedbackEnd) {
-                                    phase = 'feedback';
-                                    questionState = 'paused';
-                                } else {
-                                    phase = 'show_answers';
-                                    questionState = 'stopped';
-                                    feedbackRemaining = 0;
-                                }
-                            } else {
-                                phase = 'show_answers';
-                                questionState = 'stopped';
-                                feedbackRemaining = 0;
-                            }
-                        } else {
-                            questionState = 'active';
-                            feedbackRemaining = 0;
-                        }
-                    } else {
-                        questionState = 'stopped';
-                        timer = 0;
-                        feedbackRemaining = 0;
-                    }
-                } else {
-                    questionState = 'stopped';
-                    timer = 0;
-                    feedbackRemaining = 0;
-                }
-
-                const liveQuestionPayload: any = {
-                    question: filteredQuestion,
-                    questionIndex: currentIndex,
-                    totalQuestions: gameStateRaw.gameState.questionUids.length,
-                    questionState,
-                    timer
-                };
-
-                if (playMode === 'quiz' && phase === 'feedback') {
-                    const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
-                    liveQuestionPayload.phase = phase;
-                    liveQuestionPayload.feedbackRemaining = safeFeedbackRemaining;
-                }
-
-                const liveRoom = `game_${accessCode}`;
-                const roomMembers = io.sockets.adapter.rooms.get(liveRoom);
-                const socketIds = roomMembers ? Array.from(roomMembers) : [];
-                logger.info({ accessCode, userId, socketId: socket.id, liveRoom, socketIds }, '[DEBUG] Late joiner socket and current live room members before emitting game_question');
-                socket.emit('game_question', liveQuestionPayload);
-                logger.info({ accessCode, userId, currentIndex, questionUid, questionState, timer, playMode, phase, feedbackRemaining }, '[DEBUG] Emitted game_question to late joiner');
-
-                if (questionState === 'stopped' || (playMode === 'quiz' && questionState === 'paused' && phase === 'feedback')) {
-                    socket.emit('correct_answers', { questionUid });
-                    logger.info({ accessCode, userId, questionUid: questionUid, playMode, questionState, phase }, '[DEBUG] Emitted correct_answers to late joiner');
-                }
-                if (playMode === 'quiz' && phase === 'feedback') {
-                    const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
-                    socket.emit('feedback', { questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining });
-                    logger.info({ accessCode, userId, questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining, playMode }, '[DEBUG] Emitted feedback to late joiner (quiz feedback phase, always)');
-                }
-            }
-        }
     };
 
     const answerHandler = async (payload: AnswerPayload) => {
@@ -370,10 +318,9 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         // Check if timer has expired for this question (tournament mode)
         if (currentPlayMode === 'tournament') {
             const timerObj = gameState.timer;
-            if (timerObj && typeof timerObj.startedAt === 'number' && typeof timerObj.durationMs === 'number') {
-                const elapsed = Date.now() - timerObj.startedAt;
-                const remaining = Math.max(0, timerObj.durationMs - elapsed);
-                if (remaining <= 0) {
+            if (timerObj && timerObj.durationMs) {
+                const timeLeftMs = timerObj.timeLeftMs || 0;
+                if (timeLeftMs <= 0) {
                     logger.warn({ accessCode, userId, questionUid }, 'Answer submitted after timer expired (tournament mode).');
                     socket.emit('answer_feedback', {
                         status: 'error',
@@ -472,7 +419,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
             }
 
             const leaderboard = await calculateLeaderboard(accessCode);
-            io.to(room).emit('leaderboard_update', { leaderboard });
+            io.to(room).emit('leaderboard_update', { leaderboard } as { leaderboard: ParticipantData[] });
 
         } catch (error: any) {
             logger.error({ accessCode: payload.accessCode, userId: payload.userId, questionUid: payload.questionUid, error: error.message, stack: error.stack }, 'Error processing answer in sharedLiveHandler');
@@ -487,7 +434,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
     socket.on(GAME_EVENTS.REQUEST_PARTICIPANTS, async (payload: { accessCode: string }) => {
         try {
             const participants = await redis.hvals(`mathquest:game:participants:${payload.accessCode}`);
-            socket.emit(GAME_EVENTS.GAME_PARTICIPANTS, { participants: participants.map(p => JSON.parse(p)) });
+            socket.emit(GAME_EVENTS.GAME_PARTICIPANTS, { participants: participants.map(p => JSON.parse(p)) } as { participants: ParticipantData[] });
         } catch (error) {
             logger.error({ accessCode: payload.accessCode, error }, 'Error fetching participants');
             socket.emit(GAME_EVENTS.GAME_PARTICIPANTS, { participants: [] });

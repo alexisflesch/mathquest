@@ -32,7 +32,7 @@ export interface TournamentQuestionPayload { // Added export
  * Filtered question data sent to students (no answers with correct information)
  */
 interface FilteredQuestionData {
-    type: string | undefined; // Allow type to be undefined
+    defaultMode: string | undefined; // Allow type to be undefined
     uid: string;
     question: string; // Ensure this is always a string
     answers: string[];
@@ -55,7 +55,7 @@ function createFilteredQuestionData(payload: TournamentQuestionPayload): Filtere
     const { question, timer, tournoiState, questionIndex } = payload;
 
     return {
-        type: question.type, // No change needed here as FilteredQuestionData now allows undefined
+        defaultMode: question.defaultMode, // No change needed here as FilteredQuestionData now allows undefined
         uid: question.uid,
         question: question.text, // Changed from question.question
         answers: Array.isArray(question.answers)
@@ -103,7 +103,7 @@ function legacySendTournamentQuestion(
     isQuizMode?: boolean
 ): void {
     const filteredPayload: FilteredQuestionData = {
-        type: questionObj.type, // No change needed here
+        defaultMode: questionObj.defaultMode, // No change needed here
         uid: questionObj.uid,
         question: questionObj.text, // Changed from questionObj.question
         answers: Array.isArray(questionObj.answers)

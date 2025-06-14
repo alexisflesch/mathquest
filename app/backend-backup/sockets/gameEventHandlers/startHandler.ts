@@ -80,7 +80,7 @@ async function handleStartGame(
 
             return {
                 uid: pq.uid,
-                type: pq.questionType,
+                defaultMode: pq.questionType,
                 text: pq.text || '',
                 time: pq.timeLimit || 20,
                 answers: parsedResponses,

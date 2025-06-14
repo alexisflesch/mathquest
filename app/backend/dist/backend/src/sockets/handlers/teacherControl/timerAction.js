@@ -72,18 +72,20 @@ function timerActionHandler(io, socket) {
         logger.info({ gameId, userId, action, durationMs, questionUid }, 'Timer action handler entered');
         if (!gameId) {
             logger.warn({ action }, 'No gameId provided in payload, aborting timer action');
-            socket.emit('error_dashboard', {
-                code: 'GAME_ID_REQUIRED',
+            const errorPayload = {
                 message: 'gameId is required to control the timer',
-            });
+                code: 'GAME_ID_REQUIRED'
+            };
+            socket.emit('error_dashboard', errorPayload);
             return;
         }
         if (!userId) {
             logger.warn({ gameId, action }, 'No userId on socket, aborting timer action');
-            socket.emit('error_dashboard', {
-                code: 'AUTHENTICATION_REQUIRED',
+            const errorPayload = {
                 message: 'Authentication required to control the timer',
-            });
+                code: 'AUTHENTICATION_REQUIRED'
+            };
+            socket.emit('error_dashboard', errorPayload);
             return;
         }
         logger.info({ gameId, userId, action, durationMs }, 'Timer action requested');
@@ -103,28 +105,33 @@ function timerActionHandler(io, socket) {
             });
             if (!gameInstance) {
                 logger.warn({ gameId, userId, action }, 'Not authorized for this game, aborting timer action');
-                socket.emit('error_dashboard', {
-                    code: 'NOT_AUTHORIZED',
+                const errorPayload = {
                     message: 'Not authorized to control this game',
-                });
+                    code: 'NOT_AUTHORIZED'
+                };
+                socket.emit('error_dashboard', errorPayload);
                 return;
             }
             // Get current game state
             const fullState = await gameStateService_1.default.getFullGameState(gameInstance.accessCode);
             if (!fullState || !fullState.gameState) {
                 logger.warn({ gameId, userId, action }, 'No game state found, aborting timer action');
-                socket.emit('error_dashboard', {
-                    code: 'STATE_ERROR',
+                const errorPayload = {
                     message: 'Could not retrieve game state',
-                });
+                    code: 'STATE_ERROR'
+                };
+                socket.emit('error_dashboard', errorPayload);
                 return;
             }
             const gameState = fullState.gameState;
-            // Initialize timer with safe defaults if undefined
+            // Initialize timer with safe defaults using shared type structure
             let timer = gameState.timer ? { ...gameState.timer } : {
-                startedAt: 0,
-                durationMs: 30000, // Default 30 seconds
-                isPaused: true
+                status: 'stop',
+                timeLeftMs: 30000,
+                durationMs: 30000,
+                questionUid: null,
+                timestamp: Date.now(),
+                localTimeLeftMs: null
             };
             const now = Date.now();
             // Validate duration if provided (durationMs is already in milliseconds)
@@ -133,11 +140,14 @@ function timerActionHandler(io, socket) {
             switch (action) {
                 case 'start':
                     logger.info({ gameId, action, now, validDurationMs, timer }, '[TIMER_ACTION] Processing start action');
+                    const startDuration = validDurationMs || (timer.durationMs || 30000);
                     timer = {
-                        startedAt: now,
-                        durationMs: validDurationMs || (timer.durationMs || 30000), // Use durationMs directly (already in ms)
-                        isPaused: false,
-                        timeRemainingMs: validDurationMs || (timer.durationMs || 30000)
+                        status: 'play',
+                        timeLeftMs: startDuration,
+                        durationMs: startDuration,
+                        questionUid: timer.questionUid,
+                        timestamp: now,
+                        localTimeLeftMs: null
                     };
                     logger.info({ gameId, action, timer }, '[TIMER_ACTION] Timer object after start processing');
                     // Update game status to 'active' when starting a timer (game has started)
@@ -146,66 +156,65 @@ function timerActionHandler(io, socket) {
                         await gameInstanceService.updateGameStatus(gameId, { status: 'active' });
                         // Emit game status change to dashboard
                         const dashboardRoom = `dashboard_${gameId}`;
-                        io.to(dashboardRoom).emit('dashboard_game_status_changed', {
+                        const statusPayload = {
                             status: 'active',
                             ended: false
-                        });
+                        };
+                        io.to(dashboardRoom).emit('dashboard_game_status_changed', statusPayload);
                     }
                     break;
                 case 'pause':
-                    if (!timer.isPaused) {
-                        const elapsed = timer.startedAt ? now - timer.startedAt : 0;
-                        const timeRemaining = Math.max(0, (timer.durationMs || 30000) - elapsed);
+                    if (timer.status !== 'pause') {
+                        // For shared timer structure, we already have timeLeftMs
+                        const timeRemaining = Math.max(0, timer.timeLeftMs);
                         // 🔥 PAUSE DEBUG: Log the pause calculation
                         logger.warn('🔥 PAUSE DEBUG: Backend pause calculation', {
                             now,
-                            'timer.startedAt': timer.startedAt,
-                            elapsed,
+                            'timer.timeLeftMs': timer.timeLeftMs,
                             'timer.durationMs': timer.durationMs,
                             timeRemaining,
-                            'timeRemaining === 0': timeRemaining === 0,
-                            'elapsed >= timer.durationMs': elapsed >= (timer.durationMs || 30000)
+                            'timeRemaining === 0': timeRemaining === 0
                         });
                         timer = {
                             ...timer,
-                            isPaused: true,
-                            pausedAt: now,
-                            timeRemainingMs: timeRemaining
+                            status: 'pause',
+                            timeLeftMs: timeRemaining,
+                            timestamp: now
                         };
                     }
                     break;
                 case 'resume':
                     // Handle resume even if timeRemaining is not defined
-                    if (timer.isPaused) {
-                        const remainingTime = timer.timeRemainingMs || timer.durationMs || 30000;
+                    if (timer.status === 'pause') {
+                        const remainingTime = timer.timeLeftMs || timer.durationMs || 30000;
                         // 🔥 RESUME DEBUG: Log the resume calculation
                         logger.warn('🔥 RESUME DEBUG: Backend resume calculation', {
                             now,
-                            'timer.timeRemainingMs (before)': timer.timeRemainingMs,
+                            'timer.timeLeftMs (before)': timer.timeLeftMs,
                             'timer.durationMs (before)': timer.durationMs,
                             remainingTime,
                             'remainingTime in seconds': remainingTime / 1000
                         });
                         timer = {
-                            startedAt: now,
-                            durationMs: timer.durationMs || 30000, // Keep original duration
-                            isPaused: false,
-                            timeRemainingMs: remainingTime // Set remaining time correctly
+                            ...timer,
+                            status: 'play',
+                            timeLeftMs: remainingTime,
+                            timestamp: now
                         };
                         logger.warn('🔥 RESUME DEBUG: Backend resume result', {
-                            'timer.startedAt (after)': timer.startedAt,
+                            'timer.status (after)': timer.status,
                             'timer.durationMs (after)': timer.durationMs,
-                            'timer.timeRemainingMs (after)': timer.timeRemainingMs,
-                            'timer.isPaused (after)': timer.isPaused
+                            'timer.timeLeftMs (after)': timer.timeLeftMs,
+                            'timer.timestamp (after)': timer.timestamp
                         });
                     }
                     break;
                 case 'stop':
                     timer = {
-                        startedAt: 0,
-                        durationMs: timer.durationMs || 30000,
-                        isPaused: true,
-                        timeRemainingMs: 0
+                        ...timer,
+                        status: 'stop',
+                        timeLeftMs: 0,
+                        timestamp: now
                     };
                     break;
                 case 'set_duration':
@@ -213,8 +222,9 @@ function timerActionHandler(io, socket) {
                         timer = {
                             ...timer,
                             durationMs: validDurationMs, // durationMs is already in milliseconds
-                            // If timer is stopped/paused, update timeRemaining to match new duration
-                            timeRemainingMs: timer.isPaused ? validDurationMs : timer.timeRemainingMs
+                            // If timer is stopped/paused, update timeLeftMs to match new duration
+                            timeLeftMs: timer.status !== 'play' ? validDurationMs : timer.timeLeftMs,
+                            timestamp: now
                         };
                     }
                     break;
@@ -279,11 +289,12 @@ function timerActionHandler(io, socket) {
                         }
                         // Broadcast question change to dashboard
                         const dashboardRoom = `dashboard_${gameId}`;
-                        io.to(dashboardRoom).emit('dashboard_question_changed', {
+                        const questionChangedPayload = {
                             questionUid: targetQuestionUid,
                             oldQuestionUid: currentQuestionUid,
                             timer: timer
-                        });
+                        };
+                        io.to(dashboardRoom).emit('dashboard_question_changed', questionChangedPayload);
                         logger.info({ gameId, targetQuestionUid, targetQuestionIndex }, '[TIMER_ACTION] Question switched and dashboard notified');
                     }
                     else {
@@ -319,11 +330,11 @@ function timerActionHandler(io, socket) {
         }
         catch (error) {
             logger.error({ gameId, action, error }, 'Error updating timer');
-            socket.emit('error_dashboard', {
-                code: 'TIMER_ERROR',
+            const errorPayload = {
                 message: 'Failed to update timer',
-                details: error instanceof Error ? error.message : String(error)
-            });
+                code: 'TIMER_ERROR'
+            };
+            socket.emit('error_dashboard', errorPayload);
         }
     };
 }

@@ -150,31 +150,44 @@ function pauseTimerHandler(io, socket) {
                 }
                 return;
             }
-            // Calculate time elapsed since timer started
+            // Calculate time remaining from current timer state
             const now = Date.now();
-            const startedAt = timer.startedAt || 0;
-            const elapsed = now - startedAt;
-            const timeRemaining = Math.max(0, timer.durationMs - elapsed);
-            // Pause the timer
-            timer = {
-                ...timer,
-                isPaused: true,
-                pausedAt: now,
-                timeRemainingMs: timeRemaining
+            let timeRemaining = 0;
+            let questionUid = null;
+            // Handle both old and new timer formats during transition
+            if ('timeLeftMs' in timer) {
+                // New format
+                timeRemaining = timer.timeLeftMs || 0;
+                questionUid = timer.questionUid || null;
+            }
+            else {
+                // Old format - calculate from startedAt
+                const startedAt = timer.startedAt || 0;
+                const elapsed = now - startedAt;
+                timeRemaining = Math.max(0, timer.durationMs - elapsed);
+            }
+            // Create paused timer using shared GameTimerState format
+            const pausedTimer = {
+                status: 'pause',
+                timeLeftMs: timeRemaining,
+                durationMs: timer.durationMs,
+                questionUid: questionUid,
+                timestamp: now,
+                localTimeLeftMs: null
             };
             // Update game state
-            gameState.timer = timer;
+            gameState.timer = pausedTimer;
             await gameStateService_1.default.updateGameState(accessCodeStr, gameState);
             // Broadcast to all relevant rooms
             const gameRoom = `game_${accessCodeStr}`;
             const dashboardRoom = `dashboard_${gameInstance.id}`;
             const projectionRoom = `projection_${gameInstance.id}`;
             // Broadcast to game room
-            io.to(gameRoom).emit('game_timer_updated', { timer });
+            io.to(gameRoom).emit('game_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Ensure isPaused is set
             // Broadcast to dashboard room
-            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer });
+            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
             // Broadcast to projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer });
+            io.to(projectionRoom).emit('projection_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
             // Call the callback if provided with success
             if (callback) {
                 callback({

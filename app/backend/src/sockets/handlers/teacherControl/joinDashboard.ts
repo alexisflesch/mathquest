@@ -95,7 +95,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                 gameInstance.gameTemplate?.creatorId === effectiveUserId;
 
             if (!isAuthorized) {
-                logger.warn({ gameId, userId: effectiveUserId, ownerId: gameInstance.initiatorUserId, creatorId: gameInstance.gameTemplate?.creatorId }, 'User not authorized for this game');
+                logger.warn({ gameId, userId: effectiveUserId, initiatorUserId: gameInstance.initiatorUserId, templateCreatorId: gameInstance.gameTemplate?.creatorId }, 'User not authorized for this game');
 
                 // For test environment, check if we should bypass auth check
                 const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;

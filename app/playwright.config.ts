@@ -15,7 +15,7 @@ export default defineConfig({
     workers: process.env.CI ? 1 : 1, // Single worker for socket testing
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
     reporter: [
-        ['html'],
+        ['html', { open: 'never' }], // Don't auto-open browser at end
         ['line'],
         ['json', { outputFile: 'test-results/results.json' }]
     ],
@@ -31,10 +31,10 @@ export default defineConfig({
         video: 'retain-on-failure',
     },
 
-    /* Global timeout settings */
-    timeout: 60000, // 60 seconds per test for real-time socket testing
+    /* Global timeout settings - optimized for local development */
+    timeout: 10000, // 10 seconds per test (much faster for local dev)
     expect: {
-        timeout: 15000, // 15 seconds for expect assertions
+        timeout: 3000, // 3 seconds for expect assertions
     },
 
     /* Configure projects for major browsers */

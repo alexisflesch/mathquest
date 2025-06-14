@@ -28,19 +28,20 @@ import { makeApiRequest } from '@/config/api';
 import {
     AuthStatusResponseSchema,
     type AuthStatusResponse,
-    RegistrationResponseSchema,
-    type RegistrationResponse,
-    UpgradeResponseSchema,
-    type UpgradeResponse,
-    UpgradeRequestSchema,
+    RegisterResponseSchema,
+    type RegisterResponse,
+    UpgradeAccountResponseSchema,
+    type UpgradeAccountResponse,
     type UpgradeRequest,
+    LoginResponseSchema,
+    type LoginResponse,
     UniversalLoginResponseSchema,
     type UniversalLoginResponse,
     ProfileUpdateResponseSchema,
     type ProfileUpdateResponse,
     LogoutResponseSchema,
     type LogoutResponse
-} from '@/types/api';
+} from '@shared/types/api/schemas';
 import {
     UserState,
     UserProfile,
@@ -110,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Register guest user in database so they can be found during upgrade
             try {
-                const result = await makeApiRequest<RegistrationResponse>(
+                const result = await makeApiRequest<RegisterResponse>(
                     '/api/auth/register',
                     {
                         method: 'POST',
@@ -123,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         }),
                     },
                     undefined,
-                    RegistrationResponseSchema
+                    RegisterResponseSchema
                 );
 
                 if (result.success) {
@@ -196,7 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-            const result = await makeApiRequest<UpgradeResponse>(
+            const result = await makeApiRequest<UpgradeAccountResponse>(
                 '/api/auth/upgrade',
                 {
                     method: 'POST',
@@ -208,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     } as UpgradeRequest),
                 },
                 undefined,
-                UpgradeResponseSchema
+                UpgradeAccountResponseSchema
             );
 
             if (result.success && result.user && result.token) {
@@ -283,14 +284,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const registerStudent = useCallback(async (email: string, password: string, username: string, avatar: string) => {
         try {
-            const result = await makeApiRequest<RegistrationResponse>(
+            const result = await makeApiRequest<RegisterResponse>(
                 '/api/auth/register',
                 {
                     method: 'POST',
                     body: JSON.stringify({ email, password, username, avatar, role: 'STUDENT' }),
                 },
                 undefined,
-                RegistrationResponseSchema
+                RegisterResponseSchema
             );
 
             if (result.success && result.user && result.token) {
@@ -362,7 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const registerTeacher = useCallback(async (email: string, password: string, username: string, adminPassword: string, avatar: string) => {
         try {
-            const result = await makeApiRequest<RegistrationResponse>(
+            const result = await makeApiRequest<RegisterResponse>(
                 '/api/auth',
                 {
                     method: 'POST',
@@ -376,7 +377,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     }),
                 },
                 undefined,
-                RegistrationResponseSchema
+                RegisterResponseSchema
             );
 
             if (result.success && result.user && result.token) {

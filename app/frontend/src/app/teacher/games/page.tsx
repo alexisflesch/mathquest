@@ -663,8 +663,8 @@ export default function TeacherGamesPage() {
     const [snackbar, setSnackbar] = useState<{
         open: boolean;
         message: string;
-        type: 'success' | 'error';
-    }>({ open: false, message: '', type: 'success' });
+        defaultMode: 'success' | 'error';
+    }>({ open: false, message: '', defaultMode: 'success' });
     const { teacherId, userState, isTeacher } = useAuth();
 
     useEffect(() => {
@@ -842,7 +842,7 @@ export default function TeacherGamesPage() {
             setSnackbar({
                 open: true,
                 message: successMessage,
-                type: 'success'
+                defaultMode: 'success'
             });
         } catch (err: unknown) {
             const error = err as Error;
@@ -859,7 +859,7 @@ export default function TeacherGamesPage() {
                 setSnackbar({
                     open: true,
                     message: errorMessage,
-                    type: 'error'
+                    defaultMode: 'error'
                 });
             }
         }
@@ -895,14 +895,14 @@ export default function TeacherGamesPage() {
             setSnackbar({
                 open: true,
                 message: 'Session supprimée avec succès !',
-                type: 'success'
+                defaultMode: 'success'
             });
         } catch (err: unknown) {
             setDeleteInstanceModal(prev => ({ ...prev, isLoading: false }));
             setSnackbar({
                 open: true,
                 message: `Erreur lors de la suppression: ${(err as Error).message}`,
-                type: 'error'
+                defaultMode: 'error'
             });
         }
     };
@@ -1044,7 +1044,7 @@ export default function TeacherGamesPage() {
             <Snackbar
                 open={snackbar.open}
                 message={snackbar.message}
-                type={snackbar.type}
+                type={snackbar.defaultMode}
                 onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
                 duration={3000}
             />

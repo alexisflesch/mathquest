@@ -2,6 +2,10 @@ import express, { Request, Response } from 'express';
 import { UserService } from '@/core/services/userService';
 import { optionalAuth } from '@/middleware/auth';
 import createLogger from '@/utils/logger';
+import type { PublicUser } from '@shared/types/core/user';
+import type {
+    ErrorResponse
+} from '@shared/types/api/requests';
 
 const logger = createLogger('UsersAPI');
 const router = express.Router();
@@ -17,7 +21,7 @@ const getUserService = (): UserService => {
 };
 
 // GET /api/v1/users/:userId - Get user by ID
-router.get('/:userId', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/:userId', optionalAuth, async (req: Request, res: Response<PublicUser | ErrorResponse>): Promise<void> => {
     try {
         const { userId } = req.params;
 
@@ -35,13 +39,14 @@ router.get('/:userId', optionalAuth, async (req: Request, res: Response): Promis
         }
 
         // Return user data without sensitive information
-        const publicUser = {
+        const publicUser: PublicUser = {
             id: user.id,
             username: user.username,
-            email: user.email,
-            role: user.role,
-            avatarEmoji: user.avatarEmoji,
-            createdAt: user.createdAt
+            email: user.email || undefined,
+            role: user.role as any, // Type assertion for enum compatibility
+            avatarEmoji: user.avatarEmoji || undefined,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.createdAt.toISOString() // Use createdAt if updatedAt doesn't exist
         };
 
         res.json(publicUser);

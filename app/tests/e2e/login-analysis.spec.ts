@@ -17,11 +17,11 @@ test("Check login page structure", async ({ page }) => {
     
     for (let i = 0; i < inputs.length; i++) {
       const input = inputs[i];
-      const type = await input.getAttribute("type");
+      const defaultMode = await input.getAttribute("defaultMode");
       const name = await input.getAttribute("name"); 
       const placeholder = await input.getAttribute("placeholder");
       const id = await input.getAttribute("id");
-      console.log(`Input ${i+1}: type="${type}", name="${name}", placeholder="${placeholder}", id="${id}"`);
+      console.log(`Input ${i+1}: type="${defaultMode", name="${name}", placeholder="${placeholder}", id="${id}"`);
     }
     
     await page.screenshot({ path: "test-results/login-form-analysis.png" });

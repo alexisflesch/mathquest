@@ -1,9 +1,23 @@
 import express, { Request, Response } from 'express';
 import { teacherAuth } from '@/middleware/auth';
+import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
 import gameStateService from '@/core/gameStateService';
 import { getIO } from '@/sockets';
 import { prisma } from '@/db/prisma';
+import type {
+    GameControlStateResponse,
+    QuestionSetResponse,
+    QuestionEndedResponse,
+    GameEndedResponse,
+    ErrorResponse
+} from '@shared/types/api/responses';
+import type {
+    SetQuestionRequest
+} from '@shared/types/api/requests';
+import {
+    SetQuestionRequestSchema
+} from '@shared/types/api/schemas';
 
 // Create a route-specific logger
 const logger = createLogger('GameControlAPI');
@@ -15,7 +29,7 @@ const router = express.Router();
  * GET /api/v1/game-control/:accessCode
  * Requires teacher authentication
  */
-router.get('/:accessCode', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/:accessCode', teacherAuth, async (req: Request, res: Response<GameControlStateResponse | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });
@@ -47,7 +61,7 @@ router.get('/:accessCode', teacherAuth, async (req: Request, res: Response): Pro
             return;
         }
 
-        res.status(200).json(gameState);
+        res.status(200).json({ gameState });
     } catch (error) {
         logger.error({ error }, 'Error fetching game state');
         res.status(500).json({ error: 'An error occurred while fetching game state' });
@@ -59,7 +73,7 @@ router.get('/:accessCode', teacherAuth, async (req: Request, res: Response): Pro
  * POST /api/v1/game-control/:accessCode/question
  * Requires teacher authentication
  */
-router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/:accessCode/question', teacherAuth, validateRequestBody(SetQuestionRequestSchema), async (req: Request<{ accessCode: string }, QuestionSetResponse | ErrorResponse, SetQuestionRequest>, res: Response<QuestionSetResponse | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });
@@ -139,7 +153,7 @@ router.post('/:accessCode/question', teacherAuth, async (req: Request, res: Resp
  * POST /api/v1/game-control/:accessCode/end-question
  * Requires teacher authentication
  */
-router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: Response<QuestionEndedResponse | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });
@@ -220,7 +234,7 @@ router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: 
  * POST /api/v1/game-control/:accessCode/end-game
  * Requires teacher authentication
  */
-router.post('/:accessCode/end-game', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/:accessCode/end-game', teacherAuth, async (req: Request, res: Response<GameEndedResponse | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).json({ error: 'Teacher authentication required' });

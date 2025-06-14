@@ -9,18 +9,7 @@ import { QuizListResponseSchema, QuestionsFiltersResponseSchema, type QuizListRe
 import { useAuth } from '@/components/AuthProvider';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { Search } from 'lucide-react';
-
-interface Quiz {
-    id: string;
-    nom: string;
-    questions_ids: string[];
-    enseignant_id: string;
-    date_creation: string;
-    niveaux: string[];
-    categories: string[];
-    themes: string[];
-    type: string;
-}
+import type { GameTemplate } from '@shared/types/core/game';
 
 export default function UseQuizPage() {
     // Access guard: Require teacher access for quiz usage
@@ -35,34 +24,27 @@ export default function UseQuizPage() {
     }
 
     const { teacherId } = useAuth();
-    const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-    const [filters, setFilters] = useState<{ niveaux: string[]; disciplines: string[]; themes: string[] }>({ niveaux: [], disciplines: [], themes: [] });
+    const [quizzes, setQuizzes] = useState<GameTemplate[]>([]);
+    const [filters, setFilters] = useState<{ gradeLevel: string[]; disciplines: string[]; themes: string[] }>({ gradeLevel: [], disciplines: [], themes: [] });
     const [selectedNiveau, setSelectedNiveau] = useState('');
     const [selectedDiscipline, setSelectedDiscipline] = useState('');
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
     const [search, setSearch] = useState('');
-    const [filteredQuizzes, setFilteredQuizzes] = useState<Quiz[]>([]);
+    const [filteredQuizzes, setFilteredQuizzes] = useState<GameTemplate[]>([]);
     const [selectedQuizId, setSelectedQuizId] = useState<string>("");
     const router = useRouter();
 
     useEffect(() => {
         if (teacherId) {
-            makeApiRequest<QuizListResponse>(`/api/quiz?enseignant_id=${teacherId}`, undefined, undefined, QuizListResponseSchema)
+            // Use the shared QuizTemplatesResponse API
+            makeApiRequest<QuizListResponse>(`/api/quiz?creatorId=${teacherId}`, undefined, undefined, QuizListResponseSchema)
                 .then(data => {
                     if (Array.isArray(data)) {
-                        // Map API response to local Quiz interface with required fields
-                        const mappedQuizzes = data.map(quiz => ({
-                            id: quiz.id,
-                            nom: quiz.nom,
-                            questions_ids: quiz.questions_ids || [],
-                            enseignant_id: quiz.enseignant_id || teacherId,
-                            date_creation: quiz.date_creation || new Date().toISOString(),
-                            niveaux: quiz.niveaux || quiz.levels || [],
-                            categories: quiz.categories || [],
-                            themes: quiz.themes || [],
-                            type: quiz.type || 'standard'
-                        }));
-                        setQuizzes(mappedQuizzes);
+                        // Use GameTemplate directly - no mapping needed
+                        setQuizzes(data);
+                    } else if (data && 'gameTemplates' in data) {
+                        // Handle QuizTemplatesResponse format
+                        setQuizzes(data.gameTemplates);
                     } else {
                         setQuizzes([]);
                     }
@@ -75,7 +57,14 @@ export default function UseQuizPage() {
             setQuizzes([]);
         }
         makeApiRequest<QuestionsFiltersResponse>('questions/filters', undefined, undefined, QuestionsFiltersResponseSchema)
-            .then(setFilters)
+            .then(data => {
+                // Filter out null values from niveaux array
+                setFilters({
+                    gradeLevel: data.gradeLevel.filter((n): n is string => n !== null),
+                    disciplines: data.disciplines,
+                    themes: data.themes
+                });
+            })
             .catch(error => {
                 console.error('Error fetching filters:', error);
             });
@@ -83,10 +72,10 @@ export default function UseQuizPage() {
 
     useEffect(() => {
         const filtered = quizzes.filter(q =>
-            (selectedNiveau ? (Array.isArray(q.niveaux) && q.niveaux.some(n => n.trim().toLowerCase() === selectedNiveau.trim().toLowerCase())) : true) &&
-            (selectedDiscipline ? (Array.isArray(q.categories) && q.categories.some(c => c.trim().toLowerCase() === selectedDiscipline.trim().toLowerCase())) : true) &&
+            (selectedNiveau ? (q.gradeLevel && q.gradeLevel.trim().toLowerCase() === selectedNiveau.trim().toLowerCase()) : true) &&
+            (selectedDiscipline ? (q.discipline && q.discipline.trim().toLowerCase() === selectedDiscipline.trim().toLowerCase()) : true) &&
             (selectedThemes.length > 0 ? (Array.isArray(q.themes) && selectedThemes.every(selTheme => q.themes.some(t => t.trim().toLowerCase() === selTheme.trim().toLowerCase()))) : true) &&
-            (search ? q.nom.toLowerCase().includes(search.toLowerCase()) : true)
+            (search ? q.name.toLowerCase().includes(search.toLowerCase()) : true)
         );
         setFilteredQuizzes(filtered);
     }, [quizzes, selectedNiveau, selectedDiscipline, selectedThemes, search]);
@@ -99,7 +88,7 @@ export default function UseQuizPage() {
                         <h1 className="card-title text-3xl mb-4 text-center">Utiliser un Quiz Existant</h1>
                         <div className="w-full flex flex-col gap-4 mb-4">
                             <CustomDropdown
-                                options={filters.niveaux}
+                                options={filters.gradeLevel}
                                 value={selectedNiveau}
                                 onChange={setSelectedNiveau}
                                 placeholder="Niveau"
@@ -143,7 +132,7 @@ export default function UseQuizPage() {
                                     style={selectedQuizId === quiz.id ? { minHeight: '2.5rem' } : {}}
                                     onClick={() => setSelectedQuizId(quiz.id)}
                                 >
-                                    {quiz.nom}
+                                    {quiz.name}
                                 </span>
                             ))}
                         </div>

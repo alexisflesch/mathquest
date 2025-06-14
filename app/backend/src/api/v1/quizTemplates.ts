@@ -1,7 +1,18 @@
 import express, { Request, Response } from 'express';
 import { GameTemplateService, GameTemplateCreationData, GameTemplateUpdateData } from '@/core/services/gameTemplateService';
 import { teacherAuth } from '@/middleware/auth';
+import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
+import type { GameTemplate } from '@shared/types/core/game';
+import type {
+    GameTemplateCreationRequest,
+    GameTemplateUpdateRequest,
+    ErrorResponse
+} from '@shared/types/api/requests';
+import {
+    CreateQuizTemplateRequestSchema,
+    UpdateQuizTemplateRequestSchema
+} from '@shared/types/api/schemas';
 
 // Create a route-specific logger
 const logger = createLogger('gameTemplatesAPI');
@@ -28,7 +39,7 @@ export const __setGameTemplateServiceForTesting = (mockService: GameTemplateServ
  * POST /api/v1/quiz-templates
  * Requires teacher authentication
  */
-router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/', teacherAuth, validateRequestBody(CreateQuizTemplateRequestSchema), async (req: Request<{}, { gameTemplate: any } | ErrorResponse, GameTemplateCreationRequest>, res: Response<{ gameTemplate: any } | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).type('application/json').json({ error: 'Authentication required' });
@@ -56,9 +67,9 @@ router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void>
 
         const gameTemplate = await getGameTemplateService().creategameTemplate(req.user.userId, {
             name,
-            gradeLevel,
+            gradeLevel: gradeLevel || '',
             themes,
-            discipline,
+            discipline: discipline || '',
             description,
             defaultMode,
             questions
@@ -76,7 +87,7 @@ router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void>
  * GET /api/v1/quiz-templates/:id
  * Requires teacher authentication
  */
-router.get('/:id', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/:id', teacherAuth, async (req: Request, res: Response<{ gameTemplate: any } | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).type('application/json').json({ error: 'Authentication required' });
@@ -111,7 +122,7 @@ router.get('/:id', teacherAuth, async (req: Request, res: Response): Promise<voi
  * GET /api/v1/quiz-templates
  * Requires teacher authentication
  */
-router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/', teacherAuth, async (req: Request, res: Response<{ gameTemplates: any[], total: number, page: number, pageSize: any, totalPages: number } | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).type('application/json').json({ error: 'Authentication required' });
@@ -162,7 +173,35 @@ router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> 
  * PUT /api/v1/quiz-templates/:id
  * Requires teacher authentication
  */
-router.put('/:id', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.put('/:id', teacherAuth, validateRequestBody(UpdateQuizTemplateRequestSchema), async (req: Request<{ id: string }, { gameTemplate: any } | ErrorResponse, GameTemplateUpdateRequest>, res: Response<{ gameTemplate: any } | ErrorResponse>): Promise<void> => {
+    // ...existing code...
+});
+
+/**
+ * Delete a quiz template
+ */
+router.delete('/:id', teacherAuth, async (req: Request, res: Response<{ success: boolean, message: string } | ErrorResponse>): Promise<void> => {
+    // ...existing code...
+});
+
+/**
+ * Add questions to quiz template
+ */
+router.post('/:id/questions', teacherAuth, async (req: Request, res: Response<{ gameTemplate: any } | ErrorResponse>): Promise<void> => {
+    // ...existing code...
+});
+
+/**
+ * Remove question from quiz template
+ */
+router.delete('/:id/questions/:questionUid', teacherAuth, async (req: Request, res: Response<{ success: boolean, message: string } | ErrorResponse>): Promise<void> => {
+    // ...existing code...
+});
+
+/**
+ * Update questions sequence in quiz template
+ */
+router.put('/:id/questions-sequence', teacherAuth, async (req: Request, res: Response<{ gameTemplate: any } | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user.role !== 'TEACHER') {
             res.status(401).type('application/json').json({ error: 'Authentication required' });

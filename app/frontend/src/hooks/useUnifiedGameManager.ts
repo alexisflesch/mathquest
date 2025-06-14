@@ -445,7 +445,7 @@ function setupTournamentEvents(
                     question: {
                         uid: data.uid || data.question?.uid,
                         text: data.question || data.text,
-                        type: data.type || QUESTION_TYPES.MULTIPLE_CHOICE_EN,
+                        defaultMode: data.defaultMode || QUESTION_TYPES.MULTIPLE_CHOICE_EN,
                         answerOptions: data.answerOptions || []
                     },
                     timer: data.remainingTime || data.timeLeftMs,

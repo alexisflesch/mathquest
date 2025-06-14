@@ -409,7 +409,7 @@ export default function LiveGamePage() {
             <div className={`card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6 relative${showFeedbackOverlay ? " blur-sm" : ""}`}>
                 {/* Show timer only for tournament/quiz modes */}
                 {gameMode !== 'practice' && (
-                    <TournamentTimer timerS={gameState.timer} isMobile={isMobile} />
+                    <TournamentTimer timerS={gameState.timer ? Math.ceil(gameState.timer / 1000) : null} isMobile={isMobile} />
                 )}
 
                 <MathJaxWrapper>

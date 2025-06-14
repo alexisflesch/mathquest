@@ -24,13 +24,15 @@ function requestNextQuestionHandler(io, socket) {
                 }
             });
             if (!gameInstance) {
-                socket.emit('game_error', { message: 'Game not found.' });
+                const errorPayload = { message: 'Game not found.' };
+                socket.emit('game_error', errorPayload);
                 return;
             }
             // Allow request_next_question for both practice mode and deferred tournaments
             if (!gameInstance.isDiffered && gameInstance.playMode !== 'practice') {
                 logger.warn({ accessCode, userId }, 'Request next question is only for practice mode or deferred tournaments');
-                socket.emit('game_error', { message: 'This operation is only for practice mode or deferred tournaments.' });
+                const errorPayload = { message: 'This operation is only for practice mode or deferred tournaments.' };
+                socket.emit('game_error', errorPayload);
                 return;
             }
             // 2. Get participant
@@ -38,7 +40,8 @@ function requestNextQuestionHandler(io, socket) {
                 where: { gameInstanceId: gameInstance.id, userId }
             });
             if (!participant) {
-                socket.emit('game_error', { message: 'Participant not found.' });
+                const errorPayload = { message: 'Participant not found.' };
+                socket.emit('game_error', errorPayload);
                 return;
             }
             // 3. Get all questions
@@ -104,7 +107,7 @@ function requestNextQuestionHandler(io, socket) {
                     questionState: 'active'
                 };
                 // Send the question data using the proper LiveQuestionPayload structure
-                socket.emit('game_question', liveQuestionPayload);
+                socket.emit('game_question', liveQuestionPayload); // TODO: Define shared type if missing
             }
             else {
                 // All questions answered: compute and send final score
@@ -128,7 +131,7 @@ function requestNextQuestionHandler(io, socket) {
                     totalQuestions: total,
                     correct: correctCount,
                     total: total
-                });
+                }); // TODO: Define shared type if missing
                 // Update participant as completed
                 await prisma_1.prisma.gameParticipant.update({
                     where: { id: participant.id },
@@ -138,7 +141,8 @@ function requestNextQuestionHandler(io, socket) {
         }
         catch (err) {
             logger.error({ err, socketId: socket.id }, 'Error handling request_next_question');
-            socket.emit('game_error', { message: 'Error processing next question request.' });
+            const errorPayload = { message: 'Error processing next question request.' };
+            socket.emit('game_error', errorPayload);
         }
     };
 }

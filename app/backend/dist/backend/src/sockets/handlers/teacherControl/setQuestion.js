@@ -174,23 +174,31 @@ function setQuestionHandler(io, socket) {
                 const duration = (question.timeLimit || 30) * 1000 * timeMultiplier; // Convert to milliseconds
                 // CRITICAL FIX: Preserve timer state if currently running
                 const currentTimer = gameState.timer;
-                const isCurrentlyRunning = currentTimer && !currentTimer.isPaused;
+                const isCurrentlyRunning = currentTimer && currentTimer.status === 'play';
                 if (isCurrentlyRunning) {
-                    // Keep timer running but update duration
-                    gameState.timer = {
-                        startedAt: Date.now(), // Reset start time for new question
+                    // Keep timer running but update duration for new question
+                    const newTimer = {
+                        status: 'play',
+                        timeLeftMs: duration, // Full duration for new question
                         durationMs: duration,
-                        isPaused: false // Keep running
+                        questionUid: questionUid,
+                        timestamp: Date.now(),
+                        localTimeLeftMs: null
                     };
+                    gameState.timer = newTimer;
                     logger.info({ gameId, questionUid, duration }, 'Timer was running, keeping it active for new question');
                 }
                 else {
                     // Default: start paused so teacher can control when to begin
-                    gameState.timer = {
-                        startedAt: Date.now(),
+                    const pausedTimer = {
+                        status: 'pause',
+                        timeLeftMs: duration,
                         durationMs: duration,
-                        isPaused: true
+                        questionUid: questionUid,
+                        timestamp: Date.now(),
+                        localTimeLeftMs: null
                     };
+                    gameState.timer = pausedTimer;
                     logger.info({ gameId, questionUid, duration }, 'Timer was paused, keeping it paused for new question');
                 }
                 // Reset answersLocked to false for the new question

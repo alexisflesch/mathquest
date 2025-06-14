@@ -52,7 +52,7 @@ export function filterQuestionForClient(questionObject: any): FilteredQuestion {
 
     return {
         uid: questionObject.uid,
-        questionType: questionObject.questionType || questionObject.type,
+        questionType: questionObject.questionType || questionObject.defaultMode,
         text: questionObject.text,
         answerOptions: questionObject.answerOptions || [],
         // Additional properties for frontend compatibility

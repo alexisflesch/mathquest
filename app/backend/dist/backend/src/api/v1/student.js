@@ -74,11 +74,14 @@ async function handleStudentJoin(req, res) {
         });
         // Return success message
         res.status(201).json({
+            success: true,
             message: 'Student registered successfully',
+            token: result.token,
             user: {
                 id: result.user.id,
                 username: result.user.username,
-                avatar: avatar
+                avatar: avatar,
+                role: result.user.role
             }
         });
     }

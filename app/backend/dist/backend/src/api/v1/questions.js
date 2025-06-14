@@ -7,8 +7,10 @@ exports.__setQuestionServiceForTesting = void 0;
 const express_1 = __importDefault(require("express"));
 const questionService_1 = require("@/core/services/questionService");
 const auth_1 = require("@/middleware/auth");
+const validation_1 = require("@/middleware/validation");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const question_zod_1 = require("../../../../shared/types/quiz/question.zod");
+const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
 const logger = (0, logger_1.default)('QuestionsAPI');
 const router = express_1.default.Router();
@@ -30,7 +32,7 @@ exports.__setQuestionServiceForTesting = __setQuestionServiceForTesting;
  * POST /api/v1/questions
  * Requires teacher authentication
  */
-router.post('/', auth_1.teacherAuth, async (req, res) => {
+router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schemas_1.CreateQuestionRequestSchema), async (req, res) => {
     try {
         if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
@@ -62,7 +64,7 @@ router.post('/', auth_1.teacherAuth, async (req, res) => {
  */
 router.get('/filters', async (req, res) => {
     try {
-        const { niveau, discipline } = req.query;
+        const { gradeLevel, discipline } = req.query;
         const filterCriteria = {};
         if (niveau)
             filterCriteria.gradeLevel = niveau;
@@ -84,7 +86,7 @@ router.get('/filters', async (req, res) => {
  */
 router.get('/list', async (req, res) => {
     try {
-        const { niveau, discipline, themes, limit } = req.query;
+        const { gradeLevel, discipline, themes, limit } = req.query;
         // Convert to appropriate types for filtering
         const filters = {};
         if (niveau)
@@ -232,7 +234,7 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
  * PUT /api/v1/questions/:uid
  * Requires teacher authentication
  */
-router.put('/:uid', auth_1.teacherAuth, async (req, res) => {
+router.put('/:uid', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schemas_1.UpdateQuestionRequestSchema), async (req, res) => {
     try {
         if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
@@ -276,7 +278,7 @@ router.delete('/:uid', auth_1.teacherAuth, async (req, res) => {
         }
         const { uid } = req.params;
         await getQuestionService().deleteQuestion(uid);
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, message: 'Question deleted successfully' });
     }
     catch (error) {
         logger.error({ error }, 'Error deleting question');

@@ -44,10 +44,10 @@ test.describe('Basic Connectivity', () => {
       console.log(`\nLogin page has ${inputs.length} input fields:`);
       for (let i = 0; i < inputs.length; i++) {
         const input = inputs[i];
-        const type = await input.getAttribute('type');
+        const defaultMode = await input.getAttribute('defaultMode');
         const placeholder = await input.getAttribute('placeholder');
         const name = await input.getAttribute('name');
-        console.log(`Input ${i + 1}: type="${type}", placeholder="${placeholder}", name="${name}"`);
+        console.log(`Input ${i + 1}: type="${defaultMode", placeholder="${placeholder}", name="${name}"`);
       }
     }
 

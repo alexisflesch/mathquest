@@ -21,7 +21,7 @@ const GoodAnswer: React.FC<GoodAnswerProps> = ({ iconColor = "#10b981", size = 3
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.5, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 24, duration: 0.4 }}
+                transition={{ defaultMode: "spring", stiffness: 400, damping: 24, duration: 0.4 }}
                 className={className}
                 style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
             >

@@ -271,7 +271,7 @@ export function useGameSocket(
         socket.emit('join_game', payload);
     }, [socket, role]);
 
-    // Fix onGameJoined type: registration function returning cleanup
+    // Fix onGameJoined defaultMode: registration function returning cleanup
     const onGameJoined = useCallback((handler: (payload: Parameters<ServerToClientEvents['game_joined']>[0]) => void) => {
         if (!socket) {
             logger.warn(`[${role.toUpperCase()}] Cannot register handler for game_joined: no socket`);

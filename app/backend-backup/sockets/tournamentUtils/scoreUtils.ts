@@ -70,14 +70,14 @@ export function calculateScore(
     if (!question.answers || numCorrectOptions === 0) {
         logger.warn(`[calculateScore] Question ${question.uid} has no responses or no correct responses defined.`);
         // scoreBeforePenalty remains 0
-    } else if (question.type === 'QCU' || (question.type === 'QCM' && numCorrectOptions === 1)) {
+    } else if (question.defaultMode === 'QCU' || (question.defaultMode === 'QCM' && numCorrectOptions === 1)) {
         // Treat as QCU: 1000 if correct, 0 if incorrect.
         // The caller should set answer.isCorrect based on comparing answer.answerIdx with the correct option.
         // For QCM with 1 correct answer, answer.isCorrect should be true if the single correct option was chosen.
         if (answer.isCorrect) { // Relies on caller to set this correctly for QCU-like scenarios
             scoreBeforePenalty = MAX_SCORE_BASE;
         }
-    } else if (question.type === 'QCM') {
+    } else if (question.defaultMode === 'QCM') {
         const pointsPerOption = MAX_SCORE_BASE / numCorrectOptions;
         let currentScoreForQCM = 0;
         const selectedIndices = Array.isArray(answer.answerIdx) ? answer.answerIdx : (typeof answer.answerIdx === 'number' ? [answer.answerIdx] : []);
@@ -94,7 +94,7 @@ export function calculateScore(
         });
         scoreBeforePenalty = Math.max(0, Math.round(currentScoreForQCM));
     } else {
-        logger.warn(`[calculateScore] Unhandled question type: ${question.type} for question ${question.uid}`);
+        logger.warn(`[calculateScore] Unhandled question defaultMode: ${question.defaultMode} for question ${question.uid}`);
         // scoreBeforePenalty remains 0 for unhandled types
     }
 
@@ -105,7 +105,7 @@ export function calculateScore(
     const normalizedQuestionScore = totalQuestionsInEvent > 0 ? Math.round(scoreAfterPenalty / totalQuestionsInEvent) : 0;
 
     logger.debug(
-        `[calculateScore] Q_UID: ${question.uid}, Type: ${question.type}, AnswerValue: '''${JSON.stringify(answer.value)}''', CorrectOverall: ${answer.isCorrect}, ` +
+        `[calculateScore] Q_UID: ${question.uid}, Type: ${question.defaultMode}, AnswerValue: '''${JSON.stringify(answer.value)}''', CorrectOverall: ${answer.isCorrect}, ` +
         `TimeTakenMs: ${answer.timeMs}, AvailableTimeSec: ${availableTimeSeconds}, ` +
         `ScoreBeforePenalty: ${scoreBeforePenalty}, TimePenalty: ${timePenalty}, ScoreAfterPenalty: ${scoreAfterPenalty}, ` +
         `TotalQuestions: ${totalQuestionsInEvent}, NormalizedScore: ${normalizedQuestionScore}`

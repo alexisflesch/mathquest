@@ -89,9 +89,7 @@ async function sendFirstQuestionAndStartTimer({ io, target, gameInstance, questi
         logger.info({ socketConnected: target.connected, socketId: target.id }, 'Socket connection state');
         try {
             // Emit with an explicit acknowledgement callback
-            target.emit('game_question', payload, (ack) => {
-                logger.info({ ack }, 'game_question acknowledged');
-            });
+            target.emit('game_question', payload); // TODO: Define shared type if missing
             logger.info('game_question event emitted');
         }
         catch (err) {
@@ -100,7 +98,7 @@ async function sendFirstQuestionAndStartTimer({ io, target, gameInstance, questi
     }
     else {
         // target is a room string
-        io.to(target).emit('game_question', payload);
+        io.to(target).emit('game_question', payload); // TODO: Define shared type if missing
     }
     // Timer logic (if needed)
     // For practice, timer is per-player; for quiz, timer is per-room/teacher controlled

@@ -62,7 +62,7 @@ function tournamentHandler(io, socket) {
         const tournamentRoom = `game_${accessCode}`;
         const lobbyRoom = `lobby_${accessCode}`;
         logger.debug({ accessCode, playMode: gameInstance.playMode, socketId: socket.id }, '[DEBUG] Emitting unified 5-second countdown for all tournament types');
-        io.to(lobbyRoom).emit(events_1.LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId: gameInstance.id });
+        io.to(lobbyRoom).emit(events_1.LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId: gameInstance.id }); // TODO: Define shared type if missing
         // Short delay to allow clients to process redirect before game state changes affect them
         await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
         if (!gameInstance.gameTemplate || !gameInstance.gameTemplate.questions || gameInstance.gameTemplate.questions.length === 0) {
@@ -98,9 +98,12 @@ function tournamentHandler(io, socket) {
                 currentQuestionIndex: -1, // Indicate that countdown is happening before Q0
                 questionUids: actualQuestions.map(q => q.uid),
                 timer: {
-                    startedAt: Date.now(), // Placeholder, will be updated by game flow
+                    status: 'pause', // Paused during countdown
+                    timeLeftMs: 0,
                     durationMs: 0,
-                    isPaused: true
+                    questionUid: null,
+                    timestamp: Date.now(),
+                    localTimeLeftMs: null
                 },
                 settings: {
                     timeMultiplier: 1.0,
@@ -123,18 +126,18 @@ function tournamentHandler(io, socket) {
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, '[DEBUG] Updated game status to active (countdown phase)');
         logger.info({ room: liveRoom, duration: countdownDuration, accessCode, socketId: socket.id }, `[TournamentHandler] Emitting tournament_starting and waiting ${countdownDuration}s before starting game.`);
         // Start countdown with ticking - emit to both lobby and game rooms
-        io.to(liveRoom).emit('tournament_starting', { countdown: countdownDuration });
-        io.to(lobbyRoom).emit('tournament_starting', { countdown: countdownDuration });
+        io.to(liveRoom).emit('tournament_starting', { countdown: countdownDuration }); // TODO: Define shared type if missing
+        io.to(lobbyRoom).emit('tournament_starting', { countdown: countdownDuration }); // TODO: Define shared type if missing
         // Emit countdown tick every second to both rooms
         for (let i = countdownDuration; i > 0; i--) {
             logger.debug({ accessCode, countdown: i, socketId: socket.id }, `[TournamentHandler] Countdown tick: ${i}`);
-            io.to(liveRoom).emit('countdown_tick', { countdown: i });
-            io.to(lobbyRoom).emit('countdown_tick', { countdown: i });
+            io.to(liveRoom).emit('countdown_tick', { countdown: i }); // TODO: Define shared type if missing
+            io.to(lobbyRoom).emit('countdown_tick', { countdown: i }); // TODO: Define shared type if missing
             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
         }
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown complete. About to start game flow.`);
-        io.to(liveRoom).emit('countdown_complete');
-        io.to(lobbyRoom).emit('countdown_complete');
+        io.to(liveRoom).emit('countdown_complete'); // TODO: Define shared type if missing
+        io.to(lobbyRoom).emit('countdown_complete'); // TODO: Define shared type if missing
         logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown finished. Calling runGameFlow.`);
         // Update currentQuestionIndex to 0 before starting game flow
         // Also ensure other required fields for GameState are present or updated as necessary
@@ -149,9 +152,12 @@ function tournamentHandler(io, socket) {
             currentQuestionIndex: 0,
             status: 'active', // Ensure status is still active
             timer: {
-                ...currentStateData.gameState.timer, // Access timer from gameState
-                startedAt: Date.now(),
-                isPaused: false // Game is starting, timer should not be paused
+                status: 'pause', // Will be started by game flow
+                timeLeftMs: 0,
+                durationMs: 0,
+                questionUid: null,
+                timestamp: Date.now(),
+                localTimeLeftMs: null
             }
         });
         await gameInstanceService.updateGameStatus(gameInstance.id, {

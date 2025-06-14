@@ -45,12 +45,12 @@ function setupGameStatusCheck(io, accessCode) {
                 io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.REDIRECT_TO_GAME, {
                     accessCode,
                     gameId: gameInstance.id
-                });
+                }); // TODO: Define shared type if missing
                 // Also emit game_started event
                 io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.GAME_STARTED, {
                     accessCode,
                     gameId: gameInstance.id
-                });
+                }); // TODO: Define shared type if missing
                 // Clear the interval since game is now active
                 clearInterval(interval);
                 gameStatusCheckIntervals.delete(accessCode);

@@ -10,11 +10,11 @@ import { createValidator, SchemaFieldType } from './schemaValidation';
 // Answer schema
 export const answerSchema = {
     texte: {
-        type: 'string' as SchemaFieldType,
+        defaultMode: 'string' as SchemaFieldType,
         required: true
     },
     correct: {
-        type: 'boolean' as SchemaFieldType,
+        defaultMode: 'boolean' as SchemaFieldType,
         required: true
     }
 };
@@ -22,28 +22,28 @@ export const answerSchema = {
 // BaseQuestion schema
 export const baseQuestionSchema = {
     uid: {
-        type: 'string' as SchemaFieldType,
+        defaultMode: 'string' as SchemaFieldType,
         required: true
     },
     text: { // Renamed from texte
-        type: 'string' as SchemaFieldType,
+        defaultMode: 'string' as SchemaFieldType,
         required: true
     },
-    type: {
-        type: 'string' as SchemaFieldType,
+    defaultMode: {
+        defaultMode: 'string' as SchemaFieldType,
         required: true
     },
     responses: { // Renamed from reponses
-        type: 'array' as SchemaFieldType,
+        defaultMode: 'array' as SchemaFieldType,
         required: false,
         arrayOf: answerSchema
     },
     time: { // Renamed from temps
-        type: 'number' as SchemaFieldType,
+        defaultMode: 'number' as SchemaFieldType,
         required: false
     },
     explanation: { // Renamed from explication
-        type: 'string' as SchemaFieldType,
+        defaultMode: 'string' as SchemaFieldType,
         required: false
     }
 };
@@ -63,49 +63,49 @@ const isLevelField = (value: unknown): boolean => { // Renamed from isNiveauFiel
 export const questionSchema = {
     ...baseQuestionSchema,
     correct: {
-        type: 'custom' as SchemaFieldType,
+        defaultMode: 'custom' as SchemaFieldType,
         validator: isCorrectField,
         required: false
     },
     themes: { // Changed from singular theme
-        type: 'array' as SchemaFieldType,
+        defaultMode: 'array' as SchemaFieldType,
         required: false,
         arrayOf: 'string' as SchemaFieldType // Corrected: cast to SchemaFieldType
     },
     difficulty: { // Renamed from difficulte
-        type: 'number' as SchemaFieldType,
+        defaultMode: 'number' as SchemaFieldType,
         required: false
     },
     /* // Old level field using custom validator
     level: { // Renamed from niveau
-        type: 'custom' as SchemaFieldType,
+        defaultMode: 'custom' as SchemaFieldType,
         validator: isLevelField, // Renamed from isNiveauField
         required: false
     },
     */
     gradeLevel: { // New gradeLevel field
-        type: 'string' as SchemaFieldType,
+        defaultMode: 'string' as SchemaFieldType,
         required: false
     },
     discipline: {
-        type: 'string' as SchemaFieldType,
+        defaultMode: 'string' as SchemaFieldType,
         required: false
     },
     question: {
-        type: 'string' as SchemaFieldType,
+        defaultMode: 'string' as SchemaFieldType,
         required: false
     },
     answers: {
-        type: 'array' as SchemaFieldType,
+        defaultMode: 'array' as SchemaFieldType,
         required: false,
         arrayOf: answerSchema
     },
     hidden: {
-        type: 'boolean' as SchemaFieldType,
+        defaultMode: 'boolean' as SchemaFieldType,
         required: false
     },
     title: { // Standardized to 'title', removing 'titre'
-        type: 'string' as SchemaFieldType,
+        defaultMode: 'string' as SchemaFieldType,
         required: false
     }
     // Removed 'titre' field as it's covered by 'title'

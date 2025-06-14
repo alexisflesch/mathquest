@@ -1,281 +1,311 @@
 /**
- * API Response Type Definitions
+ * API Type Definitions - Uses Shared Types
  * 
- * Centralized type definitions for API responses to ensure consistency
- * between client and server and prevent interface contract mismatches.
+ * This file re-exports shared types and schemas to maintain backward 
+ * compatibility while centralizing all type definitions.
  */
 
 import { z } from 'zod';
-import { AUTH_STATES } from '../constants/auth';
 
-// Base User Schema
-const UserSchema = z.object({
-    id: z.string(),
-    username: z.string(),
-    email: z.string().optional(), // Optional because guest users don't have emails
-    role: z.enum(['STUDENT', 'TEACHER']),
-    avatar: z.string().optional()
-});
+// Import schemas directly for use in API_SCHEMAS object
+import {
+    AuthStatusResponseSchema,
+    UniversalLoginResponseSchema,
+    RegisterResponseSchema,
+    UpgradeAccountResponseSchema,
+    UpgradeAccountRequestSchema,
+    ProfileUpdateResponseSchema,
+    LogoutResponseSchema,
+    ErrorResponseSchema,
+    QuestionsFiltersResponseSchema,
+    QuestionsResponseSchema,
+    QuestionsCountResponseSchema,
+    QuizListResponseSchema,
+    TournamentCodeResponseSchema,
+    TeacherQuizQuestionsResponseSchema,
+    QuizCreationResponseSchema,
+    TournamentVerificationResponseSchema
+} from '@shared/types/api/schemas';
 
-// Auth Status Response Schema
-export const AuthStatusResponseSchema = z.object({
-    authState: z.enum([AUTH_STATES.ANONYMOUS, AUTH_STATES.GUEST, AUTH_STATES.STUDENT, AUTH_STATES.TEACHER]),
-    cookiesFound: z.number(),
-    cookieNames: z.array(z.string()),
-    hasAuthToken: z.boolean(),
-    hasTeacherToken: z.boolean(),
-    timestamp: z.string(),
-    user: UserSchema.optional()
-});
+// Re-export shared API response types
+export type {
+    // Auth API Types
+    LoginResponse,
+    RegisterResponse,
+    UpgradeAccountResponse,
+    AuthStatusResponse,
+    ProfileUpdateResponse,
+    PasswordResetResponse,
+    PasswordResetConfirmResponse,
+    ErrorResponse,
+    // Game API Types  
+    GameCreationResponse,
+    GameJoinResponse,
+    GameStatusUpdateResponse,
+    GameInstanceResponse,
+    GameInstanceWithTemplateResponse,
+    GameStateResponse,
+    LeaderboardResponse,
+    TeacherActiveGamesResponse,
+    GameInstancesByTemplateResponse,
+    // Game Control API Types
+    GameControlStateResponse,
+    QuestionSetResponse,
+    QuestionEndedResponse,
+    GameEndedResponse,
+    // Question API Types
+    QuestionCreationResponse,
+    QuestionResponse,
+    QuestionsListResponse,
+    QuestionUidsResponse,
+    QuestionFiltersResponse,
+    // Game Template API Types
+    GameTemplateResponse,
+    GameTemplatesResponse,
+    GameTemplateCreationResponse,
+    GameTemplateUpdateResponse,
+    // Quiz Template API Types
+    QuizTemplateResponse,
+    QuizTemplatesResponse,
+    QuizTemplateCreationResponse,
+    QuizTemplateUpdateResponse,
+    QuizTemplateDeleteResponse,
+    QuizTemplateQuestionResponse,
+    // User API Types
+    PublicUserResponse,
+    UserByCookieResponse,
+    TeacherProfileResponse,
+    // Generic Response Types
+    SuccessResponse
+} from '@shared/types/api/responses';
 
-export type AuthStatusResponse = z.infer<typeof AuthStatusResponseSchema>;
+// Re-export shared API request types
+export type {
+    LoginRequest,
+    RegisterRequest,
+    UpgradeAccountRequest,
+    PasswordResetRequest,
+    PasswordResetConfirmRequest,
+    ProfileUpdateRequest,
+    CreateGameRequest,
+    GameJoinRequest,
+    GameStatusUpdateRequest,
+    CreateGameTemplateRequest,
+    UpdateGameTemplateRequest,
+    CreateQuestionRequest,
+    UpdateQuestionRequest,
+    UpdateUserRequest,
+    CreateQuizTemplateRequest,
+    UpdateQuizTemplateRequest,
+    SetQuestionRequest
+} from '@shared/types/api/requests';
 
-// Universal Login Response Schema (handles both teacher and student login)
-export const UniversalLoginResponseSchema = z.union([
-    // Teacher login response
-    z.object({
-        message: z.string(),
-        enseignantId: z.string(),
-        username: z.string(),
-        avatar: z.string().optional(),
-        token: z.string()
-    }),
-    // Student login response  
-    z.object({
-        success: z.boolean(),
-        user: UserSchema,
-        token: z.string()
-    })
-]);
+// Re-export all shared API schemas
+export {
+    // Auth Request Schemas
+    LoginRequestSchema,
+    RegisterRequestSchema,
+    UpgradeAccountRequestSchema,
+    PasswordResetRequestSchema,
+    PasswordResetConfirmRequestSchema,
+    ProfileUpdateRequestSchema,
+    // Auth Response Schemas
+    LoginResponseSchema,
+    RegisterResponseSchema,
+    UpgradeAccountResponseSchema,
+    ProfileUpdateResponseSchema,
+    LogoutResponseSchema,
+    UniversalLoginResponseSchema,
+    ErrorResponseSchema,
+    // Game Request Schemas
+    CreateGameRequestSchema,
+    GameJoinRequestSchema,
+    GameStatusUpdateRequestSchema,
+    // Game Response Schemas
+    GameCreationResponseSchema,
+    GameJoinResponseSchema,
+    GameStatusUpdateResponseSchema,
+    GameStateResponseSchema,
+    LeaderboardResponseSchema,
+    TeacherActiveGamesResponseSchema,
+    GameInstancesByTemplateResponseSchema,
+    // Game Template Request Schemas
+    CreateGameTemplateRequestSchema,
+    UpdateGameTemplateRequestSchema,
+    // Game Template Response Schemas
+    GameTemplateResponseSchema,
+    GameTemplatesResponseSchema,
+    GameTemplateCreationResponseSchema,
+    GameTemplateUpdateResponseSchema,
+    // Question Request Schemas
+    CreateQuestionRequestSchema,
+    UpdateQuestionRequestSchema,
+    // Question Response Schemas
+    QuestionCreationResponseSchema,
+    QuestionResponseSchema,
+    QuestionsResponseSchema,
+    QuestionsListResponseSchema,
+    QuestionUidsResponseSchema,
+    QuestionsFiltersResponseSchema,
+    QuestionsCountResponseSchema,
+    // User Request Schemas
+    UpdateUserRequestSchema,
+    // Quiz Template Request Schemas
+    CreateQuizTemplateRequestSchema,
+    UpdateQuizTemplateRequestSchema,
+    // Quiz Template Response Schemas
+    QuizTemplateResponseSchema,
+    QuizTemplatesResponseSchema,
+    QuizCreationResponseSchema,
+    QuizTemplateCreationResponseSchema,
+    QuizTemplateUpdateResponseSchema,
+    QuizTemplateDeleteResponseSchema,
+    QuizTemplateQuestionResponseSchema,
+    QuizListResponseSchema,
+    TeacherQuizQuestionsResponseSchema,
+    TournamentCodeResponseSchema,
+    TournamentVerificationResponseSchema,
+    // Game Control Request Schemas
+    SetQuestionRequestSchema,
+    // Generic Response Schemas
+    SuccessResponseSchema
+} from '@shared/types/api/schemas';
 
+// Re-export core types that are commonly used
+export type { Question } from '@shared/types/quiz/question';
+export type { UserRole } from '@shared/types/core/user';
+export type { GameTemplate, GameInstance } from '@shared/types/core';
+export type { BaseParticipant, LeaderboardEntry } from '@shared/types/core/participant';
+
+// Import shared types and schemas that are already exported above
+import type {
+    RegisterResponse,
+    UpgradeAccountResponse,
+    QuestionFiltersResponse,
+    QuestionsListResponse,
+    UserByCookieResponse,
+    GameTemplateCreationResponse,
+    LeaderboardResponse
+} from '@shared/types/api/responses';
+
+import type {
+    UpgradeAccountRequest
+} from '@shared/types/api/requests';
+
+import type {
+    GameTemplate,
+    Question
+} from '@shared/types/core';
+
+// Legacy type aliases for backward compatibility
+export type RegistrationResponse = RegisterResponse;
+export type UpgradeResponse = UpgradeAccountResponse;
+export type UpgradeRequest = UpgradeAccountRequest;
 export type UniversalLoginResponse = z.infer<typeof UniversalLoginResponseSchema>;
 
-// Registration Response Schema (for both students and teachers)
-export const RegistrationResponseSchema = z.object({
-    success: z.boolean(),
-    user: UserSchema,
-    token: z.string(),
-    message: z.string().optional()
-});
+// Legacy question and quiz response types for backward compatibility
+export type QuestionsFiltersResponse = QuestionFiltersResponse;
+export type QuestionsResponse = QuestionsListResponse;
+export type QuestionsCountResponse = {
+    total: number;
+};
+export type QuizListResponse = import('@shared/types/api/responses').QuizTemplatesResponse;
+export type TournamentCodeResponse = {
+    tournament_code: string;
+};
+export type TeacherQuizQuestionsResponse = {
+    questions: Question[];
+};
+export type PlayerCookieResponse = UserByCookieResponse;
+export type QuizCreationResponse = GameTemplateCreationResponse;
+export type TournamentVerificationResponse = {
+    id: string;
+    code?: string;
+    nom?: string;
+    type?: string;
+    statut?: string;
+};
+export type TournamentStatusResponse = {
+    code: string;
+    defaultMode: string;
+    statut: string;
+};
+export type TournamentLeaderboardResponse = LeaderboardResponse;
+export type CanPlayDifferedResponse = {
+    canPlay: boolean;
+};
+export type MyTournamentsResponse = {
+    created: Array<{
+        id: string;
+        code: string;
+        name: string;
+        statut: string;
+        createdAt: string;
+        date_debut: string | null;
+        date_fin: string | null;
+        leaderboard?: unknown[];
+    }>;
+    played: Array<{
+        id: string;
+        code: string;
+        name: string;
+        statut: string;
+        createdAt: string;
+        date_debut: string | null;
+        date_fin: string | null;
+        leaderboard?: unknown[];
+        position: number;
+        score: number;
+    }>;
+};
 
-export type RegistrationResponse = z.infer<typeof RegistrationResponseSchema>;
+// Legacy schemas for backward compatibility with existing code
+export const RegistrationResponseSchema = RegisterResponseSchema;
+export const UpgradeResponseSchema = UpgradeAccountResponseSchema;
+export const UpgradeRequestSchema = UpgradeAccountRequestSchema;
 
-// Upgrade Response Schema (guest to account)
-export const UpgradeResponseSchema = z.object({
-    success: z.boolean(),
-    user: UserSchema,
-    token: z.string(),
-    message: z.string()
-});
+// Additional frontend-specific schemas that aren't in shared
+import { questionSchema as QuestionSchema } from '@shared/types/quiz/question.zod';
 
-export type UpgradeResponse = z.infer<typeof UpgradeResponseSchema>;
-
-// Upgrade Request Schema (guest to account)
-export const UpgradeRequestSchema = z.object({
-    cookieId: z.string(),
-    email: z.string(),
-    password: z.string(),
-    targetRole: z.enum(['STUDENT'])
-});
-
-export type UpgradeRequest = z.infer<typeof UpgradeRequestSchema>;
-
-// Profile Update Response Schema
-export const ProfileUpdateResponseSchema = z.object({
-    success: z.boolean(),
-    user: UserSchema,
-    message: z.string().optional()
-});
-
-export type ProfileUpdateResponse = z.infer<typeof ProfileUpdateResponseSchema>;
-
-// Logout Response Schema
-export const LogoutResponseSchema = z.object({
-    message: z.string()
-});
-
-export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
-
-// Generic Error Response Schema
-export const ErrorResponseSchema = z.object({
-    error: z.string(),
-    message: z.string().optional(),
-    success: z.boolean().optional()
-});
-
-export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
-
-// Question Schemas
-const AnswerSchema = z.object({
-    text: z.string(),
-    correct: z.boolean()
-});
-
-const QuestionSchema = z.object({
-    uid: z.string(),
-    text: z.string(),
-    questionType: z.string(), // Canonical field, matches DB and API
-    answerOptions: z.array(z.string()), // Database field name
-    correctAnswers: z.array(z.boolean()), // Database field name
-    answers: z.array(AnswerSchema).optional(), // Legacy field for backward compatibility
-    title: z.string().nullable().optional(),
-    explanation: z.string().nullable().optional(),
-    time: z.number().optional(),
-    timeLimit: z.number().nullable(), // Database field name - nullable to match database schema
-    tags: z.array(z.string()).optional(),
-    level: z.string().optional(),
-    gradeLevel: z.string(),
-    discipline: z.string(),
-    themes: z.array(z.string()),
-    difficulty: z.number(),
-    author: z.string().nullable().optional(),
-    isHidden: z.boolean(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-    feedbackWaitTime: z.number().nullable() // Nullable to match database schema
-});
-
-export type Question = z.infer<typeof QuestionSchema>;
-
-// Questions Filters Response Schema
-export const QuestionsFiltersResponseSchema = z.object({
-    niveaux: z.array(z.string()),
-    disciplines: z.array(z.string()),
-    themes: z.array(z.string())
-});
-
-export type QuestionsFiltersResponse = z.infer<typeof QuestionsFiltersResponseSchema>;
-
-// Questions Response Schema (for various question endpoints)
-export const QuestionsResponseSchema = z.object({
-    questions: z.array(QuestionSchema),
-    total: z.number(),
-    hasMore: z.boolean().optional(),
-    page: z.number(),
-    pageSize: z.number(),
-    totalPages: z.number()
-});
-
-export type QuestionsResponse = z.infer<typeof QuestionsResponseSchema>;
-
-// Quiz Data Schema
-const QuizSchema = z.object({
-    id: z.string(),
-    nom: z.string(),
-    enseignant_id: z.string().optional(),
-    questions_ids: z.array(z.string()).optional(),
-    levels: z.array(z.string()).optional(),
-    themes: z.array(z.string()).optional(),
-    type: z.string().optional(),
-    date_creation: z.string().optional(),
-    niveaux: z.array(z.string()).optional(),
-    categories: z.array(z.string()).optional()
-});
-
-// Quiz List Response Schema
-export const QuizListResponseSchema = z.array(QuizSchema);
-
-export type QuizListResponse = z.infer<typeof QuizListResponseSchema>;
-
-// Tournament Code Response Schema
-export const TournamentCodeResponseSchema = z.object({
-    tournament_code: z.string()
-});
-
-export type TournamentCodeResponse = z.infer<typeof TournamentCodeResponseSchema>;
-
-// Teacher Quiz Questions Response Schema
-export const TeacherQuizQuestionsResponseSchema = z.object({
-    questions: z.array(QuestionSchema)
-});
-
-export type TeacherQuizQuestionsResponse = z.infer<typeof TeacherQuizQuestionsResponseSchema>;
-
-// Player Cookie Response Schema
 export const PlayerCookieResponseSchema = z.object({
     user: z.object({
         id: z.string(),
-        username: z.string().optional(),
-        avatar: z.string().optional()
+        username: z.string(),
+        email: z.string().optional(),
+        role: z.enum(['STUDENT', 'TEACHER']),
+        avatarEmoji: z.string(),
+        createdAt: z.string()
     })
 });
 
-export type PlayerCookieResponse = z.infer<typeof PlayerCookieResponseSchema>;
-
-// Game Creation Response Schema
-export const GameCreationResponseSchema = z.object({
-    gameInstance: z.object({
-        accessCode: z.string(),
-        id: z.string().optional()
-    }),
-    message: z.string().optional()
-});
-
-export type GameCreationResponse = z.infer<typeof GameCreationResponseSchema>;
-
-// Questions Count Response Schema
-export const QuestionsCountResponseSchema = z.object({
-    total: z.number()
-});
-
-export type QuestionsCountResponse = z.infer<typeof QuestionsCountResponseSchema>;
-
-// Quiz Creation Response Schema
-export const QuizCreationResponseSchema = z.object({
-    id: z.string(),
-    message: z.string().optional()
-});
-
-export type QuizCreationResponse = z.infer<typeof QuizCreationResponseSchema>;
-
-// Tournament Verification Response Schema
-export const TournamentVerificationResponseSchema = z.object({
-    id: z.string(),
-    code: z.string().optional(),
-    nom: z.string().optional(),
-    type: z.string().optional(),
-    statut: z.string().optional()
-});
-
-export type TournamentVerificationResponse = z.infer<typeof TournamentVerificationResponseSchema>;
-
-// Tournament Status Response Schema
 export const TournamentStatusResponseSchema = z.object({
     code: z.string(),
-    type: z.string(),
+    defaultMode: z.string(),
     statut: z.string()
 });
 
-export type TournamentStatusResponse = z.infer<typeof TournamentStatusResponseSchema>;
-
-// Tournament Leaderboard Response Schema
 export const TournamentLeaderboardResponseSchema = z.object({
     leaderboard: z.array(z.object({
-        id: z.string(),
+        userId: z.string(), // Use userId to match shared LeaderboardEntry type
         username: z.string(),
-        avatar: z.string(),
+        avatar: z.string().optional(), // Make optional to match shared type
         score: z.number(),
+        rank: z.number().optional(), // Add rank field from shared type
         isDiffered: z.boolean().optional()
     }))
 });
 
-export type TournamentLeaderboardResponse = z.infer<typeof TournamentLeaderboardResponseSchema>;
-
-// Can Play Differed Response Schema
 export const CanPlayDifferedResponseSchema = z.object({
     canPlay: z.boolean()
 });
 
-export type CanPlayDifferedResponse = z.infer<typeof CanPlayDifferedResponseSchema>;
-
-// My Tournaments Response Schema
 export const MyTournamentsResponseSchema = z.object({
     created: z.array(z.object({
         id: z.string(),
         code: z.string(),
-        nom: z.string(),
+        name: z.string(),
         statut: z.string(),
-        date_creation: z.string(),
+        createdAt: z.string(),
         date_debut: z.string().nullable(),
         date_fin: z.string().nullable(),
         leaderboard: z.array(z.unknown()).optional()
@@ -283,9 +313,9 @@ export const MyTournamentsResponseSchema = z.object({
     played: z.array(z.object({
         id: z.string(),
         code: z.string(),
-        nom: z.string(),
+        name: z.string(),
         statut: z.string(),
-        date_creation: z.string(),
+        createdAt: z.string(),
         date_debut: z.string().nullable(),
         date_fin: z.string().nullable(),
         leaderboard: z.array(z.unknown()).optional(),
@@ -294,35 +324,10 @@ export const MyTournamentsResponseSchema = z.object({
     }))
 });
 
-export type MyTournamentsResponse = z.infer<typeof MyTournamentsResponseSchema>;
-
-// Teacher Active Games Response Schema
-export const TeacherActiveGamesResponseSchema = z.object({
-    games: z.array(z.object({
-        id: z.string(),
-        name: z.string(),
-        accessCode: z.string(),
-        status: z.string(),
-        playMode: z.string(),
-        createdAt: z.string(),
-        startedAt: z.string().nullable(),
-        endedAt: z.string().nullable(),
-        currentQuestionIndex: z.number().nullable(),
-        gameTemplate: z.object({
-            name: z.string()
-        }),
-        participants: z.array(z.object({
-            id: z.string()
-        }))
-    }))
-});
-
-export type TeacherActiveGamesResponse = z.infer<typeof TeacherActiveGamesResponseSchema>;
-
-// Export all schemas for runtime validation
+// Export all schemas for runtime validation - maintaining legacy structure
 export const API_SCHEMAS = {
     authStatus: AuthStatusResponseSchema,
-    universalLogin: UniversalLoginResponseSchema,
+    universalLogin: UniversalLoginResponseSchema, // Use UniversalLoginResponseSchema for backward compatibility
     registration: RegistrationResponseSchema,
     upgrade: UpgradeResponseSchema,
     profileUpdate: ProfileUpdateResponseSchema,
@@ -336,13 +341,12 @@ export const API_SCHEMAS = {
     tournamentCode: TournamentCodeResponseSchema,
     teacherQuizQuestions: TeacherQuizQuestionsResponseSchema,
     playerCookie: PlayerCookieResponseSchema,
-    gameCreation: GameCreationResponseSchema,
+    gameCreation: QuizCreationResponseSchema,
     quizCreation: QuizCreationResponseSchema,
     // Tournament Schemas
     tournamentVerification: TournamentVerificationResponseSchema,
     tournamentStatus: TournamentStatusResponseSchema,
     tournamentLeaderboard: TournamentLeaderboardResponseSchema,
     canPlayDiffered: CanPlayDifferedResponseSchema,
-    myTournaments: MyTournamentsResponseSchema,
-    teacherActiveGames: TeacherActiveGamesResponseSchema
+    myTournaments: MyTournamentsResponseSchema
 } as const;

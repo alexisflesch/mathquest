@@ -52,7 +52,7 @@ export const playerJoinedGamePayloadSchema = z.object({
 
 export const notificationPayloadSchema = z.object({
   message: z.string().min(1, { message: "Notification message cannot be empty." }),
-  type: z.enum(['info', 'warning', 'error', 'success']),
+  defaultMode: z.enum(['info', 'warning', 'error', 'success']),
 });
 
 export const questionDataSchema = z.object({

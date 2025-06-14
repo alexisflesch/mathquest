@@ -104,3 +104,4 @@ async function getParticipantCount(io, accessCode) {
         return 0;
     }
 }
+// TODO: Sweep the rest of the file and update all emits to use shared types or add TODOs for missing types.

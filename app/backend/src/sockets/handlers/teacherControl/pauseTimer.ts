@@ -5,6 +5,8 @@ import gameStateService from '@/core/gameStateService';
 import createLogger from '@/utils/logger';
 import { PauseTimerPayload } from './types';
 import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { GameTimerState } from '@shared/types/core/timer';
+import type { ErrorPayload, GameTimerUpdatePayload } from '@shared/types/socketEvents';
 
 // Create a handler-specific logger
 const logger = createLogger('PauseTimerHandler');
@@ -22,7 +24,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             socket.emit('error_dashboard', {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control timer',
-            });
+            } as ErrorPayload);
             if (callback) {
                 callback({
                     success: false,
@@ -56,7 +58,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 socket.emit('error_dashboard', {
                     code: 'MISSING_PARAMS',
                     message: 'Either game ID or access code must be provided',
-                });
+                } as ErrorPayload);
                 if (callback) {
                     callback({
                         success: false,
@@ -71,7 +73,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 socket.emit('error_dashboard', {
                     code: 'GAME_NOT_FOUND',
                     message: 'Game not found with the provided ID or access code',
-                });
+                } as ErrorPayload);
                 if (callback) {
                     callback({
                         success: false,
@@ -90,7 +92,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 socket.emit('error_dashboard', {
                     code: 'NOT_AUTHORIZED',
                     message: 'You are not authorized to control this game',
-                });
+                } as ErrorPayload);
                 if (callback) {
                     callback({
                         success: false,
@@ -106,7 +108,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 socket.emit('error_dashboard', {
                     code: 'MISSING_ACCESS_CODE',
                     message: 'Access code is required to manage game state',
-                });
+                } as ErrorPayload);
                 if (callback) {
                     callback({
                         success: false,
@@ -126,7 +128,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 socket.emit('error_dashboard', {
                     code: 'STATE_ERROR',
                     message: 'Could not retrieve game state',
-                });
+                } as ErrorPayload);
                 if (callback) {
                     callback({
                         success: false,
@@ -162,22 +164,35 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 return;
             }
 
-            // Calculate time elapsed since timer started
+            // Calculate time remaining from current timer state
             const now = Date.now();
-            const startedAt = timer.startedAt || 0;
-            const elapsed = now - startedAt;
-            const timeRemaining = Math.max(0, timer.durationMs - elapsed);
+            let timeRemaining = 0;
+            let questionUid: string | null = null;
 
-            // Pause the timer
-            timer = {
-                ...timer,
-                isPaused: true,
-                pausedAt: now,
-                timeRemainingMs: timeRemaining
+            // Handle both old and new timer formats during transition
+            if ('timeLeftMs' in timer) {
+                // New format
+                timeRemaining = timer.timeLeftMs || 0;
+                questionUid = timer.questionUid || null;
+            } else {
+                // Old format - calculate from startedAt
+                const startedAt = timer.startedAt || 0;
+                const elapsed = now - startedAt;
+                timeRemaining = Math.max(0, timer.durationMs - elapsed);
+            }
+
+            // Create paused timer using shared GameTimerState format
+            const pausedTimer: GameTimerState = {
+                status: 'pause',
+                timeLeftMs: timeRemaining,
+                durationMs: timer.durationMs,
+                questionUid: questionUid,
+                timestamp: now,
+                localTimeLeftMs: null
             };
 
             // Update game state
-            gameState.timer = timer;
+            gameState.timer = pausedTimer;
             await gameStateService.updateGameState(accessCodeStr, gameState);
 
             // Broadcast to all relevant rooms
@@ -186,13 +201,13 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             const projectionRoom = `projection_${gameInstance.id}`;
 
             // Broadcast to game room
-            io.to(gameRoom).emit('game_timer_updated', { timer });
+            io.to(gameRoom).emit('game_timer_updated', { timer: { ...pausedTimer, isPaused: true } } as GameTimerUpdatePayload); // TODO: Ensure isPaused is set
 
             // Broadcast to dashboard room
-            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer });
+            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
 
             // Broadcast to projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer });
+            io.to(projectionRoom).emit('projection_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
 
             // Call the callback if provided with success
             if (callback) {
@@ -207,7 +222,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 code: 'TIMER_ERROR',
                 message: 'Failed to pause timer',
                 details: error instanceof Error ? error.message : String(error)
-            });
+            } as ErrorPayload);
 
             // Call the callback with error if provided
             if (callback) {

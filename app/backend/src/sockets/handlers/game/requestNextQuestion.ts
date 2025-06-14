@@ -1,7 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
-import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
+import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData, ErrorPayload } from '@shared/types/socketEvents';
 import { GAME_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
@@ -28,14 +28,16 @@ export function requestNextQuestionHandler(
             });
 
             if (!gameInstance) {
-                socket.emit('game_error', { message: 'Game not found.' });
+                const errorPayload: ErrorPayload = { message: 'Game not found.' };
+                socket.emit('game_error', errorPayload);
                 return;
             }
 
             // Allow request_next_question for both practice mode and deferred tournaments
             if (!gameInstance.isDiffered && gameInstance.playMode !== 'practice') {
                 logger.warn({ accessCode, userId }, 'Request next question is only for practice mode or deferred tournaments');
-                socket.emit('game_error', { message: 'This operation is only for practice mode or deferred tournaments.' });
+                const errorPayload: ErrorPayload = { message: 'This operation is only for practice mode or deferred tournaments.' };
+                socket.emit('game_error', errorPayload);
                 return;
             }
 
@@ -45,7 +47,8 @@ export function requestNextQuestionHandler(
             });
 
             if (!participant) {
-                socket.emit('game_error', { message: 'Participant not found.' });
+                const errorPayload: ErrorPayload = { message: 'Participant not found.' };
+                socket.emit('game_error', errorPayload);
                 return;
             }
 
@@ -122,7 +125,7 @@ export function requestNextQuestionHandler(
                 };
 
                 // Send the question data using the proper LiveQuestionPayload structure
-                socket.emit('game_question', liveQuestionPayload);
+                socket.emit('game_question', liveQuestionPayload); // TODO: Define shared type if missing
             } else {
                 // All questions answered: compute and send final score
                 const total = allQuestions.length;
@@ -145,7 +148,7 @@ export function requestNextQuestionHandler(
                     totalQuestions: total,
                     correct: correctCount,
                     total: total
-                });
+                }); // TODO: Define shared type if missing
 
                 // Update participant as completed
                 await prisma.gameParticipant.update({
@@ -155,7 +158,8 @@ export function requestNextQuestionHandler(
             }
         } catch (err) {
             logger.error({ err, socketId: socket.id }, 'Error handling request_next_question');
-            socket.emit('game_error', { message: 'Error processing next question request.' });
+            const errorPayload: ErrorPayload = { message: 'Error processing next question request.' };
+            socket.emit('game_error', errorPayload);
         }
     };
 }

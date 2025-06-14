@@ -1,9 +1,37 @@
 import express, { Request, Response } from 'express';
 import { optionalAuth } from '@/middleware/auth';
+import { validateRequestBody } from '@/middleware/validation';
 import { UserService } from '@/core/services/userService';
 import { UserRole } from '@/db/generated/client';
 import { validateAvatar, getRandomAvatar, AllowedAvatar, isValidAvatar } from '@/utils/avatarUtils';
 import createLogger from '@/utils/logger';
+import type {
+    LoginResponse,
+    RegisterResponse,
+    UpgradeAccountResponse,
+    PasswordResetResponse,
+    PasswordResetConfirmResponse,
+    AuthStatusResponse,
+    ProfileUpdateResponse,
+    ErrorResponse
+} from '@shared/types/api/responses';
+import type {
+    LoginRequest,
+    RegisterRequest,
+    TeacherRegisterRequest,
+    UpgradeAccountRequest,
+    PasswordResetRequest,
+    PasswordResetConfirmRequest,
+    ProfileUpdateRequest
+} from '@shared/types/api/requests';
+import {
+    LoginRequestSchema,
+    RegisterRequestSchema,
+    UpgradeAccountRequestSchema,
+    PasswordResetRequestSchema,
+    PasswordResetConfirmRequestSchema,
+    ProfileUpdateRequestSchema
+} from '@shared/types/api/schemas';
 
 // Create a route-specific logger
 const logger = createLogger('AuthAPI');
@@ -29,7 +57,7 @@ export const __setUserServiceForTesting = (mockService: UserService): void => {
  * Generic auth endpoint that handles multiple actions
  * POST /api/v1/auth
  */
-router.post('/', async (req: Request, res: Response): Promise<void> => {
+router.post('/', validateRequestBody(LoginRequestSchema.or(RegisterRequestSchema)), async (req: Request, res: Response<LoginResponse | RegisterResponse | ErrorResponse>): Promise<void> => {
     try {
         const { action, email, password, username } = req.body;
 
@@ -57,7 +85,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 /**
  * Universal login handler - determines user role automatically
  */
-async function handleUniversalLogin(req: Request, res: Response): Promise<void> {
+async function handleUniversalLogin(req: Request, res: Response<LoginResponse | ErrorResponse>): Promise<void> {
     const { email, password } = req.body;
 
     // Basic validation
@@ -219,7 +247,7 @@ async function handleTeacherLogin(req: Request, res: Response): Promise<void> {
 /**
  * Handle teacher registration
  */
-async function handleTeacherRegister(req: Request, res: Response): Promise<void> {
+async function handleTeacherRegister(req: Request, res: Response<RegisterResponse | ErrorResponse>): Promise<void> {
     const { username, email, password, nom, prenom, adminPassword, avatar } = req.body;
 
     // Basic validation
@@ -303,7 +331,7 @@ async function handleTeacherRegister(req: Request, res: Response): Promise<void>
  * POST /api/v1/auth/register
  * Handles: guest registration, student registration, teacher registration
  */
-router.post('/register', async (req: Request, res: Response): Promise<void> => {
+router.post('/register', validateRequestBody(RegisterRequestSchema), async (req: Request, res: Response<RegisterResponse | ErrorResponse>): Promise<void> => {
     try {
         const { username, avatar, cookieId, email, password, role = 'STUDENT', adminPassword } = req.body;
 
@@ -454,7 +482,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
  * POST /api/v1/auth/upgrade
  * Handles: guest→student, student→teacher, guest→teacher
  */
-router.post('/upgrade', async (req: Request, res: Response): Promise<void> => {
+router.post('/upgrade', validateRequestBody(UpgradeAccountRequestSchema), async (req: Request, res: Response<UpgradeAccountResponse | ErrorResponse>): Promise<void> => {
     try {
         const { cookieId, email, password, targetRole = 'STUDENT', adminPassword } = req.body;
 
@@ -596,7 +624,7 @@ router.post('/upgrade', async (req: Request, res: Response): Promise<void> => {
  * Universal login endpoint (for backwards compatibility)
  * POST /api/v1/auth/login
  */
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
+router.post('/login', async (req: Request, res: Response<LoginResponse | ErrorResponse>): Promise<void> => {
     await handleUniversalLogin(req, res);
 });
 
@@ -604,7 +632,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
  * Password reset request endpoint
  * POST /api/v1/auth/reset-password
  */
-router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
+router.post('/reset-password', validateRequestBody(PasswordResetRequestSchema), async (req: Request, res: Response<PasswordResetResponse | ErrorResponse>): Promise<void> => {
     try {
         const { email } = req.body;
 
@@ -640,7 +668,7 @@ router.post('/reset-password', async (req: Request, res: Response): Promise<void
  * Password reset confirmation endpoint
  * POST /api/v1/auth/reset-password/confirm
  */
-router.post('/reset-password/confirm', async (req: Request, res: Response): Promise<void> => {
+router.post('/reset-password/confirm', validateRequestBody(PasswordResetConfirmRequestSchema), async (req: Request, res: Response<PasswordResetConfirmResponse | ErrorResponse>): Promise<void> => {
     try {
         const { token, newPassword } = req.body;
 
@@ -685,7 +713,7 @@ router.post('/reset-password/confirm', async (req: Request, res: Response): Prom
  * GET /api/v1/auth/status
  * Returns authentication status for the current user
  */
-router.get('/status', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/status', optionalAuth, async (req: Request, res: Response<AuthStatusResponse | ErrorResponse>): Promise<void> => {
     try {
         // Check if user is authenticated
         const isAuthenticated = !!(req.user?.userId);
@@ -750,7 +778,7 @@ router.get('/status', optionalAuth, async (req: Request, res: Response): Promise
                 id: user.id,
                 username: user.username || 'Utilisateur',
                 avatar: user.avatarEmoji || '👤',
-                email: user.email,
+                email: user.email || undefined,
                 role: userRole as 'STUDENT' | 'TEACHER'
             } : undefined,
             // Legacy fields for backward compatibility
@@ -768,7 +796,7 @@ router.get('/status', optionalAuth, async (req: Request, res: Response): Promise
  * PUT /api/v1/auth/profile
  * Updates the profile for authenticated students and teachers
  */
-router.put('/profile', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+router.put('/profile', optionalAuth, validateRequestBody(ProfileUpdateRequestSchema), async (req: Request, res: Response<ProfileUpdateResponse | ErrorResponse>): Promise<void> => {
     try {
         const { username, avatar } = req.body;
 
@@ -806,9 +834,9 @@ router.put('/profile', optionalAuth, async (req: Request, res: Response): Promis
             message: 'Profile updated successfully',
             user: {
                 id: updatedUser.id,
-                email: updatedUser.email,
+                email: updatedUser.email || undefined,
                 username: updatedUser.username,
-                avatar: updatedUser.avatarEmoji,
+                avatar: updatedUser.avatarEmoji || '👤',
                 role: updatedUser.role
             }
         });

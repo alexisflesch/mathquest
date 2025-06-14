@@ -19,7 +19,7 @@ export function isBaseQuestion(value: unknown): value is BaseQuestion {
         typeof (value as BaseQuestion).uid === 'string' &&
         'text' in value &&
         typeof (value as BaseQuestion).text === 'string' &&
-        'type' in value &&
+        'defaultMode' in value &&
         typeof ((value as unknown as BaseQuestion).questionType) === 'string'
     );
 }

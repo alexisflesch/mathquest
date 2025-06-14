@@ -147,7 +147,7 @@ async function handleJoinQuizTemplateDashboard(
         return {
             uid: pq.uid,
             text: pq.text || '',
-            type: pq.questionType,
+            defaultMode: pq.questionType,
             answers: parsedResponses,
             time: pq.timeLimit || 20,
             explanation: pq.explanation || undefined,

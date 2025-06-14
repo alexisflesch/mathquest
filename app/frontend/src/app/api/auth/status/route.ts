@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createApiUrl } from '@/config/api';
+import { AuthStatusResponseSchema, type AuthStatusResponse } from '@shared/types/api/schemas';
 
 /**
  * Auth status API endpoint - Proxies to backend to get complete auth state with user profile
@@ -30,7 +31,11 @@ export async function GET() {
         }
 
         const data = await response.json();
-        return NextResponse.json(data);
+
+        // Validate the response from backend
+        const validatedData = AuthStatusResponseSchema.parse(data);
+
+        return NextResponse.json(validatedData);
 
     } catch (error) {
         console.error('[Frontend Auth Status] Error calling backend:', error);
@@ -47,12 +52,16 @@ export async function GET() {
             authState = 'student';
         }
 
-        return NextResponse.json({
+        const fallbackResponse: AuthStatusResponse = {
             authState,
+            cookiesFound: 0,
+            cookieNames: [],
             hasAuthToken: !!authToken,
             hasTeacherToken: !!teacherToken,
-            user: null,
-            error: 'Backend unavailable'
-        });
+            timestamp: new Date().toISOString(),
+            user: undefined
+        };
+
+        return NextResponse.json(fallbackResponse);
     }
 }

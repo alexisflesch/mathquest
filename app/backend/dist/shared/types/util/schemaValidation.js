@@ -46,7 +46,7 @@ function validateSchema(data, schema) {
  * Validates a field's type against its schema definition
  */
 function validateFieldType(value, field, fieldName, errors) {
-    switch (field.type) {
+    switch (field.defaultMode) {
         case 'string':
             if (typeof value !== 'string') {
                 errors.push(`Field '${fieldName}' must be a string`);

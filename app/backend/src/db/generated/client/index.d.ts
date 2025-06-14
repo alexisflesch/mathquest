@@ -670,7 +670,7 @@ export namespace Prisma {
 
   type Cast<A, B> = A extends B ? A : B;
 
-  export const type: unique symbol;
+  export const defaultMode: unique symbol;
 
 
 

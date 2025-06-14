@@ -5,7 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express")); // Use standard Request
 const gameTemplateService_1 = require("@/core/services/gameTemplateService");
+const validation_1 = require("@/middleware/validation");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const schemas_1 = require("@shared/types/api/schemas");
 const logger = (0, logger_1.default)('GameTemplatesAPI');
 const router = express_1.default.Router();
 // Singleton instance for service
@@ -101,7 +103,7 @@ router.get('/:id', async (req, res) => {
  * Allows a teacher/admin to create a game template with specific details.
  * This route should be protected by teacherAuth middleware to ensure req.user is populated.
  */
-router.post('/', async (req, res) => {
+router.post('/', (0, validation_1.validateRequestBody)(schemas_1.CreateGameTemplateRequestSchema), async (req, res) => {
     try {
         // Log the received request body for debugging
         logger.info({ body: req.body, user: req.user }, 'Received request for game template creation');
@@ -218,7 +220,7 @@ router.post('/', async (req, res) => {
  * PUT /api/v1/game-templates/:id
  * Allows a teacher to update their game template
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', (0, validation_1.validateRequestBody)(schemas_1.UpdateGameTemplateRequestSchema), async (req, res) => {
     try {
         const { id } = req.params;
         const { name, discipline, gradeLevel, themes, description, defaultMode, questions } = req.body;

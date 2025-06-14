@@ -6,7 +6,28 @@ import { GameTemplateService } from '@/core/services/gameTemplateService';
 import { initializeGameState, getFullGameState, getFormattedLeaderboard } from '@/core/gameStateService';
 import { redisClient } from '@/config/redis';
 import { teacherAuth, optionalAuth } from '@/middleware/auth';
+import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
+import type {
+    GameCreationResponse,
+    GameInstanceResponse,
+    GameJoinResponse,
+    GameStatusUpdateResponse,
+    GameStateResponse,
+    LeaderboardResponse,
+    TeacherActiveGamesResponse,
+    GameInstancesByTemplateResponse
+} from '@shared/types/api/responses';
+import type {
+    GameCreationRequest,
+    GameJoinRequest,
+    ErrorResponse
+} from '@shared/types/api/requests';
+import {
+    CreateGameRequestSchema,
+    GameJoinRequestSchema,
+    GameStatusUpdateRequestSchema
+} from '@shared/types/api/schemas';
 
 // Create a route-specific logger
 const logger = createLogger('GamesAPI');
@@ -45,7 +66,7 @@ export const __setGameParticipantServiceForTesting = (mockService: GameParticipa
  * POST /api/v1/games
  * Allows teacher or student authentication
  */
-router.post('/', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/', optionalAuth, validateRequestBody(CreateGameRequestSchema), async (req: Request<{}, GameCreationResponse | ErrorResponse, GameCreationRequest>, res: Response<GameCreationResponse | ErrorResponse>): Promise<void> => {
     try {
         // Debug: Log the full request body, user, and headers
         logger.info('Games POST request body debug', {
@@ -134,7 +155,7 @@ router.post('/', optionalAuth, async (req: Request, res: Response): Promise<void
         const gameInstance = await getGameInstanceService().createGameInstanceUnified({
             name,
             gameTemplateId: finalgameTemplateId,
-            playMode,
+            playMode: playMode as any, // Type assertion for now
             settings,
             initiatorUserId: userId
         });
@@ -154,7 +175,7 @@ router.post('/', optionalAuth, async (req: Request, res: Response): Promise<void
  * GET /api/v1/games/:accessCode
  * Public endpoint - no authentication required
  */
-router.get('/:accessCode', async (req: Request, res: Response): Promise<void> => {
+router.get('/:accessCode', async (req: Request, res: Response<GameInstanceResponse | ErrorResponse>): Promise<void> => {
     try {
         const { accessCode } = req.params;
 
@@ -184,7 +205,7 @@ router.get('/:accessCode', async (req: Request, res: Response): Promise<void> =>
  * GET /api/v1/games/id/:id
  * Requires teacher authentication
  */
-router.get('/id/:id', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/id/:id', teacherAuth, async (req: Request, res: Response<GameInstanceResponse | ErrorResponse>): Promise<void> => {
     try {
         const { id } = req.params;
         const user = req.user;
@@ -220,7 +241,7 @@ router.get('/id/:id', teacherAuth, async (req: Request, res: Response): Promise<
  * POST /api/v1/games/:accessCode/join
  * Requires player ID in request
  */
-router.post('/:accessCode/join', async (req: Request, res: Response): Promise<void> => {
+router.post('/:accessCode/join', validateRequestBody(GameJoinRequestSchema), async (req: Request<{ accessCode: string }, GameJoinResponse | ErrorResponse, GameJoinRequest>, res: Response<GameJoinResponse | ErrorResponse>): Promise<void> => {
     try {
         const { accessCode } = req.params;
         const { userId } = req.body;
@@ -233,7 +254,12 @@ router.post('/:accessCode/join', async (req: Request, res: Response): Promise<vo
         const joinResult = await getGameParticipantService().joinGame(userId, accessCode);
 
         if (!joinResult.success) {
-            res.status(400).json({ error: joinResult.error });
+            res.status(400).json({ error: joinResult.error || 'Failed to join game' });
+            return;
+        }
+
+        if (!joinResult.gameInstance || !joinResult.participant) {
+            res.status(500).json({ error: 'Incomplete join result' });
             return;
         }
 
@@ -253,7 +279,7 @@ router.post('/:accessCode/join', async (req: Request, res: Response): Promise<vo
  * PUT /api/v1/games/:id/status
  * Requires teacher authentication
  */
-router.put('/:id/status', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+router.put('/:id/status', optionalAuth, validateRequestBody(GameStatusUpdateRequestSchema), async (req: Request, res: Response<GameStatusUpdateResponse | ErrorResponse>): Promise<void> => {
     try {
         const user = req.user;
         const studentId = req.headers['x-student-id'] as string | undefined;
@@ -371,7 +397,7 @@ router.patch('/:id/differed', teacherAuth, async (req: Request, res: Response): 
  * GET /api/v1/games/:code/leaderboard
  * Returns the leaderboard for a given game instance (by access code)
  */
-router.get('/:code/leaderboard', async (req: Request, res: Response) => {
+router.get('/:code/leaderboard', async (req: Request, res: Response<LeaderboardResponse | ErrorResponse>) => {
     const { code } = req.params;
     try {
         const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
@@ -386,7 +412,7 @@ router.get('/:code/leaderboard', async (req: Request, res: Response) => {
         // consider doing that here or in a separate sync process.
         // For now, we return the Redis-based leaderboard directly.
 
-        res.json(leaderboard);
+        res.json({ leaderboard });
     } catch (error) {
         logger.error('Failed to fetch leaderboard', error);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });

@@ -30,8 +30,7 @@ function gameAnswerHandler(io, socket) {
             }, 'Invalid game answer payload');
             const errorPayload = {
                 message: 'Invalid game answer payload',
-                code: 'INVALID_PAYLOAD',
-                details: errorDetails
+                code: 'INVALID_PAYLOAD'
             };
             // Emit error response
             socket.emit('game_error', errorPayload);
@@ -135,10 +134,8 @@ function gameAnswerHandler(io, socket) {
             const leaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
             logger.debug({ leaderboard }, 'Leaderboard data');
             if (gameInstance.isDiffered) {
-                // Self-paced mode: no leaderboard, use only documented events
-                // 1. Get the current question and check correctness
+                // Practice mode: send correctAnswers and feedback immediately
                 const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
-                // 2. Send answer_received (always) with correctness info and correct answers
                 socket.emit('answer_received', {
                     questionUid,
                     timeSpent,
@@ -205,6 +202,8 @@ function gameAnswerHandler(io, socket) {
                 }
             }
             else {
+                // Tournament and quiz mode: DO NOT send correctAnswers or feedback here
+                // Only emit answer_received (without correctAnswers/explanation)
                 let roomName = accessCode;
                 if (gameInstance.playMode === 'quiz' && gameInstance.initiatorUserId) {
                     roomName = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
@@ -214,14 +213,10 @@ function gameAnswerHandler(io, socket) {
                 }
                 logger.info({ leaderboard, roomName }, 'Emitting leaderboard_update to room');
                 io.to(roomName).emit('leaderboard_update', { leaderboard });
-            }
-            // We've already sent the answer_received event for differed mode, so only emit it here for non-differed mode
-            if (!gameInstance.isDiffered) {
-                logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode');
+                // Only emit answer_received with minimal info (NO correct field for tournament/quiz)
+                logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode (without correct field)');
                 try {
-                    // Make sure we send back a response even if something fails
-                    // Use the isCorrect value if available, otherwise default to false
-                    socket.emit('answer_received', { questionUid, timeSpent, correct: isCorrect !== undefined ? isCorrect : false });
+                    socket.emit('answer_received', { questionUid, timeSpent });
                     console.log(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
                 }
                 catch (emitError) {
@@ -235,9 +230,9 @@ function gameAnswerHandler(io, socket) {
             try {
                 // Try to send error response
                 socket.emit('game_error', { message: 'Unexpected error during answer submission.' });
-                // Also send back answer_received to unblock the client
+                // Also send back answer_received to unblock the client (without correct field)
                 if (questionUid && timeSpent !== undefined) {
-                    socket.emit('answer_received', { questionUid, timeSpent, correct: false });
+                    socket.emit('answer_received', { questionUid, timeSpent });
                     console.log(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
                 }
             }

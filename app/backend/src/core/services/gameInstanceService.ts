@@ -94,10 +94,16 @@ export class GameInstanceService {
                 include: {
                     gameTemplate: {
                         select: {
+                            id: true,
                             name: true,
                             themes: true,
                             discipline: true,
                             gradeLevel: true,
+                            description: true,
+                            defaultMode: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            creatorId: true
                         }
                     }
                 }
@@ -162,10 +168,16 @@ export class GameInstanceService {
                 include: {
                     gameTemplate: {
                         select: {
+                            id: true,
                             name: true,
                             themes: true,
                             discipline: true,
                             gradeLevel: true,
+                            description: true,
+                            defaultMode: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            creatorId: true
                         }
                     },
                     participants: includeParticipants ? {
@@ -250,7 +262,23 @@ export class GameInstanceService {
             // Update the game instance
             const updatedGame = await prisma.gameInstance.update({
                 where: { id: gameId },
-                data: updates
+                data: updates,
+                include: {
+                    gameTemplate: {
+                        select: {
+                            id: true,
+                            name: true,
+                            themes: true,
+                            discipline: true,
+                            gradeLevel: true,
+                            description: true,
+                            defaultMode: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            creatorId: true
+                        }
+                    }
+                }
             });
 
             return updatedGame;

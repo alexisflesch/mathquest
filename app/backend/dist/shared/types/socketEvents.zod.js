@@ -48,7 +48,7 @@ exports.playerJoinedGamePayloadSchema = zod_1.z.object({
 });
 exports.notificationPayloadSchema = zod_1.z.object({
     message: zod_1.z.string().min(1, { message: "Notification message cannot be empty." }),
-    type: zod_1.z.enum(['info', 'warning', 'error', 'success']),
+    defaultMode: zod_1.z.enum(['info', 'warning', 'error', 'success']),
 });
 exports.questionDataSchema = zod_1.z.object({
     uid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }),

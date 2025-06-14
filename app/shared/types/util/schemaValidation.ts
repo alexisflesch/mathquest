@@ -16,7 +16,7 @@ export type SchemaFieldType =
 
 // Schema field definition
 export interface SchemaField {
-    type: SchemaFieldType;
+    defaultMode: SchemaFieldType;
     required?: boolean;
     arrayOf?: SchemaFieldType | Schema;
     properties?: Schema;
@@ -87,7 +87,7 @@ function validateFieldType(
     fieldName: string,
     errors: string[]
 ): boolean {
-    switch (field.type) {
+    switch (field.defaultMode) {
         case 'string':
             if (typeof value !== 'string') {
                 errors.push(`Field '${fieldName}' must be a string`);

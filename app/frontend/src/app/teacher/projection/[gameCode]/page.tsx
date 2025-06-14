@@ -36,8 +36,8 @@ import { QUESTION_TYPES } from '@shared/types';
 const isQuestionMultipleChoice = (tq: TournamentQuestion | null): boolean => {
     if (!tq?.question) return false;
     if (typeof tq.question === 'string') return false;
-    if (typeof tq.question === 'object' && 'type' in tq.question) {
-        return tq.question.type === QUESTION_TYPES.MULTIPLE_CHOICE;
+    if (typeof tq.question === 'object' && 'defaultMode' in tq.question) {
+        return tq.question.defaultMode === QUESTION_TYPES.MULTIPLE_CHOICE;
     }
     if (typeof tq.question === 'object' && 'questionType' in tq.question) {
         return tq.question.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;

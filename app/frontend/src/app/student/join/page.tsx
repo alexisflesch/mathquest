@@ -35,11 +35,11 @@ export default function StudentJoinPage() {
         try {
             const data = await makeApiRequest<TournamentStatusResponse>(`tournament/status?code=${code}`, {}, undefined, TournamentStatusResponseSchema);
             const tournoiCode = data.code || code; // prefer code over id
-            if (data.type === 'differé' || data.type === 'différé') {
+            if (data.defaultMode === 'differé' || data.defaultMode === 'différé') {
                 router.push(`/live/${tournoiCode}`);
                 return;
             }
-            if (data.type === 'direct') {
+            if (data.defaultMode === 'direct') {
                 if (data.statut === 'en préparation') {
                     router.push(`/lobby/${tournoiCode}`);
                     return;

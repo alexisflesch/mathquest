@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 // Define the response schema for filters
 const QuestionsFiltersResponseSchema = z.object({
-    niveaux: z.array(z.string()),
+    gradeLevel: z.array(z.string()),
     disciplines: z.array(z.string()),
     themes: z.array(z.string())
 });
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         // Backend returns: niveaux, disciplines, themes
         // Frontend expects: niveaux, disciplines, themes (same structure)
         const result = {
-            niveaux: data.niveaux || [],
+            gradeLevel: data.levels || [],
             disciplines: data.disciplines || [],
             themes: data.themes || []
         };

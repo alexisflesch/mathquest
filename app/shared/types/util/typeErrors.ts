@@ -12,10 +12,9 @@ export function createTypeError(
     receivedValue: unknown,
     context?: string
 ): Error {
-    const type = typeof receivedValue;
+    const actualType = typeof receivedValue;
     const value = JSON.stringify(receivedValue, null, 2).substring(0, 100);
-    const message = `Type Error: Expected ${expectedType}, received ${type}${context ? ` in ${context}` : ""
-        }.\nValue: ${value}${value.length > 100 ? "..." : ""}`;
+    const message = `Type Error: Expected ${expectedType}, received ${actualType}${context ? ` in ${context}` : ""}.\nValue: ${value}${value.length > 100 ? "..." : ""}`;
 
     return new Error(message);
 }

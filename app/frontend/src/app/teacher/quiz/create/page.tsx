@@ -8,7 +8,7 @@ import { useAccessGuard } from '@/hooks/useAccessGuard';
 import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
-import { QuestionsResponseSchema, QuizCreationResponseSchema, type QuestionsResponse, type QuizCreationResponse } from '@/types/api';
+import { QuestionsResponseSchema, QuizCreationResponseSchema, GameTemplateCreationResponseSchema, type QuestionsResponse, type QuizCreationResponse } from '@/types/api';
 import { Search } from 'lucide-react';
 import { QUESTION_TYPES } from '@shared/types'; // Import QUESTION_TYPES
 
@@ -56,7 +56,7 @@ export default function CreateQuizPage() {
         }>('questions/filters')
             .then(data => {
                 setFilters({
-                    levels: data.levels || data.niveaux || [], // Prefer 'levels', fallback to 'niveaux'
+                    levels: data.levels || data.levels || [], // Prefer 'levels', fallback to 'gradeLevel'
                     disciplines: data.disciplines || [],
                     themes: data.themes || []
                 });
@@ -105,10 +105,10 @@ export default function CreateQuizPage() {
                     uid: q.uid,
                     title: q.title || q.titre,
                     text: q.text || q.question,
-                    questionType: q.questionType || q.type || QUESTION_TYPES.SINGLE_CHOICE,
+                    questionType: q.questionType || q.defaultMode || QUESTION_TYPES.SINGLE_CHOICE,
                     answerOptions,
                     correctAnswers,
-                    gradeLevel: q.gradeLevel || q.level || q.niveaux,
+                    gradeLevel: q.gradeLevel || q.level || q.gradeLevel,
                     discipline: q.discipline || q.category || q.subject,
                     themes: q.themes,
                     explanation: q.explanation || q.justification,
@@ -180,14 +180,14 @@ export default function CreateQuizPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    nom: quizName,
-                    questions_ids: selectedQuestions,
-                    enseignant_id: teacherId,
-                    levels: quizMeta.levels, // Use levels
+                    name: quizName, // Use canonical 'name' instead of 'name'
+                    questionUids: selectedQuestions, // Use canonical 'questionUids' instead of 'questionUids'
+                    creatorId: teacherId, // Use canonical 'creatorId' instead of 'creatorId'
+                    gradeLevel: quizMeta.levels, // Use canonical 'gradeLevel' instead of 'levels'
                     themes: quizMeta.themes,
-                    type: 'direct',
+                    defaultMode: 'direct',
                 }),
-            }, undefined, QuizCreationResponseSchema);
+            }, undefined, GameTemplateCreationResponseSchema);
             setQuizSaveSuccess('Quiz sauvegardé avec succès !');
             setQuizName('');
             setSelectedQuestions([]);

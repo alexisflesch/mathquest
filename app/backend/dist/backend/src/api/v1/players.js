@@ -39,7 +39,16 @@ router.get('/cookie/:cookieId', async (req, res) => {
             res.status(404).json({ error: 'User not found' });
             return;
         }
-        res.status(200).json({ user });
+        res.status(200).json({
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email || undefined,
+                role: user.role,
+                avatarEmoji: user.avatarEmoji || '👤',
+                createdAt: user.createdAt.toISOString()
+            }
+        });
     }
     catch (error) {
         logger.error({ error }, 'Error fetching user by cookieId');

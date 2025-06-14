@@ -6,7 +6,7 @@ import { makeApiRequest } from '@/config/api';
 import { QuizListResponseSchema, QuizCreationResponseSchema, type QuizListResponse, type QuizCreationResponse } from '@/types/api';
 
 export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
-    const [quizzes, setQuizzes] = useState<{ id: string; nom: string }[]>([]);
+    const [quizzes, setQuizzes] = useState<{ id: string; name: string }[]>([]);
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
     const [quizName, setQuizName] = useState('');
     const [savingQuiz, setSavingQuiz] = useState(false);
@@ -15,12 +15,12 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
 
     useEffect(() => {
         makeApiRequest<QuizListResponse>('/api/quiz', undefined, undefined, QuizListResponseSchema)
-            .then((data) => setQuizzes(Array.isArray(data) ? data.filter(q => q && typeof q.id === 'string' && typeof q.nom === 'string') : []))
+            .then((data) => setQuizzes(data?.gameTemplates?.filter(q => q && typeof q.id === 'string' && typeof q.name === 'string') || []))
             .catch((err) => console.error('Error loading quizzes:', err));
     }, []);
     useEffect(() => {
         makeApiRequest<QuizListResponse>('/api/quiz', undefined, undefined, QuizListResponseSchema)
-            .then((data) => setQuizzes(Array.isArray(data) ? data.filter(q => q && typeof q.id === 'string' && typeof q.nom === 'string') : []))
+            .then((data) => setQuizzes(data?.gameTemplates?.filter(q => q && typeof q.id === 'string' && typeof q.name === 'string') || []))
             .catch((err) => console.error('Error loading quizzes:', err));
     }, [quizSaveSuccess]);
 
@@ -33,15 +33,12 @@ export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    nom: quizName || 'Quiz ' + new Date().toLocaleString(),
-                    questions_ids: selectedQuestions,
-                    enseignant_id: teacherId,
-                    niveau: '',
-                    categorie: '',
-                    themes: [],
-                    type: 'direct',
+                    name: quizName || 'Quiz ' + new Date().toLocaleString(),
+                    questionUids: selectedQuestions,
+                    description: '',
+                    settings: {}
                 }),
-            }, undefined, QuizCreationResponseSchema);
+            });
             setQuizSaveSuccess('Quiz sauvegardé !');
             setQuizName('');
             setSelectedQuestions([]);

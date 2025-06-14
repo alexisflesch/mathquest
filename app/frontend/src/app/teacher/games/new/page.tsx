@@ -175,7 +175,7 @@ export default function CreateActivityPage() {
         }>('questions/filters')
             .then(data => {
                 setFilters({
-                    levels: data.levels || data.niveaux || [], // Prefer 'levels', fallback to 'niveaux'
+                    levels: data.levels || data.levels || [], // Prefer 'levels', fallback to 'gradeLevel'
                     disciplines: data.disciplines || [],
                     themes: data.themes || [],
                     authors: data.authors || []
@@ -233,10 +233,10 @@ export default function CreateActivityPage() {
                         uid: q.uid,
                         title: q.title || q.titre,
                         text: q.text || q.question,
-                        questionType: q.questionType || q.type || QUESTION_TYPES.SINGLE_CHOICE,
+                        questionType: q.questionType || q.defaultMode || QUESTION_TYPES.SINGLE_CHOICE,
                         answerOptions,
                         correctAnswers,
-                        gradeLevel: q.gradeLevel || q.level || q.niveaux,
+                        gradeLevel: q.gradeLevel || q.level || q.gradeLevel,
                         discipline: q.discipline || q.category || q.subject,
                         themes: q.themes,
                         explanation: q.explanation || q.justification,

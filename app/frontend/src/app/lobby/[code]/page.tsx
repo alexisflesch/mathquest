@@ -46,7 +46,7 @@ interface GameState {
     question?: {
         uid: string;
         text: string;
-        type: string;
+        defaultMode: string;
     };
 }
 

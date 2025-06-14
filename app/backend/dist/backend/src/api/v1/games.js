@@ -11,7 +11,9 @@ const gameTemplateService_1 = require("@/core/services/gameTemplateService");
 // Import specific functions from gameStateService
 const gameStateService_1 = require("@/core/gameStateService");
 const auth_1 = require("@/middleware/auth");
+const validation_1 = require("@/middleware/validation");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
 const logger = (0, logger_1.default)('GamesAPI');
 const router = express_1.default.Router();
@@ -44,7 +46,7 @@ exports.__setGameParticipantServiceForTesting = __setGameParticipantServiceForTe
  * POST /api/v1/games
  * Allows teacher or student authentication
  */
-router.post('/', auth_1.optionalAuth, async (req, res) => {
+router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(schemas_1.CreateGameRequestSchema), async (req, res) => {
     try {
         // Debug: Log the full request body, user, and headers
         logger.info('Games POST request body debug', {
@@ -118,7 +120,7 @@ router.post('/', auth_1.optionalAuth, async (req, res) => {
         const gameInstance = await getGameInstanceService().createGameInstanceUnified({
             name,
             gameTemplateId: finalgameTemplateId,
-            playMode,
+            playMode: playMode, // Type assertion for now
             settings,
             initiatorUserId: userId
         });
@@ -193,7 +195,7 @@ router.get('/id/:id', auth_1.teacherAuth, async (req, res) => {
  * POST /api/v1/games/:accessCode/join
  * Requires player ID in request
  */
-router.post('/:accessCode/join', async (req, res) => {
+router.post('/:accessCode/join', (0, validation_1.validateRequestBody)(schemas_1.GameJoinRequestSchema), async (req, res) => {
     try {
         const { accessCode } = req.params;
         const { userId } = req.body;
@@ -203,7 +205,11 @@ router.post('/:accessCode/join', async (req, res) => {
         }
         const joinResult = await getGameParticipantService().joinGame(userId, accessCode);
         if (!joinResult.success) {
-            res.status(400).json({ error: joinResult.error });
+            res.status(400).json({ error: joinResult.error || 'Failed to join game' });
+            return;
+        }
+        if (!joinResult.gameInstance || !joinResult.participant) {
+            res.status(500).json({ error: 'Incomplete join result' });
             return;
         }
         res.status(200).json({
@@ -222,7 +228,7 @@ router.post('/:accessCode/join', async (req, res) => {
  * PUT /api/v1/games/:id/status
  * Requires teacher authentication
  */
-router.put('/:id/status', auth_1.optionalAuth, async (req, res) => {
+router.put('/:id/status', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(schemas_1.GameStatusUpdateRequestSchema), async (req, res) => {
     try {
         const user = req.user;
         const studentId = req.headers['x-student-id'];
@@ -351,7 +357,7 @@ router.get('/:code/leaderboard', async (req, res) => {
         // If gameInstance.leaderboard is the source of truth and needs to be updated,
         // consider doing that here or in a separate sync process.
         // For now, we return the Redis-based leaderboard directly.
-        res.json(leaderboard);
+        res.json({ leaderboard });
     }
     catch (error) {
         logger.error('Failed to fetch leaderboard', error);

@@ -1,8 +1,20 @@
 import express, { Request, Response } from 'express';
 import { QuestionService, QuestionCreationData, QuestionUpdateData } from '@/core/services/questionService';
 import { teacherAuth, optionalAuth } from '@/middleware/auth';
+import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
 import { questionSchema, questionCreationSchema } from '../../../../shared/types/quiz/question.zod';
+import type { Question } from '@shared/types/quiz/question';
+import type {
+    QuestionCreationRequest,
+    QuestionUpdateRequest,
+    QuestionSearchRequest,
+    ErrorResponse
+} from '@shared/types/api/requests';
+import {
+    CreateQuestionRequestSchema,
+    UpdateQuestionRequestSchema
+} from '@shared/types/api/schemas';
 
 // Create a route-specific logger
 const logger = createLogger('QuestionsAPI');
@@ -29,7 +41,7 @@ export const __setQuestionServiceForTesting = (mockService: QuestionService): vo
  * POST /api/v1/questions
  * Requires teacher authentication
  */
-router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), async (req: Request<{}, { question: any } | ErrorResponse, QuestionCreationRequest>, res: Response<{ question: any } | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
@@ -61,12 +73,12 @@ router.post('/', teacherAuth, async (req: Request, res: Response): Promise<void>
  * GET /api/v1/questions/filters
  * Optional query parameters: niveau, discipline to filter cascading results
  */
-router.get('/filters', async (req: Request, res: Response): Promise<void> => {
+router.get('/filters', async (req: Request, res: Response<{ gradeLevel: (string | null)[], disciplines: string[], themes: string[] } | ErrorResponse>): Promise<void> => {
     try {
-        const { niveau, discipline } = req.query;
+        const { gradeLevel, discipline } = req.query;
 
         const filterCriteria: any = {};
-        if (niveau) filterCriteria.gradeLevel = niveau as string;
+        if (gradeLevel) filterCriteria.gradeLevel = gradeLevel as string;
         if (discipline) filterCriteria.discipline = discipline as string;
 
         const filters = await getQuestionService().getAvailableFilters(filterCriteria);
@@ -83,13 +95,13 @@ router.get('/filters', async (req: Request, res: Response): Promise<void> => {
  * Query parameters: niveau, discipline, themes (comma-separated), limit
  * Returns only question UIDs without sensitive data
  */
-router.get('/list', async (req: Request, res: Response): Promise<void> => {
+router.get('/list', async (req: Request, res: Response<string[] | ErrorResponse>): Promise<void> => {
     try {
-        const { niveau, discipline, themes, limit } = req.query;
+        const { gradeLevel, discipline, themes, limit } = req.query;
 
         // Convert to appropriate types for filtering
         const filters: any = {};
-        if (niveau) filters.gradeLevel = niveau as string;
+        if (gradeLevel) filters.gradeLevel = gradeLevel as string;
         if (discipline) filters.discipline = discipline as string;
         if (themes) {
             filters.themes = Array.isArray(themes)
@@ -121,7 +133,7 @@ router.get('/list', async (req: Request, res: Response): Promise<void> => {
  * Get a question by ID
  * GET /api/v1/questions/:uid
  */
-router.get('/:uid', optionalAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/:uid', optionalAuth, async (req: Request, res: Response<{ question: any } | ErrorResponse>): Promise<void> => {
     try {
         const { uid } = req.params;
 
@@ -150,7 +162,7 @@ router.get('/:uid', optionalAuth, async (req: Request, res: Response): Promise<v
  * GET /api/v1/questions
  * REQUIRES TEACHER AUTHENTICATION - Contains complete question data including answers
  */
-router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any[], total: number, page: number, pageSize: number, totalPages: number } | ErrorResponse>): Promise<void> => {
     try {
         const {
             discipline,
@@ -257,7 +269,7 @@ router.get('/', teacherAuth, async (req: Request, res: Response): Promise<void> 
  * PUT /api/v1/questions/:uid
  * Requires teacher authentication
  */
-router.put('/:uid', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.put('/:uid', teacherAuth, validateRequestBody(UpdateQuestionRequestSchema), async (req: Request, res: Response<{ question: any } | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
@@ -296,7 +308,7 @@ router.put('/:uid', teacherAuth, async (req: Request, res: Response): Promise<vo
  * DELETE /api/v1/questions/:uid
  * Requires teacher authentication
  */
-router.delete('/:uid', teacherAuth, async (req: Request, res: Response): Promise<void> => {
+router.delete('/:uid', teacherAuth, async (req: Request, res: Response<{ success: boolean, message: string } | ErrorResponse>): Promise<void> => {
     try {
         if (!req.user?.userId || req.user?.role !== 'TEACHER') {
             res.status(401).json({ error: 'Authentication required' });
@@ -307,7 +319,7 @@ router.delete('/:uid', teacherAuth, async (req: Request, res: Response): Promise
 
         await getQuestionService().deleteQuestion(uid);
 
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, message: 'Question deleted successfully' });
     } catch (error) {
         logger.error({ error }, 'Error deleting question');
         if (error instanceof Error && error.message.includes('not found')) {

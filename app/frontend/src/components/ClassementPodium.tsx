@@ -45,7 +45,7 @@ export default function ClassementPodium({ top3, others, zoomFactor = 1, correct
                             animate={{ y: 0, opacity: 1 }}
                             // Utiliser une animation custom pour surmonter les limites du conteneur
                             transition={{
-                                type: 'spring',
+                                defaultMode: 'spring',
                                 bounce: 0.3,
                                 duration: 1.5,
                                 delay: animationDelay

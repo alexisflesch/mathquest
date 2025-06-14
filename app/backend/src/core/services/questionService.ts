@@ -259,7 +259,7 @@ export class QuestionService {
             // Apply cascading filter logic
             if (filterCriteria?.discipline) {
                 // When discipline is selected:
-                // - niveaux: show niveaux that have this discipline
+                // - gradeLevel: show niveaux that have this discipline
                 // - disciplines: show only the selected discipline  
                 // - themes: show themes for this discipline
                 niveauxWhere.discipline = filterCriteria.discipline;
@@ -269,7 +269,7 @@ export class QuestionService {
 
             if (filterCriteria?.gradeLevel) {
                 // When niveau is selected:
-                // - niveaux: show only the selected niveau
+                // - gradeLevel: show only the selected niveau
                 // - disciplines: show disciplines that have this niveau
                 // - themes: show themes for this niveau
                 niveauxWhere.gradeLevel = filterCriteria.gradeLevel;
@@ -312,7 +312,7 @@ export class QuestionService {
             });
 
             return {
-                niveaux: niveaux.map(n => n.gradeLevel).filter(Boolean).sort(),
+                gradeLevel: niveaux.map(n => n.gradeLevel).filter(Boolean).sort(),
                 disciplines: disciplines.map(d => d.discipline).filter(Boolean).sort(),
                 themes: Array.from(uniqueThemes).sort()
             };

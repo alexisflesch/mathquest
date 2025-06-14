@@ -33,7 +33,7 @@ try {
     console.log('✅ Verification successful:', verified);
 } catch (error: any) {
     console.log('❌ Verification failed:', error.message);
-    console.log('Error type:', error.name);
+    console.log('Error defaultMode:', error.name);
 }
 
 // Attempt 2: Try with Buffer

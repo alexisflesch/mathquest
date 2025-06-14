@@ -56,7 +56,7 @@ app.use('/api', (req, res, next) => {
 app.use((err, req, res, next) => {
     logger.error({ err, req: { method: req.method, url: req.url } }, 'Unhandled error');
     // Always return JSON for errors, and set content-type explicitly
-    res.status(500).type('application/json').json({ error: 'Internal server error' });
+    res.status(500).defaultMode('application/json').json({ error: 'Internal server error' });
 });
 const server = http_1.default.createServer(app);
 // Initialize Socket.IO with Redis adapter

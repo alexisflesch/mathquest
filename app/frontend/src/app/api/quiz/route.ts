@@ -17,10 +17,11 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
 
         // All quiz requests should be mapped to quiz-templates endpoint
-        // Remove enseignant_id from query params since backend uses auth token to identify teacher
+        // Remove legacy field names from query params since backend uses auth token and canonical names
         const filteredParams = new URLSearchParams();
         for (const [key, value] of searchParams.entries()) {
-            if (key !== 'enseignant_id') {
+            // Filter out legacy field names - backend uses auth token and canonical field names
+            if (key !== 'creatorId') { // creatorId is handled via auth token
                 filteredParams.append(key, value);
             }
         }
@@ -68,14 +69,14 @@ export async function GET(request: NextRequest) {
             // Backend returned quiz-templates format, transform to legacy format
             transformedData = data.quizTemplates.map((template: any) => ({
                 id: template.id,
-                nom: template.name,
-                enseignant_id: template.creatorId,
-                questions_ids: template.questions?.map((q: any) => q.questionUid || q.uid) || [],
+                name: template.name, // Use canonical 'name' instead of 'name'
+                creatorId: template.creatorId, // Use canonical 'creatorId' instead of 'creatorId'
+                questionUids: template.questions?.map((q: any) => q.questionUid || q.uid) || [], // Use canonical 'questionUids'
                 themes: template.themes || [],
-                niveaux: template.gradeLevel ? [template.gradeLevel] : [],
-                categories: template.discipline ? [template.discipline] : [],
-                date_creation: template.createdAt,
-                type: template.defaultMode || 'standard'
+                gradeLevel: template.gradeLevel ? [template.gradeLevel] : [], // Use canonical 'gradeLevel' instead of 'gradeLevel'
+                discipline: template.discipline ? [template.discipline] : [], // Use canonical 'discipline' instead of 'discipline'
+                createdAt: template.createdAt, // Use canonical 'createdAt' instead of 'createdAt'
+                defaultMode: template.defaultMode || 'standard' // Use canonical 'defaultMode' instead of 'defaultMode'
             }));
             console.log('[Frontend API] Transformed data:', transformedData);
         }

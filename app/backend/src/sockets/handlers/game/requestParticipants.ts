@@ -9,6 +9,9 @@ export type RequestParticipantsPayload = z.infer<typeof requestParticipantsPaylo
 
 const PARTICIPANTS_KEY_PREFIX = 'mathquest:game:participants:';
 
+// TODO: Import or define type for:
+// - game_participants
+
 export function requestParticipantsHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: RequestParticipantsPayload) => {
         // Zod validation for payload
@@ -17,6 +20,6 @@ export function requestParticipantsHandler(io: SocketIOServer, socket: Socket) {
         const { accessCode } = parseResult.data;
         const participantsHash = await redisClient.hgetall(`${PARTICIPANTS_KEY_PREFIX}${accessCode}`);
         const participants = Object.values(participantsHash).map((p: any) => JSON.parse(p));
-        socket.emit('game_participants', { participants });
+        socket.emit('game_participants', { participants }); // TODO: Define shared type if missing
     };
 }

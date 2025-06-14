@@ -28,7 +28,7 @@ class QuestionService {
                     discipline: data.discipline,
                     themes: data.themes,
                     difficulty: data.difficulty,
-                    gradeLevel: data.gradeLevel,
+                    gradeLevel: data.levels,
                     author: data.author || userId, // Default to userId if not specified
                     explanation: data.explanation,
                     tags: data.tags || [],
@@ -197,7 +197,7 @@ class QuestionService {
             // Apply cascading filter logic
             if (filterCriteria?.discipline) {
                 // When discipline is selected:
-                // - niveaux: show niveaux that have this discipline
+                // - gradeLevel: show niveaux that have this discipline
                 // - disciplines: show only the selected discipline  
                 // - themes: show themes for this discipline
                 niveauxWhere.discipline = filterCriteria.discipline;
@@ -206,7 +206,7 @@ class QuestionService {
             }
             if (filterCriteria?.gradeLevel) {
                 // When niveau is selected:
-                // - niveaux: show only the selected niveau
+                // - gradeLevel: show only the selected niveau
                 // - disciplines: show disciplines that have this niveau
                 // - themes: show themes for this niveau
                 niveauxWhere.gradeLevel = filterCriteria.gradeLevel;
@@ -246,7 +246,7 @@ class QuestionService {
                 }
             });
             return {
-                niveaux: niveaux.map(n => n.gradeLevel).filter(Boolean).sort(),
+                gradeLevel: niveaux.map(n => n.gradeLevel).filter(Boolean).sort(),
                 disciplines: disciplines.map(d => d.discipline).filter(Boolean).sort(),
                 themes: Array.from(uniqueThemes).sort()
             };

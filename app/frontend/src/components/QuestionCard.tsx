@@ -41,8 +41,8 @@ interface QuestionCardProps {
 // Helper to get the question type (for multiple choice detection)
 const getQuestionType = (q: FilteredQuestion | QuestionData | string): string | undefined => {
     if (typeof q === 'object' && q !== null) {
-        // FilteredQuestion uses 'type', QuestionData uses 'questionType'
-        if ('type' in q && typeof q.type === 'string') return q.type;
+        // FilteredQuestion uses 'defaultMode', QuestionData uses 'questionType'
+        if ('defaultMode' in q && typeof q.defaultMode === 'string') return q.defaultMode;
         if ('questionType' in q && typeof q.questionType === 'string') return q.questionType;
     }
     return undefined;

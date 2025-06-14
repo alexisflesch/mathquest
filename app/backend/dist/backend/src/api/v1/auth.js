@@ -6,10 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.__setUserServiceForTesting = void 0;
 const express_1 = __importDefault(require("express"));
 const auth_1 = require("@/middleware/auth");
+const validation_1 = require("@/middleware/validation");
 const userService_1 = require("@/core/services/userService");
 const client_1 = require("@/db/generated/client");
 const avatarUtils_1 = require("@/utils/avatarUtils");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
 const logger = (0, logger_1.default)('AuthAPI');
 const router = express_1.default.Router();
@@ -30,7 +32,7 @@ exports.__setUserServiceForTesting = __setUserServiceForTesting;
  * Generic auth endpoint that handles multiple actions
  * POST /api/v1/auth
  */
-router.post('/', async (req, res) => {
+router.post('/', (0, validation_1.validateRequestBody)(schemas_1.LoginRequestSchema.or(schemas_1.RegisterRequestSchema)), async (req, res) => {
     try {
         const { action, email, password, username } = req.body;
         switch (action) {
@@ -279,7 +281,7 @@ async function handleTeacherRegister(req, res) {
  * POST /api/v1/auth/register
  * Handles: guest registration, student registration, teacher registration
  */
-router.post('/register', async (req, res) => {
+router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.RegisterRequestSchema), async (req, res) => {
     try {
         const { username, avatar, cookieId, email, password, role = 'STUDENT', adminPassword } = req.body;
         // Basic validation
@@ -422,7 +424,7 @@ router.post('/register', async (req, res) => {
  * POST /api/v1/auth/upgrade
  * Handles: guest→student, student→teacher, guest→teacher
  */
-router.post('/upgrade', async (req, res) => {
+router.post('/upgrade', (0, validation_1.validateRequestBody)(schemas_1.UpgradeAccountRequestSchema), async (req, res) => {
     try {
         const { cookieId, email, password, targetRole = 'STUDENT', adminPassword } = req.body;
         // Validation
@@ -560,7 +562,7 @@ router.post('/login', async (req, res) => {
  * Password reset request endpoint
  * POST /api/v1/auth/reset-password
  */
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', (0, validation_1.validateRequestBody)(schemas_1.PasswordResetRequestSchema), async (req, res) => {
     try {
         const { email } = req.body;
         if (!email) {
@@ -591,7 +593,7 @@ router.post('/reset-password', async (req, res) => {
  * Password reset confirmation endpoint
  * POST /api/v1/auth/reset-password/confirm
  */
-router.post('/reset-password/confirm', async (req, res) => {
+router.post('/reset-password/confirm', (0, validation_1.validateRequestBody)(schemas_1.PasswordResetConfirmRequestSchema), async (req, res) => {
     try {
         const { token, newPassword } = req.body;
         if (!token || !newPassword) {
@@ -688,7 +690,7 @@ router.get('/status', auth_1.optionalAuth, async (req, res) => {
                 id: user.id,
                 username: user.username || 'Utilisateur',
                 avatar: user.avatarEmoji || '👤',
-                email: user.email,
+                email: user.email || undefined,
                 role: userRole
             } : undefined,
             // Legacy fields for backward compatibility
@@ -706,7 +708,7 @@ router.get('/status', auth_1.optionalAuth, async (req, res) => {
  * PUT /api/v1/auth/profile
  * Updates the profile for authenticated students and teachers
  */
-router.put('/profile', auth_1.optionalAuth, async (req, res) => {
+router.put('/profile', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(schemas_1.ProfileUpdateRequestSchema), async (req, res) => {
     try {
         const { username, avatar } = req.body;
         if (!username || !avatar) {
@@ -738,9 +740,9 @@ router.put('/profile', auth_1.optionalAuth, async (req, res) => {
             message: 'Profile updated successfully',
             user: {
                 id: updatedUser.id,
-                email: updatedUser.email,
+                email: updatedUser.email || undefined,
                 username: updatedUser.username,
-                avatar: updatedUser.avatarEmoji,
+                avatar: updatedUser.avatarEmoji || '👤',
                 role: updatedUser.role
             }
         });

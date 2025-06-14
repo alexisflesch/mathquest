@@ -73,7 +73,7 @@ test.describe('Practice Mode E2E', () => {
                 for (const niveau of possibleNiveaux) {
                     const niveauOption = niveauOptions.filter({ hasText: niveau });
                     if (await niveauOption.count() > 0) {
-                        console.log(`✅ Found and selecting niveau: ${niveau}`);
+                        console.log(`✅ Found and selecting gradeLevel: ${gradeLevel`);
                         await niveauOption.first().click();
                         selectedNiveau = true;
                         break;
@@ -83,7 +83,7 @@ test.describe('Practice Mode E2E', () => {
                 if (!selectedNiveau) {
                     // Select the first available niveau option
                     const firstNiveauText = niveauTexts[0];
-                    console.log(`✅ Selecting first available niveau: ${firstNiveauText}`);
+                    console.log(`✅ Selecting first available gradeLevel: ${firstNiveauText}`);
                     await niveauOptions.first().click();
                     selectedNiveau = true;
                 }

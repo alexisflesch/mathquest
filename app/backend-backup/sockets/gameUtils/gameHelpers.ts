@@ -85,7 +85,7 @@ export async function sendQuestionWithState(
     // Create a trimmed-down question object for clients
     const clientQuestion = {
         uid: question.uid,
-        type: question.type,
+        defaultMode: question.defaultMode,
         text: question.text,
         answers: question.answers,
         time: question.time

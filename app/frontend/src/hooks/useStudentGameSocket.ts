@@ -254,7 +254,7 @@ export function useStudentGameSocket({
                 feedbackRemaining: null,
                 correctAnswers: null,
                 connectedToRoom: true,
-                timer: payload.timer || 30, // ms
+                // Don't set timer here - let the unified timer system handle it via game_timer_updated
                 timerStatus: 'play'
             }));
         }, isLiveQuestionPayload, 'game_question'));
@@ -285,15 +285,14 @@ export function useStudentGameSocket({
                     : prev.currentQuestion
             }));
         }, (d): d is GameStateUpdatePayload => true, 'game_state_update'));
-        socket.on('answer_received', (payload) => {
+        socket.on('answer_received', createSafeEventHandler<AnswerReceived>((payload) => {
             logger.info('=== ANSWER RECEIVED ===', payload);
 
-            // Store the correct answers when we receive answer feedback
+            // Store the answer feedback (without correct answers - those come from correct_answers event)
             setGameState(prev => {
                 const feedback = {
                     correct: payload.correct,
                     explanation: payload.explanation,
-                    correctAnswers: payload.correctAnswers,
                     questionUid: payload.questionUid
                 };
 
@@ -302,12 +301,16 @@ export function useStudentGameSocket({
                 return {
                     ...prev,
                     answered: true,
-                    lastAnswerFeedback: feedback,
-                    // Store correct answers for later display
-                    correctAnswers: Array.isArray(payload.correctAnswers) ? payload.correctAnswers : null
+                    lastAnswerFeedback: feedback
                 };
             });
-        });
+        }, (data): data is AnswerReceived => {
+            if (!data || typeof data !== 'object') return false;
+            const a = data as Record<string, unknown>;
+            return typeof a.questionUid === 'string' &&
+                typeof a.timeSpent === 'number' &&
+                typeof a.correct === 'boolean';
+        }, 'answer_received'));
         socket.on('game_ended', () => {
             setGameState(prev => ({ ...prev, gameStatus: 'finished', timer: null }));
         });
@@ -321,16 +324,16 @@ export function useStudentGameSocket({
         socket.on('correct_answers', createSafeEventHandler<CorrectAnswersPayload>((payload) => {
             logger.info('=== CORRECT ANSWERS EVENT ===', payload);
 
-            // The correct answers should already be stored from the answer_received event
             setGameState(prev => {
                 logger.info('=== SETTING SHOW ANSWERS PHASE ===', {
-                    storedCorrectAnswers: prev.correctAnswers,
-                    hasStoredAnswers: !!prev.correctAnswers
+                    newCorrectAnswers: payload.correctAnswers,
+                    hasNewCorrectAnswers: !!payload.correctAnswers
                 });
 
                 return {
                     ...prev,
-                    phase: 'show_answers'
+                    phase: 'show_answers',
+                    correctAnswers: payload.correctAnswers || prev.correctAnswers
                 };
             });
         }, isCorrectAnswersPayload, 'correct_answers'));

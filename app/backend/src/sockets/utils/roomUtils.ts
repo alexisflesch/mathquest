@@ -1,6 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
+import type { ErrorPayload } from '@shared/types/socketEvents';
 
 // Create a utility-specific logger
 const logger = createLogger('RoomUtils');
@@ -45,7 +46,7 @@ export async function joinRoom(socket: Socket, roomName: string, userData?: Reco
         socket.emit('room_joined', {
             room: roomName,
             timestamp: new Date().toISOString()
-        });
+        }); // TODO: Define shared type if missing
     } catch (error) {
         logger.error({
             error,
@@ -86,7 +87,7 @@ export async function leaveRoom(socket: Socket, roomName: string): Promise<void>
         socket.emit('room_left', {
             room: roomName,
             timestamp: new Date().toISOString()
-        });
+        }); // TODO: Define shared type if missing
     } catch (error) {
         logger.error({
             error,
@@ -182,3 +183,13 @@ export function broadcastToRoom(
         throw error;
     }
 }
+
+// TODO: Sweep the rest of the file and update all emits to use shared types or add TODOs for missing types.
+// TODO: Import or define types for:
+// - room_joined
+// - room_left
+// - broadcastToRoom (eventName/data)
+// Example refactor for emits (repeat for all emits in this file):
+// socket.emit('room_joined', joinedPayload); // TODO: Define shared type if missing
+// socket.emit('room_left', leftPayload); // TODO: Define shared type if missing
+// io.to(roomName).emit(eventName, data); // TODO: Ensure data uses shared type if eventName is known

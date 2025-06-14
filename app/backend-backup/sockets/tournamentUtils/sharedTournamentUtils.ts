@@ -31,7 +31,7 @@ export function sendTournamentQuestion(
 
     // Create filtered payload without sensitive data
     const filteredPayload = {
-        type: payload.question.type,
+        defaultMode: payload.question.defaultMode,
         uid: payload.question.uid,
         question: payload.question.question ?? '',
         answers: Array.isArray(payload.question.answers)

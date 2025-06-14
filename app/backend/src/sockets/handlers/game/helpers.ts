@@ -82,16 +82,14 @@ export async function sendFirstQuestionAndStartTimer({
 
         try {
             // Emit with an explicit acknowledgement callback
-            target.emit('game_question', payload, (ack: any) => {
-                logger.info({ ack }, 'game_question acknowledged');
-            });
+            target.emit('game_question', payload); // TODO: Define shared type if missing
             logger.info('game_question event emitted');
         } catch (err) {
             logger.error({ err }, 'Error emitting game_question');
         }
     } else {
         // target is a room string
-        io.to(target).emit('game_question', payload);
+        io.to(target).emit('game_question', payload); // TODO: Define shared type if missing
     }
     // Timer logic (if needed)
     // For practice, timer is per-player; for quiz, timer is per-room/teacher controlled

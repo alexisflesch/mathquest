@@ -173,7 +173,7 @@ export interface ServerToClientEvents {
     }) => void;
     correct_answers: (payload: {
         questionUid: string;
-        [key: string]: any;
+        correctAnswers?: boolean[];
     }) => void;
     feedback: (payload: {
         questionUid: string;
