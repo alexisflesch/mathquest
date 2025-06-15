@@ -142,7 +142,14 @@ export function requestNextQuestionHandler(
                         questionType: nextQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                         answerOptions: nextQuestion.answerOptions || []
                     },
-                    timer: nextQuestion.timeLimit || 30,
+                    timer: {
+                        status: 'play' as const,
+                        timeLeftMs: (nextQuestion.timeLimit || 30) * 1000,
+                        durationMs: (nextQuestion.timeLimit || 30) * 1000,
+                        questionUid: nextQuestion.uid,
+                        timestamp: Date.now(),
+                        localTimeLeftMs: (nextQuestion.timeLimit || 30) * 1000
+                    },
                     questionIndex: questionIndex,
                     totalQuestions: totalQuestions,
                     questionState: 'active' as const

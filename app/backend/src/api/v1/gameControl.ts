@@ -123,7 +123,7 @@ router.post('/:accessCode/question', teacherAuth, validateRequestBody(SetQuestio
                     questionType: updatedGameState.questionData.questionType,
                     answerOptions: updatedGameState.questionData.answerOptions
                 },
-                timer: updatedGameState.timer.durationMs / 1000, // Convert ms to seconds
+                timer: updatedGameState.timer, // Send full timer state
                 questionIndex: questionIndex,
                 totalQuestions: updatedGameState.questionUids.length,
                 questionState: 'active'

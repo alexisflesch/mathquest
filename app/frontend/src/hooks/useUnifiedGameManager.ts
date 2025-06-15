@@ -353,7 +353,9 @@ function setupStudentEvents(
             }));
             if (payload.question?.uid && payload.timer) {
                 logger.debug('Starting timer for question', { questionUid: payload.question.uid, timer: payload.timer });
-                timer.start(payload.question.uid, payload.timer);
+                // Extract duration from GameTimerState object
+                const duration = typeof payload.timer === 'object' ? payload.timer.durationMs : payload.timer;
+                timer.start(payload.question.uid, duration);
             }
         }
     );

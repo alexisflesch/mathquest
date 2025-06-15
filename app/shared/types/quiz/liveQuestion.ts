@@ -5,6 +5,8 @@
  * (sent to clients during live tournaments/quizzes).
  */
 
+import { GameTimerState } from '../core/timer';
+
 /**
  * Filtered question data (without correct answer information)
  */
@@ -27,7 +29,7 @@ export interface FilteredQuestion {
  */
 export interface LiveQuestionPayload {
     question: FilteredQuestion;   // The filtered question object
-    timer?: number;               // Timer duration for this question
+    timer?: GameTimerState;       // Timer state for this question
     questionIndex?: number;       // Index of the current question (0-based)
     totalQuestions?: number;      // Total number of questions
     questionState?: 'pending' | 'active' | 'paused' | 'stopped' | 'finished';

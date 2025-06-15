@@ -366,7 +366,7 @@ export const joinLobbyPayloadSchema = z.object({
 
 export const leaveLobbyPayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
-  userId: z.string().min(1, { message: "User ID cannot be empty." }),
+  userId: z.string().min(1, { message: "User ID cannot be empty." }).optional(),
 });
 
 export const getParticipantsPayloadSchema = z.object({

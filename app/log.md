@@ -1,5 +1,38 @@
 # MathQuest API Type Safety Audit Log
 
+**Phase: Tournament Guest Authentication Bug Fix**
+
+## June 15, 2025
+
+### 🐛 BUG FIX: Tournament Guest Authentication + Timer Sync
+**Time**: Current session
+**Goal**: Fix guest users unable to join tournament lobbies + timer sync for late joiners
+**Status**: ⚠️ **MAJOR PROGRESS - TESTS NEED FIXING**
+
+**Problem**: Guest users received authentication error "User details not available. Ensure client is authenticated" when trying to join tournaments from another browser.
+
+**Root Cause**: Backend `lobbyHandler.ts` only checked `socket.data.user` for user details (populated only for authenticated users), but ignored the validated payload data that guests send.
+
+**Solution**: Modified the join lobby handler to use a fallback pattern:
+1. First check `socket.data.user` (for authenticated users)
+2. Fall back to validated payload data (for guest users)  
+3. Both paths validated through existing Zod schema `joinLobbyPayloadSchema`
+
+**Files Modified**:
+- `/backend/src/sockets/handlers/lobbyHandler.ts` - Updated user details extraction logic
+- `/plan.md` - Marked implementation complete, added testing checklist
+- `/log.md` - This entry
+
+**Technical Details**:
+- Changed: `const { userId, username, avatarEmoji } = socket.data.user || {};`
+- To: `const { userId, username, avatarEmoji } = socket.data.user || payload;` 
+- Added fallback for avatar emoji: `avatarEmoji: avatarEmoji || payload.avatarEmoji || '🐼'`
+- All TypeScript compilations pass (shared/, backend/, frontend/)
+
+**Testing Required**: Manual testing needed to verify guest users can now join tournaments successfully.
+
+---
+
 **Phase: Frontend API Migration to Shared Types**
 
 ## June 15, 2025
@@ -1074,7 +1107,3 @@ Based on practice mode testing, identified architectural problem:
 - **Props**: Uses `practiceParams` and `practiceState.session.statistics`
 - **Themes Display**: Shows "Tous" when no specific themes selected
 - **Data Safety**: Proper fallbacks with `|| 0` for undefined stats
-
-**IMPORT UPDATES**:
-- **Added**: `BarChart3`, `X` icons from lucide-react
-- **Removed**: `Home` icon (no longer needed)

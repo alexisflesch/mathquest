@@ -2,7 +2,18 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useStudentGameSocket } from '../useStudentGameSocket';
 import { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
+import type { GameTimerState } from '@shared/types/core/timer';
 import { QUESTION_TYPES } from '@shared/types';
+
+// Helper function to create proper timer state
+const createTimerState = (durationMs: number, questionUid: string, status: 'play' | 'pause' | 'stop' = 'play'): GameTimerState => ({
+    status,
+    timeLeftMs: durationMs,
+    durationMs,
+    questionUid,
+    timestamp: Date.now(),
+    localTimeLeftMs: durationMs
+});
 
 // Mock socket.io-client
 jest.mock('socket.io-client');
@@ -85,7 +96,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 explanation: '2 + 2 = 4',
                 correctAnswers: [false, true, false, false]
             },
-            timer: 30000, // ms
+            timer: createTimerState(30000, 'q1'),
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'
@@ -154,7 +165,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 explanation: '2 + 2 = 4',
                 correctAnswers: [false, true, false, false]
             },
-            timer: 3000, // ms
+            timer: createTimerState(3000, 'q1'),
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'
@@ -207,7 +218,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 explanation: '2 + 2 = 4',
                 correctAnswers: [false, true, false, false]
             },
-            timer: 30000, // ms
+            timer: createTimerState(30000, 'q1'),
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'paused'
@@ -261,7 +272,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 explanation: '2 + 2 = 4',
                 correctAnswers: [false, true, false, false]
             },
-            timer: 30000, // ms
+            timer: createTimerState(30000, 'q1'),
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'
@@ -453,7 +464,7 @@ describe('useStudentGameSocket - Timer Management', () => {
                 explanation: '2 + 2 = 4',
                 correctAnswers: [false, true, false, false]
             },
-            timer: 30000, // ms
+            timer: createTimerState(30000, 'q1'),
             questionIndex: 0,
             totalQuestions: 5,
             questionState: 'active'

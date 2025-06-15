@@ -70,7 +70,14 @@ describe('useStudentGameSocket - State Updates', () => {
                 explanation: 'Paris is the capital of France.',
                 correctAnswers: [false, true, false, false]
             },
-            timer: 45,
+            timer: {
+                status: 'play' as const,
+                timeLeftMs: 45000,
+                durationMs: 45000,
+                questionUid: 'q1',
+                timestamp: Date.now(),
+                localTimeLeftMs: 45000
+            },
             questionIndex: 2,
             totalQuestions: 10,
             questionState: 'active'
@@ -127,7 +134,14 @@ describe('useStudentGameSocket - State Updates', () => {
                 explanation: '5 + 3 = 8',
                 correctAnswers: [false, false, true, false]
             },
-            timer: 30,
+            timer: {
+                status: 'play' as const,
+                timeLeftMs: 30000,
+                durationMs: 30000,
+                questionUid: 'q2',
+                timestamp: Date.now(),
+                localTimeLeftMs: 30000
+            },
             questionIndex: 1,
             totalQuestions: 5,
             questionState: 'active'
@@ -182,7 +196,14 @@ describe('useStudentGameSocket - State Updates', () => {
                 explanation: 'Test explanation',
                 correctAnswers: [true, false, false, false]
             },
-            timer: 30,
+            timer: {
+                status: 'play' as const,
+                timeLeftMs: 30000,
+                durationMs: 30000,
+                questionUid: 'q1',
+                timestamp: Date.now(),
+                localTimeLeftMs: 30000
+            },
             questionIndex: 0,
             totalQuestions: 1,
             questionState: 'active'
@@ -217,7 +238,14 @@ describe('useStudentGameSocket - State Updates', () => {
                 questionType: QUESTION_TYPES.MULTIPLE_CHOICE,
                 answerOptions: ['2', '3', '4', '5', '6', '7']
             },
-            timer: 60,
+            timer: {
+                status: 'play' as const,
+                timeLeftMs: 60000,
+                durationMs: 60000,
+                questionUid: 'q3',
+                timestamp: Date.now(),
+                localTimeLeftMs: 60000
+            },
             questionIndex: 3,
             totalQuestions: 8,
             questionState: 'active'
@@ -354,7 +382,14 @@ describe('useStudentGameSocket - State Updates', () => {
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
                 answerOptions: ['A', 'B', 'C', 'D']
             },
-            timer: 40,
+            timer: {
+                status: 'play' as const,
+                timeLeftMs: 40000,
+                durationMs: 40000,
+                questionUid: 'q5',
+                timestamp: Date.now(),
+                localTimeLeftMs: 40000
+            },
             questionIndex: 4,
             totalQuestions: 6,
             questionState: 'active'
@@ -426,7 +461,14 @@ describe('useStudentGameSocket - State Updates', () => {
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
                 answerOptions: ['A', 'B']
             },
-            timer: 0,
+            timer: {
+                status: 'stop' as const,
+                timeLeftMs: 0,
+                durationMs: 0,
+                questionUid: 'q1',
+                timestamp: Date.now(),
+                localTimeLeftMs: 0
+            },
             questionIndex: 0,
             totalQuestions: 1,
             questionState: 'active'

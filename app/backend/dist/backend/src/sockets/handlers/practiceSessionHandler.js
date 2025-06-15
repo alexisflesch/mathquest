@@ -101,14 +101,24 @@ function registerPracticeSessionHandlers(io, socket) {
                 socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_COMPLETED, completedResponse);
                 return;
             }
+            // Get session data to build proper progress
+            const session = await practiceSessionService_1.practiceSessionService.getSession(payload.sessionId);
+            if (!session) {
+                const errorResponse = {
+                    errorType: 'session_not_found',
+                    message: 'Practice session not found'
+                };
+                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+                return;
+            }
             // Build proper question ready payload with progress
             const questionResponse = {
                 sessionId: payload.sessionId,
                 question: questionData,
                 progress: {
                     currentQuestionNumber: (questionData.questionIndex || 0) + 1,
-                    totalQuestions: questionData.questionIndex ? Math.max(questionData.questionIndex + 1, 1) : 1, // Will be updated when we get session data
-                    questionsRemaining: 0 // Will be calculated properly when we have session data
+                    totalQuestions: session.questionPool.length,
+                    questionsRemaining: session.questionPool.length - ((questionData.questionIndex || 0) + 1)
                 },
                 isRetry: false
             };

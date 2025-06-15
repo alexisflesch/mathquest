@@ -131,16 +131,33 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             return;
         }
 
-        const { accessCode } = parseResult.data;
-        const { userId, username, avatarEmoji } = socket.data.user || {}; // Get user details from authenticated socket data
+        const { accessCode, userId: payloadUserId, username: payloadUsername, avatarEmoji: payloadAvatarEmoji } = parseResult.data;
 
-        logger.info({ accessCode, userId, username, socketId: socket.id }, 'Player joining lobby');
+        // Support both authenticated users (socket.data.user) and guest users (payload)
+        const userId = socket.data.user?.userId || payloadUserId;
+        const username = socket.data.user?.username || payloadUsername;
+        const avatarEmoji = socket.data.user?.avatarEmoji || payloadAvatarEmoji;
+
+        logger.info({
+            accessCode,
+            userId,
+            username,
+            socketId: socket.id,
+            isAuthenticated: !!socket.data.user,
+            source: socket.data.user ? 'socket.data.user' : 'payload'
+        }, 'Player joining lobby');
 
         if (!userId || !username) {
-            logger.error({ accessCode, socketId: socket.id, payloadUserId: payload.userId, socketDataUser: socket.data.user }, 'User details not found in socket data for join_lobby');
+            logger.error({
+                accessCode,
+                socketId: socket.id,
+                payloadUserId,
+                payloadUsername,
+                socketDataUser: socket.data.user
+            }, 'User details not found in both socket data and payload for join_lobby');
             socket.emit(LOBBY_EVENTS.LOBBY_ERROR, {
                 error: 'authentication_error',
-                message: 'User details not available. Ensure client is authenticated.'
+                message: 'User details not available. Provide userId and username in payload for guest users.'
             });
             return;
         }
@@ -235,9 +252,9 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             // Store new participant data in Redis
             const participant: LobbyParticipant = {
                 id: socket.id,
-                userId, // Use userId from socket.data.user
-                username, // Use username from socket.data.user
-                avatarEmoji: avatarEmoji || payload.avatarEmoji || '🐼', // Default to panda if not provided
+                userId, // Use userId from socket.data.user or payload
+                username, // Use username from socket.data.user or payload
+                avatarEmoji: avatarEmoji || '🐼', // Use avatarEmoji from socket.data.user, payload, or default to panda
                 joinedAt: Date.now()
             };
 

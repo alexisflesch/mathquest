@@ -259,6 +259,21 @@ export function useStudentGameSocket({
         }, isGameJoinedPayload, 'game_joined'));
         socket.on('game_question', createSafeEventHandler<LiveQuestionPayload>((payload) => {
             logger.info('Received game_question', payload);
+
+            // Sync timer immediately if present in payload (for late joiners)
+            if (payload.timer) {
+                // Convert GameTimerState to TimerUpdatePayload format for syncWithBackend
+                const timerUpdate: TimerUpdatePayload = {
+                    timeLeftMs: payload.timer.timeLeftMs,
+                    running: payload.timer.status === 'play',
+                    status: payload.timer.status,
+                    durationMs: payload.timer.durationMs,
+                    questionUid: payload.timer.questionUid || undefined
+                };
+                gameTimer.syncWithBackend(timerUpdate);
+                logger.info('Synced timer from game_question payload', timerUpdate);
+            }
+
             setGameState(prev => ({
                 ...prev,
                 currentQuestion: payload.question,
@@ -270,8 +285,7 @@ export function useStudentGameSocket({
                 feedbackRemaining: null,
                 correctAnswers: null,
                 connectedToRoom: true,
-                // Don't set timer here - let the unified timer system handle it via game_timer_updated
-                timerStatus: 'play'
+                timerStatus: payload.timer?.status || 'play'
             }));
         }, isLiveQuestionPayload, 'game_question'));
         socket.on('timer_update', createSafeEventHandler<TimerUpdatePayload>((data) => {

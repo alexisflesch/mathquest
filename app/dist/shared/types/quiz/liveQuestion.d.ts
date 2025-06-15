@@ -4,6 +4,7 @@
  * These types represent the standardized question payload structure used for live events
  * (sent to clients during live tournaments/quizzes).
  */
+import { GameTimerState } from '../core/timer';
 /**
  * Filtered question data (without correct answer information)
  */
@@ -24,7 +25,7 @@ export interface FilteredQuestion {
  */
 export interface LiveQuestionPayload {
     question: FilteredQuestion;
-    timer?: number;
+    timer?: GameTimerState;
     questionIndex?: number;
     totalQuestions?: number;
     questionState?: 'pending' | 'active' | 'paused' | 'stopped' | 'finished';

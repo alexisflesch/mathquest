@@ -110,7 +110,7 @@ export default function LobbyPage() {
             } else if (status.statut === 'en cours') {
                 logger.info(`Tournament ${code} is already in progress, redirecting`);
                 if (socketRef.current) {
-                    socketRef.current.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { code });
+                    socketRef.current.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: code });
                 }
 
                 // For games in progress, redirect immediately to live page

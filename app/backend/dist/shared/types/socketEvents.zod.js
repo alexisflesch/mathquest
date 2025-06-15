@@ -308,7 +308,7 @@ exports.joinLobbyPayloadSchema = zod_1.z.object({
 });
 exports.leaveLobbyPayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." }),
-    userId: zod_1.z.string().min(1, { message: "User ID cannot be empty." }),
+    userId: zod_1.z.string().min(1, { message: "User ID cannot be empty." }).optional(),
 });
 exports.getParticipantsPayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." }),

@@ -128,6 +128,9 @@ Please refer to `/instructions.md` for coding standards, naming conventions, and
 - [ ] Remove or update legacy code to match current backend/frontend contracts.
 - [ ] Ensure all socket/API payloads are validated and type-safe.
 
+### 2.5. Redirects & Navigation
+- Anonymous users accessing any url should be redirected to login/"url", then after login, they should be redirected to the original url they wanted to access.
+
 ---
 
 ## 3. **Legacy Code Cleanup**
