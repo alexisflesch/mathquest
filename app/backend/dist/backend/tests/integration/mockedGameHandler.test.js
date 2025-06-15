@@ -723,6 +723,7 @@ describe('Mocked Game Handler', () => {
             currentQuestionIndex: 0,
             questionUids,
             answersLocked: false,
+            gameMode: 'quiz', // Test quiz mode
             timer: {
                 status: 'play',
                 timeLeftMs: 20000,

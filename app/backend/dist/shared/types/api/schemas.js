@@ -7,7 +7,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuizTemplateQuestionResponseSchema = exports.QuizTemplateDeleteResponseSchema = exports.QuizTemplateUpdateResponseSchema = exports.QuizTemplateCreationResponseSchema = exports.QuizCreationResponseSchema = exports.QuizTemplatesResponseSchema = exports.QuizTemplateResponseSchema = exports.GameTemplateUpdateResponseSchema = exports.GameTemplateCreationResponseSchema = exports.GameTemplatesResponseSchema = exports.GameTemplateResponseSchema = exports.QuestionsCountResponseSchema = exports.QuestionsFiltersResponseSchema = exports.QuestionUidsResponseSchema = exports.QuestionsListResponseSchema = exports.QuestionsResponseSchema = exports.QuestionResponseSchema = exports.QuestionCreationResponseSchema = exports.GameInstancesByTemplateResponseSchema = exports.TeacherActiveGamesResponseSchema = exports.LeaderboardResponseSchema = exports.GameStateResponseSchema = exports.GameStatusUpdateResponseSchema = exports.GameJoinResponseSchema = exports.GameCreationResponseSchema = exports.UniversalLoginResponseSchema = exports.ErrorResponseSchema = exports.LogoutResponseSchema = exports.ProfileUpdateResponseSchema = exports.AuthStatusResponseSchema = exports.UpgradeAccountResponseSchema = exports.RegisterResponseSchema = exports.LoginResponseSchema = exports.SetQuestionRequestSchema = exports.UpdateQuizTemplateRequestSchema = exports.CreateQuizTemplateRequestSchema = exports.UpdateUserRequestSchema = exports.UpdateQuestionRequestSchema = exports.CreateQuestionRequestSchema = exports.UpdateGameTemplateRequestSchema = exports.CreateGameTemplateRequestSchema = exports.GameStatusUpdateRequestSchema = exports.GameJoinRequestSchema = exports.CreateGameRequestSchema = exports.ProfileUpdateRequestSchema = exports.PasswordResetConfirmRequestSchema = exports.PasswordResetRequestSchema = exports.UpgradeAccountRequestSchema = exports.RegisterRequestSchema = exports.LoginRequestSchema = void 0;
-exports.SuccessResponseSchema = exports.TournamentVerificationResponseSchema = exports.TournamentCodeResponseSchema = exports.TeacherQuizQuestionsResponseSchema = exports.QuizListResponseSchema = void 0;
+exports.GetPracticeQuestionsApiResponseSchema = exports.GetPracticeSessionsApiResponseSchema = exports.GetPracticeSessionApiResponseSchema = exports.CreatePracticeSessionApiResponseSchema = exports.GetPracticeQuestionsApiRequestSchema = exports.UpdatePracticeSessionApiRequestSchema = exports.GetPracticeSessionsApiRequestSchema = exports.CreatePracticeSessionApiRequestSchema = exports.GetPracticeSessionStatePayloadSchema = exports.EndPracticeSessionPayloadSchema = exports.RetryPracticeQuestionPayloadSchema = exports.GetNextPracticeQuestionPayloadSchema = exports.SubmitPracticeAnswerPayloadSchema = exports.StartPracticeSessionPayloadSchema = exports.CreatePracticeSessionResponseSchema = exports.CreatePracticeSessionRequestSchema = exports.PracticeSessionSchema = exports.PracticeStatisticsSchema = exports.PracticeQuestionDataSchema = exports.PracticeAnswerSchema = exports.PracticeSettingsSchema = exports.SuccessResponseSchema = exports.TournamentVerificationResponseSchema = exports.TournamentCodeResponseSchema = exports.TeacherQuizQuestionsResponseSchema = exports.QuizListResponseSchema = void 0;
 const zod_1 = require("zod");
 const question_zod_1 = require("../quiz/question.zod");
 const game_zod_1 = require("../core/game.zod");
@@ -266,7 +266,8 @@ exports.QuestionsResponseSchema = zod_1.z.object({
         totalPages: zod_1.z.number()
     })
 });
-exports.QuestionsListResponseSchema = exports.QuestionsResponseSchema; // Alias
+// Questions list endpoint returns just UIDs as string array
+exports.QuestionsListResponseSchema = zod_1.z.array(zod_1.z.string());
 exports.QuestionUidsResponseSchema = zod_1.z.object({
     questionUids: zod_1.z.array(zod_1.z.string()),
     total: zod_1.z.number()
@@ -367,4 +368,160 @@ exports.TournamentVerificationResponseSchema = zod_1.z.object({
 exports.SuccessResponseSchema = zod_1.z.object({
     success: zod_1.z.boolean(),
     message: zod_1.z.string().optional()
+});
+/**
+ * Practice Session Validation Schemas
+ * Zod schemas for runtime validation of practice mode data
+ */
+// Practice Session Settings Schema
+exports.PracticeSettingsSchema = zod_1.z.object({
+    gradeLevel: zod_1.z.string().min(1, "Grade level is required"),
+    discipline: zod_1.z.string().min(1, "Discipline is required"),
+    themes: zod_1.z.array(zod_1.z.string()).min(1, "At least one theme is required"),
+    questionCount: zod_1.z.number().int().min(1, "Question count must be at least 1").max(50, "Question count cannot exceed 50"),
+    showImmediateFeedback: zod_1.z.boolean(),
+    allowRetry: zod_1.z.boolean(),
+    randomizeQuestions: zod_1.z.boolean()
+});
+// Practice Answer Schema
+exports.PracticeAnswerSchema = zod_1.z.object({
+    questionUid: zod_1.z.string().min(1, "Question UID is required"),
+    selectedAnswers: zod_1.z.array(zod_1.z.number().int().min(0)),
+    isCorrect: zod_1.z.boolean(),
+    submittedAt: zod_1.z.date(),
+    timeSpentMs: zod_1.z.number().int().min(0, "Time spent must be non-negative"),
+    attemptNumber: zod_1.z.number().int().min(1, "Attempt number must be at least 1")
+});
+// Practice Question Data Schema
+exports.PracticeQuestionDataSchema = zod_1.z.object({
+    uid: zod_1.z.string().min(1, "Question UID is required"),
+    title: zod_1.z.string().min(1, "Question title is required"),
+    text: zod_1.z.string().min(1, "Question text is required"),
+    answerOptions: zod_1.z.array(zod_1.z.string()).min(2, "At least 2 answer options required"),
+    questionType: zod_1.z.string().min(1, "Question type is required"),
+    timeLimit: zod_1.z.number().int().min(1).optional(),
+    gradeLevel: zod_1.z.string().min(1, "Grade level is required"),
+    discipline: zod_1.z.string().min(1, "Discipline is required"),
+    themes: zod_1.z.array(zod_1.z.string()).min(1, "At least one theme is required")
+});
+// Practice Statistics Schema
+exports.PracticeStatisticsSchema = zod_1.z.object({
+    questionsAttempted: zod_1.z.number().int().min(0),
+    correctAnswers: zod_1.z.number().int().min(0),
+    incorrectAnswers: zod_1.z.number().int().min(0),
+    accuracyPercentage: zod_1.z.number().min(0).max(100),
+    averageTimePerQuestion: zod_1.z.number().min(0),
+    totalTimeSpent: zod_1.z.number().min(0),
+    retriedQuestions: zod_1.z.array(zod_1.z.string())
+});
+// Practice Session Schema
+exports.PracticeSessionSchema = zod_1.z.object({
+    sessionId: zod_1.z.string().min(1, "Session ID is required"),
+    userId: zod_1.z.string().min(1, "User ID is required"),
+    settings: exports.PracticeSettingsSchema,
+    status: zod_1.z.enum(['active', 'completed', 'abandoned']),
+    questionPool: zod_1.z.array(zod_1.z.string()).min(1, "Question pool cannot be empty"),
+    currentQuestionIndex: zod_1.z.number().int().min(-1),
+    currentQuestion: exports.PracticeQuestionDataSchema.optional(),
+    answers: zod_1.z.array(exports.PracticeAnswerSchema),
+    statistics: exports.PracticeStatisticsSchema,
+    createdAt: zod_1.z.date(),
+    startedAt: zod_1.z.date().optional(),
+    completedAt: zod_1.z.date().optional(),
+    expiresAt: zod_1.z.date()
+});
+// Practice Session Creation Request Schema
+exports.CreatePracticeSessionRequestSchema = zod_1.z.object({
+    userId: zod_1.z.string().min(1, "User ID is required"),
+    settings: exports.PracticeSettingsSchema
+});
+// Practice Session Creation Response Schema
+exports.CreatePracticeSessionResponseSchema = zod_1.z.object({
+    session: exports.PracticeSessionSchema,
+    success: zod_1.z.literal(true),
+    message: zod_1.z.string().optional()
+});
+// Practice Socket Event Schemas
+exports.StartPracticeSessionPayloadSchema = zod_1.z.object({
+    userId: zod_1.z.string().min(1, "User ID is required"),
+    settings: exports.PracticeSettingsSchema,
+    preferences: zod_1.z.object({
+        maxDurationMinutes: zod_1.z.number().int().min(1).max(180).optional(),
+        shuffleQuestions: zod_1.z.boolean().optional()
+    }).optional()
+});
+exports.SubmitPracticeAnswerPayloadSchema = zod_1.z.object({
+    sessionId: zod_1.z.string().min(1, "Session ID is required"),
+    questionUid: zod_1.z.string().min(1, "Question UID is required"),
+    selectedAnswers: zod_1.z.array(zod_1.z.number().int().min(0)),
+    timeSpentMs: zod_1.z.number().int().min(0, "Time spent must be non-negative")
+});
+exports.GetNextPracticeQuestionPayloadSchema = zod_1.z.object({
+    sessionId: zod_1.z.string().min(1, "Session ID is required"),
+    skipCurrent: zod_1.z.boolean().optional()
+});
+exports.RetryPracticeQuestionPayloadSchema = zod_1.z.object({
+    sessionId: zod_1.z.string().min(1, "Session ID is required"),
+    questionUid: zod_1.z.string().min(1, "Question UID is required")
+});
+exports.EndPracticeSessionPayloadSchema = zod_1.z.object({
+    sessionId: zod_1.z.string().min(1, "Session ID is required"),
+    reason: zod_1.z.enum(['completed', 'user_quit', 'timeout'])
+});
+exports.GetPracticeSessionStatePayloadSchema = zod_1.z.object({
+    sessionId: zod_1.z.string().min(1, "Session ID is required")
+});
+// Practice API Request Schemas
+exports.CreatePracticeSessionApiRequestSchema = zod_1.z.object({
+    userId: zod_1.z.string().min(1, "User ID is required"),
+    settings: exports.PracticeSettingsSchema
+});
+exports.GetPracticeSessionsApiRequestSchema = zod_1.z.object({
+    userId: zod_1.z.string().min(1, "User ID is required"),
+    status: zod_1.z.enum(['active', 'completed', 'abandoned']).optional(),
+    limit: zod_1.z.number().int().min(1).max(100).optional(),
+    offset: zod_1.z.number().int().min(0).optional()
+});
+exports.UpdatePracticeSessionApiRequestSchema = zod_1.z.object({
+    sessionId: zod_1.z.string().min(1, "Session ID is required"),
+    settings: exports.PracticeSettingsSchema.partial()
+});
+exports.GetPracticeQuestionsApiRequestSchema = zod_1.z.object({
+    gradeLevel: zod_1.z.string().min(1, "Grade level is required"),
+    discipline: zod_1.z.string().min(1, "Discipline is required"),
+    themes: zod_1.z.array(zod_1.z.string()).optional(),
+    limit: zod_1.z.number().int().min(1).max(100).optional(),
+    excludeQuestions: zod_1.z.array(zod_1.z.string()).optional()
+});
+// Practice API Response Schemas
+exports.CreatePracticeSessionApiResponseSchema = zod_1.z.object({
+    success: zod_1.z.boolean(),
+    session: exports.PracticeSessionSchema.optional(),
+    error: zod_1.z.string().optional(),
+    statusCode: zod_1.z.number().int()
+});
+exports.GetPracticeSessionApiResponseSchema = zod_1.z.object({
+    success: zod_1.z.boolean(),
+    session: exports.PracticeSessionSchema.optional(),
+    error: zod_1.z.string().optional(),
+    statusCode: zod_1.z.number().int()
+});
+exports.GetPracticeSessionsApiResponseSchema = zod_1.z.object({
+    success: zod_1.z.boolean(),
+    sessions: zod_1.z.array(exports.PracticeSessionSchema).optional(),
+    pagination: zod_1.z.object({
+        total: zod_1.z.number().int().min(0),
+        page: zod_1.z.number().int().min(1),
+        pageSize: zod_1.z.number().int().min(1),
+        totalPages: zod_1.z.number().int().min(0)
+    }).optional(),
+    error: zod_1.z.string().optional(),
+    statusCode: zod_1.z.number().int()
+});
+exports.GetPracticeQuestionsApiResponseSchema = zod_1.z.object({
+    success: zod_1.z.boolean(),
+    questionUids: zod_1.z.array(zod_1.z.string()).optional(),
+    totalAvailable: zod_1.z.number().int().min(0).optional(),
+    error: zod_1.z.string().optional(),
+    statusCode: zod_1.z.number().int()
 });

@@ -1049,16 +1049,19 @@ textarea:focus {
 }
 
 .feedback-overlay-inner {
-  /* This class is kept for potential future use but currently has no properties */
-  /* Originally contained max-width, centering, and flex layout which have been removed */
-  display: block;
-  /* Placeholder property to avoid empty ruleset */
+  /* Center the feedback card within the overlay */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .feedback-card {
   background: var(--card, white);
   color: var(--foreground);
   border-radius: var(--radius);
+  border: 2px solid var(--primary);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   padding: 1rem;
   width: 100%;

@@ -1,5 +1,6 @@
 import type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload, AnswerSubmissionPayload as GameAnswerPayload, LeaderboardEntry } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
+import type { PracticeClientToServerEvents, PracticeServerToClientEvents } from './practice/events';
 type LeaderboardEntryData = LeaderboardEntry;
 export interface JoinGamePayload {
     accessCode: string;
@@ -59,7 +60,7 @@ export interface QuestionData {
     difficulty?: number;
     explanation?: string;
 }
-export interface ClientToServerEvents {
+export interface ClientToServerEvents extends PracticeClientToServerEvents {
     join_game: (payload: JoinGamePayload) => void;
     game_answer: (payload: GameAnswerPayload) => void;
     submit_answer: (payload: GameAnswerPayload) => void;
@@ -112,7 +113,7 @@ export interface ClientToServerEvents {
         cookieId?: string;
     }) => void;
 }
-export interface ServerToClientEvents {
+export interface ServerToClientEvents extends PracticeServerToClientEvents {
     connect: () => void;
     disconnect: (reason: string) => void;
     connection_established: (payload: {
@@ -213,5 +214,7 @@ export interface SocketData {
     role?: 'player' | 'teacher' | 'admin' | 'projector';
     accessCode?: string;
     currentGameRoom?: string;
+    practiceSessionId?: string;
+    practiceUserId?: string;
 }
 export type { TournamentQuestion } from './tournament/question';

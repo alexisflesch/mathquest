@@ -37,7 +37,7 @@ export const setup = async (): Promise<void> => {
             defaultMode: 'quiz',
         },
     });
-    // Use two questions from testQuestions
+    // Use two questions from testQuestions for existing setup
     const questionUids = [testQuestions[2].uid, testQuestions[3].uid]; // e.g. 'q-1', 'q-2'
     for (let i = 0; i < questionUids.length; i++) {
         // Ensure question exists
@@ -48,9 +48,19 @@ export const setup = async (): Promise<void> => {
         });
         // Link question to template
         await prisma.questionsInGameTemplate.upsert({
-            where: { gameTemplateId_questionUid: { gameTemplateId: template.id, questionUids: questionUids[i] } },
+            where: { gameTemplateId_questionUid: { gameTemplateId: template.id, questionUid: questionUids[i] } },
             update: { sequence: i },
-            create: { gameTemplateId: template.id, questionUids: questionUids[i], sequence: i },
+            create: { gameTemplateId: template.id, questionUid: questionUids[i], sequence: i },
+        });
+    }
+
+    // Seed practice mode test questions with explanations for testing
+    const practiceQuestions = [testQuestions[0], testQuestions[1], testQuestions[2]]; // TEST-add-1, TEST-add-2, TEST-mult-1
+    for (const question of practiceQuestions) {
+        await prisma.question.upsert({
+            where: { uid: question.uid },
+            update: {},
+            create: { ...question },
         });
     }
     // Optionally, create a game instance for this template

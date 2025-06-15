@@ -137,6 +137,9 @@ async function initializeGameState(gameInstanceId) {
             currentQuestionIndex: -1, // No question active initially
             questionUids,
             startedAt: Date.now(),
+            answersLocked: false, // Default to unlocked
+            gameMode: gameInstance.playMode, // Use the playMode from the game instance
+            linkedQuizId: gameInstance.gameTemplateId, // Link to the template
             timer: {
                 status: 'stop',
                 timeLeftMs: 0,

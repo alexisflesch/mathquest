@@ -149,7 +149,7 @@ async function getGameControlState(gameId, userId, isTestEnvironment = false) {
             currentQuestionUid,
             questions,
             timer: mapBackendTimerToCore(gameState.timer),
-            answersLocked: gameState.answersLocked ?? false,
+            answersLocked: gameState.answersLocked,
             participantCount,
             answerStats
         };

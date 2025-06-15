@@ -316,7 +316,8 @@ export const QuestionsResponseSchema = z.object({
     })
 });
 
-export const QuestionsListResponseSchema = QuestionsResponseSchema; // Alias
+// Questions list endpoint returns just UIDs as string array
+export const QuestionsListResponseSchema = z.array(z.string());
 
 export const QuestionUidsResponseSchema = z.object({
     questionUids: z.array(z.string()),
@@ -503,3 +504,204 @@ export type TournamentCodeResponse = z.infer<typeof TournamentCodeResponseSchema
 export type TournamentVerificationResponse = z.infer<typeof TournamentVerificationResponseSchema>;
 export type SuccessResponse = z.infer<typeof SuccessResponseSchema>;
 export type UniversalLoginResponse = z.infer<typeof UniversalLoginResponseSchema>;
+
+/**
+ * Practice Session Validation Schemas
+ * Zod schemas for runtime validation of practice mode data
+ */
+
+// Practice Session Settings Schema
+export const PracticeSettingsSchema = z.object({
+    gradeLevel: z.string().min(1, "Grade level is required"),
+    discipline: z.string().min(1, "Discipline is required"),
+    themes: z.array(z.string()).min(1, "At least one theme is required"),
+    questionCount: z.number().int().min(1, "Question count must be at least 1").max(50, "Question count cannot exceed 50"),
+    showImmediateFeedback: z.boolean(),
+    allowRetry: z.boolean(),
+    randomizeQuestions: z.boolean()
+});
+
+// Practice Answer Schema
+export const PracticeAnswerSchema = z.object({
+    questionUid: z.string().min(1, "Question UID is required"),
+    selectedAnswers: z.array(z.number().int().min(0)),
+    isCorrect: z.boolean(),
+    submittedAt: z.date(),
+    timeSpentMs: z.number().int().min(0, "Time spent must be non-negative"),
+    attemptNumber: z.number().int().min(1, "Attempt number must be at least 1")
+});
+
+// Practice Question Data Schema
+export const PracticeQuestionDataSchema = z.object({
+    uid: z.string().min(1, "Question UID is required"),
+    title: z.string().min(1, "Question title is required"),
+    text: z.string().min(1, "Question text is required"),
+    answerOptions: z.array(z.string()).min(2, "At least 2 answer options required"),
+    questionType: z.string().min(1, "Question type is required"),
+    timeLimit: z.number().int().min(1).optional(),
+    gradeLevel: z.string().min(1, "Grade level is required"),
+    discipline: z.string().min(1, "Discipline is required"),
+    themes: z.array(z.string()).min(1, "At least one theme is required")
+});
+
+// Practice Statistics Schema
+export const PracticeStatisticsSchema = z.object({
+    questionsAttempted: z.number().int().min(0),
+    correctAnswers: z.number().int().min(0),
+    incorrectAnswers: z.number().int().min(0),
+    accuracyPercentage: z.number().min(0).max(100),
+    averageTimePerQuestion: z.number().min(0),
+    totalTimeSpent: z.number().min(0),
+    retriedQuestions: z.array(z.string())
+});
+
+// Practice Session Schema
+export const PracticeSessionSchema = z.object({
+    sessionId: z.string().min(1, "Session ID is required"),
+    userId: z.string().min(1, "User ID is required"),
+    settings: PracticeSettingsSchema,
+    status: z.enum(['active', 'completed', 'abandoned']),
+    questionPool: z.array(z.string()).min(1, "Question pool cannot be empty"),
+    currentQuestionIndex: z.number().int().min(-1),
+    currentQuestion: PracticeQuestionDataSchema.optional(),
+    answers: z.array(PracticeAnswerSchema),
+    statistics: PracticeStatisticsSchema,
+    createdAt: z.date(),
+    startedAt: z.date().optional(),
+    completedAt: z.date().optional(),
+    expiresAt: z.date()
+});
+
+// Practice Session Creation Request Schema
+export const CreatePracticeSessionRequestSchema = z.object({
+    userId: z.string().min(1, "User ID is required"),
+    settings: PracticeSettingsSchema
+});
+
+// Practice Session Creation Response Schema
+export const CreatePracticeSessionResponseSchema = z.object({
+    session: PracticeSessionSchema,
+    success: z.literal(true),
+    message: z.string().optional()
+});
+
+// Practice Socket Event Schemas
+export const StartPracticeSessionPayloadSchema = z.object({
+    userId: z.string().min(1, "User ID is required"),
+    settings: PracticeSettingsSchema,
+    preferences: z.object({
+        maxDurationMinutes: z.number().int().min(1).max(180).optional(),
+        shuffleQuestions: z.boolean().optional()
+    }).optional()
+});
+
+export const SubmitPracticeAnswerPayloadSchema = z.object({
+    sessionId: z.string().min(1, "Session ID is required"),
+    questionUid: z.string().min(1, "Question UID is required"),
+    selectedAnswers: z.array(z.number().int().min(0)),
+    timeSpentMs: z.number().int().min(0, "Time spent must be non-negative")
+});
+
+export const GetNextPracticeQuestionPayloadSchema = z.object({
+    sessionId: z.string().min(1, "Session ID is required"),
+    skipCurrent: z.boolean().optional()
+});
+
+export const RetryPracticeQuestionPayloadSchema = z.object({
+    sessionId: z.string().min(1, "Session ID is required"),
+    questionUid: z.string().min(1, "Question UID is required")
+});
+
+export const EndPracticeSessionPayloadSchema = z.object({
+    sessionId: z.string().min(1, "Session ID is required"),
+    reason: z.enum(['completed', 'user_quit', 'timeout'])
+});
+
+export const GetPracticeSessionStatePayloadSchema = z.object({
+    sessionId: z.string().min(1, "Session ID is required")
+});
+
+// Practice API Request Schemas
+export const CreatePracticeSessionApiRequestSchema = z.object({
+    userId: z.string().min(1, "User ID is required"),
+    settings: PracticeSettingsSchema
+});
+
+export const GetPracticeSessionsApiRequestSchema = z.object({
+    userId: z.string().min(1, "User ID is required"),
+    status: z.enum(['active', 'completed', 'abandoned']).optional(),
+    limit: z.number().int().min(1).max(100).optional(),
+    offset: z.number().int().min(0).optional()
+});
+
+export const UpdatePracticeSessionApiRequestSchema = z.object({
+    sessionId: z.string().min(1, "Session ID is required"),
+    settings: PracticeSettingsSchema.partial()
+});
+
+export const GetPracticeQuestionsApiRequestSchema = z.object({
+    gradeLevel: z.string().min(1, "Grade level is required"),
+    discipline: z.string().min(1, "Discipline is required"),
+    themes: z.array(z.string()).optional(),
+    limit: z.number().int().min(1).max(100).optional(),
+    excludeQuestions: z.array(z.string()).optional()
+});
+
+// Practice API Response Schemas
+export const CreatePracticeSessionApiResponseSchema = z.object({
+    success: z.boolean(),
+    session: PracticeSessionSchema.optional(),
+    error: z.string().optional(),
+    statusCode: z.number().int()
+});
+
+export const GetPracticeSessionApiResponseSchema = z.object({
+    success: z.boolean(),
+    session: PracticeSessionSchema.optional(),
+    error: z.string().optional(),
+    statusCode: z.number().int()
+});
+
+export const GetPracticeSessionsApiResponseSchema = z.object({
+    success: z.boolean(),
+    sessions: z.array(PracticeSessionSchema).optional(),
+    pagination: z.object({
+        total: z.number().int().min(0),
+        page: z.number().int().min(1),
+        pageSize: z.number().int().min(1),
+        totalPages: z.number().int().min(0)
+    }).optional(),
+    error: z.string().optional(),
+    statusCode: z.number().int()
+});
+
+export const GetPracticeQuestionsApiResponseSchema = z.object({
+    success: z.boolean(),
+    questionUids: z.array(z.string()).optional(),
+    totalAvailable: z.number().int().min(0).optional(),
+    error: z.string().optional(),
+    statusCode: z.number().int()
+});
+
+// Infer types from schemas for use in TypeScript
+export type PracticeSettings = z.infer<typeof PracticeSettingsSchema>;
+export type PracticeAnswer = z.infer<typeof PracticeAnswerSchema>;
+export type PracticeQuestionData = z.infer<typeof PracticeQuestionDataSchema>;
+export type PracticeStatistics = z.infer<typeof PracticeStatisticsSchema>;
+export type PracticeSession = z.infer<typeof PracticeSessionSchema>;
+export type CreatePracticeSessionRequest = z.infer<typeof CreatePracticeSessionRequestSchema>;
+export type CreatePracticeSessionResponse = z.infer<typeof CreatePracticeSessionResponseSchema>;
+export type StartPracticeSessionPayload = z.infer<typeof StartPracticeSessionPayloadSchema>;
+export type SubmitPracticeAnswerPayload = z.infer<typeof SubmitPracticeAnswerPayloadSchema>;
+export type GetNextPracticeQuestionPayload = z.infer<typeof GetNextPracticeQuestionPayloadSchema>;
+export type RetryPracticeQuestionPayload = z.infer<typeof RetryPracticeQuestionPayloadSchema>;
+export type EndPracticeSessionPayload = z.infer<typeof EndPracticeSessionPayloadSchema>;
+export type GetPracticeSessionStatePayload = z.infer<typeof GetPracticeSessionStatePayloadSchema>;
+export type CreatePracticeSessionApiRequest = z.infer<typeof CreatePracticeSessionApiRequestSchema>;
+export type GetPracticeSessionsApiRequest = z.infer<typeof GetPracticeSessionsApiRequestSchema>;
+export type UpdatePracticeSessionApiRequest = z.infer<typeof UpdatePracticeSessionApiRequestSchema>;
+export type GetPracticeQuestionsApiRequest = z.infer<typeof GetPracticeQuestionsApiRequestSchema>;
+export type CreatePracticeSessionApiResponse = z.infer<typeof CreatePracticeSessionApiResponseSchema>;
+export type GetPracticeSessionApiResponse = z.infer<typeof GetPracticeSessionApiResponseSchema>;
+export type GetPracticeSessionsApiResponse = z.infer<typeof GetPracticeSessionsApiResponseSchema>;
+export type GetPracticeQuestionsApiResponse = z.infer<typeof GetPracticeQuestionsApiResponseSchema>;

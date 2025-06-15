@@ -5,6 +5,7 @@ import gameHandler from './gameHandler';
 import teacherControlHandler from './teacherControlHandler';
 import { registerTournamentHandlers } from './tournament';
 import { disconnectHandler } from './disconnectHandler';
+import { registerPracticeSessionHandlers, handlePracticeSessionDisconnect } from './practiceSessionHandler';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 
 // Create a handler-specific logger
@@ -17,13 +18,21 @@ const logger = createLogger('ConnectionHandlers');
 export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
     io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
         handleConnection(socket);
-        socket.on('disconnect', disconnectHandler(io, socket));
+
+        // Create custom disconnect handler that includes practice session cleanup
+        socket.on('disconnect', (reason) => {
+            // Handle practice session cleanup first
+            handlePracticeSessionDisconnect(io, socket);
+            // Then handle normal disconnect
+            disconnectHandler(io, socket)(reason);
+        });
 
         // Register feature-specific handlers
         registerLobbyHandlers(io, socket);
         gameHandler(io, socket);
         teacherControlHandler(io, socket);
         registerTournamentHandlers(io, socket);
+        registerPracticeSessionHandlers(io, socket);
     });
 }
 

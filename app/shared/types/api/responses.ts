@@ -206,15 +206,8 @@ export interface QuestionResponse {
     question: any; // Flexible type for database question objects
 }
 
-export interface QuestionsListResponse {
-    questions: any[]; // Flexible type for database question objects
-    meta: {
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    };
-}
+// Note: QuestionsListResponse is now defined in schemas.ts as z.array(z.string())
+// This endpoint returns just question UIDs, not full question objects
 
 export interface QuestionUidsResponse {
     questionUids: string[];

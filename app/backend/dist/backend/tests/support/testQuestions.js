@@ -3,6 +3,52 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testQuestions = void 0;
 exports.testQuestions = [
+    // Practice mode test questions with explanations
+    {
+        uid: 'TEST-add-1',
+        text: 'Que fait 2 + 3 ?',
+        answerOptions: ['4', '5', '6', '7'],
+        correctAnswers: [false, true, false, false],
+        questionType: 'single_correct',
+        discipline: 'math',
+        themes: ['arithmetic'],
+        gradeLevel: 'elementary',
+        tags: ['addition', 'practice'],
+        difficulty: 1,
+        timeLimit: 30,
+        feedbackWaitTime: 5,
+        explanation: 'La réponse est 5 car 2 + 3 = 5. Quand on additionne 2 et 3, on obtient 5.'
+    },
+    {
+        uid: 'TEST-add-2',
+        text: 'Combien font 4 + 4 ?',
+        answerOptions: ['6', '7', '8', '9'],
+        correctAnswers: [false, false, true, false],
+        questionType: 'single_correct',
+        discipline: 'math',
+        themes: ['arithmetic'],
+        gradeLevel: 'elementary',
+        tags: ['addition', 'practice'],
+        difficulty: 1,
+        timeLimit: 30,
+        feedbackWaitTime: 5,
+        explanation: 'La réponse est 8 car 4 + 4 = 8. C\'est le double de 4.'
+    },
+    {
+        uid: 'TEST-mult-1',
+        text: 'Que fait 3 × 2 ?',
+        answerOptions: ['5', '6', '7', '8'],
+        correctAnswers: [false, true, false, false],
+        questionType: 'single_correct',
+        discipline: 'math',
+        themes: ['multiplication'],
+        gradeLevel: 'elementary',
+        tags: ['multiplication', 'practice'],
+        difficulty: 1,
+        timeLimit: 30,
+        feedbackWaitTime: 5,
+        explanation: 'La réponse est 6 car 3 × 2 = 6. Multiplier par 2, c\'est ajouter le nombre à lui-même : 3 + 3 = 6.'
+    },
     // New questions for late-join/feedback scenarios
     {
         uid: 'q-late-1',

@@ -55,6 +55,39 @@ export function joinGameHandler(
             return;
         }
         const { accessCode, userId, username, avatarEmoji } = parseResult.data;
+
+        // Special handling for practice mode
+        if (accessCode === 'PRACTICE') {
+            logger.info({ userId, username, avatarEmoji }, 'Joining practice mode');
+
+            // For practice mode, we don't need a database game instance
+            // Join a practice-specific room for this user
+            const practiceRoomName = `practice_${userId}`;
+            await socket.join(practiceRoomName);
+            socket.data.currentGameRoom = practiceRoomName;
+
+            logger.debug({ practiceRoomName, socketId: socket.id }, 'Player joined practice room');
+
+            // Send successful join response for practice mode
+            const gameJoinedPayload: GameJoinedPayload = {
+                accessCode: 'PRACTICE',
+                gameStatus: 'active', // Practice mode is immediately active
+                isDiffered: false, // Practice mode is not deferred
+                participant: {
+                    id: userId,
+                    userId: userId, // Same as id for practice mode
+                    username,
+                    avatar: avatarEmoji || '🐼', // Use avatarEmoji as avatar
+                    avatarEmoji: avatarEmoji || '🐼',
+                    score: 0
+                }
+            };
+
+            logger.info({ gameJoinedPayload }, 'Emitting game_joined for practice mode');
+            socket.emit('game_joined', gameJoinedPayload);
+            return;
+        }
+
         try {
             logger.debug({ accessCode, userId, username, avatarEmoji }, 'Looking up gameInstance');
             const gameInstance = await prisma.gameInstance.findUnique({

@@ -69,29 +69,29 @@ const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
 
     if (!visible) return null;
 
-    // Determine icon and styling based on correctness
+    // Always use book icon and "Explication" text as requested
     const getIcon = () => {
-        if (isCorrect === true) {
-            return <CheckCircle size={32} strokeWidth={2.4} className="text-success" />;
-        } else if (isCorrect === false) {
-            return <XCircle size={32} strokeWidth={2.4} className="text-error" />;
-        }
         return <BookOpenCheck size={32} strokeWidth={2.4} />;
     };
 
     const getTitle = () => {
-        if (isCorrect === true) {
-            return "Correct !";
-        } else if (isCorrect === false) {
-            return "Incorrect";
-        }
-        return "Explication :";
+        return "Explication";
     };
 
     return (
-        <div className="feedback-overlay" role="dialog" aria-live="polite">
-            <div className="feedback-overlay-inner main-content-alignment">
-                <div className="feedback-card max-w-xl w-[95%] mx-2" style={{ width: '95%' }}>
+        <div
+            className="feedback-overlay"
+            role="dialog"
+            aria-live="polite"
+            onClick={mode === 'practice' ? handleClose : undefined} // Allow clicking anywhere in practice mode
+            style={{ cursor: mode === 'practice' ? 'pointer' : 'default' }}
+        >
+            <div className="feedback-overlay-inner">
+                <div
+                    className="feedback-card max-w-xl w-[95%] mx-2"
+                    style={{ width: '95%' }}
+                    onClick={mode === 'practice' ? handleClose : undefined} // Allow clicking on card itself in practice mode
+                >
                     {/* Manual close button for practice mode */}
                     {allowManualClose && (
                         <button
@@ -135,13 +135,6 @@ const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
                     )}
 
                     <p className="feedback-text mb-3 p-2">{explanation}</p>
-
-                    {/* Manual close hint for practice mode */}
-                    {allowManualClose && (
-                        <div className="text-xs text-base-content/60 text-center">
-                            Cliquez sur × pour continuer
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

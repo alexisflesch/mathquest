@@ -10,6 +10,7 @@ const gameHandler_1 = __importDefault(require("./gameHandler"));
 const teacherControlHandler_1 = __importDefault(require("./teacherControlHandler"));
 const tournament_1 = require("./tournament");
 const disconnectHandler_1 = require("./disconnectHandler");
+const practiceSessionHandler_1 = require("./practiceSessionHandler");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('ConnectionHandlers');
 /**
@@ -19,12 +20,19 @@ const logger = (0, logger_1.default)('ConnectionHandlers');
 function registerConnectionHandlers(io) {
     io.on('connection', (socket) => {
         handleConnection(socket);
-        socket.on('disconnect', (0, disconnectHandler_1.disconnectHandler)(io, socket));
+        // Create custom disconnect handler that includes practice session cleanup
+        socket.on('disconnect', (reason) => {
+            // Handle practice session cleanup first
+            (0, practiceSessionHandler_1.handlePracticeSessionDisconnect)(io, socket);
+            // Then handle normal disconnect
+            (0, disconnectHandler_1.disconnectHandler)(io, socket)(reason);
+        });
         // Register feature-specific handlers
         (0, lobbyHandler_1.registerLobbyHandlers)(io, socket);
         (0, gameHandler_1.default)(io, socket);
         (0, teacherControlHandler_1.default)(io, socket);
         (0, tournament_1.registerTournamentHandlers)(io, socket);
+        (0, practiceSessionHandler_1.registerPracticeSessionHandlers)(io, socket);
     });
 }
 /**

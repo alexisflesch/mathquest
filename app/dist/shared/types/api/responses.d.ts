@@ -166,15 +166,6 @@ export interface QuestionCreationResponse {
 export interface QuestionResponse {
     question: any;
 }
-export interface QuestionsListResponse {
-    questions: any[];
-    meta: {
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    };
-}
 export interface QuestionUidsResponse {
     questionUids: string[];
     total: number;

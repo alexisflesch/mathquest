@@ -12,6 +12,10 @@ import type {
     LeaderboardEntry
 } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
+import type {
+    PracticeClientToServerEvents,
+    PracticeServerToClientEvents
+} from './practice/events';
 
 // Define LeaderboardEntryData for this file's usage
 type LeaderboardEntryData = LeaderboardEntry;
@@ -104,7 +108,7 @@ export interface QuestionData {
 // --- Core Socket.IO Event Definitions ---
 
 // Events emitted by the client and listened to by the server
-export interface ClientToServerEvents {
+export interface ClientToServerEvents extends PracticeClientToServerEvents {
     join_game: (payload: JoinGamePayload) => void;
     game_answer: (payload: GameAnswerPayload) => void;
     submit_answer: (payload: GameAnswerPayload) => void; // Alias for game_answer
@@ -125,7 +129,7 @@ export interface ClientToServerEvents {
 }
 
 // Events emitted by the server and listened to by the client
-export interface ServerToClientEvents {
+export interface ServerToClientEvents extends PracticeServerToClientEvents {
     connect: () => void;
     disconnect: (reason: string) => void;
     connection_established: (payload: { socketId: string; timestamp: string; user: Partial<SocketData> }) => void; // Example welcome event
@@ -191,6 +195,9 @@ export interface SocketData {
     role?: 'player' | 'teacher' | 'admin' | 'projector';
     accessCode?: string; // If the socket is associated with a specific game/lobby
     currentGameRoom?: string; // Room name for current game
+    // Practice session data
+    practiceSessionId?: string; // Current practice session ID
+    practiceUserId?: string; // User ID for practice session
     // Add any other data you want to associate with the socket
 }
 

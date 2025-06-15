@@ -708,7 +708,7 @@ router.get('/status', auth_1.optionalAuth, async (req, res) => {
             user: user ? {
                 id: user.id,
                 username: user.username || 'Utilisateur',
-                avatar: user.avatarEmoji || '👤',
+                avatar: user.avatarEmoji || '🐼',
                 email: user.email || undefined,
                 role: userRole
             } : undefined,
@@ -761,7 +761,7 @@ router.put('/profile', auth_1.optionalAuth, (0, validation_1.validateRequestBody
                 id: updatedUser.id,
                 email: updatedUser.email || undefined,
                 username: updatedUser.username,
-                avatar: updatedUser.avatarEmoji || '👤',
+                avatar: updatedUser.avatarEmoji || '�',
                 role: updatedUser.role
             }
         });

@@ -18,6 +18,7 @@ import {
     LogoutResponseSchema,
     ErrorResponseSchema,
     QuestionsFiltersResponseSchema,
+    QuestionsListResponseSchema,
     QuestionsResponseSchema,
     QuestionsCountResponseSchema,
     QuizListResponseSchema,
@@ -56,7 +57,6 @@ export type {
     // Question API Types
     QuestionCreationResponse,
     QuestionResponse,
-    QuestionsListResponse,
     QuestionUidsResponse,
     QuestionFiltersResponse,
     // Game Template API Types
@@ -182,7 +182,6 @@ import type {
     RegisterResponse,
     UpgradeAccountResponse,
     QuestionFiltersResponse,
-    QuestionsListResponse,
     UserByCookieResponse,
     GameTemplateCreationResponse,
     LeaderboardResponse
@@ -204,7 +203,8 @@ export type {
 
 // Legacy question and quiz response types for backward compatibility
 export type QuestionsFiltersResponse = QuestionFiltersResponse;
-export type QuestionsResponse = QuestionsListResponse;
+export type QuestionsListResponse = z.infer<typeof QuestionsListResponseSchema>; // string[]
+export type QuestionsResponse = z.infer<typeof QuestionsResponseSchema>; // { questions: Question[], meta: PaginationMeta }
 export type QuestionsCountResponse = {
     total: number;
 };
