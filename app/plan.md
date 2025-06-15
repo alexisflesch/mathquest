@@ -44,6 +44,9 @@
 #### Known Issues:
 - [ ] **Test Compilation Errors**: Multiple test files expect `timer: number` but now need `timer: GameTimerState`
 - [ ] **Testing Required**: Manual verification that timer sync works for late joiners
+- [ ] **Question 1/n**: not working as expected, needs further investigation
+- [ ] **Timer**: Ensure correct rounding : if joining with 15.5s, write 15 for 0.5s then normal countdown.
+
 
 #### Expected Fix:
 - [x] Guests should be able to join tournaments using username/avatar from localStorage

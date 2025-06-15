@@ -215,6 +215,91 @@ export function joinGameHandler(
             };
             logger.info({ gameJoinedPayload }, 'Emitting game_joined');
             socket.emit('game_joined', gameJoinedPayload);
+
+            // For live tournaments (not deferred), check if game is active and send current state to late joiners
+            if (!gameInstance.isDiffered && gameInstance.status === 'active' && gameInstance.playMode === 'tournament') {
+                logger.info({ accessCode, userId }, 'Live tournament is active, sending current state to late joiner');
+
+                try {
+                    const currentGameState = await gameStateService.getFullGameState(accessCode);
+                    if (currentGameState && currentGameState.gameState && currentGameState.gameState.currentQuestionIndex >= 0) {
+                        const { gameState } = currentGameState;
+
+                        // Get the current question data
+                        const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
+                            where: { id: gameInstance.id },
+                            include: {
+                                gameTemplate: {
+                                    include: {
+                                        questions: {
+                                            include: { question: true },
+                                            orderBy: { sequence: 'asc' }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        if (gameInstanceWithQuestions?.gameTemplate?.questions &&
+                            gameState.currentQuestionIndex < gameInstanceWithQuestions.gameTemplate.questions.length) {
+
+                            const currentQuestion = gameInstanceWithQuestions.gameTemplate.questions[gameState.currentQuestionIndex]?.question;
+                            if (currentQuestion) {
+                                const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
+                                const filteredQuestion = filterQuestionForClient(currentQuestion);
+
+                                // Calculate remaining time for late joiner
+                                let actualTimer = gameState.timer;
+                                if (gameState.timer && gameState.timer.status === 'play' && gameState.timer.timestamp) {
+                                    const elapsed = Date.now() - gameState.timer.timestamp;
+                                    const timeLeftMs = Math.max(0, gameState.timer.timeLeftMs - elapsed);
+
+                                    actualTimer = {
+                                        ...gameState.timer,
+                                        timeLeftMs,
+                                        timestamp: Date.now()
+                                    };
+                                }
+
+                                // Send current question with actual remaining time
+                                const lateJoinerQuestionPayload = {
+                                    question: filteredQuestion,
+                                    index: gameState.currentQuestionIndex,
+                                    feedbackWaitTime: currentQuestion.feedbackWaitTime || 1.5,
+                                    timer: actualTimer
+                                };
+
+                                logger.info({
+                                    accessCode,
+                                    userId,
+                                    questionIndex: gameState.currentQuestionIndex,
+                                    originalTimeLeft: gameState.timer?.timeLeftMs,
+                                    actualTimeLeft: actualTimer?.timeLeftMs,
+                                    payload: lateJoinerQuestionPayload
+                                }, 'Sending current question to late joiner');
+
+                                socket.emit('game_question', lateJoinerQuestionPayload);
+
+                                // Also send timer update
+                                if (actualTimer) {
+                                    const timerUpdatePayload = {
+                                        timer: {
+                                            isPaused: actualTimer.status === 'pause',
+                                            timeLeftMs: actualTimer.timeLeftMs,
+                                            startedAt: actualTimer.timestamp || undefined,
+                                            durationMs: actualTimer.durationMs
+                                        }
+                                    };
+                                    socket.emit('game_timer_updated', timerUpdatePayload);
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    logger.error({ error, accessCode, userId }, 'Error sending current state to late joiner');
+                }
+            }
+
             if (!gameInstance.isDiffered && socket.data.currentGameRoom) {
                 const playerJoinedPayload: PlayerJoinedGamePayload = {
                     participant: {

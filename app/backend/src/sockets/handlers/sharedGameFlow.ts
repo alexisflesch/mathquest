@@ -85,7 +85,7 @@ export async function runGameFlow(
                 question: filteredQuestion,
                 index: i,
                 feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1),
-                timer: questions[i].timeLimit || 30 // Include timer duration
+                timer: timer // Use timer state for initial question emission
             };
 
             logger.info({ room: `game_${accessCode}`, event: 'game_question', payload: gameQuestionPayload }, '[DEBUG] Emitting game_question');
