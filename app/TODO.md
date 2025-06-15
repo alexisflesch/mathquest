@@ -108,9 +108,9 @@ Please refer to `/instructions.md` for coding standards, naming conventions, and
 **Use jest** for unit tests: find bugs using the app, then write tests to fix them.
 
 ### 2.1. Practice Mode
-- [ ] Thoroughly test practice mode (all flows: start, answer, finish, feedback).
-- [ ] Fix any bugs or missing features found during testing.
-- [ ] Ensure all socket and API payloads in practice mode use shared types and strict validation.
+- [x] Thoroughly test practice mode (all flows: start, answer, finish, feedback).
+- [x] Fix any bugs or missing features found during testing.
+- [x] Ensure all socket and API payloads in practice mode use shared types and strict validation.
 
 ### 2.2. Live Tournaments
 - [ ] Test live tournaments end-to-end (joining, answering, scoring, leaderboard).
