@@ -12,7 +12,7 @@ import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
-import { useAuth } from '@/components/AuthProvider';
+import { useAuthState } from '@/hooks/useAuthState';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { UsersRound } from "lucide-react";
 import { type Question } from '@/types/api';
@@ -46,7 +46,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
     const { code } = React.use(params);
 
     // Authentication and access control (following established pattern)
-    const { isTeacher, isAuthenticated, isLoading: authLoading, userState, userProfile } = useAuth();
+    const { isTeacher, isAuthenticated, isLoading: authLoading, userState, userProfile } = useAuthState();
     const { isAllowed } = useAccessGuard({
         requireMinimum: 'teacher',
         redirectTo: '/login'
@@ -188,14 +188,14 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         logger.info(`Dashboard: showConfirm state changed to ${showConfirm}, pendingPlayIdx: ${pendingPlayIdx}`);
     }, [showConfirm, pendingPlayIdx]);
 
-    // Debug timer state updates
-    useEffect(() => {
-        logger.info(`Dashboard timer state updated:`, {
-            timerStatus,
-            timerQuestionUid,
-            timeLeftMs
-        });
-    }, [timerStatus, timerQuestionUid, timeLeftMs]);
+    // // Debug timer state updates
+    // useEffect(() => {
+    //     logger.info(`Dashboard timer state updated:`, {
+    //         timerStatus,
+    //         timerQuestionUid,
+    //         timeLeftMs
+    //     });
+    // }, [timerStatus, timerQuestionUid, timeLeftMs]);
 
     // Debug individual timer state changes to track when questionUid gets reset
     useEffect(() => {

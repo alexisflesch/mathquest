@@ -1,29 +1,32 @@
 /**
- * Student Tournament Join Page
+ * Student Game Join Page
  * 
- * This page provides the interface for students to join tournaments:
+ * This page provides the interface for students to join games (quiz, tournament, or practice):
  * - Simple numeric code entry with validation
- * - Smart routing based on tournament type and status
+ * - Smart routing based on game type and status
  * - Error handling for invalid codes
  * 
  * The component implements intelligent routing logic that directs students
- * to the appropriate experience based on the tournament's current state:
- * - Direct tournaments in preparation → Lobby
- * - Direct tournaments in progress → Tournament interface
- * - Direct tournaments that are finished → Tournament in differed mode
- * - Differed tournaments → Tournament interface directly
+ * to the appropriate experience based on the game's current state:
+ * - Games in preparation → Lobby
+ * - Games in progress → Live interface
+ * - Games that are finished → Live interface in differed mode
+ * - Differed games → Live interface directly
  */
 
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { makeApiRequest } from '@/config/api';
-import { TournamentStatusResponseSchema, type TournamentStatusResponse } from '@/types/api';
+import { GameJoinResponse } from '@/types/api';
+import { useAuthState } from '@/hooks/useAuthState';
+import type { GameStatus } from '@shared/types/core/game';
 
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const { userProfile } = useAuthState();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,30 +36,39 @@ export default function StudentJoinPage() {
             return;
         }
         try {
-            const data = await makeApiRequest<TournamentStatusResponse>(`tournament/status?code=${code}`, {}, undefined, TournamentStatusResponseSchema);
-            const tournoiCode = data.code || code; // prefer code over id
-            if (data.defaultMode === 'differé' || data.defaultMode === 'différé') {
-                router.push(`/live/${tournoiCode}`);
+            if (!userProfile.userId) {
+                setError("Impossible de récupérer l'identifiant utilisateur. Veuillez vous reconnecter.");
                 return;
             }
-            if (data.defaultMode === 'direct') {
-                if (data.statut === 'en préparation') {
-                    router.push(`/lobby/${tournoiCode}`);
-                    return;
-                }
-                if (data.statut === 'en cours') {
-                    router.push(`/live/${tournoiCode}`);
-                    return;
-                }
-                if (data.statut === 'terminé') {
-                    // Allow differed play for finished tournaments
-                    router.push(`/live/${tournoiCode}?differed=1`);
-                    return;
-                }
+            const data = await makeApiRequest<GameJoinResponse>('/api/games/' + code + '/join', {
+                method: 'POST',
+                body: JSON.stringify({ userId: userProfile.userId }),
+            });
+            const game = data.gameInstance;
+            const status = game.status;
+            const accessCode = game.accessCode || code;
+
+            // Strict naming: use only canonical GameStatus values
+            // Backend and frontend must use: 'pending', 'active', 'paused', 'completed', 'archived'
+            if (game.isDiffered) {
+                router.push(`/live/${accessCode}`);
+                return;
             }
-            setError('Code erroné');
-        } catch {
-            setError("Code erroné");
+            if (status === 'pending') {
+                router.push(`/lobby/${accessCode}`);
+                return;
+            }
+            if (status === 'active') {
+                router.push(`/live/${accessCode}`);
+                return;
+            }
+            if (status === 'completed') {
+                router.push(`/live/${accessCode}?differed=1`);
+                return;
+            }
+            setError(`Code erroné (status: ${status})`);
+        } catch (err: any) {
+            setError(err?.message || "Code erroné");
         }
     };
 
@@ -67,7 +79,7 @@ export default function StudentJoinPage() {
                 className="card w-full max-w-md shadow-xl bg-base-100 my-6"
             >
                 <div className="card-body items-center gap-8">
-                    <h1 className="card-title text-3xl mb-4">Rejoindre un tournoi</h1>
+                    <h1 className="card-title text-3xl mb-4">Rejoindre un jeu</h1>
                     <input
                         className="input input-bordered input-lg w-full text-center tracking-widest"
                         type="tel"
@@ -75,7 +87,7 @@ export default function StudentJoinPage() {
                         pattern="[0-9]*"
                         maxLength={8}
                         minLength={4}
-                        placeholder="Code du tournoi"
+                        placeholder="Code du jeu"
                         value={code}
                         onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
                         autoFocus

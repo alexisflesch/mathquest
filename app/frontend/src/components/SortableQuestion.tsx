@@ -214,11 +214,11 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     // Remove duplicate useEffect that was already handled above
 
     // Refine logging for timer updates - remove displayedTimeLeft from dependencies
-    useEffect(() => {
-        if (isActive && liveTimeLeft !== undefined && liveTimeLeft !== null) {
-            logger.info(`Question ${q.uid}: Timer updated to ${liveTimeLeft}ms`);
-        }
-    }, [isActive, liveTimeLeft, q.uid]); // Removed displayedTimeLeft dependency
+    // useEffect(() => {
+    //     if (isActive && liveTimeLeft !== undefined && liveTimeLeft !== null) {
+    //         logger.info(`Question ${q.uid}: Timer updated to ${liveTimeLeft}ms`);
+    //     }
+    // }, [isActive, liveTimeLeft, q.uid]); // Removed displayedTimeLeft dependency
 
     // --- Handlers (conservés ici) ---
     const pauseHandler = () => { onPause(); }; // Simple wrapper

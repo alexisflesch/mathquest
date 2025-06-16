@@ -37,7 +37,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.timerActionHandler = timerActionHandler;
+exports.clearAllTimers = clearAllTimers;
+exports.clearTimerForGame = clearTimerForGame;
 const prisma_1 = require("@/db/prisma");
+const redis_1 = require("@/config/redis");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const logger_1 = __importDefault(require("@/utils/logger"));
@@ -45,8 +48,76 @@ const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('TimerActionHandler');
+// Redis key prefix for game state
+const GAME_KEY_PREFIX = 'mathquest:game:';
 // Create GameInstanceService instance
 const gameInstanceService = new gameInstanceService_1.GameInstanceService();
+// Timer management for automatic expiry
+const activeTimers = new Map();
+/**
+ * Clear an existing timer for a game
+ */
+function clearGameTimer(gameId) {
+    const existingTimer = activeTimers.get(gameId);
+    if (existingTimer) {
+        clearTimeout(existingTimer);
+        activeTimers.delete(gameId);
+        logger.info({ gameId }, '[TIMER_EXPIRY] Cleared existing timer');
+    }
+}
+/**
+ * Start automatic timer expiry for a game
+ */
+function startGameTimer(io, gameId, accessCode, durationMs, questionUid) {
+    // Clear any existing timer first
+    clearGameTimer(gameId);
+    logger.info({ gameId, accessCode, durationMs, questionUid }, '[TIMER_EXPIRY] Starting automatic timer expiry');
+    const timeout = setTimeout(async () => {
+        try {
+            logger.info({ gameId, accessCode, questionUid }, '[TIMER_EXPIRY] Timer expired, auto-stopping');
+            // Remove from active timers
+            activeTimers.delete(gameId);
+            // Get current game state
+            const gameStateRaw = await redis_1.redisClient.get(`${GAME_KEY_PREFIX}${accessCode}`);
+            if (!gameStateRaw) {
+                logger.warn({ gameId, accessCode }, '[TIMER_EXPIRY] Game state not found when timer expired');
+                return;
+            }
+            const gameState = JSON.parse(gameStateRaw);
+            // Update timer to stopped state
+            const now = Date.now();
+            const expiredTimer = {
+                status: 'stop',
+                timeLeftMs: 0,
+                durationMs: gameState.timer?.durationMs || durationMs,
+                questionUid: questionUid || gameState.timer?.questionUid || null,
+                timestamp: now,
+                localTimeLeftMs: null
+            };
+            // Update game state
+            gameState.timer = expiredTimer;
+            await gameStateService_1.default.updateGameState(accessCode, gameState);
+            // Broadcast timer expiry to all rooms using same structure as manual actions
+            const dashboardRoom = `dashboard_${gameId}`;
+            const liveRoom = `game_${accessCode}`;
+            const projectionRoom = `projection_${gameId}`;
+            logger.info({ gameId, accessCode, dashboardRoom, liveRoom, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Broadcasting timer expiry to all rooms');
+            // To dashboard (include questionUid to match frontend validation)
+            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer: expiredTimer, questionUid: expiredTimer.questionUid });
+            logger.info({ gameId, dashboardRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to dashboardRoom');
+            // To live room (for quiz players)
+            io.to(liveRoom).emit('game_timer_updated', { timer: expiredTimer });
+            logger.info({ gameId, liveRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to liveRoom');
+            // To projection room
+            io.to(projectionRoom).emit('projection_timer_updated', { timer: expiredTimer });
+            logger.info({ gameId, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to projectionRoom');
+        }
+        catch (error) {
+            logger.error({ gameId, accessCode, error }, '[TIMER_EXPIRY] Error handling timer expiry');
+        }
+    }, durationMs);
+    activeTimers.set(gameId, timeout);
+}
 function timerActionHandler(io, socket) {
     return async (payload) => {
         // Runtime validation with Zod
@@ -196,8 +267,14 @@ function timerActionHandler(io, socket) {
                         };
                         io.to(dashboardRoom).emit('dashboard_game_status_changed', statusPayload);
                     }
+                    // Start the automatic timer expiry mechanism
+                    if (startDuration > 0) {
+                        startGameTimer(io, gameId, gameInstance.accessCode, startDuration, questionUid || null);
+                    }
                     break;
                 case 'pause':
+                    // Clear any running timer when pausing
+                    clearGameTimer(gameId);
                     if (timer.status !== 'pause') {
                         // Use the frontend-provided duration (remaining time) if available,
                         // otherwise fall back to stored timeLeftMs
@@ -246,9 +323,15 @@ function timerActionHandler(io, socket) {
                             'timer.timeLeftMs (after)': timer.timeLeftMs,
                             'timer.timestamp (after)': timer.timestamp
                         });
+                        // Restart automatic timer expiry when resuming
+                        if (remainingTime > 0) {
+                            startGameTimer(io, gameId, gameInstance.accessCode, remainingTime, questionUid || null);
+                        }
                     }
                     break;
                 case 'stop':
+                    // Clear any running timer when stopping
+                    clearGameTimer(gameId);
                     timer = {
                         ...timer,
                         status: 'stop',
@@ -258,6 +341,7 @@ function timerActionHandler(io, socket) {
                     break;
                 case 'set_duration':
                     if (validDurationMs) {
+                        const wasPlaying = timer.status === 'play';
                         timer = {
                             ...timer,
                             durationMs: validDurationMs, // durationMs is already in milliseconds
@@ -265,6 +349,14 @@ function timerActionHandler(io, socket) {
                             timeLeftMs: timer.status !== 'play' ? validDurationMs : timer.timeLeftMs,
                             timestamp: now
                         };
+                        // If timer was playing and duration changed, restart the timer
+                        if (wasPlaying) {
+                            clearGameTimer(gameId);
+                            const newTimeLeft = timer.timeLeftMs;
+                            if (newTimeLeft > 0) {
+                                startGameTimer(io, gameId, gameInstance.accessCode, newTimeLeft, questionUid || null);
+                            }
+                        }
                     }
                     break;
             }
@@ -383,4 +475,21 @@ function timerActionHandler(io, socket) {
             socket.emit('error_dashboard', errorPayload);
         }
     };
+}
+/**
+ * Clean up all timers (for cleanup when server shuts down or games end)
+ */
+function clearAllTimers() {
+    logger.info({ activeTimersCount: activeTimers.size }, '[TIMER_EXPIRY] Clearing all active timers');
+    for (const [gameId, timeout] of activeTimers.entries()) {
+        clearTimeout(timeout);
+        logger.debug({ gameId }, '[TIMER_EXPIRY] Cleared timer for game');
+    }
+    activeTimers.clear();
+}
+/**
+ * Clear timer for a specific game (useful when game ends)
+ */
+function clearTimerForGame(gameId) {
+    clearGameTimer(gameId);
 }

@@ -159,9 +159,23 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             // Stop countdown when it reaches zero
             if (remaining <= 0) {
                 stopLocalCountdown();
+
+                // For teachers, automatically stop the timer on the backend when it expires
+                if (role === 'teacher' && socket && timerState.questionUid) {
+                    logger.info('Timer expired, automatically stopping timer:', { questionUid: timerState.questionUid });
+
+                    const payload: TimerActionPayload = {
+                        accessCode,
+                        action: 'stop',
+                        duration: 0,
+                        questionUid: timerState.questionUid
+                    };
+
+                    socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
+                }
             }
         }, 100); // Update every 100ms for smooth countdown
-    }, []);
+    }, [role, socket, accessCode, timerState.questionUid]);
 
     const stopLocalCountdown = useCallback(() => {
         if (localTimerRef.current) {
