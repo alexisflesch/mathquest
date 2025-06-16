@@ -156,16 +156,25 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
                     // Send timer state as a separate event
                     if (gs.timer) {
-                        // With shared GameTimerState, timeLeftMs is already calculated and available
-                        const timeLeftMs = gs.timer.timeLeftMs || 0;
+                        // Calculate actual remaining time for late joiners
+                        let actualTimeLeftMs = gs.timer.timeLeftMs || 0;
+                        let actualTimestamp = gs.timer.timestamp;
 
-                        // When emitting game_timer_updated, use the correct structure:
+                        if (gs.timer.status === 'play' && gs.timer.timestamp) {
+                            const elapsed = Date.now() - gs.timer.timestamp;
+                            actualTimeLeftMs = Math.max(0, gs.timer.timeLeftMs - elapsed);
+                            actualTimestamp = Date.now();
+                        }
+
+                        // When emitting game_timer_updated, use the canonical GameTimerState format:
                         socket.emit('game_timer_updated', {
                             timer: {
-                                isPaused: gs.timer.status === 'pause',
-                                timeLeftMs: gs.timer.timeLeftMs,
-                                startedAt: gs.timer.timestamp,
-                                durationMs: gs.timer.durationMs
+                                status: gs.timer.status,
+                                timeLeftMs: actualTimeLeftMs,
+                                durationMs: gs.timer.durationMs,
+                                questionUid: gs.timer.questionUid,
+                                timestamp: actualTimestamp,
+                                localTimeLeftMs: null
                             },
                             questionUid: questionUid
                         } as GameTimerUpdatePayload);
@@ -177,7 +186,12 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                     let feedbackRemaining = 0;
 
                     if (gs.timer && gs.timer.durationMs) {
-                        const timeLeftMs = gs.timer.timeLeftMs || 0;
+                        // Calculate actual remaining time for late joiners
+                        let timeLeftMs = gs.timer.timeLeftMs || 0;
+                        if (gs.timer.status === 'play' && gs.timer.timestamp) {
+                            const elapsed = Date.now() - gs.timer.timestamp;
+                            timeLeftMs = Math.max(0, gs.timer.timeLeftMs - elapsed);
+                        }
 
                         if (timeLeftMs <= 0) {
                             shouldSendCorrectAnswers = true;
@@ -346,7 +360,13 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         if (currentPlayMode === 'tournament') {
             const timerObj = gameState.timer;
             if (timerObj && timerObj.durationMs) {
-                const timeLeftMs = timerObj.timeLeftMs || 0;
+                // Calculate actual remaining time
+                let timeLeftMs = timerObj.timeLeftMs || 0;
+                if (timerObj.status === 'play' && timerObj.timestamp) {
+                    const elapsed = Date.now() - timerObj.timestamp;
+                    timeLeftMs = Math.max(0, timerObj.timeLeftMs - elapsed);
+                }
+
                 if (timeLeftMs <= 0) {
                     logger.warn({ accessCode, userId, questionUid }, 'Answer submitted after timer expired (tournament mode).');
                     socket.emit('answer_feedback', {

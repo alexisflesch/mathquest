@@ -13,8 +13,6 @@ export interface FilteredQuestion {
     text: string;
     questionType: string;
     answerOptions: string[];
-    explanation?: string;
-    correctAnswers?: boolean[];
     timeLimit?: number;
     gradeLevel?: string;
     difficulty?: number;

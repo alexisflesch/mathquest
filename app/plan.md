@@ -1,8 +1,42 @@
-# Plan: Fix Teacher Dashboard Timer Issue
+# Plan: Live Page Timer Modernization Project
 
-## 🎯 **CURRENT PHASE: Timer Frontend Fix**
+## 🚨 **CRITICAL ISSUE DISCOVERED: Dual Timer System Conflict**
 
-### **Issue Description**
+### **Current Status: URGENT FIX REQUIRED**
+Despite previous "completion", logs reveal that **MULTIPLE TIMER SYSTEMS** are still running simultaneously, causing conflicts and preventing proper timer functionality for late joiners.
+
+### **Evidence of Dual Timer System**
+```
+Legacy Format: {"isPaused": false, "timeLeftMs": 10054, "startedAt": 1750086061402}
+Modern Format: {"status": "stop", "timeLeftMs": 0, "durationMs": 0}
+```
+
+### **Phase 4: ELIMINATE LEGACY TIMER SYSTEMS** 🚨
+- [ ] **INVESTIGATE**: Identify all remaining legacy timer code
+- [ ] **AUDIT**: Find sources of `isPaused`, `startedAt` fields (legacy format)
+- [ ] **REMOVE**: Comment out/remove ALL legacy timer hooks and handlers
+- [ ] **ENFORCE**: Only useSimpleTimer should handle timer state
+- [ ] **VALIDATE**: Ensure shared types are used consistently
+- [ ] **TEST**: Verify late joiner countdown works with single timer system
+
+### **Immediate Actions Required**
+- [ ] Search codebase for legacy timer fields: `isPaused`, `startedAt`, `running`
+- [ ] Remove any remaining `useGameTimer`, `useStudentTimer` imports/usage
+- [ ] Remove timer handling from `useStudentGameSocket` completely
+- [ ] Ensure only `useSimpleTimer` processes timer events
+- [ ] Validate all timer events use shared `GameTimerState` type
+
+### **Expected Outcome**
+- ✅ Single timer system (useSimpleTimer only)
+- ✅ Consistent shared types across all layers
+- ✅ Late joiner countdown works immediately
+- ✅ No timer conflicts or dual state management
+
+---
+
+## 🔥 ARCHIVE: Previous Teacher Dashboard Timer Issues (Completed)
+
+### **Issue Description** ✅
 When teacher clicks "play" on a question in the dashboard, the timer starts immediately on the frontend. According to the instructions and documentation, the timer should only start when the backend sends the correct payload.
 
 ### **Root Cause Analysis**
@@ -168,5 +202,118 @@ The fix should:
 - [ ] **PENDING**: Clean up any backup/legacy files using old timer formats
 - [ ] **PENDING**: Audit other socket events for type and payload consistency
 
-## 🎯 **NEXT IMMEDIATE PRIORITY**
-Focus on validating that the dashboard properly starts its local countdown timer when receiving backend timer events with status "play", per the documentation requirement.
+## 🎯 **CURRENT PHASE: Modernize Live/[code] Page Timer** ⏳
+
+### **Issue Description**
+The live/[code] page is using the old timer implementation via `useStudentGameSocket` and `gameState.timer`. It needs to be modernized to use the new timer system (`useSimpleTimer`) that was implemented and validated in the teacher/dashboard/[code] page.
+
+### **Current vs. Target Implementation**
+- **Current**: Live page uses `gameState.timer.timeLeftMs` from `useStudentGameSocket`
+- **Target**: Live page should use `useSimpleTimer` hook with role 'student' like teacher dashboard uses role 'teacher'
+
+### **Phase Checklist**
+
+#### **Phase 1: Analysis and Planning** ⏳
+- [ ] Document current timer flow in live/[code] page
+- [ ] Identify how useStudentGameSocket provides timer data
+- [ ] Plan integration of useSimpleTimer with role 'student'
+- [ ] Verify student timer events match the backend timer system
+
+#### **Phase 2: Timer Modernization Implementation** 
+- [ ] Replace gameState.timer usage with useSimpleTimer hook
+- [ ] Update TournamentTimer component to receive timer from useSimpleTimer
+- [ ] Ensure proper socket event handling for student timer updates
+- [ ] Remove legacy timer code from useStudentGameSocket if no longer needed
+
+#### **Phase 3: Testing and Validation** ⏳
+- [x] **ISSUE FOUND**: Late joining timer doesn't start - event mismatch
+- [x] **ROOT CAUSE**: useSimpleTimer listening to wrong events vs useGameTimer  
+- [x] **FIX APPLIED**: Updated useSimpleTimer to listen to correct events:
+  - `GAME_EVENTS.GAME_TIMER_UPDATED` (primary)
+  - `GAME_EVENTS.TIMER_UPDATE` (alternative for students)
+- [ ] Test timer displays when teacher starts question from dashboard
+- [ ] Verify timer countdown works correctly on live page
+- [ ] Test timer pause/resume functionality  
+- [ ] Validate timer expiration handling
+- [ ] Ensure no regression in other live page functionality
+
+### **Files to Modify**
+- `/home/aflesch/mathquest/app/frontend/src/app/live/[code]/page.tsx` - Replace timer usage
+- Potentially `/home/aflesch/mathquest/app/frontend/src/hooks/useStudentGameSocket.ts` - Remove legacy timer if unused
+
+### **Exit Criteria**
+- Live page uses modern timer system via useSimpleTimer
+- Timer behavior matches teacher dashboard implementation
+- All timer functionality works correctly for students
+- No legacy timer code remains
+
+## 🔧 NEW TASK: Live Page Timer Modernization
+
+**Goal**: Modernize the live/[code] page to use the new `useSimpleTimer` hook (the one implemented in teacher/dashboard/[code])
+
+### **Compatibility Analysis Result**: ✅ COMPATIBLE
+
+#### **Current State**:
+- Live page uses `TournamentTimer` component with `timerS` (seconds) prop
+- Timer data comes from `gameState.timer?.timeLeftMs` (milliseconds from useStudentGameSocket)
+- Converts ms to seconds: `Math.ceil(gameState.timer.timeLeftMs / 1000)`
+
+#### **Target State**:
+- Replace timer data source with `useSimpleTimer` hook
+- Use role='student' configuration
+- Keep existing `TournamentTimer` component (just change data source)
+
+### **Phase Checklist**
+
+#### **Phase 1: Analysis and Integration Planning** ✅
+- [x] Document current timer flow in live/[code] page
+- [x] Analyze useSimpleTimer hook capabilities and interface  
+- [x] Verify compatibility between useSimpleTimer and TournamentTimer component
+- [x] Confirm socket events and role configuration requirements
+- [x] Plan integration steps with minimal code changes
+
+#### **Phase 2: Timer Modernization Implementation** ✅
+- [x] Add useSimpleTimer hook to live/[code] page with student role
+- [x] Update timer data source from gameState.timer to useSimpleTimer
+- [x] Remove timer-related code from useStudentGameSocket if redundant
+- [x] Ensure proper error handling and fallbacks
+
+#### **Phase 3: Testing and Validation**
+- [ ] Test timer display starts when teacher starts question from dashboard
+- [ ] Verify timer countdown works correctly on live page
+- [ ] Test timer synchronization with backend timer system  
+- [ ] Validate timer expiration handling (timer reaches zero)
+- [ ] Ensure no regression in other live page functionality (answer submission, feedback, etc.)
+
+### **Implementation Details**
+
+**Required Hook Configuration**:
+```typescript
+const timer = useSimpleTimer({
+    gameId: string,           // from page params or context
+    accessCode: string,       // from page params  
+    socket: Socket | null,    // from existing useStudentGameSocket
+    role: 'student'           // student role for read-only timer
+});
+```
+
+**TournamentTimer Integration**:
+```typescript
+// Before: 
+<TournamentTimer 
+    timerS={gameState.timer?.timeLeftMs ? Math.ceil(gameState.timer.timeLeftMs / 1000) : null} 
+    isMobile={isMobile} 
+/>
+
+// After:
+<TournamentTimer 
+    timerS={timer.timeLeftMs ? Math.ceil(timer.timeLeftMs / 1000) : null} 
+    isMobile={isMobile} 
+/>
+```
+
+### **Exit Criteria**
+- [ ] Live page timer uses useSimpleTimer hook instead of useStudentGameSocket timer data
+- [ ] Timer displays correctly and syncs with teacher dashboard
+- [ ] No breaking changes to existing live page functionality
+- [ ] Code is cleaner and follows the modernization pattern

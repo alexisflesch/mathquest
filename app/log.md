@@ -534,3 +534,213 @@ Created comprehensive test plan in `/home/aflesch/mathquest/app/timer_fix_test_p
 - Removed deprecated socket event handlers and unused code
 - Updated all tests and documentation to reflect new structure
 - Conducted thorough testing to ensure feature parity and stability
+
+## 2025-06-16 - Live Page Timer Modernization Analysis
+
+### Task: Modernize live/[code] page to use new useSimpleTimer hook
+
+#### Compatibility Analysis Completed ✅
+
+**Current Implementation:**
+- Live page uses `TournamentTimer` component expecting `timerS` (seconds) and `isMobile` props
+- Timer data from `gameState.timer?.timeLeftMs` via `useStudentGameSocket` hook
+- Conversion: `Math.ceil(gameState.timer.timeLeftMs / 1000)` (ms → seconds)
+- Students get read-only timer display
+
+**useSimpleTimer Hook Analysis:**
+- ✅ **Compatible interface**: Returns `timeLeftMs`, `status`, `questionUid`, `durationMs`, `isActive`
+- ✅ **Student role support**: Handles `role: 'student'` with `'game_timer_updated'` events  
+- ✅ **Socket integration**: Works with existing socket from useStudentGameSocket
+- ✅ **Type safety**: Uses shared types consistent with backend timer system
+
+**Integration Requirements:**
+- Configure with `role: 'student'`, existing socket, accessCode, gameId
+- Update timer data source: `gameState.timer?.timeLeftMs` → `timer.timeLeftMs` 
+- Keep existing `TournamentTimer` component (minimal changes)
+- Remove redundant timer code from `useStudentGameSocket` if applicable
+
+**Benefits of Migration:**
+- Unified timer API across the application (teacher dashboard already uses it)
+- Better type safety with shared backend types
+- Consistent timer behavior and synchronization
+- Future-proof architecture aligned with modernization plan
+
+**Next Steps:**
+- Updated `plan.md` with detailed implementation phases
+- Ready for implementation: Hook integration → Testing → Validation
+
+**Files Analyzed:**
+- `frontend/src/app/live/[code]/page.tsx` - current timer usage
+- `frontend/src/components/TournamentTimer.tsx` - timer display component  
+- `frontend/src/hooks/useSimpleTimer.ts` - new timer hook
+- `frontend/src/hooks/useStudentGameSocket.ts` - current timer source
+
+## 2025-06-16 - Live Page Timer Modernization Implementation
+
+### Task: Phase 2 Implementation Complete ✅
+
+#### Changes Made:
+
+**1. Modified useSimpleTimer Hook Interface:**
+- Made `gameId` optional for student role compatibility
+- Updated interface: `gameId?: string` 
+- Students don't control timer, so gameId not required
+
+**2. Updated Live Page (/live/[code]/page.tsx):**
+- Added `useSimpleTimer` import
+- Integrated `useSimpleTimer` hook with student role configuration:
+  ```typescript
+  const timer = useSimpleTimer({
+      accessCode: typeof code === 'string' ? code : '',
+      socket,
+      role: 'student'
+  });
+  ```
+- Updated `TournamentTimer` component to use new timer data source:
+  ```typescript
+  // Before: gameState.timer?.timeLeftMs
+  // After:  timer.timeLeftMs
+  ```
+
+**3. Implementation Details:**
+- Used existing socket from `useStudentGameSocket`
+- Maintained same conversion logic (ms → seconds for display)
+- No breaking changes to `TournamentTimer` component interface
+- TypeScript compilation successful with no errors
+
+#### Next Steps: Phase 3 Testing
+- Verify timer display when teacher starts question from dashboard
+- Test timer countdown and synchronization with backend
+- Validate timer expiration handling  
+- Ensure no regression in live page functionality
+
+**Files Modified:**
+- `frontend/src/hooks/useSimpleTimer.ts` - Made gameId optional
+- `frontend/src/app/live/[code]/page.tsx` - Integrated new timer hook
+
+## 2025-06-16 - Live Page Timer Issue: Late Joining Fix
+
+### Critical Issue: Timer Doesn't Start for Late Joiners ❌ → ✅
+
+#### Problem Analysis:
+**Root Cause**: Event mismatch between `useSimpleTimer` and `useGameTimer` (used by useStudentGameSocket)
+
+**Evidence from Console Logs**:
+- ✅ useStudentGameSocket received timer events properly  
+- ✅ useGameTimer received multiple timer updates
+- ❌ useSimpleTimer received only 2 updates vs many more from useGameTimer
+
+**Event Mismatch**:
+- **useSimpleTimer** (broken): listened to `'game_timer_updated'` (hardcoded string)
+- **useGameTimer** (working): listened to `SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED` + `SOCKET_EVENTS.GAME.TIMER_UPDATE`
+
+#### Fix Applied:
+
+**1. Added Missing Import**:
+```typescript
+import { TEACHER_EVENTS, GAME_EVENTS } from '@shared/types/socket/events';
+```
+
+**2. Updated Event Listeners**:
+```typescript
+// Before (broken):
+: 'game_timer_updated';
+
+// After (fixed):
+: GAME_EVENTS.GAME_TIMER_UPDATED;
+
+// Added secondary event for students:
+if (role === 'student') {
+    socket.on(GAME_EVENTS.TIMER_UPDATE, handleTimerUpdate);
+}
+```
+
+**3. Updated Cleanup**:
+```typescript
+socket.off(eventName, handleTimerUpdate);
+if (role === 'student') {
+    socket.off(GAME_EVENTS.TIMER_UPDATE, handleTimerUpdate);
+}
+```
+
+#### Expected Result:
+- Timer should now start properly for late joiners
+- useSimpleTimer should receive the same events as useGameTimer
+- Live page timer should sync correctly with teacher dashboard
+
+**Files Modified**:
+- `frontend/src/hooks/useSimpleTimer.ts` - Fixed event listeners for student role
+
+**Ready for Testing**: Late joining scenario should now work correctly! 🚀
+
+## 2025-01-16 22:00 - CRITICAL FIX: Quiz Mode Late Joiner Timer Issue
+
+### Root Cause Identified
+Late joiners in "quiz" mode were seeing the correct current time but the countdown was not starting when timer status was 'play'. Investigation revealed that the backend only had late joiner logic for tournament mode, not quiz mode.
+
+**Problem**: In `backend/src/sockets/handlers/game/joinGame.ts`, lines 220-296 contained late joiner logic that only applied to tournament mode:
+```typescript
+if (!gameInstance.isDiffered && gameInstance.status === 'active' && gameInstance.playMode === 'tournament') {
+    // Send current question and timer state to late joiner
+}
+```
+
+**Quiz mode late joiners** only received the basic `game_joined` event but:
+- No current question state
+- No timer state with correct remaining time
+- No `game_timer_updated` event to start countdown
+
+### The Fix
+Extended the late joiner logic to support both quiz and tournament modes:
+
+```typescript
+if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
+    // Send current question and timer state to late joiner (for both modes)
+}
+```
+
+**Key Changes:**
+1. **Extended Condition**: Added `|| gameInstance.playMode === 'quiz'` to include quiz mode
+2. **Mode-Specific Feedback**: Adjusted feedback wait time based on mode (tournament: 1.5s, quiz: 1s)
+3. **Enhanced Logging**: Added `playMode` to debug logs for better troubleshooting
+
+### Files Modified
+- `backend/src/sockets/handlers/game/joinGame.ts` - Extended late joiner logic to support quiz mode
+
+### Result
+- Late joiners in quiz mode now receive current question with correct remaining time
+- Timer countdown starts properly when status is 'play'
+- Consistent behavior between quiz and tournament modes for late joiners
+- Enhanced logging helps track mode-specific behavior
+
+### Testing Required
+- Verify late joiners in quiz mode see countdown start correctly
+- Confirm tournament mode still works as before
+- Test edge cases: paused timers, expired timers, different time remaining values
+
+## 2025-06-16 16:56 - CRITICAL: Legacy Timer System Elimination
+
+### Issue
+TypeScript compilation revealed **53 errors** across multiple files due to incomplete legacy timer removal. Despite backend fixes, dual timer system still exists.
+
+### Root Cause Analysis
+1. **Backend**: Fixed legacy `isPaused`/`startedAt` fields to use canonical `GameTimerState`
+2. **Frontend**: Still has legacy timer references and incorrect type usage
+3. **Tests**: All timer tests use legacy fields and removed `timer` property from `StudentGameUIState`
+4. **Live Page**: Still references non-existent `correctAnswers` field (security vulnerability)
+
+### Actions Taken
+- **Backend**: Removed legacy timer format from `sharedLiveHandler.ts` and `joinGame.ts`
+- **Shared Types**: Updated `GameTimerUpdatePayload` to use canonical `GameTimerState` only
+- **TypeScript**: 53 compilation errors identified across 6 files
+
+### Next Steps
+1. Fix live page security issue: Remove `correctAnswers` references
+2. Fix test files: Update all timer tests to use new system
+3. Remove legacy `isPaused` usage in `useGameTimer.ts`
+4. Complete validation of single timer system
+
+### Files Modified
+- `/home/aflesch/mathquest/app/shared/types/core/timer.ts`
+- `/home/aflesch/mathquest/app/backend/src/sockets/handlers/sharedLiveHandler.ts`
+- `/home/aflesch/mathquest/app/backend/src/sockets/handlers/game/joinGame.ts`

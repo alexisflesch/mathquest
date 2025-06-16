@@ -128,23 +128,8 @@ export interface TimerUpdatePayload {
  * Specific payload for game timer socket events
  */
 export interface GameTimerUpdatePayload {
-    /** Timer object with state */
-    timer: {
-        /** Timer status */
-        status?: 'play' | 'pause' | 'stop';
-        /** Whether timer is paused (legacy field) */
-        isPaused?: boolean;
-        /** Time remaining in milliseconds (canonical) */
-        timeLeftMs?: number;
-        /** When timer was started (timestamp) */
-        startedAt?: number;
-        /** Timer duration in milliseconds */
-        durationMs?: number;
-        /** Current timestamp */
-        timestamp?: number;
-        /** Local time left (frontend-specific) */
-        localTimeLeftMs?: number;
-    };
+    /** Timer object with canonical GameTimerState format */
+    timer: GameTimerState;
     /** Question UID associated with the timer */
     questionUid?: string;
 }

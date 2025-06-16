@@ -418,7 +418,7 @@ export function useGameTimer(
                 'gameTimerUpdate.timer': gameTimerUpdate.timer,
                 'gameTimerUpdate.questionUid': gameTimerUpdate.questionUid,
                 'gameTimerUpdate.timer.timeLeftMs': gameTimerUpdate.timer?.timeLeftMs,
-                'gameTimerUpdate.timer.isPaused': gameTimerUpdate.timer?.isPaused,
+                'gameTimerUpdate.timer.status': gameTimerUpdate.timer?.status,
                 'typeof gameTimerUpdate.timer?.timeLeftMs': typeof gameTimerUpdate.timer?.timeLeftMs,
                 'JSON.stringify(gameTimerUpdate)': JSON.stringify(gameTimerUpdate)
             });

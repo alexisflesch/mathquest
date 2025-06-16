@@ -3,14 +3,11 @@ import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
-import { useStudentTimer } from '@/hooks/useGameTimer';
 
 // Import shared types - organized by module
 import type {
     Question,
-    PlayMode,
-    TimerStatus,
-    GameTimerState
+    PlayMode
 } from '@shared/types';
 
 import type {
@@ -22,8 +19,6 @@ import type {
     ErrorPayload,
     GameAlreadyPlayedPayload,
     QuestionData,
-    TimerUpdatePayload,
-    GameTimerUpdatePayload,
     GameStateUpdatePayload
 } from '@shared/types/socketEvents';
 
@@ -40,8 +35,6 @@ import {
     isParticipantData,
     isErrorPayload,
     isGameJoinedPayload,
-    isTimerUpdatePayload,
-    isGameTimerUpdatePayload,
     createSafeEventHandler,
     validateEventPayload,
     isLiveQuestionPayload,
@@ -102,9 +95,6 @@ export interface StudentGameUIState {
     gameMode?: PlayMode;
     linkedQuizId?: string | null;
 
-    // Timer state using shared types
-    timer: GameTimerState | null;
-
     // Game status aligned with shared types
     gameStatus: 'pending' | 'active' | 'paused' | 'completed';
 }
@@ -151,7 +141,6 @@ export function useStudentGameSocket({
         currentQuestion: null,
         questionIndex: 0,
         totalQuestions: 0,
-        timer: null,
         gameStatus: 'pending',
         answered: false,
         connectedToRoom: false,
@@ -164,25 +153,6 @@ export function useStudentGameSocket({
     });
 
     // Use unified timer system for student countdown
-    const gameTimer = useStudentTimer(socket, {
-        autoStart: true,
-        smoothCountdown: true,
-        showMilliseconds: false,
-        enableLocalAnimation: true
-    });
-
-    // Sync unified timer state with game state using shared types
-    useEffect(() => {
-        setGameState(prev => ({
-            ...prev,
-            timer: gameTimer.timerState, // Use complete GameTimerState
-            gameStatus: gameTimer.timerState.status === 'play' ? 'active' :
-                gameTimer.timerState.status === 'pause' ? 'paused' :
-                    gameTimer.timerState.status === 'stop' && gameTimer.timerState.timeLeftMs === 0 ? 'pending' :
-                        prev.gameStatus
-        }));
-    }, [gameTimer.timerState]);
-
     // --- Socket Connection ---
     useEffect(() => {
         if (!accessCode || !userId || !username) {
@@ -260,20 +230,6 @@ export function useStudentGameSocket({
         socket.on('game_question', createSafeEventHandler<LiveQuestionPayload>((payload) => {
             logger.info('Received game_question', payload);
 
-            // Sync timer immediately if present in payload (for late joiners)
-            if (payload.timer) {
-                // Convert GameTimerState to TimerUpdatePayload format for syncWithBackend
-                const timerUpdate: TimerUpdatePayload = {
-                    timeLeftMs: payload.timer.timeLeftMs,
-                    running: payload.timer.status === 'play',
-                    status: payload.timer.status,
-                    durationMs: payload.timer.durationMs,
-                    questionUid: payload.timer.questionUid || undefined
-                };
-                gameTimer.syncWithBackend(timerUpdate);
-                logger.info('Synced timer from game_question payload', timerUpdate);
-            }
-
             setGameState(prev => {
                 const newState = {
                     ...prev,
@@ -285,8 +241,7 @@ export function useStudentGameSocket({
                     phase: 'question' as const,
                     feedbackRemaining: null,
                     correctAnswers: null,
-                    connectedToRoom: true,
-                    timerStatus: payload.timer?.status || 'play'
+                    connectedToRoom: true
                 };
 
                 logger.info('=== QUESTION STATE UPDATED ===', {
@@ -299,19 +254,7 @@ export function useStudentGameSocket({
                 return newState;
             });
         }, isLiveQuestionPayload, 'game_question'));
-        socket.on('timer_update', createSafeEventHandler<TimerUpdatePayload>((data) => {
-            gameTimer.syncWithBackend(data);
-            if (typeof data.timeLeftMs === 'number' && data.timeLeftMs !== null) {
-                setGameState(prev => ({
-                    ...prev,
-                    gameStatus: data.running && !!data.timeLeftMs && data.timeLeftMs > 0 ? 'active' : 'pending'
-                }));
-            }
-        }, isTimerUpdatePayload, 'timer_update'));
-        socket.on('game_timer_updated', createSafeEventHandler<GameTimerUpdatePayload>((data) => {
-            gameTimer.syncWithBackend(data);
-            setGameState(prev => ({ ...prev }));
-        }, isGameTimerUpdatePayload, 'game_timer_updated'));
+
         socket.on('game_state_update', createSafeEventHandler<GameStateUpdatePayload>((data) => {
             setGameState(prev => ({
                 ...prev,

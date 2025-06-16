@@ -29,6 +29,7 @@ import type { TournamentQuestion } from '@shared/types';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
 import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
+import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
@@ -115,6 +116,13 @@ export default function LiveGamePage() {
             setSnackbarMessage("Réponse enregistrée");
             setSnackbarOpen(true);
         }
+    });
+
+    // Modern timer hook integration
+    const timer = useSimpleTimer({
+        accessCode: typeof code === 'string' ? code : '',
+        socket,
+        role: 'student'
     });
 
     // Local UI state
@@ -314,12 +322,18 @@ export default function LiveGamePage() {
     useEffect(() => {
         if (process.env.NODE_ENV === 'development') {
             logger.debug('Timer debug:', {
-                gameStateTimer: gameState.timer,
+                newSimpleTimer: {
+                    timeLeftMs: timer.timeLeftMs,
+                    status: timer.status,
+                    isActive: timer.isActive,
+                    durationMs: timer.durationMs,
+                    questionUid: timer.questionUid
+                },
                 gameMode,
                 isTimerShown: gameMode !== 'practice'
             });
         }
-    }, [gameState.timer, gameMode]);
+    }, [timer, gameMode]);
 
     // Convert enhanced socket hook state to legacy QuestionCard format
     const currentQuestion: TournamentQuestion | null = useMemo(() => {
@@ -336,14 +350,14 @@ export default function LiveGamePage() {
         return {
             code: typeof code === 'string' ? code : '',
             question: convertedQuestion,
-            remainingTime: gameState.timer?.timeLeftMs ? Math.ceil(gameState.timer.timeLeftMs / 1000) : undefined,
+            remainingTime: timer.timeLeftMs ? Math.ceil(timer.timeLeftMs / 1000) : undefined,
             questionIndex: gameState.questionIndex,
             totalQuestions: gameState.totalQuestions,
             questionState: gameState.gameStatus === 'paused' ? 'paused' :
                 gameState.gameStatus === 'active' ? 'active' : 'stopped',
             tournoiState: 'running'
         };
-    }, [gameState, code]);    // Determine if component should be readonly (showing answers)
+    }, [gameState, code, timer]);    // Determine if component should be readonly (showing answers)
     const isReadonly = useMemo(() => {
         return gameState.phase === 'show_answers' ||
             gameState.gameStatus === 'completed' ||
@@ -371,11 +385,7 @@ export default function LiveGamePage() {
                         duration={feedbackDuration}
                         onClose={() => setShowFeedbackOverlay(false)}
                         isCorrect={gameState.lastAnswerFeedback?.correct}
-                        correctAnswers={gameState.currentQuestion?.correctAnswers ?
-                            (gameState.currentQuestion.answerOptions || [])?.map((_: string, index: number) =>
-                                gameState.currentQuestion?.correctAnswers?.[index] || false
-                            ) : undefined
-                        }
+                        correctAnswers={gameState.correctAnswers || undefined}
                         answerOptions={gameState.currentQuestion?.answerOptions}
                         showTimer={gameMode !== 'practice'} // Hide timer for practice mode
                         mode={gameMode}
@@ -388,7 +398,7 @@ export default function LiveGamePage() {
             <div className={`card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6 relative${showFeedbackOverlay ? " blur-sm" : ""}`}>
                 {/* Show timer only for tournament/quiz modes */}
                 {gameMode !== 'practice' && (
-                    <TournamentTimer timerS={gameState.timer?.timeLeftMs ? Math.ceil(gameState.timer.timeLeftMs / 1000) : null} isMobile={isMobile} />
+                    <TournamentTimer timerS={timer.timeLeftMs ? Math.ceil(timer.timeLeftMs / 1000) : null} isMobile={isMobile} />
                 )}
 
                 <MathJaxWrapper>

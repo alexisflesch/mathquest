@@ -15,7 +15,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
-import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { TEACHER_EVENTS, GAME_EVENTS } from '@shared/types/socket/events';
 import type {
     GameTimerState,
     TimerStatus,
@@ -26,8 +26,8 @@ import type {
 const logger = createLogger('SimpleTimer');
 
 export interface SimpleTimerConfig {
-    /** Game ID for the timer */
-    gameId: string;
+    /** Game ID for the timer (optional for student role) */
+    gameId?: string;
     /** Access code for the game */
     accessCode: string;
     /** Socket connection */
@@ -123,6 +123,10 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
 
             // Start local countdown if timer is playing
             if (newState.status === 'play' && newState.timeLeftMs > 0) {
+                logger.info('[SimpleTimer] Starting local countdown:', {
+                    timeLeftMs: newState.timeLeftMs,
+                    status: newState.status
+                });
                 startLocalCountdown(newState.timeLeftMs, now);
             } else {
                 stopLocalCountdown();
@@ -134,13 +138,21 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED
             : role === 'projection'
                 ? 'projection_timer_updated'  // Backend sends this
-                : 'game_timer_updated';       // Backend sends this for students
+                : GAME_EVENTS.GAME_TIMER_UPDATED;       // Backend sends this for students
 
         socket.on(eventName, handleTimerUpdate);
+
+        // For students, also listen to the alternative timer_update event
+        if (role === 'student') {
+            socket.on(GAME_EVENTS.TIMER_UPDATE, handleTimerUpdate);
+        }
 
         // Cleanup
         return () => {
             socket.off(eventName, handleTimerUpdate);
+            if (role === 'student') {
+                socket.off(GAME_EVENTS.TIMER_UPDATE, handleTimerUpdate);
+            }
             stopLocalCountdown();
         };
     }, [socket, role]);
@@ -148,6 +160,11 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     // Local countdown management
     const startLocalCountdown = useCallback((initialTime: number, startTimestamp: number) => {
         stopLocalCountdown(); // Clear any existing countdown
+
+        logger.info('[SimpleTimer] Starting countdown interval:', {
+            initialTime,
+            currentTime: Date.now()
+        });
 
         localTimerRef.current = setInterval(() => {
             const now = Date.now();
@@ -158,6 +175,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
 
             // Stop countdown when it reaches zero
             if (remaining <= 0) {
+                logger.info('[SimpleTimer] Countdown reached zero, stopping');
                 stopLocalCountdown();
 
                 // For teachers, automatically stop the timer on the backend when it expires

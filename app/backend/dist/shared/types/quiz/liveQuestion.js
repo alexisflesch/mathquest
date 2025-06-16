@@ -24,11 +24,10 @@ function filterQuestionForClient(questionObject) {
         text: questionObject.text,
         answerOptions: questionObject.answerOptions || [],
         // Additional properties for frontend compatibility
-        explanation: questionObject.explanation || undefined, // Convert null to undefined for type consistency
-        correctAnswers: questionObject.correctAnswers,
         timeLimit: questionObject.timeLimit,
         gradeLevel: questionObject.gradeLevel,
         difficulty: questionObject.difficulty,
         themes: questionObject.themes,
+        // Note: correctAnswers and explanation are intentionally excluded for security
     };
 }

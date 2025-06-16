@@ -12,7 +12,8 @@ import {
     ClientToServerEvents,
     ServerToClientEvents,
     InterServerEvents,
-    SocketData
+    SocketData,
+    GameTimerUpdatePayload
 } from '@shared/types/socketEvents';
 import {
     joinGamePayloadSchema,
@@ -216,9 +217,9 @@ export function joinGameHandler(
             logger.info({ gameJoinedPayload }, 'Emitting game_joined');
             socket.emit('game_joined', gameJoinedPayload);
 
-            // For live tournaments (not deferred), check if game is active and send current state to late joiners
-            if (!gameInstance.isDiffered && gameInstance.status === 'active' && gameInstance.playMode === 'tournament') {
-                logger.info({ accessCode, userId }, 'Live tournament is active, sending current state to late joiner');
+            // For live games (quiz and tournament, not deferred), check if game is active and send current state to late joiners
+            if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
+                logger.info({ accessCode, userId, playMode: gameInstance.playMode }, 'Live game is active, sending current state to late joiner');
 
                 try {
                     const currentGameState = await gameStateService.getFullGameState(accessCode);
@@ -250,15 +251,26 @@ export function joinGameHandler(
 
                                 // Calculate remaining time for late joiner
                                 let actualTimer = gameState.timer;
-                                if (gameState.timer && gameState.timer.status === 'play' && gameState.timer.timestamp) {
+                                if (gameState.timer && gameState.timer.timestamp && gameState.timer.durationMs) {
                                     const elapsed = Date.now() - gameState.timer.timestamp;
-                                    const timeLeftMs = Math.max(0, gameState.timer.timeLeftMs - elapsed);
+                                    const timeLeftMs = Math.max(0, gameState.timer.durationMs - elapsed);
 
+                                    // Always recalculate based on original duration, not current timeLeftMs
+                                    // This ensures late joiners get accurate remaining time even if timer expired globally
                                     actualTimer = {
                                         ...gameState.timer,
                                         timeLeftMs,
-                                        timestamp: Date.now()
+                                        timestamp: Date.now(),
+                                        // Status must be consistent with remaining time
+                                        status: timeLeftMs > 0 ? 'play' : 'stop'
                                     };
+
+                                    logger.info({
+                                        originalTimer: gameState.timer,
+                                        elapsed,
+                                        calculatedTimeLeft: timeLeftMs,
+                                        actualTimer
+                                    }, '[TIMER_FIX] Recalculated timer for late joiner');
                                 }
 
                                 // Send current question with actual remaining time
@@ -266,16 +278,20 @@ export function joinGameHandler(
                                     question: filteredQuestion,
                                     questionIndex: gameState.currentQuestionIndex, // Use shared type field name
                                     totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length, // Add total questions count
-                                    feedbackWaitTime: currentQuestion.feedbackWaitTime || 1.5,
+                                    feedbackWaitTime: currentQuestion.feedbackWaitTime || (gameInstance.playMode === 'tournament' ? 1.5 : 1),
                                     timer: actualTimer
                                 };
 
                                 logger.info({
                                     accessCode,
                                     userId,
+                                    playMode: gameInstance.playMode,
                                     questionIndex: gameState.currentQuestionIndex,
                                     originalTimeLeft: gameState.timer?.timeLeftMs,
+                                    originalStatus: gameState.timer?.status,
                                     actualTimeLeft: actualTimer?.timeLeftMs,
+                                    actualStatus: actualTimer?.status,
+                                    elapsed: gameState.timer?.timestamp ? Date.now() - gameState.timer.timestamp : 'no timestamp',
                                     payload: lateJoinerQuestionPayload
                                 }, 'Sending current question to late joiner');
 
@@ -283,13 +299,9 @@ export function joinGameHandler(
 
                                 // Also send timer update
                                 if (actualTimer) {
-                                    const timerUpdatePayload = {
-                                        timer: {
-                                            isPaused: actualTimer.status === 'pause',
-                                            timeLeftMs: actualTimer.timeLeftMs,
-                                            startedAt: actualTimer.timestamp || undefined,
-                                            durationMs: actualTimer.durationMs
-                                        }
+                                    const timerUpdatePayload: GameTimerUpdatePayload = {
+                                        timer: actualTimer,
+                                        questionUid: actualTimer.questionUid ?? undefined
                                     };
                                     socket.emit('game_timer_updated', timerUpdatePayload);
                                 }
@@ -360,10 +372,12 @@ export function joinGameHandler(
                                 status: 'active' as const,
                                 currentQuestionIndex: 0,
                                 timer: {
-                                    ...currentState.gameState.timer,
-                                    startedAt: Date.now(),
-                                    duration: (actualQuestions[0]?.timeLimit || 30) * 1000,
-                                    isPaused: false
+                                    status: 'play' as const,
+                                    timeLeftMs: (actualQuestions[0]?.timeLimit || 30) * 1000,
+                                    durationMs: (actualQuestions[0]?.timeLimit || 30) * 1000,
+                                    questionUid: actualQuestions[0]?.uid || null,
+                                    timestamp: Date.now(),
+                                    localTimeLeftMs: null
                                 }
                             };
                             await gameStateService.updateGameState(accessCode, updatedState);

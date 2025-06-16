@@ -15,13 +15,12 @@ export interface FilteredQuestion {
     text: string;             // The question text
     questionType: string;     // Question type (choix_simple, choix_multiple, etc.) - CANONICAL FIELD NAME
     answerOptions: string[];  // Answer options - CANONICAL FIELD NAME
-    // Additional properties required by frontend components
-    explanation?: string;       // Question explanation for feedback
-    correctAnswers?: boolean[]; // Correct answer flags (optional, for feedback)
+    // Additional properties required by frontend components (non-sensitive)
     timeLimit?: number;         // Time limit for this question
     gradeLevel?: string;        // Grade level of the question
     difficulty?: number;        // Difficulty rating
     themes?: string[];          // Question themes/categories
+    // Note: correctAnswers and explanation are intentionally excluded for security
 }
 
 /**
@@ -58,11 +57,10 @@ export function filterQuestionForClient(questionObject: any): FilteredQuestion {
         text: questionObject.text,
         answerOptions: questionObject.answerOptions || [],
         // Additional properties for frontend compatibility
-        explanation: questionObject.explanation || undefined, // Convert null to undefined for type consistency
-        correctAnswers: questionObject.correctAnswers,
         timeLimit: questionObject.timeLimit,
         gradeLevel: questionObject.gradeLevel,
         difficulty: questionObject.difficulty,
         themes: questionObject.themes,
+        // Note: correctAnswers and explanation are intentionally excluded for security
     };
 }

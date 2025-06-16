@@ -238,34 +238,20 @@ describe('useStudentGameSocket - Connection', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        // Connect and start a timer scenario
+        // Connect and start a game scenario
         act(() => {
             connectHandler?.();
         });
 
-        // Simulate starting a timer by setting initial state
-        act(() => {
-            // Timer is now a GameTimerState object, not a number
-            result.current.gameState.timer = {
-                status: 'play',
-                timeLeftMs: 30000,
-                durationMs: 30000,
-                questionUid: null,
-                timestamp: Date.now(),
-                localTimeLeftMs: 30000,
-                isRunning: true
-            };
-        });
+        // Timer is now managed by useSimpleTimer hook separately
+        // No need to test timer state in this connection test
 
-        // Disconnect should clear any timers
+        // Disconnect should clear any game state
         act(() => {
             disconnectHandler?.('transport close');
         });
 
-        // Fast-forward time to check timer cleanup
-        act(() => {
-            jest.advanceTimersByTime(5000);
-        });
+        // Connection cleanup is handled by the hook itself
 
         await waitFor(() => {
             expect(result.current.connected).toBe(false);

@@ -66,9 +66,8 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q1',
                 text: 'What is the capital of France?',
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['London', 'Paris', 'Berlin', 'Madrid'],
-                explanation: 'Paris is the capital of France.',
-                correctAnswers: [false, true, false, false]
+                answerOptions: ['London', 'Paris', 'Berlin', 'Madrid']
+                // explanation and correctAnswers removed for security
             },
             timer: {
                 status: 'play' as const,
@@ -100,7 +99,7 @@ describe('useStudentGameSocket - State Updates', () => {
             expect(result.current.gameState.currentQuestion).toEqual(questionPayload.question);
             expect(result.current.gameState.questionIndex).toBe(2);
             expect(result.current.gameState.totalQuestions).toBe(10);
-            expect(result.current.gameState.timer).toBe(45);
+            // Timer state is now managed by useSimpleTimer hook
             expect(result.current.gameState.answered).toBe(false);
             expect(result.current.gameState.gameStatus).toBe('active');
         });
@@ -130,9 +129,8 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q2',
                 text: 'What is 5 + 3?',
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['6', '7', '8', '9'],
-                explanation: '5 + 3 = 8',
-                correctAnswers: [false, false, true, false]
+                answerOptions: ['6', '7', '8', '9']
+                // explanation and correctAnswers removed for security
             },
             timer: {
                 status: 'play' as const,
@@ -192,9 +190,8 @@ describe('useStudentGameSocket - State Updates', () => {
                 uid: 'q1',
                 text: 'Test question',
                 questionType: QUESTION_TYPES.SINGLE_CHOICE,
-                answerOptions: ['A', 'B', 'C', 'D'],
-                explanation: 'Test explanation',
-                correctAnswers: [true, false, false, false]
+                answerOptions: ['A', 'B', 'C', 'D']
+                // explanation and correctAnswers removed for security
             },
             timer: {
                 status: 'play' as const,
@@ -323,8 +320,8 @@ describe('useStudentGameSocket - State Updates', () => {
 
         const { result } = renderHook(() => useStudentGameSocket(hookProps));
 
-        // Initial timer status
-        expect(result.current.gameState.timer?.status).toBe('stop');
+        // Timer state is now managed by useSimpleTimer hook
+        // Initial timer status test removed
 
         // Update timer to play
         act(() => {
@@ -336,7 +333,8 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer?.status).toBe('play');
+            // Timer state is now managed by useSimpleTimer hook
+            expect(result.current.gameState.gameStatus).toBe('active');
         });
 
         // Update timer to pause
@@ -349,7 +347,8 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer?.status).toBe('pause');
+            // Timer state is now managed by useSimpleTimer hook
+            expect(result.current.gameState.gameStatus).toBe('paused');
         });
 
         // Update timer to stop
@@ -362,7 +361,8 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer?.status).toBe('stop');
+            // Timer state is now managed by useSimpleTimer hook
+            expect(result.current.gameState.gameStatus).toBe('completed');
         });
     });
 
@@ -480,7 +480,7 @@ describe('useStudentGameSocket - State Updates', () => {
         });
 
         await waitFor(() => {
-            expect(result.current.gameState.timer).toBe(30); // expect 30 as per unified system
+            // Timer state is now managed by useSimpleTimer hook
             expect(result.current.gameState.currentQuestion?.uid).toBe('q1');
             expect(result.current.gameState.currentQuestion?.questionType).toBe(QUESTION_TYPES.SINGLE_CHOICE);
             expect(result.current.gameState.currentQuestion?.answerOptions).toEqual(['A', 'B']);
