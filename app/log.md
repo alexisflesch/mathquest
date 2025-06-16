@@ -744,3 +744,46 @@ TypeScript compilation revealed **53 errors** across multiple files due to incom
 - `/home/aflesch/mathquest/app/shared/types/core/timer.ts`
 - `/home/aflesch/mathquest/app/backend/src/sockets/handlers/sharedLiveHandler.ts`
 - `/home/aflesch/mathquest/app/backend/src/sockets/handlers/game/joinGame.ts`
+
+## 2025-06-16 16:45 - **PHASE 4: Legacy Timer System Elimination Started**
+
+### **CRITICAL ACTION: Modernizing useTeacherQuizSocket**
+**Timestamp:** 2025-06-16 16:45  
+**Checklist Item:** Phase 4.1 - Core Legacy Timer Elimination  
+**What:** Starting replacement of useUnifiedGameManager with useSimpleTimer in useTeacherQuizSocket  
+**Why:** useTeacherQuizSocket currently uses legacy gameManager.gameState.timer.* fields which maintain dual timer system  
+**How:** Replace useUnifiedGameManager with direct useSimpleTimer + useGameSocket usage  
+**Files:** `/home/aflesch/mathquest/app/frontend/src/hooks/useTeacherQuizSocket.ts`
+
+**Evidence of Legacy Timer Usage:**
+- `timerStatus: gameManager.gameState.timer.status` (line 293)
+- `timerQuestionUid: gameManager.gameState.timer.questionUid` (line 294)  
+- `timeLeftMs: gameManager.gameState.timer.timeLeftMs` (line 295)
+
+**Consumers Found:**
+- `/app/debug/timer/page.tsx` - Uses timer fields from hook
+- Various test files - Will need updating
+- Teacher dashboard already uses useSimpleTimer directly ✅
+
+**Strategy:**
+Following .instructions.md zero tolerance policy:
+- ❌ NO backward compatibility 
+- ❌ NO migration layers
+- ✅ Complete rewrite with modern patterns
+- ✅ Use canonical shared types only
+
+### **STRATEGIC PIVOT: Modernization Approach Change**
+**Timestamp:** 2025-06-16 17:15  
+**Issue:** Complete rewrite of useTeacherQuizSocket is complex due to 50+ gameManager references  
+**Decision:** Instead of full rewrite, target the specific legacy timer fields first  
+
+**New Strategy:**
+1. **First**: Just fix the timer-related return values (the core legacy timer issue)  
+2. **Later**: Full modernization can be separate phase
+
+**Target Changes:**
+- `timerStatus: gameManager.gameState.timer.status` → `timerStatus: timer.status`
+- `timerQuestionUid: gameManager.gameState.timer.questionUid` → `timerQuestionUid: timer.questionUid`  
+- `timeLeftMs: gameManager.gameState.timer.timeLeftMs` → `timeLeftMs: timer.timeLeftMs`
+
+**This eliminates the legacy timer fields exposure while keeping gameManager for now.**

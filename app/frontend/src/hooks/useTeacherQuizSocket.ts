@@ -1,13 +1,14 @@
 /**
  * Teacher Quiz Socket Hook
  * 
- * Provides teacher quiz management functionality using the unified system
- * for timer and socket management with clean, production-ready code.
+ * Provides teacher quiz management functionality using modern timer system
+ * with useSimpleTimer instead of legacy UnifiedGameManager.
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { createLogger } from '@/clientLogger';
-import { useUnifiedGameManager } from './useUnifiedGameManager';
+import { useSimpleTimer } from './useSimpleTimer';
+import { useGameSocket } from './useGameSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Import core types
@@ -32,209 +33,179 @@ const logger = createLogger('useTeacherQuizSocket');
  * @returns Complete teacher quiz interface
  */
 export function useTeacherQuizSocket(accessCode: string | null, token: string | null, quizId?: string | null) {
-    // Use the unified game manager internally
-    const gameManager = useUnifiedGameManager({
-        role: 'teacher',
-        gameId: quizId || null,
-        token,
-        accessCode,
-        timerConfig: {
-            autoStart: false,
-            smoothCountdown: false,
-            showMilliseconds: false,
-            enableLocalAnimation: false
-        }
+    // Use modern hooks instead of legacy UnifiedGameManager
+    const socket = useGameSocket('teacher', quizId || null);
+
+    const timer = useSimpleTimer({
+        gameId: quizId || undefined,
+        accessCode: accessCode || '',
+        socket: socket.socket,
+        role: 'teacher'
     });
 
     // State management
     const [quizState, setQuizState] = useState<QuizState | null>(null);
-    const [localTimeLeftMs, setLocalTimeLeft] = useState<number | null>(null);
+    const [connectedCount, setConnectedCount] = useState<number>(0);
 
-    // Sync unified state to QuizState format
+    // Update quiz state based on timer state changes
     useEffect(() => {
-        const unifiedState = gameManager.gameState;
-
-        if (unifiedState.gameId) {
+        if (timer.questionUid || timer.timeLeftMs !== null) {
             setQuizState(prev => {
+                if (!prev) return null;
+
                 const newState = {
-                    currentQuestionidx: unifiedState.currentQuestionIndex,
-                    currentQuestionUid: unifiedState.currentQuestionUid || null,
-                    questions: prev?.questions || [],
+                    ...prev,
                     chrono: {
-                        timeLeftMs: unifiedState.timer.timeLeftMs,
-                        running: unifiedState.isTimerRunning,
-                        status: unifiedState.timer.status
+                        timeLeftMs: timer.timeLeftMs || 0,
+                        running: timer.status === 'play',
+                        status: timer.status
                     },
-                    locked: prev?.locked ?? false,
-                    ended: unifiedState.gameStatus === 'completed',
-                    stats: prev?.stats || {},
-                    profSocketId: gameManager.socket.instance?.id || null,
-                    timerStatus: unifiedState.timer.status,
-                    timerQuestionUid: unifiedState.timer.questionUid,
-                    timerTimeLeft: unifiedState.timer.timeLeftMs,
-                    timerTimestamp: unifiedState.timer.timestamp ?? undefined,
+                    timerStatus: timer.status,
+                    timerQuestionUid: timer.questionUid,
+                    timerTimeLeft: timer.timeLeftMs || 0
                 };
 
                 // Only update if there are meaningful changes
-                if (!prev ||
-                    prev.currentQuestionidx !== newState.currentQuestionidx ||
-                    prev.chrono.timeLeftMs !== newState.chrono.timeLeftMs ||
+                if (prev.chrono.timeLeftMs !== newState.chrono.timeLeftMs ||
                     prev.chrono.running !== newState.chrono.running ||
-                    prev.ended !== newState.ended ||
                     prev.timerStatus !== newState.timerStatus ||
-                    prev.timerQuestionUid !== newState.timerQuestionUid ||
-                    prev.profSocketId !== newState.profSocketId) {
+                    prev.timerQuestionUid !== newState.timerQuestionUid) {
                     return newState;
                 }
                 return prev;
             });
         }
-    }, [gameManager.gameState.gameId, gameManager.gameState.currentQuestionIndex,
-    gameManager.gameState.timer.timeLeftMs, gameManager.gameState.isTimerRunning,
-    gameManager.gameState.gameStatus, gameManager.gameState.timer.status,
-    gameManager.gameState.timer.questionUid, gameManager.socket.instance?.id]);
+    }, [timer.timeLeftMs, timer.status, timer.questionUid]);
 
-    // Sync local timer display
+    // Set up socket event handlers
     useEffect(() => {
-        const displayTime = gameManager.timer.getDisplayTime();
-        if (displayTime !== localTimeLeftMs) {
-            setLocalTimeLeft(displayTime);
-        }
-    }, [gameManager.timer.getDisplayTime, localTimeLeftMs]);
-
-    // Set up additional event handlers
-    useEffect(() => {
-        if (!gameManager.socket.instance) return;
+        if (!socket.socket) return;
 
         const cleanupFunctions: (() => void)[] = [];
 
         // Game control state handler
-        if (gameManager.socket.instance) {
-            const gameControlStateHandler = (state: any) => {
-                logger.debug('Received game_control_state', state);
-                setQuizState(prev => ({
-                    ...prev,
-                    ...state,
-                    chrono: {
-                        timeLeftMs: state.chrono?.timeLeft ?? state.timerTimeLeft ?? 0,
-                        running: state.chrono?.running ?? (state.timerStatus === 'play')
-                    }
-                }));
-            };
+        const gameControlStateHandler = (state: any) => {
+            logger.debug('Received game_control_state', state);
+            setQuizState(prev => ({
+                ...prev,
+                ...state,
+                chrono: {
+                    timeLeftMs: state.chrono?.timeLeft ?? state.timerTimeLeft ?? 0,
+                    running: state.chrono?.running ?? (state.timerStatus === 'play'),
+                    status: state.timerStatus || 'stop'
+                }
+            }));
+        };
 
-            gameManager.socket.instance.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents, gameControlStateHandler);
-            cleanupFunctions.push(() => {
-                gameManager.socket.instance?.off(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents, gameControlStateHandler);
-            });
-        }
+        socket.socket.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents, gameControlStateHandler);
+        cleanupFunctions.push(() => {
+            socket.socket?.off(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents, gameControlStateHandler);
+        });
 
         // Stats update handler
-        if (gameManager.socket.instance) {
-            const statsUpdateHandler = (stats: any) => {
-                logger.debug('Received stats_update', stats);
-                setQuizState(prev => prev ? { ...prev, stats } : prev);
-            };
+        const statsUpdateHandler = (stats: any) => {
+            logger.debug('Received stats_update', stats);
+            setQuizState(prev => prev ? { ...prev, stats } : prev);
+        };
 
-            gameManager.socket.instance.on('stats_update' as keyof ServerToClientEvents, statsUpdateHandler);
-            cleanupFunctions.push(() => {
-                gameManager.socket.instance?.off('stats_update' as keyof ServerToClientEvents, statsUpdateHandler);
-            });
-        }
+        socket.socket.on('stats_update' as keyof ServerToClientEvents, statsUpdateHandler);
+        cleanupFunctions.push(() => {
+            socket.socket?.off('stats_update' as keyof ServerToClientEvents, statsUpdateHandler);
+        });
 
         // Answers locked handler
-        if (gameManager.socket.instance) {
-            const answersLockedHandler = (...args: unknown[]) => {
-                const data = args[0] as { locked: boolean };
-                logger.debug('Received answers_locked', data);
-                setQuizState(prev => prev ? { ...prev, locked: data.locked } : prev);
-            };
+        const answersLockedHandler = (...args: unknown[]) => {
+            const data = args[0] as { locked: boolean };
+            logger.debug('Received answers_locked', data);
+            setQuizState(prev => prev ? { ...prev, locked: data.locked } : prev);
+        };
 
-            gameManager.socket.instance.on('answers_locked' as keyof ServerToClientEvents, answersLockedHandler);
-            cleanupFunctions.push(() => {
-                gameManager.socket.instance?.off('answers_locked' as keyof ServerToClientEvents, answersLockedHandler);
-            });
-        }
+        socket.socket.on('answers_locked' as keyof ServerToClientEvents, answersLockedHandler);
+        cleanupFunctions.push(() => {
+            socket.socket?.off('answers_locked' as keyof ServerToClientEvents, answersLockedHandler);
+        });
 
-        // Dashboard timer updated handler (ONLY source of timer state changes)
-        if (gameManager.socket.instance) {
-            const dashboardTimerHandler = (payload: any) => {
-                logger.debug('Received dashboard_timer_updated', payload);
-                if (payload && payload.timer) {
-                    // Use the canonical sync method instead of manual timer manipulation
-                    // This ensures consistent timer state management across all timer events
-                    gameManager.timer.syncWithBackend(payload);
-                }
-            };
-            gameManager.socket.instance.on('dashboard_timer_updated' as keyof ServerToClientEvents, dashboardTimerHandler);
-            cleanupFunctions.push(() => {
-                gameManager.socket.instance?.off('dashboard_timer_updated' as keyof ServerToClientEvents, dashboardTimerHandler);
-            });
-        }
+        // Connected count updates
+        const connectedCountHandler = (count: number) => {
+            logger.debug('Received connected_count', count);
+            setConnectedCount(count);
+        };
+
+        socket.socket.on('connected_count' as keyof ServerToClientEvents, connectedCountHandler);
+        cleanupFunctions.push(() => {
+            socket.socket?.off('connected_count' as keyof ServerToClientEvents, connectedCountHandler);
+        });
 
         return () => {
             cleanupFunctions.forEach(cleanup => cleanup());
         };
-    }, [gameManager.socket.instance]);
+    }, [socket.socket]);
 
     // Action functions
     const emitSetQuestion = useCallback((questionUid: string, duration?: number) => {
         logger.info('emitSetQuestion called', { questionUid, duration });
 
-        if (gameManager.actions.setQuestion) {
-            gameManager.actions.setQuestion(questionUid, duration);
+        if (socket.socket && quizId) {
+            socket.socket.emit('set_question', {
+                gameId: quizId,
+                questionUid
+            });
         }
-
-        // DO NOT automatically start timer - let backend control timer state
-        // Remove: if (duration) { gameManager.socket.emitTimerAction('start', duration); }
-    }, [gameManager.actions.setQuestion]);
+    }, [socket.socket, quizId]);
 
     const emitEndQuiz = useCallback(() => {
         logger.info('emitEndQuiz called');
 
-        if (gameManager.actions.endGame) {
-            gameManager.actions.endGame();
+        if (socket.socket && quizId && accessCode) {
+            socket.socket.emit('end_game', {
+                accessCode: accessCode,
+                gameId: quizId
+            });
         }
-    }, [gameManager.actions.endGame]);
+    }, [socket.socket, quizId]);
 
     const emitPauseQuiz = useCallback(() => {
         logger.info('emitPauseQuiz called');
-        // DO NOT update local timer state optimistically - let backend handle it
-        gameManager.socket.emitTimerAction(
-            'pause',
-            accessCode!,
-            gameManager.gameState.currentQuestionUid || undefined
-        );
-    }, [gameManager.socket.emitTimerAction, accessCode, gameManager.gameState.currentQuestionUid]);
+
+        if (socket.socket && accessCode) {
+            socket.socket.emit('quiz_timer_action', {
+                accessCode: accessCode,
+                action: 'pause',
+                questionUid: timer.questionUid || undefined
+            });
+        }
+    }, [socket.socket, accessCode, timer.questionUid]);
 
     const emitResumeQuiz = useCallback(() => {
         logger.info('emitResumeQuiz called');
-        // DO NOT update local timer state optimistically - let backend handle it
-        gameManager.socket.emitTimerAction(
-            'resume',
-            accessCode!,
-            gameManager.gameState.currentQuestionUid || undefined
-        );
-    }, [gameManager.socket.emitTimerAction, accessCode, gameManager.gameState.currentQuestionUid]);
+
+        if (socket.socket && accessCode) {
+            socket.socket.emit('quiz_timer_action', {
+                accessCode: accessCode,
+                action: 'resume',
+                questionUid: timer.questionUid || undefined
+            });
+        }
+    }, [socket.socket, accessCode, timer.questionUid]);
 
     const emitSetTimer = useCallback((newTime: number, questionUid?: string) => {
         logger.info('emitSetTimer called', { newTime, questionUid });
-        // DO NOT update local timer state optimistically - let backend handle it via dashboard_timer_updated
-        if (gameManager.socket.instance && quizId) {
-            gameManager.socket.instance.emit('set_timer', { gameId: quizId, time: newTime, questionUid });
+
+        if (socket.socket && quizId) {
+            socket.socket.emit('set_timer', {
+                gameId: quizId,
+                time: newTime,
+                questionUid
+            });
         }
-    }, [gameManager.socket.instance, quizId]);
+    }, [socket.socket, quizId]);
 
     const emitTimerAction = useCallback((payload: { status: string; questionUid?: string; timeLeftMs?: number }) => {
         logger.info('emitTimerAction called', payload);
 
         const { status, questionUid, timeLeftMs } = payload;
 
-        // DO NOT update local timer state optimistically
-        // According to timer management docs: "Frontend must never update timer state optimistically"
-        // Timer state should only change when receiving dashboard_timer_updated from backend
-
-        // Only emit socket event to backend - let backend control timer state
-        if (gameManager.socket.instance && quizId) {
+        if (socket.socket && accessCode) {
             let backendAction: 'start' | 'pause' | 'resume' | 'stop';
             switch (status) {
                 case 'play':
@@ -269,35 +240,38 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
                 duration: timeLeftMs
             });
 
-            gameManager.socket.instance.emit('quiz_timer_action', socketPayload);
+            socket.socket.emit('quiz_timer_action', socketPayload);
         }
-    }, [gameManager.timer, gameManager.socket.instance, quizId]);
+    }, [socket.socket, accessCode]);
 
     const emitUpdateTournamentCode = useCallback((tournamentCode: string) => {
         logger.info('emitUpdateTournamentCode called', { tournamentCode });
-        if (gameManager.socket.instance && quizId) {
-            gameManager.socket.instance.emit('update_tournament_code', {
+
+        if (socket.socket && quizId) {
+            socket.socket.emit('update_tournament_code', {
                 gameId: quizId,
                 newCode: tournamentCode
             });
         }
-    }, [gameManager.socket.instance, quizId]);
+    }, [socket.socket, quizId]);
 
     // Return interface
     return {
         // Socket instance
-        quizSocket: gameManager.socket.instance,
+        quizSocket: socket.socket,
 
-        // State
+        // State - use modern timer values
         quizState,
-        timerStatus: gameManager.gameState.timer.status,
-        timerQuestionUid: gameManager.gameState.timer.questionUid,
-        timeLeftMs: gameManager.gameState.timer.timeLeftMs,
-        localTimeLeftMs,
-        connectedCount: gameManager.gameState.connectedCount,
+        timerStatus: timer.status,
+        timerQuestionUid: timer.questionUid,
+        timeLeftMs: timer.timeLeftMs,
+        localTimeLeftMs: timer.timeLeftMs, // Use timer's value directly
+        connectedCount,
 
-        // Setters
-        setLocalTimeLeft,
+        // Setters (deprecated - for backward compatibility only)
+        setLocalTimeLeft: () => {
+            logger.warn('setLocalTimeLeft is deprecated - timer state is managed by useSimpleTimer');
+        },
 
         // Actions
         emitSetQuestion,

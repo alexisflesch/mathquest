@@ -1,0 +1,221 @@
+/**
+ * Teacher Quiz Socket Hook - Modernized
+ * 
+ * Provides teacher quiz management functionality using modern timer system.
+ * Uses useSimpleTimer + useGameSocket directly instead of legacy UnifiedGameManager.
+ * 
+ * Following .instructions.md zero tolerance policy:
+ * - No legacy timer fields (isPaused, startedAt, running)
+ * - Uses canonical shared types only
+ * - No backward compatibility layers
+ */
+
+import { useEffect, useState, useCallback } from 'react';
+import { createLogger } from '@/clientLogger';
+import { useSimpleTimer } from './useSimpleTimer';
+import { useGameSocket } from './useGameSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+
+// Import core types
+import type { Question } from '@shared/types/core';
+import type { QuestionData, ServerToClientEvents } from '@shared/types/socketEvents';
+import type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
+
+// Re-export QuizState for other files that import it from this hook
+export type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
+
+const logger = createLogger('useTeacherQuizSocket');
+
+/**
+ * Teacher Quiz Socket Hook - Modernized
+ * 
+ * Provides comprehensive teacher quiz management functionality including
+ * timer control, question management, and real-time synchronization.
+ * 
+ * @param accessCode - The access code for the quiz/game
+ * @param token - Authentication token
+ * @param quizId - The quiz/game ID (optional)
+ * @returns Complete teacher quiz interface with modern timer system
+ */
+export function useTeacherQuizSocket(accessCode: string | null, token: string | null, quizId?: string | null) {
+    // Socket management (replaces legacy UnifiedGameManager socket)
+    const socket = useGameSocket({
+        role: 'teacher',
+        url: process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001',
+        token,
+        accessCode,
+        gameId: quizId || undefined
+    });
+
+    // Modern timer system (replaces legacy UnifiedGameManager timer)
+    const timer = useSimpleTimer({
+        gameId: quizId || undefined,
+        accessCode: accessCode || '',
+        socket: socket.instance, // Pass the socket from useGameSocket
+        role: 'teacher'
+    });
+
+    // State management
+    const [quizState, setQuizState] = useState<QuizState | null>(null);
+    const [localTimeLeftMs, setLocalTimeLeft] = useState<number | null>(null);
+    const [connectedCount, setConnectedCount] = useState<number>(0);
+
+    // Sync local timer display with backend timer
+    useEffect(() => {
+        if (timer.timeLeftMs !== localTimeLeftMs) {
+            setLocalTimeLeft(timer.timeLeftMs);
+        }
+    }, [timer.timeLeftMs, localTimeLeftMs]);
+
+    // Handle socket events for quiz state management
+    useEffect(() => {
+        if (!socket.instance) return;
+
+        const handleGameState = (data: any) => {
+            logger.debug('Received game state update', data);
+            
+            if (data.gameId === quizId) {
+                setQuizState(prev => ({
+                    currentQuestionidx: data.currentQuestionIndex || 0,
+                    currentQuestionUid: data.currentQuestionUid || null,
+                    questions: prev?.questions || [],
+                    chrono: {
+                        timeLeftMs: timer.timeLeftMs,
+                        running: timer.status === 'play',
+                        status: timer.status
+                    },
+                    locked: prev?.locked ?? false,
+                    ended: data.gameStatus === 'completed',
+                    stats: prev?.stats || {},
+                    connectedStudents: data.connectedCount || 0
+                }));
+                
+                if (data.connectedCount !== undefined) {
+                    setConnectedCount(data.connectedCount);
+                }
+            }
+        };
+
+        const handleConnectedCount = (data: { count: number }) => {
+            logger.debug('Connected count update', data);
+            setConnectedCount(data.count);
+        };
+
+        // Register event listeners
+        socket.instance.on('game_state_update', handleGameState);
+        socket.instance.on('connected_count', handleConnectedCount);
+        socket.instance.on(SOCKET_EVENTS.DASHBOARD_TIMER_UPDATED, handleGameState);
+
+        return () => {
+            socket.instance?.off('game_state_update', handleGameState);
+            socket.instance?.off('connected_count', handleConnectedCount);
+            socket.instance?.off(SOCKET_EVENTS.DASHBOARD_TIMER_UPDATED, handleGameState);
+        };
+    }, [socket.instance, quizId, timer.timeLeftMs, timer.status]);
+
+    // Timer action handlers (modern approach using useSimpleTimer)
+    const emitSetQuestion = useCallback((questionData: QuestionData) => {
+        if (!socket.instance) {
+            logger.warn('Cannot set question: socket not connected');
+            return;
+        }
+
+        logger.info('Setting question', { questionData, gameId: quizId });
+        socket.instance.emit(SOCKET_EVENTS.SET_QUESTION, {
+            gameId: quizId,
+            question: questionData
+        });
+    }, [socket.instance, quizId]);
+
+    const emitEndQuiz = useCallback(() => {
+        if (!socket.instance) {
+            logger.warn('Cannot end quiz: socket not connected');
+            return;
+        }
+
+        logger.info('Ending quiz', { gameId: quizId });
+        socket.instance.emit(SOCKET_EVENTS.END_QUIZ, { gameId: quizId });
+    }, [socket.instance, quizId]);
+
+    const emitPauseQuiz = useCallback(() => {
+        logger.info('Pausing quiz via timer');
+        timer.pauseTimer();
+    }, [timer]);
+
+    const emitResumeQuiz = useCallback(() => {
+        logger.info('Resuming quiz via timer');
+        timer.resumeTimer();
+    }, [timer]);
+
+    const emitSetTimer = useCallback((duration: number, questionUid?: string) => {
+        if (!questionUid) {
+            logger.warn('Cannot set timer: questionUid is required');
+            return;
+        }
+
+        logger.info('Setting timer', { duration, questionUid });
+        timer.startTimer(questionUid, duration);
+    }, [timer]);
+
+    const emitTimerAction = useCallback((action: 'start' | 'pause' | 'resume' | 'stop', duration?: number, questionUid?: string) => {
+        logger.info('Timer action', { action, duration, questionUid });
+        
+        switch (action) {
+            case 'start':
+                if (duration && questionUid) {
+                    timer.startTimer(questionUid, duration);
+                } else {
+                    logger.warn('Start action requires duration and questionUid');
+                }
+                break;
+            case 'pause':
+                timer.pauseTimer();
+                break;
+            case 'resume':
+                timer.resumeTimer();
+                break;
+            case 'stop':
+                timer.stopTimer();
+                break;
+        }
+    }, [timer]);
+
+    const emitUpdateTournamentCode = useCallback((tournamentCode: string) => {
+        if (!socket.instance) {
+            logger.warn('Cannot update tournament code: socket not connected');
+            return;
+        }
+
+        logger.info('Updating tournament code', { tournamentCode, gameId: quizId });
+        socket.instance.emit('update_tournament_code', {
+            gameId: quizId,
+            newCode: tournamentCode
+        });
+    }, [socket.instance, quizId]);
+
+    // Return interface (modernized - uses timer state directly)
+    return {
+        // Socket instance
+        quizSocket: socket.instance,
+
+        // State (modernized - timer fields come from useSimpleTimer)
+        quizState,
+        timerStatus: timer.status,
+        timerQuestionUid: timer.questionUid,
+        timeLeftMs: timer.timeLeftMs,
+        localTimeLeftMs,
+        connectedCount,
+
+        // Setters
+        setLocalTimeLeft,
+
+        // Actions (modernized - use timer methods directly)
+        emitSetQuestion,
+        emitEndQuiz,
+        emitPauseQuiz,
+        emitResumeQuiz,
+        emitSetTimer,
+        emitTimerAction,
+        emitUpdateTournamentCode
+    };
+}
