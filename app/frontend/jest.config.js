@@ -17,10 +17,12 @@ module.exports = {
             runtime: 'automatic',
           },
         },
+        target: 'es2018',
       },
       module: {
-        defaultMode: 'commonjs',
+        type: 'commonjs',
       },
+      sourceMaps: 'inline',
     }],
   },
 

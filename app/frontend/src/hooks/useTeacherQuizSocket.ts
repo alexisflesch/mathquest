@@ -7,7 +7,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createLogger } from '@/clientLogger';
-import { useTeacherGameManager } from './useUnifiedGameManager';
+import { useUnifiedGameManager } from './useUnifiedGameManager';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Import core types
@@ -33,7 +33,11 @@ const logger = createLogger('useTeacherQuizSocket');
  */
 export function useTeacherQuizSocket(accessCode: string | null, token: string | null, quizId?: string | null) {
     // Use the unified game manager internally
-    const gameManager = useTeacherGameManager(quizId || null, token, {
+    const gameManager = useUnifiedGameManager({
+        role: 'teacher',
+        gameId: quizId || null,
+        token,
+        accessCode,
         timerConfig: {
             autoStart: false,
             smoothCountdown: false,
@@ -151,15 +155,14 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             });
         }
 
-        // Dashboard timer updated handler (for timer debug and canonical timer sync)
+        // Dashboard timer updated handler (ONLY source of timer state changes)
         if (gameManager.socket.instance) {
             const dashboardTimerHandler = (payload: any) => {
                 logger.debug('Received dashboard_timer_updated', payload);
-                if (payload && payload.timer && typeof payload.timer.timeLeftMs === 'number') {
-                    // Canonical: update the actual timer state in the game manager
-                    if (typeof gameManager.timer.setDuration === 'function') {
-                        gameManager.timer.setDuration(payload.timer.timeLeftMs);
-                    }
+                if (payload && payload.timer) {
+                    // Use the canonical sync method instead of manual timer manipulation
+                    // This ensures consistent timer state management across all timer events
+                    gameManager.timer.syncWithBackend(payload);
                 }
             };
             gameManager.socket.instance.on('dashboard_timer_updated' as keyof ServerToClientEvents, dashboardTimerHandler);
@@ -181,10 +184,9 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             gameManager.actions.setQuestion(questionUid, duration);
         }
 
-        if (duration) {
-            gameManager.socket.emitTimerAction('start', duration);
-        }
-    }, [gameManager.actions.setQuestion, gameManager.socket.emitTimerAction]);
+        // DO NOT automatically start timer - let backend control timer state
+        // Remove: if (duration) { gameManager.socket.emitTimerAction('start', duration); }
+    }, [gameManager.actions.setQuestion]);
 
     const emitEndQuiz = useCallback(() => {
         logger.info('emitEndQuiz called');
@@ -196,47 +198,42 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
 
     const emitPauseQuiz = useCallback(() => {
         logger.info('emitPauseQuiz called');
-        gameManager.timer.pause();
-        gameManager.socket.emitTimerAction('pause');
-    }, [gameManager.timer.pause, gameManager.socket.emitTimerAction]);
+        // DO NOT update local timer state optimistically - let backend handle it
+        gameManager.socket.emitTimerAction(
+            'pause',
+            accessCode!,
+            gameManager.gameState.currentQuestionUid || undefined
+        );
+    }, [gameManager.socket.emitTimerAction, accessCode, gameManager.gameState.currentQuestionUid]);
 
     const emitResumeQuiz = useCallback(() => {
         logger.info('emitResumeQuiz called');
-        gameManager.timer.resume();
-        gameManager.socket.emitTimerAction('resume');
-    }, [gameManager.timer.resume, gameManager.socket.emitTimerAction]);
+        // DO NOT update local timer state optimistically - let backend handle it
+        gameManager.socket.emitTimerAction(
+            'resume',
+            accessCode!,
+            gameManager.gameState.currentQuestionUid || undefined
+        );
+    }, [gameManager.socket.emitTimerAction, accessCode, gameManager.gameState.currentQuestionUid]);
 
     const emitSetTimer = useCallback((newTime: number, questionUid?: string) => {
         logger.info('emitSetTimer called', { newTime, questionUid });
-        gameManager.timer.setDuration(newTime);
+        // DO NOT update local timer state optimistically - let backend handle it via dashboard_timer_updated
         if (gameManager.socket.instance && quizId) {
             gameManager.socket.instance.emit('set_timer', { gameId: quizId, time: newTime, questionUid });
         }
-    }, [gameManager.timer.setDuration, gameManager.socket.instance, quizId]);
+    }, [gameManager.socket.instance, quizId]);
 
     const emitTimerAction = useCallback((payload: { status: string; questionUid?: string; timeLeftMs?: number }) => {
         logger.info('emitTimerAction called', payload);
 
         const { status, questionUid, timeLeftMs } = payload;
 
-        // Update local timer state
-        switch (status) {
-            case 'play':
-                if (questionUid && timeLeftMs) {
-                    gameManager.timer.start(questionUid, timeLeftMs);
-                } else {
-                    gameManager.timer.resume();
-                }
-                break;
-            case 'pause':
-                gameManager.timer.pause();
-                break;
-            case 'stop':
-                gameManager.timer.stop();
-                break;
-        }
+        // DO NOT update local timer state optimistically
+        // According to timer management docs: "Frontend must never update timer state optimistically"
+        // Timer state should only change when receiving dashboard_timer_updated from backend
 
-        // Emit socket event
+        // Only emit socket event to backend - let backend control timer state
         if (gameManager.socket.instance && quizId) {
             let backendAction: 'start' | 'pause' | 'resume' | 'stop';
             switch (status) {
@@ -254,7 +251,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             }
 
             const socketPayload: any = {
-                gameId: quizId,
+                accessCode: accessCode,
                 action: backendAction
             };
 

@@ -21,7 +21,6 @@
 
 import React, { useState, useCallback, useRef } from "react";
 import { Socket } from 'socket.io-client';
-import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
 import type { Question } from "@/types/api";
 import { SortableQuestion } from './SortableQuestion';
@@ -87,16 +86,6 @@ export default function DraggableQuestionsList({
     expandedUids,
     onToggleExpand,
 }: DraggableQuestionsListProps) {
-    const [confirmDialog, setConfirmDialog] = useState<{
-        isOpen: boolean;
-        questionUid: string;
-        startTime: number;
-    }>({
-        isOpen: false,
-        questionUid: "",
-        startTime: 0
-    });
-
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
     //     logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionUid}, Time left: ${timeLeftMs}`);
@@ -135,150 +124,22 @@ export default function DraggableQuestionsList({
     const handlePlay = useCallback((questionUid: string, startTime: number) => {
         logger.info(`handlePlay called for questionUid: ${questionUid}, startTime: ${startTime}`);
 
-        // Check if the current question's timer has naturally expired
-        const timerHasExpired = timerQuestionUid &&
-            (effectiveTimeLeft === 0 || effectiveTimeLeft === null) &&
-            timerStatus !== 'play';
-
-        // If the timer for the current question has reached zero, no need for confirmation
-        if (timerHasExpired) {
-            logger.info(`Current question timer has expired, switching directly to: ${questionUid}`);
-            onSelect(questionUid);
-            if (onTimerAction) {
-                onTimerAction({
-                    status: 'play',
-                    questionUid,
-                    timeLeftMs: startTime,
-                });
-            }
-            return;
-        }
-
-        // If there is an active question with a running or paused timer with time left,
-        // confirm the switch to avoid accidental question changes
-        if (timerQuestionUid &&
-            timerQuestionUid !== questionUid &&
-            ((timerStatus === 'play' && effectiveTimeLeft > 0) ||
-                (timerStatus === 'pause' && effectiveTimeLeft > 0))) {
-
-            // Open the confirmation dialog instead of using window.confirm()
-            setConfirmDialog({
-                isOpen: true,
-                questionUid: questionUid,
-                startTime: startTime
-            });
-            return;
-        } else {
-            // Regular scenario - no active question or same question
-            if (onTimerAction) {
-                // When resuming a paused question, always use the timeLeftMs from server state
-                // This ensures we don't reset the timer to the full duration
-                if (timerQuestionUid === questionUid && timerStatus === 'pause' && effectiveTimeLeft !== null) {
-                    logger.info(`Resuming paused question: ${questionUid}, using server timeLeftMs?: ${effectiveTimeLeft}s`);
-                    onTimerAction({
-                        status: 'play',
-                        questionUid,
-                        timeLeftMs: effectiveTimeLeft, // Use the server's timeLeft value for consistency
-                    });
-                } else {
-                    // Normal start - for non-paused questions
-                    logger.info(`Starting question: ${questionUid}, timeLeftMs?: ${startTime}s`);
-                    onTimerAction({
-                        status: 'play',
-                        questionUid,
-                        timeLeftMs: startTime,
-                    });
-                }
-            } else {
-                logger.warn('onTimerAction is not defined. Cannot emit quiz_set_question.');
-            }
-
-            logger.info(`Setting active question in UI to: ${questionUid}`);
-            onSelect(questionUid);
-
-            if (timerQuestionUid === questionUid) {
-                if (timerStatus === 'play') {
-                    logger.info(`Pausing question: ${questionUid}`);
-                    if (onPause) onPause();
-                } else if (timerStatus === 'pause') {
-                    logger.info(`Resuming question: ${questionUid}`);
-                    // When resuming from pause, use the backend's timeLeftMs value
-                    if (onPlay) onPlay(questionUid, effectiveTimeLeft ?? startTime);
-                } else {
-                    logger.info(`Starting question: ${questionUid} from stopped state, timeLeftMs?: ${startTime}s`);
-                    if (onPlay) onPlay(questionUid, startTime);
-                }
-            } else {
-                logger.info(`Playing new question: ${questionUid}, timeLeftMs?: ${startTime}s`);
-                if (onPlay) onPlay(questionUid, startTime);
-            }
-        }
-    }, [timerQuestionUid, timerStatus, effectiveTimeLeft, onPause, onPlay, onTimerAction, onSelect, quizSocket]);
-
-    // Handler for confirmation dialog confirm action
-    const handleConfirmationConfirm = useCallback(() => {
-        const { questionUid, startTime } = confirmDialog;
-
-        logger.info(`User confirmed switch to question ${questionUid}`);
-
-        if (onTimerAction) {
-            onTimerAction({
-                status: 'play',
-                questionUid,
-                timeLeftMs: startTime,
-            });
-        }
-
-        logger.info(`Setting active question in UI to: ${questionUid}`);
-        onSelect(questionUid);
-
-        // Close the dialog
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-    }, [confirmDialog, onTimerAction, onSelect]);
-
-    // Handler for confirmation dialog cancel action
-    const handleConfirmationCancel = useCallback(() => {
-        logger.info(`User canceled switch to question ${confirmDialog.questionUid}`);
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-    }, [confirmDialog.questionUid]);
+        // Simply forward all play clicks to the dashboard without any filtering
+        // The dashboard has the authoritative timer state and will handle all logic
+        // IMPORTANT: Don't call onSelect here - let the dashboard handle selection after confirmation
+        logger.info(`Forwarding to dashboard handlePlay: ${questionUid}, timeLeftMs: ${startTime}`);
+        if (onPlay) onPlay(questionUid, startTime);
+    }, [onPlay]);
 
     const handlePause = useCallback(() => {
-        logger.info('handlePause called');
-
-        // Emit quiz_timer_action with status: 'pause'
-        if (onTimerAction) {
-            logger.info('Emitting quiz_timer_action for pause');
-            onTimerAction({
-                status: 'pause',
-                questionUid: timerQuestionUid || '',
-                timeLeftMs: effectiveTimeLeft || 0,
-            });
-        } else {
-            logger.warn('onTimerAction is not defined. Cannot emit quiz_timer_action for pause.');
-        }
-    }, [onTimerAction, timerQuestionUid, effectiveTimeLeft]);
+        logger.info('handlePause called - forwarding to dashboard');
+        if (onPause) onPause();
+    }, [onPause]);
 
     const handleStop = useCallback(() => {
-        logger.info('handleStop called');
-
-        // Emit quiz_timer_action with status: 'stop'
-        if (onTimerAction) {
-            logger.info('Emitting quiz_timer_action for stop');
-            onTimerAction({
-                status: 'stop',
-                questionUid: timerQuestionUid || '',
-                timeLeftMs: 0,
-            });
-        } else {
-            logger.warn('onTimerAction is not defined. Cannot emit quiz_timer_action for stop.');
-        }
-
-        if (onStop) {
-            onStop();
-        } else {
-            logger.warn('onStop is not defined. Cannot handle stop action.');
-        }
-    }, [onTimerAction, timerQuestionUid, onStop]);
+        logger.info('handleStop called - forwarding to dashboard');
+        if (onStop) onStop();
+    }, [onStop]);
 
     // --- Drag and drop logic is now disabled. ---
     // const sensors = useSensors(
@@ -313,38 +174,8 @@ export default function DraggableQuestionsList({
         };
     }, []);
 
-    // Centralize quiz_action_response handling for all actions
-    React.useEffect(() => {
-        if (!quizSocket) {
-            logger.warn('quizSocket is not available. Cannot listen for quiz_action_response.');
-            return;
-        }
-
-        const handleQuizActionResponse = (data: { status: string; message: string }) => {
-            // Enhanced debugging for quiz_action_response handling
-            logger.debug('Received quiz_action_response from quizSocket:', data);
-            // No-op: removed legacy setPendingMap and pendingTimeoutsRef logic
-            if (!(data.status === 'success' || data.status === 'error')) {
-                logger.warn(`Unexpected quiz_action_response received: ${JSON.stringify(data)}`);
-            }
-        };
-
-        quizSocket.on('quiz_action_response', handleQuizActionResponse);
-
-        return () => {
-            quizSocket.off('quiz_action_response', handleQuizActionResponse);
-        };
-    }, [quizSocket]);
-
     return (
         <>
-            <ConfirmDialog
-                open={confirmDialog.isOpen}
-                title="Changer de question"
-                message="Une question est actuellement active. Voulez-vous passer à une autre question? Le temps sera réinitialisé."
-                onConfirm={handleConfirmationConfirm}
-                onCancel={handleConfirmationCancel}
-            />
             <ul className="space-y-4">
                 {questions.length === 0 && <li key="no-questions">Aucune question pour ce quiz.</li>}
                 {questions.map((q, idx) => {

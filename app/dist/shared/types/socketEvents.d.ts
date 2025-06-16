@@ -1,5 +1,6 @@
 import type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload, AnswerSubmissionPayload as GameAnswerPayload, LeaderboardEntry } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
+import type { SetQuestionPayload } from './socket/dashboardPayloads';
 import type { PracticeClientToServerEvents, PracticeServerToClientEvents } from './practice/events';
 type LeaderboardEntryData = LeaderboardEntry;
 export interface JoinGamePayload {
@@ -72,12 +73,7 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
         userId: string;
         currentQuestionUid: string | null;
     }) => void;
-    set_question: (payload: {
-        gameId?: string;
-        accessCode?: string;
-        questionUid: string;
-        questionIndex: number;
-    }) => void;
+    set_question: (payload: SetQuestionPayload) => void;
     quiz_timer_action: (payload: TimerActionPayload) => void;
     lock_answers: (payload: {
         accessCode?: string;
@@ -89,7 +85,7 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
         gameId?: string;
     }) => void;
     join_dashboard: (payload: {
-        gameId: string;
+        accessCode: string;
     }) => void;
     get_game_state: (payload: {
         accessCode: string;
@@ -168,10 +164,6 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
         total?: number;
         score?: number;
         totalQuestions?: number;
-    }) => void;
-    game_end: (payload: {
-        accessCode?: string;
-        [key: string]: any;
     }) => void;
     correct_answers: (payload: {
         questionUid: string;

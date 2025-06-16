@@ -62,7 +62,7 @@ export interface GameSocketHook {
     onGameJoined?: (handler: (payload: Parameters<ServerToClientEvents['game_joined']>[0]) => void) => () => void;
 
     // Timer-specific events
-    emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', duration?: number) => void;
+    emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', accessCode: string, questionUid?: string, duration?: number) => void;
     onTimerUpdate: (handler: (timerState: Partial<TimerState>) => void) => () => void;
 }
 
@@ -286,6 +286,8 @@ export function useGameSocket(
     // --- Timer-Specific Methods ---
     const emitTimerAction = useCallback((
         action: 'start' | 'pause' | 'resume' | 'stop',
+        accessCode: string,
+        questionUid?: string,
         duration?: number
     ) => {
         if (!socket?.connected) {
@@ -294,13 +296,14 @@ export function useGameSocket(
         }
         if (role === 'teacher') {
             socket.emit('quiz_timer_action', {
-                gameId: gameId!,
+                accessCode,
                 action,
-                durationMs: duration
+                duration,
+                questionUid
             });
         }
         // Add other roles as needed
-    }, [socket, role, gameId]);
+    }, [socket, role]);
 
     const onTimerUpdate = useCallback((handler: (timerState: Partial<TimerState>) => void) => {
         if (!socket) {

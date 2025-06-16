@@ -24,7 +24,7 @@ function filterQuestionForClient(questionObject) {
         text: questionObject.text,
         answerOptions: questionObject.answerOptions || [],
         // Additional properties for frontend compatibility
-        explanation: questionObject.explanation,
+        explanation: questionObject.explanation || undefined, // Convert null to undefined for type consistency
         correctAnswers: questionObject.correctAnswers,
         timeLimit: questionObject.timeLimit,
         gradeLevel: questionObject.gradeLevel,

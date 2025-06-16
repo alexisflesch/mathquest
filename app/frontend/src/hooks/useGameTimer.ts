@@ -416,6 +416,7 @@ export function useGameTimer(
             console.warn('🚨 SYNC DEBUG: Raw backend timer data received', {
                 'gameTimerUpdate': gameTimerUpdate,
                 'gameTimerUpdate.timer': gameTimerUpdate.timer,
+                'gameTimerUpdate.questionUid': gameTimerUpdate.questionUid,
                 'gameTimerUpdate.timer.timeLeftMs': gameTimerUpdate.timer?.timeLeftMs,
                 'gameTimerUpdate.timer.isPaused': gameTimerUpdate.timer?.isPaused,
                 'typeof gameTimerUpdate.timer?.timeLeftMs': typeof gameTimerUpdate.timer?.timeLeftMs,
@@ -432,25 +433,31 @@ export function useGameTimer(
                 timeLeftMs = 0;
             }
 
-            let status: TimerStatus = 'stop';
-            if (timer.isPaused) {
-                status = timeLeftMs === 0 ? 'stop' : 'pause';
-            } else {
-                status = timeLeftMs > 0 ? 'play' : 'stop';
-            }
+            // Use status from backend timer object if available
+            const timerStatus = timer.status || timerState.status;
 
-            setTimerState((prev: GameTimerState) => ({
-                ...prev,
-                status,
-                timeLeftMs: timeLeftMs,
-                durationMs: timer.durationMs || prev.durationMs,
-                questionUid: gameTimerUpdate.questionUid || prev.questionUid,
-                timestamp: Date.now(),
-                localTimeLeftMs: timeLeftMs
-            }));
+            setTimerState((prev: GameTimerState) => {
+                const newQuestionUid = gameTimerUpdate.questionUid || prev.questionUid;
+                console.warn('🚨 QUESTION UID DEBUG:', {
+                    'gameTimerUpdate.questionUid': gameTimerUpdate.questionUid,
+                    'prev.questionUid': prev.questionUid,
+                    'newQuestionUid': newQuestionUid,
+                    'will questionUid change': newQuestionUid !== prev.questionUid
+                });
 
-            // Start/stop local countdown based on status
-            if (status === 'play' && timeLeftMs > 0) {
+                return {
+                    ...prev,
+                    status: timerStatus,
+                    timeLeftMs: timeLeftMs,
+                    durationMs: timer.durationMs || prev.durationMs,
+                    questionUid: newQuestionUid,
+                    timestamp: Date.now(),
+                    localTimeLeftMs: timeLeftMs
+                };
+            });
+
+            // Start/stop local countdown based on status from backend
+            if (timerStatus === 'play' && timeLeftMs > 0) {
                 startLocalCountdown(timeLeftMs);
             } else {
                 cleanup();
@@ -500,8 +507,8 @@ export function useGameTimer(
         switch (role) {
             case 'teacher':
                 events.push(
-                    { event: SOCKET_EVENTS.TEACHER.TIMER_UPDATE, handler: handleTimerUpdate },
-                    { event: SOCKET_EVENTS.TEACHER.DASHBOARD_TIMER_UPDATED, handler: handleDashboardTimerUpdate }
+                    { event: SOCKET_EVENTS.TEACHER.TIMER_UPDATE, handler: handleTimerUpdate }
+                    // NOTE: dashboard_timer_updated is handled by useTeacherQuizSocket to avoid duplicate listeners
                 );
                 break;
             case 'student':

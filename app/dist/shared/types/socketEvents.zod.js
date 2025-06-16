@@ -17,7 +17,7 @@ exports.timerActionPayloadSchema = zod_1.z.object({
     action: zod_1.z.enum(['start', 'pause', 'resume', 'stop', 'set_duration'], {
         errorMap: () => ({ message: "Action must be one of: start, pause, resume, stop, set_duration" }),
     }),
-    duration: zod_1.z.number().int().positive({ message: "Duration must be a positive integer." }).optional(),
+    duration: zod_1.z.number().int().nonnegative({ message: "Duration must be a non-negative integer." }).optional(),
     questionUid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }).optional(),
 });
 exports.lockAnswersPayloadSchema = zod_1.z.object({

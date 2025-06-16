@@ -26,12 +26,12 @@ export declare const timerActionPayloadSchema: z.ZodObject<{
     questionUid: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
-    action: "start" | "pause" | "resume" | "stop" | "set_duration";
+    action: "pause" | "stop" | "start" | "resume" | "set_duration";
     questionUid?: string | undefined;
     duration?: number | undefined;
 }, {
     accessCode: string;
-    action: "start" | "pause" | "resume" | "stop" | "set_duration";
+    action: "pause" | "stop" | "start" | "resume" | "set_duration";
     questionUid?: string | undefined;
     duration?: number | undefined;
 }>;
@@ -218,11 +218,11 @@ export declare const notificationPayloadSchema: z.ZodObject<{
     message: z.ZodString;
     defaultMode: z.ZodEnum<["info", "warning", "error", "success"]>;
 }, "strip", z.ZodTypeAny, {
-    defaultMode: "error" | "info" | "warning" | "success";
     message: string;
+    defaultMode: "info" | "warning" | "error" | "success";
 }, {
-    defaultMode: "error" | "info" | "warning" | "success";
     message: string;
+    defaultMode: "info" | "warning" | "error" | "success";
 }>;
 export declare const questionDataSchema: z.ZodObject<{
     uid: z.ZodString;
@@ -326,12 +326,12 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
         questionIndex: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         questionUid: string;
-        questionIndex: number;
         accessCode: string;
+        questionIndex: number;
     }, {
         questionUid: string;
-        questionIndex: number;
         accessCode: string;
+        questionIndex: number;
     }>], z.ZodUnknown>, z.ZodVoid>;
     teacher_timer_action: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         accessCode: z.ZodString;
@@ -339,11 +339,11 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
         duration: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
         accessCode: string;
-        action: "start" | "pause" | "resume" | "stop" | "set_duration";
+        action: "pause" | "stop" | "start" | "resume" | "set_duration";
         duration?: number | undefined;
     }, {
         accessCode: string;
-        action: "start" | "pause" | "resume" | "stop" | "set_duration";
+        action: "pause" | "stop" | "start" | "resume" | "set_duration";
         duration?: number | undefined;
     }>], z.ZodUnknown>, z.ZodVoid>;
     teacher_lock_answers: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
@@ -383,12 +383,12 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     teacher_set_question: (args_0: {
         questionUid: string;
-        questionIndex: number;
         accessCode: string;
+        questionIndex: number;
     }, ...args: unknown[]) => void;
     teacher_timer_action: (args_0: {
         accessCode: string;
-        action: "start" | "pause" | "resume" | "stop" | "set_duration";
+        action: "pause" | "stop" | "start" | "resume" | "set_duration";
         duration?: number | undefined;
     }, ...args: unknown[]) => void;
     teacher_lock_answers: (args_0: {
@@ -418,12 +418,12 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     teacher_set_question: (args_0: {
         questionUid: string;
-        questionIndex: number;
         accessCode: string;
+        questionIndex: number;
     }, ...args: unknown[]) => void;
     teacher_timer_action: (args_0: {
         accessCode: string;
-        action: "start" | "pause" | "resume" | "stop" | "set_duration";
+        action: "pause" | "stop" | "start" | "resume" | "set_duration";
         duration?: number | undefined;
     }, ...args: unknown[]) => void;
     teacher_lock_answers: (args_0: {
@@ -445,13 +445,13 @@ export declare const socketDataSchema: z.ZodObject<{
     accessCode?: string | undefined;
     userId?: string | undefined;
     username?: string | undefined;
-    role?: "player" | "teacher" | "admin" | "projector" | undefined;
+    role?: "teacher" | "player" | "admin" | "projector" | undefined;
     currentGameRoom?: string | undefined;
 }, {
     accessCode?: string | undefined;
     userId?: string | undefined;
     username?: string | undefined;
-    role?: "player" | "teacher" | "admin" | "projector" | undefined;
+    role?: "teacher" | "player" | "admin" | "projector" | undefined;
     currentGameRoom?: string | undefined;
 }>;
 export declare const gameJoinedPayloadSchema: z.ZodObject<{
@@ -565,13 +565,13 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             accessCode?: string | undefined;
             userId?: string | undefined;
             username?: string | undefined;
-            role?: "player" | "teacher" | "admin" | "projector" | undefined;
+            role?: "teacher" | "player" | "admin" | "projector" | undefined;
             currentGameRoom?: string | undefined;
         }, {
             accessCode?: string | undefined;
             userId?: string | undefined;
             username?: string | undefined;
-            role?: "player" | "teacher" | "admin" | "projector" | undefined;
+            role?: "teacher" | "player" | "admin" | "projector" | undefined;
             currentGameRoom?: string | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
@@ -581,7 +581,7 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             accessCode?: string | undefined;
             userId?: string | undefined;
             username?: string | undefined;
-            role?: "player" | "teacher" | "admin" | "projector" | undefined;
+            role?: "teacher" | "player" | "admin" | "projector" | undefined;
             currentGameRoom?: string | undefined;
         };
     }, {
@@ -591,7 +591,7 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             accessCode?: string | undefined;
             userId?: string | undefined;
             username?: string | undefined;
-            role?: "player" | "teacher" | "admin" | "projector" | undefined;
+            role?: "teacher" | "player" | "admin" | "projector" | undefined;
             currentGameRoom?: string | undefined;
         };
     }>], z.ZodUnknown>, z.ZodVoid>;
@@ -951,11 +951,11 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         message: z.ZodString;
         defaultMode: z.ZodEnum<["info", "warning", "error", "success"]>;
     }, "strip", z.ZodTypeAny, {
-        defaultMode: "error" | "info" | "warning" | "success";
         message: string;
+        defaultMode: "info" | "warning" | "error" | "success";
     }, {
-        defaultMode: "error" | "info" | "warning" | "success";
         message: string;
+        defaultMode: "info" | "warning" | "error" | "success";
     }>], z.ZodUnknown>, z.ZodVoid>;
     game_control_question_set: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         questionIndex: z.ZodNumber;
@@ -1102,12 +1102,12 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         questionUid: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         accessCode: string;
-        action: "start" | "pause" | "resume" | "stop" | "set_duration";
+        action: "pause" | "stop" | "start" | "resume" | "set_duration";
         questionUid?: string | undefined;
         duration?: number | undefined;
     }, {
         accessCode: string;
-        action: "start" | "pause" | "resume" | "stop" | "set_duration";
+        action: "pause" | "stop" | "start" | "resume" | "set_duration";
         questionUid?: string | undefined;
         duration?: number | undefined;
     }>], z.ZodUnknown>, z.ZodVoid>;
@@ -1129,21 +1129,6 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         accessCode: string;
     }>], z.ZodUnknown>, z.ZodVoid>;
 }, "strip", z.ZodTypeAny, {
-    join_dashboard: (args_0: {
-        accessCode: string;
-    }, ...args: unknown[]) => void;
-    set_question: (args_0: {
-        questionUid: string;
-        accessCode: string;
-        questionIndex?: number | undefined;
-    }, ...args: unknown[]) => void;
-    lock_answers: (args_0: {
-        accessCode: string;
-        lock: boolean;
-    }, ...args: unknown[]) => void;
-    end_game: (args_0: {
-        accessCode: string;
-    }, ...args: unknown[]) => void;
     connect: (...args: unknown[]) => void;
     disconnect: (args_0: string, ...args: unknown[]) => void;
     connection_established: (args_0: {
@@ -1153,7 +1138,7 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             accessCode?: string | undefined;
             userId?: string | undefined;
             username?: string | undefined;
-            role?: "player" | "teacher" | "admin" | "projector" | undefined;
+            role?: "teacher" | "player" | "admin" | "projector" | undefined;
             currentGameRoom?: string | undefined;
         };
     }, ...args: unknown[]) => void;
@@ -1256,8 +1241,8 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         accessCode: string;
     }, ...args: unknown[]) => void;
     notification: (args_0: {
-        defaultMode: "error" | "info" | "warning" | "success";
         message: string;
+        defaultMode: "info" | "warning" | "error" | "success";
     }, ...args: unknown[]) => void;
     game_control_question_set: (args_0: {
         questionIndex: number;
@@ -1289,28 +1274,28 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         }[] | undefined;
         showLeaderboard?: boolean | undefined;
     }, ...args: unknown[]) => void;
+    set_question: (args_0: {
+        questionUid: string;
+        accessCode: string;
+        questionIndex?: number | undefined;
+    }, ...args: unknown[]) => void;
+    join_dashboard: (args_0: {
+        accessCode: string;
+    }, ...args: unknown[]) => void;
     timer_action: (args_0: {
         accessCode: string;
-        action: "start" | "pause" | "resume" | "stop" | "set_duration";
+        action: "pause" | "stop" | "start" | "resume" | "set_duration";
         questionUid?: string | undefined;
         duration?: number | undefined;
+    }, ...args: unknown[]) => void;
+    lock_answers: (args_0: {
+        accessCode: string;
+        lock: boolean;
+    }, ...args: unknown[]) => void;
+    end_game: (args_0: {
+        accessCode: string;
     }, ...args: unknown[]) => void;
 }, {
-    join_dashboard: (args_0: {
-        accessCode: string;
-    }, ...args: unknown[]) => void;
-    set_question: (args_0: {
-        questionUid: string;
-        accessCode: string;
-        questionIndex?: number | undefined;
-    }, ...args: unknown[]) => void;
-    lock_answers: (args_0: {
-        accessCode: string;
-        lock: boolean;
-    }, ...args: unknown[]) => void;
-    end_game: (args_0: {
-        accessCode: string;
-    }, ...args: unknown[]) => void;
     connect: (...args: unknown[]) => void;
     disconnect: (args_0: string, ...args: unknown[]) => void;
     connection_established: (args_0: {
@@ -1320,7 +1305,7 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
             accessCode?: string | undefined;
             userId?: string | undefined;
             username?: string | undefined;
-            role?: "player" | "teacher" | "admin" | "projector" | undefined;
+            role?: "teacher" | "player" | "admin" | "projector" | undefined;
             currentGameRoom?: string | undefined;
         };
     }, ...args: unknown[]) => void;
@@ -1423,8 +1408,8 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         accessCode: string;
     }, ...args: unknown[]) => void;
     notification: (args_0: {
-        defaultMode: "error" | "info" | "warning" | "success";
         message: string;
+        defaultMode: "info" | "warning" | "error" | "success";
     }, ...args: unknown[]) => void;
     game_control_question_set: (args_0: {
         questionIndex: number;
@@ -1456,11 +1441,26 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
         }[] | undefined;
         showLeaderboard?: boolean | undefined;
     }, ...args: unknown[]) => void;
+    set_question: (args_0: {
+        questionUid: string;
+        accessCode: string;
+        questionIndex?: number | undefined;
+    }, ...args: unknown[]) => void;
+    join_dashboard: (args_0: {
+        accessCode: string;
+    }, ...args: unknown[]) => void;
     timer_action: (args_0: {
         accessCode: string;
-        action: "start" | "pause" | "resume" | "stop" | "set_duration";
+        action: "pause" | "stop" | "start" | "resume" | "set_duration";
         questionUid?: string | undefined;
         duration?: number | undefined;
+    }, ...args: unknown[]) => void;
+    lock_answers: (args_0: {
+        accessCode: string;
+        lock: boolean;
+    }, ...args: unknown[]) => void;
+    end_game: (args_0: {
+        accessCode: string;
     }, ...args: unknown[]) => void;
 }>;
 export declare const startTimerPayloadSchema: z.ZodEffects<z.ZodObject<{
@@ -1469,36 +1469,36 @@ export declare const startTimerPayloadSchema: z.ZodEffects<z.ZodObject<{
     duration: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     duration: number;
-    gameId?: string | undefined;
     accessCode?: string | undefined;
+    gameId?: string | undefined;
 }, {
     duration: number;
-    gameId?: string | undefined;
     accessCode?: string | undefined;
+    gameId?: string | undefined;
 }>, {
     duration: number;
-    gameId?: string | undefined;
     accessCode?: string | undefined;
+    gameId?: string | undefined;
 }, {
     duration: number;
-    gameId?: string | undefined;
     accessCode?: string | undefined;
+    gameId?: string | undefined;
 }>;
 export declare const pauseTimerPayloadSchema: z.ZodEffects<z.ZodObject<{
     gameId: z.ZodOptional<z.ZodString>;
     accessCode: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    gameId?: string | undefined;
     accessCode?: string | undefined;
+    gameId?: string | undefined;
 }, {
-    gameId?: string | undefined;
     accessCode?: string | undefined;
+    gameId?: string | undefined;
 }>, {
-    gameId?: string | undefined;
     accessCode?: string | undefined;
+    gameId?: string | undefined;
 }, {
-    gameId?: string | undefined;
     accessCode?: string | undefined;
+    gameId?: string | undefined;
 }>;
 export declare const startTournamentPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
@@ -1582,13 +1582,13 @@ export declare const sharedJoinPayloadSchema: z.ZodObject<{
     userId: string;
     username: string;
     avatarEmoji?: string | undefined;
-    playMode?: "quiz" | "tournament" | "practice" | undefined;
+    playMode?: "tournament" | "quiz" | "practice" | undefined;
 }, {
     accessCode: string;
     userId: string;
     username: string;
     avatarEmoji?: string | undefined;
-    playMode?: "quiz" | "tournament" | "practice" | undefined;
+    playMode?: "tournament" | "quiz" | "practice" | undefined;
 }>;
 export declare const sharedAnswerPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
@@ -1603,12 +1603,12 @@ export declare const sharedAnswerPayloadSchema: z.ZodObject<{
     userId: string;
     answer: string | number | string[] | number[];
     timeSpent: number;
-    playMode?: "quiz" | "tournament" | "practice" | undefined;
+    playMode?: "tournament" | "quiz" | "practice" | undefined;
 }, {
     questionUid: string;
     accessCode: string;
     userId: string;
     answer: string | number | string[] | number[];
     timeSpent: number;
-    playMode?: "quiz" | "tournament" | "practice" | undefined;
+    playMode?: "tournament" | "quiz" | "practice" | undefined;
 }>;

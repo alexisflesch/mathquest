@@ -130,14 +130,20 @@ export interface TimerUpdatePayload {
 export interface GameTimerUpdatePayload {
     /** Timer object with state */
     timer: {
-        /** Whether timer is paused */
-        isPaused: boolean;
+        /** Timer status */
+        status?: 'play' | 'pause' | 'stop';
+        /** Whether timer is paused (legacy field) */
+        isPaused?: boolean;
         /** Time remaining in milliseconds (canonical) */
         timeLeftMs?: number;
         /** When timer was started (timestamp) */
         startedAt?: number;
         /** Timer duration in milliseconds */
         durationMs?: number;
+        /** Current timestamp */
+        timestamp?: number;
+        /** Local time left (frontend-specific) */
+        localTimeLeftMs?: number;
     };
     /** Question UID associated with the timer */
     questionUid?: string;
@@ -148,14 +154,12 @@ export interface GameTimerUpdatePayload {
  * Payload for timer control actions
  */
 export interface TimerActionPayload {
-    /** Game access code */
-    accessCode?: string;
-    /** Game ID for database operations */
-    gameId?: string;
+    /** Game access code (required for backend validation) */
+    accessCode: string;
     /** Action to perform on timer */
     action: 'start' | 'pause' | 'resume' | 'stop' | 'set_duration';
-    /** Duration in milliseconds (converted from user input seconds) */
-    durationMs?: number;
+    /** Duration in milliseconds (matches backend implementation and documentation requirement) */
+    duration?: number;
     /** Question UID for question-specific timer operations */
     questionUid?: string;
 }

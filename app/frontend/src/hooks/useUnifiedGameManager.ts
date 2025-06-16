@@ -34,7 +34,9 @@ import type {
     ServerToClientEvents,
     TimerActionPayload,
     JoinGamePayload,
-    GameAnswerPayload
+    GameAnswerPayload,
+    TimerUpdatePayload,
+    GameTimerUpdatePayload
 } from '@shared/types/socketEvents';
 import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
 import { logTimerEvent, logTimerState, logTimerCalculation, logTimerError } from '@/utils/timerDebugLogger';
@@ -112,6 +114,7 @@ export interface UnifiedGameManagerHook {
         setDuration: (duration: number) => void;
         formatTime: (time: number, showMs?: boolean) => string;
         getDisplayTime: () => number;
+        syncWithBackend: (payload: TimerUpdatePayload | GameTimerUpdatePayload) => void;
     };
 
     // Socket controls
@@ -120,7 +123,7 @@ export interface UnifiedGameManagerHook {
         connect: () => void;
         disconnect: () => void;
         reconnect: () => void;
-        emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', duration?: number) => void;
+        emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', accessCode: string, questionUid?: string, duration?: number) => void;
     };
 
     // Game actions (role-specific)
@@ -200,12 +203,12 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
 
     // --- Teacher Dashboard Connection ---
     useEffect(() => {
-        if (!socket.socket || !socket.socketState.connected || role !== 'teacher' || !gameId) return;
+        if (!socket.socket || !socket.socketState.connected || role !== 'teacher' || !accessCode) return;
 
-        logger.info('Teacher socket connected, joining dashboard room', { gameId });
+        logger.info('Teacher socket connected, joining dashboard room', { accessCode });
         // Use type assertion to bypass TypeScript error for the emit
-        (socket.socket.emit as any)('join_dashboard', { gameId });
-    }, [socket.socket, socket.socketState.connected, role, gameId]);
+        (socket.socket.emit as any)('join_dashboard', { accessCode });
+    }, [socket.socket, socket.socketState.connected, role, accessCode]);
 
     // --- Socket Event Handlers ---
     useEffect(() => {
@@ -273,7 +276,8 @@ export function useUnifiedGameManager(config: UnifiedGameConfig): UnifiedGameMan
             reset: timer.reset,
             setDuration: timer.setDuration,
             formatTime: timer.formatTime,
-            getDisplayTime: timer.getDisplayTime
+            getDisplayTime: timer.getDisplayTime,
+            syncWithBackend: timer.syncWithBackend
         },
         socket: {
             instance: socket.socket,
@@ -487,40 +491,63 @@ function createRoleSpecificActions(
     const actions: any = {};
     if (role === 'teacher') {
         actions.setQuestion = (questionUid: string, duration?: number) => {
-            // Always provide a non-optional gameId (string)
-            const payload: import('@shared/types/socket/payloads').SetQuestionPayload = {
+            if (!config.gameId) {
+                logger.error('Missing gameId for setQuestion');
+                return;
+            }
+            const payload: import('@shared/types/socket/dashboardPayloads').SetQuestionPayload = {
                 gameId: String(config.gameId),
                 questionUid: questionUid,
                 questionIndex: 0 // TODO: Replace with actual index if available
             };
-            // Only include gameId if present (using gameId instead of accessCode)
-            if (config.gameId) {
-                payload.gameId = config.gameId;
-            }
             socket.socket?.emit(
                 SOCKET_EVENTS.TEACHER.SET_QUESTION as keyof ClientToServerEvents,
                 payload
             );
-            if (duration) {
-                socket.emitTimerAction('start', duration);
+            if (duration && config.accessCode) {
+                // Use the new emitTimerAction signature
+                socket.emitTimerAction(
+                    'start',
+                    config.accessCode,
+                    questionUid,
+                    duration
+                );
             }
         };
         actions.endGame = () => {
+            if (!config.accessCode) {
+                logger.error('Missing accessCode for endGame');
+                return;
+            }
+            const payload: { accessCode: string; gameId?: string } = { accessCode: config.accessCode };
+            if (config.gameId) payload.gameId = config.gameId;
             socket.socket?.emit(
                 SOCKET_EVENTS.TEACHER.END_GAME as keyof ClientToServerEvents,
-                { accessCode: String(config.gameId) }
+                payload
             );
         };
         actions.lockAnswers = () => {
+            if (!config.accessCode) {
+                logger.error('Missing accessCode for lockAnswers');
+                return;
+            }
+            const payload: { accessCode: string; gameId?: string; lock: boolean } = { accessCode: config.accessCode, lock: true };
+            if (config.gameId) payload.gameId = config.gameId;
             socket.socket?.emit(
                 SOCKET_EVENTS.TEACHER.LOCK_ANSWERS as keyof ClientToServerEvents,
-                { accessCode: String(config.gameId), lock: true }
+                payload
             );
         };
         actions.unlockAnswers = () => {
+            if (!config.accessCode) {
+                logger.error('Missing accessCode for unlockAnswers');
+                return;
+            }
+            const payload: { accessCode: string; gameId?: string; lock: boolean } = { accessCode: config.accessCode, lock: false };
+            if (config.gameId) payload.gameId = config.gameId;
             socket.socket?.emit(
                 SOCKET_EVENTS.TEACHER.LOCK_ANSWERS as keyof ClientToServerEvents,
-                { accessCode: String(config.gameId), lock: false }
+                payload
             );
         };
     }
@@ -553,9 +580,13 @@ function createRoleSpecificActions(
     }
     if (role === 'projection') {
         actions.getState = () => {
+            if (!config.accessCode) {
+                logger.error('Missing accessCode for getState (projection role)');
+                return;
+            }
             socket.socket?.emit(
                 SOCKET_EVENTS.TEACHER.GET_GAME_STATE as keyof ClientToServerEvents,
-                { accessCode: config.gameId! }
+                { accessCode: config.accessCode }
             );
         };
     }

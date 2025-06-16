@@ -193,16 +193,21 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
 
                 case 'pause':
                     if (timer.status !== 'pause') {
-                        // For shared timer structure, we already have timeLeftMs
-                        const timeRemaining = Math.max(0, timer.timeLeftMs);
+                        // Use the frontend-provided duration (remaining time) if available,
+                        // otherwise fall back to stored timeLeftMs
+                        const timeRemaining = validDurationMs !== undefined
+                            ? Math.max(0, validDurationMs)
+                            : Math.max(0, timer.timeLeftMs);
 
                         // 🔥 PAUSE DEBUG: Log the pause calculation
                         logger.warn('🔥 PAUSE DEBUG: Backend pause calculation', {
                             now,
-                            'timer.timeLeftMs': timer.timeLeftMs,
+                            'validDurationMs (from frontend)': validDurationMs,
+                            'timer.timeLeftMs (stored)': timer.timeLeftMs,
                             'timer.durationMs': timer.durationMs,
                             timeRemaining,
-                            'timeRemaining === 0': timeRemaining === 0
+                            'timeRemaining === 0': timeRemaining === 0,
+                            'using frontend duration': validDurationMs !== undefined
                         });
 
                         timer = {
@@ -365,6 +370,14 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     ? gameState.questionUids[gameState.currentQuestionIndex]
                     : null;
                 targetQuestionUid = currentQuestionFromState || undefined;
+            }
+
+            // Update timer object with resolved questionUid before broadcasting
+            if (targetQuestionUid) {
+                timer = {
+                    ...timer,
+                    questionUid: targetQuestionUid
+                };
             }
 
             // Broadcast timer update to all relevant rooms

@@ -24,7 +24,7 @@ export interface SortableQuestionProps {
     quizState?: QuizState | null; // Gardé pour la logique interne si besoin
     open: boolean;
     setOpen: () => void;
-    onPlay: (uid: string, time: number) => void;
+    onPlay: (uid: string, timeMs: number) => void; // timeMs in milliseconds per documentation
     onPause: () => void;
     onStop?: () => void;
     // onSelect: () => void; // Gardé pour la sélection via clic/touche
@@ -138,16 +138,16 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     const displayedTimeLeft = React.useMemo(() => {
         if (isActive) {
             if (liveStatus === 'stop') {
-                // liveTimeLeft is in milliseconds, q.timeLimit is in seconds from database
-                return liveTimeLeft ?? ((q.timeLimit ?? 0) * 1000);
+                // When stopped, always show the original question time (already in ms from backend)
+                return q.timeLimit ?? 0;
             } else if (liveStatus === 'pause' || liveStatus === 'play') {
-                // liveTimeLeft is in milliseconds, q.timeLimit is in seconds from database
-                return liveTimeLeft ?? ((q.timeLimit ?? 0) * 1000);
+                // For pause/play, use liveTimeLeft from backend, fallback to original time
+                return liveTimeLeft ?? (q.timeLimit ?? 0);
             } else {
-                return (q.timeLimit ?? 0) * 1000;
+                return q.timeLimit ?? 0;
             }
         } else {
-            return (q.timeLimit ?? 0) * 1000;
+            return q.timeLimit ?? 0;
         }
     }, [isActive, liveStatus, liveTimeLeft, q.timeLimit]);
 
@@ -205,7 +205,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
             // Convert milliseconds to seconds for display in edit input
             const initialValue = liveTimeLeft !== undefined && liveTimeLeft !== null
                 ? Math.ceil(liveTimeLeft / 1000)
-                : Math.ceil((q.timeLimit ?? 0));
+                : Math.ceil((q.timeLimit ?? 0) / 1000); // q.timeLimit is already in ms from backend
             setEditTimerValue(String(initialValue));
             setTimeout(() => timerInputRef.current?.focus(), 0);
         }
@@ -268,14 +268,21 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         }
     };
 
-    // Handler for PLAY (convert milliseconds to seconds for parent)
+    // Handler for PLAY (keep in milliseconds as per documentation)
     const handlePlayWithCurrentTime = () => {
-        // displayedTimeLeft is in milliseconds, but onPlay expects seconds
-        const currentTimerInSeconds = timerConversions.msToSecondsDisplay(displayedTimeLeft);
-
         logger.debug('SortableQuestion handlePlayWithCurrentTime - Question UID:', q.uid);
+        logger.debug('SortableQuestion handlePlayWithCurrentTime - isActive:', isActive);
+        logger.debug('SortableQuestion handlePlayWithCurrentTime - liveStatus:', liveStatus);
 
-        onPlay(q.uid, currentTimerInSeconds); // Convert to seconds for parent
+        // Always use full duration for non-active questions to ensure proper "new question" detection
+        // Only use remaining time if this is the currently active question and it's paused
+        const timeToUse = (isActive && liveStatus === 'pause')
+            ? displayedTimeLeft  // Use remaining time for paused current question
+            : (q.timeLimit ?? 0);  // Use full duration for new questions (already in ms from backend)
+
+        logger.debug('SortableQuestion handlePlayWithCurrentTime - timeToUse (ms):', timeToUse);
+
+        onPlay(q.uid, timeToUse);
     };
 
     // --- Rendu ---
@@ -332,7 +339,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         inputMode="numeric"
                         pattern="[0-9]*"
                         className="w-20 px-1 py-0.5 rounded border border-gray-300 text-lg font-mono text-center bg-input text-foreground"
-                        value={formatTime(parseInt(editTimerValue, 10) || 0)}
+                        value={formatTime((parseInt(editTimerValue, 10) || 0) * 1000)}
                         onChange={e => {
                             const val = e.target.value.replace(/[^0-9:]/g, '');
                             if (val.includes(':')) {

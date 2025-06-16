@@ -115,33 +115,46 @@ async function runGameFlow(io, accessCode, questions, options) {
                 : 5; // Default to 5 seconds when feedbackWaitTime is null
             // Wait for the delay between correct answers and feedback
             await new Promise((resolve) => setTimeout(resolve, correctAnswersToFeedbackDelay * 1000));
-            // Emit feedback event with the full feedback display duration and explanation
-            logger.info({ room: `game_${accessCode}`, event: 'feedback', questionUid: questions[i].uid, feedbackDisplayDuration }, '[DEBUG] Emitting feedback');
-            // DETAILED LOGGING: Debug explanation transmission
-            const feedbackPayload = {
-                questionUid: questions[i].uid,
-                feedbackRemaining: feedbackDisplayDuration,
-                explanation: questions[i].explanation || undefined // Include explanation in feedback event
-            };
-            logger.info('=== BACKEND FEEDBACK PAYLOAD DEBUG ===', {
-                accessCode,
-                questionIndex: i,
-                questionUid: questions[i].uid,
-                questionExplanation: questions[i].explanation,
-                explanationLength: questions[i].explanation ? questions[i].explanation.length : 0,
-                explanationExists: !!questions[i].explanation,
-                payloadExplanation: feedbackPayload.explanation,
-                fullPayload: JSON.stringify(feedbackPayload)
-            });
-            io.to(`game_${accessCode}`).emit('feedback', feedbackPayload);
-            logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid, feedbackDisplayDuration, hasExplanation: !!questions[i].explanation }, '[TRACE] Emitted feedback');
-            options.onFeedback?.(i);
-            // Wait for feedback display duration before proceeding to next question
-            await new Promise((resolve) => setTimeout(resolve, feedbackDisplayDuration * 1000));
+            // Only emit feedback event if there's an explanation to show
+            if (questions[i].explanation) {
+                // Emit feedback event with the full feedback display duration and explanation
+                logger.info({ room: `game_${accessCode}`, event: 'feedback', questionUid: questions[i].uid, feedbackDisplayDuration }, '[DEBUG] Emitting feedback');
+                // DETAILED LOGGING: Debug explanation transmission
+                const feedbackPayload = {
+                    questionUid: questions[i].uid,
+                    feedbackRemaining: feedbackDisplayDuration,
+                    explanation: questions[i].explanation // Include explanation in feedback event
+                };
+                logger.info('=== BACKEND FEEDBACK PAYLOAD DEBUG ===', {
+                    accessCode,
+                    questionIndex: i,
+                    questionUid: questions[i].uid,
+                    questionExplanation: questions[i].explanation,
+                    explanationLength: questions[i].explanation.length,
+                    explanationExists: true,
+                    payloadExplanation: feedbackPayload.explanation,
+                    fullPayload: JSON.stringify(feedbackPayload)
+                });
+                io.to(`game_${accessCode}`).emit('feedback', feedbackPayload);
+                logger.info({ accessCode, event: 'feedback', questionUid: questions[i].uid, feedbackDisplayDuration, hasExplanation: true }, '[TRACE] Emitted feedback');
+                options.onFeedback?.(i);
+                // Wait for feedback display duration before proceeding to next question
+                await new Promise((resolve) => setTimeout(resolve, feedbackDisplayDuration * 1000));
+            }
+            else {
+                // No explanation - skip feedback phase and proceed directly
+                logger.info({ accessCode, questionUid: questions[i].uid }, '[DEBUG] Skipping feedback phase - no explanation available');
+                options.onFeedback?.(i); // Still call the callback for consistency
+            }
         }
-        logger.info({ room: `game_${accessCode}`, event: 'game_end' }, '[DEBUG] Emitting game_end');
-        io.to(`game_${accessCode}`).emit('game_end');
-        logger.info({ accessCode, event: 'game_end' }, '[TRACE] Emitted game_end');
+        // Game completed, emit game_ended with stats for navigation
+        const gameEndedPayload = {
+            accessCode,
+            totalQuestions: questions.length
+        };
+        logger.info({ room: `game_${accessCode}`, event: 'game_ended', payload: gameEndedPayload }, '[DEBUG] Emitting game_ended for navigation');
+        io.to(`game_${accessCode}`).emit('game_ended', gameEndedPayload);
+        logger.info({ accessCode, event: 'game_ended' }, '[TRACE] Emitted game_ended');
         options.onGameEnd?.();
     }
     catch (error) {

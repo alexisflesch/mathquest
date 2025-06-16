@@ -53,7 +53,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     isOpen = false,
     onToggleOpen,
     timerStatus = "stop",
-    timeLeftMs = (question.timeLimit ?? 0) * 1000, // Convert database seconds to milliseconds for internal use
+    timeLeftMs = (question.timeLimit ?? 0), // Backend already sends timeLimit in milliseconds
     onPlay,
     onPause,
     onStop,
@@ -70,13 +70,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onStatsToggle, // NEW: destructure onStatsToggle
     stats, // NEW: destructure stats
 }) => {
-    // Debug: Log the question data received
-    logger.info('[DEBUG QuestionDisplay] Received question:', question);
-    const answersForDisplay = getAnswersForDisplay(question);
-    logger.info('[DEBUG QuestionDisplay] Question answerOptions:', question.answerOptions);
-    logger.info('[DEBUG QuestionDisplay] Question correctAnswers:', question.correctAnswers);
-    logger.info('[DEBUG QuestionDisplay] Computed answers for display:', answersForDisplay);
-    logger.info('[DEBUG QuestionDisplay] Question text:', question.text);
+    // // Debug: Log the question data received
+    // logger.info('[DEBUG QuestionDisplay] Received question:', question);
+    // const answersForDisplay = getAnswersForDisplay(question);
+    // logger.info('[DEBUG QuestionDisplay] Question answerOptions:', question.answerOptions);
+    // logger.info('[DEBUG QuestionDisplay] Question correctAnswers:', question.correctAnswers);
+    // logger.info('[DEBUG QuestionDisplay] Computed answers for display:', answersForDisplay);
+    // logger.info('[DEBUG QuestionDisplay] Question text:', question.text);
 
     // Détermine l'état effectif des boutons play/pause
     const effectiveIsRunning = timerStatus === 'play';

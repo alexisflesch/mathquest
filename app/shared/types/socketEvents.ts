@@ -12,6 +12,7 @@ import type {
     LeaderboardEntry
 } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
+import type { SetQuestionPayload } from './socket/dashboardPayloads';
 import type {
     PracticeClientToServerEvents,
     PracticeServerToClientEvents
@@ -115,11 +116,11 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
     request_participants: (payload: { accessCode: string }) => void;
     request_next_question: (payload: { accessCode: string; userId: string; currentQuestionUid: string | null }) => void;
     // Teacher controls - using actual event names from TEACHER_EVENTS
-    set_question: (payload: { gameId?: string; accessCode?: string; questionUid: string; questionIndex: number }) => void;
+    set_question: (payload: SetQuestionPayload) => void;
     quiz_timer_action: (payload: TimerActionPayload) => void;
     lock_answers: (payload: { accessCode?: string; gameId?: string; lock: boolean }) => void;
     end_game: (payload: { accessCode: string; gameId?: string }) => void;
-    join_dashboard: (payload: { gameId: string }) => void;
+    join_dashboard: (payload: { accessCode: string }) => void;
     get_game_state: (payload: { accessCode: string }) => void;
     set_timer: (payload: { gameId?: string; time: number; questionUid?: string }) => void;
     update_tournament_code: (payload: { gameId: string; newCode: string }) => void;
