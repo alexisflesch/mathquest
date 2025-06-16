@@ -55,17 +55,11 @@ const AnswerFeedbackOverlay: React.FC<AnswerFeedbackOverlayProps> = ({
             progressBarRef.current.style.width = '0%';
         }
 
-        // Auto-close after duration (unless manual close is allowed and user needs to close manually)
-        if (!allowManualClose) {
-            const timeout = setTimeout(() => {
-                handleClose();
-            }, duration * 1000);
-            return () => clearTimeout(timeout);
-        }
-
+        // Note: No auto-close logic - parent component controls visibility
+        // The duration is only used for the progress bar animation
         // Return empty cleanup function for consistency
         return () => { };
-    }, [duration, showTimer, allowManualClose]);
+    }, [duration, showTimer]);
 
     if (!visible) return null;
 

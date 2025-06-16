@@ -64,9 +64,10 @@ async function runGameFlow(io, accessCode, questions, options) {
             const filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(questions[i]);
             const gameQuestionPayload = {
                 question: filteredQuestion,
-                index: i,
+                questionIndex: i, // Use shared type field name
+                totalQuestions: questions.length, // Add total questions count
                 feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1),
-                timer: questions[i].timeLimit || 30 // Include timer duration
+                timer: timer // Use timer state for initial question emission
             };
             logger.info({ room: `game_${accessCode}`, event: 'game_question', payload: gameQuestionPayload }, '[DEBUG] Emitting game_question');
             io.to(`game_${accessCode}`).emit('game_question', gameQuestionPayload);

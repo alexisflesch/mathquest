@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
-import { useStudentTimer } from './useGameTimer';
+import { useStudentTimer } from '@/hooks/useGameTimer';
 
 // Import shared types - organized by module
 import type {
@@ -46,9 +46,7 @@ import {
     validateEventPayload,
     isLiveQuestionPayload,
     isCorrectAnswersPayload,
-    isFeedbackEventPayload,
-    CorrectAnswersPayload,
-    FeedbackEventPayload
+    CorrectAnswersPayload
 } from '@/types/socketTypeGuards';
 
 const logger = createLogger('useStudentGameSocket');
@@ -117,6 +115,7 @@ export interface StudentGameSocketHookProps {
     username: string | null;
     avatarEmoji?: string | null;
     isDiffered?: boolean;
+    onAnswerReceived?: () => void; // Callback when answer is received
 }
 
 export interface StudentGameSocketHook {
@@ -139,7 +138,8 @@ export function useStudentGameSocket({
     userId,
     username,
     avatarEmoji,
-    isDiffered = false
+    isDiffered = false,
+    onAnswerReceived
 }: StudentGameSocketHookProps): StudentGameSocketHook {
 
     const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
@@ -274,19 +274,30 @@ export function useStudentGameSocket({
                 logger.info('Synced timer from game_question payload', timerUpdate);
             }
 
-            setGameState(prev => ({
-                ...prev,
-                currentQuestion: payload.question,
-                questionIndex: payload.questionIndex ?? 0,
-                totalQuestions: payload.totalQuestions ?? 0,
-                answered: false,
-                gameStatus: 'active',
-                phase: 'question',
-                feedbackRemaining: null,
-                correctAnswers: null,
-                connectedToRoom: true,
-                timerStatus: payload.timer?.status || 'play'
-            }));
+            setGameState(prev => {
+                const newState = {
+                    ...prev,
+                    currentQuestion: payload.question,
+                    questionIndex: payload.questionIndex ?? 0,
+                    totalQuestions: payload.totalQuestions ?? prev.totalQuestions ?? 1, // Fallback to prevent 0
+                    answered: false,
+                    gameStatus: 'active' as const,
+                    phase: 'question' as const,
+                    feedbackRemaining: null,
+                    correctAnswers: null,
+                    connectedToRoom: true,
+                    timerStatus: payload.timer?.status || 'play'
+                };
+
+                logger.info('=== QUESTION STATE UPDATED ===', {
+                    questionUid: payload.question.uid,
+                    questionIndex: payload.questionIndex ?? 0,
+                    totalQuestions: payload.totalQuestions ?? 0,
+                    questionText: payload.question.text.substring(0, 50) + '...'
+                });
+
+                return newState;
+            });
         }, isLiveQuestionPayload, 'game_question'));
         socket.on('timer_update', createSafeEventHandler<TimerUpdatePayload>((data) => {
             gameTimer.syncWithBackend(data);
@@ -323,8 +334,19 @@ export function useStudentGameSocket({
                 // Keep existing phase and feedbackRemaining values
             }));
         }, (d): d is GameStateUpdatePayload => true, 'game_state_update'));
-        socket.on('answer_received', createSafeEventHandler<AnswerReceived>((payload) => {
+        socket.on('answer_received', createSafeEventHandler<{
+            questionUid: string;
+            timeSpent: number;
+            correct?: boolean;
+            correctAnswers?: boolean[];
+            explanation?: string;
+        }>((payload) => {
             logger.info('=== ANSWER RECEIVED ===', payload);
+
+            // Trigger snackbar callback
+            if (onAnswerReceived) {
+                onAnswerReceived();
+            }
 
             // Store the answer feedback (without correct answers - those come from correct_answers event)
             setGameState(prev => {
@@ -342,23 +364,21 @@ export function useStudentGameSocket({
                     lastAnswerFeedback: feedback
                 };
             });
-        }, (data): data is AnswerReceived => {
+        }, (data): data is {
+            questionUid: string;
+            timeSpent: number;
+            correct?: boolean;
+            correctAnswers?: boolean[];
+            explanation?: string;
+        } => {
             if (!data || typeof data !== 'object') return false;
             const a = data as Record<string, unknown>;
             return typeof a.questionUid === 'string' &&
-                typeof a.timeSpent === 'number' &&
-                typeof a.correct === 'boolean';
+                typeof a.timeSpent === 'number';
+            // correct is optional, so don't require it
         }, 'answer_received'));
-        socket.on('game_ended', () => {
-            setGameState(prev => ({ ...prev, gameStatus: 'completed', timer: null }));
-        });
 
         // Add missing event listeners that backend emits
-        socket.on('game_end', () => {
-            logger.info('=== GAME END RECEIVED ===');
-            setGameState(prev => ({ ...prev, gameStatus: 'completed', timer: null }));
-        });
-
         socket.on('correct_answers', createSafeEventHandler<CorrectAnswersPayload>((payload) => {
             logger.info('=== CORRECT ANSWERS EVENT ===', payload);
 
@@ -376,14 +396,27 @@ export function useStudentGameSocket({
             });
         }, isCorrectAnswersPayload, 'correct_answers'));
 
-        socket.on('feedback', createSafeEventHandler<FeedbackEventPayload>((payload) => {
+        socket.on('feedback', createSafeEventHandler<{
+            questionUid: string;
+            feedbackRemaining: number;
+            [key: string]: any; // Allows explanation and other fields
+        }>((payload) => {
             logger.info('=== FEEDBACK PHASE STARTED ===', payload);
             setGameState(prev => ({
                 ...prev,
                 phase: 'feedback',
-                feedbackRemaining: payload.feedbackRemaining
+                feedbackRemaining: payload.feedbackRemaining,
+                lastAnswerFeedback: {
+                    ...prev.lastAnswerFeedback,
+                    explanation: payload.explanation, // Store the explanation from feedback event
+                    questionUid: payload.questionUid
+                }
             }));
-        }, isFeedbackEventPayload, 'feedback'));
+        }, (data): data is { questionUid: string; feedbackRemaining: number;[key: string]: any } => {
+            if (!data || typeof data !== 'object') return false;
+            const f = data as Record<string, unknown>;
+            return typeof f.questionUid === 'string' && typeof f.feedbackRemaining === 'number';
+        }, 'feedback'));
 
         socket.on('game_error', createSafeEventHandler<ErrorPayload>((error) => {
             setError(error.message || 'Unknown game error');
@@ -391,6 +424,16 @@ export function useStudentGameSocket({
         socket.on('game_already_played', createSafeEventHandler<GameAlreadyPlayedPayload>(() => {
             setError('You have already played this game');
         }, (d): d is GameAlreadyPlayedPayload => true, 'game_already_played'));
+
+        // Listen for backend game end signal - this should control navigation
+        socket.on('game_ended', createSafeEventHandler<{ accessCode: string; endedAt?: string; score?: number; totalQuestions?: number; correct?: number; total?: number }>((payload) => {
+            logger.info('=== GAME ENDED ===', payload);
+            // Use window.location for more reliable navigation
+            window.location.href = `/leaderboard/${payload.accessCode}`;
+        }, (data): data is { accessCode: string; endedAt?: string; score?: number; totalQuestions?: number; correct?: number; total?: number } => {
+            return typeof data === 'object' && data !== null && 'accessCode' in data && typeof (data as any).accessCode === 'string';
+        }, 'game_ended'));
+
         // No legacy or backward compatibility event listeners remain
         return () => {
             socket.off('game_joined');
@@ -400,7 +443,6 @@ export function useStudentGameSocket({
             socket.off('game_state_update');
             socket.off('answer_received');
             socket.off('game_ended');
-            socket.off('game_end');
             socket.off('correct_answers');
             socket.off('feedback');
             socket.off('game_error');

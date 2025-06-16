@@ -60,7 +60,8 @@ export async function sendFirstQuestionAndStartTimer({
 
     const payload = {
         question: filteredQuestion,
-        index: 0,
+        questionIndex: 0, // Use shared type field name
+        totalQuestions: 1, // Practice mode has 1 question at a time
         timer: firstQ.timeLimit || 30 // Include timer duration
     };
     if (mode === 'practice') {

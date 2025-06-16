@@ -594,23 +594,6 @@ export function isCorrectAnswersPayload(data: unknown): data is CorrectAnswersPa
         (c.correctAnswers === undefined || Array.isArray(c.correctAnswers));
 }
 
-// --- Feedback Event Type Guards (for practice mode) ---
-
-export interface FeedbackEventPayload {
-    questionUid?: string;
-    feedbackRemaining: number;
-}
-
-export function isFeedbackEventPayload(data: unknown): data is FeedbackEventPayload {
-    if (!data || typeof data !== 'object') return false;
-
-    const f = data as Record<string, unknown>;
-    return (
-        typeof f.questionUid === 'string' &&
-        typeof f.feedbackRemaining === 'number'
-    );
-}
-
 // --- Live Question Type Guard ---
 
 export function isLiveQuestionPayload(data: unknown): data is LiveQuestionPayload {
@@ -623,17 +606,18 @@ export function isLiveQuestionPayload(data: unknown): data is LiveQuestionPayloa
         typeof q.text === 'string' &&
         typeof q.questionType === 'string' &&
         Array.isArray(q.answerOptions) &&
-        // Optional fields
-        (q.explanation === undefined || typeof q.explanation === 'string') &&
+        // Optional fields - note: null is also allowed for database nullable fields
+        (q.explanation === undefined || q.explanation === null || typeof q.explanation === 'string') &&
         (q.correctAnswers === undefined || Array.isArray(q.correctAnswers)) &&
         (q.timeLimit === undefined || typeof q.timeLimit === 'number') &&
         (q.gradeLevel === undefined || typeof q.gradeLevel === 'string') &&
         (q.difficulty === undefined || typeof q.difficulty === 'number') &&
         (q.themes === undefined || Array.isArray(q.themes)) &&
-        (lq.timer === undefined || typeof lq.timer === 'number') &&
+        (lq.timer === undefined || typeof lq.timer === 'object') &&
         (lq.questionIndex === undefined || typeof lq.questionIndex === 'number') &&
         (lq.totalQuestions === undefined || typeof lq.totalQuestions === 'number') &&
         (lq.questionState === undefined || typeof lq.questionState === 'string') &&
-        (lq.modeSpecificData === undefined || typeof lq.modeSpecificData === 'object')
+        (lq.modeSpecificData === undefined || typeof lq.modeSpecificData === 'object') &&
+        (lq.feedbackWaitTime === undefined || typeof lq.feedbackWaitTime === 'number')
     );
 }

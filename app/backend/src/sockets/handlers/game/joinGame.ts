@@ -264,7 +264,8 @@ export function joinGameHandler(
                                 // Send current question with actual remaining time
                                 const lateJoinerQuestionPayload = {
                                     question: filteredQuestion,
-                                    index: gameState.currentQuestionIndex,
+                                    questionIndex: gameState.currentQuestionIndex, // Use shared type field name
+                                    totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length, // Add total questions count
                                     feedbackWaitTime: currentQuestion.feedbackWaitTime || 1.5,
                                     timer: actualTimer
                                 };

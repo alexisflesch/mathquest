@@ -233,17 +233,32 @@ function setQuestionHandler(io, socket) {
                 const currentTimer = gameState.timer;
                 const isCurrentlyRunning = currentTimer && currentTimer.status === 'play';
                 if (isCurrentlyRunning) {
-                    // Keep timer running but update duration for new question
+                    // Keep timer running but preserve actual remaining time for existing question
+                    // or reset to full duration only if it's truly a new question
+                    let actualTimeLeft = duration; // Default to full duration for new questions
+                    // If timer is running and has timing info, calculate actual remaining time
+                    if (currentTimer.startedAt) {
+                        const elapsed = Date.now() - currentTimer.startedAt;
+                        actualTimeLeft = Math.max(0, currentTimer.durationMs - elapsed);
+                        logger.info({
+                            gameId,
+                            questionUid,
+                            elapsed,
+                            originalDuration: currentTimer.durationMs,
+                            actualTimeLeft
+                        }, 'Preserving actual remaining time for running timer');
+                    }
                     const newTimer = {
                         status: 'play',
-                        timeLeftMs: duration, // Full duration for new question
-                        durationMs: duration,
+                        timeLeftMs: actualTimeLeft, // Use actual remaining time, not full duration
+                        durationMs: duration, // Update duration for new question
                         questionUid: questionUid,
                         timestamp: Date.now(),
-                        localTimeLeftMs: null
+                        localTimeLeftMs: null,
+                        startedAt: currentTimer.startedAt || Date.now() // Preserve or set start time
                     };
                     gameState.timer = newTimer;
-                    logger.info({ gameId, questionUid, duration }, 'Timer was running, keeping it active for new question');
+                    logger.info({ gameId, questionUid, actualTimeLeft, duration }, 'Timer running: preserved actual remaining time');
                 }
                 else {
                     // Default: start paused so teacher can control when to begin

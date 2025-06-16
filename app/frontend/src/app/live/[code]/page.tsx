@@ -109,7 +109,12 @@ export default function LiveGamePage() {
         userId,
         username,
         avatarEmoji,
-        isDiffered
+        isDiffered,
+        onAnswerReceived: () => {
+            setSnackbarType("success");
+            setSnackbarMessage("Réponse enregistrée");
+            setSnackbarOpen(true);
+        }
     });
 
     // Local UI state
@@ -133,32 +138,9 @@ export default function LiveGamePage() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Check tournament status on mount
-    useEffect(() => {
-        async function checkTournamentStatus() {
-            try {
-                const status = await makeApiRequest<{
-                    status: string;
-                    statut?: string;
-                }>(`games/${code}/state`);
-
-                if (status.status === 'finished' || status.statut === 'terminé') {
-                    logger.info(`Tournament ${code} is finished, redirecting to leaderboard`);
-                    router.replace(`/leaderboard/${code}`);
-                } else if (status.status === 'preparing' || status.statut === 'en préparation') {
-                    logger.info(`Tournament ${code} is still in preparation, redirecting to lobby`);
-                    router.replace(`/lobby/${code}`);
-                }
-            } catch (err) {
-                logger.error(`Error checking tournament status: ${err}`);
-            }
-        }
-
-        // Only check tournament status if user is authenticated
-        if (userProfile.username) {
-            checkTournamentStatus();
-        }
-    }, [code, router, userState, userProfile.username]);
+    // NOTE: Removed autonomous tournament status checking and redirecting
+    // The frontend should NOT make autonomous decisions about redirecting
+    // It should wait for backend signals via socket events like 'tournament_finished_redirect'
 
     // Automatically join the game when user data is ready
     useEffect(() => {
@@ -168,19 +150,16 @@ export default function LiveGamePage() {
         }
     }, [userId, username, code, connected, connecting, joinGame]);
 
-    // Handle game end - redirect to leaderboard (Handled by socket hook)
-    // Disabled in favor of socket hook redirect which happens faster (2s vs 3s)
-    // useEffect(() => {
-    //     if (gameState.gameStatus === 'finished') {
-    //         logger.info(`Game finished, redirecting to leaderboard in 3 seconds`);
-    //         console.log('Game status changed to finished:', gameState);
-    //         const timer = setTimeout(() => {
-    //             logger.info(`Redirecting to leaderboard: /leaderboard/${code}`);
-    //             router.push(`/leaderboard/${code}`);
-    //         }, 3000); // Give user time to see final results
-    //         return () => clearTimeout(timer);
-    //     }
-    // }, [gameState.gameStatus, router, code]);
+    // Handle game end - Wait for backend signaling, do NOT redirect automatically
+    // The backend should emit 'tournament_finished_redirect' or similar event
+    // Removed automatic redirect to respect backend control
+    useEffect(() => {
+        if (gameState.gameStatus === 'completed' && code) {
+            logger.info(`Game finished - waiting for backend redirect signal`);
+            // Do NOT redirect automatically - wait for backend event
+        }
+        return () => { }; // Return empty cleanup function for other cases
+    }, [gameState.gameStatus, router, code]);
 
     // Enhanced feedback handling for all modes
     useEffect(() => {
@@ -200,27 +179,21 @@ export default function LiveGamePage() {
             // Only show overlay if it's not already showing (prevent re-rendering every second)
 
             // Priority 1: Use explanation from lastAnswerFeedback (comes from backend feedback event)
-            // Priority 2: Use explanation from current question
-            // Priority 3: Generate message based on correctness
-            // Priority 4: Fallback messages
+            // Priority 2: Generate message based on correctness
+            // Priority 3: Fallback messages
+            // NOTE: Do NOT use currentQuestion.explanation autonomously - wait for backend feedback event
             let feedbackMessage: string | undefined;
 
             if (gameState.lastAnswerFeedback?.explanation) {
                 feedbackMessage = gameState.lastAnswerFeedback.explanation;
-            } else if (gameState.currentQuestion?.explanation) {
-                feedbackMessage = gameState.currentQuestion.explanation;
             } else if (gameState.lastAnswerFeedback?.correct !== undefined) {
                 // Generate message based on correctness if no explanation available
                 feedbackMessage = gameState.lastAnswerFeedback.correct
                     ? "Bonne réponse ! ✅"
                     : "Mauvaise réponse ❌";
             } else {
-                // Final fallback - check if we have any answer feedback
-                if (gameState.answered) {
-                    feedbackMessage = "Temps écoulé ⏰"; // Time expired
-                } else {
-                    feedbackMessage = "Réponse enregistrée"; // Answer recorded
-                }
+                // Default fallback when in feedback phase but no explanation available
+                feedbackMessage = "Réponse enregistrée"; // Answer recorded
             }
 
             setFeedbackText(feedbackMessage || "");
@@ -228,29 +201,24 @@ export default function LiveGamePage() {
             setShowFeedbackOverlay(true);
 
             logger.info(`Showing feedback overlay for ${gameState.feedbackRemaining}s`, {
-                hasExplanation: !!(gameState.lastAnswerFeedback?.explanation || gameState.currentQuestion?.explanation),
+                hasExplanation: !!(gameState.lastAnswerFeedback?.explanation),
                 feedbackMessage,
                 lastAnswerCorrect: gameState.lastAnswerFeedback?.correct,
-                explanationSource: gameState.lastAnswerFeedback?.explanation ? 'feedback' :
-                    gameState.currentQuestion?.explanation ? 'question' : 'generated'
+                explanationSource: gameState.lastAnswerFeedback?.explanation ? 'feedback' : 'generated'
             });
 
-            // Auto-hide feedback overlay when time expires
-            const timer = setTimeout(() => {
-                setShowFeedbackOverlay(false);
-            }, gameState.feedbackRemaining * 1000);
-
-            return () => clearTimeout(timer);
+            // NOTE: Do NOT auto-hide feedback overlay - let backend control when to close it
+            // The backend will send the next phase/question when feedback time is over
         }
         // Hide feedback overlay when new question starts
         else if (gameState.phase === 'question') {
-            setShowFeedbackOverlay(false);
+            setShowFeedbackOverlay(false); // Close feedback when new question starts
             setFeedbackText("");
         }
 
         // Return empty cleanup function for consistency
         return () => { };
-    }, [gameState.phase, gameState.feedbackRemaining, gameState.currentQuestion, gameState.gameMode, gameState.lastAnswerFeedback, gameState.correctAnswers]);
+    }, [gameState.phase, gameState.feedbackRemaining, gameState.gameMode, gameState.lastAnswerFeedback, gameState.correctAnswers]);
 
     // Handle socket errors
     useEffect(() => {
@@ -382,6 +350,17 @@ export default function LiveGamePage() {
             (gameState.answered && gameMode === 'practice');
     }, [gameState.phase, gameState.gameStatus, gameState.answered, gameMode]);
 
+    // Auto-hide snackbar after 2 seconds
+    useEffect(() => {
+        if (snackbarOpen) {
+            const timer = setTimeout(() => {
+                setSnackbarOpen(false);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+        return () => { }; // Return empty cleanup function when snackbar is not open
+    }, [snackbarOpen]);
+
     return (
         <div className="main-content">
             {/* Enhanced Feedback Overlay */}
@@ -483,13 +462,6 @@ export default function LiveGamePage() {
                     </div>
                 )}
             </div>
-
-            {/* Mode indicator (for debugging) */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className="fixed bottom-4 left-4 bg-gray-800 text-white px-2 py-1 rounded text-xs">
-                    Mode: {gameMode} | Phase: {gameState.phase} | Status: {gameState.gameStatus}
-                </div>
-            )}
 
             {/* Snackbar for notifications */}
             <Snackbar
