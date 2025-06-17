@@ -78,8 +78,14 @@ router.get('/filters', async (req: Request, res: Response<{ gradeLevel: (string 
         const { gradeLevel, discipline } = req.query;
 
         const filterCriteria: any = {};
-        if (gradeLevel) filterCriteria.gradeLevel = gradeLevel as string;
-        if (discipline) filterCriteria.discipline = discipline as string;
+        if (gradeLevel) {
+            // Handle both single values and arrays
+            filterCriteria.gradeLevel = Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel as string];
+        }
+        if (discipline) {
+            // Handle both single values and arrays
+            filterCriteria.discipline = Array.isArray(discipline) ? discipline : [discipline as string];
+        }
 
         const filters = await getQuestionService().getAvailableFilters(filterCriteria);
         res.status(200).json(filters);
@@ -176,7 +182,9 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
             questionType,
             includeHidden, // req.query.includeHidden (string | undefined)
             page = '1',
-            pageSize = '20'
+            pageSize = '20',
+            limit, // Frontend uses 'limit' instead of 'pageSize'
+            offset // Frontend uses 'offset' for pagination
         } = req.query;
 
         // Convert to appropriate types
@@ -244,10 +252,21 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
         // filters.includeHidden remains undefined on the filters object.
         // The service layer will handle the default visibility.
 
-        const pagination = {
-            skip: (Number(page) - 1) * Number(pageSize),
-            take: Number(pageSize)
-        };
+        // Handle pagination - support both page/pageSize and offset/limit formats
+        let pagination;
+        if (offset !== undefined || limit !== undefined) {
+            // Frontend offset-based pagination
+            pagination = {
+                skip: Number(offset) || 0,
+                take: Number(limit) || Number(pageSize)
+            };
+        } else {
+            // Traditional page-based pagination
+            pagination = {
+                skip: (Number(page) - 1) * Number(pageSize),
+                take: Number(pageSize)
+            };
+        }
 
         const result = await getQuestionService().getQuestions(filters, pagination);
 

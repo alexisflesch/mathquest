@@ -244,29 +244,34 @@ export class QuestionService {
             const niveauxWhere = { ...baseWhere };
             const disciplinesWhere = { ...baseWhere };
             const themesWhere = { ...baseWhere };
+            const authorsWhere = { ...baseWhere };
 
             // Apply cascading filter logic
             if (filterCriteria?.discipline) {
-                // When discipline is selected:
-                // - gradeLevel: show niveaux that have this discipline
-                // - disciplines: show only the selected discipline  
-                // - themes: show themes for this discipline
-                niveauxWhere.discipline = filterCriteria.discipline;
-                disciplinesWhere.discipline = filterCriteria.discipline;
-                themesWhere.discipline = filterCriteria.discipline;
+                // When discipline(s) is selected: use OR logic with 'in' operator
+                const disciplineFilter = Array.isArray(filterCriteria.discipline)
+                    ? { in: filterCriteria.discipline }
+                    : filterCriteria.discipline;
+
+                niveauxWhere.discipline = disciplineFilter;
+                disciplinesWhere.discipline = disciplineFilter;
+                themesWhere.discipline = disciplineFilter;
+                authorsWhere.discipline = disciplineFilter;
             }
 
             if (filterCriteria?.gradeLevel) {
-                // When niveau is selected:
-                // - gradeLevel: show only the selected niveau
-                // - disciplines: show disciplines that have this niveau
-                // - themes: show themes for this niveau
-                niveauxWhere.gradeLevel = filterCriteria.gradeLevel;
-                disciplinesWhere.gradeLevel = filterCriteria.gradeLevel;
-                themesWhere.gradeLevel = filterCriteria.gradeLevel;
+                // When niveau(s) is selected: use OR logic with 'in' operator
+                const gradeLevelFilter = Array.isArray(filterCriteria.gradeLevel)
+                    ? { in: filterCriteria.gradeLevel }
+                    : filterCriteria.gradeLevel;
+
+                niveauxWhere.gradeLevel = gradeLevelFilter;
+                disciplinesWhere.gradeLevel = gradeLevelFilter;
+                themesWhere.gradeLevel = gradeLevelFilter;
+                authorsWhere.gradeLevel = gradeLevelFilter;
             }
 
-            const [niveaux, disciplines, themes] = await Promise.all([
+            const [niveaux, disciplines, themes, authors] = await Promise.all([
                 prisma.question.findMany({
                     select: { gradeLevel: true },
                     distinct: ['gradeLevel'],
@@ -289,6 +294,17 @@ export class QuestionService {
                         ...themesWhere,
                         themes: { isEmpty: false }
                     }
+                }),
+                prisma.question.findMany({
+                    select: { author: true },
+                    distinct: ['author'],
+                    where: {
+                        ...authorsWhere,
+                        AND: [
+                            { author: { not: null } },
+                            { author: { not: '' } }
+                        ]
+                    }
                 })
             ]);
 
@@ -303,7 +319,8 @@ export class QuestionService {
             return {
                 gradeLevel: niveaux.map(n => n.gradeLevel).filter(Boolean).sort(),
                 disciplines: disciplines.map(d => d.discipline).filter(Boolean).sort(),
-                themes: Array.from(uniqueThemes).sort()
+                themes: Array.from(uniqueThemes).sort(),
+                authors: authors.map(a => a.author).filter(Boolean).sort()
             };
         } catch (error) {
             logger.error({ error }, 'Error fetching available filters');

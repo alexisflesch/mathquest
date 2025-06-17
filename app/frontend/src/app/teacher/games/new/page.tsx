@@ -175,8 +175,9 @@ export default function CreateActivityPage() {
             authors?: string[];
         }>('questions/filters')
             .then(data => {
+                console.log('Filters API response:', data); // Debug log
                 setFilters({
-                    levels: data.levels || data.levels || [], // Prefer 'levels', fallback to 'gradeLevel'
+                    levels: data.levels || data.niveaux || [], // Prefer 'levels', fallback to 'niveaux'
                     disciplines: data.disciplines || [],
                     themes: data.themes || [],
                     authors: data.authors || []
@@ -412,13 +413,10 @@ export default function CreateActivityPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Créer une nouvelle activité</h1>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                {selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'} sélectionnée{selectedQuestions.length <= 1 ? '' : 's'}
-                            </p>
                         </div>
                         <div className="hidden sm:block">
-                            <Link href="/teacher/games" className="btn btn-ghost flex items-center gap-2 whitespace-nowrap">
-                                Retour aux activités
+                            <Link href="/teacher/games" className="btn-primary">
+                                Voir mes activités
                             </Link>
                         </div>
                     </div>
@@ -546,27 +544,29 @@ export default function CreateActivityPage() {
                                     Sélectionnez des questions pour les ajouter au panier
                                 </div>
                             ) : (
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCenter}
-                                    onDragEnd={handleDragEnd}
-                                >
-                                    <SortableContext
-                                        items={selectedQuestions.map(q => q.uid)}
-                                        strategy={verticalListSortingStrategy}
+                                <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleDragEnd}
                                     >
-                                        <div className="space-y-1 overflow-y-auto flex-1 w-full">
-                                            {selectedQuestions.map((question) => (
-                                                <SortableCartQuestion
-                                                    key={question.uid}
-                                                    question={question}
-                                                    onRemove={() => removeFromCart(question.uid)}
-                                                    onTimeChange={(time) => updateQuestionTime(question.uid, time)}
-                                                />
-                                            ))}
-                                        </div>
-                                    </SortableContext>
-                                </DndContext>
+                                        <SortableContext
+                                            items={selectedQuestions.map(q => q.uid)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            <div className="space-y-1 overflow-y-auto flex-1 w-full">
+                                                {selectedQuestions.map((question) => (
+                                                    <SortableCartQuestion
+                                                        key={question.uid}
+                                                        question={question}
+                                                        onRemove={() => removeFromCart(question.uid)}
+                                                        onTimeChange={(time) => updateQuestionTime(question.uid, time)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </SortableContext>
+                                    </DndContext>
+                                </div>
                             )}
 
                             {/* Activity Name and Metadata - Fixed at bottom */}
