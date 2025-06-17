@@ -32,9 +32,15 @@ interface PracticeParams {
     level: string;
     themes: string[];
     limit: number;
+    gameTemplateId?: string;
 }
 
-export default function PracticeSessionPage() {
+interface PracticeSessionPageProps {
+    gameInstance?: any; // GameInstance from access code flow  
+    practiceSettings?: any; // PracticeSettings from access code flow
+}
+
+export default function PracticeSessionPage({ gameInstance, practiceSettings }: PracticeSessionPageProps = {}) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userId = getUserId();
@@ -45,7 +51,8 @@ export default function PracticeSessionPage() {
         discipline: '',
         level: '',
         themes: [],
-        limit: 10
+        limit: 10,
+        gameTemplateId: undefined
     });
 
     // UI state matching live page exactly
@@ -63,16 +70,29 @@ export default function PracticeSessionPage() {
     // Stats modal state
     const [showStatsModal, setShowStatsModal] = useState(false);
 
-    // Extract practice parameters from URL on component mount
+    // Extract practice parameters from props (access code flow) or URL (original flow)
     useEffect(() => {
-        const discipline = searchParams.get("discipline") || "";
-        const level = searchParams.get("gradeLevel") || "";
-        const themesParam = searchParams.get("themes") || "";
-        const limit = parseInt(searchParams.get("limit") || "10", 10);
-        const themes = themesParam ? themesParam.split(',').filter(t => t.trim()) : [];
+        if (practiceSettings && gameInstance) {
+            // Use data from GameInstance (access code flow)
+            setPracticeParams({
+                discipline: practiceSettings.discipline || '',
+                level: practiceSettings.gradeLevel || '',
+                themes: practiceSettings.themes || [],
+                limit: practiceSettings.questionCount || 10,
+                gameTemplateId: gameInstance.gameTemplateId || undefined
+            });
+        } else {
+            // Extract from URL params (original flow)
+            const discipline = searchParams.get("discipline") || "";
+            const level = searchParams.get("gradeLevel") || "";
+            const themesParam = searchParams.get("themes") || "";
+            const limit = parseInt(searchParams.get("limit") || "10", 10);
+            const gameTemplateId = searchParams.get("gameTemplateId") || "";
+            const themes = themesParam ? themesParam.split(',').filter(t => t.trim()) : [];
 
-        setPracticeParams({ discipline, level, themes, limit });
-    }, [searchParams]);
+            setPracticeParams({ discipline, level, themes, limit, gameTemplateId });
+        }
+    }, [searchParams, practiceSettings, gameInstance]);
 
     // Initialize practice session hook with auto-start when params are ready
     const {
@@ -92,7 +112,8 @@ export default function PracticeSessionPage() {
             questionCount: practiceParams.limit,
             showImmediateFeedback: true,
             allowRetry: true,
-            randomizeQuestions: false
+            randomizeQuestions: false,
+            gameTemplateId: practiceParams.gameTemplateId
         },
         autoStart: true // Auto-start session when connected and params are ready
     });
@@ -214,7 +235,7 @@ export default function PracticeSessionPage() {
             });
             setFeedbackText(practiceState.lastFeedback.explanation);
             setFeedbackDuration(10);
-            // Don't auto-show in practice mode, wait for user to click feedback
+            // Don't auto-show overlay - user must click the feedback button
         } else {
             logger.debug('No feedback text available', {
                 hasExplanation: !!practiceState.lastFeedback?.explanation,
@@ -387,11 +408,20 @@ export default function PracticeSessionPage() {
                 {practiceState.hasAnswered && !showFeedbackOverlay && (
                     <div className="mt-4">
                         <div className="flex justify-between items-center">
-                            {/* Left side: Explanation button */}
-                            {practiceState.lastFeedback?.explanation ? (
+                            {/* Left side: Explanation button - always available after answering */}
+                            {practiceState.hasAnswered && practiceState.currentQuestion ? (
                                 <button
                                     className="btn btn-outline btn-sm flex items-center gap-2"
-                                    onClick={() => setShowFeedbackOverlay(true)}
+                                    onClick={() => {
+                                        // If we already have explanation, show it
+                                        if (practiceState.lastFeedback?.explanation) {
+                                            setShowFeedbackOverlay(true);
+                                        } else if (practiceState.currentQuestion) {
+                                            // Otherwise request explanation from server
+                                            requestFeedback(practiceState.currentQuestion.uid);
+                                        }
+                                    }}
+                                    title="Voir l'explication"
                                 >
                                     <MessageCircle size={16} />
                                 </button>

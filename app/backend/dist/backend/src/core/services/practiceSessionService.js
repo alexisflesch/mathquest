@@ -25,8 +25,25 @@ class PracticeSessionService {
         try {
             // Generate unique session ID
             const sessionId = `practice_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            // Fetch questions based on settings
-            const questionPool = await this.generateQuestionPool(settings);
+            // Fetch questions - use GameTemplate questions if available, otherwise generate new ones
+            let questionPool;
+            if (settings.gameTemplateId) {
+                // Use pre-selected questions from GameTemplate
+                questionPool = await this.getGameTemplateQuestions(settings.gameTemplateId);
+                logger.info({
+                    sessionId,
+                    gameTemplateId: settings.gameTemplateId,
+                    questionCount: questionPool.length
+                }, 'Using GameTemplate questions for practice session');
+            }
+            else {
+                // Generate new questions based on criteria (original behavior)
+                questionPool = await this.generateQuestionPool(settings);
+                logger.info({
+                    sessionId,
+                    questionCount: questionPool.length
+                }, 'Generated new question pool for practice session');
+            }
             if (questionPool.length === 0) {
                 throw new Error('No questions found for the specified criteria');
             }
@@ -457,6 +474,37 @@ class PracticeSessionService {
         catch (error) {
             logger.error({ questionUid, error }, 'Failed to get question details');
             return null;
+        }
+    }
+    /**
+     * Private helper: Get questions from GameTemplate
+     */
+    async getGameTemplateQuestions(gameTemplateId) {
+        try {
+            const gameTemplate = await prisma_1.prisma.gameTemplate.findUnique({
+                where: { id: gameTemplateId },
+                include: {
+                    questions: {
+                        orderBy: { sequence: 'asc' },
+                        include: { question: true }
+                    }
+                }
+            });
+            if (!gameTemplate) {
+                throw new Error(`GameTemplate not found: ${gameTemplateId}`);
+            }
+            // Extract question UIDs in correct sequence order
+            const questionUids = gameTemplate.questions.map(qtq => qtq.questionUid);
+            logger.info({
+                gameTemplateId,
+                questionCount: questionUids.length,
+                questionUids
+            }, 'Retrieved questions from GameTemplate');
+            return questionUids;
+        }
+        catch (error) {
+            logger.error({ gameTemplateId, error }, 'Failed to get GameTemplate questions');
+            throw error;
         }
     }
 }

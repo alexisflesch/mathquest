@@ -212,15 +212,55 @@ function StudentCreateTournamentPageInner() {
                 ? themes.map((t: any) => typeof t === 'string' ? t : (t?.value || ''))
                 : (typeof themes === 'string' ? [themes] : []);
 
-            // Check if this is a training session - redirect to practice instead of creating tournament
+            // Check if this is a training session - create practice GameInstance
             if (isTraining) {
-                const params = new URLSearchParams({
+                const avatar = getAvatar();
+                const username = getUsername();
+
+                // Create practice GameInstance with access code
+                const requestBody = {
+                    name: `Entraînement - ${username}`,
+                    playMode: 'practice',
                     gradeLevel: safeNiveau,
                     discipline: safeDiscipline,
-                    themes: safeThemes.join(","),
-                    limit: String(numQuestions),
+                    themes: safeThemes,
+                    nbOfQuestions: numQuestions,
+                    settings: {
+                        type: 'practice',
+                        avatar: avatar,
+                        username: username,
+                        // Store practice criteria in settings for later extraction
+                        practiceSettings: {
+                            gradeLevel: safeNiveau,
+                            discipline: safeDiscipline,
+                            themes: safeThemes,
+                            questionCount: numQuestions,
+                            showImmediateFeedback: true,
+                            allowRetry: true,
+                            randomizeQuestions: false
+                        }
+                    }
+                };
+
+                logger.debug("Creating practice GameInstance", requestBody);
+                const gameResponse = await fetch('/api/games', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
                 });
-                router.push(`/student/practice/session?${params.toString()}`);
+
+                if (!gameResponse.ok) {
+                    const errorText = await gameResponse.text();
+                    throw new Error(`Erreur lors de la création: ${errorText}`);
+                }
+
+                const gameData = await gameResponse.json();
+                logger.info("Practice GameInstance created", gameData);
+
+                // Redirect to new practice session page with access code
+                router.push(`/student/practice/${gameData.gameInstance.accessCode}`);
                 return;
             }
 

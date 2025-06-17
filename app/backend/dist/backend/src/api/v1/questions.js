@@ -68,45 +68,25 @@ router.get('/filters', async (req, res) => {
         const { gradeLevel, discipline, theme, author } = req.query;
         const filterCriteria = {};
         if (gradeLevel) {
-            // Handle both single values and arrays
             filterCriteria.gradeLevel = Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel];
         }
         if (discipline) {
-            // Handle both single values and arrays
             filterCriteria.discipline = Array.isArray(discipline) ? discipline : [discipline];
         }
         if (theme) {
-            // Handle both single values and arrays
             filterCriteria.theme = Array.isArray(theme) ? theme : [theme];
         }
         if (author) {
-            // Handle both single values and arrays
             filterCriteria.author = Array.isArray(author) ? author : [author];
         }
-        // Get compatible filters based on current selections
         const compatibleFilters = await getQuestionService().getAvailableFilters(filterCriteria);
-        // Get all possible filters (without restrictions) for incompatible detection
-        const allFilters = await getQuestionService().getAvailableFilters({});
-        // Create enhanced response with compatibility information
-        const enhancedResponse = {
-            gradeLevel: (allFilters.gradeLevel || []).map(value => ({
-                value: value || '',
-                isCompatible: (compatibleFilters.gradeLevel || []).includes(value)
-            })).filter(item => item.value !== ''),
-            disciplines: (allFilters.disciplines || []).map(value => ({
-                value,
-                isCompatible: (compatibleFilters.disciplines || []).includes(value)
-            })),
-            themes: (allFilters.themes || []).map(value => ({
-                value,
-                isCompatible: (compatibleFilters.themes || []).includes(value)
-            })),
-            authors: (allFilters.authors || []).map(value => ({
-                value,
-                isCompatible: (compatibleFilters.authors || []).includes(value)
-            }))
-        };
-        res.status(200).json(enhancedResponse);
+        // Return only compatible filters for each field
+        res.status(200).json({
+            gradeLevel: (compatibleFilters.gradeLevel || []).filter((v) => typeof v === 'string'),
+            disciplines: (compatibleFilters.disciplines || []).filter((v) => typeof v === 'string'),
+            themes: (compatibleFilters.themes || []).filter((v) => typeof v === 'string'),
+            authors: (compatibleFilters.authors || []).filter((v) => typeof v === 'string'),
+        });
     }
     catch (error) {
         logger.error({ error }, 'Error fetching filters');

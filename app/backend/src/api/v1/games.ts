@@ -114,8 +114,8 @@ router.post('/', optionalAuth, validateRequestBody(CreateGameRequestSchema), asy
         }
 
         let finalgameTemplateId = gameTemplateId;
-        // If no gameTemplateId but student tournament params are provided, create GameTemplate on-the-fly
-        if (!gameTemplateId && playMode === 'tournament' && gradeLevel && discipline && Array.isArray(themes) && nbOfQuestions) {
+        // If no gameTemplateId but student tournament/practice params are provided, create GameTemplate on-the-fly
+        if (!gameTemplateId && (playMode === 'tournament' || playMode === 'practice') && gradeLevel && discipline && Array.isArray(themes) && nbOfQuestions) {
             try {
                 const gameTemplateService = new GameTemplateService();
                 const template = await gameTemplateService.createStudentGameTemplate({

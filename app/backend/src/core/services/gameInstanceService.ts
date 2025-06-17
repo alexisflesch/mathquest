@@ -71,11 +71,15 @@ export class GameInstanceService {
     async createGameInstanceUnified(data: GameInstanceUnifiedCreationData) {
         try {
             const accessCode = await this.generateUniqueAccessCode();
+
+            // Set status based on playMode - practice sessions are immediately active
+            const status = data.playMode === 'practice' ? 'active' : 'pending';
+
             const createData: any = {
                 name: data.name,
                 gameTemplateId: data.gameTemplateId,
                 accessCode,
-                status: 'pending',
+                status,
                 playMode: data.playMode,
                 settings: data.settings || {},
                 currentQuestionIndex: null,

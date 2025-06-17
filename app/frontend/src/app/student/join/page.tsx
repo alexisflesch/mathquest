@@ -1,13 +1,16 @@
 /**
- * Student Game Join Page
+ * Student Universal Join Page
  * 
- * This page provides the interface for students to join games (quiz, tournament, or practice):
+ * This page provides the interface for students to join any type of session:
+ * - Quiz/Tournament games → Lobby or Live interface
+ * - Practice sessions → Direct practice interface
  * - Simple numeric code entry with validation
  * - Smart routing based on game type and status
  * - Error handling for invalid codes
  * 
  * The component implements intelligent routing logic that directs students
- * to the appropriate experience based on the game's current state:
+ * to the appropriate experience based on the session type and state:
+ * - Practice sessions → Direct practice interface
  * - Games in preparation → Lobby
  * - Games in progress → Live interface
  * - Games that are finished → Live interface in differed mode
@@ -40,6 +43,19 @@ export default function StudentJoinPage() {
                 setError("Impossible de récupérer l'identifiant utilisateur. Veuillez vous reconnecter.");
                 return;
             }
+
+            // First, get the game instance to check playMode
+            const gameData = await makeApiRequest<{ gameInstance: any }>(`/api/games/${code}`);
+            const gameInstance = gameData.gameInstance;
+
+            // Check if this is a practice session
+            if (gameInstance.playMode === 'practice') {
+                // Redirect directly to practice session - no joining required
+                router.push(`/student/practice/${code}`);
+                return;
+            }
+
+            // For quiz/tournament games, proceed with join logic
             const data = await makeApiRequest<GameJoinResponse>('/api/games/' + code + '/join', {
                 method: 'POST',
                 body: JSON.stringify({ userId: userProfile.userId }),
@@ -79,7 +95,7 @@ export default function StudentJoinPage() {
                 className="card w-full max-w-md shadow-xl bg-base-100 my-6"
             >
                 <div className="card-body items-center gap-8">
-                    <h1 className="card-title text-3xl mb-4">Rejoindre un jeu</h1>
+                    <h1 className="card-title text-3xl mb-4">Rejoindre une session</h1>
                     <input
                         className="input input-bordered input-lg w-full text-center tracking-widest"
                         type="tel"
@@ -87,7 +103,7 @@ export default function StudentJoinPage() {
                         pattern="[0-9]*"
                         maxLength={8}
                         minLength={4}
-                        placeholder="Code du jeu"
+                        placeholder="Code de la session"
                         value={code}
                         onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
                         autoFocus

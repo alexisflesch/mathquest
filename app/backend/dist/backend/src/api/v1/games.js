@@ -81,8 +81,8 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
             return;
         }
         let finalgameTemplateId = gameTemplateId;
-        // If no gameTemplateId but student tournament params are provided, create GameTemplate on-the-fly
-        if (!gameTemplateId && playMode === 'tournament' && gradeLevel && discipline && Array.isArray(themes) && nbOfQuestions) {
+        // If no gameTemplateId but student tournament/practice params are provided, create GameTemplate on-the-fly
+        if (!gameTemplateId && (playMode === 'tournament' || playMode === 'practice') && gradeLevel && discipline && Array.isArray(themes) && nbOfQuestions) {
             try {
                 const gameTemplateService = new gameTemplateService_1.GameTemplateService();
                 const template = await gameTemplateService.createStudentGameTemplate({
@@ -117,18 +117,14 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
             });
             return;
         }
-        // Tag student-created games in settings
-        let patchedSettings = settings;
-        if (role === 'STUDENT') {
-            patchedSettings = { ...(settings || {}), createdVia: 'student-create-game' };
-        }
         const gameInstance = await getGameInstanceService().createGameInstanceUnified({
             name,
             gameTemplateId: finalgameTemplateId,
             playMode: playMode, // Type assertion for now
-            settings: patchedSettings,
+            settings: settings,
             initiatorUserId: userId
         });
+        logger.info('GamesAPI created gameInstance debug', { gameInstanceSettings: gameInstance.settings });
         // Initialize game state in Redis immediately after game instance creation
         await (0, gameStateService_1.initializeGameState)(gameInstance.id);
         res.status(201).json({ gameInstance });
