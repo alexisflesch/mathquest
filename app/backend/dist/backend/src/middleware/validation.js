@@ -14,6 +14,13 @@ const logger_1 = require("../utils/logger");
 function validateRequestBody(schema) {
     return (req, res, next) => {
         try {
+            // Debug: Log incoming request body before validation
+            if (req.path === '/api/v1/game-templates' && req.method === 'POST') {
+                logger_1.logger.info({
+                    questionUids: req.body.questionUids,
+                    rawBody: req.body
+                }, 'DEBUG: Pre-validation data for game templates');
+            }
             const validatedData = schema.parse(req.body);
             req.body = validatedData;
             next();

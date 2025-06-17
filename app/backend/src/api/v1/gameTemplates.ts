@@ -133,6 +133,18 @@ router.post('/', validateRequestBody(CreateGameTemplateRequestSchema), async (re
         // Log the received request body for debugging
         logger.info({ body: req.body, user: req.user }, 'Received request for game template creation');
 
+        // Debug questionUids format specifically
+        if (req.body.questionUids) {
+            logger.info({
+                questionUids: req.body.questionUids,
+                questionUidsCount: req.body.questionUids.length,
+                firstUid: req.body.questionUids[0],
+                firstUidType: typeof req.body.questionUids[0],
+                firstUidLength: req.body.questionUids[0]?.length,
+                isFirstUidUuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.body.questionUids[0] || '')
+            }, 'DEBUG: questionUids format analysis');
+        }
+
         const { name, discipline, gradeLevel, themes, questions, questionUids, description, defaultMode } = req.body as GameTemplateCreationData;
 
         // Try to get userId from req.user first, then from headers for frontend API route compatibility

@@ -613,7 +613,7 @@ export default function CreateActivityPage() {
                             />
 
                             <button
-                                className="w-full p-2 bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:bg-gray-400"
+                                className="btn btn-primary w-full"
                                 style={{ borderRadius: 'var(--radius)' }}
                                 onClick={handleSaveActivity}
                                 disabled={savingActivity || selectedQuestions.length === 0 || !activityName.trim()}

@@ -268,13 +268,12 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        window.open(`/teacher/dashboard/${instance.id}`, '_blank');
+                                                                        window.open(`/teacher/dashboard/${instance.accessCode}`, '_blank');
                                                                     }}
                                                                     className="text-xs px-2 py-1 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] rounded hover:bg-opacity-90 transition-colors"
                                                                 >
-                                                                    {instance.status === 'active' ? 'Surveiller' :
-                                                                        instance.status === 'completed' ? 'Voir résultats' :
-                                                                            instance.status === 'pending' ? 'Préparer' : 'Voir détails'}
+                                                                    {instance.status === 'active' || instance.status === 'pending' ? 'Piloter' :
+                                                                        instance.status === 'completed' ? 'Voir résultats' : 'Voir détails'}
                                                                 </button>
                                                             )}
                                                             <button

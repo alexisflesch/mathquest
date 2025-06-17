@@ -920,3 +920,29 @@ Need to check backend API implementation to understand how it handles comma-sepa
 - **User transparency**: Still shows problematic selections with visual feedback
 - **User control**: Can manually remove incompatible selections
 - **Progressive disclosure**: More options appear as filters are cleared
+### 🔍 **ROOT CAUSE IDENTIFIED: UUID Validation Error**
+**Timestamp:** 2025-06-17 18:20
+**What:** Game template creation failing with ZodError on questionUids
+**Error:** `Invalid uuid` for questionUids[0] and questionUids[1]
+**Root Cause:** Backend expects UUIDs but frontend sending different format (probably question UIDs from database)
+**Investigation:** Need to check:
+1. What format are question UIDs in database/API responses?
+2. What format does game-templates endpoint expect?
+3. Are we using legacy field names or formats?
+````markdown
+### 🔍 **SCHEMA MISMATCH CONFIRMED**
+**Timestamp:** 2025-06-17 18:25
+**What:** Found the root cause - schema format mismatch
+**Issue:** 
+- **Backend expects**: `questionUids: z.array(z.string().uuid())` (UUID format)
+- **Frontend sends**: `selectedQuestions.map(q => q.uid)` (unknown format)
+- **Question UIDs**: Not necessarily UUID format from database
+
+### 🚨 **Following .instructions.md: FIX ROOT CAUSES**
+**Options:**
+1. **Fix schema**: Change game template schema to accept any string UID (not just UUID)
+2. **Fix data**: Ensure questions use UUID format in database 
+3. **Fix mapping**: Convert question UIDs to UUID format when creating game template
+
+**Investigation needed**: What format are question UIDs actually in the database?
+```

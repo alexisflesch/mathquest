@@ -1,4 +1,5 @@
 import { prisma } from '@/db/prisma';
+import { Prisma } from '@/db/generated/client';
 import createLogger from '@/utils/logger';
 import { PlayMode, GameInstanceCreationData, GameState, GameStatus } from '@shared/types/core';
 
@@ -382,7 +383,7 @@ export class GameInstanceService {
             return await prisma.gameInstance.findMany({
                 where: {
                     initiatorUserId: userId,
-                    status: { in: ['pending', 'active', 'paused'] }
+                    status: { in: ['pending', 'active', 'paused'] },
                 },
                 include: {
                     gameTemplate: {
@@ -401,7 +402,7 @@ export class GameInstanceService {
                 }
             });
         } catch (error) {
-            logger.error({ error }, `Error fetching active games for teacher ${userId}`);
+            logger.error('Error fetching teacher active games:', error);
             throw error;
         }
     }

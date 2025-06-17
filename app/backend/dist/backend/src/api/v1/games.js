@@ -117,11 +117,16 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
             });
             return;
         }
+        // Tag student-created games in settings
+        let patchedSettings = settings;
+        if (role === 'STUDENT') {
+            patchedSettings = { ...(settings || {}), createdVia: 'student-create-game' };
+        }
         const gameInstance = await getGameInstanceService().createGameInstanceUnified({
             name,
             gameTemplateId: finalgameTemplateId,
             playMode: playMode, // Type assertion for now
-            settings,
+            settings: patchedSettings,
             initiatorUserId: userId
         });
         // Initialize game state in Redis immediately after game instance creation

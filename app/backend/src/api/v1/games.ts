@@ -156,9 +156,11 @@ router.post('/', optionalAuth, validateRequestBody(CreateGameRequestSchema), asy
             name,
             gameTemplateId: finalgameTemplateId,
             playMode: playMode as any, // Type assertion for now
-            settings,
+            settings: settings,
             initiatorUserId: userId
         });
+
+        logger.info('GamesAPI created gameInstance debug', { gameInstanceSettings: gameInstance.settings });
 
         // Initialize game state in Redis immediately after game instance creation
         await initializeGameState(gameInstance.id);

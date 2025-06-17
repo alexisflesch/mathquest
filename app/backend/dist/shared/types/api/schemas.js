@@ -84,7 +84,7 @@ exports.CreateGameTemplateRequestSchema = zod_1.z.object({
     discipline: zod_1.z.string().optional(),
     description: zod_1.z.string().optional(),
     defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
-    questionUids: zod_1.z.array(zod_1.z.string().uuid()).min(1, 'At least one question is required')
+    questionUids: zod_1.z.array(zod_1.z.string()).min(1, 'At least one question is required') // Temporarily allow any string format
 });
 exports.UpdateGameTemplateRequestSchema = zod_1.z.object({
     name: zod_1.z.string().min(1).optional(),
@@ -93,7 +93,7 @@ exports.UpdateGameTemplateRequestSchema = zod_1.z.object({
     discipline: zod_1.z.string().optional(),
     description: zod_1.z.string().optional(),
     defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
-    questionUids: zod_1.z.array(zod_1.z.string().uuid()).optional()
+    questionUids: zod_1.z.array(zod_1.z.string()).optional() // Temporarily allow any string format
 });
 // --- Question API Request Schemas ---
 exports.CreateQuestionRequestSchema = zod_1.z.object({

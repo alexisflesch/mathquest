@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameInstanceService = void 0;
 const prisma_1 = require("@/db/prisma");
+const client_1 = require("@/db/generated/client");
 const logger_1 = __importDefault(require("@/utils/logger"));
 // Create a service-specific logger
 const logger = (0, logger_1.default)('GameInstanceService');
@@ -356,7 +357,11 @@ class GameInstanceService {
             return await prisma_1.prisma.gameInstance.findMany({
                 where: {
                     initiatorUserId: userId,
-                    status: { in: ['pending', 'active', 'paused'] }
+                    status: { in: ['pending', 'active', 'paused'] },
+                    OR: [
+                        { settings: { equals: client_1.Prisma.JsonNull } },
+                        { NOT: { settings: { path: ['createdVia'], equals: 'student-create-game' } } }
+                    ]
                 },
                 include: {
                     gameTemplate: {

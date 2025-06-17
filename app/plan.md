@@ -16,7 +16,9 @@ Fix filter system in teacher games creation page, ensuring consistent API contra
 - [x] **COMPLETED**: Fix "Niveaux" filter not working - API parameter mismatch (FIXED: API returns `gradeLevel` not `levels`)
 - [x] **COMPLETED**: Test "Niveaux" filter functionality after fix
 - [x] **COMPLETED**: Fix layout issue - "nom de l'activité" button pushed down when adding questions
-- [x] **COMPLETED**: Enhanced Multi-Filter UX with Incompatible Option Handling
+- [x] **COMPLETED**: Fix game template creation UUID validation error
+- [x] **COMPLETED**: Remove createdVia logic from backend (cleaned up old approach)
+- [x] **COMPLETED**: Fix training session redirection - should go to practice session, not lobby
 - [ ] Validate all filters work correctly with proper OR/AND logic
 - [ ] Test filter combinations
 - [ ] Update documentation with filter API contracts

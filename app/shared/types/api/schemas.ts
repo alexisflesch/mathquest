@@ -98,7 +98,7 @@ export const CreateGameTemplateRequestSchema = z.object({
     discipline: z.string().optional(),
     description: z.string().optional(),
     defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
-    questionUids: z.array(z.string().uuid()).min(1, 'At least one question is required')
+    questionUids: z.array(z.string()).min(1, 'At least one question is required') // Temporarily allow any string format
 });
 
 export const UpdateGameTemplateRequestSchema = z.object({
@@ -108,7 +108,7 @@ export const UpdateGameTemplateRequestSchema = z.object({
     discipline: z.string().optional(),
     description: z.string().optional(),
     defaultMode: z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
-    questionUids: z.array(z.string().uuid()).optional()
+    questionUids: z.array(z.string()).optional() // Temporarily allow any string format
 });
 
 // --- Question API Request Schemas ---

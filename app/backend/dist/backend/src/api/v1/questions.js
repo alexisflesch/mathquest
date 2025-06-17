@@ -58,9 +58,10 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
     }
 });
 /**
- * Get available filter values (unique disciplines, grade levels, themes)
+ * Get available filter values with compatibility information
  * GET /api/v1/questions/filters
  * Optional query parameters: gradeLevel, discipline, theme, author to filter cascading results
+ * Returns both compatible and incompatible options with isCompatible flags
  */
 router.get('/filters', async (req, res) => {
     try {
@@ -82,8 +83,30 @@ router.get('/filters', async (req, res) => {
             // Handle both single values and arrays
             filterCriteria.author = Array.isArray(author) ? author : [author];
         }
-        const filters = await getQuestionService().getAvailableFilters(filterCriteria);
-        res.status(200).json(filters);
+        // Get compatible filters based on current selections
+        const compatibleFilters = await getQuestionService().getAvailableFilters(filterCriteria);
+        // Get all possible filters (without restrictions) for incompatible detection
+        const allFilters = await getQuestionService().getAvailableFilters({});
+        // Create enhanced response with compatibility information
+        const enhancedResponse = {
+            gradeLevel: (allFilters.gradeLevel || []).map(value => ({
+                value: value || '',
+                isCompatible: (compatibleFilters.gradeLevel || []).includes(value)
+            })).filter(item => item.value !== ''),
+            disciplines: (allFilters.disciplines || []).map(value => ({
+                value,
+                isCompatible: (compatibleFilters.disciplines || []).includes(value)
+            })),
+            themes: (allFilters.themes || []).map(value => ({
+                value,
+                isCompatible: (compatibleFilters.themes || []).includes(value)
+            })),
+            authors: (allFilters.authors || []).map(value => ({
+                value,
+                isCompatible: (compatibleFilters.authors || []).includes(value)
+            }))
+        };
+        res.status(200).json(enhancedResponse);
     }
     catch (error) {
         logger.error({ error }, 'Error fetching filters');
@@ -167,9 +190,9 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
         // Convert to appropriate types
         const filters = {};
         if (discipline) {
-            // Handle multiple disciplines as comma-separated values
-            if (typeof discipline === 'string' && discipline.includes(',')) {
-                filters.disciplines = discipline.split(',').map(d => d.trim()).filter(d => d.length > 0);
+            // Handle both single values and arrays (consistent with filters endpoint)
+            if (Array.isArray(discipline)) {
+                filters.disciplines = discipline;
             }
             else {
                 filters.discipline = discipline;
@@ -178,27 +201,30 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
         // Handle themes from both 'theme' and 'themes' parameters
         const themeParam = theme || themes;
         if (themeParam) {
-            filters.themes = Array.isArray(themeParam)
-                ? themeParam
-                : themeParam.split(',').map(t => t.trim()).filter(t => t.length > 0);
+            if (Array.isArray(themeParam)) {
+                filters.themes = themeParam;
+            }
+            else {
+                filters.themes = [themeParam];
+            }
         }
         if (difficulty)
             filters.difficulty = Number(difficulty);
         // Handle grade level from both 'level' and 'gradeLevel' parameters
         const levelParam = level || gradeLevel;
         if (levelParam) {
-            // Handle multiple grade levels as comma-separated values
-            if (typeof levelParam === 'string' && levelParam.includes(',')) {
-                filters.gradeLevels = levelParam.split(',').map(g => g.trim()).filter(g => g.length > 0);
+            // Handle both single values and arrays (consistent with filters endpoint)
+            if (Array.isArray(levelParam)) {
+                filters.gradeLevels = levelParam;
             }
             else {
                 filters.gradeLevel = levelParam;
             }
         }
         if (author) {
-            // Handle multiple authors as comma-separated values
-            if (typeof author === 'string' && author.includes(',')) {
-                filters.authors = author.split(',').map(a => a.trim()).filter(a => a.length > 0);
+            // Handle both single values and arrays (consistent with filters endpoint)
+            if (Array.isArray(author)) {
+                filters.authors = author;
             }
             else {
                 filters.author = author;

@@ -22,6 +22,7 @@ import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsFiltersResponseSchema, QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
+import { useAuth } from '@/components/AuthProvider';
 
 // Create a logger for this component
 const logger = createLogger('CreateTournament');
@@ -45,6 +46,8 @@ function StudentCreateTournamentPageInner() {
     if (!isAllowed) {
         return null; // Component won't render while redirecting
     }
+
+    const { userProfile } = useAuth();
 
     const [step, setStep] = useState(1);
     const [filters, setFilters] = useState<Filters>({ gradeLevel: [], disciplines: [], themes: [] });
@@ -202,45 +205,38 @@ function StudentCreateTournamentPageInner() {
         setError(null);
         try {
             logger.info("Creating tournament with", { gradeLevel: niveau, discipline, themes, numQuestions });
-            // 1. Fetch question IDs only using secure questions list API
-            const listParams = new URLSearchParams({
-                gradeLevel: niveau,
-                discipline: discipline,
-                themes: themes.join(','),
-                limit: numQuestions.toString()
-            });
-            const questionsResult = await makeApiRequest<string[]>(`/api/questions/list?${listParams.toString()}`);
-            const questions = questionsResult;
+            // Defensive: ensure all filters are strings (not objects)
+            const safeNiveau = typeof niveau === 'string' ? niveau : '';
+            const safeDiscipline = typeof discipline === 'string' ? discipline : '';
+            const safeThemes = Array.isArray(themes)
+                ? themes.map((t: any) => typeof t === 'string' ? t : (t?.value || ''))
+                : (typeof themes === 'string' ? [themes] : []);
 
-            logger.debug("Questions fetched", { count: questions.length });
-            if (!questions || !Array.isArray(questions) || questions.length === 0) {
-                setError('Aucune question ne correspond à ces critères.');
-                setLoading(false);
-                return;
-            }
+            // Check if this is a training session - redirect to practice instead of creating tournament
             if (isTraining) {
-                // Only redirect to practice session, do NOT create a tournament
                 const params = new URLSearchParams({
-                    gradeLevel: niveau,
-                    discipline,
-                    themes: themes.join(","),
+                    gradeLevel: safeNiveau,
+                    discipline: safeDiscipline,
+                    themes: safeThemes.join(","),
                     limit: String(numQuestions),
                 });
                 router.push(`/student/practice/session?${params.toString()}`);
                 return;
             }
-            const avatar = localStorage.getItem('mathquest_avatar') || '';
-            const username = localStorage.getItem('mathquest_username') || 'Élève';
+
+            const avatar = getAvatar();
+            const username = getUsername();
 
             // Create tournament directly - backend will handle authentication
             const requestBody = {
                 name: `${username}`,
                 playMode: 'tournament',
-                gradeLevel: niveau,
-                discipline: discipline,
-                themes: themes,
+                gradeLevel: safeNiveau,
+                discipline: safeDiscipline,
+                themes: safeThemes,
                 nbOfQuestions: numQuestions,
                 settings: {
+                    type: 'direct', // for compatibility
                     defaultMode: 'direct',
                     avatar: avatar,
                     username: username
@@ -273,6 +269,9 @@ function StudentCreateTournamentPageInner() {
             setLoading(false);
         }
     };
+
+    const getUsername = () => userProfile?.username || localStorage.getItem('mathquest_username') || 'Élève';
+    const getAvatar = () => userProfile?.avatar || localStorage.getItem('mathquest_avatar') || '🐨';
 
     return (
         <div className="main-content">
