@@ -71,52 +71,55 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
             {label && <label className="font-bold text-lg mb-1">{label}</label>}
             <div className="relative w-full" ref={dropdownRef}>
                 <button
-                    className="btn btn-outline btn-lg w-full bg-dropdown text-dropdown no-dropdown-hover"
+                    className="border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 w-full transition-colors"
+                    style={{ borderRadius: 'var(--radius)' }}
                     onClick={e => { e.preventDefault(); if (!disabled) setOpen(o => !o); }}
                     type="button"
                     disabled={disabled}
-                    style={{
-                        transition: 'none',
-                    }}
                 >
-                    <div className="flex items-center justify-between w-full min-w-0">
-                        <span className={`${(selected?.length ?? 0) === 0 ? "text-placeholder" : "text-dropdown"} truncate flex-1 text-left`}>
+                    <div className="flex items-center justify-between w-full">
+                        <span className={`${(selected?.length ?? 0) === 0 ? "text-gray-500" : "text-gray-900 dark:text-gray-100"} truncate flex-1 text-left text-sm`}>
                             {(selected?.length ?? 0) === 0 ? placeholder : (selected || []).join(", ")}
                         </span>
                         <ChevronDown
                             size={16}
-                            className="ml-2 flex-shrink-0 text-gray-600 dark:text-gray-400"
+                            className="ml-2 flex-shrink-0 text-gray-500"
                             style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
                         />
                     </div>
                 </button>
                 <div
-                    className="absolute z-10 w-full bg-dropdown text-dropdown rounded-xl shadow-lg mt-2 max-h-60 overflow-y-auto border border-base-200"
+                    className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg mt-1 max-h-60 overflow-y-auto"
                     style={{
                         display: open ? 'block' : 'none',
+                        left: '0',
                         minWidth: '100%',
-                        width: '100%',
+                        width: 'max-content',
+                        maxWidth: '300px', // Prevent extremely wide dropdowns
+                        borderRadius: 'var(--radius)',
                     }}
                 >
                     <style>{`
                         .multi-dropdown-option:hover {
-                            background-color: var(--primary) !important;
-                            color: var(--primary-foreground) !important;
+                            background-color: #f3f4f6 !important;
+                        }
+                        .dark .multi-dropdown-option:hover {
+                            background-color: #374151 !important;
                         }
                     `}</style>
                     {options.map((option) => (
                         <label
                             key={option}
-                            className={`multi-dropdown-option flex items-center px-4 py-2 cursor-pointer ${(selected ?? []).includes(option) ? 'bg-base-200 font-bold' : ''}`}
+                            className={`multi-dropdown-option flex items-center px-3 py-2 cursor-pointer text-sm ${(selected ?? []).includes(option) ? 'bg-gray-100 dark:bg-gray-700 font-medium' : 'text-gray-900 dark:text-gray-100'}`}
                             style={{ userSelect: 'none' }}
                         >
                             <input
                                 type="checkbox"
                                 checked={(selected ?? []).includes(option)}
                                 onChange={() => handleToggle(option)}
-                                className="checkbox mr-2"
+                                className="w-4 h-4 mr-2 text-gray-600 border-gray-300 rounded focus:ring-0 flex-shrink-0"
                             />
-                            {option}
+                            <span className="text-left">{option}</span>
                         </label>
                     ))}
                 </div>

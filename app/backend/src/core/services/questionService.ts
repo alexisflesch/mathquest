@@ -41,7 +41,7 @@ export class QuestionService {
                 }
             });
 
-            return question;
+            return this.normalizeQuestion(question);
         } catch (error) {
             logger.error({ error }, 'Error creating question');
             throw error;
@@ -53,9 +53,11 @@ export class QuestionService {
      */
     async getQuestionById(uid: string) {
         try {
-            return await prisma.question.findUnique({
+            const question = await prisma.question.findUnique({
                 where: { uid }
             });
+
+            return this.normalizeQuestion(question);
         } catch (error) {
             logger.error({ error }, `Error fetching question with ID ${uid}`);
             throw error;
@@ -161,7 +163,7 @@ export class QuestionService {
             ]);
 
             return {
-                questions,
+                questions: questions.map(q => this.normalizeQuestion(q)),
                 total,
                 page: Math.floor(skip / take) + 1,
                 pageSize: take,
@@ -195,7 +197,7 @@ export class QuestionService {
                 data: updateData
             });
 
-            return updatedQuestion;
+            return this.normalizeQuestion(updatedQuestion);
         } catch (error) {
             logger.error({ error }, 'Error updating question');
             throw error;
@@ -307,5 +309,18 @@ export class QuestionService {
             logger.error({ error }, 'Error fetching available filters');
             throw error;
         }
+    }
+
+    /**
+     * Normalize question data from database to match canonical types
+     * Converts null values to undefined for optional fields
+     */
+    private normalizeQuestion(question: any): any {
+        return {
+            ...question,
+            title: question.title ?? undefined,
+            author: question.author ?? undefined,
+            explanation: question.explanation ?? undefined
+        };
     }
 }

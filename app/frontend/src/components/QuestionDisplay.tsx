@@ -46,6 +46,10 @@ export interface QuestionDisplayProps {
     correctAnswers?: number[]; // NEW: indices des réponses correctes à afficher (ex: [1,2])
     onStatsToggle?: (isDisplayed: boolean) => void; // NEW: callback for stats toggle
     stats?: number[]; // NEW: answer stats (count per answer)
+    // Checkbox props for selection
+    showCheckbox?: boolean; // Show checkbox for selection
+    checked?: boolean; // Checkbox state
+    onCheckboxChange?: (checked: boolean) => void; // Checkbox change handler
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -69,6 +73,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     correctAnswers,
     onStatsToggle, // NEW: destructure onStatsToggle
     stats, // NEW: destructure stats
+    showCheckbox = false, // NEW: destructure showCheckbox
+    checked = false, // NEW: destructure checked
+    onCheckboxChange, // NEW: destructure onCheckboxChange
 }) => {
     // // Debug: Log the question data received
     // logger.info('[DEBUG QuestionDisplay] Received question:', question);
@@ -195,33 +202,48 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             aria-expanded={isOpen}
         >
             <div
-                className={`card w-full flex flex-col ${isActive ? 'active-question-border' : ''} ${className}`}
+                className={`card w-full flex flex-col ${className}`}
             >
                 <div className="flex flex-col">
                     <div className={`flex items-center justify-between gap-3 question-header ${isOpen ? 'no-bottom-border no-bottom-radius' : ''}`} style={{ paddingTop: 0, paddingBottom: 0 }}>
-                        <div className="font-medium fade-right-bottom-crop relative" style={{ minHeight: '1.8em', marginLeft: 0, flexGrow: 0, paddingLeft: 0 }}>
-                            {/* Animated cropped question for no-title case */}
-                            {question.title ? ( // Modifié: question.titre -> question.title
-                                <div style={{ fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})` }}>
-                                    <MathJaxWrapper>{question.title}</MathJaxWrapper> {/* Modifié: question.titre -> question.title */}
-                                </div>
-                            ) : (
-                                <span
-                                    style={{
-                                        display: 'block',
-                                        position: 'absolute',
-                                        left: 0,
-                                        right: 0,
-                                        top: 0,
-                                        zIndex: 2,
-                                        transition: `transform ${isOpen ? '.5s' : '1s'} cubic-bezier(0.4,0,0.2,1)`,
-                                        transform: isOpen ? 'translateY(120px)' : 'translateY(0)',
-                                        fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
+                        <div className="flex items-center gap-3 flex-1">
+                            {/* Checkbox */}
+                            {showCheckbox && (
+                                <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={(e) => {
+                                        e.stopPropagation();
+                                        if (onCheckboxChange) onCheckboxChange(e.target.checked);
                                     }}
-                                >
-                                    <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
-                                </span>
+                                    className="w-4 h-4 text-[color:var(--primary)] border-gray-300 rounded focus:ring-0 flex-shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                />
                             )}
+                            <div className="font-medium fade-right-bottom-crop relative" style={{ minHeight: '1.8em', marginLeft: 0, flexGrow: 0, paddingLeft: 0 }}>
+                                {/* Animated cropped question for no-title case */}
+                                {question.title ? ( // Modifié: question.titre -> question.title
+                                    <div style={{ fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})` }}>
+                                        <MathJaxWrapper>{question.title}</MathJaxWrapper> {/* Modifié: question.titre -> question.title */}
+                                    </div>
+                                ) : (
+                                    <span
+                                        style={{
+                                            display: 'block',
+                                            position: 'absolute',
+                                            left: 0,
+                                            right: 0,
+                                            top: 0,
+                                            zIndex: 2,
+                                            transition: `transform ${isOpen ? '.5s' : '1s'} cubic-bezier(0.4,0,0.2,1)`,
+                                            transform: isOpen ? 'translateY(120px)' : 'translateY(0)',
+                                            fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
+                                        }}
+                                    >
+                                        <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         {/* Only one of these will render, always right-aligned */}
                         {showControls ? (
@@ -292,7 +314,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                 <ul
                                     className={[
                                         "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",
-                                        isActive ? "answers-selected" : "",
                                         isOpen ? "no-top-border" : ""
                                     ].join(" ")}
                                 >
@@ -363,7 +384,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     <ul
                                         className={[
                                             "ml-0 mt-0 flex flex-col gap-2 answers-list p-3 rounded-b-xl rounded-t-none",
-                                            isActive ? "answers-selected" : "",
                                             isOpen ? "no-top-border" : ""
                                         ].join(" ")}
                                     >

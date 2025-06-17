@@ -62,30 +62,30 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
     const [timeValue, setTimeValue] = useState(question.customTime || question.timeLimit || 30);
 
     return (
-        <div ref={setNodeRef} style={style} className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg p-3 mb-2 shadow-sm">
-            <div className="flex items-start gap-3">
+        <div ref={setNodeRef} style={style} className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg p-3 mb-2 shadow-sm w-full">
+            <div className="flex items-start gap-2 w-full">
                 <button
                     {...attributes}
                     {...listeners}
-                    className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] cursor-grab active:cursor-grabbing mt-1"
+                    className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] cursor-grab active:cursor-grabbing mt-1 flex-shrink-0"
                 >
                     <GripVertical size={16} />
                 </button>
 
                 <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-[color:var(--foreground)] truncate mb-1">
-                        {question.title || question.text.substring(0, 50)}...
+                        {question.title || question.text.substring(0, 40)}...
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                     {editingTime ? (
                         <div className="flex items-center gap-1">
                             <input
                                 type="number"
                                 value={timeValue}
                                 onChange={(e) => setTimeValue(parseInt(e.target.value) || 30)}
-                                className="input input-xs w-16 text-center"
+                                className="w-14 p-1 text-center text-xs"
                                 min="5"
                                 max="300"
                             />
@@ -94,7 +94,8 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
                                     onTimeChange(timeValue);
                                     setEditingTime(false);
                                 }}
-                                className="btn btn-xs btn-primary"
+                                className="px-2 py-1 bg-blue-600 text-white text-xs hover:bg-blue-700"
+                                style={{ borderRadius: 'var(--radius)' }}
                             >
                                 ✓
                             </button>
@@ -111,7 +112,7 @@ function SortableCartQuestion({ question, onRemove, onTimeChange }: {
 
                     <button
                         onClick={onRemove}
-                        className="text-[color:var(--alert)] hover:text-red-600"
+                        className="text-[color:var(--alert)] hover:text-red-600 flex-shrink-0"
                     >
                         <X size={16} />
                     </button>
@@ -404,12 +405,30 @@ export default function CreateActivityPage() {
     };
 
     return (
-        <div className="main-content">
-            <div className="w-full max-w-7xl mx-auto p-4">
-                <h1 className="text-3xl font-bold text-left mb-6 text-[color:var(--foreground)]">Créer une nouvelle activité</h1>
+        <div className="h-screen bg-background flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="bg-background border-b border-[color:var(--border)] px-4 sm:px-6 lg:px-8 flex-shrink-0">
+                <div className="max-w-7xl mx-auto py-4 sm:py-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Créer une nouvelle activité</h1>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                {selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'} sélectionnée{selectedQuestions.length <= 1 ? '' : 's'}
+                            </p>
+                        </div>
+                        <div className="hidden sm:block">
+                            <Link href="/teacher/games" className="btn btn-ghost flex items-center gap-2 whitespace-nowrap">
+                                Retour aux activités
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            {/* Content */}
+            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col min-h-0 w-full">
                 {/* Filters Row */}
-                <div className="flex flex-col xl:flex-row gap-4 mb-6">
+                <div className="flex flex-col xl:flex-row gap-4 mb-6 flex-shrink-0">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-row gap-4 xl:flex-1">
                         <MultiSelectDropdown
                             options={filters.levels || []}
@@ -438,10 +457,10 @@ export default function CreateActivityPage() {
                     </div>
                     <div className="relative flex-1 xl:max-w-md">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search size={20} className="text-[color:var(--muted-foreground)]" />
+                            <Search size={16} className="text-gray-500" />
                         </div>
                         <input
-                            className="input input-bordered w-full pl-10"
+                            className="px-3 py-2 w-full pl-10 text-sm placeholder-gray-500 focus:outline-none focus:ring-0 transition-colors"
                             type="text"
                             placeholder="Rechercher par tag, thème, niveau, discipline..."
                             value={tagSearch}
@@ -451,206 +470,183 @@ export default function CreateActivityPage() {
                 </div>
 
                 {/* Desktop Two-Panel Layout */}
-                <div className="hidden lg:flex gap-6">
-                    {/* Left Panel - Available Questions */}
-                    <div className="flex-1 bg-[color:var(--card)] rounded-lg shadow-sm border border-[color:var(--border)] p-4">
-                        <div className="flex items-center gap-3 mb-4">
+                <div className="hidden lg:flex gap-6 flex-1 min-h-0 w-full overflow-hidden">
+                    {/* Left Panel - Available Questions (66%) */}
+                    <div className="flex-[2] flex flex-col min-h-0 min-w-0">
+                        <div className="flex items-center gap-3 mb-4 flex-shrink-0">
                             <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Liste des questions</h2>
                             {loadingQuestions && (
                                 <InfinitySpin size={24} />
                             )}
                         </div>
-                        <div
-                            className="space-y-3 overflow-y-auto"
-                            ref={listRef}
-                            style={{ maxHeight: '60vh' }}
-                        >
-                            {loadingQuestions && questions.length === 0 ? (
-                                <div className="text-center text-[color:var(--muted-foreground)] text-lg py-8">
-                                    Chargement des questions…
-                                </div>
-                            ) : questions.length === 0 ? (
-                                <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
-                            ) : (
-                                <>
-                                    {questions
-                                        .filter((q) => {
-                                            if (!tagSearch.trim()) return true;
-                                            const search = tagSearch.trim().toLowerCase();
-                                            const tags = [
-                                                ...(q.tags || []),
-                                                q.themes,
-                                                q.gradeLevel,
-                                                q.discipline,
-                                                q.title,
-                                                q.text
-                                            ].filter(Boolean).map(String).map(s => s.toLowerCase());
-                                            return tags.some(t => t.includes(search));
-                                        })
-                                        .map(q => (
-                                            <div key={q.uid} className="flex items-start gap-3 p-3 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)]">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isQuestionSelected(q.uid)}
-                                                    onChange={e => {
-                                                        if (e.target.checked) {
-                                                            addToCart(q);
-                                                        } else {
-                                                            removeFromCart(q.uid);
-                                                        }
-                                                    }}
-                                                    className="mt-3"
-                                                />
-                                                <div className="flex-1 min-w-0">
-                                                    <QuestionDisplay
-                                                        question={q}
-                                                        isActive={isQuestionSelected(q.uid)}
-                                                        isOpen={openUid === q.uid}
-                                                        onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
-                                                        timerStatus="stop"
-                                                        disabled={false}
-                                                        showControls={false}
-                                                        className="question-compact"
-                                                        showMeta={true}
-                                                    />
-                                                </div>
-                                                <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] mt-2">
-                                                    <Clock size={12} />
-                                                    <span>{q.timeLimit || 30}s</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Right Panel - Shopping Cart */}
-                    <div className="w-80 bg-[color:var(--card)] rounded-lg shadow-sm border border-[color:var(--border)] p-4">
-                        <div className="flex items-center gap-2 mb-4">
-                            <ShoppingCart size={20} className="text-[color:var(--foreground)]" />
-                            <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Panier ({selectedQuestions.length} questions)</h2>
-                        </div>
-
-                        {selectedQuestions.length === 0 ? (
-                            <div className="text-center text-[color:var(--muted-foreground)] py-8">
-                                Sélectionnez des questions pour les ajouter au panier
-                            </div>
-                        ) : (
-                            <DndContext
-                                sensors={sensors}
-                                collisionDetection={closestCenter}
-                                onDragEnd={handleDragEnd}
-                            >
-                                <SortableContext
-                                    items={selectedQuestions.map(q => q.uid)}
-                                    strategy={verticalListSortingStrategy}
-                                >
-                                    <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
-                                        {selectedQuestions.map((question) => (
-                                            <SortableCartQuestion
-                                                key={question.uid}
-                                                question={question}
-                                                onRemove={() => removeFromCart(question.uid)}
-                                                onTimeChange={(time) => updateQuestionTime(question.uid, time)}
-                                            />
-                                        ))}
+                        <div className="question-list-simple flex-1 flex flex-col min-h-0 overflow-hidden">
+                            <div className="overflow-y-auto flex-1" ref={listRef}>
+                                {loadingQuestions && questions.length === 0 ? (
+                                    <div className="text-center text-[color:var(--muted-foreground)] text-lg py-8">
+                                        Chargement des questions…
                                     </div>
-                                </SortableContext>
-                            </DndContext>
-                        )}
-
-                        {/* Activity Name and Metadata */}
-                        <div className="border-t pt-4 mt-4">
-                            <input
-                                className="input input-bordered w-full mb-3"
-                                type="text"
-                                placeholder="Nom de l'activité"
-                                value={activityName}
-                                onChange={e => setActivityName(e.target.value)}
-                            />
-
-                            <button
-                                className="btn btn-primary w-full"
-                                onClick={handleSaveActivity}
-                                disabled={savingActivity || selectedQuestions.length === 0 || !activityName.trim()}
-                            >
-                                {savingActivity ? 'Sauvegarde...' : 'Sauvegarder l\'activité'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Mobile Layout */}
-                <div className="lg:hidden">
-                    <div className="bg-[color:var(--card)] rounded-lg shadow-sm border border-[color:var(--border)] p-4">
-                        <div className="flex items-center gap-3 mb-4">
-                            <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Liste des questions</h2>
-                            {loadingQuestions && (
-                                <InfinitySpin size={24} />
-                            )}
-                        </div>
-                        <div
-                            className="space-y-3 overflow-y-auto mb-4"
-                            style={{ maxHeight: '50vh' }}
-                        >
-                            {loadingQuestions && questions.length === 0 ? (
-                                <div className="text-center text-[color:var(--muted-foreground)] py-8">Chargement des questions…</div>
-                            ) : questions.length === 0 ? (
-                                <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
-                            ) : (
-                                <>
-                                    {questions
-                                        .filter((q) => {
-                                            if (!tagSearch.trim()) return true;
-                                            const search = tagSearch.trim().toLowerCase();
-                                            const tags = [
-                                                ...(q.tags || []),
-                                                q.themes,
-                                                q.gradeLevel,
-                                                q.discipline,
-                                                q.title,
-                                                q.text
-                                            ].filter(Boolean).map(String).map(s => s.toLowerCase());
-                                            return tags.some(t => t.includes(search));
-                                        })
-                                        .map(q => (
-                                            <div key={q.uid} className="flex items-start gap-3 p-3 border border-[color:var(--border)] rounded-lg">
-                                                <input
-                                                    type="checkbox"
+                                ) : questions.length === 0 ? (
+                                    <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
+                                ) : (
+                                    <>
+                                        {questions
+                                            .filter((q) => {
+                                                if (!tagSearch.trim()) return true;
+                                                const search = tagSearch.trim().toLowerCase();
+                                                const tags = [
+                                                    ...(q.tags || []),
+                                                    q.themes,
+                                                    q.gradeLevel,
+                                                    q.discipline,
+                                                    q.title,
+                                                    q.text
+                                                ].filter(Boolean).map(String).map(s => s.toLowerCase());
+                                                return tags.some(t => t.includes(search));
+                                            })
+                                            .map(q => (
+                                                <QuestionDisplay
+                                                    key={q.uid}
+                                                    question={q}
+                                                    isActive={isQuestionSelected(q.uid)}
+                                                    isOpen={openUid === q.uid}
+                                                    onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
+                                                    timerStatus="stop"
+                                                    disabled={false}
+                                                    showControls={false}
+                                                    className=""
+                                                    showMeta={true}
+                                                    showCheckbox={true}
                                                     checked={isQuestionSelected(q.uid)}
-                                                    onChange={e => {
-                                                        if (e.target.checked) {
+                                                    onCheckboxChange={(checked) => {
+                                                        if (checked) {
                                                             addToCart(q);
                                                         } else {
                                                             removeFromCart(q.uid);
                                                         }
                                                     }}
-                                                    className="mt-3"
                                                 />
-                                                <div className="flex-1 min-w-0">
-                                                    <QuestionDisplay
-                                                        question={q}
-                                                        isActive={isQuestionSelected(q.uid)}
-                                                        isOpen={openUid === q.uid}
-                                                        onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
-                                                        timerStatus="stop"
-                                                        disabled={false}
-                                                        showControls={false}
-                                                        className="question-compact"
-                                                        showMeta={true}
-                                                    />
-                                                </div>
-                                                <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)] mt-2">
-                                                    <Clock size={12} />
-                                                    <span>{q.timeLimit || 30}s</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
-                                </>
+                                            ))}
+                                        {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Panel - Shopping Cart (34%) */}
+                    <div className="flex-[1] flex flex-col min-h-0 min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-2 mb-4 flex-shrink-0">
+                            <ShoppingCart size={20} className="text-[color:var(--foreground)] flex-shrink-0" />
+                            <h2 className="text-lg font-semibold text-[color:var(--foreground)] truncate min-w-0">Panier ({selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'})</h2>
+                        </div>
+
+                        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                            {selectedQuestions.length === 0 ? (
+                                <div className="text-center text-[color:var(--muted-foreground)] py-8">
+                                    Sélectionnez des questions pour les ajouter au panier
+                                </div>
+                            ) : (
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SortableContext
+                                        items={selectedQuestions.map(q => q.uid)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        <div className="space-y-1 overflow-y-auto flex-1 w-full">
+                                            {selectedQuestions.map((question) => (
+                                                <SortableCartQuestion
+                                                    key={question.uid}
+                                                    question={question}
+                                                    onRemove={() => removeFromCart(question.uid)}
+                                                    onTimeChange={(time) => updateQuestionTime(question.uid, time)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
                             )}
+
+                            {/* Activity Name and Metadata - Fixed at bottom */}
+                            <div className="border-t pt-3 mt-3 flex-shrink-0 w-full">
+                                <input
+                                    className="w-full mb-2 text-sm focus:outline-none focus:ring-0 focus:ring-offset-0"
+                                    style={{ boxShadow: 'none' }}
+                                    type="text"
+                                    placeholder="Nom de l'activité"
+                                    value={activityName}
+                                    onChange={e => setActivityName(e.target.value)}
+                                />
+
+                                <button
+                                    className="w-full p-2 bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:bg-gray-400"
+                                    style={{ borderRadius: 'var(--radius)' }}
+                                    onClick={handleSaveActivity}
+                                    disabled={savingActivity || selectedQuestions.length === 0 || !activityName.trim()}
+                                >
+                                    {savingActivity ? 'Sauvegarde...' : 'Sauvegarder l\'activité'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>                {/* Mobile Layout */}
+                    <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden">
+                        <div className="flex items-center gap-3 mb-4 flex-shrink-0">
+                            <h2 className="text-xl font-semibold text-[color:var(--foreground)]">Liste des questions</h2>
+                            {loadingQuestions && (
+                                <InfinitySpin size={24} />
+                            )}
+                        </div>
+                        <div className="question-list-simple flex-1 flex flex-col min-h-0 overflow-hidden">
+                            <div className="overflow-y-auto flex-1">
+                                {loadingQuestions && questions.length === 0 ? (
+                                    <div className="text-center text-[color:var(--muted-foreground)] py-8">Chargement des questions…</div>
+                                ) : questions.length === 0 ? (
+                                    <div className="text-center text-[color:var(--muted-foreground)] py-8">Aucune question trouvée pour ces filtres.</div>
+                                ) : (
+                                    <>
+                                        {questions
+                                            .filter((q) => {
+                                                if (!tagSearch.trim()) return true;
+                                                const search = tagSearch.trim().toLowerCase();
+                                                const tags = [
+                                                    ...(q.tags || []),
+                                                    q.themes,
+                                                    q.gradeLevel,
+                                                    q.discipline,
+                                                    q.title,
+                                                    q.text
+                                                ].filter(Boolean).map(String).map(s => s.toLowerCase());
+                                                return tags.some(t => t.includes(search));
+                                            })
+                                            .map(q => (
+                                                <QuestionDisplay
+                                                    key={q.uid}
+                                                    question={q}
+                                                    isActive={isQuestionSelected(q.uid)}
+                                                    isOpen={openUid === q.uid}
+                                                    onToggleOpen={() => setOpenUid(openUid === q.uid ? null : q.uid)}
+                                                    timerStatus="stop"
+                                                    disabled={false}
+                                                    showControls={false}
+                                                    className=""
+                                                    showMeta={true}
+                                                    showCheckbox={true}
+                                                    checked={isQuestionSelected(q.uid)}
+                                                    onCheckboxChange={(checked) => {
+                                                        if (checked) {
+                                                            addToCart(q);
+                                                        } else {
+                                                            removeFromCart(q.uid);
+                                                        }
+                                                    }}
+                                                />
+                                            ))}
+                                        {loadingMore && <div className="text-center text-[color:var(--muted-foreground)] py-2">Chargement…</div>}
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -658,7 +654,7 @@ export default function CreateActivityPage() {
                     {selectedQuestions.length > 0 && (
                         <button
                             onClick={() => setShowMobileCart(true)}
-                            className="fixed bottom-6 right-6 btn btn-primary btn-circle shadow-lg z-10 flex items-center justify-center"
+                            className="lg:hidden fixed bottom-6 right-6 btn btn-primary btn-circle shadow-lg z-10 flex items-center justify-center"
                         >
                             <div className="relative">
                                 <ShoppingCart size={20} />
@@ -746,15 +742,15 @@ export default function CreateActivityPage() {
                         </div>
                     )}
                 </div>
-
-                {/* Success/Error Messages */}
-                <Snackbar
-                    open={snackbarOpen}
-                    message={snackbarMessage}
-                    type={snackbarType}
-                    onClose={() => setSnackbarOpen(false)}
-                />
             </div>
+
+            {/* Success/Error Messages */}
+            <Snackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                type={snackbarType}
+                onClose={() => setSnackbarOpen(false)}
+            />
         </div>
     );
 }

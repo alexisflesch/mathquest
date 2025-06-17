@@ -308,12 +308,10 @@ export const QuestionResponseSchema = z.object({
 
 export const QuestionsResponseSchema = z.object({
     questions: z.array(questionSchema),
-    meta: z.object({
-        total: z.number(),
-        page: z.number(),
-        pageSize: z.number(),
-        totalPages: z.number()
-    })
+    total: z.number(),
+    page: z.number(),
+    pageSize: z.number(),
+    totalPages: z.number()
 });
 
 // Questions list endpoint returns just UIDs as string array

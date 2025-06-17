@@ -463,94 +463,114 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
     const isDisabled = !quizSocket || !quizSocket.connected || quizState?.ended;
 
     return (
-        <div className="main-content">
-            <div className="card w-full max-w-4xl shadow-xl bg-base-100 m-4 my-6">
-                <div className="flex flex-col gap-8">
-                    <div className="card-body flex-1 flex flex-col gap-8 min-h-0 overflow-y-auto w-full p-0">
-
-                        {/* Header */}
-                        <div className="flex flex-row items-center justify-between mb-2 gap-2">
-                            <h1 className="card-title text-3xl">Tableau de bord – {quizName}</h1>
+        <div className="min-h-screen bg-background">
+            {/* Header */}
+            <div className="bg-background border-b border-[color:var(--border)] px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto py-4 sm:py-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{quizName}</h1>
+                            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+                                <UsersRound className="w-4 h-4" />
+                                {connectedCount} participant{connectedCount <= 1 ? '' : 's'} connecté{connectedCount <= 1 ? '' : 's'}
+                            </p>
+                        </div>
+                        <div className="hidden sm:block">
                             <button
-                                className="btn btn-secondary"
+                                className="btn btn-secondary flex items-center gap-2 whitespace-nowrap"
                                 onClick={handleEndQuiz}
                                 disabled={isDisabled}
                             >
                                 {quizState?.ended ? 'Quiz Terminé' : 'Terminer le quiz'}
                             </button>
                         </div>
+                    </div>
 
-                        {/* Connection info */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                            <div className="flex items-center gap-2 ml-auto text-base-content/80">
-                                <UsersRound className="w-6 h-6" />
-                                <span className="font-semibold">{connectedCount}</span>
-                            </div>
-                        </div>
-
-                        {/* Questions */}
-                        <section>
-                            <div className="flex items-center gap-2 mb-4">
-                                <h2 className="text-xl font-semibold">Questions</h2>
-                                {loading && <InfinitySpin size={32} />}
-                            </div>
-
-                            <DraggableQuestionsList
-                                quizSocket={quizSocket}
-                                questions={mappedQuestions}
-                                currentQuestionIdx={quizState?.currentQuestionidx}
-                                isChronoRunning={quizState?.chrono?.running}
-                                isQuizEnded={quizState?.ended}
-                                questionActiveUid={questionActiveUid}
-                                timerStatus={timerStatus}
-                                timerQuestionUid={timerQuestionUid}
-                                timeLeftMs={timeLeftMs}
-                                onSelect={handleSelect}
-                                onPlay={handlePlay}
-                                onPause={handlePause}
-                                onStop={handleStop}
-                                onEditTimer={handleEditTimer}
-                                onReorder={handleReorder}
-                                quizId={gameId || ''}
-                                currentTournamentCode={code || ''}
-                                onTimerAction={handleTimerAction}
-                                disabled={isDisabled}
-                                expandedUids={expandedUids}
-                                onToggleExpand={handleToggleExpand}
-                                getStatsForQuestion={(uid: string) => {
-                                    // Return stats for this question if available
-                                    const stats = answerStats[uid];
-                                    if (stats && typeof stats === 'object') {
-                                        // Backend now returns percentages directly for each option
-                                        // stats is an object like { "0": 25, "1": 75, "2": 0 } for percentages
-
-                                        // Find the question to get the number of answer options
-                                        const question = mappedQuestions.find(q => q.uid === uid);
-                                        const numOptions = question?.answerOptions?.length || 0;
-
-                                        if (numOptions === 0) {
-                                            logger.warn(`Question ${uid} has no answer options`);
-                                            return undefined;
-                                        }
-
-                                        // Convert to array format, ensuring all options are included
-                                        const statsObj = stats as Record<string, number>;
-                                        const percentageArray: number[] = [];
-                                        for (let i = 0; i < numOptions; i++) {
-                                            const percentage = statsObj[i.toString()] || 0; // Backend sends percentages directly
-                                            percentageArray.push(percentage);
-                                        }
-
-                                        logger.debug(`getStatsForQuestion called for ${uid}:`, stats,
-                                            `-> percentages from backend:`, percentageArray);
-                                        return percentageArray;
-                                    }
-                                    return undefined;
-                                }}
-                            />
-                        </section>
+                    {/* Mobile end quiz button */}
+                    <div className="sm:hidden mt-4">
+                        <button
+                            className="btn btn-secondary w-full flex items-center justify-center gap-2"
+                            onClick={handleEndQuiz}
+                            disabled={isDisabled}
+                        >
+                            {quizState?.ended ? 'Quiz Terminé' : 'Terminer le quiz'}
+                        </button>
                     </div>
                 </div>
+            </div>
+
+            {/* Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                {loading && (
+                    <div className="flex flex-col items-center justify-center py-16">
+                        <InfinitySpin size={48} />
+                        <p className="text-muted-foreground mt-4">Chargement du tableau de bord...</p>
+                    </div>
+                )}
+
+                {/* Questions Section */}
+                {!loading && (
+                    <section>
+                        <div className="flex items-center gap-2 mb-6">
+                            <h2 className="text-xl font-semibold">Questions</h2>
+                            {loading && <InfinitySpin size={32} />}
+                        </div>
+
+                        <DraggableQuestionsList
+                            quizSocket={quizSocket}
+                            questions={mappedQuestions}
+                            currentQuestionIdx={quizState?.currentQuestionidx}
+                            isChronoRunning={quizState?.chrono?.running}
+                            isQuizEnded={quizState?.ended}
+                            questionActiveUid={questionActiveUid}
+                            timerStatus={timerStatus}
+                            timerQuestionUid={timerQuestionUid}
+                            timeLeftMs={timeLeftMs}
+                            onSelect={handleSelect}
+                            onPlay={handlePlay}
+                            onPause={handlePause}
+                            onStop={handleStop}
+                            onEditTimer={handleEditTimer}
+                            onReorder={handleReorder}
+                            quizId={gameId || ''}
+                            currentTournamentCode={code || ''}
+                            onTimerAction={handleTimerAction}
+                            disabled={isDisabled}
+                            expandedUids={expandedUids}
+                            onToggleExpand={handleToggleExpand}
+                            getStatsForQuestion={(uid: string) => {
+                                // Return stats for this question if available
+                                const stats = answerStats[uid];
+                                if (stats && typeof stats === 'object') {
+                                    // Backend now returns percentages directly for each option
+                                    // stats is an object like { "0": 25, "1": 75, "2": 0 } for percentages
+
+                                    // Find the question to get the number of answer options
+                                    const question = mappedQuestions.find(q => q.uid === uid);
+                                    const numOptions = question?.answerOptions?.length || 0;
+
+                                    if (numOptions === 0) {
+                                        logger.warn(`Question ${uid} has no answer options`);
+                                        return undefined;
+                                    }
+
+                                    // Convert to array format, ensuring all options are included
+                                    const statsObj = stats as Record<string, number>;
+                                    const percentageArray: number[] = [];
+                                    for (let i = 0; i < numOptions; i++) {
+                                        const percentage = statsObj[i.toString()] || 0; // Backend sends percentages directly
+                                        percentageArray.push(percentage);
+                                    }
+
+                                    logger.debug(`getStatsForQuestion called for ${uid}:`, stats,
+                                        `-> percentages from backend:`, percentageArray);
+                                    return percentageArray;
+                                }
+                                return undefined;
+                            }}
+                        />
+                    </section>
+                )}
             </div>
 
             {/* Confirmation Dialog for Question Change */}

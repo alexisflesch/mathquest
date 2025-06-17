@@ -83,9 +83,10 @@ export default function CustomDropdown({
                     </div>
                 </button>
                 <div
-                    className="absolute z-10 w-full bg-dropdown rounded-xl shadow-lg mt-2 max-h-60 overflow-y-auto border border-base-200"
+                    className="absolute z-10 w-full bg-dropdown shadow-lg mt-2 max-h-60 overflow-y-auto border border-base-200"
                     style={{
                         display: open ? 'block' : 'none',
+                        borderRadius: 'var(--radius)',
                     }}
                 >
                     <style>
