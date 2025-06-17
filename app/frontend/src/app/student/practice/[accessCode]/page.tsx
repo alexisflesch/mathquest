@@ -9,9 +9,6 @@ import type { PracticeSettings } from '@shared/types/practice/session';
 import type { GameInstanceResponse } from '@shared/types/api/responses';
 import type { GameInstance } from '@shared/types/core/game';
 
-// Import the original practice session component
-import PracticeSessionPage from '../session/page';
-
 const logger = createLogger('PracticeSessionWithAccessCode');
 
 export default function PracticeSessionWithAccessCodePage() {
@@ -92,7 +89,7 @@ export default function PracticeSessionWithAccessCodePage() {
                 </div>
             </div>
         );
-    }    // Extract practice settings and pass directly to practice session
+    }    // Extract practice settings and redirect to practice session
     let practiceSettings = gameInstance.settings?.practiceSettings;
 
     // If no practiceSettings in GameInstance, extract from GameTemplate (teacher-created sessions)
@@ -129,11 +126,25 @@ export default function PracticeSessionWithAccessCodePage() {
         );
     }
 
-    // Pass the GameInstance data directly to practice session
+    // Redirect to practice session with URL parameters
+    useEffect(() => {
+        if (gameInstance && practiceSettings) {
+            const params = new URLSearchParams({
+                discipline: practiceSettings.discipline || '',
+                gradeLevel: practiceSettings.gradeLevel || '',
+                themes: (practiceSettings.themes || []).join(','),
+                limit: String(practiceSettings.questionCount || 10),
+                ...(gameInstance.gameTemplateId ? { gameTemplateId: gameInstance.gameTemplateId } : {})
+            });
+
+            router.push(`/student/practice/session?${params.toString()}`);
+        }
+    }, [gameInstance, practiceSettings, router]);
+
+    // Show loading while redirecting
     return (
-        <PracticeSessionPage
-            gameInstance={gameInstance}
-            practiceSettings={practiceSettings}
+        <LoadingScreen
+            message="Redirecting to practice session..."
         />
     );
 }

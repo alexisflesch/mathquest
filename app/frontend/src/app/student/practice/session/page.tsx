@@ -35,12 +35,7 @@ interface PracticeParams {
     gameTemplateId?: string;
 }
 
-interface PracticeSessionPageProps {
-    gameInstance?: any; // GameInstance from access code flow  
-    practiceSettings?: any; // PracticeSettings from access code flow
-}
-
-export default function PracticeSessionPage({ gameInstance, practiceSettings }: PracticeSessionPageProps = {}) {
+export default function PracticeSessionPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userId = getUserId();
@@ -72,27 +67,16 @@ export default function PracticeSessionPage({ gameInstance, practiceSettings }: 
 
     // Extract practice parameters from props (access code flow) or URL (original flow)
     useEffect(() => {
-        if (practiceSettings && gameInstance) {
-            // Use data from GameInstance (access code flow)
-            setPracticeParams({
-                discipline: practiceSettings.discipline || '',
-                level: practiceSettings.gradeLevel || '',
-                themes: practiceSettings.themes || [],
-                limit: practiceSettings.questionCount || 10,
-                gameTemplateId: gameInstance.gameTemplateId || undefined
-            });
-        } else {
-            // Extract from URL params (original flow)
-            const discipline = searchParams.get("discipline") || "";
-            const level = searchParams.get("gradeLevel") || "";
-            const themesParam = searchParams.get("themes") || "";
-            const limit = parseInt(searchParams.get("limit") || "10", 10);
-            const gameTemplateId = searchParams.get("gameTemplateId") || "";
-            const themes = themesParam ? themesParam.split(',').filter(t => t.trim()) : [];
+        // Extract from URL params (original flow)
+        const discipline = searchParams.get("discipline") || "";
+        const level = searchParams.get("gradeLevel") || "";
+        const themesParam = searchParams.get("themes") || "";
+        const limit = parseInt(searchParams.get("limit") || "10", 10);
+        const gameTemplateId = searchParams.get("gameTemplateId") || "";
+        const themes = themesParam ? themesParam.split(',').filter(t => t.trim()) : [];
 
-            setPracticeParams({ discipline, level, themes, limit, gameTemplateId });
-        }
-    }, [searchParams, practiceSettings, gameInstance]);
+        setPracticeParams({ discipline, level, themes, limit, gameTemplateId });
+    }, [searchParams]);
 
     // Initialize practice session hook with auto-start when params are ready
     const {
