@@ -3,7 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/gameStateService';
 import createLogger from '@/utils/logger';
-import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, TEACHER_EVENTS  } from '@shared/types/socket/events';
 import { GameTimerState } from '@shared/types/core/timer';
 import { pauseTimerPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { ErrorPayload, GameTimerUpdatePayload } from '@shared/types/socketEvents';
@@ -234,7 +234,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             io.to(dashboardRoom).emit('dashboard_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
 
             // Broadcast to projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
+            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
 
             // Call the callback if provided with success
             if (callback) {

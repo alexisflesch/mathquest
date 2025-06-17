@@ -2,7 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/gameStateService';
 import createLogger from '@/utils/logger';
-import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, TEACHER_EVENTS  } from '@shared/types/socket/events';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import { endGamePayloadSchema } from '@shared/types/socketEvents.zod';
 
@@ -157,7 +157,7 @@ export function endGameHandler(io: SocketIOServer, socket: Socket) {
             });
 
             // To projection room
-            io.to(projectionRoom).emit('projection_game_ended', {
+            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, {
                 gameId,
                 accessCode,
                 endedAt

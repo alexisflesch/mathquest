@@ -5,7 +5,7 @@ import gameStateService, { GameState } from '@/core/gameStateService';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
 import createLogger from '@/utils/logger';
 import { TimerActionPayload } from './types';
-import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, TEACHER_EVENTS  } from '@shared/types/socket/events';
 import type { GameTimerState } from '@shared/types/core/timer';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import type {
@@ -95,7 +95,7 @@ function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, 
             logger.info({ gameId, liveRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to liveRoom');
 
             // To projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer: expiredTimer });
+            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer: expiredTimer });
             logger.info({ gameId, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to projectionRoom');
 
         } catch (error) {
@@ -512,7 +512,7 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
             logger.info({ gameId, action, liveRoom, timer }, '[TIMER_ACTION] Emitted to liveRoom');
 
             // To projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer });
+            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer });
             logger.info({ gameId, action, projectionRoom, timer }, '[TIMER_ACTION] Emitted to projectionRoom');
 
             logger.info({ gameId, action }, 'Timer updated successfully');

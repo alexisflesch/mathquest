@@ -109,7 +109,7 @@ function startGameTimer(io, gameId, accessCode, durationMs, questionUid) {
             io.to(liveRoom).emit('game_timer_updated', { timer: expiredTimer });
             logger.info({ gameId, liveRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to liveRoom');
             // To projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer: expiredTimer });
+            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer: expiredTimer });
             logger.info({ gameId, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to projectionRoom');
         }
         catch (error) {
@@ -464,7 +464,7 @@ function timerActionHandler(io, socket) {
             io.to(liveRoom).emit('game_timer_updated', { timer });
             logger.info({ gameId, action, liveRoom, timer }, '[TIMER_ACTION] Emitted to liveRoom');
             // To projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer });
+            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer });
             logger.info({ gameId, action, projectionRoom, timer }, '[TIMER_ACTION] Emitted to projectionRoom');
             logger.info({ gameId, action }, 'Timer updated successfully');
         }

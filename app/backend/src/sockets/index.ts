@@ -5,8 +5,6 @@ import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import { socketAuthMiddleware } from './middleware/socketAuth';
 import { registerConnectionHandlers } from './handlers/connectionHandlers';
-import { projectorHandler } from './handlers/projectorHandler';
-import tournamentHandler from './handlers/tournamentHandler'; // Changed to default import
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 
 // Create a socket-specific logger
@@ -104,11 +102,4 @@ export function configureSocketServer(socketServer: SocketIOServer<ClientToServe
  */
 export function registerHandlers(socketServer: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
     registerConnectionHandlers(socketServer);
-}
-
-export function setupSocketHandlers(io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) {
-    io.on('connection', (socket) => {
-        projectorHandler(io, socket);
-        tournamentHandler(io, socket); // Use the imported default handler
-    });
 }

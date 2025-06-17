@@ -402,7 +402,7 @@ function setupProjectionEvents(
     if (!socket.socket) return;
 
     socket.socket.on(
-        SOCKET_EVENTS.PROJECTOR.PROJECTOR_STATE as keyof ServerToClientEvents,
+        SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE as keyof ServerToClientEvents,
         (state: any) => {
             logger.debug('Projection received projector_state', state);
             setGameState(prev => ({
@@ -416,7 +416,7 @@ function setupProjectionEvents(
         }
     );
     cleanupFunctions.push(() => {
-        socket.socket?.off(SOCKET_EVENTS.PROJECTOR.PROJECTOR_STATE as keyof ServerToClientEvents);
+        socket.socket?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE as keyof ServerToClientEvents);
     });
 }
 

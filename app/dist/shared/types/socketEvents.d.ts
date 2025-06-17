@@ -1,6 +1,6 @@
 import type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload, AnswerSubmissionPayload as GameAnswerPayload, LeaderboardEntry } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
-import type { SetQuestionPayload } from './socket/dashboardPayloads';
+import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload } from './socket/dashboardPayloads';
 import type { PracticeClientToServerEvents, PracticeServerToClientEvents } from './practice/events';
 type LeaderboardEntryData = LeaderboardEntry;
 export interface JoinGamePayload {
@@ -193,6 +193,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     dashboard_game_status_changed: (payload: {
         status: string;
     }) => void;
+    dashboard_answer_stats_update: (payload: DashboardAnswerStatsUpdatePayload) => void;
     quiz_connected_count: (payload: {
         count: number;
     }) => void;

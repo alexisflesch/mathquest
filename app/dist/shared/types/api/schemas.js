@@ -23,7 +23,7 @@ exports.RegisterRequestSchema = zod_1.z.object({
     action: zod_1.z.enum(['teacher_register', 'teacher_signup']).optional(),
     username: zod_1.z.string().min(3, 'Username must be at least 3 characters'),
     email: zod_1.z.string().email('Invalid email format').optional(),
-    password: zod_1.z.string().min(6, 'Password must be at least 6 characters'),
+    password: zod_1.z.string().min(6, 'Password must be at least 6 characters').optional(), // Optional for guest users
     role: zod_1.z.enum(['STUDENT', 'TEACHER']).optional(),
     gradeLevel: zod_1.z.string().optional(),
     avatar: zod_1.z.string().optional(),
@@ -84,7 +84,7 @@ exports.CreateGameTemplateRequestSchema = zod_1.z.object({
     discipline: zod_1.z.string().optional(),
     description: zod_1.z.string().optional(),
     defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
-    questionUids: zod_1.z.array(zod_1.z.string().uuid()).min(1, 'At least one question is required')
+    questionUids: zod_1.z.array(zod_1.z.string()).min(1, 'At least one question is required') // Temporarily allow any string format
 });
 exports.UpdateGameTemplateRequestSchema = zod_1.z.object({
     name: zod_1.z.string().min(1).optional(),
@@ -93,7 +93,7 @@ exports.UpdateGameTemplateRequestSchema = zod_1.z.object({
     discipline: zod_1.z.string().optional(),
     description: zod_1.z.string().optional(),
     defaultMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']).optional(),
-    questionUids: zod_1.z.array(zod_1.z.string().uuid()).optional()
+    questionUids: zod_1.z.array(zod_1.z.string()).optional() // Temporarily allow any string format
 });
 // --- Question API Request Schemas ---
 exports.CreateQuestionRequestSchema = zod_1.z.object({
@@ -259,12 +259,10 @@ exports.QuestionResponseSchema = zod_1.z.object({
 });
 exports.QuestionsResponseSchema = zod_1.z.object({
     questions: zod_1.z.array(question_zod_1.questionSchema),
-    meta: zod_1.z.object({
-        total: zod_1.z.number(),
-        page: zod_1.z.number(),
-        pageSize: zod_1.z.number(),
-        totalPages: zod_1.z.number()
-    })
+    total: zod_1.z.number(),
+    page: zod_1.z.number(),
+    pageSize: zod_1.z.number(),
+    totalPages: zod_1.z.number()
 });
 // Questions list endpoint returns just UIDs as string array
 exports.QuestionsListResponseSchema = zod_1.z.array(zod_1.z.string());

@@ -1,0 +1,27 @@
+MATHQUEST QUALITY MONITOR REPORT
+========================================
+Generated: 20250617_233110
+Project: /home/aflesch/mathquest/app
+
+SUMMARY:
+  Files Analyzed: 74
+  Total Issues: 0
+  Critical Issues: 0
+  Warnings: 0
+  Auto-fixable: 0
+  Overall Score: 65.0/100
+
+CATEGORY SCORES:
+  Bundle Health: 98.0/100
+  Dependencies: 70.0/100
+  Code Quality: 27.0/100
+
+TOP RECOMMENDATIONS:
+  1. [HIGH] Found 1 analysis errors
+     Action: Review and fix script execution issues
+  2. [MEDIUM] Found 16 files using '@/types' instead of '@shared/types'
+     Action: Update imports to use shared types consistently
+  3. [LOW] Found 7 suspicious files
+     Action: Review files with suspicious names (backup, temp, old)
+  4. [INFO] No critical code quality issues found
+     Action: Code quality looks good! Consider fixing any remaining warnings

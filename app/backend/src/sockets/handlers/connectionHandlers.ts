@@ -6,6 +6,7 @@ import teacherControlHandler from './teacherControlHandler';
 import { registerTournamentHandlers } from './tournament';
 import { disconnectHandler } from './disconnectHandler';
 import { registerPracticeSessionHandlers, handlePracticeSessionDisconnect } from './practiceSessionHandler';
+import { projectionHandler } from './projectionHandler';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
 
 // Create a handler-specific logger
@@ -33,6 +34,7 @@ export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEven
         teacherControlHandler(io, socket);
         registerTournamentHandlers(io, socket);
         registerPracticeSessionHandlers(io, socket);
+        projectionHandler(io, socket); // Register modern projection handler
     });
 }
 

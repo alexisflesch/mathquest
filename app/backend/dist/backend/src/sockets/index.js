@@ -15,7 +15,7 @@ const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const socketAuth_1 = require("./middleware/socketAuth");
 const connectionHandlers_1 = require("./handlers/connectionHandlers");
-const projectorHandler_1 = require("./handlers/projectorHandler");
+const projectionHandler_1 = require("./handlers/projectionHandler");
 const tournamentHandler_1 = __importDefault(require("./handlers/tournamentHandler")); // Changed to default import
 // Create a socket-specific logger
 const logger = (0, logger_1.default)('SocketIO');
@@ -103,7 +103,7 @@ function registerHandlers(socketServer) {
 }
 function setupSocketHandlers(io) {
     io.on('connection', (socket) => {
-        (0, projectorHandler_1.projectorHandler)(io, socket);
+        (0, projectionHandler_1.projectionHandler)(io, socket); // Modern projection handler for teacher projection page
         (0, tournamentHandler_1.default)(io, socket); // Use the imported default handler
     });
 }

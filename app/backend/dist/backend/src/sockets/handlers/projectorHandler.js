@@ -20,7 +20,7 @@ function projectorHandler(io, socket) {
      * Join projector room for a specific gameId
      * @param gameId - The database ID of the GameInstance
      */
-    socket.on(events_1.PROJECTOR_EVENTS.JOIN_PROJECTOR, async (payload) => {
+    socket.on(events_1.PROJECTOR_EVENTS.JOIN_PROJECTION, async (payload) => {
         // Runtime validation with Zod
         const parseResult = socketEvents_zod_1.joinProjectorPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -56,7 +56,7 @@ function projectorHandler(io, socket) {
                 return;
             }
             const gameStateResult = await (0, gameStateService_1.getFullGameState)(gameInstance.accessCode);
-            socket.emit(events_1.PROJECTOR_EVENTS.PROJECTOR_STATE, { accessCode: gameInstance.accessCode, ...gameStateResult });
+            socket.emit(events_1.PROJECTOR_EVENTS.PROJECTION_STATE, { accessCode: gameInstance.accessCode, ...gameStateResult });
         }
         catch (err) {
             logger.error('Error fetching game state for projector', err);
@@ -66,7 +66,7 @@ function projectorHandler(io, socket) {
     /**
      * Leave projector room
      */
-    socket.on(events_1.PROJECTOR_EVENTS.LEAVE_PROJECTOR, (payload) => {
+    socket.on(events_1.PROJECTOR_EVENTS.LEAVE_PROJECTION, (payload) => {
         // Runtime validation with Zod
         const parseResult = socketEvents_zod_1.leaveProjectorPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -109,7 +109,7 @@ async function broadcastProjectorState(io, gameId) {
             return;
         }
         const gameStateResult = await (0, gameStateService_1.getFullGameState)(gameInstance.accessCode);
-        io.to(room).emit(events_1.PROJECTOR_EVENTS.PROJECTOR_STATE, { accessCode: gameInstance.accessCode, ...gameStateResult });
+        io.to(room).emit(events_1.PROJECTOR_EVENTS.PROJECTION_STATE, { accessCode: gameInstance.accessCode, ...gameStateResult });
     }
     catch (err) {
         logger.error('Error broadcasting projector state', err);

@@ -139,7 +139,7 @@ function endGameHandler(io, socket) {
                 endedAt
             });
             // To projection room
-            io.to(projectionRoom).emit('projection_game_ended', {
+            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, {
                 gameId,
                 accessCode,
                 endedAt

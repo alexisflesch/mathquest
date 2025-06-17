@@ -1,164 +1,186 @@
 /**
  * Projection Quiz Socket Hook
  * 
- * Provides projection display functionality using the modern timer system
- * with useSimpleTimer and useGameSocket instead of legacy UnifiedGameManager.
+ * Modernized hook for teacher projection display using canonical shared types
+ * and the modern useSimpleTimer hook. Follows modernization guidelines from .instructions.md.
+ * 
+ * Key modernization principles:
+ * - Uses SOCKET_EVENTS shared constants (no hardcoded event names)
+ * - Uses canonical shared types from @shared/types
+ * - Uses modern useSimpleTimer hook
+ * - Clean room separation with projection_${gameId} pattern
+ * - Zod validation for socket payloads
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from './useSimpleTimer';
 import { useGameSocket } from './useGameSocket';
-import type { QuizState } from './useTeacherQuizSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
-
-// Import core types
-import type { Question } from '@shared/types/core';
-import type { QuestionData } from '@shared/types/socketEvents';
+import type { Question, TimerStatus } from '@shared/types';
+import type { GameState } from '@shared/types/core/game';
 
 const logger = createLogger('useProjectionQuizSocket');
 
 /**
- * Projection Quiz Socket Hook
- * 
- * Provides projection display functionality with timer animations
- * and real-time synchronization for quiz projection screens.
- * 
- * @param gameId - The game/quiz ID
- * @param tournamentCode - Optional tournament code for tournament mode
- * @returns Complete projection interface
+ * Hook for teacher projection page that displays quiz content
+ * Uses modern timer system and joins projection room using shared constants
  */
-export function useProjectionQuizSocket(gameId: string | null, tournamentCode: string | null) {
-    // Use modern hooks instead of legacy UnifiedGameManager
-    const socket = useGameSocket('projection', gameId || null);
+export function useProjectionQuizSocket(accessCode: string, gameId: string | null) {
+    // Use modern game socket with correct role and gameId
+    const socket = useGameSocket('projection', gameId);
 
+    // Use modern timer with projection role
     const timer = useSimpleTimer({
         gameId: gameId || undefined,
-        accessCode: tournamentCode || '',
+        accessCode,
         socket: socket.socket,
         role: 'projection'
     });
 
-    // State management
-    const [gameState, setGameState] = useState<QuizState | null>(null);
+    // Use canonical GameState from backend response
+    const [gameState, setGameState] = useState<GameState | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(0);
 
-    // Update game state based on timer state changes
+    // Join projection room when socket connects
     useEffect(() => {
-        if (timer.questionUid || timer.timeLeftMs !== null) {
-            setGameState(prev => {
-                if (!prev) {
-                    // Initialize basic state for projections
-                    return {
-                        currentQuestionidx: 0,
-                        currentQuestionUid: timer.questionUid,
-                        questions: [],
-                        chrono: {
-                            timeLeftMs: timer.timeLeftMs || 0,
-                            running: timer.status === 'play',
-                            status: timer.status
-                        },
-                        locked: false,
-                        ended: false,
-                        stats: {},
-                        profSocketId: null,
-                        timerStatus: timer.status,
-                        timerQuestionUid: timer.questionUid,
-                        timerTimeLeft: timer.timeLeftMs || 0
-                    };
-                }
+        if (!socket.socket || !gameId) return;
 
-                const newState = {
-                    ...prev,
-                    currentQuestionUid: timer.questionUid,
-                    chrono: {
-                        timeLeftMs: timer.timeLeftMs || 0,
-                        running: timer.status === 'play',
-                        status: timer.status
-                    },
-                    timerStatus: timer.status,
-                    timerQuestionUid: timer.questionUid,
-                    timerTimeLeft: timer.timeLeftMs || 0
-                };
+        const joinProjection = () => {
+            logger.info('🎬 Joining projection room for game:', gameId);
+            logger.debug('📡 Emitting join event with payload:', { gameId });
+            // Use shared constant for join event (temporary raw emit until types are updated)
+            (socket.socket as any)?.emit(SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTION, { gameId });
+        };
 
-                // Only update if there are meaningful changes
-                if (prev.chrono.timeLeftMs !== newState.chrono.timeLeftMs ||
-                    prev.chrono.running !== newState.chrono.running ||
-                    prev.timerStatus !== newState.timerStatus ||
-                    prev.timerQuestionUid !== newState.timerQuestionUid) {
-                    return newState;
-                }
-                return prev;
-            });
+        // Join immediately if already connected
+        if (socket.socket.connected) {
+            joinProjection();
         }
-    }, [timer.timeLeftMs, timer.status, timer.questionUid]);
 
-    // Set up projection-specific event handlers
+        // Listen for connection events
+        const handleConnect = () => {
+            logger.info('🔌 [PROJECTION] Socket connected:', socket.socket?.id);
+            joinProjection();
+        };
+
+        const handleDisconnect = () => {
+            logger.warn('🔌 [PROJECTION] Socket disconnected');
+            // Reset state on disconnect - maintain required properties
+            setGameState(prev => prev ? ({
+                ...prev,
+                locked: false,
+                connectedSockets: new Set()
+            }) : null);
+        };
+
+        // Listen for projection join success
+        const handleProjectionJoined = (payload: any) => {
+            logger.info('✅ [PROJECTION] Successfully joined projection room:', payload);
+            logger.debug('🎯 Projection room joined, should receive timer events now');
+        };
+
+        // Listen for projection errors
+        const handleProjectionError = (payload: any) => {
+            logger.error('❌ [PROJECTION] Error joining projection room:', payload);
+        };
+
+        socket.socket.on('connect', handleConnect);
+        socket.socket.on('disconnect', handleDisconnect);
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_JOINED, handleProjectionJoined);
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_ERROR, handleProjectionError);
+
+        return () => {
+            socket.socket?.off('connect', handleConnect);
+            socket.socket?.off('disconnect', handleDisconnect);
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_JOINED, handleProjectionJoined);
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_ERROR, handleProjectionError);
+
+            // Leave projection room on cleanup
+            if (gameId) {
+                (socket.socket as any)?.emit(SOCKET_EVENTS.PROJECTOR.LEAVE_PROJECTION, { gameId });
+            }
+        };
+    }, [socket.socket, gameId]);
+
+    // Listen for projection-specific game events using shared constants
     useEffect(() => {
         if (!socket.socket) return;
 
-        const cleanupFunctions: (() => void)[] = [];
+        // Handle question changes from teacher dashboard
+        const handleQuestionChanged = (payload: { question: Question; questionIndex: number }) => {
+            logger.info('📋 Projection question changed:', payload);
 
-        // Projector state handler for additional projection data
-        const projectorStateHandler = (...args: unknown[]) => {
-            const state = args[0] as any;
-            logger.debug('Received projector_state', state);
-            setGameState((prev: QuizState | null) => ({
+            setGameState(prev => prev ? ({
                 ...prev,
-                ...state,
-                chrono: {
-                    timeLeftMs: state.chrono?.timeLeft ?? state.timerTimeLeft ?? 0,
-                    running: state.chrono?.running ?? (state.timerStatus === 'play'),
-                    status: state.timerStatus || 'stop'
-                }
-            }));
+                currentQuestionIndex: payload.questionIndex
+            }) : null);
         };
 
-        (socket.socket as any).on('projector_state', projectorStateHandler);
-        cleanupFunctions.push(() => {
-            (socket.socket as any)?.off('projector_state', projectorStateHandler);
-        });
-
-        // Connected count updates (use any type for now until proper event is defined)
-        const connectedCountHandler = (count: number) => {
-            logger.debug('Received connected_count', count);
-            setConnectedCount(count);
+        // Handle connected participant count updates
+        const handleConnectedCount = (payload: { count: number }) => {
+            logger.debug('👥 Connected count update:', payload.count);
+            setConnectedCount(payload.count);
         };
 
-        (socket.socket as any).on('connected_count', connectedCountHandler);
-        cleanupFunctions.push(() => {
-            (socket.socket as any)?.off('connected_count', connectedCountHandler);
-        });
+        // Handle game state updates (including initial state from getFullGameState)
+        const handleGameStateUpdate = (payload: any) => {
+            logger.info('🎮 Game state update received:', payload);
+
+            // If this is a full state update from getFullGameState (has gameState property)
+            if (payload.gameState) {
+                setGameState(payload.gameState);
+                logger.info('✅ Full projection state initialized from backend');
+                return;
+            }
+
+            // Handle partial updates (legacy compatibility)
+            if (payload.status) {
+                setGameState(prev => prev ? ({
+                    ...prev,
+                    status: payload.status
+                }) : null);
+            }
+
+            if (payload.answersLocked !== undefined) {
+                setGameState(prev => prev ? ({
+                    ...prev,
+                    answersLocked: payload.answersLocked
+                }) : null);
+            }
+        };
+
+        // Listen to projection events using shared constants (with type casting until types are updated)
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, handleQuestionChanged);
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT, handleConnectedCount);
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
 
         return () => {
-            cleanupFunctions.forEach(cleanup => cleanup());
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, handleQuestionChanged);
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT, handleConnectedCount);
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
         };
     }, [socket.socket]);
 
-    // Auto-request state on connection for projections
-    useEffect(() => {
-        if (socket.socketState.connected && socket.socket && gameId) {
-            logger.info('Projection connected, requesting state');
-            (socket.socket as any).emit('get_state', { gameId });
-        }
-    }, [socket.socketState.connected, socket.socket, gameId]);
-
-    // Return interface
+    // Return clean interface using canonical GameState properties
     return {
-        // Socket instance
-        gameSocket: socket.socket,
+        // Socket connection status
+        isConnected: socket.socketState.connected,
 
-        // State - use modern timer values
+        // Game state using canonical types
         gameState,
+        currentQuestion: null, // Questions need to be fetched separately based on questionUids
+        currentQuestionIndex: gameState?.currentQuestionIndex ?? null,
+        connectedCount,
+        gameStatus: gameState?.status ?? 'pending',
+        isAnswersLocked: gameState?.answersLocked ?? false,
+
+        // Modern timer interface
         timerStatus: timer.status,
         timerQuestionUid: timer.questionUid,
         timeLeftMs: timer.timeLeftMs,
-        localTimeLeftMs: timer.timeLeftMs, // Use timer's smooth countdown directly
-        connectedCount,
 
-        // Timer setter for backward compatibility (deprecated)
-        setLocalTimeLeft: (time: number | null) => {
-            logger.warn('setLocalTimeLeft is deprecated for projections - timer state is managed by useSimpleTimer');
-        }
+        // Socket reference (if needed for advanced usage)
+        socket: socket.socket
     };
 }

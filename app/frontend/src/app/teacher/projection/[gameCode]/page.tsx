@@ -22,28 +22,14 @@ import { useProjectionQuizSocket } from '@/hooks/useProjectionQuizSocket';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import QuestionCard from '@/components/QuestionCard';
-import { Timer } from 'lucide-react'; // Suppression de MoveDiagonal2 et ZoomIn/ZoomOut car géré par ZoomControls
+import { Timer } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import ClassementPodium from '@/components/ClassementPodium';
-import ZoomControls from '@/components/ZoomControls'; // Import du nouveau composant
-import { Question } from '@/types'; // Remove unused QuizState import
-import type { TournamentQuestion } from '@shared/types';
+import ZoomControls from '@/components/ZoomControls';
+import type { QuizQuestion, TournamentQuestion } from '@shared/types';
 import type { QuestionData } from '@shared/types/socketEvents';
-import { getQuestionUid } from '@shared/types/tournament/question';
+import type { QuizState } from '@/hooks/useTeacherQuizSocket';
 import { QUESTION_TYPES } from '@shared/types';
-
-// Helper to check if a TournamentQuestion is multiple choice
-const isQuestionMultipleChoice = (tq: TournamentQuestion | null): boolean => {
-    if (!tq?.question) return false;
-    if (typeof tq.question === 'string') return false;
-    if (typeof tq.question === 'object' && 'defaultMode' in tq.question) {
-        return tq.question.defaultMode === QUESTION_TYPES.MULTIPLE_CHOICE;
-    }
-    if (typeof tq.question === 'object' && 'questionType' in tq.question) {
-        return tq.question.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
-    }
-    return false;
-};
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const logger = createLogger('ProjectionPage');
@@ -85,16 +71,61 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     const [questionStats, setQuestionStats] = useState<Record<string, StatsData>>({});
     const [showStats, setShowStats] = useState<Record<string, boolean>>({});
 
-    // Move the useProjectionQuizSocket hook call to the top, before any useEffect or code that uses gameSocket
+    // State for gameId (fetched from gameCode)
+    const [gameId, setGameId] = useState<string | null>(null);
+
+    // Fetch gameId from gameCode
+    useEffect(() => {
+        const fetchGameId = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                logger.info('Fetching game details for access code:', gameCode);
+
+                const response = await fetch(`/api/games/access-code/${gameCode}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch game details');
+                }
+
+                if (!data.gameInstance || !data.gameInstance.id) {
+                    throw new Error('Invalid game instance data received');
+                }
+
+                logger.info('Game details fetched successfully:', {
+                    gameId: data.gameInstance.id,
+                    accessCode: data.gameInstance.accessCode,
+                    status: data.gameInstance.status
+                });
+
+                setGameId(data.gameInstance.id);
+            } catch (error: any) {
+                logger.error('Failed to fetch game details:', error.message);
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (gameCode && !gameId) {
+            fetchGameId();
+        }
+    }, [gameCode, gameId]);
+
+    // Only initialize socket connection once we have gameId
     const {
-        gameSocket,
+        socket,
         gameState,
+        currentQuestion: socketCurrentQuestion,
+        currentQuestionIndex,
         timerStatus,
         timerQuestionUid,
-        localTimeLeftMs,
-        setLocalTimeLeft, // <-- Now available
+        timeLeftMs,
         connectedCount,
-    } = useProjectionQuizSocket(gameCode, null); // Use gameCode directly
+        gameStatus,
+        isAnswersLocked
+    } = useProjectionQuizSocket(gameCode, gameId); // Pass both gameCode and gameId
 
     // Extract tournament code from game state when available
     useEffect(() => {
@@ -131,23 +162,23 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
             clearInterval(timerRef.current);
             timerRef.current = null;
         }
-    }, [timerStatus, localTimeLeftMs]);
+    }, [timerStatus, timeLeftMs]);
 
-    // --- Force timer to zero if stopped, even if localTimeLeftMs is not zero ---
+    // --- Force timer to zero if stopped, even if timeLeftMs is not zero ---
     useEffect(() => {
-        if (timerStatus === 'stop' && localTimeLeftMs !== 0) {
-            logger.debug('[Projection] Forcing localTimeLeftMs to 0 because timerStatus is stop. Previous value:', localTimeLeftMs);
-            setLocalTimeLeft(0);
+        if (timerStatus === 'stop' && timeLeftMs !== 0) {
+            logger.debug('[Projection] Forcing timeLeftMs to 0 because timerStatus is stop. Previous value:', timeLeftMs);
+            // Note: We don't have setLocalTimeLeft, we rely on socket updates
         }
-    }, [timerStatus, localTimeLeftMs]);
+    }, [timerStatus, timeLeftMs]);
 
     // Log every timer update for debugging the blinking effect
     useEffect(() => {
         logger.debug('[Projection] Timer display update:', {
             timerStatus,
-            localTimeLeftMs,
+            timeLeftMs,
         });
-    }, [timerStatus, localTimeLeftMs]);
+    }, [timerStatus, timeLeftMs]);
 
     // Set the base URL for QR code generation
     useEffect(() => {
@@ -283,18 +314,11 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     if (!layout || layout.length === 0) return <div className="p-8 text-orange-600">Aucun layout défini pour la projection.</div>;
 
     const currentQuestion = getCurrentQuestion();
-    // Map to TournamentQuestion's expected format
+    // Use canonical shared types directly - no unnecessary mapping
     const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
-        ? {
-            question: {
-                uid: currentQuestion.uid,
-                text: currentQuestion.text,
-                questionType: currentQuestion.questionType,
-                answerOptions: currentQuestion.answerOptions || []
-            }
-        }
+        ? { question: currentQuestion }
         : null;
-    const currentQuestionUid = currentTournamentQuestion ? getQuestionUid(currentTournamentQuestion) : undefined;
+    const currentQuestionUid = currentQuestion?.uid;
     const statsToShow = currentQuestionUid && showStats[currentQuestionUid] ? questionStats[currentQuestionUid] : undefined;
     const showStatsFlag = !!(currentQuestionUid && showStats[currentQuestionUid]);
 
@@ -352,7 +376,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                     lineHeight: '1',
                                 }}
                             >
-                                {formatTimer(localTimeLeftMs)}
+                                {formatTimer(timeLeftMs)}
                             </span>
                         </div>
                     </div>
@@ -393,9 +417,9 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                         <QuestionCard
                                             key={questionKey}
                                             currentQuestion={currentTournamentQuestion}
-                                            questionIndex={gameState?.questions.findIndex((q: any) => q.uid === currentQuestionUid) ?? 0}
+                                            questionIndex={gameState?.questions.findIndex(q => q.uid === currentQuestionUid) ?? 0}
                                             totalQuestions={gameState?.questions.length ?? 0}
-                                            isMultipleChoice={isQuestionMultipleChoice(currentTournamentQuestion)}
+                                            isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
                                             selectedAnswer={null}
                                             setSelectedAnswer={noopSetState}
                                             selectedAnswers={[]}

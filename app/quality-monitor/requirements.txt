@@ -1,0 +1,44 @@
+# Core Python utilities
+click==8.1.6
+colorama==0.4.6
+tabulate==0.9.0
+
+# AST and code analysis
+ast-tools==0.1.8
+astroid==2.15.6
+
+# Git integration
+gitpython==3.1.32
+
+# Syntax highlighting and code parsing
+pygments==2.15.1
+
+# Template engine for report generation
+jinja2==3.1.2
+
+# Data visualization for quality reports
+matplotlib==3.7.2
+plotly==5.15.0
+
+# JSON and data manipulation
+jsonschema==4.19.0
+
+# Progress bars and CLI utilities
+tqdm==4.66.1
+rich==13.5.2
+
+# Text similarity and fuzzy matching
+fuzzywuzzy==0.18.0
+python-levenshtein==0.21.1
+
+# Regular expression utilities
+regex==2023.8.8
+
+# Configuration file parsing
+pyyaml==6.0.1
+
+# HTTP requests (for potential API integrations)
+requests==2.31.0
+
+# File type detection
+python-magic==0.4.27

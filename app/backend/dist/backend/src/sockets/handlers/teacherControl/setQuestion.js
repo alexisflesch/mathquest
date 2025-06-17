@@ -328,7 +328,7 @@ function setQuestionHandler(io, socket) {
             }
             // Broadcast to projection room if needed
             const projectionRoom = `projection_${gameId}`;
-            io.to(projectionRoom).emit('projection_question_changed', {
+            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, {
                 questionUid: questionUid,
                 questionIndex: foundQuestionIndex,
                 totalQuestions: gameState.questionUids.length,

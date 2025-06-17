@@ -15,7 +15,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
-import { TEACHER_EVENTS, GAME_EVENTS } from '@shared/types/socket/events';
+import { TEACHER_EVENTS, GAME_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';
 import type {
     GameTimerState,
     TimerStatus,
@@ -103,7 +103,8 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
         if (!socket) return;
 
         const handleTimerUpdate = (payload: GameTimerUpdatePayload) => {
-            logger.info('Received timer update:', payload);
+            logger.info(`[SimpleTimer] Timer update received for role ${role}:`, payload);
+            logger.debug(`[SimpleTimer] Event: ${eventName}, Payload:`, payload);
 
             const { timer, questionUid } = payload;
             const now = Date.now();
@@ -137,7 +138,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
         const eventName = role === 'teacher'
             ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED
             : role === 'projection'
-                ? 'projection_timer_updated'  // Backend sends this
+                ? SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED  // Use shared constant
                 : GAME_EVENTS.GAME_TIMER_UPDATED;       // Backend sends this for students
 
         socket.on(eventName, handleTimerUpdate);

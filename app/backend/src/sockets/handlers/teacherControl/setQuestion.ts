@@ -4,7 +4,7 @@ import gameStateService from '@/core/gameStateService';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
 import createLogger from '@/utils/logger';
 import { SetQuestionPayload } from './types';
-import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import { GameTimerState } from '@shared/types/core/timer';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import type {
@@ -331,7 +331,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
 
             // Broadcast to projection room if needed
             const projectionRoom = `projection_${gameId}`;
-            io.to(projectionRoom).emit('projection_question_changed', {
+            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, {
                 questionUid: questionUid,
                 questionIndex: foundQuestionIndex,
                 totalQuestions: gameState.questionUids.length,

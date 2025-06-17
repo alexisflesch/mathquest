@@ -25,7 +25,7 @@ export declare const RegisterRequestSchema: z.ZodObject<{
     action: z.ZodOptional<z.ZodEnum<["teacher_register", "teacher_signup"]>>;
     username: z.ZodString;
     email: z.ZodOptional<z.ZodString>;
-    password: z.ZodString;
+    password: z.ZodOptional<z.ZodString>;
     role: z.ZodOptional<z.ZodEnum<["STUDENT", "TEACHER"]>>;
     gradeLevel: z.ZodOptional<z.ZodString>;
     avatar: z.ZodOptional<z.ZodString>;
@@ -34,10 +34,10 @@ export declare const RegisterRequestSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
     prenom: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    password: string;
     username: string;
     action?: "teacher_register" | "teacher_signup" | undefined;
     email?: string | undefined;
+    password?: string | undefined;
     role?: "STUDENT" | "TEACHER" | undefined;
     gradeLevel?: string | undefined;
     avatar?: string | undefined;
@@ -46,10 +46,10 @@ export declare const RegisterRequestSchema: z.ZodObject<{
     name?: string | undefined;
     prenom?: string | undefined;
 }, {
-    password: string;
     username: string;
     action?: "teacher_register" | "teacher_signup" | undefined;
     email?: string | undefined;
+    password?: string | undefined;
     role?: "STUDENT" | "TEACHER" | undefined;
     gradeLevel?: string | undefined;
     avatar?: string | undefined;
@@ -161,10 +161,10 @@ export declare const GameStatusUpdateRequestSchema: z.ZodObject<{
     status: z.ZodEnum<["pending", "active", "paused", "completed", "archived"]>;
     currentQuestionIndex: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    status: "pending" | "active" | "paused" | "completed" | "archived";
+    status: "active" | "completed" | "pending" | "archived" | "paused";
     currentQuestionIndex?: number | undefined;
 }, {
-    status: "pending" | "active" | "paused" | "completed" | "archived";
+    status: "active" | "completed" | "pending" | "archived" | "paused";
     currentQuestionIndex?: number | undefined;
 }>;
 export declare const CreateGameTemplateRequestSchema: z.ZodObject<{
@@ -405,6 +405,7 @@ export declare const LoginResponseSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     message: string;
     token: string;
+    success?: boolean | undefined;
     username?: string | undefined;
     role?: string | undefined;
     avatar?: string | undefined;
@@ -421,10 +422,10 @@ export declare const LoginResponseSchema: z.ZodObject<{
     } | undefined;
     enseignantId?: string | undefined;
     cookie_id?: string | undefined;
-    success?: boolean | undefined;
 }, {
     message: string;
     token: string;
+    success?: boolean | undefined;
     username?: string | undefined;
     role?: string | undefined;
     avatar?: string | undefined;
@@ -441,7 +442,6 @@ export declare const LoginResponseSchema: z.ZodObject<{
     } | undefined;
     enseignantId?: string | undefined;
     cookie_id?: string | undefined;
-    success?: boolean | undefined;
 }>;
 export declare const RegisterResponseSchema: z.ZodObject<{
     success: z.ZodBoolean;
@@ -467,6 +467,7 @@ export declare const RegisterResponseSchema: z.ZodObject<{
         email?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
+    success: boolean;
     message: string;
     token: string;
     user: {
@@ -476,8 +477,8 @@ export declare const RegisterResponseSchema: z.ZodObject<{
         id: string;
         email?: string | undefined;
     };
-    success: boolean;
 }, {
+    success: boolean;
     message: string;
     token: string;
     user: {
@@ -487,7 +488,6 @@ export declare const RegisterResponseSchema: z.ZodObject<{
         id: string;
         email?: string | undefined;
     };
-    success: boolean;
 }>;
 export declare const UpgradeAccountResponseSchema: z.ZodObject<{
     success: z.ZodBoolean;
@@ -513,6 +513,7 @@ export declare const UpgradeAccountResponseSchema: z.ZodObject<{
         email?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
+    success: boolean;
     message: string;
     token: string;
     user: {
@@ -522,8 +523,8 @@ export declare const UpgradeAccountResponseSchema: z.ZodObject<{
         id: string;
         email?: string | undefined;
     };
-    success: boolean;
 }, {
+    success: boolean;
     message: string;
     token: string;
     user: {
@@ -533,7 +534,6 @@ export declare const UpgradeAccountResponseSchema: z.ZodObject<{
         id: string;
         email?: string | undefined;
     };
-    success: boolean;
 }>;
 export declare const AuthStatusResponseSchema: z.ZodObject<{
     authState: z.ZodString;
@@ -616,6 +616,7 @@ export declare const ProfileUpdateResponseSchema: z.ZodObject<{
         email?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
+    success: boolean;
     message: string;
     user: {
         username: string;
@@ -624,8 +625,8 @@ export declare const ProfileUpdateResponseSchema: z.ZodObject<{
         id: string;
         email?: string | undefined;
     };
-    success: boolean;
 }, {
+    success: boolean;
     message: string;
     user: {
         username: string;
@@ -634,17 +635,16 @@ export declare const ProfileUpdateResponseSchema: z.ZodObject<{
         id: string;
         email?: string | undefined;
     };
-    success: boolean;
 }>;
 export declare const LogoutResponseSchema: z.ZodObject<{
     success: z.ZodBoolean;
     message: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    message: string;
     success: boolean;
+    message: string;
 }, {
-    message: string;
     success: boolean;
+    message: string;
 }>;
 export declare const ErrorResponseSchema: z.ZodObject<{
     error: z.ZodString;
@@ -703,6 +703,7 @@ export declare const UniversalLoginResponseSchema: z.ZodUnion<[z.ZodObject<{
     }>;
     token: z.ZodString;
 }, "strip", z.ZodTypeAny, {
+    success: boolean;
     token: string;
     user: {
         username: string;
@@ -711,8 +712,8 @@ export declare const UniversalLoginResponseSchema: z.ZodUnion<[z.ZodObject<{
         id: string;
         email?: string | undefined;
     };
-    success: boolean;
 }, {
+    success: boolean;
     token: string;
     user: {
         username: string;
@@ -721,7 +722,6 @@ export declare const UniversalLoginResponseSchema: z.ZodUnion<[z.ZodObject<{
         id: string;
         email?: string | undefined;
     };
-    success: boolean;
 }>]>;
 export declare const GameCreationResponseSchema: z.ZodObject<{
     gameInstance: z.ZodType<any, z.ZodTypeDef, any>;
@@ -1090,22 +1090,10 @@ export declare const QuestionsResponseSchema: z.ZodObject<{
         timeLimit?: number | undefined;
         isHidden?: boolean | undefined;
     }>, "many">;
-    meta: z.ZodObject<{
-        total: z.ZodNumber;
-        page: z.ZodNumber;
-        pageSize: z.ZodNumber;
-        totalPages: z.ZodNumber;
-    }, "strip", z.ZodTypeAny, {
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    }, {
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    }>;
+    total: z.ZodNumber;
+    page: z.ZodNumber;
+    pageSize: z.ZodNumber;
+    totalPages: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     questions: {
         discipline: string;
@@ -1124,12 +1112,10 @@ export declare const QuestionsResponseSchema: z.ZodObject<{
         timeLimit?: number | undefined;
         isHidden?: boolean | undefined;
     }[];
-    meta: {
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    };
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
 }, {
     questions: {
         discipline: string;
@@ -1148,12 +1134,10 @@ export declare const QuestionsResponseSchema: z.ZodObject<{
         timeLimit?: number | undefined;
         isHidden?: boolean | undefined;
     }[];
-    meta: {
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    };
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
 }>;
 export declare const QuestionsListResponseSchema: z.ZodArray<z.ZodString, "many">;
 export declare const QuestionUidsResponseSchema: z.ZodObject<{
@@ -1518,12 +1502,6 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
         totalPages: number;
     }>;
 }, "strip", z.ZodTypeAny, {
-    meta: {
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    };
     gameTemplates: {
         name: string;
         themes: string[];
@@ -1555,13 +1533,13 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
         }[] | undefined;
         creator?: any;
     }[];
+    meta: {
+        total: number;
+        page: number;
+        pageSize: number;
+        totalPages: number;
+    };
 }, {
-    meta: {
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    };
     gameTemplates: {
         name: string;
         themes: string[];
@@ -1593,6 +1571,12 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
         }[] | undefined;
         creator?: any;
     }[];
+    meta: {
+        total: number;
+        page: number;
+        pageSize: number;
+        totalPages: number;
+    };
 }>;
 export declare const GameTemplateCreationResponseSchema: z.ZodObject<{
     gameTemplate: z.ZodObject<{
@@ -5643,14 +5627,14 @@ export declare const GetPracticeQuestionsApiResponseSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     success: boolean;
     statusCode: number;
-    questionUids?: string[] | undefined;
     error?: string | undefined;
+    questionUids?: string[] | undefined;
     totalAvailable?: number | undefined;
 }, {
     success: boolean;
     statusCode: number;
-    questionUids?: string[] | undefined;
     error?: string | undefined;
+    questionUids?: string[] | undefined;
     totalAvailable?: number | undefined;
 }>;
 export type PracticeSettings = z.infer<typeof PracticeSettingsSchema>;

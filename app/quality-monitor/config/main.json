@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "project_name": "MathQuest",
+  "analysis": {
+    "enabled_scripts": [
+      "bundle-analyzer",
+      "dependency-graph",
+      "eslint-runner",
+      "typescript-analyzer"
+    ],
+    "timeout_seconds": 300,
+    "max_files_per_analysis": 1000,
+    "exclude_patterns": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".next/**",
+      "coverage/**",
+      "*.min.js",
+      "*.bundle.js"
+    ]
+  },
+  "reporting": {
+    "formats": [
+      "html",
+      "json",
+      "summary"
+    ],
+    "include_charts": true,
+    "include_detailed_results": true
+  },
+  "auto_fix": {
+    "enabled": true,
+    "safe_fixes_only": true,
+    "create_backups": true,
+    "max_files_per_fix": 50
+  }
+}

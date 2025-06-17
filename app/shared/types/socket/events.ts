@@ -95,14 +95,17 @@ export const LOBBY_EVENTS = {
 // ===== Projector Events =====
 export const PROJECTOR_EVENTS = {
     // Projector actions
-    JOIN_PROJECTOR: 'join_projector',
-    LEAVE_PROJECTOR: 'leave_projector',
+    JOIN_PROJECTION: 'join_projection',
+    LEAVE_PROJECTION: 'leave_projection',
 
     // Server responses
-    PROJECTOR_STATE: 'projector_state',
+    PROJECTION_JOINED: 'projection_joined',
+    PROJECTION_LEFT: 'projection_left',
+    PROJECTION_ERROR: 'projection_error',
+    PROJECTION_QUESTION_CHANGED: 'projection_question_changed',
     PROJECTION_TIMER_UPDATED: 'projection_timer_updated',
-    PROJECTOR_CONNECTED_COUNT: 'projector_connected_count',
-    JOINED_ROOM: 'joined_room'
+    PROJECTION_CONNECTED_COUNT: 'projection_connected_count',
+    PROJECTION_STATE: 'projection_state'
 };
 
 // ===== Student/Game Events =====

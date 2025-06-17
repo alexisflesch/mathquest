@@ -1,0 +1,78 @@
+architecture:
+  cross_module_imports:
+    allowed_patterns:
+    - '@/shared/**'
+    - '@/utils/**'
+    enabled: true
+    severity: warning
+  deep_import_paths:
+    enabled: true
+    max_depth: 3
+    severity: warning
+code_quality:
+  console_statements:
+    auto_fix: true
+    enabled: true
+    severity: warning
+  debugger_statements:
+    auto_fix: false
+    enabled: true
+    severity: error
+  todo_comments:
+    enabled: true
+    patterns:
+    - TODO
+    - FIXME
+    - HACK
+    - XXX
+    severity: info
+dependencies:
+  circular_dependencies:
+    enabled: true
+    severity: error
+  duplicate_dependencies:
+    auto_fix: true
+    enabled: true
+    severity: warning
+  unused_dependencies:
+    auto_fix: false
+    enabled: true
+    severity: warning
+hardcoded_strings:
+  api_endpoints:
+    enabled: true
+    patterns:
+    - /api/
+    - /endpoint/
+    severity: error
+  event_names:
+    enabled: true
+    patterns:
+    - user-joined
+    - user-left
+    - game-started
+    - game-ended
+    - question-answered
+    - timer-update
+    severity: warning
+  magic_numbers:
+    enabled: true
+    exclude:
+    - 0
+    - 1
+    - -1
+    - 100
+    - 1000
+    severity: warning
+typescript:
+  any_usage:
+    enabled: true
+    max_percentage: 5
+    severity: warning
+  implicit_any:
+    enabled: true
+    severity: error
+  type_assertions:
+    enabled: true
+    max_per_file: 3
+    severity: warning

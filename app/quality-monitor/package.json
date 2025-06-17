@@ -1,0 +1,47 @@
+{
+  "name": "mathquest-quality-monitor",
+  "version": "1.0.0",
+  "description": "Automated code quality monitoring for MathQuest app",
+  "main": "main.py",
+  "scripts": {
+    "install-deps": "npm install && pip install -r requirements.txt",
+    "check": "python main.py --full-report",
+    "check-quick": "python main.py --quick --critical-only",
+    "check-frontend": "python main.py --module frontend",
+    "check-backend": "python main.py --module backend",
+    "check-shared": "python main.py --module shared",
+    "eslint-check": "node scripts/javascript/eslint-runner.js",
+    "bundle-analyze": "node scripts/javascript/bundle-analyzer.js",
+    "deps-analyze": "node scripts/javascript/dependency-graph.js",
+    "ts-analyze": "node scripts/javascript/typescript-analyzer.js"
+  },
+  "keywords": [
+    "code-quality",
+    "static-analysis",
+    "typescript",
+    "eslint",
+    "monitoring"
+  ],
+  "author": "MathQuest Team",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint-plugin-sonarjs": "^0.21.0",
+    "eslint-plugin-import": "^2.28.0",
+    "eslint-plugin-unused-imports": "^3.0.0",
+    "jscpd": "^3.5.0",
+    "madge": "^6.1.0",
+    "depcheck": "^1.4.0",
+    "dependency-cruiser": "^13.0.0",
+    "webpack-bundle-analyzer": "^4.9.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "documentation": "^14.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

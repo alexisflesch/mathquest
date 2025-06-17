@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BACKEND_API_BASE_URL } from '@/config/api';
 
-// Only allow GET for teachers, block for students/anonymous
+// Allow GET for authenticated users (both teachers and students)
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ gameId: string }> }
 ) {
     const { gameId } = await params;
-    // Only allow if teacher token is present
+
+    // Get authentication token from cookies - allow both teacher and student tokens
     const teacherToken = request.cookies.get('teacherToken')?.value;
-    if (!teacherToken) {
-        return NextResponse.json({ error: 'Unauthorized: Teachers only' }, { status: 403 });
+    const authToken = request.cookies.get('authToken')?.value;
+
+    const token = teacherToken || authToken;
+
+    if (!token) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
+
     // Forward request to backend
     const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/games/${gameId}`, {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${teacherToken}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
         },
     });
+
     const data = await backendResponse.json();
     return NextResponse.json(data, { status: backendResponse.status });
 }

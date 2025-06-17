@@ -7,6 +7,7 @@ exports.startTimerHandler = startTimerHandler;
 const prisma_1 = require("@/db/prisma");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const logger_1 = __importDefault(require("@/utils/logger"));
+const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('StartTimerHandler');
@@ -206,7 +207,7 @@ function startTimerHandler(io, socket) {
             // Broadcast to dashboard room
             io.to(dashboardRoom).emit('dashboard_timer_updated', { timer });
             // Broadcast to projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer });
+            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer });
             // Call the callback if provided with success
             if (callback) {
                 callback({

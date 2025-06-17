@@ -127,7 +127,7 @@ function lockAnswersHandler(io, socket) {
                 answersLocked: lock
             });
             // To projection room
-            io.to(projectionRoom).emit('projection_answers_lock_changed', {
+            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, {
                 answersLocked: lock
             });
             logger.info({ gameId, lock }, 'Answers lock status updated');

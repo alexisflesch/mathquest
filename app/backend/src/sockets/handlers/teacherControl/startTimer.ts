@@ -3,7 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/gameStateService';
 import createLogger from '@/utils/logger';
-import { TEACHER_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, TEACHER_EVENTS  } from '@shared/types/socket/events';
 import { startTimerPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 
@@ -216,7 +216,7 @@ export function startTimerHandler(io: SocketIOServer, socket: Socket) {
             // Broadcast to dashboard room
             io.to(dashboardRoom).emit('dashboard_timer_updated', { timer });
             // Broadcast to projection room
-            io.to(projectionRoom).emit('projection_timer_updated', { timer });
+            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer });
             // Call the callback if provided with success
             if (callback) {
                 callback({

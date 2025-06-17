@@ -23,6 +23,7 @@ export declare const TEACHER_EVENTS: {
     DASHBOARD_TIMER_UPDATED: string;
     DASHBOARD_ANSWERS_LOCK_CHANGED: string;
     DASHBOARD_GAME_STATUS_CHANGED: string;
+    DASHBOARD_ANSWER_STATS_UPDATE: string;
     ERROR_DASHBOARD: string;
 };
 export declare const TOURNAMENT_EVENTS: {
@@ -60,15 +61,17 @@ export declare const LOBBY_EVENTS: {
     ROOM_LEFT: string;
     REDIRECT_TO_GAME: string;
     GAME_STARTED: string;
-    REDIRECT_TO_QUIZ: string;
 };
 export declare const PROJECTOR_EVENTS: {
-    JOIN_PROJECTOR: string;
-    LEAVE_PROJECTOR: string;
-    PROJECTOR_STATE: string;
+    JOIN_PROJECTION: string;
+    LEAVE_PROJECTION: string;
+    PROJECTION_JOINED: string;
+    PROJECTION_LEFT: string;
+    PROJECTION_ERROR: string;
+    PROJECTION_QUESTION_CHANGED: string;
     PROJECTION_TIMER_UPDATED: string;
-    PROJECTOR_CONNECTED_COUNT: string;
-    JOINED_ROOM: string;
+    PROJECTION_CONNECTED_COUNT: string;
+    PROJECTION_STATE: string;
 };
 export declare const GAME_EVENTS: {
     JOIN_GAME: string;
@@ -121,6 +124,7 @@ export declare const SOCKET_EVENTS: {
         DASHBOARD_TIMER_UPDATED: string;
         DASHBOARD_ANSWERS_LOCK_CHANGED: string;
         DASHBOARD_GAME_STATUS_CHANGED: string;
+        DASHBOARD_ANSWER_STATS_UPDATE: string;
         ERROR_DASHBOARD: string;
     };
     GAME: {
@@ -191,15 +195,17 @@ export declare const SOCKET_EVENTS: {
         ROOM_LEFT: string;
         REDIRECT_TO_GAME: string;
         GAME_STARTED: string;
-        REDIRECT_TO_QUIZ: string;
     };
     PROJECTOR: {
-        JOIN_PROJECTOR: string;
-        LEAVE_PROJECTOR: string;
-        PROJECTOR_STATE: string;
+        JOIN_PROJECTION: string;
+        LEAVE_PROJECTION: string;
+        PROJECTION_JOINED: string;
+        PROJECTION_LEFT: string;
+        PROJECTION_ERROR: string;
+        PROJECTION_QUESTION_CHANGED: string;
         PROJECTION_TIMER_UPDATED: string;
-        PROJECTOR_CONNECTED_COUNT: string;
-        JOINED_ROOM: string;
+        PROJECTION_CONNECTED_COUNT: string;
+        PROJECTION_STATE: string;
     };
     CONNECT: string;
     DISCONNECT: string;

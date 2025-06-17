@@ -33,6 +33,7 @@ exports.TEACHER_EVENTS = {
     DASHBOARD_TIMER_UPDATED: 'dashboard_timer_updated',
     DASHBOARD_ANSWERS_LOCK_CHANGED: 'dashboard_answers_lock_changed',
     DASHBOARD_GAME_STATUS_CHANGED: 'dashboard_game_status_changed',
+    DASHBOARD_ANSWER_STATS_UPDATE: 'dashboard_answer_stats_update',
     // Error handling
     ERROR_DASHBOARD: 'error_dashboard'
 };
@@ -77,20 +78,22 @@ exports.LOBBY_EVENTS = {
     PARTICIPANT_LEFT: 'participant_left',
     PARTICIPANTS_LIST: 'participants_list',
     ROOM_LEFT: 'room_left',
-    REDIRECT_TO_GAME: 'redirect_to_game',
-    GAME_STARTED: 'game_started',
-    REDIRECT_TO_QUIZ: 'redirect_to_quiz'
+    REDIRECT_TO_GAME: 'redirect_to_game', // Canonical redirect event
+    GAME_STARTED: 'game_started'
 };
 // ===== Projector Events =====
 exports.PROJECTOR_EVENTS = {
     // Projector actions
-    JOIN_PROJECTOR: 'join_projector',
-    LEAVE_PROJECTOR: 'leave_projector',
+    JOIN_PROJECTION: 'join_projection',
+    LEAVE_PROJECTION: 'leave_projection',
     // Server responses
-    PROJECTOR_STATE: 'projector_state',
+    PROJECTION_JOINED: 'projection_joined',
+    PROJECTION_LEFT: 'projection_left',
+    PROJECTION_ERROR: 'projection_error',
+    PROJECTION_QUESTION_CHANGED: 'projection_question_changed',
     PROJECTION_TIMER_UPDATED: 'projection_timer_updated',
-    PROJECTOR_CONNECTED_COUNT: 'projector_connected_count',
-    JOINED_ROOM: 'joined_room'
+    PROJECTION_CONNECTED_COUNT: 'projection_connected_count',
+    PROJECTION_STATE: 'projection_state'
 };
 // ===== Student/Game Events =====
 exports.GAME_EVENTS = {

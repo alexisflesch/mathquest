@@ -29,6 +29,8 @@ export interface PracticeSettings {
     allowRetry: boolean;
     /** Whether to randomize question order */
     randomizeQuestions: boolean;
+    /** Optional GameTemplate ID to use pre-selected questions instead of generating new ones */
+    gameTemplateId?: string;
 }
 /**
  * Practice answer submission
