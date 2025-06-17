@@ -445,5 +445,10 @@ const timer = useSimpleTimer({
 ### **Phase 8: DASHBOARD SOCKET CONSISTENCY** ✅ COMPLETED
 - [x] **NAMING CONVENTION**: Implemented consistent `dashboard_${gameId}` room naming across all game types ✅
 - [x] **DRY PRINCIPLE**: Removed special-case room logic for quiz mode ✅
-- [x] **CODE SIMPLIFICATION**: Unified dashboard room emission logic for all play modes ✅
-- [x] **BACKEND PERCENTAGE CALCULATION**: Simplified answer stats to use unified percentage calculation for all question types ✅
+- [x] **BACKEND EMISSION**: Added real-time answer stats emission to dashboard room ✅
+- [x] **CRITICAL BUG FIX**: Fixed answer statistics percentage calculation logic ✅
+  - [x] **Root Cause**: Array-to-string conversion was creating invalid keys like "1,2" ✅
+  - [x] **Solution**: Proper handling of multiple choice arrays and user-based percentage calculation ✅
+  - [x] **Redis Cache**: Cleared stale answer data to enable proper debugging ✅
+- [x] **UNIFIED LOGIC**: Single percentage calculation for all question types ✅
+- [x] **VALIDATION**: Confirmed stats display correctly (100% for options selected by users) ✅

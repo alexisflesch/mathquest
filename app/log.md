@@ -863,3 +863,52 @@ Following .instructions.md zero tolerance policy:
 - `timeLeftMs: gameManager.gameState.timer.timeLeftMs` → `timeLeftMs: timer.timeLeftMs`
 
 **This eliminates the legacy timer fields exposure while keeping gameManager for now.**
+
+## 2025-06-17 - Dashboard Stats Implementation Completed Successfully
+
+**WHAT**: Successfully completed real-time answer statistics implementation for teacher dashboard
+**WHY**: Enable teachers to see live student answer data during quiz sessions
+**HOW**: 
+- Fixed critical percentage calculation bug (array-to-string conversion issue)
+- Cleared Redis cache to remove stale answer data  
+- Implemented consistent `dashboard_${gameId}` room naming across all game types
+- Unified backend emission logic for all play modes
+- Validated frontend correctly receives and displays live stats
+
+**FINAL RESULT**: Teacher dashboard now displays accurate, real-time answer statistics as students submit answers
+
+**FILES INVOLVED**:
+- `/backend/src/sockets/handlers/teacherControl/helpers.ts` - Fixed stats calculation
+- `/backend/src/sockets/handlers/game/gameAnswer.ts` - Consistent room emission
+- `/backend/src/sockets/handlers/teacherControl/joinDashboard.ts` - Unified room joining
+- Redis cache cleared to remove stale data
+
+**COMPLIANCE WITH .instructions.md**:
+✅ Point 1: Documented everything in plan.md with checklist items
+✅ Point 2: Logged all actions with what/why/how/when
+✅ Point 7: Enforced consistent naming (dashboard_${gameId} across all modes)
+✅ Point 8: Used shared types for socket events and payloads
+✅ Point 11: Fixed root cause (stats calculation) rather than patching symptoms
+✅ Point 5: Validated changes work correctly with live testing
+
+## 2025-06-17 - Critical Late Joiner Timer Pause Bug Fix
+
+**WHAT**: Fixed critical bug where late joiners received incorrect timer when game was paused
+**WHY**: Late joiners were getting timer=0 and status="stop" even when teacher had paused timer with time remaining
+**HOW**: 
+- **Problem**: Elapsed time calculation was applied even when timer was paused
+- **Root Cause**: Code didn't distinguish between paused vs playing timer states for late joiners
+- **Solution**: When timer status is "pause", late joiners now get the same timeLeft as when it was paused
+
+**BEFORE** (❌ Broken):
+- Teacher pauses timer at 7 seconds → Late joiner gets: timer=0, status="stop"
+- Elapsed time since pause was incorrectly reducing the remaining time
+
+**AFTER** (✅ Fixed):
+- Teacher pauses timer at 7 seconds → Late joiner gets: timer=7s, status="pause"  
+- Paused timers maintain their timeLeft for late joiners
+
+**FILES MODIFIED**:
+- `/backend/src/sockets/handlers/game/joinGame.ts` - Fixed late joiner timer calculation logic
+
+**ALIGNMENT**: Critical bug fix ensuring consistent timer behavior for all participants
