@@ -36,7 +36,7 @@ class QuestionService {
                     isHidden: data.isHidden
                 }
             });
-            return question;
+            return this.normalizeQuestion(question);
         }
         catch (error) {
             logger.error({ error }, 'Error creating question');
@@ -48,9 +48,10 @@ class QuestionService {
      */
     async getQuestionById(uid) {
         try {
-            return await prisma_1.prisma.question.findUnique({
+            const question = await prisma_1.prisma.question.findUnique({
                 where: { uid }
             });
+            return this.normalizeQuestion(question);
         }
         catch (error) {
             logger.error({ error }, `Error fetching question with ID ${uid}`);
@@ -121,7 +122,7 @@ class QuestionService {
                 prisma_1.prisma.question.count({ where })
             ]);
             return {
-                questions,
+                questions: questions.map(q => this.normalizeQuestion(q)),
                 total,
                 page: Math.floor(skip / take) + 1,
                 pageSize: take,
@@ -151,7 +152,7 @@ class QuestionService {
                 where: { uid },
                 data: updateData
             });
-            return updatedQuestion;
+            return this.normalizeQuestion(updatedQuestion);
         }
         catch (error) {
             logger.error({ error }, 'Error updating question');
@@ -194,26 +195,49 @@ class QuestionService {
             const niveauxWhere = { ...baseWhere };
             const disciplinesWhere = { ...baseWhere };
             const themesWhere = { ...baseWhere };
+            const authorsWhere = { ...baseWhere };
             // Apply cascading filter logic
             if (filterCriteria?.discipline) {
-                // When discipline is selected:
-                // - gradeLevel: show niveaux that have this discipline
-                // - disciplines: show only the selected discipline  
-                // - themes: show themes for this discipline
-                niveauxWhere.discipline = filterCriteria.discipline;
-                disciplinesWhere.discipline = filterCriteria.discipline;
-                themesWhere.discipline = filterCriteria.discipline;
+                // When discipline(s) is selected: use OR logic with 'in' operator
+                const disciplineFilter = Array.isArray(filterCriteria.discipline)
+                    ? { in: filterCriteria.discipline }
+                    : filterCriteria.discipline;
+                niveauxWhere.discipline = disciplineFilter;
+                disciplinesWhere.discipline = disciplineFilter;
+                themesWhere.discipline = disciplineFilter;
+                authorsWhere.discipline = disciplineFilter;
             }
             if (filterCriteria?.gradeLevel) {
-                // When niveau is selected:
-                // - gradeLevel: show only the selected niveau
-                // - disciplines: show disciplines that have this niveau
-                // - themes: show themes for this niveau
-                niveauxWhere.gradeLevel = filterCriteria.gradeLevel;
-                disciplinesWhere.gradeLevel = filterCriteria.gradeLevel;
-                themesWhere.gradeLevel = filterCriteria.gradeLevel;
+                // When niveau(s) is selected: use OR logic with 'in' operator
+                const gradeLevelFilter = Array.isArray(filterCriteria.gradeLevel)
+                    ? { in: filterCriteria.gradeLevel }
+                    : filterCriteria.gradeLevel;
+                niveauxWhere.gradeLevel = gradeLevelFilter;
+                disciplinesWhere.gradeLevel = gradeLevelFilter;
+                themesWhere.gradeLevel = gradeLevelFilter;
+                authorsWhere.gradeLevel = gradeLevelFilter;
             }
-            const [niveaux, disciplines, themes] = await Promise.all([
+            if (filterCriteria?.theme) {
+                // When theme(s) is selected: use array contains logic
+                const themeFilter = Array.isArray(filterCriteria.theme)
+                    ? { hasSome: filterCriteria.theme }
+                    : { has: filterCriteria.theme };
+                niveauxWhere.themes = themeFilter;
+                disciplinesWhere.themes = themeFilter;
+                themesWhere.themes = themeFilter;
+                authorsWhere.themes = themeFilter;
+            }
+            if (filterCriteria?.author) {
+                // When author(s) is selected: use OR logic with 'in' operator
+                const authorFilter = Array.isArray(filterCriteria.author)
+                    ? { in: filterCriteria.author }
+                    : filterCriteria.author;
+                niveauxWhere.author = authorFilter;
+                disciplinesWhere.author = authorFilter;
+                themesWhere.author = authorFilter;
+                authorsWhere.author = authorFilter;
+            }
+            const [niveaux, disciplines, themes, authors] = await Promise.all([
                 prisma_1.prisma.question.findMany({
                     select: { gradeLevel: true },
                     distinct: ['gradeLevel'],
@@ -236,6 +260,17 @@ class QuestionService {
                         ...themesWhere,
                         themes: { isEmpty: false }
                     }
+                }),
+                prisma_1.prisma.question.findMany({
+                    select: { author: true },
+                    distinct: ['author'],
+                    where: {
+                        ...authorsWhere,
+                        AND: [
+                            { author: { not: null } },
+                            { author: { not: '' } }
+                        ]
+                    }
                 })
             ]);
             // Extract unique themes from all questions
@@ -246,15 +281,28 @@ class QuestionService {
                 }
             });
             return {
-                gradeLevel: niveaux.map(n => n.gradeLevel).filter(Boolean).sort(),
-                disciplines: disciplines.map(d => d.discipline).filter(Boolean).sort(),
-                themes: Array.from(uniqueThemes).sort()
+                gradeLevel: niveaux.map(n => n.gradeLevel).filter((v) => Boolean(v)).sort(),
+                disciplines: disciplines.map(d => d.discipline).filter((v) => Boolean(v)).sort(),
+                themes: Array.from(uniqueThemes).sort(),
+                authors: authors.map(a => a.author).filter((v) => Boolean(v)).sort()
             };
         }
         catch (error) {
             logger.error({ error }, 'Error fetching available filters');
             throw error;
         }
+    }
+    /**
+     * Normalize question data from database to match canonical types
+     * Converts null values to undefined for optional fields
+     */
+    normalizeQuestion(question) {
+        return {
+            ...question,
+            title: question.title ?? undefined,
+            author: question.author ?? undefined,
+            explanation: question.explanation ?? undefined
+        };
     }
 }
 exports.QuestionService = QuestionService;

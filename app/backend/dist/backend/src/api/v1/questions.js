@@ -60,16 +60,28 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
 /**
  * Get available filter values (unique disciplines, grade levels, themes)
  * GET /api/v1/questions/filters
- * Optional query parameters: niveau, discipline to filter cascading results
+ * Optional query parameters: gradeLevel, discipline, theme, author to filter cascading results
  */
 router.get('/filters', async (req, res) => {
     try {
-        const { gradeLevel, discipline } = req.query;
+        const { gradeLevel, discipline, theme, author } = req.query;
         const filterCriteria = {};
-        if (gradeLevel)
-            filterCriteria.gradeLevel = gradeLevel;
-        if (discipline)
-            filterCriteria.discipline = discipline;
+        if (gradeLevel) {
+            // Handle both single values and arrays
+            filterCriteria.gradeLevel = Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel];
+        }
+        if (discipline) {
+            // Handle both single values and arrays
+            filterCriteria.discipline = Array.isArray(discipline) ? discipline : [discipline];
+        }
+        if (theme) {
+            // Handle both single values and arrays
+            filterCriteria.theme = Array.isArray(theme) ? theme : [theme];
+        }
+        if (author) {
+            // Handle both single values and arrays
+            filterCriteria.author = Array.isArray(author) ? author : [author];
+        }
         const filters = await getQuestionService().getAvailableFilters(filterCriteria);
         res.status(200).json(filters);
     }
@@ -149,7 +161,9 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
         themes, level, // Frontend sends 'level', not 'gradeLevel'
         gradeLevel, author, // Frontend sends 'author'
         difficulty, tags, questionType, includeHidden, // req.query.includeHidden (string | undefined)
-        page = '1', pageSize = '20' } = req.query;
+        page = '1', pageSize = '20', limit, // Frontend uses 'limit' instead of 'pageSize'
+        offset // Frontend uses 'offset' for pagination
+         } = req.query;
         // Convert to appropriate types
         const filters = {};
         if (discipline) {
@@ -212,10 +226,22 @@ router.get('/', auth_1.teacherAuth, async (req, res) => {
         // If includeHidden query param is NOT provided (is undefined),
         // filters.includeHidden remains undefined on the filters object.
         // The service layer will handle the default visibility.
-        const pagination = {
-            skip: (Number(page) - 1) * Number(pageSize),
-            take: Number(pageSize)
-        };
+        // Handle pagination - support both page/pageSize and offset/limit formats
+        let pagination;
+        if (offset !== undefined || limit !== undefined) {
+            // Frontend offset-based pagination
+            pagination = {
+                skip: Number(offset) || 0,
+                take: Number(limit) || Number(pageSize)
+            };
+        }
+        else {
+            // Traditional page-based pagination
+            pagination = {
+                skip: (Number(page) - 1) * Number(pageSize),
+                take: Number(pageSize)
+            };
+        }
         const result = await getQuestionService().getQuestions(filters, pagination);
         // Debug logging
         logger.info(`Returning ${result.questions.length} questions for API request`);

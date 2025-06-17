@@ -224,18 +224,15 @@ function gameAnswerHandler(io, socket) {
                     questionUid,
                     stats: answerStats
                 };
-                // Emit to dashboard room (for quiz mode) or teacher control room
-                let dashboardRoom = `dashboard_${gameInstance.id}`;
-                if (gameInstance.playMode === 'quiz' && gameInstance.initiatorUserId) {
-                    dashboardRoom = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
-                }
+                // Emit to dashboard room - consistent naming across all game types
+                const dashboardRoom = `dashboard_${gameInstance.id}`;
                 logger.debug({
                     accessCode,
                     questionUid,
                     answerStats,
                     dashboardRoom,
                     playMode: gameInstance.playMode
-                }, 'Emitting answer stats update to dashboard');
+                }, 'Emitting answer stats update to dashboard room');
                 io.to(dashboardRoom).emit('dashboard_answer_stats_update', dashboardStatsPayload);
             }
             catch (statsError) {

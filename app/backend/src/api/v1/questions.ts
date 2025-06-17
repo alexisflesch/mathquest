@@ -71,11 +71,11 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), 
 /**
  * Get available filter values (unique disciplines, grade levels, themes)
  * GET /api/v1/questions/filters
- * Optional query parameters: niveau, discipline to filter cascading results
+ * Optional query parameters: gradeLevel, discipline, theme, author to filter cascading results
  */
-router.get('/filters', async (req: Request, res: Response<{ gradeLevel: (string | null)[], disciplines: string[], themes: string[] } | ErrorResponse>): Promise<void> => {
+router.get('/filters', async (req: Request, res: Response<{ gradeLevel: (string | null)[], disciplines: string[], themes: string[], authors: string[] } | ErrorResponse>): Promise<void> => {
     try {
-        const { gradeLevel, discipline } = req.query;
+        const { gradeLevel, discipline, theme, author } = req.query;
 
         const filterCriteria: any = {};
         if (gradeLevel) {
@@ -85,6 +85,14 @@ router.get('/filters', async (req: Request, res: Response<{ gradeLevel: (string 
         if (discipline) {
             // Handle both single values and arrays
             filterCriteria.discipline = Array.isArray(discipline) ? discipline : [discipline as string];
+        }
+        if (theme) {
+            // Handle both single values and arrays
+            filterCriteria.theme = Array.isArray(theme) ? theme : [theme as string];
+        }
+        if (author) {
+            // Handle both single values and arrays
+            filterCriteria.author = Array.isArray(author) ? author : [author as string];
         }
 
         const filters = await getQuestionService().getAvailableFilters(filterCriteria);

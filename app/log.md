@@ -1,5 +1,32 @@
 # Change Log
 
+## 2025-06-17
+
+### 📋 **Task: Fix Filter System Issues**
+**Timestamp:** 2025-06-17
+**Checklist Item:** Phase 1 - Fix "Niveaux" filter not working
+**What:** Fixed legacy fallback names - API returns `gradeLevel` but code looked for `levels`/`niveaux`
+**Why:** "Niveaux" filter dropdown shows nothing when clicked due to incorrect field mapping
+**How:** Updated filter mapping to use `data.gradeLevel` as primary field, with legacy fallbacks
+**Files:** `/frontend/src/app/teacher/games/new/page.tsx`, `plan.md`, `log.md`
+
+### 🔍 **Investigation Steps**
+1. Following .instructions.md requirement to document everything and log all actions
+2. Added detailed debugging logs to filter API response handling
+3. Changed API parameter from `level` to `gradeLevel` to match canonical field name
+4. Updated plan.md with current phase and task checklist
+
+### 🎯 **Expected vs Actual**
+- **Expected**: Dropdown shows list of available grade levels
+- **Actual**: Dropdown appears empty when clicked
+- **Debug approach**: Added detailed console logging to trace data flow
+
+### 📋 **Next Steps**
+1. Check browser console for filter API response data
+2. Verify backend API contract matches frontend expectations
+3. Fix any parameter name mismatches found
+4. Test filter functionality after fixes
+
 ## 2025-06-16
 
 ### 📋 **Task: Fix Teacher Dashboard Timer Bug**
@@ -422,33 +449,6 @@ With all fixes applied, the timer system now properly handles:
 - ✅ **Timer Payloads**: Always include correct questionUid for frontend association
 - ⏳ **Resume**: Needs testing with questionUid
 - ⏳ **Set Duration**: Needs testing with questionUid
-
-## 2025-06-16 11:45 - CRITICAL FIX: Confirmation Dialog and Timer Switching Bug
-
-### 🚨 **Bug:** Confirmation Dialog Not Working and Timer State Issues
-**Issue:** When switching between questions while a timer is active, the confirmation dialog sometimes doesn't appear, and clicking "play" on a previously played question sometimes emits a "pause" event instead of "play".
-
-### 🔍 **Root Cause Analysis**
-1. **Confirmation Dialog State Management Issues:**
-   - `setPendingPlayIdx` was using `questions` array instead of `mappedQuestions` array
-   - This caused array index mismatches when questions were transformed
-   
-2. **Missing/Broken Confirmation Dialog Handlers:**
-   - `confirmPlay` function was using deprecated `emitSetQuestion` API instead of new `emitTimerAction`
-   - No proper logging to track confirmation dialog state transitions
-   
-3. **Timer State Synchronization:**
-   - Race conditions between frontend timer state and backend timer state
-   - Component sometimes thought timer was stopped when it was actually running
-
-### 🔧 **Fix Applied**
-**Files Modified:** `/home/aflesch/mathquest/app/frontend/src/app/teacher/dashboard/[code]/page.tsx`
-
-**Changes Made:**
-1. **Fixed Confirmation Dialog State Management:**
-   ```typescript
-   // BEFORE (buggy):
-   setPendingPlayIdx(questions.findIndex(q => q.uid === uid));
    
    // AFTER (fixed):
    setPendingPlayIdx(mappedQuestions.findIndex(q => q.uid === uid));
@@ -718,308 +718,23 @@ if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstanc
 - Confirm tournament mode still works as before
 - Test edge cases: paused timers, expired timers, different time remaining values
 
-## 2025-06-17 - Dashboard Layout Modernization
-
-**WHAT**: Updated teacher dashboard layout to match the consistent header pattern from teacher/games page
-**WHY**: Create consistent UI/UX across all teacher pages with proper responsive design
-**HOW**: 
-- Replaced "Tableau de bord – Quiz" with just the quiz name as main heading
-- Added participant count below title (similar to "40 activités créées" pattern)
-- Moved "Terminer le quiz" button to header right side (desktop) and below title (mobile)
-- Added horizontal separator via border-b on header section
-- Implemented full-width responsive layout with proper spacing
-
-**BEFORE** (❌ Old Layout):
-- Card-based layout with limited width
-- "Tableau de bord – {quizName}" title
-- Participant count in separate disconnected section
-- Button placement inconsistent
-
-**AFTER** (✅ New Layout):
-- Full-width responsive layout matching teacher/games
-- Clean quiz name as main title
-- Participant count with icon below title
-- Responsive button placement (header on desktop, below title on mobile)
-- Consistent spacing and typography
-
-**FILES MODIFIED**:
-- `/frontend/src/app/teacher/dashboard/[code]/page.tsx` - Updated layout structure and styling
-
-**ALIGNMENT**: UI consistency improvement following established design patterns across teacher pages
-
-## 2025-06-17 - French Grammar Fix: Participant Count
-
-**WHAT**: Fixed French grammar for participant count display in dashboard
-**WHY**: Proper French requires singular form for counts ≤ 1 (0 or 1 participant)
-**HOW**: Changed condition from `!== 1` to `<= 1` for plural suffix logic
-
-**BEFORE** (❌ Incorrect Grammar):
-- 0 participants connectés ❌
-- 1 participant connecté ✅
-- 2 participants connectés ✅
-
-**AFTER** (✅ Correct Grammar):
-- 0 participant connecté ✅
-- 1 participant connecté ✅  
-- 2 participants connectés ✅
-
-**FILES MODIFIED**:
-- `/frontend/src/app/teacher/dashboard/[code]/page.tsx` - Updated pluralization logic
-
-**ALIGNMENT**: French language accuracy improvement for better user experience
-
-## 2025-06-17 - Critical Zod Schema Fix: Database Null Handling
-
-**WHAT**: Fixed TypeScript compilation errors caused by null values in database not matching Zod schema expectations
-**WHY**: Database has nullable fields (title, author, explanation) but shared types expect optional (undefined) fields
-**HOW**: 
-- **Root Cause**: Database schema uses `String?` (nullable) but canonical shared type uses `string | undefined` (optional)
-- **Solution**: Added data normalization at service layer to convert null → undefined
-- **Method**: Created `normalizeQuestionData` helper to transform database records before returning
-- **Applied**: Updated all questionService methods (getQuestions, getQuestionById, createQuestion, updateQuestion)
-
-**ALIGNMENT WITH .instructions.md**:
-✅ **Point 8**: Used canonical shared types without modification
-✅ **Point 11**: Fixed root cause instead of patching schema
-✅ **Point 14**: Maintained canonical shared types directly 
-✅ **Point 6**: No migration layers - proper data transformation
-
-**BEFORE** (❌ Broken):
-- Database: `{ title: null, author: null }` 
-- Zod Schema: Expected `string | undefined`
-- Result: TypeScript compilation errors
-
-**AFTER** (✅ Fixed):
-- Database: `{ title: null, author: null }`
-- Service Layer: Converts to `{ title: undefined, author: undefined }`
-- Zod Schema: Validates `string | undefined` ✅
-- Result: Clean compilation and proper type safety
-
-**FILES MODIFIED**:
-- `/backend/src/core/services/questionService.ts` - Added normalization layer
-- `/shared/types/api/schemas.ts` - Made meta field optional for backward compatibility
-
-**CRITICAL**: This fix maintains data integrity while ensuring type safety across the entire application
-
-## 2025-06-17 - Unified Layout: Teacher Games/New Page
-
-**WHAT**: Updated teacher/games/new page to match the unified header layout pattern
-**WHY**: Create consistent UI/UX across all teacher pages following established design system
-**HOW**: 
-- Replaced old layout with unified header structure from teacher/games and teacher/dashboard
-- Added proper page title "Créer une nouvelle activité" in header
-- Added question count subtitle (e.g., "2 questions sélectionnées")
-- Added "Retour aux activités" button in header (desktop only)
-- Implemented full-width responsive layout with proper spacing
-- Added horizontal separator via border-b on header section
-
-**LAYOUT CHANGES**:
-- **Header**: Clean title with subtitle showing selected question count
-- **Navigation**: "Retour aux activités" button for easy navigation back
-- **Content**: Full-width responsive layout instead of constrained container
-- **Spacing**: Consistent padding and margins matching other teacher pages
-
-**BEFORE** (❌ Old Layout):
-- Basic main-content wrapper with simple title
-- No header structure or navigation
-- Limited responsive design
-
-**AFTER** (✅ New Layout):
-- Professional header with title, subtitle, and navigation
-- Consistent spacing and typography across all screen sizes
-- Full-width responsive design matching teacher/games pattern
-
-**FILES MODIFIED**:
-- `/frontend/src/app/teacher/games/new/page.tsx` - Updated layout structure and header
-
-**ALIGNMENT**: UI consistency improvement following established design patterns across teacher pages
-
-## 2025-06-17 - MultiSelectDropdown Design Improvements
-
-**WHAT**: Updated MultiSelectDropdown component with minimalistic, sober design improvements
-**WHY**: User requested more minimalistic theme with better UX (no blue borders, less padding, no horizontal scrollbars)
-**HOW**: 
-- **Removed blue borders**: Replaced `btn-outline` with custom gray borders (gray-300/gray-600)
-- **Reduced padding**: Removed `btn-lg` class, used `px-3 py-2` for compact design
-- **Fixed horizontal scrollbar**: Used `left: 0, right: 0` positioning and `whitespace-nowrap` for options
-- **Minimalistic colors**: Gray borders, subtle hover effects, clean styling
-- **Better text handling**: Added `text-ellipsis` and proper text sizing
-
-**DESIGN CHANGES**:
-- **Button**: Gray border instead of blue, smaller padding, cleaner typography
-- **Dropdown**: Proper positioning to prevent horizontal overflow
-- **Options**: Smaller padding, better text handling, subtle hover effects
-- **Checkboxes**: Standard styling with proper sizing
-
-**BEFORE** (❌ Issues):
-- Blue borders (too prominent)
-- Large padding (btn-lg making boxes too big)
-- Horizontal scrollbars in dropdown content
-
-**AFTER** (✅ Improved):
-- Clean gray borders (minimalistic)
-- Compact padding (better space usage)
-- No horizontal scrollbars (proper text handling)
-- Sober, professional appearance
-
-**FILES MODIFIED**:
-- `/frontend/src/components/MultiSelectDropdown.tsx` - Complete styling overhaul
-
-**ALIGNMENT**: UI/UX improvement following user preferences for minimalistic design
-
-## 2025-06-17 - MultiSelectDropdown: Auto-width Content Expansion
-
-**WHAT**: Enhanced dropdown to automatically expand width based on content length
-**WHY**: User reported content cropping when button text is short (e.g., "Thèmes") - dropdown options were not fully visible
-**HOW**: 
-- **Changed width strategy**: From fixed width to `width: max-content` with `minWidth: 100%`
-- **Added max width**: Set `maxWidth: 300px` to prevent extremely wide dropdowns
-- **Removed text constraints**: Removed `whitespace-nowrap` and `text-ellipsis` to allow natural text flow
-- **Better positioning**: Dropdown now expands to fit content while staying anchored to button
-
-**BEHAVIOR CHANGES**:
-- **Short button text**: Dropdown expands beyond button width to show full option text
-- **Long button text**: Dropdown maintains at least button width
-- **Very long options**: Capped at 300px max width to prevent layout issues
-- **Text display**: Full option text visible without cropping
-
-**BEFORE** (❌ Cropped Content):
-- Dropdown constrained to button width
-- Short button text = cropped option text
-- Options like "Développements limités" cut off to "Développ..."
-
-**AFTER** (✅ Full Content Visible):
-- Dropdown expands to fit longest option
-- All option text fully visible regardless of button width
-- Reasonable max width prevents layout breaking
-
-**FILES MODIFIED**:
-- `/frontend/src/components/MultiSelectDropdown.tsx` - Updated width calculation and text handling
-
-**ALIGNMENT**: UX improvement ensuring all content is accessible and readable
-
-## 2025-01-16 18:15 - UI/UX: Search Bar Styling Modernization
-
-### 🎨 **Feature: Unified Minimalistic Search Bar Styling**
-**Timestamp:** 2025-01-16 18:15  
-**Checklist Item:** Teacher UI/UX Modernization - Search Bar  
-**What:** Updated search bar in teacher/games/new to match dropdown minimalistic style  
-**Why:** Maintain consistent, professional look across all form elements  
-**How:** Replaced DaisyUI classes with custom styling matching MultiSelectDropdown  
-**Files:** `/home/aflesch/mathquest/app/frontend/src/app/teacher/games/new/page.tsx`  
-
-**Styling Changes:**
-1. **Border:** Changed from `input input-bordered` to `border border-gray-300 dark:border-gray-600`
-2. **Hover States:** Added `hover:border-gray-400 dark:hover:border-gray-500`
-3. **Focus States:** Added `focus:border-gray-500 dark:focus:border-gray-400` with `focus:ring-0`
-4. **Background:** Added `bg-white dark:bg-gray-800`
-5. **Text Colors:** Added `text-gray-900 dark:text-gray-100` and `placeholder-gray-500`
-6. **Padding:** Standardized to `px-3 py-2` matching dropdown height
-7. **Icon Size:** Reduced Search icon from 20px to 16px for consistency
-8. **Transitions:** Added `transition-colors` for smooth hover effects
-
-**Result:** Search bar now has unified height and minimalistic styling consistent with dropdowns, providing a cohesive professional appearance across the teacher interface.
-
-## 2025-01-16 18:45 - UI/UX: Question List Enhancement with DRY Principle
-
-### 🎨 **Feature: Enhanced QuestionDisplay Component with Checkbox Support**
-**Timestamp:** 2025-01-16 18:45  
-**Checklist Item:** Teacher UI/UX Modernization - Question List Enhancement  
-**What:** Enhanced QuestionDisplay component to support selection checkboxes while maintaining LaTeX and expandability  
-**Why:** Preserve DRY principle and retain valuable features (LaTeX rendering, expandable answers) while adding selection UI  
-**How:** Added optional checkbox props to existing QuestionDisplay component instead of replacing it  
-**Files:** 
-- `/home/aflesch/mathquest/app/frontend/src/components/QuestionDisplay.tsx`
-- `/home/aflesch/mathquest/app/frontend/src/app/teacher/games/new/page.tsx`  
-
-**QuestionDisplay Component Enhancements:**
-1. **New Props Added:**
-   - `showCheckbox?: boolean` - Controls checkbox visibility
-   - `checked?: boolean` - Checkbox state
-   - `onCheckboxChange?: (checked: boolean) => void` - Checkbox change handler
-
-2. **Layout Integration:**
-   - Checkbox positioned in header alongside title/question text
-   - Maintains existing click-to-expand functionality
-   - Event propagation handled to prevent conflicts
-   - Consistent styling with project checkbox conventions
-
-**Teacher/Games/New Implementation:**
-1. **Preserved Features:**
-   - LaTeX rendering with MathJaxWrapper
-   - Expandable answer options display
-   - Metadata display with tags, themes, disciplines
-   - Timer display integration
-   - Question animations and transitions
-
-2. **Added Selection Logic:**
-   - `showCheckbox={true}` enables selection UI
-   - `checked={isQuestionSelected(q.uid)}` reflects selection state
-   - `onCheckboxChange` handles add/remove from cart operations
-   - Removed custom card implementation in favor of enhanced component
-
-**Design Benefits:**
-- **DRY Compliance:** Single source of truth for question display logic
-- **Feature Preservation:** Maintains LaTeX, expandability, and all existing functionality
-- **Consistent Styling:** Uses existing QuestionDisplay card styling with `isActive` prop for selection state
-- **Minimal Code Changes:** Added only essential props without breaking existing usage
-- **Future-Proof:** Any QuestionDisplay improvements automatically benefit question selection UI
-
-**Result:** Clean, professional question selection interface that maintains all advanced features while following DRY principles and component reusability best practices.
-
-## 2025-01-16 19:00 - UI/UX: Layout Optimization - Full Height & Consistent Styling
-
-### 🎨 **Feature: Improved Space Utilization and Layout Consistency**
-**Timestamp:** 2025-01-16 19:00  
-**Checklist Item:** Teacher UI/UX Modernization - Layout & Space Optimization  
-**What:** Fixed question list height constraints and removed inconsistent card styling from cart  
-**Why:** Maximize content space utilization and ensure visual consistency between panels  
-**How:** Implemented flexbox layout system and unified styling approach  
-**Files:** `/home/aflesch/mathquest/app/frontend/src/app/teacher/games/new/page.tsx`  
-
-**Layout Improvements:**
-
-1. **Full Height Question List:**
-   - **Before:** Fixed `maxHeight: '60vh'` artificially limiting content space
-   - **After:** Flexbox layout (`flex-1 overflow-y-auto`) taking all available height until page bottom
-   - **Benefit:** Users can see more questions without wasted screen space
-
-2. **Consistent Panel Styling:**
-   - **Before:** Cart in card container (`bg-[color:var(--card)] border rounded-lg shadow-sm`) while questions list was plain
-   - **After:** Both panels use same simple header + content layout without card wrapping
-   - **Benefit:** Visual consistency and reduced interface complexity
-
-3. **Responsive Height Management:**
-   - **Desktop:** Full-height layout with proper scroll areas for both questions and cart
-   - **Mobile:** Flexible height adapting to screen space while maintaining usability
-   - **Implementation:** CSS Flexbox with `min-h-0` for proper overflow handling
-
-**Technical Changes:**
-
-```css
-/* Main container */
-.min-h-screen → .min-h-screen.flex.flex-col
-
-/* Content area */
-.py-6 → .py-6.flex-1.flex.flex-col.min-h-0
-
-/* Desktop layout */
-.lg:flex.gap-6 → .lg:flex.gap-6.h-full
-
-/* Question list */
-.flex-1 → .flex-1.flex.flex-col.min-h-0
-.overflow-y-auto.maxHeight-60vh → .overflow-y-auto.flex-1
-
-/* Cart panel */
-.w-80.bg-card.border.p-4 → .w-80.flex.flex-col.min-h-0
-.max-h-64.overflow-y-auto → .overflow-y-auto.flex-1
-```
-
-**User Experience Impact:**
-- **More Content Visible:** Question list now uses full available screen height
-- **Unified Visual Design:** Both panels follow same layout pattern for consistency  
-- **Better Space Efficiency:** No artificial height limits preventing content access
-- **Responsive Behavior:** Layout adapts properly on different screen sizes
-- **Improved Scrolling:** Dedicated scroll areas in appropriate sections only
-
-**Result:** Professional, space-efficient layout that maximizes content visibility while maintaining visual consistency across all interface panels.
+## 2025-06-17 - Removed Timer Editing & Added Proper Logging
+
+**Timer Editing Removal**:
+- Removed timer editing functionality from cart questions (clicking timer no longer opens edit mode)
+- Timer icon and time value still displayed for information
+- Simplified SortableCartQuestion component (removed `editingTime` state and `onTimeChange` prop)
+- Removed `updateQuestionTime` helper function
+
+**Proper Logging Implementation**:
+- Added `createLogger('CreateActivityPage')` import and initialization
+- Replaced all `console.log` statements with appropriate logger methods:
+  - Filter API responses: `logger.debug()` for development debugging
+  - Game template creation: `logger.info()` for important operations
+  - Error handling: `logger.error()` for error conditions
+- Follows established logging pattern used throughout the application
+
+**Benefits**:
+- Cleaner cart UX without unnecessary timer editing complexity
+- Consistent logging that can be controlled via log levels
+- Better error tracking and debugging capabilities

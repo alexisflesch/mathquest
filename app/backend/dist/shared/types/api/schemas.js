@@ -259,12 +259,10 @@ exports.QuestionResponseSchema = zod_1.z.object({
 });
 exports.QuestionsResponseSchema = zod_1.z.object({
     questions: zod_1.z.array(question_zod_1.questionSchema),
-    meta: zod_1.z.object({
-        total: zod_1.z.number(),
-        page: zod_1.z.number(),
-        pageSize: zod_1.z.number(),
-        totalPages: zod_1.z.number()
-    })
+    total: zod_1.z.number(),
+    page: zod_1.z.number(),
+    pageSize: zod_1.z.number(),
+    totalPages: zod_1.z.number()
 });
 // Questions list endpoint returns just UIDs as string array
 exports.QuestionsListResponseSchema = zod_1.z.array(zod_1.z.string());

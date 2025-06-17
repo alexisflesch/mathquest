@@ -247,15 +247,24 @@ function joinGameHandler(io, socket) {
                                 let actualTimer = gameState.timer;
                                 if (gameState.timer && gameState.timer.timestamp && gameState.timer.durationMs) {
                                     const elapsed = Date.now() - gameState.timer.timestamp;
-                                    const timeLeftMs = Math.max(0, gameState.timer.durationMs - elapsed);
-                                    // Always recalculate based on original duration, not current timeLeftMs
-                                    // This ensures late joiners get accurate remaining time even if timer expired globally
+                                    let timeLeftMs;
+                                    let status;
+                                    // Handle different timer states
+                                    if (gameState.timer.status === 'pause') {
+                                        // When paused, late joiners should see the same time left as when it was paused
+                                        timeLeftMs = gameState.timer.timeLeftMs || 0;
+                                        status = 'pause';
+                                    }
+                                    else {
+                                        // When playing, calculate remaining time based on elapsed time
+                                        timeLeftMs = Math.max(0, gameState.timer.durationMs - elapsed);
+                                        status = timeLeftMs > 0 ? 'play' : 'stop';
+                                    }
                                     actualTimer = {
                                         ...gameState.timer,
                                         timeLeftMs,
                                         timestamp: Date.now(),
-                                        // Status must be consistent with remaining time
-                                        status: timeLeftMs > 0 ? 'play' : 'stop'
+                                        status
                                     };
                                     logger.info({
                                         originalTimer: gameState.timer,

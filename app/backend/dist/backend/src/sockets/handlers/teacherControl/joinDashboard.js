@@ -146,7 +146,7 @@ function joinDashboardHandler(io, socket) {
                 }
                 logger.info({ gameId, userId: effectiveUserId }, 'Test environment: Bypassing authorization check');
             }
-            // Join both the dashboard and projection rooms
+            // Join dashboard and projection rooms - consistent naming across all game types
             const dashboardRoom = `dashboard_${gameId}`;
             const projectionRoom = `projection_${gameId}`;
             await socket.join(dashboardRoom);
@@ -161,7 +161,8 @@ function joinDashboardHandler(io, socket) {
                 dashboardRoom,
                 dashboardSockets,
                 projectionRoom,
-                projectionSockets
+                projectionSockets,
+                playMode: gameInstance.playMode
             }, 'Socket joined dashboard and projection rooms');
             // Track user's dashboard session in Redis
             await redis_1.redisClient.hset(`${helpers_1.DASHBOARD_PREFIX}${gameId}`, socket.id, JSON.stringify({

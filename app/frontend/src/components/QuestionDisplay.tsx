@@ -196,6 +196,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     return (
         <div
             className={`question-display flex flex-col select-none transition-all duration-150 ease-in-out ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+            style={{ minWidth: 0 }}
             onClick={handleToggle}
             tabIndex={0}
             role="button"
@@ -203,6 +204,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         >
             <div
                 className={`card w-full flex flex-col ${className}`}
+                style={{ minWidth: 0 }}
             >
                 <div className="flex flex-col">
                     <div className={`flex items-center justify-between gap-3 question-header ${isOpen ? 'no-bottom-border no-bottom-radius' : ''}`} style={{ paddingTop: 0, paddingBottom: 0 }}>
@@ -221,28 +223,23 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                 />
                             )}
                             <div className="font-medium fade-right-bottom-crop relative" style={{ minHeight: '1.8em', marginLeft: 0, flexGrow: 0, paddingLeft: 0 }}>
-                                {/* Animated cropped question for no-title case */}
-                                {question.title ? ( // Modifié: question.titre -> question.title
-                                    <div style={{ fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})` }}>
-                                        <MathJaxWrapper>{question.title}</MathJaxWrapper> {/* Modifié: question.titre -> question.title */}
-                                    </div>
-                                ) : (
-                                    <span
-                                        style={{
-                                            display: 'block',
-                                            position: 'absolute',
-                                            left: 0,
-                                            right: 0,
-                                            top: 0,
-                                            zIndex: 2,
-                                            transition: `transform ${isOpen ? '.5s' : '1s'} cubic-bezier(0.4,0,0.2,1)`,
-                                            transform: isOpen ? 'translateY(120px)' : 'translateY(0)',
-                                            fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
-                                        }}
-                                    >
-                                        <MathJaxWrapper>{question.text}</MathJaxWrapper> {/* Changed from question.question to question.text */}
-                                    </span>
-                                )}
+                                {/* For both cases, use the same layout: a span with fade-right-bottom-crop, absolute for no-title, static for title */}
+                                <span
+                                    className="fade-right-bottom-crop"
+                                    style={{
+                                        display: 'block',
+                                        position: 'absolute',
+                                        left: 0,
+                                        right: 0,
+                                        top: 0,
+                                        zIndex: 2,
+                                        transition: `transform ${isOpen ? '.5s' : '1s'} cubic-bezier(0.4,0,0.2,1)`,
+                                        transform: isOpen ? 'translateY(120px)' : 'translateY(0)',
+                                        fontSize: `calc(${baseTitleFontSize} * ${zoomFactor})`,
+                                    }}
+                                >
+                                    <MathJaxWrapper>{question.title ? question.title : question.text}</MathJaxWrapper>
+                                </span>
                             </div>
                         </div>
                         {/* Only one of these will render, always right-aligned */}

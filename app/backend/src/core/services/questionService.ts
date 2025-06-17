@@ -271,6 +271,30 @@ export class QuestionService {
                 authorsWhere.gradeLevel = gradeLevelFilter;
             }
 
+            if (filterCriteria?.theme) {
+                // When theme(s) is selected: use array contains logic
+                const themeFilter = Array.isArray(filterCriteria.theme)
+                    ? { hasSome: filterCriteria.theme }
+                    : { has: filterCriteria.theme };
+
+                niveauxWhere.themes = themeFilter;
+                disciplinesWhere.themes = themeFilter;
+                themesWhere.themes = themeFilter;
+                authorsWhere.themes = themeFilter;
+            }
+
+            if (filterCriteria?.author) {
+                // When author(s) is selected: use OR logic with 'in' operator
+                const authorFilter = Array.isArray(filterCriteria.author)
+                    ? { in: filterCriteria.author }
+                    : filterCriteria.author;
+
+                niveauxWhere.author = authorFilter;
+                disciplinesWhere.author = authorFilter;
+                themesWhere.author = authorFilter;
+                authorsWhere.author = authorFilter;
+            }
+
             const [niveaux, disciplines, themes, authors] = await Promise.all([
                 prisma.question.findMany({
                     select: { gradeLevel: true },
@@ -317,10 +341,10 @@ export class QuestionService {
             });
 
             return {
-                gradeLevel: niveaux.map(n => n.gradeLevel).filter(Boolean).sort(),
-                disciplines: disciplines.map(d => d.discipline).filter(Boolean).sort(),
+                gradeLevel: niveaux.map(n => n.gradeLevel).filter((v): v is string => Boolean(v)).sort(),
+                disciplines: disciplines.map(d => d.discipline).filter((v): v is string => Boolean(v)).sort(),
                 themes: Array.from(uniqueThemes).sort(),
-                authors: authors.map(a => a.author).filter(Boolean).sort()
+                authors: authors.map(a => a.author).filter((v): v is string => Boolean(v)).sort()
             };
         } catch (error) {
             logger.error({ error }, 'Error fetching available filters');
