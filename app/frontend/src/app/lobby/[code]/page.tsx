@@ -478,15 +478,21 @@ export default function LobbyPage() {
 
         const socket = socketRef.current;
 
-        // Listen for redirect_to_quiz event
-        socket.on(SOCKET_EVENTS.LOBBY.REDIRECT_TO_QUIZ, ({ quizId }) => {
-            logger.info(`Received redirect_to_quiz for quiz ${quizId}, redirecting...`);
-            router.push(`/quiz/${quizId}`);
+        // Listen for redirect_to_game event (canonical redirect event)
+        socket.on(SOCKET_EVENTS.LOBBY.REDIRECT_TO_GAME, (payload) => {
+            logger.info(`Received redirect_to_game event with payload:`, payload);
+            const { accessCode } = payload || {};
+            if (accessCode) {
+                logger.info(`Received redirect_to_game for access code ${accessCode}, redirecting to live game...`);
+                router.push(`/live/${accessCode}`);
+            } else {
+                logger.error('redirect_to_game event received but no accessCode in payload:', payload);
+            }
         });
 
         return () => {
             if (socket) {
-                socket.off(SOCKET_EVENTS.LOBBY.REDIRECT_TO_QUIZ);
+                socket.off(SOCKET_EVENTS.LOBBY.REDIRECT_TO_GAME);
             }
         };
     }, [router]);

@@ -259,6 +259,8 @@ function timerActionHandler(io, socket) {
                     if (gameInstance.status === 'pending') {
                         logger.info({ gameId, action }, 'Setting game status to active as timer is being started');
                         await gameInstanceService.updateGameStatus(gameId, { status: 'active' });
+                        // CRITICAL: Also update the Redis game state status to match
+                        gameState.status = 'active';
                         // Emit game status change to dashboard
                         const dashboardRoom = `dashboard_${gameId}`;
                         const statusPayload = {

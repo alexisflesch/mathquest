@@ -366,6 +366,22 @@ router.post('/register', (0, validation_1.validateRequestBody)(schemas_1.Registe
                 logger.info('Teacher registration attempt', { username, email, adminPassword: !!adminPassword });
             }
         }
+        else if (email && !password) {
+            // Email provided but no password - invalid for authenticated accounts
+            res.status(400).json({
+                success: false,
+                error: 'Password is required when email is provided'
+            });
+            return;
+        }
+        else if (!email && !cookieId) {
+            // Guest registration must have cookieId
+            res.status(400).json({
+                success: false,
+                error: 'cookieId is required for guest user registration'
+            });
+            return;
+        }
         // Register the user
         const result = await getUserService().registerUser({
             username,

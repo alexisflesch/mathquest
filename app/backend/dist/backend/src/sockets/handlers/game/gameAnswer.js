@@ -6,9 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.gameAnswerHandler = gameAnswerHandler;
 const gameParticipantService_1 = require("@/core/services/gameParticipantService");
 const prisma_1 = require("@/db/prisma");
+const gameStateService_1 = require("@/core/gameStateService");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const sharedLeaderboard_1 = require("../sharedLeaderboard");
+const helpers_1 = require("../teacherControl/helpers");
 const logger = (0, logger_1.default)('GameAnswerHandler');
 function gameAnswerHandler(io, socket) {
     logger.info({ socketId: socket.id }, 'gameAnswerHandler registered');
@@ -101,6 +103,105 @@ function gameAnswerHandler(io, socket) {
                 socket.emit('game_error', errorPayload);
                 return;
             }
+            // CRITICAL: Add timer validation before processing answer
+            // Fetch current game state to check timer status
+            const fullGameState = await (0, gameStateService_1.getFullGameState)(accessCode);
+            if (!fullGameState) {
+                logger.warn({ socketId: socket.id, error: 'Game state not found', accessCode }, 'EARLY RETURN: Game state not found');
+                const errorPayload = { message: 'Game state not found.' };
+                socket.emit('game_error', errorPayload);
+                return;
+            }
+            const { gameState } = fullGameState;
+            // Check if game is active
+            if (gameState.status !== 'active') {
+                logger.warn({
+                    socketId: socket.id,
+                    accessCode,
+                    userId,
+                    questionUid,
+                    gameStatus: gameState.status,
+                    playMode: gameInstance.playMode
+                }, 'EARLY RETURN: Answer submitted but game is not active');
+                const errorPayload = {
+                    message: 'Game is not active. Answers cannot be submitted.',
+                    code: 'GAME_NOT_ACTIVE'
+                };
+                socket.emit('game_error', errorPayload);
+                return;
+            }
+            // Check if answers are locked
+            if (gameState.answersLocked) {
+                logger.warn({ socketId: socket.id, accessCode, userId, questionUid }, 'EARLY RETURN: Answers are locked');
+                const errorPayload = {
+                    message: 'Answers are locked for this question.',
+                    code: 'ANSWERS_LOCKED'
+                };
+                socket.emit('game_error', errorPayload);
+                return;
+            }
+            // Check timer status and expiration
+            if (gameState.timer) {
+                const timerObj = gameState.timer;
+                // Add detailed timer state logging
+                logger.info({
+                    socketId: socket.id,
+                    accessCode,
+                    userId,
+                    questionUid,
+                    timerState: {
+                        status: timerObj.status,
+                        timeLeftMs: timerObj.timeLeftMs,
+                        durationMs: timerObj.durationMs,
+                        timestamp: timerObj.timestamp
+                    },
+                    playMode: gameInstance.playMode,
+                    gameStatus: gameState.status
+                }, 'TIMER VALIDATION: Checking timer state for answer submission');
+                // For all modes: check if timer is stopped (when timer exists)
+                if (timerObj.status === 'stop') {
+                    logger.warn({
+                        socketId: socket.id,
+                        accessCode,
+                        userId,
+                        questionUid,
+                        timerStatus: timerObj.status,
+                        playMode: gameInstance.playMode
+                    }, 'EARLY RETURN: Answer submitted but timer is stopped');
+                    const errorPayload = {
+                        message: 'Trop tard ! Le temps est écoulé.',
+                        code: 'TIMER_STOPPED'
+                    };
+                    logger.info({ errorPayload, socketId: socket.id }, 'Emitting game_error: timer stopped');
+                    socket.emit('game_error', errorPayload);
+                    return;
+                }
+                // For all modes: check if timer has expired
+                if (timerObj.durationMs && timerObj.durationMs > 0) {
+                    let timeLeftMs = timerObj.timeLeftMs || 0;
+                    // Calculate actual remaining time if timer is running
+                    if (timerObj.status === 'play' && timerObj.timestamp) {
+                        const elapsed = Date.now() - timerObj.timestamp;
+                        timeLeftMs = Math.max(0, timerObj.timeLeftMs - elapsed);
+                    }
+                    if (timeLeftMs <= 0) {
+                        logger.warn({
+                            socketId: socket.id,
+                            accessCode,
+                            userId,
+                            questionUid,
+                            timeLeftMs,
+                            playMode: gameInstance.playMode
+                        }, 'EARLY RETURN: Answer submitted after timer expired');
+                        const errorPayload = {
+                            message: 'Time has expired for this question.',
+                            code: 'TIME_EXPIRED'
+                        };
+                        socket.emit('game_error', errorPayload);
+                        return;
+                    }
+                }
+            }
             const participantService = new gameParticipantService_1.GameParticipantService();
             logger.debug({ userId, gameInstanceId: gameInstance.id, questionUid, answer, timeSpent }, 'Calling participantService.submitAnswer');
             await participantService.submitAnswer(gameInstance.id, userId, {
@@ -115,6 +216,34 @@ function gameAnswerHandler(io, socket) {
             if (question && Array.isArray(question.correctAnswers) && typeof answer === 'number' && answer >= 0 && answer < question.correctAnswers.length) {
                 isCorrect = question.correctAnswers[answer] === true;
                 logger.debug({ isCorrect, questionUid, answer }, 'Determined answer correctness');
+            }
+            // Emit real-time answer statistics to teacher dashboard
+            try {
+                const answerStats = await (0, helpers_1.getAnswerStats)(accessCode, questionUid);
+                const dashboardStatsPayload = {
+                    questionUid,
+                    stats: answerStats
+                };
+                // Emit to dashboard room (for quiz mode) or teacher control room
+                let dashboardRoom = `dashboard_${gameInstance.id}`;
+                if (gameInstance.playMode === 'quiz' && gameInstance.initiatorUserId) {
+                    dashboardRoom = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
+                }
+                logger.debug({
+                    accessCode,
+                    questionUid,
+                    answerStats,
+                    dashboardRoom,
+                    playMode: gameInstance.playMode
+                }, 'Emitting answer stats update to dashboard');
+                io.to(dashboardRoom).emit('dashboard_answer_stats_update', dashboardStatsPayload);
+            }
+            catch (statsError) {
+                logger.error({
+                    accessCode,
+                    questionUid,
+                    error: statsError
+                }, 'Error computing or emitting answer stats');
             }
             // Refetch participant to get updated score
             const updatedParticipant = await prisma_1.prisma.gameParticipant.findUnique({
@@ -241,8 +370,7 @@ function gameAnswerHandler(io, socket) {
             }
         }
     };
-    // Handle the next_question event for practice mode
-    // Add the handler to the socket
-    socket.on('game_answer', handler);
+    // NOTE: Handler registration is done in game/index.ts to prevent duplicate registrations
+    // Do NOT register the handler here: socket.on('game_answer', handler) - REMOVED
     return handler;
 }

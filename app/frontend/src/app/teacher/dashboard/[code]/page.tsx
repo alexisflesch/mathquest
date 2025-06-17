@@ -73,6 +73,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
     const [quizSocket, setQuizSocket] = useState<Socket | null>(null);
     const [quizState, setQuizState] = useState<any>(null);
     const [connectedCount, setConnectedCount] = useState(0);
+    const [answerStats, setAnswerStats] = useState<Record<string, Record<string, number>>>({});
 
     // Fetch game data
     useEffect(() => {
@@ -118,17 +119,41 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
         socket.on('connect', () => {
             logger.info('Socket connected:', socket.id);
+            logger.info('Joining dashboard with accessCode:', code);
             socket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { accessCode: code });
+
+            // Debug: Log all socket events to debug room joining
+            logger.info('📡 Dashboard attempting to join rooms via JOIN_DASHBOARD event');
+        });
+
+        // Add a catch-all event listener to see what events we're receiving
+        socket.onAny((eventName, ...args) => {
+            if (eventName !== 'timer_updated' && eventName !== 'dashboard_timer_updated') {
+                // Avoid spamming with timer events, but log all others
+                logger.debug(`Socket received event: ${eventName}`, args);
+            }
         }); socket.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, (state: any) => {
             logger.info('Dashboard state received:', state);
-            if (state.gameInstance) {
-                setGameId(state.gameInstance.id);
-                setQuizName(state.gameInstance.name || "Quiz");
+
+            // The backend sends the gameId directly, not wrapped in gameInstance
+            if (state.gameId) {
+                const newGameId = state.gameId;
+                logger.info('Setting gameId:', newGameId);
+                setGameId(newGameId);
+                setQuizName("Quiz"); // We'll get the proper name later or from the questions
+
+                // Log which dashboard room we should be in for stats
+                logger.info(`📍 Dashboard should be listening for stats in room: dashboard_${newGameId}`);
+                logger.info(`📍 Alternative room format (if quiz mode): teacher_<userId>_${code}`);
+                logger.info(`📍 Current accessCode: ${code}`);
             }
+
             if (state.questions) {
                 const processedQuestions = state.questions.map(mapToCanonicalQuestion);
                 setQuestions(processedQuestions);
+                logger.info('Questions loaded:', processedQuestions.length);
             }
+
             setQuizState(state);
             setLoading(false);
         });
@@ -137,9 +162,75 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             setConnectedCount(data.count);
         });
 
+        // Listen for answer stats updates
+        socket.on('dashboard_answer_stats_update', (payload: any) => {
+            logger.info('🎯 RECEIVED answer stats update:', payload);
+            logger.info('🎯 Stats payload breakdown:', {
+                hasStats: !!payload.stats,
+                hasQuestionUid: !!payload.questionUid,
+                statsType: typeof payload.stats,
+                statsKeys: payload.stats ? Object.keys(payload.stats) : 'none',
+                statsValues: payload.stats ? Object.values(payload.stats) : 'none'
+            });
+
+            if (payload.stats && payload.questionUid) {
+                // Update the stats for this specific question
+                setAnswerStats(prev => {
+                    const newStats = {
+                        ...prev,
+                        [payload.questionUid]: payload.stats
+                    };
+                    logger.info('✅ Answer stats updated for question:', payload.questionUid, payload.stats);
+                    logger.info('📊 Complete stats state after update:', newStats);
+                    return newStats;
+                });
+            } else {
+                logger.warn('❌ Invalid answer stats payload:', payload);
+            }
+        });
+
+        // Also listen for any stats-related events (in case the event name is different)
+        socket.on('answer_stats_update', (payload: any) => {
+            logger.info('🎯 RECEIVED alternative answer stats update:', payload);
+            if (payload.stats && payload.questionUid) {
+                setAnswerStats(prev => ({
+                    ...prev,
+                    [payload.questionUid]: payload.stats
+                }));
+                logger.info('✅ Answer stats updated via alternative event:', payload.questionUid, payload.stats);
+            }
+        });
+
+        // Add a timeout to periodically check if we have stats
+        const statsCheckInterval = setInterval(() => {
+            logger.debug('📊 Current answer stats state:', answerStats);
+            logger.debug('📊 Current gameId:', gameId);
+            logger.debug('📊 Current questions:', questions.map(q => q.uid));
+            logger.debug('📊 Socket connected:', socket.connected);
+            logger.debug('📊 Socket rooms (client cannot see this, but logging for completeness)');
+            if (gameId) {
+                logger.debug(`📊 Expected dashboard room: dashboard_${gameId}`);
+                logger.debug(`📊 Expected quiz mode room: teacher_<userId>_${code}`);
+            }
+
+            // Check if we have any answer stats at all
+            const hasAnyStats = Object.keys(answerStats).length > 0;
+            logger.debug('📊 Has any answer stats:', hasAnyStats);
+
+            if (!hasAnyStats && questions.length > 0) {
+                logger.warn('⚠️ No answer stats received yet, but questions are loaded. Possible room mismatch?');
+            }
+        }, 10000); // Every 10 seconds
+
         socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {
             logger.error('Socket connection error:', error);
             setError('Failed to connect to game server');
+            setLoading(false);
+        });
+
+        socket.on(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, (error: any) => {
+            logger.error('Dashboard error:', error);
+            setError(`Dashboard error: ${error.message || 'Unknown error'}`);
             setLoading(false);
         });
 
@@ -147,11 +238,12 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
         return () => {
             logger.info('Disconnecting socket');
+            clearInterval(statsCheckInterval);
             socket.disconnect();
         };
     }, [isAuthenticated, isTeacher, code]);
 
-    // Simple timer hook
+    // Simple timer hook (only initialize when we have gameId and socket)
     const {
         status: timerStatus,
         questionUid: timerQuestionUid,
@@ -162,9 +254,9 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         stopTimer
     } = useSimpleTimer({
         role: 'teacher',
-        gameId: gameId || '',
+        gameId: gameId || undefined,
         accessCode: code || '',
-        socket: quizSocket
+        socket: gameId ? quizSocket : null  // Only pass socket when we have a gameId
     });
 
     // Keep a ref to the current timer state for reliable access during callbacks
@@ -425,6 +517,36 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
                                 disabled={isDisabled}
                                 expandedUids={expandedUids}
                                 onToggleExpand={handleToggleExpand}
+                                getStatsForQuestion={(uid: string) => {
+                                    // Return stats for this question if available
+                                    const stats = answerStats[uid];
+                                    if (stats && typeof stats === 'object') {
+                                        // Backend now returns percentages directly for each option
+                                        // stats is an object like { "0": 25, "1": 75, "2": 0 } for percentages
+
+                                        // Find the question to get the number of answer options
+                                        const question = mappedQuestions.find(q => q.uid === uid);
+                                        const numOptions = question?.answerOptions?.length || 0;
+
+                                        if (numOptions === 0) {
+                                            logger.warn(`Question ${uid} has no answer options`);
+                                            return undefined;
+                                        }
+
+                                        // Convert to array format, ensuring all options are included
+                                        const statsObj = stats as Record<string, number>;
+                                        const percentageArray: number[] = [];
+                                        for (let i = 0; i < numOptions; i++) {
+                                            const percentage = statsObj[i.toString()] || 0; // Backend sends percentages directly
+                                            percentageArray.push(percentage);
+                                        }
+
+                                        logger.debug(`getStatsForQuestion called for ${uid}:`, stats,
+                                            `-> percentages from backend:`, percentageArray);
+                                        return percentageArray;
+                                    }
+                                    return undefined;
+                                }}
                             />
                         </section>
                     </div>

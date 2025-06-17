@@ -23,7 +23,7 @@ exports.RegisterRequestSchema = zod_1.z.object({
     action: zod_1.z.enum(['teacher_register', 'teacher_signup']).optional(),
     username: zod_1.z.string().min(3, 'Username must be at least 3 characters'),
     email: zod_1.z.string().email('Invalid email format').optional(),
-    password: zod_1.z.string().min(6, 'Password must be at least 6 characters'),
+    password: zod_1.z.string().min(6, 'Password must be at least 6 characters').optional(), // Optional for guest users
     role: zod_1.z.enum(['STUDENT', 'TEACHER']).optional(),
     gradeLevel: zod_1.z.string().optional(),
     avatar: zod_1.z.string().optional(),

@@ -132,6 +132,7 @@ export default function LiveGamePage() {
     const [snackbarMessage, setSnackbarMessage] = useState<string>("");
     const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
     const [isMobile, setIsMobile] = useState(false);
+    const [lastErrorTimestamp, setLastErrorTimestamp] = useState<number>(0);
 
     // Feedback system state
     const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
@@ -228,23 +229,42 @@ export default function LiveGamePage() {
         return () => { };
     }, [gameState.phase, gameState.feedbackRemaining, gameState.gameMode, gameState.lastAnswerFeedback, gameState.correctAnswers]);
 
-    // Handle socket errors
+    // Handle socket errors - force show snackbar even for repeated errors
     useEffect(() => {
+        console.log('🔥 [SNACKBAR DEBUG] socketError effect triggered:', {
+            socketError,
+            hasError: !!socketError,
+            timestamp: Date.now()
+        });
         if (socketError) {
+            // Strip timestamp from error message (format: "message|timestamp")
+            const displayMessage = socketError.includes('|') ? socketError.split('|')[0] : socketError;
+            console.log('🔥 [SNACKBAR DEBUG] Setting error snackbar:', displayMessage);
+            // Always show error snackbar, even if same message
             setSnackbarType("error");
-            setSnackbarMessage(socketError);
+            setSnackbarMessage(displayMessage);
             setSnackbarOpen(true);
+            console.log('🔥 [SNACKBAR DEBUG] Snackbar should now be open with message:', displayMessage);
+            logger.debug('Showing error snackbar', { socketError: displayMessage });
         }
-    }, [socketError]);
+    }, [socketError]); // Only depend on socketError, not the snackbar state
 
     // Reset selected answers when question changes
     const currentQuestionUid = gameState.currentQuestion?.uid;
+    const previousQuestionUid = useRef(currentQuestionUid);
     useEffect(() => {
-        setSelectedAnswer(null);
-        setSelectedAnswers([]);
-        setSnackbarOpen(false);
-        setShowFeedbackOverlay(false); // Hide feedback when question changes
-    }, [currentQuestionUid]);
+        // Only reset when we actually move to a different question
+        if (currentQuestionUid && currentQuestionUid !== previousQuestionUid.current) {
+            setSelectedAnswer(null);
+            setSelectedAnswers([]);
+            // Only hide error snackbar if it's not a timer-related error
+            if (snackbarType !== "error" || !snackbarMessage?.includes('temps')) {
+                setSnackbarOpen(false);
+            }
+            setShowFeedbackOverlay(false); // Hide feedback when question changes
+            previousQuestionUid.current = currentQuestionUid;
+        }
+    }, [currentQuestionUid, snackbarType, snackbarMessage]);
 
     // Get game mode directly from game state (now mandatory) and map to component mode
     const gameMode = useMemo(() => {
@@ -366,14 +386,20 @@ export default function LiveGamePage() {
 
     // Auto-hide snackbar after 2 seconds
     useEffect(() => {
+        console.log('🔥 [AUTO-HIDE DEBUG] Auto-hide effect triggered:', { snackbarOpen });
         if (snackbarOpen) {
+            console.log('🔥 [AUTO-HIDE DEBUG] Setting 2s timer to hide snackbar');
             const timer = setTimeout(() => {
+                console.log('🔥 [AUTO-HIDE DEBUG] Auto-hiding snackbar after 2s');
                 setSnackbarOpen(false);
             }, 2000);
-            return () => clearTimeout(timer);
+            return () => {
+                console.log('🔥 [AUTO-HIDE DEBUG] Clearing auto-hide timer');
+                clearTimeout(timer);
+            };
         }
         return () => { }; // Return empty cleanup function when snackbar is not open
-    }, [snackbarOpen]);
+    }, [snackbarOpen]); // Only depend on snackbarOpen
 
     return (
         <div className="main-content">

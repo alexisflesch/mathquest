@@ -173,9 +173,14 @@ async function getAnswerStats(accessCode, questionUid) {
         // Process each answer to build the statistics
         Object.values(answersHash).forEach(answerJson => {
             try {
-                const answer = JSON.parse(answerJson);
-                const selectedOption = answer.answer?.selectedOption;
-                if (selectedOption) {
+                const answerData = JSON.parse(answerJson);
+                // Handle different answer structures
+                let selectedOption = answerData.answer?.selectedOption || answerData.answer;
+                // Convert to string key for consistent stats mapping
+                if (typeof selectedOption === 'number') {
+                    selectedOption = selectedOption.toString();
+                }
+                if (selectedOption !== undefined && selectedOption !== null) {
                     stats[selectedOption] = (stats[selectedOption] || 0) + 1;
                 }
             }

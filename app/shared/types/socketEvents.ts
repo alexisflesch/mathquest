@@ -12,7 +12,7 @@ import type {
     LeaderboardEntry
 } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
-import type { SetQuestionPayload } from './socket/dashboardPayloads';
+import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload } from './socket/dashboardPayloads';
 import type {
     PracticeClientToServerEvents,
     PracticeServerToClientEvents
@@ -175,6 +175,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     dashboard_timer_updated: (payload: TimerUpdatePayload) => void;
     dashboard_answers_lock_changed: (payload: { locked: boolean }) => void;
     dashboard_game_status_changed: (payload: { status: string }) => void;
+    dashboard_answer_stats_update: (payload: DashboardAnswerStatsUpdatePayload) => void;
     quiz_connected_count: (payload: { count: number }) => void;
     projector_state: (payload: any) => void;
 

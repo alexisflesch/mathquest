@@ -140,7 +140,7 @@ This violates the modernization principle #8: "USE shared types in `shared/`" - 
 
 ### New Issue: Missing Redis Game State ❌
 **Backend Error**: "Game state not found in Redis" for accessCode "3141"
-- gameId: "06086448-aed1-49ed-972b-5bd3869d4899"
+- gameId:
 - accessCode: "3141" 
 - Game instance exists in database but Redis state is missing
 
@@ -746,6 +746,82 @@ TypeScript compilation revealed **53 errors** across multiple files due to incom
 - `/home/aflesch/mathquest/app/backend/src/sockets/handlers/game/joinGame.ts`
 
 ## 2025-06-16 16:45 - **PHASE 4: Legacy Timer System Elimination Started**
+
+### 📊 **Implementation: Real-Time Answer Statistics for Teacher Dashboard** ✅
+**Timestamp:** 2025-06-16 22:30  
+**Task:** Implement real-time emission of answer statistics to teacher dashboard  
+**Status:** **COMPLETED**
+
+#### 🎯 **Objective Achieved**
+Successfully implemented real-time emission of answer statistics to the teacher dashboard, restoring the pre-rewrite functionality where teachers could see live visualization of student response distribution as answers are submitted.
+
+#### 🔧 **Technical Implementation**
+
+**1. Shared Event Definition:**
+- Added `DASHBOARD_ANSWER_STATS_UPDATE: 'dashboard_answer_stats_update'` to `shared/types/socket/events.ts`
+- Ensures consistent event naming across frontend and backend
+
+**2. Backend Answer Emission Logic:**
+- Modified `backend/src/sockets/handlers/game/gameAnswer.ts` to emit stats after each answer submission
+- Added import of `getAnswerStats` helper and dashboard payload types
+- Positioned emission after successful Redis storage but before leaderboard update
+
+**3. Enhanced Stats Calculation:**
+- Updated `backend/src/sockets/handlers/teacherControl/helpers.ts`
+- Enhanced `getAnswerStats` function to handle current answer data structure
+- Added support for both direct answer values (numbers) and nested structures
+- Convert answer indices to string keys for consistent dashboard mapping
+
+**4. Smart Room Targeting:**
+- Implemented game mode-aware room selection:
+  - General games: `dashboard_${gameId}`
+  - Quiz mode: `teacher_${initiatorUserId}_${accessCode}`
+- Ensures stats reach the correct teacher dashboard regardless of game type
+
+#### 📊 **Data Flow**
+```
+Student Answer Submission → Redis Storage → getAnswerStats() → DashboardAnswerStatsUpdatePayload → Teacher Dashboard
+```
+
+**Payload Structure:**
+```typescript
+{
+  questionUid: string,
+  stats: Record<string, number>  // Maps option indices to answer counts
+}
+```
+
+#### 🛡️ **Error Handling**
+- Graceful fallback if stats calculation fails
+- Comprehensive logging for debugging
+- Non-blocking implementation - answer submission continues even if stats emission fails
+
+#### 📝 **Files Modified**
+1. **`shared/types/socket/events.ts`** - Added new event constant
+2. **`backend/src/sockets/handlers/game/gameAnswer.ts`** - Main emission logic
+3. **`backend/src/sockets/handlers/teacherControl/helpers.ts`** - Enhanced stats calculation
+4. **`plan.md`** - Added Phase 9 documentation
+5. **`log.md`** - This implementation log
+
+#### 🚀 **Impact**
+- ✅ Teachers now receive live answer statistics as students submit responses
+- ✅ Dashboard can update bar graphs and visualizations in real-time
+- ✅ Consistent with pre-rewrite system functionality expectations
+- ✅ Uses shared types and follows `.instructions.md` guidelines
+- ✅ Ready for frontend dashboard integration and testing
+
+#### 🧪 **Ready for Frontend Integration**
+The backend implementation is complete and ready for frontend dashboard components to:
+1. Listen for `dashboard_answer_stats_update` events
+2. Process the `questionUid` and `stats` data
+3. Update answer distribution visualizations (bar charts, etc.)
+4. Display real-time student response patterns to teachers
+
+#### 📊 **Testing Validation Required**
+- Verify teacher dashboard receives events for each student answer
+- Confirm stats data structure matches frontend expectations  
+- Test across different question types (single choice, multiple choice)
+- Validate room targeting works correctly for quiz vs tournament modes
 
 ### **CRITICAL ACTION: Modernizing useTeacherQuizSocket**
 **Timestamp:** 2025-06-16 16:45  

@@ -480,41 +480,19 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         }
     };
 
-    socket.on(GAME_EVENTS.REQUEST_PARTICIPANTS, async (payload: any) => {
-        // Runtime validation with Zod
-        const parseResult = requestParticipantsPayloadSchema.safeParse(payload);
-        if (!parseResult.success) {
-            const errorDetails = parseResult.error.format();
-            logger.warn({
-                socketId: socket.id,
-                error: 'Invalid requestParticipants payload',
-                details: errorDetails,
-                payload
-            }, 'Socket payload validation failed');
+    // NOTE: REQUEST_PARTICIPANTS is now handled exclusively by requestParticipants.ts (registered in game/index.ts)
+    // This eliminates the dual handler registration issue
+    // socket.on(GAME_EVENTS.REQUEST_PARTICIPANTS, ...) - REMOVED to prevent duplicate processing
 
-            socket.emit(GAME_EVENTS.GAME_PARTICIPANTS, { participants: [] });
-            return;
-        }
+    // NOTE: JOIN_GAME is now handled exclusively by joinGame.ts (registered in game/index.ts)
+    // This eliminates the dual handler registration issue that was causing inconsistent behavior
+    // socket.on(GAME_EVENTS.JOIN_GAME, ...) - REMOVED to prevent duplicate processing
 
-        const { accessCode } = parseResult.data;
-        try {
-            const participants = await redis.hvals(`mathquest:game:participants:${accessCode}`);
-            socket.emit(GAME_EVENTS.GAME_PARTICIPANTS, { participants: participants.map(p => JSON.parse(p)) } as { participants: ParticipantData[] });
-        } catch (error) {
-            logger.error({ accessCode, error }, 'Error fetching participants');
-            socket.emit(GAME_EVENTS.GAME_PARTICIPANTS, { participants: [] });
-        }
-    });
-
-    socket.on(GAME_EVENTS.JOIN_GAME, (payload: any) => joinHandler(payload));
     socket.on(TOURNAMENT_EVENTS.JOIN_TOURNAMENT, (payload: any) => joinHandler({ ...payload, playMode: 'tournament' }));
 
-    // Ensure game_answer is handled by answerHandler if not practice mode
-    // For practice mode, gameAnswer.ts (registered in game/index.ts) should take precedence.
-    socket.on(GAME_EVENTS.GAME_ANSWER, (payload: any) => {
-        // This registration will be called if gameAnswer.ts doesn't stop propagation or if it's not practice.
-        // The logic inside answerHandler now checks for playMode === 'practice' and returns early.
-        answerHandler(payload);
-    });
+    // NOTE: game_answer is now handled exclusively by gameAnswer.ts (registered in game/index.ts)
+    // This eliminates the dual handler registration issue that was causing inconsistent validation
+    // socket.on(GAME_EVENTS.GAME_ANSWER, ...) - REMOVED to prevent duplicate processing
+
     socket.on(TOURNAMENT_EVENTS.TOURNAMENT_ANSWER, (payload: any) => answerHandler({ ...payload, playMode: 'tournament' }));
 }

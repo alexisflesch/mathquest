@@ -128,29 +128,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 );
 
                 if (result.success) {
-                    logger.info('Guest user registered in database', { username, avatar, cookieId });
+                    logger.info('Guest user registered in database', { username, avatar, cookieId, userId: result.user.id });
+
+                    // Store guest profile in localStorage
+                    localStorage.setItem('mathquest_username', username);
+                    localStorage.setItem('mathquest_avatar', avatar);
+
+                    // Update state with userId from registration response
+                    setUserState('guest');
+                    setUserProfile({
+                        username,
+                        avatar,
+                        cookieId,
+                        userId: result.user.id // Include userId for guest users
+                    });
+
+                    logger.info('Guest profile set with userId', { username, avatar, cookieId, userId: result.user.id });
+                    return; // Exit early since registration succeeded
                 } else {
                     throw new Error('Registration failed: ' + (result.message || 'Unknown error'));
                 }
             } catch (dbError) {
-                // If user already exists in database (e.g., cookieId reused), that's fine
-                // We'll just update localStorage and continue
-                logger.warn('Guest user may already exist in database, continuing with localStorage update', {
+                // If user already exists in database, we need to look up their userId by cookieId
+                logger.warn('Guest registration failed, attempting to lookup existing user', {
                     cookieId,
                     error: dbError instanceof Error ? dbError.message : 'Unknown error'
                 });
+
+                // Try to get the existing user by cookieId through the auth status endpoint
+                try {
+                    const statusResult = await makeApiRequest<AuthStatusResponse>(
+                        '/api/auth/status',
+                        {},
+                        undefined,
+                        AuthStatusResponseSchema
+                    );
+                    if (statusResult && statusResult.user && statusResult.user.id) {
+                        // Found existing user - use their userId
+                        setUserState('guest');
+                        setUserProfile({
+                            username,
+                            avatar,
+                            cookieId,
+                            userId: statusResult.user.id
+                        });
+
+                        logger.info('Found existing guest user, profile updated with userId', {
+                            username, avatar, cookieId, userId: statusResult.user.id
+                        });
+                        return;
+                    }
+                } catch (lookupError) {
+                    logger.warn('Could not lookup existing user', { lookupError });
+                }
+
+                // If we can't find the user, create profile without userId
+                // This will prevent game joining until the user re-registers
+                logger.error('Could not establish userId for guest user - game joining will be blocked');
             }
 
-            // Store guest profile in localStorage
+            // Store guest profile in localStorage (fallback if registration failed)
             localStorage.setItem('mathquest_username', username);
             localStorage.setItem('mathquest_avatar', avatar);
 
-            // Update state
+            // Update state (fallback without userId if registration failed)
             setUserState('guest');
             setUserProfile({
                 username,
                 avatar,
                 cookieId
+                // Note: No userId if registration/lookup failed - this will require user to re-register
             });
 
             logger.info('Guest profile set', { username, avatar, cookieId });

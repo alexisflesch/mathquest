@@ -136,6 +136,7 @@ export function useStudentGameSocket({
     const [connected, setConnected] = useState(false);
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [errorCounter, setErrorCounter] = useState(0);
 
     const [gameState, setGameState] = useState<StudentGameUIState>({
         currentQuestion: null,
@@ -168,6 +169,7 @@ export function useStudentGameSocket({
         });
 
         setConnecting(true);
+        logger.debug('Clearing error state during socket initialization');
         setError(null);
 
         // Create socket configuration with authentication
@@ -182,6 +184,7 @@ export function useStudentGameSocket({
             logger.info(`Student socket connected: ${s.id}`);
             setConnected(true);
             setConnecting(false);
+            logger.debug('Clearing error state on socket connect');
             setError(null);
         });
 
@@ -190,6 +193,7 @@ export function useStudentGameSocket({
             logger.info(`Student socket reconnected: ${s.id}`);
             setConnected(true);
             setConnecting(false);
+            logger.debug('Clearing error state on socket reconnect');
             setError(null);
         });
 
@@ -362,7 +366,10 @@ export function useStudentGameSocket({
         }, 'feedback'));
 
         socket.on('game_error', createSafeEventHandler<ErrorPayload>((error) => {
-            setError(error.message || 'Unknown game error');
+            logger.warn('=== GAME ERROR RECEIVED ===', { errorMessage: error.message, errorCode: error.code });
+            // Include timestamp to force unique error strings and trigger React re-renders
+            const uniqueErrorMessage = `${error.message || 'Unknown game error'}|${Date.now()}`;
+            setError(uniqueErrorMessage);
         }, isErrorPayload, 'game_error'));
         socket.on('game_already_played', createSafeEventHandler<GameAlreadyPlayedPayload>(() => {
             setError('You have already played this game');

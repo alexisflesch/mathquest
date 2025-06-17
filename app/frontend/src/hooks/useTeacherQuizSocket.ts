@@ -15,6 +15,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { Question } from '@shared/types/core';
 import type { QuestionData, ServerToClientEvents } from '@shared/types/socketEvents';
 import type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
+import type { DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
 
 // Re-export QuizState for other files that import it from this hook
 export type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
@@ -46,6 +47,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
     // State management
     const [quizState, setQuizState] = useState<QuizState | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(0);
+    const [answerStats, setAnswerStats] = useState<Record<string, number>>({});
 
     // Update quiz state based on timer state changes
     useEffect(() => {
@@ -134,6 +136,17 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         socket.socket.on('connected_count' as keyof ServerToClientEvents, connectedCountHandler);
         cleanupFunctions.push(() => {
             socket.socket?.off('connected_count' as keyof ServerToClientEvents, connectedCountHandler);
+        });
+
+        // Answer stats updates
+        const answerStatsHandler = (payload: DashboardAnswerStatsUpdatePayload) => {
+            logger.debug('Received dashboard_answer_stats_update', payload);
+            setAnswerStats(payload.stats);
+        };
+
+        socket.socket.on('dashboard_answer_stats_update' as keyof ServerToClientEvents, answerStatsHandler);
+        cleanupFunctions.push(() => {
+            socket.socket?.off('dashboard_answer_stats_update' as keyof ServerToClientEvents, answerStatsHandler);
         });
 
         return () => {
@@ -267,6 +280,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         timeLeftMs: timer.timeLeftMs,
         localTimeLeftMs: timer.timeLeftMs, // Use timer's value directly
         connectedCount,
+        answerStats,
 
         // Setters (deprecated - for backward compatibility only)
         setLocalTimeLeft: () => {

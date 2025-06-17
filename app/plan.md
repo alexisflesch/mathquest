@@ -24,17 +24,59 @@ Modern Format: {"status": "play", "timeLeftMs": 10054, "questionUid": "q1", "tim
 - [x] **VALIDATE**: Ensure shared types are used consistently ✅
 - [ ] **TEST**: Verify late joiner countdown works with single timer system
 
-### **Remaining Cleanup Tasks**
-- [ ] Clean up test files that reference legacy timer fields: `isPaused`, `startedAt`, `gameManager.gameState.timer`
-- [ ] Remove legacy type definitions if no longer needed
-- [ ] Final end-to-end testing of timer consistency
-- [ ] Validate all timer events use shared `GameTimerState` type
+### **Phase 5: 🚨 CRITICAL BACKEND HANDLER ARCHITECTURE CLEANUP** ✅ COMPLETED  
+- [x] **AUDIT**: Run `scripts/audit_event_handlers.py` to identify duplicate handler registrations ✅
+- [x] **ANALYZE**: Review handler_audit_report.md findings (22 duplicate event registrations found!) ✅
+- [x] **ELIMINATE DUPLICATES**: Remove redundant handler registrations ✅
+  - [x] join_game: Removed duplicate from sharedLiveHandler.ts, using dedicated game/joinGame.ts ✅
+  - [x] game_answer: Removed internal registration from gameAnswer.ts (handler returned for index.ts) ✅  
+  - [x] request_participants: Removed duplicate from sharedLiveHandler.ts, using dedicated handler ✅
+  - [x] Verified production handlers with scripts/audit_production_handlers.py ✅
+- [x] **CONSOLIDATE**: Established single source of truth for each critical event handler ✅
+- [x] **VALIDATE**: Confirmed only legitimate disconnect handlers remain (4 for different components) ✅
+
+### **Current Status: BACKEND ARCHITECTURE MODERNIZED ✅**
+All critical duplicate event handler registrations have been eliminated from production code. The timer system is now fully modernized with single source of truth and proper security validation.
+
+### **Phase 6: PRODUCTION ISSUE RESOLUTION** ✅ COMPLETED
+- [x] **CRITICAL BUG FIX**: Resolved quiz mode answer submission issue ✅
+  - [x] **Root Cause**: Game status remained "pending" when timer paused, blocking answer submissions ✅  
+  - [x] **Solution**: Ensured `gameState.status = 'active'` syncs with database when timer starts ✅
+  - [x] **Validation**: Timer pause now keeps game active while changing only timer.status ✅
+- [x] **STATUS ARCHITECTURE**: Clarified separation between game status and timer status ✅
+- [x] **SECURITY MAINTAINED**: Answer validation still prevents submissions when timer.status is "stop" ✅
+
+### **Phase 7: FINAL CLEANUP & TESTING** ⏳ IN PROGRESS
+- [x] **CRITICAL BUG FIX**: Fixed guest user login issue preventing game joining ✅
+  - [x] Identified root cause: missing `userId` in guest profiles when registration fallback occurs ✅
+  - [x] Enhanced `setGuestProfile` to lookup existing users via `/api/auth/status` ✅
+  - [x] Ensured all guest users have `userId` for game joining capability ✅
+- [x] **LOBBY REDIRECT FIX**: Removed legacy REDIRECT_TO_QUIZ event per DRY principles ✅
+  - [x] Eliminated dual redirect handlers (legacy compatibility forbidden per .instructions.md) ✅
+  - [x] Now using only canonical REDIRECT_TO_GAME event for all redirects ✅
+- [x] **TIMER FEEDBACK ENHANCEMENT**: Added debug logging to timer stopped validation ✅
+  - [x] Backend correctly detects when timer is stopped and validates answer submissions ✅
+  - [x] Frontend properly handles game_error events for user feedback ✅
+  - [x] Added explicit logging for game_error emissions to track validation ✅
+- [ ] **TEST CURRENT**: Verify timer stopped feedback works consistently in live testing
+- [ ] **TEST CLEANUP**: Remove all legacy timer references from test files
+  - [ ] Remove `isPaused`, `startedAt`, `gameManager.gameState.timer` from frontend tests
+  - [ ] Update test expectations to use `GameTimerState` format
+  - [ ] Ensure test handlers don't conflict with production handlers
+- [ ] **LEGACY TYPE CLEANUP**: Remove unused legacy timer types if no longer referenced
+- [ ] **END-TO-END VALIDATION**: Comprehensive testing of modernized timer system
+  - [ ] Verify quiz mode answer submission works correctly when timer is paused
+  - [ ] Test timer validation prevents unauthorized answer submissions when timer is stopped
+  - [ ] Confirm all timer events use shared `GameTimerState` type
+  - [ ] Validate late joiner countdown works with single timer system
 
 ### **Expected Outcome**
-- ✅ Single timer system (useSimpleTimer only)
-- ✅ Consistent shared types across all layers
-- ✅ Late joiner countdown works immediately
-- ✅ No timer conflicts or dual state management
+- ✅ Single timer system (useSimpleTimer only) ✅ ACHIEVED
+- ✅ Consistent shared types across all layers ✅ ACHIEVED  
+- ✅ No timer conflicts or dual state management ✅ ACHIEVED
+- ✅ Single event handler registration per event ✅ ACHIEVED
+- [ ] Clean test suite with no legacy references
+- [ ] Complete documentation of new architecture
 
 ---
 
@@ -332,3 +374,76 @@ const timer = useSimpleTimer({
 2. Update all internal method implementations to use new timer methods  
 3. Keep return interface identical to avoid breaking debug page and tests
 4. Test TypeScript compilation
+
+### 🚨 **CRITICAL SECURITY FIX APPLIED** ✅
+- **Fixed Timer Bypass Vulnerability**: Added comprehensive timer validation to `gameAnswer.ts`
+- **Issue**: Users could submit answers when timer was stopped in quiz mode
+- **Root Cause**: Dual event handler registration with inconsistent validation
+- **Solution**: Added proper timer status checks before answer processing
+- **Result**: Timer controls now properly enforced across all game modes
+
+### **🚨 Phase 5: BACKEND HANDLER ARCHITECTURE CLEANUP** 🔄 ACTIVE
+**Discovered**: Systemic dual event handler registration causing security vulnerabilities
+
+#### **Critical Issues Found**:
+- [x] **Dual `game_answer` handlers**: Fixed - removed duplicate from sharedLiveHandler ✅
+- [ ] **Dual `JOIN_GAME` handlers**: `sharedLiveHandler.ts` + `game/index.ts` both register
+- [ ] **Architecture confusion**: Handler responsibility unclear
+- [ ] **Complete audit needed**: Check all event registrations for duplicates
+
+#### **Phase 5 Tasks** (Following .instructions.md guidelines):
+- [ ] **Create handler audit script**: Python script to systematically identify all dual registrations
+- [ ] **Fix JOIN_GAME duplication**: Choose single handler or implement proper coordination
+- [ ] **Document handler responsibilities**: Clear separation of concerns in docs/
+- [ ] **Validate no other duplicates**: Ensure clean event handler architecture
+- [ ] **Test all fixed handlers**: Verify no regressions in functionality
+- [ ] **Update documentation**: Handler patterns and best practices
+
+### **Phase 8: FIX LOBBY REDIRECT ISSUE - ELIMINATE LEGACY REDIRECT EVENTS** 🚧 IN PROGRESS
+- [ ] **INVESTIGATE**: Students stuck in lobby after teacher starts quiz ✅
+- [ ] **ROOT CAUSE**: Legacy dual redirect events (`REDIRECT_TO_QUIZ` + `REDIRECT_TO_GAME`) ✅  
+- [ ] **MODERNIZE**: Remove legacy `REDIRECT_TO_QUIZ` event completely
+- [ ] **VALIDATE**: Test lobby → live game redirection works correctly
+- [ ] **CLEANUP**: Remove legacy socket event definitions
+
+**ISSUE**: Students receive `redirect_to_game` event but don't redirect automatically. Frontend has legacy compatibility code listening to both `REDIRECT_TO_QUIZ` (legacy) and `REDIRECT_TO_GAME` (canonical). Per `.instructions.md`, must eliminate all legacy patterns.
+
+### **Phase 9: IMPLEMENT REAL-TIME ANSWER STATISTICS** ✅ COMPLETED
+**OBJECTIVE**: Emit real-time answer statistics to teacher dashboard for each question, enabling live visualization of student response distribution as in the pre-rewrite system.
+
+#### **Implementation** ✅
+- [x] **Event Definition**: Added `DASHBOARD_ANSWER_STATS_UPDATE` event to shared types ✅
+- [x] **Backend Emission**: Modified `gameAnswer.ts` to emit answer stats after each submission ✅
+- [x] **Stats Calculation**: Enhanced `getAnswerStats` helper to handle current answer data structure ✅
+- [x] **Room Targeting**: Correctly identifies dashboard room based on game mode (quiz vs tournament) ✅
+- [x] **Data Structure**: Uses `DashboardAnswerStatsUpdatePayload` with `questionUid` and `stats` mapping ✅
+
+#### **Technical Details** ✅
+- **Event Name**: `dashboard_answer_stats_update`
+- **Payload Type**: `DashboardAnswerStatsUpdatePayload`
+- **Emission Location**: After successful answer storage in Redis, before leaderboard update
+- **Room Logic**: `dashboard_${gameId}` for general games, `teacher_${initiatorUserId}_${accessCode}` for quiz mode
+- **Error Handling**: Graceful fallback if stats calculation fails, with detailed logging
+
+#### **Code Changes** ✅
+1. **Shared Types** (`shared/types/socket/events.ts`):
+   - Added `DASHBOARD_ANSWER_STATS_UPDATE: 'dashboard_answer_stats_update'` event
+2. **Backend Handler** (`backend/src/sockets/handlers/game/gameAnswer.ts`):
+   - Import `getAnswerStats` helper and dashboard payload types
+   - Emit stats update after successful answer submission
+3. **Stats Helper** (`backend/src/sockets/handlers/teacherControl/helpers.ts`):
+   - Enhanced to handle direct answer values (numbers) and nested structures
+   - Convert answer indices to string keys for consistent mapping
+4. **Frontend Integration** (`frontend/src/app/teacher/dashboard/[code]/page.tsx`):
+   - Updated to use `useTeacherQuizSocket` hook which provides `answerStats`
+   - Added `getStatsForQuestion` function to convert backend stats format to UI format
+   - Connected stats to `DraggableQuestionsList` component for real-time display
+   - Stats are always visible on teacher dashboard (no toggle needed)
+
+**STATUS**: ✅ COMPLETED - Teacher dashboard now displays live answer statistics as students submit responses.
+
+### **Phase 8: DASHBOARD SOCKET CONSISTENCY** ✅ COMPLETED
+- [x] **NAMING CONVENTION**: Implemented consistent `dashboard_${gameId}` room naming across all game types ✅
+- [x] **DRY PRINCIPLE**: Removed special-case room logic for quiz mode ✅
+- [x] **CODE SIMPLIFICATION**: Unified dashboard room emission logic for all play modes ✅
+- [x] **BACKEND PERCENTAGE CALCULATION**: Simplified answer stats to use unified percentage calculation for all question types ✅

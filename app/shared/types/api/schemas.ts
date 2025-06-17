@@ -26,7 +26,7 @@ export const RegisterRequestSchema = z.object({
     action: z.enum(['teacher_register', 'teacher_signup']).optional(),
     username: z.string().min(3, 'Username must be at least 3 characters'),
     email: z.string().email('Invalid email format').optional(),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(6, 'Password must be at least 6 characters').optional(), // Optional for guest users
     role: z.enum(['STUDENT', 'TEACHER']).optional(),
     gradeLevel: z.string().optional(),
     avatar: z.string().optional(),

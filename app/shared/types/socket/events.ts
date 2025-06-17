@@ -36,6 +36,7 @@ export const TEACHER_EVENTS = {
     DASHBOARD_TIMER_UPDATED: 'dashboard_timer_updated',
     DASHBOARD_ANSWERS_LOCK_CHANGED: 'dashboard_answers_lock_changed',
     DASHBOARD_GAME_STATUS_CHANGED: 'dashboard_game_status_changed',
+    DASHBOARD_ANSWER_STATS_UPDATE: 'dashboard_answer_stats_update',
 
     // Error handling
     ERROR_DASHBOARD: 'error_dashboard'
@@ -87,9 +88,8 @@ export const LOBBY_EVENTS = {
     PARTICIPANT_LEFT: 'participant_left',
     PARTICIPANTS_LIST: 'participants_list',
     ROOM_LEFT: 'room_left',
-    REDIRECT_TO_GAME: 'redirect_to_game',
-    GAME_STARTED: 'game_started',
-    REDIRECT_TO_QUIZ: 'redirect_to_quiz'
+    REDIRECT_TO_GAME: 'redirect_to_game', // Canonical redirect event
+    GAME_STARTED: 'game_started'
 };
 
 // ===== Projector Events =====
