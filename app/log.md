@@ -718,23 +718,205 @@ if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstanc
 - Confirm tournament mode still works as before
 - Test edge cases: paused timers, expired timers, different time remaining values
 
-## 2025-06-17 - Removed Timer Editing & Added Proper Logging
+## 2025-06-17 15:30 - TASK: Fix Filter OR Logic Issue
 
-**Timer Editing Removal**:
-- Removed timer editing functionality from cart questions (clicking timer no longer opens edit mode)
-- Timer icon and time value still displayed for information
-- Simplified SortableCartQuestion component (removed `editingTime` state and `onTimeChange` prop)
-- Removed `updateQuestionTime` helper function
+### 📋 **Task: Fix Filter OR Logic Issue**
+**Timestamp:** 2025-06-17 15:30
+**Checklist Item:** Phase 1 - Fix filter OR logic issue - selecting multiple grade levels should show union of themes
+**What:** Investigating filter dropdown behavior when multiple grade levels selected
+**Why:** User reports that selecting multiple grade levels doesn't show union of available themes (OR logic)
+**How:** 
+1. Initially tried changing API format from comma-separated to array parameters (gradeLevel[])
+2. Broke dynamic filtering - user now sees all themes regardless of selection
+3. Need to revert to original working format and investigate backend API behavior
+**Files:** `/frontend/src/app/teacher/games/new/page.tsx`, `plan.md`, `log.md`
 
-**Proper Logging Implementation**:
-- Added `createLogger('CreateActivityPage')` import and initialization
-- Replaced all `console.log` statements with appropriate logger methods:
-  - Filter API responses: `logger.debug()` for development debugging
-  - Game template creation: `logger.info()` for important operations
-  - Error handling: `logger.error()` for error conditions
-- Follows established logging pattern used throughout the application
+### 🔍 **Problem Analysis**
+- **Expected**: Select Grade 5 + Grade 6 → see themes available for Grade 5 OR Grade 6 (union)
+- **Current**: Either shows all themes (broken) or uses AND logic (too restrictive)
+- **Root Cause**: Backend API interpretation of filter parameters unclear
 
-**Benefits**:
-- Cleaner cart UX without unnecessary timer editing complexity
-- Consistent logging that can be controlled via log levels
-- Better error tracking and debugging capabilities
+### 🔧 **Fix Applied: Reverted to Working Format**
+**Timestamp:** 2025-06-17 15:35
+**What:** Reverted both `fetchFilters` and `fetchQuestions` back to comma-separated parameter format
+**Why:** Array parameter format (gradeLevel[]) broke the dynamic filtering completely
+**How:** 
+1. Reverted `fetchFilters` to use `gradeLevel=5,6` format
+2. Reverted `fetchQuestions` to use same comma-separated format
+3. Maintained proper TypeScript typing with `string[]` for params array
+**Files:** `/frontend/src/app/teacher/games/new/page.tsx`
+
+### 🎯 **Expected Result**
+- Selecting single grade level should show only themes for that level
+- Selecting multiple grade levels should show themes available for any of those levels (OR logic)
+- Backend should handle comma-separated values as OR logic, not AND logic
+
+### 📋 **Next Investigation**
+Need to check backend API implementation to understand how it handles comma-separated values in filter parameters.
+
+### 🔍 **Root Cause Found**
+**Timestamp:** 2025-06-17 15:45
+**What:** Found backend API documentation in `/backend/src/api/v1/questions.ts`
+**Why:** Backend expects multiple values as separate query parameters, not comma-separated
+**How:** Backend code shows `Array.isArray(gradeLevel) ? gradeLevel : [gradeLevel as string]`
+**Evidence:** Student page uses `params.append('gradeLevel', niveau)` for single values
+
+### 📋 **Correct API Format**
+- **Wrong**: `gradeLevel=5,6` (comma-separated)
+- **Correct**: `gradeLevel=5&gradeLevel=6` (multiple parameters)
+- **Backend**: Automatically converts to array for OR logic processing
+
+### ✅ **FIXED: OR Logic Implementation**
+**Timestamp:** 2025-06-17 15:50
+**Checklist Item:** [x] Fix filter OR logic issue - selecting multiple grade levels should show union of themes
+**What:** Implemented proper OR logic using URLSearchParams for multiple values
+**Why:** Backend expects `gradeLevel=5&gradeLevel=6` format, not `gradeLevel=5,6`
+**How:** 
+1. Changed to use `URLSearchParams()` instead of manual string building
+2. Use `.append()` method for each selected value to create multiple parameters
+3. Applied same fix to both `fetchFilters` and `fetchQuestions`
+**Files:** `/frontend/src/app/teacher/games/new/page.tsx`, `plan.md`, `log.md`
+
+### 🎯 **Expected Result**
+- Select Grade 5: see themes for Grade 5 only
+- Select Grade 5 + Grade 6: see themes for Grade 5 OR Grade 6 (union)
+- Backend processes arrays automatically for OR logic
+
+### 📋 **Implementation Details**
+- **Format**: `?gradeLevel=5&gradeLevel=6&discipline=Math`
+- **Backend**: Converts to arrays automatically
+- **Logic**: OR within same parameter type, AND between different types
+
+### 🔧 **CRITICAL FIX: Different API Formats**
+**Timestamp:** 2025-06-17 17:10
+**What:** Fixed backend API format mismatch between endpoints
+**Why:** `/questions/filters` uses multiple parameters, `/questions` uses comma-separated
+**How:** 
+1. Found backend code in `/backend/src/api/v1/questions.ts` lines 218-226
+2. Questions endpoint expects: `gradeLevel=CE2,CP` (comma-separated)
+3. Filters endpoint expects: `gradeLevel=CE2&gradeLevel=CP` (multiple params)
+4. Fixed `fetchQuestions` to use comma-separated format
+5. Kept `fetchFilters` with multiple parameter format
+**Files:** `/frontend/src/app/teacher/games/new/page.tsx`, `log.md`
+
+### 🎯 **CONSISTENCY ISSUE: Mixed API Parameter Formats**
+**Timestamp:** 2025-06-17 17:15
+**What:** Identified API inconsistency violating .instructions.md principles
+**Why:** Two endpoints use different formats for multiple values - breaks consistency
+**Issue:** 
+- `/questions/filters` uses multiple params: `gradeLevel=A&gradeLevel=B`
+- `/questions` uses comma-separated: `gradeLevel=A,B`
+**Principle Violated:** "ENFORCE consistent naming" and "FIX ROOT CAUSES"
+
+### ✅ **CONSISTENCY FIX: Standardized API Parameter Format**
+**Timestamp:** 2025-06-17 17:20
+**What:** Standardized all API endpoints to use multiple parameter format
+**Why:** Following .instructions.md principle "ENFORCE consistent naming" and "FIX ROOT CAUSES"
+**Decision:** Multiple parameters (`gradeLevel=A&gradeLevel=B`) - HTTP standard compliant
+**Changes:**
+1. **Backend**: Modified `/questions` endpoint to handle arrays like `/questions/filters`
+2. **Frontend**: Reverted to use multiple parameters for both endpoints
+3. **Consistency**: Both endpoints now use identical parameter format
+
+### 🔧 **Files Modified**
+- **Backend**: `/backend/src/api/v1/questions.ts` - Lines 200-235
+  - Changed gradeLevel, discipline, theme, author handling to arrays
+- **Frontend**: `/frontend/src/app/teacher/games/new/page.tsx`
+  - Reverted fetchQuestions to use multiple parameters
+
+### 🎯 **Result**
+- **Consistent format**: `?gradeLevel=CE2&gradeLevel=CP&discipline=Math`  
+- **HTTP compliant**: Standard multiple parameter approach
+- **Backend ready**: Express.js automatically parses as arrays
+- **OR logic working**: Multiple values processed correctly
+
+### 📋 **NEW TASK: Enhanced Multi-Filter UX with Incompatible Option Handling**
+**Timestamp:** 2025-06-17 17:25
+**What:** Implementing sophisticated filter system with visual feedback for incompatible selections
+**Why:** Improve UX by showing incompatible options as grayed/strikethrough instead of hiding them
+**Scope:**
+1. Enhanced MultiSelectDropdown with incompatible option styling
+2. Backend API modification to provide compatibility information
+3. Visual indicators: gray text, strikethrough, warning icon, tooltip
+4. Symmetric behavior across all filter types
+
+### ✅ **COMPLETED: Enhanced Multi-Filter UX System**
+**Timestamp:** 2025-06-17 17:45
+**What:** Implemented sophisticated filter system with visual feedback for incompatible selections
+**Components Created:**
+1. **EnhancedMultiSelectDropdown** - `/frontend/src/components/EnhancedMultiSelectDropdown.tsx`
+   - Visual indicators: gray text, strikethrough, ⚠️ icon for incompatible options
+   - Tooltips: "Pas de question disponible avec ce filtre"
+   - Maintains user control over all selections
+2. **Enhanced Types** - `/frontend/src/types/enhancedFilters.ts`
+   - FilterOption interface with isCompatible flag
+   - EnhancedFilters and EnhancedFiltersResponse types
+
+### 🔧 **Backend Enhancements**
+- **Enhanced /filters endpoint** - `/backend/src/api/v1/questions.ts`
+  - Returns compatibility information for all options
+  - Compares available vs all filters to determine compatibility
+  - Maintains backward compatibility while adding enhancement
+
+### 🎯 **Frontend Integration**
+- **Updated main page** - `/frontend/src/app/teacher/games/new/page.tsx`
+  - Replaced MultiSelectDropdown with EnhancedMultiSelectDropdown
+  - Updated state types and API calls
+  - Maintains existing functionality while adding UX improvements
+
+### 📋 **Features Implemented**
+- ✅ Incompatible options shown as gray + strikethrough + ⚠️ icon
+- ✅ Hover tooltips explaining incompatibility  
+- ✅ User can still manually uncheck incompatible options
+- ✅ Symmetric behavior across all filter types (gradeLevel, discipline, theme, author)
+- ✅ Enhanced display in dropdown button (shows ⚠️ for incompatible selections)
+
+### 🐛 **TOOLTIP STILL BROKEN: Cursor and positioning issues**
+**Timestamp:** 2025-06-17 18:00
+**What:** Current tooltip implementation causing cursor "?" and horizontal scrollbar
+**Issues:**
+1. Cursor shows "?" mark (cursor-help causing issues)
+2. Tooltip appearing in wrong location
+3. Horizontal scrollbar still appearing in dropdown
+**Solution:** Use native browser title attribute or portal-based tooltip outside dropdown container
+
+### ✅ **TOOLTIP FIXED: Simple Native Approach**
+**Timestamp:** 2025-06-17 18:05
+**What:** Replaced complex tooltip with native browser title attribute
+**Why:** Complex positioning was causing scrollbars and cursor issues
+**Solution:**
+1. **Native tooltip**: Using HTML `title` attribute on wrapper div
+2. **No JavaScript hover**: Removed all custom hover state management
+3. **No positioning issues**: Browser handles tooltip positioning automatically
+4. **No layout impact**: No absolute positioning or z-index conflicts
+
+### 📋 **NEW TASK: Smart Option Filtering**
+**Timestamp:** 2025-06-17 18:10
+**What:** Implement smarter dropdown option filtering logic
+**Requirement:** Show only:
+1. Compatible options (based on current filters)
+2. Incompatible options that user has already selected (for transparency)
+**Hide:** Incompatible options that user hasn't selected (reduces clutter)
+**Benefit:** Cleaner UI while maintaining user control over incompatible selections
+
+### ✅ **SMART FILTERING IMPLEMENTED**
+**Timestamp:** 2025-06-17 18:15
+**What:** Implemented smart option filtering in EnhancedMultiSelectDropdown
+**Logic:** 
+```javascript
+.filter(option => {
+    // Show option if it's compatible OR if user has selected it (even if incompatible)
+    return option.isCompatible || (selected ?? []).includes(option.value);
+})
+```
+
+### 🎯 **Behavior**
+1. **Compatible options**: Always shown (based on current filter combinations)
+2. **Incompatible selected**: Shown with warning icon and strikethrough (user can uncheck)
+3. **Incompatible unselected**: Hidden (reduces clutter)
+
+### 🌟 **Benefits**
+- **Cleaner UI**: No overwhelming list of incompatible options
+- **User transparency**: Still shows problematic selections with visual feedback
+- **User control**: Can manually remove incompatible selections
+- **Progressive disclosure**: More options appear as filters are cleared

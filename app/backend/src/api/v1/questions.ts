@@ -69,11 +69,17 @@ router.post('/', teacherAuth, validateRequestBody(CreateQuestionRequestSchema), 
 });
 
 /**
- * Get available filter values (unique disciplines, grade levels, themes)
+ * Get available filter values with compatibility information
  * GET /api/v1/questions/filters
  * Optional query parameters: gradeLevel, discipline, theme, author to filter cascading results
+ * Returns both compatible and incompatible options with isCompatible flags
  */
-router.get('/filters', async (req: Request, res: Response<{ gradeLevel: (string | null)[], disciplines: string[], themes: string[], authors: string[] } | ErrorResponse>): Promise<void> => {
+router.get('/filters', async (req: Request, res: Response<{
+    gradeLevel: Array<{ value: string, isCompatible: boolean }>,
+    disciplines: Array<{ value: string, isCompatible: boolean }>,
+    themes: Array<{ value: string, isCompatible: boolean }>,
+    authors: Array<{ value: string, isCompatible: boolean }>
+} | ErrorResponse>): Promise<void> => {
     try {
         const { gradeLevel, discipline, theme, author } = req.query;
 
@@ -95,8 +101,36 @@ router.get('/filters', async (req: Request, res: Response<{ gradeLevel: (string 
             filterCriteria.author = Array.isArray(author) ? author : [author as string];
         }
 
-        const filters = await getQuestionService().getAvailableFilters(filterCriteria);
-        res.status(200).json(filters);
+        // Get compatible filters based on current selections
+        const compatibleFilters = await getQuestionService().getAvailableFilters(filterCriteria);
+
+        // Get all possible filters (without restrictions) for incompatible detection
+        const allFilters = await getQuestionService().getAvailableFilters({});
+
+        // Create enhanced response with compatibility information
+        const enhancedResponse = {
+            gradeLevel: (allFilters.gradeLevel || []).map(value => ({
+                value: value || '',
+                isCompatible: (compatibleFilters.gradeLevel || []).includes(value)
+            })).filter(item => item.value !== ''),
+
+            disciplines: (allFilters.disciplines || []).map(value => ({
+                value,
+                isCompatible: (compatibleFilters.disciplines || []).includes(value)
+            })),
+
+            themes: (allFilters.themes || []).map(value => ({
+                value,
+                isCompatible: (compatibleFilters.themes || []).includes(value)
+            })),
+
+            authors: (allFilters.authors || []).map(value => ({
+                value,
+                isCompatible: (compatibleFilters.authors || []).includes(value)
+            }))
+        };
+
+        res.status(200).json(enhancedResponse);
     } catch (error) {
         logger.error({ error }, 'Error fetching filters');
         res.status(500).json({ error: 'An error occurred while fetching filters' });
@@ -199,9 +233,9 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
         const filters: any = {};
 
         if (discipline) {
-            // Handle multiple disciplines as comma-separated values
-            if (typeof discipline === 'string' && discipline.includes(',')) {
-                filters.disciplines = discipline.split(',').map(d => d.trim()).filter(d => d.length > 0);
+            // Handle both single values and arrays (consistent with filters endpoint)
+            if (Array.isArray(discipline)) {
+                filters.disciplines = discipline as string[];
             } else {
                 filters.discipline = discipline as string;
             }
@@ -210,9 +244,11 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
         // Handle themes from both 'theme' and 'themes' parameters
         const themeParam = theme || themes;
         if (themeParam) {
-            filters.themes = Array.isArray(themeParam)
-                ? themeParam as string[]
-                : (themeParam as string).split(',').map(t => t.trim()).filter(t => t.length > 0);
+            if (Array.isArray(themeParam)) {
+                filters.themes = themeParam as string[];
+            } else {
+                filters.themes = [themeParam as string];
+            }
         }
 
         if (difficulty) filters.difficulty = Number(difficulty);
@@ -220,18 +256,18 @@ router.get('/', teacherAuth, async (req: Request, res: Response<{ questions: any
         // Handle grade level from both 'level' and 'gradeLevel' parameters
         const levelParam = level || gradeLevel;
         if (levelParam) {
-            // Handle multiple grade levels as comma-separated values
-            if (typeof levelParam === 'string' && levelParam.includes(',')) {
-                filters.gradeLevels = levelParam.split(',').map(g => g.trim()).filter(g => g.length > 0);
+            // Handle both single values and arrays (consistent with filters endpoint)
+            if (Array.isArray(levelParam)) {
+                filters.gradeLevels = levelParam as string[];
             } else {
                 filters.gradeLevel = levelParam as string;
             }
         }
 
         if (author) {
-            // Handle multiple authors as comma-separated values
-            if (typeof author === 'string' && author.includes(',')) {
-                filters.authors = author.split(',').map(a => a.trim()).filter(a => a.length > 0);
+            // Handle both single values and arrays (consistent with filters endpoint)
+            if (Array.isArray(author)) {
+                filters.authors = author as string[];
             } else {
                 filters.author = author as string;
             }

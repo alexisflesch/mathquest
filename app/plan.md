@@ -15,8 +15,9 @@ Fix filter system in teacher games creation page, ensuring consistent API contra
 - [x] Fix QuestionDisplay component cropping for titles (COMPLETED)
 - [x] **COMPLETED**: Fix "Niveaux" filter not working - API parameter mismatch (FIXED: API returns `gradeLevel` not `levels`)
 - [x] **COMPLETED**: Test "Niveaux" filter functionality after fix
-- [ ] **CURRENT**: Investigate and fix other filter issues
-- [ ] Validate all filters work correctly
+- [x] **COMPLETED**: Fix layout issue - "nom de l'activité" button pushed down when adding questions
+- [x] **COMPLETED**: Enhanced Multi-Filter UX with Incompatible Option Handling
+- [ ] Validate all filters work correctly with proper OR/AND logic
 - [ ] Test filter combinations
 - [ ] Update documentation with filter API contracts
 

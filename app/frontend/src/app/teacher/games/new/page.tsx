@@ -7,9 +7,11 @@ import { useAuth } from '@/components/AuthProvider';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
+import EnhancedMultiSelectDropdown from '@/components/EnhancedMultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
 import { Search } from 'lucide-react';
 import { QuestionsResponseSchema, GameCreationResponseSchema, type QuestionsResponse, type GameCreationResponse } from '@/types/api';
+import { type FilterOption, type EnhancedFilters, type EnhancedFiltersResponse } from '@/types/enhancedFilters';
 import {
     DndContext,
     closestCenter,
@@ -119,7 +121,14 @@ export default function CreateActivityPage() {
     const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
 
     const { teacherId, userState, userProfile, isTeacher } = useAuth();
-    const [filters, setFilters] = useState<{ levels: string[]; disciplines: string[]; themes: string[]; authors: string[] }>({ levels: [], disciplines: [], themes: [], authors: [] });
+
+    // Enhanced filter state with compatibility information
+    const [filters, setFilters] = useState<EnhancedFilters>({
+        levels: [],
+        disciplines: [],
+        themes: [],
+        authors: []
+    });
     const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
     const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
     const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
@@ -143,37 +152,22 @@ export default function CreateActivityPage() {
     // Fetch filters based on current selections
     const fetchFilters = useCallback(async () => {
         try {
-            let url = 'questions/filters?';
-            const params = [];
+            // Build URL with proper multiple parameter format for OR logic
+            const params = new URLSearchParams();
 
-            // Add current selections as filter parameters to get compatible options
-            if (selectedLevels.length > 0) {
-                params.push(`gradeLevel=${selectedLevels.map(encodeURIComponent).join(',')}`);
-            }
-            if (selectedDisciplines.length > 0) {
-                params.push(`discipline=${selectedDisciplines.map(encodeURIComponent).join(',')}`);
-            }
-            if (selectedThemes.length > 0) {
-                params.push(`theme=${selectedThemes.map(encodeURIComponent).join(',')}`);
-            }
-            if (selectedAuthors.length > 0) {
-                params.push(`author=${selectedAuthors.map(encodeURIComponent).join(',')}`);
-            }
+            // Add current selections - multiple values as separate parameters for OR logic
+            selectedLevels.forEach(level => params.append('gradeLevel', level));
+            selectedDisciplines.forEach(discipline => params.append('discipline', discipline));
+            selectedThemes.forEach(theme => params.append('theme', theme));
+            selectedAuthors.forEach(author => params.append('author', author));
 
-            if (params.length > 0) {
-                url += params.join('&');
-            }
+            const url = `questions/filters?${params.toString()}`;
 
-            const data = await makeApiRequest<{
-                gradeLevel?: string[];
-                disciplines?: string[];
-                themes?: string[];
-                authors?: string[];
-            }>(url);
+            const data = await makeApiRequest<EnhancedFiltersResponse>(url);
 
-            logger.debug('Dynamic filters API response:', data);
+            logger.debug('Enhanced filters API response:', data);
 
-            const processedFilters = {
+            const processedFilters: EnhancedFilters = {
                 levels: data.gradeLevel || [],
                 disciplines: data.disciplines || [],
                 themes: data.themes || [],
@@ -190,7 +184,7 @@ export default function CreateActivityPage() {
     // Fetch filters whenever selections change
     useEffect(() => {
         fetchFilters();
-    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]); // Direct dependencies instead of fetchFilters
+    }, [selectedLevels, selectedDisciplines, selectedThemes, selectedAuthors]);
 
     const fetchQuestions = useCallback(async (reset = false) => {
         if (loadingQuestions || loadingMore) return;
@@ -200,16 +194,21 @@ export default function CreateActivityPage() {
         }
 
         try {
-            let url = 'questions?';
-            const params = [];
-            if (selectedLevels.length > 0) params.push(`gradeLevel=${selectedLevels.map(encodeURIComponent).join(',')}`);
-            if (selectedDisciplines.length > 0) params.push(`discipline=${selectedDisciplines.map(encodeURIComponent).join(',')}`);
-            if (selectedThemes.length > 0) params.push(`theme=${selectedThemes.map(encodeURIComponent).join(',')}`);
-            if (selectedAuthors.length > 0) params.push(`author=${selectedAuthors.map(encodeURIComponent).join(',')}`);
-            params.push(`limit=${BATCH_SIZE}`);
-            params.push(`offset=${reset ? 0 : offset}`);
-            params.push('shuffle=false');
-            if (params.length > 0) url += params.join('&');
+            // Build URL with consistent multiple parameter format (same as filters)
+            const params = new URLSearchParams();
+
+            // Add selections - multiple values as separate parameters (consistent format)
+            selectedLevels.forEach(level => params.append('gradeLevel', level));
+            selectedDisciplines.forEach(discipline => params.append('discipline', discipline));
+            selectedThemes.forEach(theme => params.append('theme', theme));
+            selectedAuthors.forEach(author => params.append('author', author));
+
+            // Add pagination and other parameters
+            params.append('limit', BATCH_SIZE.toString());
+            params.append('offset', (reset ? 0 : offset).toString());
+            params.append('shuffle', 'false');
+
+            const url = `questions?${params.toString()}`;
 
             const data = await makeApiRequest<QuestionsResponse>(url, undefined, undefined, QuestionsResponseSchema);
 
@@ -460,25 +459,25 @@ export default function CreateActivityPage() {
                 {/* Filters Row */}
                 <div className="flex flex-col xl:flex-row gap-4 mb-6 flex-shrink-0">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-row gap-4 xl:flex-1">
-                        <MultiSelectDropdown
+                        <EnhancedMultiSelectDropdown
                             options={filters.levels || []}
                             selected={selectedLevels}
                             onChange={setSelectedLevels}
                             placeholder="Niveaux"
                         />
-                        <MultiSelectDropdown
+                        <EnhancedMultiSelectDropdown
                             options={filters.disciplines || []}
                             selected={selectedDisciplines}
                             onChange={setSelectedDisciplines}
                             placeholder="Disciplines"
                         />
-                        <MultiSelectDropdown
+                        <EnhancedMultiSelectDropdown
                             options={filters.themes || []}
                             selected={selectedThemes ?? []}
                             onChange={setSelectedThemes}
                             placeholder="Thèmes"
                         />
-                        <MultiSelectDropdown
+                        <EnhancedMultiSelectDropdown
                             options={filters.authors || []}
                             selected={selectedAuthors}
                             onChange={setSelectedAuthors}
@@ -570,13 +569,14 @@ export default function CreateActivityPage() {
                             <h2 className="text-lg font-semibold text-[color:var(--foreground)] truncate min-w-0">Panier ({selectedQuestions.length} question{selectedQuestions.length <= 1 ? '' : 's'})</h2>
                         </div>
 
-                        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                        {/* Cart Content - Flexible height */}
+                        <div className="flex-1 min-h-0 overflow-hidden">
                             {selectedQuestions.length === 0 ? (
                                 <div className="text-center text-[color:var(--muted-foreground)] py-8">
                                     Sélectionnez des questions pour les ajouter au panier
                                 </div>
                             ) : (
-                                <div className="flex-1 overflow-y-auto min-h-0">
+                                <div className="h-full overflow-y-auto pb-2">
                                     <DndContext
                                         sensors={sensors}
                                         collisionDetection={closestCenter}
@@ -599,27 +599,27 @@ export default function CreateActivityPage() {
                                     </DndContext>
                                 </div>
                             )}
+                        </div>
 
-                            {/* Activity Name and Metadata - Always visible at bottom */}
-                            <div className="border-t pt-3 mt-3 flex-shrink-0 w-full">
-                                <input
-                                    className="w-full mb-2 text-sm focus:outline-none focus:ring-0 focus:ring-offset-0"
-                                    style={{ boxShadow: 'none' }}
-                                    type="text"
-                                    placeholder="Nom de l'activité"
-                                    value={activityName}
-                                    onChange={e => setActivityName(e.target.value)}
-                                />
+                        {/* Activity Name and Save Button - Fixed at bottom */}
+                        <div className="border-t pt-3 mt-3 flex-shrink-0 w-full bg-background">
+                            <input
+                                className="w-full mb-2 text-sm focus:outline-none focus:ring-0 focus:ring-offset-0"
+                                style={{ boxShadow: 'none' }}
+                                type="text"
+                                placeholder="Nom de l'activité"
+                                value={activityName}
+                                onChange={e => setActivityName(e.target.value)}
+                            />
 
-                                <button
-                                    className="w-full p-2 bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:bg-gray-400"
-                                    style={{ borderRadius: 'var(--radius)' }}
-                                    onClick={handleSaveActivity}
-                                    disabled={savingActivity || selectedQuestions.length === 0 || !activityName.trim()}
-                                >
-                                    {savingActivity ? 'Sauvegarde...' : 'Sauvegarder l\'activité'}
-                                </button>
-                            </div>
+                            <button
+                                className="w-full p-2 bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:bg-gray-400"
+                                style={{ borderRadius: 'var(--radius)' }}
+                                onClick={handleSaveActivity}
+                                disabled={savingActivity || selectedQuestions.length === 0 || !activityName.trim()}
+                            >
+                                {savingActivity ? 'Sauvegarde...' : 'Sauvegarder l\'activité'}
+                            </button>
                         </div>
                     </div>
                 </div>
