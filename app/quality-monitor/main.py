@@ -19,13 +19,17 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
 from report_generator import ReportGenerator
 from auto_fixer import AutoFixer
 from config_manager import ConfigManager
+from global_config import get_config
 
 
 class QualityMonitor:
     """Main orchestrator for the quality monitoring system."""
     
     def __init__(self, project_root: str = None):
-        self.project_root = Path(project_root) if project_root else Path(__file__).parent.parent
+        # Initialize global configuration
+        self.global_config = get_config()
+        
+        self.project_root = Path(project_root) if project_root else Path(self.global_config.get_project_root())
         self.quality_monitor_root = Path(__file__).parent
         self.scripts_dir = self.quality_monitor_root / "scripts"
         self.reports_dir = self.quality_monitor_root / "reports"
@@ -96,7 +100,9 @@ class QualityMonitor:
             ('bundle-analyzer.js', 'Bundle Analysis'),
             ('dependency-graph.js', 'Dependency Analysis'),
             ('eslint-runner.js', 'ESLint Analysis'),
-            ('typescript-analyzer.js', 'TypeScript Analysis')
+            ('typescript-analyzer.js', 'TypeScript Analysis'),
+            ('interface-similarity-checker.js', 'Interface Similarity Analysis'),
+            ('navigation-graph-analyzer.js', 'Navigation Graph Analysis')
         ]
         
         for script_file, description in js_scripts:
@@ -378,40 +384,227 @@ class QualityMonitor:
         
         print("="*60)
 
+    def list_available_scripts(self):
+        """List all available analysis scripts."""
+        print("📋 Available Analysis Scripts:\n")
+        
+        print("🟨 JavaScript Scripts:")
+        js_scripts = [
+            ('bundle-analyzer.js', 'Bundle Analysis'),
+            ('dependency-graph.js', 'Dependency Analysis'),
+            ('eslint-runner.js', 'ESLint Analysis'),
+            ('typescript-analyzer.js', 'TypeScript Analysis'),
+            ('interface-similarity-checker.js', 'Interface Similarity Analysis'),
+            ('navigation-graph-analyzer.js', 'Navigation Graph Analysis')
+        ]
+        
+        for script_file, description in js_scripts:
+            script_name = script_file.replace('.js', '')
+            print(f"   • {script_name:<30} - {description}")
+        
+        print("\n🐍 Python Scripts:")
+        python_scripts = [
+            ('hardcoded_strings.py', 'Hardcoded Strings Analysis'),
+            ('architecture_validator.py', 'Architecture Validation'),
+            ('performance_analyzer.py', 'Performance Analysis'),
+            ('code_duplicator.py', 'Code Duplication Detection'),
+            ('legacy_detector.py', 'Legacy Pattern Detection'),
+            ('documentation_sync.py', 'Documentation Sync Check')
+        ]
+        
+        for script_file, description in python_scripts:
+            script_name = script_file.replace('.py', '')
+            print(f"   • {script_name:<30} - {description}")
+        
+        print("\nUsage: python main.py --script <script-name>")
+        print("Example: python main.py --script interface-similarity-checker")
+
+    def run_single_script(self, script_name: str, output_json: bool = False) -> Dict[str, Any]:
+        """Run a single analysis script by name."""
+        print(f"🔍 Running single script: {script_name}")
+        print("=" * 50)
+        
+        # Check if it's a JavaScript script
+        js_script_path = self.scripts_dir / "javascript" / f"{script_name}.js"
+        py_script_path = self.scripts_dir / "python" / f"{script_name}.py"
+        
+        result = {
+            'script_name': script_name,
+            'timestamp': datetime.now().isoformat(),
+            'success': False,
+            'output': None,
+            'error': None
+        }
+        
+        try:
+            if js_script_path.exists():
+                result.update(self._run_single_js_script(js_script_path, script_name))
+            elif py_script_path.exists():
+                result.update(self._run_single_py_script(py_script_path, script_name))
+            else:
+                error_msg = f"Script not found: {script_name}"
+                print(f"❌ {error_msg}")
+                print("💡 Use --list-scripts to see available scripts")
+                result['error'] = error_msg
+                
+        except Exception as e:
+            error_msg = f"Failed to run {script_name}: {str(e)}"
+            print(f"❌ {error_msg}")
+            result['error'] = error_msg
+        
+        return result
+
+    def _run_single_js_script(self, script_path: Path, script_name: str) -> Dict[str, Any]:
+        """Run a single JavaScript script."""
+        print(f"🟨 Running JavaScript script: {script_name}")
+        
+        try:
+            cmd = ['node', str(script_path)]
+            
+            # Add configuration parameters for specific scripts
+            if script_name == 'navigation-graph-analyzer':
+                frontend_url = self.global_config.get('server_config.frontend.url')
+                timeout = self.global_config.get_timeout('navigation_analysis')
+                cmd.extend(['--url', frontend_url, '--timeout', str(timeout)])
+            elif script_name in ['interface-similarity-checker', 'navigation-graph-analyzer']:
+                # These scripts don't need --json flag, they output formatted results
+                pass
+            else:
+                cmd.append('--json')
+            
+            print(f"🔧 Command: {' '.join(cmd)}")
+            
+            result = subprocess.run(
+                cmd,
+                cwd=str(self.scripts_dir / "javascript"),
+                capture_output=True,
+                text=True,
+                timeout=self.global_config.get_timeout('script_execution')
+            )
+            
+            if result.returncode == 0:
+                print("✅ Script completed successfully!")
+                if not script_name in ['interface-similarity-checker', 'navigation-graph-analyzer']:
+                    # Try to parse JSON output for other scripts
+                    try:
+                        output_lines = result.stdout.strip().split('\n')
+                        json_start = -1
+                        for i, line in enumerate(output_lines):
+                            if line.startswith('{') or line == '--- JSON OUTPUT ---':
+                                json_start = i + (1 if line == '--- JSON OUTPUT ---' else 0)
+                                break
+                        
+                        if json_start >= 0:
+                            json_output = '\n'.join(output_lines[json_start:])
+                            if json_output.startswith('{'):
+                                parsed_output = json.loads(json_output)
+                                return {'success': True, 'output': parsed_output}
+                    except json.JSONDecodeError:
+                        pass
+                
+                # For scripts with formatted output or if JSON parsing fails
+                print("\n" + result.stdout)
+                return {'success': True, 'output': result.stdout}
+            else:
+                error_msg = result.stderr.strip() or result.stdout.strip()
+                print(f"❌ Script failed: {error_msg}")
+                return {'success': False, 'error': error_msg}
+                
+        except subprocess.TimeoutExpired:
+            error_msg = "Script execution timed out"
+            print(f"⏰ {error_msg}")
+            return {'success': False, 'error': error_msg}
+
+    def _run_single_py_script(self, script_path: Path, script_name: str) -> Dict[str, Any]:
+        """Run a single Python script."""
+        print(f"🐍 Running Python script: {script_name}")
+        
+        try:
+            result = subprocess.run([
+                sys.executable, str(script_path),
+                '--project-root', str(self.project_root),
+                '--json'
+            ], capture_output=True, text=True, timeout=300)
+            
+            if result.returncode == 0:
+                print("✅ Script completed successfully!")
+                try:
+                    parsed_output = json.loads(result.stdout)
+                    return {'success': True, 'output': parsed_output}
+                except json.JSONDecodeError:
+                    # If JSON parsing fails, return raw output
+                    print("\n" + result.stdout)
+                    return {'success': True, 'output': result.stdout}
+            else:
+                error_msg = result.stderr.strip() or result.stdout.strip()
+                print(f"❌ Script failed: {error_msg}")
+                return {'success': False, 'error': error_msg}
+                
+        except subprocess.TimeoutExpired:
+            error_msg = "Script execution timed out"
+            print(f"⏰ {error_msg}")
+            return {'success': False, 'error': error_msg}
 
 def main():
     """Main CLI entry point."""
     import argparse
     
     parser = argparse.ArgumentParser(description='MathQuest Quality Monitor')
-    parser.add_argument('--project-root', default=None, help='Project root directory')
-    parser.add_argument('--auto-fix', action='store_true', help='Apply automatic fixes')
-    parser.add_argument('--modules', nargs='+', help='Specific modules to analyze')
-    parser.add_argument('--json', action='store_true', help='Output JSON results')
-    parser.add_argument('--quick', action='store_true', help='Quick analysis only')
+    parser.add_argument('--full-report', action='store_true', 
+                        help='Run complete quality analysis')
+    parser.add_argument('--quick', action='store_true',
+                        help='Run quick analysis')
+    parser.add_argument('--critical-only', action='store_true',
+                        help='Show only critical issues')
+    parser.add_argument('--save-history', action='store_true',
+                        help='Save results to history')
+    parser.add_argument('--auto-fix', action='store_true',
+                        help='Apply automatic fixes')
+    parser.add_argument('--module', type=str,
+                        help='Analyze specific module (frontend, backend, shared)')
+    parser.add_argument('--checks', type=str,
+                        help='Comma-separated list of specific checks to run')
+    parser.add_argument('--list-scripts', action='store_true',
+                        help='List all available analysis scripts')
+    parser.add_argument('--run-script', type=str,
+                        help='Run a specific analysis script by name')
+    parser.add_argument('--project-root', type=str, default='..',
+                        help='Project root directory (default: ..)')
     
     args = parser.parse_args()
     
     # Initialize quality monitor
     monitor = QualityMonitor(args.project_root)
     
-    # Run analysis
-    results = monitor.run_full_analysis(
-        auto_fix=args.auto_fix,
-        modules=args.modules
-    )
+    try:
+        if args.list_scripts:
+            monitor.list_available_scripts()
+        elif args.run_script:
+            result = monitor.run_single_script(args.run_script)
+            return 0 if result.get('success', False) else 1
+        elif args.full_report:
+            modules = [args.module] if args.module else None
+            monitor.run_full_analysis(auto_fix=args.auto_fix, modules=modules)
+        elif args.quick:
+            print("🚀 Running Quick Quality Check...")
+            # Run subset of critical checks
+            modules = [args.module] if args.module else None
+            monitor.run_full_analysis(auto_fix=False, modules=modules)
+        else:
+            # Default: show help
+            parser.print_help()
+            return 1
+            
+    except KeyboardInterrupt:
+        print("\n❌ Analysis interrupted by user")
+        return 1
+    except Exception as e:
+        print(f"❌ Analysis failed: {e}")
+        return 1
     
-    # Output results
-    if args.json:
-        print("\n--- JSON OUTPUT ---")
-        print(json.dumps(results, indent=2, default=str))
-    else:
-        monitor.print_summary()
-    
-    # Exit with appropriate code
-    critical_issues = results.get('summary', {}).get('critical_issues', 0)
-    sys.exit(1 if critical_issues > 0 else 0)
+    return 0
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())

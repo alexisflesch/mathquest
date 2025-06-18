@@ -1,0 +1,55 @@
+{
+    "hardcoded_patterns": {
+        "socket_events": [
+            "socket\\.emit\\(['\"](?!SOCKET_EVENTS)",
+            "socket\\.on\\(['\"](?!SOCKET_EVENTS)"
+        ],
+        "api_paths": [
+            "\\/api\\/[^'\"]*['\"]",
+            "fetch\\(['\"]\\/(api|backend)"
+        ],
+        "room_names": [
+            "['\"]game_\\s*\\+",
+            "['\"]dashboard_\\s*\\+"
+        ]
+    },
+    "architecture_violations": {
+        "frontend_backend_imports": [
+            "from ['\"].*backend.*['\"]",
+            "import.*from ['\"].*\\/backend"
+        ],
+        "business_logic_in_components": [
+            "useEffect.*\\bfetch\\b",
+            "useEffect.*\\baxios\\b"
+        ]
+    },
+    "semantic_analysis": {
+        "interface_similarity": {
+            "similarity_threshold": 0.8,
+            "local_duplicate_threshold": 0.7,
+            "skip_patterns": [
+                "\\.test\\.",
+                "\\.spec\\.",
+                "\\.d\\.ts$",
+                "node_modules",
+                "\\.next",
+                "dist",
+                "build"
+            ]
+        },
+        "navigation_analysis": {
+            "base_url": "http://localhost:3008",
+            "timeout": 30000,
+            "skip_routes": [
+                "/api/",
+                "/_next/",
+                "/static/"
+            ],
+            "dynamic_route_patterns": [
+                "\\[.*\\]",
+                ":slug",
+                "*"
+            ]
+        }
+    }
+}

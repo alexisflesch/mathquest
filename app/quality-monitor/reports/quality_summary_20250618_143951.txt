@@ -1,0 +1,40 @@
+MATHQUEST QUALITY MONITOR REPORT
+========================================
+Generated: 20250618_143951
+Project: ..
+
+SUMMARY:
+  Files Analyzed: 75
+  Total Issues: 0
+  Critical Issues: 0
+  Warnings: 0
+  Auto-fixable: 0
+  Overall Score: 50.0/100
+
+CATEGORY SCORES:
+  Bundle Health: 88.0/100
+  Dependencies: 86.0/100
+  Code Quality: 26.0/100
+  Type Safety: 0.0/100
+
+TOP RECOMMENDATIONS:
+  1. [HIGH] Found 1 large bundles
+     Action: Consider code splitting, lazy loading, or removing unused code
+  2. [HIGH] Found 357 high-severity hardcoded strings
+     Action: Move user-facing messages, socket events, and SQL queries to configuration files
+  3. [HIGH] Found 340 hardcoded socket event names
+     Action: Extract socket events to shared constants to prevent typos
+  4. [HIGH] Found 12 high-priority performance issues
+     Action: Address missing indexes, memory leaks, and algorithmic complexity
+  5. [MEDIUM] Found 739 medium-severity hardcoded strings
+     Action: Consider extracting URLs, file paths, and magic numbers to constants
+  6. [MEDIUM] Found 4 hardcoded user messages
+     Action: Implement internationalization (i18n) system for user-facing text
+  7. [MEDIUM] Found 2 files with excessive relative imports
+     Action: Use absolute imports or path aliases instead
+  8. [MEDIUM] Found 537 React performance anti-patterns
+     Action: Use useCallback, useMemo, and proper key props
+  9. [MEDIUM] Found 147 potential memory leaks
+     Action: Add proper cleanup for intervals and event listeners
+  10. [LOW] Found 7 suspicious files
+     Action: Review files with suspicious names (backup, temp, old)

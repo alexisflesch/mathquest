@@ -13,7 +13,10 @@
     "eslint-check": "node scripts/javascript/eslint-runner.js",
     "bundle-analyze": "node scripts/javascript/bundle-analyzer.js",
     "deps-analyze": "node scripts/javascript/dependency-graph.js",
-    "ts-analyze": "node scripts/javascript/typescript-analyzer.js"
+    "ts-analyze": "node scripts/javascript/typescript-analyzer.js",
+    "interface-check": "node scripts/javascript/interface-similarity-checker.js",
+    "nav-analyze": "node scripts/javascript/navigation-graph-analyzer.js",
+    "semantic-check": "npm run interface-check && npm run nav-analyze"
   },
   "keywords": [
     "code-quality",
@@ -38,7 +41,9 @@
     "webpack-bundle-analyzer": "^4.9.0",
     "typescript": "^5.0.0",
     "ts-node": "^10.9.0",
-    "documentation": "^14.0.0"
+    "documentation": "^14.0.0",
+    "ts-morph": "^20.0.0",
+    "puppeteer": "^21.0.0"
   },
   "engines": {
     "node": ">=16.0.0",

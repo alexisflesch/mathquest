@@ -107,12 +107,12 @@ export declare const joinQuizPayloadSchema: z.ZodObject<{
     teacherId: z.ZodOptional<z.ZodString>;
     studentId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    role: "teacher" | "student" | "projector";
+    role: "student" | "teacher" | "projector";
     quizId: string;
     teacherId?: string | undefined;
     studentId?: string | undefined;
 }, {
-    role: "teacher" | "student" | "projector";
+    role: "student" | "teacher" | "projector";
     quizId: string;
     teacherId?: string | undefined;
     studentId?: string | undefined;

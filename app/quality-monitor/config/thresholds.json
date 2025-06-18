@@ -1,0 +1,48 @@
+{
+    "quality_scoring": {
+        "hardcoded_strings": {
+            "weight": 20,
+            "max_violations": 0
+        },
+        "code_duplication": {
+            "weight": 25,
+            "max_violations": 5
+        },
+        "type_safety": {
+            "weight": 30,
+            "max_violations": 0
+        },
+        "architecture": {
+            "weight": 15,
+            "max_violations": 2
+        },
+        "legacy_patterns": {
+            "weight": 10,
+            "max_violations": 10
+        },
+        "interface_similarity": {
+            "weight": 15,
+            "max_violations": 3
+        },
+        "navigation_health": {
+            "weight": 10,
+            "max_orphaned_pages": 2
+        }
+    },
+    "escalation_triggers": {
+        "stop_ai_work": 70,
+        "review_required": 80,
+        "warning_level": 90
+    },
+    "semantic_analysis": {
+        "interface_duplication": {
+            "critical_threshold": 5,
+            "warning_threshold": 2
+        },
+        "navigation_issues": {
+            "critical_orphaned_pages": 3,
+            "warning_orphaned_pages": 1,
+            "max_dead_ends": 5
+        }
+    }
+}

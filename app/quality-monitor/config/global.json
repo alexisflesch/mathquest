@@ -1,0 +1,76 @@
+{
+    "project_config": {
+        "name": "MathQuest",
+        "version": "1.0.0",
+        "root_directory": "/home/aflesch/mathquest/app"
+    },
+    "server_config": {
+        "frontend": {
+            "url": "http://localhost:3008",
+            "port": 3008,
+            "protocol": "http"
+        },
+        "backend": {
+            "url": "http://localhost:3007",
+            "port": 3007,
+            "protocol": "http"
+        },
+        "api_base": {
+            "url": "http://localhost:3007/api",
+            "prefix": "/api"
+        }
+    },
+    "analysis_config": {
+        "timeouts": {
+            "script_execution": 300,
+            "network_request": 30000,
+            "navigation_analysis": 60000
+        },
+        "paths": {
+            "frontend_src": "frontend/src",
+            "backend_src": "backend/src",
+            "shared_src": "shared",
+            "test_directories": [
+                "tests",
+                "__tests__",
+                "*.test.*",
+                "*.spec.*"
+            ]
+        },
+        "file_extensions": {
+            "typescript": [
+                ".ts",
+                ".tsx"
+            ],
+            "javascript": [
+                ".js",
+                ".jsx"
+            ],
+            "config": [
+                ".json",
+                ".yaml",
+                ".yml",
+                ".toml"
+            ],
+            "ignore": [
+                ".d.ts",
+                ".min.js",
+                ".bundle.js"
+            ]
+        }
+    },
+    "quality_thresholds": {
+        "performance": {
+            "bundle_size_warning_mb": 10,
+            "bundle_size_critical_mb": 20,
+            "load_time_warning_ms": 3000,
+            "load_time_critical_ms": 5000
+        },
+        "code_quality": {
+            "duplicate_code_threshold": 0.7,
+            "interface_similarity_threshold": 0.8,
+            "complexity_warning": 10,
+            "complexity_critical": 20
+        }
+    }
+}

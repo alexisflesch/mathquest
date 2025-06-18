@@ -35,27 +35,27 @@ export declare const RegisterRequestSchema: z.ZodObject<{
     prenom: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     username: string;
-    action?: "teacher_register" | "teacher_signup" | undefined;
-    email?: string | undefined;
-    password?: string | undefined;
-    role?: "STUDENT" | "TEACHER" | undefined;
     gradeLevel?: string | undefined;
+    action?: "teacher_register" | "teacher_signup" | undefined;
     avatar?: string | undefined;
     cookieId?: string | undefined;
-    adminPassword?: string | undefined;
+    role?: "STUDENT" | "TEACHER" | undefined;
     name?: string | undefined;
+    email?: string | undefined;
+    password?: string | undefined;
+    adminPassword?: string | undefined;
     prenom?: string | undefined;
 }, {
     username: string;
-    action?: "teacher_register" | "teacher_signup" | undefined;
-    email?: string | undefined;
-    password?: string | undefined;
-    role?: "STUDENT" | "TEACHER" | undefined;
     gradeLevel?: string | undefined;
+    action?: "teacher_register" | "teacher_signup" | undefined;
     avatar?: string | undefined;
     cookieId?: string | undefined;
-    adminPassword?: string | undefined;
+    role?: "STUDENT" | "TEACHER" | undefined;
     name?: string | undefined;
+    email?: string | undefined;
+    password?: string | undefined;
+    adminPassword?: string | undefined;
     prenom?: string | undefined;
 }>;
 export declare const UpgradeAccountRequestSchema: z.ZodObject<{
@@ -65,15 +65,15 @@ export declare const UpgradeAccountRequestSchema: z.ZodObject<{
     targetRole: z.ZodOptional<z.ZodEnum<["STUDENT", "TEACHER"]>>;
     adminPassword: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    cookieId: string;
     email: string;
     password: string;
-    cookieId: string;
     adminPassword?: string | undefined;
     targetRole?: "STUDENT" | "TEACHER" | undefined;
 }, {
+    cookieId: string;
     email: string;
     password: string;
-    cookieId: string;
     adminPassword?: string | undefined;
     targetRole?: "STUDENT" | "TEACHER" | undefined;
 }>;
@@ -118,29 +118,29 @@ export declare const CreateGameRequestSchema: z.ZodObject<{
     nbOfQuestions: z.ZodOptional<z.ZodNumber>;
     initiatorStudentId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    playMode: "tournament" | "quiz" | "practice" | "class";
     name: string;
-    playMode: "quiz" | "tournament" | "practice" | "class";
+    discipline?: string | undefined;
+    themes?: string[] | undefined;
     gradeLevel?: string | undefined;
-    gameTemplateId?: string | undefined;
-    settings?: Record<string, any> | undefined;
     isDiffered?: boolean | undefined;
     differedAvailableFrom?: string | undefined;
     differedAvailableTo?: string | undefined;
-    discipline?: string | undefined;
-    themes?: string[] | undefined;
+    settings?: Record<string, any> | undefined;
+    gameTemplateId?: string | undefined;
     nbOfQuestions?: number | undefined;
     initiatorStudentId?: string | undefined;
 }, {
+    playMode: "tournament" | "quiz" | "practice" | "class";
     name: string;
-    playMode: "quiz" | "tournament" | "practice" | "class";
+    discipline?: string | undefined;
+    themes?: string[] | undefined;
     gradeLevel?: string | undefined;
-    gameTemplateId?: string | undefined;
-    settings?: Record<string, any> | undefined;
     isDiffered?: boolean | undefined;
     differedAvailableFrom?: string | undefined;
     differedAvailableTo?: string | undefined;
-    discipline?: string | undefined;
-    themes?: string[] | undefined;
+    settings?: Record<string, any> | undefined;
+    gameTemplateId?: string | undefined;
     nbOfQuestions?: number | undefined;
     initiatorStudentId?: string | undefined;
 }>;
@@ -161,10 +161,10 @@ export declare const GameStatusUpdateRequestSchema: z.ZodObject<{
     status: z.ZodEnum<["pending", "active", "paused", "completed", "archived"]>;
     currentQuestionIndex: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    status: "active" | "completed" | "pending" | "archived" | "paused";
+    status: "pending" | "active" | "paused" | "completed" | "archived";
     currentQuestionIndex?: number | undefined;
 }, {
-    status: "active" | "completed" | "pending" | "archived" | "paused";
+    status: "pending" | "active" | "paused" | "completed" | "archived";
     currentQuestionIndex?: number | undefined;
 }>;
 export declare const CreateGameTemplateRequestSchema: z.ZodObject<{
@@ -176,21 +176,21 @@ export declare const CreateGameTemplateRequestSchema: z.ZodObject<{
     defaultMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice", "class"]>>;
     questionUids: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     themes: string[];
+    name: string;
     questionUids: string[];
-    gradeLevel?: string | undefined;
     discipline?: string | undefined;
+    gradeLevel?: string | undefined;
+    defaultMode?: "tournament" | "quiz" | "practice" | "class" | undefined;
     description?: string | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
 }, {
-    name: string;
     themes: string[];
+    name: string;
     questionUids: string[];
-    gradeLevel?: string | undefined;
     discipline?: string | undefined;
+    gradeLevel?: string | undefined;
+    defaultMode?: "tournament" | "quiz" | "practice" | "class" | undefined;
     description?: string | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
 }>;
 export declare const UpdateGameTemplateRequestSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
@@ -201,20 +201,20 @@ export declare const UpdateGameTemplateRequestSchema: z.ZodObject<{
     defaultMode: z.ZodOptional<z.ZodEnum<["quiz", "tournament", "practice", "class"]>>;
     questionUids: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    gradeLevel?: string | undefined;
-    name?: string | undefined;
     discipline?: string | undefined;
     themes?: string[] | undefined;
+    gradeLevel?: string | undefined;
+    defaultMode?: "tournament" | "quiz" | "practice" | "class" | undefined;
+    name?: string | undefined;
     description?: string | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
     questionUids?: string[] | undefined;
 }, {
-    gradeLevel?: string | undefined;
-    name?: string | undefined;
     discipline?: string | undefined;
     themes?: string[] | undefined;
+    gradeLevel?: string | undefined;
+    defaultMode?: "tournament" | "quiz" | "practice" | "class" | undefined;
+    name?: string | undefined;
     description?: string | undefined;
-    defaultMode?: "quiz" | "tournament" | "practice" | "class" | undefined;
     questionUids?: string[] | undefined;
 }>;
 export declare const CreateQuestionRequestSchema: z.ZodObject<{
@@ -233,35 +233,35 @@ export declare const CreateQuestionRequestSchema: z.ZodObject<{
     feedbackWaitTime: z.ZodOptional<z.ZodNumber>;
     tags: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
+    text: string;
     discipline: string;
     themes: string[];
-    defaultMode: string;
-    text: string;
-    correctAnswer: string;
     tags: string[];
-    gradeLevel?: string | undefined;
+    defaultMode: string;
+    correctAnswer: string;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    gradeLevel?: string | undefined;
     explanationCorrect?: string | undefined;
     explanationIncorrect?: string | undefined;
     difficultyLevel?: number | undefined;
     timeToSolve?: number | undefined;
     feedbackWaitTime?: number | undefined;
 }, {
+    text: string;
     discipline: string;
     defaultMode: string;
-    text: string;
     correctAnswer: string;
-    gradeLevel?: string | undefined;
-    themes?: string[] | undefined;
     title?: string | undefined;
     answerOptions?: string[] | undefined;
+    themes?: string[] | undefined;
+    gradeLevel?: string | undefined;
+    tags?: string[] | undefined;
     explanationCorrect?: string | undefined;
     explanationIncorrect?: string | undefined;
     difficultyLevel?: number | undefined;
     timeToSolve?: number | undefined;
     feedbackWaitTime?: number | undefined;
-    tags?: string[] | undefined;
 }>;
 export declare const UpdateQuestionRequestSchema: z.ZodObject<{
     title: z.ZodOptional<z.ZodOptional<z.ZodString>>;
@@ -279,35 +279,35 @@ export declare const UpdateQuestionRequestSchema: z.ZodObject<{
     feedbackWaitTime: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
     tags: z.ZodOptional<z.ZodDefault<z.ZodArray<z.ZodString, "many">>>;
 }, "strip", z.ZodTypeAny, {
-    gradeLevel?: string | undefined;
-    discipline?: string | undefined;
-    themes?: string[] | undefined;
-    defaultMode?: string | undefined;
     title?: string | undefined;
     text?: string | undefined;
     answerOptions?: string[] | undefined;
+    discipline?: string | undefined;
+    themes?: string[] | undefined;
+    gradeLevel?: string | undefined;
+    tags?: string[] | undefined;
+    defaultMode?: string | undefined;
     correctAnswer?: string | undefined;
     explanationCorrect?: string | undefined;
     explanationIncorrect?: string | undefined;
     difficultyLevel?: number | undefined;
     timeToSolve?: number | undefined;
     feedbackWaitTime?: number | undefined;
-    tags?: string[] | undefined;
 }, {
-    gradeLevel?: string | undefined;
-    discipline?: string | undefined;
-    themes?: string[] | undefined;
-    defaultMode?: string | undefined;
     title?: string | undefined;
     text?: string | undefined;
     answerOptions?: string[] | undefined;
+    discipline?: string | undefined;
+    themes?: string[] | undefined;
+    gradeLevel?: string | undefined;
+    tags?: string[] | undefined;
+    defaultMode?: string | undefined;
     correctAnswer?: string | undefined;
     explanationCorrect?: string | undefined;
     explanationIncorrect?: string | undefined;
     difficultyLevel?: number | undefined;
     timeToSolve?: number | undefined;
     feedbackWaitTime?: number | undefined;
-    tags?: string[] | undefined;
 }>;
 export declare const UpdateUserRequestSchema: z.ZodObject<{
     username: z.ZodOptional<z.ZodString>;
@@ -315,15 +315,15 @@ export declare const UpdateUserRequestSchema: z.ZodObject<{
     gradeLevel: z.ZodOptional<z.ZodString>;
     avatarEmoji: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    email?: string | undefined;
-    username?: string | undefined;
     gradeLevel?: string | undefined;
+    username?: string | undefined;
     avatarEmoji?: string | undefined;
+    email?: string | undefined;
 }, {
-    email?: string | undefined;
-    username?: string | undefined;
     gradeLevel?: string | undefined;
+    username?: string | undefined;
     avatarEmoji?: string | undefined;
+    email?: string | undefined;
 }>;
 export declare const CreateQuizTemplateRequestSchema: z.ZodObject<{
     name: z.ZodString;
@@ -333,13 +333,13 @@ export declare const CreateQuizTemplateRequestSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     questionUids: string[];
-    settings?: Record<string, any> | undefined;
     description?: string | undefined;
+    settings?: Record<string, any> | undefined;
 }, {
     name: string;
     questionUids: string[];
-    settings?: Record<string, any> | undefined;
     description?: string | undefined;
+    settings?: Record<string, any> | undefined;
 }>;
 export declare const UpdateQuizTemplateRequestSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
@@ -348,13 +348,13 @@ export declare const UpdateQuizTemplateRequestSchema: z.ZodObject<{
     settings: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>>;
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
-    settings?: Record<string, any> | undefined;
     description?: string | undefined;
+    settings?: Record<string, any> | undefined;
     questionUids?: string[] | undefined;
 }, {
     name?: string | undefined;
-    settings?: Record<string, any> | undefined;
     description?: string | undefined;
+    settings?: Record<string, any> | undefined;
     questionUids?: string[] | undefined;
 }>;
 export declare const SetQuestionRequestSchema: z.ZodObject<{
@@ -375,15 +375,15 @@ export declare const LoginResponseSchema: z.ZodObject<{
         role: z.ZodEnum<["STUDENT", "TEACHER"]>;
     }, "strip", z.ZodTypeAny, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }>>;
     enseignant: z.ZodOptional<z.ZodObject<{
@@ -407,13 +407,13 @@ export declare const LoginResponseSchema: z.ZodObject<{
     token: string;
     success?: boolean | undefined;
     username?: string | undefined;
-    role?: string | undefined;
     avatar?: string | undefined;
+    role?: string | undefined;
     user?: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     } | undefined;
     enseignant?: {
@@ -427,13 +427,13 @@ export declare const LoginResponseSchema: z.ZodObject<{
     token: string;
     success?: boolean | undefined;
     username?: string | undefined;
-    role?: string | undefined;
     avatar?: string | undefined;
+    role?: string | undefined;
     user?: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     } | undefined;
     enseignant?: {
@@ -455,39 +455,39 @@ export declare const RegisterResponseSchema: z.ZodObject<{
         role: z.ZodEnum<["STUDENT", "TEACHER"]>;
     }, "strip", z.ZodTypeAny, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     success: boolean;
     message: string;
-    token: string;
     user: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     };
+    token: string;
 }, {
     success: boolean;
     message: string;
-    token: string;
     user: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     };
+    token: string;
 }>;
 export declare const UpgradeAccountResponseSchema: z.ZodObject<{
     success: z.ZodBoolean;
@@ -501,39 +501,39 @@ export declare const UpgradeAccountResponseSchema: z.ZodObject<{
         role: z.ZodEnum<["STUDENT", "TEACHER"]>;
     }, "strip", z.ZodTypeAny, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     success: boolean;
     message: string;
-    token: string;
     user: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     };
+    token: string;
 }, {
     success: boolean;
     message: string;
-    token: string;
     user: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     };
+    token: string;
 }>;
 export declare const AuthStatusResponseSchema: z.ZodObject<{
     authState: z.ZodString;
@@ -550,45 +550,45 @@ export declare const AuthStatusResponseSchema: z.ZodObject<{
         role: z.ZodEnum<["STUDENT", "TEACHER"]>;
     }, "strip", z.ZodTypeAny, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }>>;
     hasUserProfile: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
+    timestamp: string;
     authState: string;
     cookiesFound: number;
     cookieNames: string[];
     hasAuthToken: boolean;
     hasTeacherToken: boolean;
-    timestamp: string;
     user?: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     } | undefined;
     hasUserProfile?: boolean | undefined;
 }, {
+    timestamp: string;
     authState: string;
     cookiesFound: number;
     cookieNames: string[];
     hasAuthToken: boolean;
     hasTeacherToken: boolean;
-    timestamp: string;
     user?: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     } | undefined;
     hasUserProfile?: boolean | undefined;
@@ -604,15 +604,15 @@ export declare const ProfileUpdateResponseSchema: z.ZodObject<{
         role: z.ZodEnum<["STUDENT", "TEACHER"]>;
     }, "strip", z.ZodTypeAny, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
@@ -620,9 +620,9 @@ export declare const ProfileUpdateResponseSchema: z.ZodObject<{
     message: string;
     user: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     };
 }, {
@@ -630,9 +630,9 @@ export declare const ProfileUpdateResponseSchema: z.ZodObject<{
     message: string;
     user: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     };
 }>;
@@ -690,38 +690,38 @@ export declare const UniversalLoginResponseSchema: z.ZodUnion<[z.ZodObject<{
         role: z.ZodEnum<["STUDENT", "TEACHER"]>;
     }, "strip", z.ZodTypeAny, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }, {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     }>;
     token: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     success: boolean;
-    token: string;
     user: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     };
+    token: string;
 }, {
     success: boolean;
-    token: string;
     user: {
         username: string;
-        role: "STUDENT" | "TEACHER";
-        avatar: string;
         id: string;
+        avatar: string;
+        role: "STUDENT" | "TEACHER";
         email?: string | undefined;
     };
+    token: string;
 }>]>;
 export declare const GameCreationResponseSchema: z.ZodObject<{
     gameInstance: z.ZodType<any, z.ZodTypeDef, any>;
@@ -743,30 +743,30 @@ export declare const GameJoinResponseSchema: z.ZodObject<{
         scoredQuestions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>;
     }, "strip", z.ZodTypeAny, {
         username: string;
-        avatar: string;
         id: string;
+        avatar: string;
         score: number;
-        isDeferred?: boolean | undefined;
         socketId?: string | undefined;
+        isDeferred?: boolean | undefined;
         scoredQuestions?: Record<string, number> | undefined;
     }, {
         username: string;
-        avatar: string;
         id: string;
+        avatar: string;
         score: number;
-        isDeferred?: boolean | undefined;
         socketId?: string | undefined;
+        isDeferred?: boolean | undefined;
         scoredQuestions?: Record<string, number> | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     success: boolean;
     participant: {
         username: string;
-        avatar: string;
         id: string;
+        avatar: string;
         score: number;
-        isDeferred?: boolean | undefined;
         socketId?: string | undefined;
+        isDeferred?: boolean | undefined;
         scoredQuestions?: Record<string, number> | undefined;
     };
     gameInstance?: any;
@@ -774,11 +774,11 @@ export declare const GameJoinResponseSchema: z.ZodObject<{
     success: boolean;
     participant: {
         username: string;
-        avatar: string;
         id: string;
+        avatar: string;
         score: number;
-        isDeferred?: boolean | undefined;
         socketId?: string | undefined;
+        isDeferred?: boolean | undefined;
         scoredQuestions?: Record<string, number> | undefined;
     };
     gameInstance?: any;
@@ -799,16 +799,16 @@ export declare const GameStateResponseSchema: z.ZodObject<{
     isLive: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
     status: string;
-    name: string;
-    currentQuestionIndex: number;
     accessCode: string;
+    currentQuestionIndex: number;
+    name: string;
     isLive: boolean;
     gameState?: any;
 }, {
     status: string;
-    name: string;
-    currentQuestionIndex: number;
     accessCode: string;
+    currentQuestionIndex: number;
+    name: string;
     isLive: boolean;
     gameState?: any;
 }>;
@@ -820,30 +820,30 @@ export declare const LeaderboardResponseSchema: z.ZodObject<{
         score: z.ZodNumber;
         rank: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        username: string;
         userId: string;
+        username: string;
         score: number;
         avatar?: string | undefined;
         rank?: number | undefined;
     }, {
-        username: string;
         userId: string;
+        username: string;
         score: number;
         avatar?: string | undefined;
         rank?: number | undefined;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     leaderboard: {
-        username: string;
         userId: string;
+        username: string;
         score: number;
         avatar?: string | undefined;
         rank?: number | undefined;
     }[];
 }, {
     leaderboard: {
-        username: string;
         userId: string;
+        username: string;
         score: number;
         avatar?: string | undefined;
         rank?: number | undefined;
@@ -882,73 +882,73 @@ export declare const QuestionCreationResponseSchema: z.ZodObject<{
         timeLimit: z.ZodOptional<z.ZodNumber>;
         isHidden: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }, {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     question: {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     };
 }, {
     question: {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     };
 }>;
 export declare const QuestionResponseSchema: z.ZodObject<{
@@ -970,73 +970,73 @@ export declare const QuestionResponseSchema: z.ZodObject<{
         timeLimit: z.ZodOptional<z.ZodNumber>;
         isHidden: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }, {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     question: {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     };
 }, {
     question: {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     };
 }>;
 export declare const QuestionsResponseSchema: z.ZodObject<{
@@ -1058,37 +1058,37 @@ export declare const QuestionsResponseSchema: z.ZodObject<{
         timeLimit: z.ZodOptional<z.ZodNumber>;
         isHidden: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }, {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }>, "many">;
     total: z.ZodNumber;
     page: z.ZodNumber;
@@ -1096,21 +1096,21 @@ export declare const QuestionsResponseSchema: z.ZodObject<{
     totalPages: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     questions: {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }[];
     total: number;
     page: number;
@@ -1118,21 +1118,21 @@ export declare const QuestionsResponseSchema: z.ZodObject<{
     totalPages: number;
 }, {
     questions: {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }[];
     total: number;
     page: number;
@@ -1155,12 +1155,12 @@ export declare const QuestionsFiltersResponseSchema: z.ZodObject<{
     disciplines: z.ZodArray<z.ZodString, "many">;
     themes: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
-    gradeLevel: (string | null)[];
     themes: string[];
+    gradeLevel: (string | null)[];
     disciplines: string[];
 }, {
-    gradeLevel: (string | null)[];
     themes: string[];
+    gradeLevel: (string | null)[];
     disciplines: string[];
 }>;
 export declare const QuestionsCountResponseSchema: z.ZodObject<{
@@ -1201,163 +1201,163 @@ export declare const GameTemplateResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }>;
 export declare const GameTemplatesResponseSchema: z.ZodObject<{
@@ -1391,99 +1391,99 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>, "many">;
     meta: z.ZodObject<{
         total: z.ZodNumber;
@@ -1503,35 +1503,35 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     gameTemplates: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }[];
     meta: {
         total: number;
@@ -1541,35 +1541,35 @@ export declare const GameTemplatesResponseSchema: z.ZodObject<{
     };
 }, {
     gameTemplates: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }[];
     meta: {
         total: number;
@@ -1609,163 +1609,163 @@ export declare const GameTemplateCreationResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }>;
 export declare const GameTemplateUpdateResponseSchema: z.ZodObject<{
@@ -1800,165 +1800,165 @@ export declare const GameTemplateUpdateResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     message: string;
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }, {
     message: string;
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }>;
 export declare const QuizTemplateResponseSchema: z.ZodObject<{
@@ -1992,163 +1992,163 @@ export declare const QuizTemplateResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }>;
 export declare const QuizTemplatesResponseSchema: z.ZodObject<{
@@ -2182,99 +2182,99 @@ export declare const QuizTemplatesResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>, "many">;
     total: z.ZodNumber;
     page: z.ZodNumber;
@@ -2286,35 +2286,35 @@ export declare const QuizTemplatesResponseSchema: z.ZodObject<{
     pageSize: number;
     totalPages: number;
     gameTemplates: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }[];
 }, {
     total: number;
@@ -2322,35 +2322,35 @@ export declare const QuizTemplatesResponseSchema: z.ZodObject<{
     pageSize: number;
     totalPages: number;
     gameTemplates: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }[];
 }>;
 export declare const QuizCreationResponseSchema: z.ZodObject<{
@@ -2384,163 +2384,163 @@ export declare const QuizCreationResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }>;
 export declare const QuizTemplateCreationResponseSchema: z.ZodObject<{
@@ -2574,163 +2574,163 @@ export declare const QuizTemplateCreationResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }>;
 export declare const QuizTemplateUpdateResponseSchema: z.ZodObject<{
@@ -2764,163 +2764,163 @@ export declare const QuizTemplateUpdateResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }>;
 export declare const QuizTemplateDeleteResponseSchema: z.ZodObject<{
@@ -2961,163 +2961,163 @@ export declare const QuizTemplateQuestionResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }, {
     gameTemplate: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     };
 }>;
 export declare const QuizListResponseSchema: z.ZodObject<{
@@ -3151,99 +3151,99 @@ export declare const QuizListResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>, "many">;
     total: z.ZodNumber;
     page: z.ZodNumber;
@@ -3255,35 +3255,35 @@ export declare const QuizListResponseSchema: z.ZodObject<{
     pageSize: number;
     totalPages: number;
     gameTemplates: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }[];
 }, {
     total: number;
@@ -3291,35 +3291,35 @@ export declare const QuizListResponseSchema: z.ZodObject<{
     pageSize: number;
     totalPages: number;
     gameTemplates: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }[];
 }>;
 export declare const TeacherQuizQuestionsResponseSchema: z.ZodObject<{
@@ -3341,37 +3341,37 @@ export declare const TeacherQuizQuestionsResponseSchema: z.ZodObject<{
         timeLimit: z.ZodOptional<z.ZodNumber>;
         isHidden: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }, {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }>, "many">;
     meta: z.ZodObject<{
         total: z.ZodNumber;
@@ -3391,21 +3391,21 @@ export declare const TeacherQuizQuestionsResponseSchema: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     questions: {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }[];
     meta: {
         total: number;
@@ -3415,21 +3415,21 @@ export declare const TeacherQuizQuestionsResponseSchema: z.ZodObject<{
     };
 }, {
     questions: {
-        discipline: string;
         text: string;
         answerOptions: string[];
         correctAnswers: boolean[];
         questionType: string;
-        gradeLevel?: string | undefined;
-        themes?: string[] | undefined;
+        discipline: string;
         title?: string | undefined;
-        tags?: string[] | undefined;
-        uid?: string | undefined;
+        themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         difficulty?: number | undefined;
-        author?: string | undefined;
         explanation?: string | undefined;
+        tags?: string[] | undefined;
         timeLimit?: number | undefined;
+        author?: string | undefined;
         isHidden?: boolean | undefined;
+        uid?: string | undefined;
     }[];
     meta: {
         total: number;
@@ -3477,165 +3477,165 @@ export declare const TournamentVerificationResponseSchema: z.ZodObject<{
             timeLimit: z.ZodOptional<z.ZodNumber>;
             isHidden: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }, {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }>, "many">>;
         gameInstances: z.ZodOptional<z.ZodArray<z.ZodAny, "many">>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }, {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     verified: boolean;
     gameTemplate?: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     } | undefined;
 }, {
     verified: boolean;
     gameTemplate?: {
-        name: string;
         themes: string[];
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         creatorId: string;
-        gradeLevel?: string | null | undefined;
         discipline?: string | null | undefined;
+        gradeLevel?: string | null | undefined;
+        defaultMode?: "tournament" | "quiz" | "practice" | "class" | null | undefined;
         description?: string | null | undefined;
-        defaultMode?: "quiz" | "tournament" | "practice" | "class" | null | undefined;
-        gameInstances?: any[] | undefined;
+        creator?: any;
         questions?: {
-            discipline: string;
             text: string;
             answerOptions: string[];
             correctAnswers: boolean[];
             questionType: string;
-            gradeLevel?: string | undefined;
-            themes?: string[] | undefined;
+            discipline: string;
             title?: string | undefined;
-            tags?: string[] | undefined;
-            uid?: string | undefined;
+            themes?: string[] | undefined;
+            gradeLevel?: string | undefined;
             difficulty?: number | undefined;
-            author?: string | undefined;
             explanation?: string | undefined;
+            tags?: string[] | undefined;
             timeLimit?: number | undefined;
+            author?: string | undefined;
             isHidden?: boolean | undefined;
+            uid?: string | undefined;
         }[] | undefined;
-        creator?: any;
+        gameInstances?: any[] | undefined;
     } | undefined;
 }>;
 export declare const SuccessResponseSchema: z.ZodObject<{
@@ -3717,17 +3717,17 @@ export declare const PracticeSettingsSchema: z.ZodObject<{
     allowRetry: z.ZodBoolean;
     randomizeQuestions: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
-    gradeLevel: string;
     discipline: string;
     themes: string[];
+    gradeLevel: string;
     questionCount: number;
     showImmediateFeedback: boolean;
     allowRetry: boolean;
     randomizeQuestions: boolean;
 }, {
-    gradeLevel: string;
     discipline: string;
     themes: string[];
+    gradeLevel: string;
     questionCount: number;
     showImmediateFeedback: boolean;
     allowRetry: boolean;
@@ -3742,15 +3742,15 @@ export declare const PracticeAnswerSchema: z.ZodObject<{
     attemptNumber: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     questionUid: string;
-    selectedAnswers: number[];
     isCorrect: boolean;
+    selectedAnswers: number[];
     submittedAt: Date;
     timeSpentMs: number;
     attemptNumber: number;
 }, {
     questionUid: string;
-    selectedAnswers: number[];
     isCorrect: boolean;
+    selectedAnswers: number[];
     submittedAt: Date;
     timeSpentMs: number;
     attemptNumber: number;
@@ -3766,24 +3766,24 @@ export declare const PracticeQuestionDataSchema: z.ZodObject<{
     discipline: z.ZodString;
     themes: z.ZodArray<z.ZodString, "many">;
 }, "strip", z.ZodTypeAny, {
-    gradeLevel: string;
-    discipline: string;
-    themes: string[];
     title: string;
     text: string;
     answerOptions: string[];
-    uid: string;
     questionType: string;
+    discipline: string;
+    themes: string[];
+    gradeLevel: string;
+    uid: string;
     timeLimit?: number | undefined;
 }, {
-    gradeLevel: string;
-    discipline: string;
-    themes: string[];
     title: string;
     text: string;
     answerOptions: string[];
-    uid: string;
     questionType: string;
+    discipline: string;
+    themes: string[];
+    gradeLevel: string;
+    uid: string;
     timeLimit?: number | undefined;
 }>;
 export declare const PracticeStatisticsSchema: z.ZodObject<{
@@ -3823,17 +3823,17 @@ export declare const PracticeSessionSchema: z.ZodObject<{
         allowRetry: z.ZodBoolean;
         randomizeQuestions: z.ZodBoolean;
     }, "strip", z.ZodTypeAny, {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     }, {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
@@ -3853,24 +3853,24 @@ export declare const PracticeSessionSchema: z.ZodObject<{
         discipline: z.ZodString;
         themes: z.ZodArray<z.ZodString, "many">;
     }, "strip", z.ZodTypeAny, {
-        gradeLevel: string;
-        discipline: string;
-        themes: string[];
         title: string;
         text: string;
         answerOptions: string[];
-        uid: string;
         questionType: string;
+        discipline: string;
+        themes: string[];
+        gradeLevel: string;
+        uid: string;
         timeLimit?: number | undefined;
     }, {
-        gradeLevel: string;
-        discipline: string;
-        themes: string[];
         title: string;
         text: string;
         answerOptions: string[];
-        uid: string;
         questionType: string;
+        discipline: string;
+        themes: string[];
+        gradeLevel: string;
+        uid: string;
         timeLimit?: number | undefined;
     }>>;
     answers: z.ZodArray<z.ZodObject<{
@@ -3882,15 +3882,15 @@ export declare const PracticeSessionSchema: z.ZodObject<{
         attemptNumber: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         questionUid: string;
-        selectedAnswers: number[];
         isCorrect: boolean;
+        selectedAnswers: number[];
         submittedAt: Date;
         timeSpentMs: number;
         attemptNumber: number;
     }, {
         questionUid: string;
-        selectedAnswers: number[];
         isCorrect: boolean;
+        selectedAnswers: number[];
         submittedAt: Date;
         timeSpentMs: number;
         attemptNumber: number;
@@ -3925,29 +3925,29 @@ export declare const PracticeSessionSchema: z.ZodObject<{
     completedAt: z.ZodOptional<z.ZodDate>;
     expiresAt: z.ZodDate;
 }, "strip", z.ZodTypeAny, {
+    answers: {
+        questionUid: string;
+        isCorrect: boolean;
+        selectedAnswers: number[];
+        submittedAt: Date;
+        timeSpentMs: number;
+        attemptNumber: number;
+    }[];
     status: "active" | "completed" | "abandoned";
+    userId: string;
+    currentQuestionIndex: number;
+    createdAt: Date;
     settings: {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     };
-    userId: string;
-    currentQuestionIndex: number;
-    createdAt: Date;
     sessionId: string;
     questionPool: string[];
-    answers: {
-        questionUid: string;
-        selectedAnswers: number[];
-        isCorrect: boolean;
-        submittedAt: Date;
-        timeSpentMs: number;
-        attemptNumber: number;
-    }[];
     statistics: {
         correctAnswers: number;
         questionsAttempted: number;
@@ -3958,43 +3958,43 @@ export declare const PracticeSessionSchema: z.ZodObject<{
         retriedQuestions: string[];
     };
     expiresAt: Date;
+    startedAt?: Date | undefined;
     currentQuestion?: {
-        gradeLevel: string;
-        discipline: string;
-        themes: string[];
         title: string;
         text: string;
         answerOptions: string[];
-        uid: string;
         questionType: string;
+        discipline: string;
+        themes: string[];
+        gradeLevel: string;
+        uid: string;
         timeLimit?: number | undefined;
     } | undefined;
-    startedAt?: Date | undefined;
     completedAt?: Date | undefined;
 }, {
+    answers: {
+        questionUid: string;
+        isCorrect: boolean;
+        selectedAnswers: number[];
+        submittedAt: Date;
+        timeSpentMs: number;
+        attemptNumber: number;
+    }[];
     status: "active" | "completed" | "abandoned";
+    userId: string;
+    currentQuestionIndex: number;
+    createdAt: Date;
     settings: {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     };
-    userId: string;
-    currentQuestionIndex: number;
-    createdAt: Date;
     sessionId: string;
     questionPool: string[];
-    answers: {
-        questionUid: string;
-        selectedAnswers: number[];
-        isCorrect: boolean;
-        submittedAt: Date;
-        timeSpentMs: number;
-        attemptNumber: number;
-    }[];
     statistics: {
         correctAnswers: number;
         questionsAttempted: number;
@@ -4005,18 +4005,18 @@ export declare const PracticeSessionSchema: z.ZodObject<{
         retriedQuestions: string[];
     };
     expiresAt: Date;
+    startedAt?: Date | undefined;
     currentQuestion?: {
-        gradeLevel: string;
-        discipline: string;
-        themes: string[];
         title: string;
         text: string;
         answerOptions: string[];
-        uid: string;
         questionType: string;
+        discipline: string;
+        themes: string[];
+        gradeLevel: string;
+        uid: string;
         timeLimit?: number | undefined;
     } | undefined;
-    startedAt?: Date | undefined;
     completedAt?: Date | undefined;
 }>;
 export declare const CreatePracticeSessionRequestSchema: z.ZodObject<{
@@ -4030,44 +4030,44 @@ export declare const CreatePracticeSessionRequestSchema: z.ZodObject<{
         allowRetry: z.ZodBoolean;
         randomizeQuestions: z.ZodBoolean;
     }, "strip", z.ZodTypeAny, {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     }, {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     }>;
 }, "strip", z.ZodTypeAny, {
+    userId: string;
     settings: {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     };
-    userId: string;
 }, {
+    userId: string;
     settings: {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     };
-    userId: string;
 }>;
 export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
     session: z.ZodObject<{
@@ -4082,17 +4082,17 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             allowRetry: z.ZodBoolean;
             randomizeQuestions: z.ZodBoolean;
         }, "strip", z.ZodTypeAny, {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         }, {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
@@ -4112,24 +4112,24 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             discipline: z.ZodString;
             themes: z.ZodArray<z.ZodString, "many">;
         }, "strip", z.ZodTypeAny, {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         }, {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         }>>;
         answers: z.ZodArray<z.ZodObject<{
@@ -4141,15 +4141,15 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             attemptNumber: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             questionUid: string;
-            selectedAnswers: number[];
             isCorrect: boolean;
+            selectedAnswers: number[];
             submittedAt: Date;
             timeSpentMs: number;
             attemptNumber: number;
         }, {
             questionUid: string;
-            selectedAnswers: number[];
             isCorrect: boolean;
+            selectedAnswers: number[];
             submittedAt: Date;
             timeSpentMs: number;
             attemptNumber: number;
@@ -4184,29 +4184,29 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
         completedAt: z.ZodOptional<z.ZodDate>;
         expiresAt: z.ZodDate;
     }, "strip", z.ZodTypeAny, {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -4217,43 +4217,43 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }, {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -4264,18 +4264,18 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }>;
     success: z.ZodLiteral<true>;
@@ -4283,29 +4283,29 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     success: true;
     session: {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -4316,47 +4316,47 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     };
     message?: string | undefined;
 }, {
     success: true;
     session: {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -4367,18 +4367,18 @@ export declare const CreatePracticeSessionResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     };
     message?: string | undefined;
@@ -4394,17 +4394,17 @@ export declare const StartPracticeSessionPayloadSchema: z.ZodObject<{
         allowRetry: z.ZodBoolean;
         randomizeQuestions: z.ZodBoolean;
     }, "strip", z.ZodTypeAny, {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     }, {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
@@ -4421,31 +4421,31 @@ export declare const StartPracticeSessionPayloadSchema: z.ZodObject<{
         shuffleQuestions?: boolean | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
+    userId: string;
     settings: {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     };
-    userId: string;
     preferences?: {
         maxDurationMinutes?: number | undefined;
         shuffleQuestions?: boolean | undefined;
     } | undefined;
 }, {
+    userId: string;
     settings: {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     };
-    userId: string;
     preferences?: {
         maxDurationMinutes?: number | undefined;
         shuffleQuestions?: boolean | undefined;
@@ -4515,44 +4515,44 @@ export declare const CreatePracticeSessionApiRequestSchema: z.ZodObject<{
         allowRetry: z.ZodBoolean;
         randomizeQuestions: z.ZodBoolean;
     }, "strip", z.ZodTypeAny, {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     }, {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     }>;
 }, "strip", z.ZodTypeAny, {
+    userId: string;
     settings: {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     };
-    userId: string;
 }, {
+    userId: string;
     settings: {
-        gradeLevel: string;
         discipline: string;
         themes: string[];
+        gradeLevel: string;
         questionCount: number;
         showImmediateFeedback: boolean;
         allowRetry: boolean;
         randomizeQuestions: boolean;
     };
-    userId: string;
 }>;
 export declare const GetPracticeSessionsApiRequestSchema: z.ZodObject<{
     userId: z.ZodString;
@@ -4581,17 +4581,17 @@ export declare const UpdatePracticeSessionApiRequestSchema: z.ZodObject<{
         allowRetry: z.ZodOptional<z.ZodBoolean>;
         randomizeQuestions: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        gradeLevel?: string | undefined;
         discipline?: string | undefined;
         themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         questionCount?: number | undefined;
         showImmediateFeedback?: boolean | undefined;
         allowRetry?: boolean | undefined;
         randomizeQuestions?: boolean | undefined;
     }, {
-        gradeLevel?: string | undefined;
         discipline?: string | undefined;
         themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         questionCount?: number | undefined;
         showImmediateFeedback?: boolean | undefined;
         allowRetry?: boolean | undefined;
@@ -4599,9 +4599,9 @@ export declare const UpdatePracticeSessionApiRequestSchema: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     settings: {
-        gradeLevel?: string | undefined;
         discipline?: string | undefined;
         themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         questionCount?: number | undefined;
         showImmediateFeedback?: boolean | undefined;
         allowRetry?: boolean | undefined;
@@ -4610,9 +4610,9 @@ export declare const UpdatePracticeSessionApiRequestSchema: z.ZodObject<{
     sessionId: string;
 }, {
     settings: {
-        gradeLevel?: string | undefined;
         discipline?: string | undefined;
         themes?: string[] | undefined;
+        gradeLevel?: string | undefined;
         questionCount?: number | undefined;
         showImmediateFeedback?: boolean | undefined;
         allowRetry?: boolean | undefined;
@@ -4627,14 +4627,14 @@ export declare const GetPracticeQuestionsApiRequestSchema: z.ZodObject<{
     limit: z.ZodOptional<z.ZodNumber>;
     excludeQuestions: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    gradeLevel: string;
     discipline: string;
+    gradeLevel: string;
     themes?: string[] | undefined;
     limit?: number | undefined;
     excludeQuestions?: string[] | undefined;
 }, {
-    gradeLevel: string;
     discipline: string;
+    gradeLevel: string;
     themes?: string[] | undefined;
     limit?: number | undefined;
     excludeQuestions?: string[] | undefined;
@@ -4653,17 +4653,17 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             allowRetry: z.ZodBoolean;
             randomizeQuestions: z.ZodBoolean;
         }, "strip", z.ZodTypeAny, {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         }, {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
@@ -4683,24 +4683,24 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             discipline: z.ZodString;
             themes: z.ZodArray<z.ZodString, "many">;
         }, "strip", z.ZodTypeAny, {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         }, {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         }>>;
         answers: z.ZodArray<z.ZodObject<{
@@ -4712,15 +4712,15 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             attemptNumber: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             questionUid: string;
-            selectedAnswers: number[];
             isCorrect: boolean;
+            selectedAnswers: number[];
             submittedAt: Date;
             timeSpentMs: number;
             attemptNumber: number;
         }, {
             questionUid: string;
-            selectedAnswers: number[];
             isCorrect: boolean;
+            selectedAnswers: number[];
             submittedAt: Date;
             timeSpentMs: number;
             attemptNumber: number;
@@ -4755,29 +4755,29 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
         completedAt: z.ZodOptional<z.ZodDate>;
         expiresAt: z.ZodDate;
     }, "strip", z.ZodTypeAny, {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -4788,43 +4788,43 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }, {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -4835,18 +4835,18 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }>>;
     error: z.ZodOptional<z.ZodString>;
@@ -4856,29 +4856,29 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
     statusCode: number;
     error?: string | undefined;
     session?: {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -4889,18 +4889,18 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     } | undefined;
 }, {
@@ -4908,29 +4908,29 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
     statusCode: number;
     error?: string | undefined;
     session?: {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -4941,18 +4941,18 @@ export declare const CreatePracticeSessionApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     } | undefined;
 }>;
@@ -4970,17 +4970,17 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             allowRetry: z.ZodBoolean;
             randomizeQuestions: z.ZodBoolean;
         }, "strip", z.ZodTypeAny, {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         }, {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
@@ -5000,24 +5000,24 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             discipline: z.ZodString;
             themes: z.ZodArray<z.ZodString, "many">;
         }, "strip", z.ZodTypeAny, {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         }, {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         }>>;
         answers: z.ZodArray<z.ZodObject<{
@@ -5029,15 +5029,15 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             attemptNumber: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             questionUid: string;
-            selectedAnswers: number[];
             isCorrect: boolean;
+            selectedAnswers: number[];
             submittedAt: Date;
             timeSpentMs: number;
             attemptNumber: number;
         }, {
             questionUid: string;
-            selectedAnswers: number[];
             isCorrect: boolean;
+            selectedAnswers: number[];
             submittedAt: Date;
             timeSpentMs: number;
             attemptNumber: number;
@@ -5072,29 +5072,29 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
         completedAt: z.ZodOptional<z.ZodDate>;
         expiresAt: z.ZodDate;
     }, "strip", z.ZodTypeAny, {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -5105,43 +5105,43 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }, {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -5152,18 +5152,18 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }>>;
     error: z.ZodOptional<z.ZodString>;
@@ -5173,29 +5173,29 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
     statusCode: number;
     error?: string | undefined;
     session?: {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -5206,18 +5206,18 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     } | undefined;
 }, {
@@ -5225,29 +5225,29 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
     statusCode: number;
     error?: string | undefined;
     session?: {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -5258,18 +5258,18 @@ export declare const GetPracticeSessionApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     } | undefined;
 }>;
@@ -5287,17 +5287,17 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             allowRetry: z.ZodBoolean;
             randomizeQuestions: z.ZodBoolean;
         }, "strip", z.ZodTypeAny, {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         }, {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
@@ -5317,24 +5317,24 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             discipline: z.ZodString;
             themes: z.ZodArray<z.ZodString, "many">;
         }, "strip", z.ZodTypeAny, {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         }, {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         }>>;
         answers: z.ZodArray<z.ZodObject<{
@@ -5346,15 +5346,15 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             attemptNumber: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             questionUid: string;
-            selectedAnswers: number[];
             isCorrect: boolean;
+            selectedAnswers: number[];
             submittedAt: Date;
             timeSpentMs: number;
             attemptNumber: number;
         }, {
             questionUid: string;
-            selectedAnswers: number[];
             isCorrect: boolean;
+            selectedAnswers: number[];
             submittedAt: Date;
             timeSpentMs: number;
             attemptNumber: number;
@@ -5389,29 +5389,29 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
         completedAt: z.ZodOptional<z.ZodDate>;
         expiresAt: z.ZodDate;
     }, "strip", z.ZodTypeAny, {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -5422,43 +5422,43 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }, {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -5469,18 +5469,18 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }>, "many">>;
     pagination: z.ZodOptional<z.ZodObject<{
@@ -5506,29 +5506,29 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
     statusCode: number;
     error?: string | undefined;
     sessions?: {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -5539,18 +5539,18 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }[] | undefined;
     pagination?: {
@@ -5564,29 +5564,29 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
     statusCode: number;
     error?: string | undefined;
     sessions?: {
+        answers: {
+            questionUid: string;
+            isCorrect: boolean;
+            selectedAnswers: number[];
+            submittedAt: Date;
+            timeSpentMs: number;
+            attemptNumber: number;
+        }[];
         status: "active" | "completed" | "abandoned";
+        userId: string;
+        currentQuestionIndex: number;
+        createdAt: Date;
         settings: {
-            gradeLevel: string;
             discipline: string;
             themes: string[];
+            gradeLevel: string;
             questionCount: number;
             showImmediateFeedback: boolean;
             allowRetry: boolean;
             randomizeQuestions: boolean;
         };
-        userId: string;
-        currentQuestionIndex: number;
-        createdAt: Date;
         sessionId: string;
         questionPool: string[];
-        answers: {
-            questionUid: string;
-            selectedAnswers: number[];
-            isCorrect: boolean;
-            submittedAt: Date;
-            timeSpentMs: number;
-            attemptNumber: number;
-        }[];
         statistics: {
             correctAnswers: number;
             questionsAttempted: number;
@@ -5597,18 +5597,18 @@ export declare const GetPracticeSessionsApiResponseSchema: z.ZodObject<{
             retriedQuestions: string[];
         };
         expiresAt: Date;
+        startedAt?: Date | undefined;
         currentQuestion?: {
-            gradeLevel: string;
-            discipline: string;
-            themes: string[];
             title: string;
             text: string;
             answerOptions: string[];
-            uid: string;
             questionType: string;
+            discipline: string;
+            themes: string[];
+            gradeLevel: string;
+            uid: string;
             timeLimit?: number | undefined;
         } | undefined;
-        startedAt?: Date | undefined;
         completedAt?: Date | undefined;
     }[] | undefined;
     pagination?: {

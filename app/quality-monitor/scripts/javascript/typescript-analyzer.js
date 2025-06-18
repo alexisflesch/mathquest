@@ -21,8 +21,22 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 class TypeScriptAnalyzer {
-    constructor(projectRoot = process.cwd()) {
+    constructor(projectRoot = null) {
+        // Load global configuration
+        this.loadGlobalConfig();
+
+        // Auto-detect project root if not provided
+        if (!projectRoot) {
+            if (__dirname.includes('quality-monitor')) {
+                projectRoot = path.resolve(__dirname, '../../..');
+            } else {
+                projectRoot = path.resolve(__dirname, '../..');
+            }
+        }
+
         this.projectRoot = path.resolve(projectRoot);
+        console.log(`🔍 TypeScript Analyzer - Project root: ${this.projectRoot}`);
+
         this.results = {
             summary: {
                 totalFiles: 0,
@@ -52,6 +66,25 @@ class TypeScriptAnalyzer {
 
         this.typeDefinitions = new Map(); // Track type definitions for duplication detection
         this.interfaceDefinitions = new Map();
+    }
+
+    /**
+     * Load global configuration from config file
+     */
+    loadGlobalConfig() {
+        try {
+            const configPath = path.resolve(__dirname, '../../config/global.json');
+            if (fs.existsSync(configPath)) {
+                const configContent = fs.readFileSync(configPath, 'utf8');
+                this.globalConfig = JSON.parse(configContent);
+            } else {
+                console.warn('⚠️  Global config not found, using defaults');
+                this.globalConfig = {};
+            }
+        } catch (error) {
+            console.warn(`⚠️  Failed to load global config: ${error.message}`);
+            this.globalConfig = {};
+        }
     }
 
     /**

@@ -200,18 +200,26 @@ class HardcodedStringsAnalyzer:
         return pattern_name in fixable_patterns
     
     def _get_code_files(self, directory):
-        """Get all code files in directory recursively"""
+        """Get all TypeScript code files in directory recursively"""
         code_files = []
-        ignore_dirs = {'node_modules', '.next', 'dist', 'build', 'coverage', '.git'}
-        code_extensions = {'.js', '.jsx', '.ts', '.tsx', '.py', '.mjs'}
+        ignore_dirs = {'node_modules', '.next', 'dist', 'build', 'coverage', '.git', '__pycache__'}
+        # Focus only on TypeScript files since this is a TypeScript-only application
+        typescript_extensions = {'.ts', '.tsx'}
         
         for root, dirs, files in os.walk(directory):
-            # Remove ignored directories
+            # Remove ignored directories from the walk
             dirs[:] = [d for d in dirs if d not in ignore_dirs]
             
+            # Skip if we're in any ignored directory (handles nested cases)
+            if any(ignored in root for ignored in ignore_dirs):
+                continue
+            
             for file in files:
-                if any(file.endswith(ext) for ext in code_extensions):
-                    code_files.append(os.path.join(root, file))
+                if any(file.endswith(ext) for ext in typescript_extensions):
+                    file_path = os.path.join(root, file)
+                    # Double-check that we're not in an ignored directory
+                    if not any(ignored in file_path for ignored in ignore_dirs):
+                        code_files.append(file_path)
         
         return code_files
     

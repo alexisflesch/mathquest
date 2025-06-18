@@ -30,8 +30,8 @@ export declare const questionSchema: z.ZodObject<{
     tags?: string[] | undefined;
     timeLimit?: number | undefined;
     author?: string | undefined;
-    uid?: string | undefined;
     isHidden?: boolean | undefined;
+    uid?: string | undefined;
 }, {
     text: string;
     answerOptions: string[];
@@ -46,8 +46,8 @@ export declare const questionSchema: z.ZodObject<{
     tags?: string[] | undefined;
     timeLimit?: number | undefined;
     author?: string | undefined;
-    uid?: string | undefined;
     isHidden?: boolean | undefined;
+    uid?: string | undefined;
 }>;
 export type Question = z.infer<typeof questionSchema>;
 export declare const questionCreationSchema: z.ZodObject<Omit<{

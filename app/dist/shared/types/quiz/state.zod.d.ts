@@ -122,6 +122,7 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
     participants: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
     askedQuestions: z.ZodOptional<z.ZodSet<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
+    currentQuestionUid: string | null;
     locked: boolean;
     questions: any[];
     chrono: {
@@ -130,7 +131,6 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
         status?: "play" | "pause" | "stop" | undefined;
     };
     ended: boolean;
-    currentQuestionUid: string | null;
     id?: string | undefined;
     participants?: Record<string, any> | undefined;
     currentQuestionidx?: number | null | undefined;
@@ -157,6 +157,7 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
     socketToJoueur?: Record<string, string> | undefined;
     askedQuestions?: Set<string> | undefined;
 }, {
+    currentQuestionUid: string | null;
     locked: boolean;
     questions: any[];
     chrono: {
@@ -165,7 +166,6 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
         status?: "play" | "pause" | "stop" | undefined;
     };
     ended: boolean;
-    currentQuestionUid: string | null;
     id?: string | undefined;
     participants?: Record<string, any> | undefined;
     currentQuestionidx?: number | null | undefined;

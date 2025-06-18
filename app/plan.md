@@ -53,7 +53,38 @@ Complete modernization of the MathQuest app by eliminating all legacy code patte
   - [ ] Test complete projection page functionality
 - [ ] Final validation and testing
 
-## Phase 7: 📋 PLANNED - Final Validation & Testing
+## Phase 7: 🔥 CRITICAL - Quality Monitor Issues Resolution
+> **Priority: IMMEDIATE** - Based on Quality Monitor Report 2025-06-18
+
+### Critical Issues Requiring Automated Fixes:
+- [ ] **Fix 352 high-severity hardcoded strings**
+  - [ ] Extract 340 hardcoded socket event names to SOCKET_EVENTS constants
+  - [ ] Move user-facing messages to i18n system
+  - [ ] Extract SQL queries to proper query builders
+  - [ ] Replace magic numbers with named constants
+  
+- [ ] **Fix @/types vs @shared/types inconsistency (16 files)**
+  - [ ] Create automated script to replace import paths
+  - [ ] Validate all imports use canonical shared types
+  - [ ] Remove local type duplicates
+
+- [ ] **Address bundle size issues**
+  - [ ] Analyze main-app.js (6.5MB) for code splitting opportunities
+  - [ ] Implement lazy loading for heavy components
+  - [ ] Remove unused dependencies
+
+- [ ] **Fix React performance anti-patterns (532 issues)**
+  - [ ] Add missing useCallback/useMemo hooks
+  - [ ] Fix missing key props in lists
+  - [ ] Optimize unnecessary re-renders
+
+### Automation Scripts to Create:
+- [ ] `scripts/fix-import-paths.py` - Auto-fix @/types → @shared/types
+- [ ] `scripts/extract-socket-events.py` - Extract hardcoded socket events
+- [ ] `scripts/fix-react-performance.py` - Add missing React hooks
+- [ ] `scripts/bundle-optimization.py` - Implement code splitting suggestions
+
+## Phase 8: 📋 PLANNED - Final Validation & Testing
 - [ ] Run comprehensive TypeScript compilation across all modules
 - [ ] Test all modernized components and pages
 - [ ] Verify socket connections and event handling
