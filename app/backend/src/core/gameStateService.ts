@@ -227,7 +227,7 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
             return null;
         }
 
-        // Modify game state
+        // Modify game state - set both currentQuestionIndex and timer.questionUid
         gameState.status = 'active';
         gameState.currentQuestionIndex = questionIndex;
 
@@ -252,13 +252,13 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
 
         gameState.questionData = questionData;
 
-        // Reset and start the timer
+        // Reset and start the timer - ENSURE questionUid is properly set
         const durationMs = (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1);
         gameState.timer = {
             status: 'play',
             timeLeftMs: durationMs,
             durationMs: durationMs,
-            questionUid: questionUid,
+            questionUid: questionUid, // This is the key fix - ensure this is set correctly
             timestamp: Date.now(),
             localTimeLeftMs: null
         };
@@ -274,7 +274,7 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
             86400 // 24 hours
         );
 
-        logger.info({ accessCode, questionIndex }, 'Current question set successfully');
+        logger.info({ accessCode, questionUid, questionIndex }, 'Current question set successfully');
         return gameState;
     } catch (error) {
         logger.error({ accessCode, questionIndex, error }, 'Error setting current question');
@@ -347,6 +347,19 @@ export async function getFullGameState(accessCode: string): Promise<{
                 });
             }
         }
+
+        // Debug logging to see what game state is being returned
+        logger.debug({
+            accessCode,
+            gameStateStatus: gameState.status,
+            timerStatus: gameState.timer?.status,
+            timerQuestionUid: gameState.timer?.questionUid,
+            questionData: gameState.questionData ? 'present' : 'missing',
+            questionDataUid: gameState.questionData?.uid,
+            participantsCount: participants.length,
+            answersKeys: Object.keys(answers),
+            leaderboardCount: leaderboard.length
+        }, 'Full game state prepared for projection');
 
         return {
             gameState,

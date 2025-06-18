@@ -30,6 +30,10 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
     // Use modern game socket with correct role and gameId
     const socket = useGameSocket('projection', gameId);
 
+    // Use canonical GameState from backend response
+    const [gameState, setGameState] = useState<GameState | null>(null);
+    const [connectedCount, setConnectedCount] = useState<number>(0);
+
     // Use modern timer with projection role
     const timer = useSimpleTimer({
         gameId: gameId || undefined,
@@ -38,9 +42,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         role: 'projection'
     });
 
-    // Use canonical GameState from backend response
-    const [gameState, setGameState] = useState<GameState | null>(null);
-    const [connectedCount, setConnectedCount] = useState<number>(0);
+    // Override timer questionUid from game state when available
+    const timerQuestionUid = gameState?.timer?.questionUid || timer.questionUid;
 
     // Join projection room when socket connects
     useEffect(() => {
@@ -107,23 +110,18 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
     useEffect(() => {
         if (!socket.socket) return;
 
-        // Handle question changes from teacher dashboard
-        const handleQuestionChanged = (payload: { question: Question; questionIndex: number }) => {
+        // Handle question changes from teacher dashboard (timer updates will come through timer system)
+        const handleQuestionChanged = (payload: { question: Question; questionUid: string }) => {
             logger.info('📋 Projection question changed:', payload);
-
-            setGameState(prev => prev ? ({
-                ...prev,
-                currentQuestionIndex: payload.questionIndex
-            }) : null);
+            // Timer updates will be handled by useSimpleTimer automatically
+            // Game state will be updated via PROJECTION_STATE events
         };
 
         // Handle connected participant count updates
         const handleConnectedCount = (payload: { count: number }) => {
             logger.debug('👥 Connected count update:', payload.count);
             setConnectedCount(payload.count);
-        };
-
-        // Handle game state updates (including initial state from getFullGameState)
+        };        // Handle game state updates (including initial state from getFullGameState)
         const handleGameStateUpdate = (payload: any) => {
             logger.info('🎮 Game state update received:', payload);
 
@@ -131,6 +129,15 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             if (payload.gameState) {
                 setGameState(payload.gameState);
                 logger.info('✅ Full projection state initialized from backend');
+
+                // Debug: log the timer and question details
+                logger.debug('🔍 [DEBUG] Timer state:', {
+                    timerStatus: payload.gameState.timer?.status,
+                    timerQuestionUid: payload.gameState.timer?.questionUid,
+                    questionData: payload.gameState.questionData,
+                    questionUids: payload.gameState.questionUids
+                });
+
                 return;
             }
 
@@ -162,25 +169,44 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
     }, [socket.socket]);
 
-    // Return clean interface using canonical GameState properties
-    return {
+    // Return clean interface using canonical types only
+    const returnValue = {
         // Socket connection status
         isConnected: socket.socketState.connected,
 
         // Game state using canonical types
         gameState,
         currentQuestion: null, // Questions need to be fetched separately based on questionUids
-        currentQuestionIndex: gameState?.currentQuestionIndex ?? null,
+        currentQuestionUid: timerQuestionUid, // Use timer's questionUid instead of index
         connectedCount,
         gameStatus: gameState?.status ?? 'pending',
         isAnswersLocked: gameState?.answersLocked ?? false,
 
-        // Modern timer interface
-        timerStatus: timer.status,
-        timerQuestionUid: timer.questionUid,
-        timeLeftMs: timer.timeLeftMs,
+        // Modern timer interface - use live timer values from useSimpleTimer for countdown
+        timerStatus: timer.status || gameState?.timer?.status,
+        timerQuestionUid: timerQuestionUid, // Use the overridden value
+        timeLeftMs: timer.timeLeftMs, // Always use live countdown from useSimpleTimer
 
         // Socket reference (if needed for advanced usage)
         socket: socket.socket
     };
+
+    // Debug logging to see what we're returning
+    logger.debug('🔍 useProjectionQuizSocket returning:', {
+        hasGameState: !!returnValue.gameState,
+        gameStateKeys: returnValue.gameState ? Object.keys(returnValue.gameState) : null,
+        connectedCount: returnValue.connectedCount,
+        gameStatus: returnValue.gameStatus,
+        isConnected: returnValue.isConnected,
+        timerValues: {
+            gameStateTimeLeft: gameState?.timer?.timeLeftMs,
+            simpleTimerTimeLeft: timer.timeLeftMs,
+            finalTimeLeft: returnValue.timeLeftMs,
+            gameStateStatus: gameState?.timer?.status,
+            simpleTimerStatus: timer.status,
+            finalStatus: returnValue.timerStatus
+        }
+    });
+
+    return returnValue;
 }

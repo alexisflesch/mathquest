@@ -25,6 +25,7 @@ import {
 import { GAME_EVENTS } from '@shared/types/socket/events';
 // Import core participant types
 import { GameParticipant, ParticipantData } from '@shared/types/core/participant';
+import { calculateTimerForLateJoiner } from '../../../core/timerUtils';
 
 const logger = createLogger('JoinGameHandler');
 
@@ -249,38 +250,8 @@ export function joinGameHandler(
                                 const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
                                 const filteredQuestion = filterQuestionForClient(currentQuestion);
 
-                                // Calculate remaining time for late joiner
-                                let actualTimer = gameState.timer;
-                                if (gameState.timer && gameState.timer.timestamp && gameState.timer.durationMs) {
-                                    const elapsed = Date.now() - gameState.timer.timestamp;
-                                    let timeLeftMs: number;
-                                    let status: 'play' | 'pause' | 'stop';
-
-                                    // Handle different timer states
-                                    if (gameState.timer.status === 'pause') {
-                                        // When paused, late joiners should see the same time left as when it was paused
-                                        timeLeftMs = gameState.timer.timeLeftMs || 0;
-                                        status = 'pause';
-                                    } else {
-                                        // When playing, calculate remaining time based on elapsed time
-                                        timeLeftMs = Math.max(0, gameState.timer.durationMs - elapsed);
-                                        status = timeLeftMs > 0 ? 'play' : 'stop';
-                                    }
-
-                                    actualTimer = {
-                                        ...gameState.timer,
-                                        timeLeftMs,
-                                        timestamp: Date.now(),
-                                        status
-                                    };
-
-                                    logger.info({
-                                        originalTimer: gameState.timer,
-                                        elapsed,
-                                        calculatedTimeLeft: timeLeftMs,
-                                        actualTimer
-                                    }, '[TIMER_FIX] Recalculated timer for late joiner');
-                                }
+                                // Calculate remaining time for late joiner using shared utility
+                                const actualTimer = calculateTimerForLateJoiner(gameState.timer);
 
                                 // Send current question with actual remaining time
                                 const lateJoinerQuestionPayload = {
@@ -288,7 +259,7 @@ export function joinGameHandler(
                                     questionIndex: gameState.currentQuestionIndex, // Use shared type field name
                                     totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length, // Add total questions count
                                     feedbackWaitTime: currentQuestion.feedbackWaitTime || (gameInstance.playMode === 'tournament' ? 1.5 : 1),
-                                    timer: actualTimer
+                                    timer: actualTimer || gameState.timer
                                 };
 
                                 logger.info({

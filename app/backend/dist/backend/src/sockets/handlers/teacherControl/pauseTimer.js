@@ -212,8 +212,8 @@ function pauseTimerHandler(io, socket) {
             io.to(gameRoom).emit('game_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Ensure isPaused is set
             // Broadcast to dashboard room
             io.to(dashboardRoom).emit('dashboard_timer_updated', { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
-            // Broadcast to projection room
-            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer: { ...pausedTimer, isPaused: true } }); // TODO: Define shared type if missing
+            // Broadcast to projection room (include questionUid for proper frontend handling)
+            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer: { ...pausedTimer, isPaused: true }, questionUid: pausedTimer.questionUid }); // TODO: Define shared type if missing
             // Call the callback if provided with success
             if (callback) {
                 callback({

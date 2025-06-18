@@ -106,6 +106,12 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             logger.info(`[SimpleTimer] Timer update received for role ${role}:`, payload);
             logger.debug(`[SimpleTimer] Event: ${eventName}, Payload:`, payload);
 
+            // DEBUG: Check if we're getting spammed with updates
+            const timeSinceLastUpdate = Date.now() - lastUpdateRef.current;
+            if (timeSinceLastUpdate < 500) {
+                logger.warn(`[SimpleTimer] Rapid timer updates detected! Time since last: ${timeSinceLastUpdate}ms`);
+            }
+
             const { timer, questionUid } = payload;
             const now = Date.now();
 

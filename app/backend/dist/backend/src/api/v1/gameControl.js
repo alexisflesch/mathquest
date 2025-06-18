@@ -151,8 +151,8 @@ router.post('/:accessCode/end-question', auth_1.teacherAuth, async (req, res) =>
             return;
         }
         // Process and calculate scores
-        if (updatedGameState.currentQuestionIndex >= 0) {
-            const questionUid = updatedGameState.questionUids[updatedGameState.currentQuestionIndex];
+        if (updatedGameState.timer?.questionUid) {
+            const questionUid = updatedGameState.timer.questionUid;
             await gameStateService_1.default.calculateScores(accessCode, questionUid);
         }
         // Get updated game state with leaderboard
@@ -162,7 +162,8 @@ router.post('/:accessCode/end-question', auth_1.teacherAuth, async (req, res) =>
         if (io && fullGameState) {
             // Tell all players that question time is up
             io.to(`game_${accessCode}`).emit('question_ended', {
-                questionIndex: updatedGameState.currentQuestionIndex
+                questionIndex: updatedGameState.currentQuestionIndex,
+                questionUid: updatedGameState.timer?.questionUid || undefined
             });
             // Send leaderboard update
             if (fullGameState.leaderboard.length > 0) {

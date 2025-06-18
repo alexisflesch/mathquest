@@ -82,7 +82,7 @@ describe('Projector Mode Socket Handler', () => {
         return new Promise((resolve) => {
             httpServer = (0, http_1.createServer)();
             io = new socket_io_1.Server(httpServer);
-            (0, index_1.setupSocketHandlers)(io);
+            (0, index_1.registerHandlers)(io);
             httpServer.listen(() => {
                 const port = httpServer.address().port;
                 clientSocket = (0, socket_io_client_1.default)(`http://localhost:${port}`);

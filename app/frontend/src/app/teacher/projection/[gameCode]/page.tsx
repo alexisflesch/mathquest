@@ -44,6 +44,13 @@ function formatTimer(val: number | null) {
     return val.toString();
 }
 
+// Helper function to convert milliseconds to seconds for timer display
+function formatTimerMs(timeLeftMs: number | null) {
+    if (timeLeftMs === null || timeLeftMs === undefined) return '-';
+    const seconds = Math.ceil(timeLeftMs / 1000); // Convert ms to seconds, round up
+    return formatTimer(seconds);
+}
+
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function ProjectionPage({ params }: { params: Promise<{ gameCode: string }> }) {
@@ -118,7 +125,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         socket,
         gameState,
         currentQuestion: socketCurrentQuestion,
-        currentQuestionIndex,
+        currentQuestionUid: hookCurrentQuestionUid,
         timerStatus,
         timerQuestionUid,
         timeLeftMs,
@@ -127,10 +134,25 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         isAnswersLocked
     } = useProjectionQuizSocket(gameCode, gameId); // Pass both gameCode and gameId
 
+    // Debug what we're getting from the hook
+    useEffect(() => {
+        logger.debug('🔍 Projection page state check:', {
+            hasGameState: !!gameState,
+            gameState: gameState ? {
+                gameId: gameState.gameId,
+                status: gameState.status,
+                questionUids: gameState.questionUids,
+                timerQuestionUid: gameState.timer?.questionUid
+            } : null,
+            gameStatus,
+            connectedCount
+        });
+    }, [gameState, gameStatus, connectedCount]);
+
     // Extract tournament code from game state when available
     useEffect(() => {
-        if (gameState && (gameState.tournament_code || gameState.id) && !currentTournamentCode) {
-            const code = gameState.tournament_code || gameState.id;
+        if (gameState && (gameState.accessCode || gameState.gameId) && !currentTournamentCode) {
+            const code = gameState.accessCode || gameState.gameId;
             logger.info('Setting tournament code from game state:', code);
             if (code) {
                 setCurrentTournamentCode(code);
@@ -291,10 +313,29 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     // Get current question from game state
     const getCurrentQuestion = (): QuestionData | null => {
         if (!gameState || !timerQuestionUid) {
+            logger.debug('🔍 [getCurrentQuestion] No question available:', {
+                hasGameState: !!gameState,
+                timerQuestionUid,
+                gameStateQuestionData: gameState?.questionData
+            });
             return null;
         }
-        const found = gameState.questions.find((q: any) => q.uid === timerQuestionUid) || null;
-        return found as QuestionData | null;
+        // In canonical GameState, the current question data is stored in questionData
+        // Only return it if it matches the timer's current questionUid
+        if (gameState.questionData && gameState.questionData.uid === timerQuestionUid) {
+            logger.debug('✅ [getCurrentQuestion] Found matching question:', {
+                questionUid: gameState.questionData.uid,
+                timerQuestionUid
+            });
+            return gameState.questionData as QuestionData;
+        }
+
+        logger.debug('❌ [getCurrentQuestion] Question UID mismatch:', {
+            gameStateQuestionUid: gameState.questionData?.uid,
+            timerQuestionUid,
+            hasQuestionData: !!gameState.questionData
+        });
+        return null;
     };
 
     // Empty handler functions (needed for props but won't be used because of readonly mode)
@@ -376,7 +417,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                     lineHeight: '1',
                                 }}
                             >
-                                {formatTimer(timeLeftMs)}
+                                {formatTimerMs(timeLeftMs)}
                             </span>
                         </div>
                     </div>
@@ -417,8 +458,8 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                         <QuestionCard
                                             key={questionKey}
                                             currentQuestion={currentTournamentQuestion}
-                                            questionIndex={gameState?.questions.findIndex(q => q.uid === currentQuestionUid) ?? 0}
-                                            totalQuestions={gameState?.questions.length ?? 0}
+                                            questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex(uid => uid === currentQuestionUid) ?? 0 : 0}
+                                            totalQuestions={gameState?.questionUids.length ?? 0}
                                             isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
                                             selectedAnswer={null}
                                             setSelectedAnswer={noopSetState}

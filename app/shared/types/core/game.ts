@@ -136,6 +136,23 @@ export interface GameState {
 }
 
 /**
+ * Full game state response from getFullGameState service
+ * This is the canonical payload structure sent to projection and dashboard
+ */
+export interface FullGameStateResponse {
+    /** Access code for the game */
+    accessCode: string;
+    /** Current game state */
+    gameState: GameState;
+    /** List of participants in the game */
+    participants: any[];
+    /** Answers submitted by participants */
+    answers: Record<string, any[]>;
+    /** Current leaderboard data */
+    leaderboard: any[];
+}
+
+/**
  * Game status enumeration
  * Represents the current lifecycle state of a game instance
  */

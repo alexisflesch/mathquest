@@ -45,6 +45,7 @@ const redis_1 = require("@/config/redis");
 const participantCountUtils_1 = require("@/sockets/utils/participantCountUtils");
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const timerUtils_1 = require("../../../core/timerUtils");
 const logger = (0, logger_1.default)('JoinGameHandler');
 // Update handler signature with shared types
 function joinGameHandler(io, socket) {
@@ -243,43 +244,15 @@ function joinGameHandler(io, socket) {
                             if (currentQuestion) {
                                 const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@shared/types/quiz/liveQuestion')));
                                 const filteredQuestion = filterQuestionForClient(currentQuestion);
-                                // Calculate remaining time for late joiner
-                                let actualTimer = gameState.timer;
-                                if (gameState.timer && gameState.timer.timestamp && gameState.timer.durationMs) {
-                                    const elapsed = Date.now() - gameState.timer.timestamp;
-                                    let timeLeftMs;
-                                    let status;
-                                    // Handle different timer states
-                                    if (gameState.timer.status === 'pause') {
-                                        // When paused, late joiners should see the same time left as when it was paused
-                                        timeLeftMs = gameState.timer.timeLeftMs || 0;
-                                        status = 'pause';
-                                    }
-                                    else {
-                                        // When playing, calculate remaining time based on elapsed time
-                                        timeLeftMs = Math.max(0, gameState.timer.durationMs - elapsed);
-                                        status = timeLeftMs > 0 ? 'play' : 'stop';
-                                    }
-                                    actualTimer = {
-                                        ...gameState.timer,
-                                        timeLeftMs,
-                                        timestamp: Date.now(),
-                                        status
-                                    };
-                                    logger.info({
-                                        originalTimer: gameState.timer,
-                                        elapsed,
-                                        calculatedTimeLeft: timeLeftMs,
-                                        actualTimer
-                                    }, '[TIMER_FIX] Recalculated timer for late joiner');
-                                }
+                                // Calculate remaining time for late joiner using shared utility
+                                const actualTimer = (0, timerUtils_1.calculateTimerForLateJoiner)(gameState.timer);
                                 // Send current question with actual remaining time
                                 const lateJoinerQuestionPayload = {
                                     question: filteredQuestion,
                                     questionIndex: gameState.currentQuestionIndex, // Use shared type field name
                                     totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length, // Add total questions count
                                     feedbackWaitTime: currentQuestion.feedbackWaitTime || (gameInstance.playMode === 'tournament' ? 1.5 : 1),
-                                    timer: actualTimer
+                                    timer: actualTimer || gameState.timer
                                 };
                                 logger.info({
                                     accessCode,

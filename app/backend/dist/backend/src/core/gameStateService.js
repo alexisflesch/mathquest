@@ -201,7 +201,7 @@ async function setCurrentQuestion(accessCode, questionIndex) {
             logger.warn({ accessCode, questionUid }, 'Question not found');
             return null;
         }
-        // Modify game state
+        // Modify game state - set both currentQuestionIndex and timer.questionUid
         gameState.status = 'active';
         gameState.currentQuestionIndex = questionIndex;
         // Create a sanitized question data object for the client
@@ -221,13 +221,13 @@ async function setCurrentQuestion(accessCode, questionIndex) {
             timeLimit: (question.timeLimit || 30) * (gameState.settings.timeMultiplier || 1)
         };
         gameState.questionData = questionData;
-        // Reset and start the timer
+        // Reset and start the timer - ENSURE questionUid is properly set
         const durationMs = (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1);
         gameState.timer = {
             status: 'play',
             timeLeftMs: durationMs,
             durationMs: durationMs,
-            questionUid: questionUid,
+            questionUid: questionUid, // This is the key fix - ensure this is set correctly
             timestamp: Date.now(),
             localTimeLeftMs: null
         };
@@ -236,7 +236,7 @@ async function setCurrentQuestion(accessCode, questionIndex) {
         // Update game state in Redis
         await redis_1.redisClient.set(`${GAME_KEY_PREFIX}${accessCode}`, JSON.stringify(gameState), 'EX', 86400 // 24 hours
         );
-        logger.info({ accessCode, questionIndex }, 'Current question set successfully');
+        logger.info({ accessCode, questionUid, questionIndex }, 'Current question set successfully');
         return gameState;
     }
     catch (error) {
@@ -293,6 +293,18 @@ async function getFullGameState(accessCode) {
                 });
             }
         }
+        // Debug logging to see what game state is being returned
+        logger.debug({
+            accessCode,
+            gameStateStatus: gameState.status,
+            timerStatus: gameState.timer?.status,
+            timerQuestionUid: gameState.timer?.questionUid,
+            questionData: gameState.questionData ? 'present' : 'missing',
+            questionDataUid: gameState.questionData?.uid,
+            participantsCount: participants.length,
+            answersKeys: Object.keys(answers),
+            leaderboardCount: leaderboard.length
+        }, 'Full game state prepared for projection');
         return {
             gameState,
             participants,

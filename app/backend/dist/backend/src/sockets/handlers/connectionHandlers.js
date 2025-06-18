@@ -11,6 +11,7 @@ const teacherControlHandler_1 = __importDefault(require("./teacherControlHandler
 const tournament_1 = require("./tournament");
 const disconnectHandler_1 = require("./disconnectHandler");
 const practiceSessionHandler_1 = require("./practiceSessionHandler");
+const projectionHandler_1 = require("./projectionHandler");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('ConnectionHandlers');
 /**
@@ -33,6 +34,7 @@ function registerConnectionHandlers(io) {
         (0, teacherControlHandler_1.default)(io, socket);
         (0, tournament_1.registerTournamentHandlers)(io, socket);
         (0, practiceSessionHandler_1.registerPracticeSessionHandlers)(io, socket);
+        (0, projectionHandler_1.projectionHandler)(io, socket); // Register modern projection handler
     });
 }
 /**

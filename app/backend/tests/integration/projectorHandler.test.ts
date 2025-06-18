@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import Client, { Socket as ClientSocket } from 'socket.io-client';
-import { setupSocketHandlers } from '@/sockets/index';
+import { registerHandlers } from '@/sockets/index';
 import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/gameStateService';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
@@ -86,7 +86,7 @@ describe('Projector Mode Socket Handler', () => {
         return new Promise<void>((resolve) => {
             httpServer = createServer();
             io = new Server(httpServer);
-            setupSocketHandlers(io);
+            registerHandlers(io);
             httpServer.listen(() => {
                 const port = httpServer.address().port;
                 clientSocket = Client(`http://localhost:${port}`);

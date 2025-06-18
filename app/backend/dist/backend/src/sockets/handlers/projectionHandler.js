@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -7,17 +40,21 @@ exports.projectionHandler = projectionHandler;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
+const gameStateService = __importStar(require("@/core/gameStateService"));
+const timerUtils_1 = require("../../core/timerUtils");
 const logger = (0, logger_1.default)('ProjectionHandler');
 /**
  * Handler for teacher projection page to join projection room
  * Separate from dashboard to keep rooms cleanly separated
  */
 function projectionHandler(io, socket) {
+    logger.info({ socketId: socket.id }, 'ProjectionHandler: Socket connected, setting up projection event listeners');
     /**
      * Join projection room for a specific gameId
      * This is specifically for the teacher projection page display
      */
     socket.on(events_1.SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTION, async (payload) => {
+        logger.info({ socketId: socket.id, payload }, 'ProjectionHandler: Received JOIN_PROJECTION event');
         try {
             const { gameId } = payload;
             if (!gameId || typeof gameId !== 'string') {
@@ -58,6 +95,95 @@ function projectionHandler(io, socket) {
                 accessCode: gameInstance.accessCode,
                 room: projectionRoom
             });
+            // Send initial game state to the projection
+            try {
+                const fullState = await gameStateService.getFullGameState(gameInstance.accessCode);
+                if (!fullState) {
+                    logger.warn({ gameId }, 'No game state found for projection');
+                    return;
+                }
+                let enhancedGameState = fullState.gameState;
+                // If there's an active question, fetch the current question data from DB (same approach as joinGameHandler)
+                if (fullState.gameState.currentQuestionIndex >= 0 || fullState.gameState.timer?.questionUid) {
+                    try {
+                        const gameInstanceWithQuestions = await prisma_1.prisma.gameInstance.findUnique({
+                            where: { id: gameId },
+                            include: {
+                                gameTemplate: {
+                                    include: {
+                                        questions: {
+                                            include: { question: true },
+                                            orderBy: { sequence: 'asc' }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        if (gameInstanceWithQuestions?.gameTemplate?.questions) {
+                            let currentQuestion = null;
+                            // Try to find question by timer.questionUid first (canonical), then by index (fallback)
+                            if (fullState.gameState.timer?.questionUid) {
+                                currentQuestion = gameInstanceWithQuestions.gameTemplate.questions
+                                    .find(q => q.question.uid === fullState.gameState.timer.questionUid)?.question;
+                            }
+                            else if (fullState.gameState.currentQuestionIndex >= 0 &&
+                                fullState.gameState.currentQuestionIndex < gameInstanceWithQuestions.gameTemplate.questions.length) {
+                                currentQuestion = gameInstanceWithQuestions.gameTemplate.questions[fullState.gameState.currentQuestionIndex]?.question;
+                            }
+                            if (currentQuestion) {
+                                const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@shared/types/quiz/liveQuestion')));
+                                const filteredQuestion = filterQuestionForClient(currentQuestion);
+                                // Calculate remaining time for projection using shared utility
+                                const actualTimer = (0, timerUtils_1.calculateTimerForLateJoiner)(fullState.gameState.timer);
+                                // Add the question data and corrected timer to the game state for projection
+                                enhancedGameState = {
+                                    ...fullState.gameState,
+                                    questionData: filteredQuestion,
+                                    timer: actualTimer || fullState.gameState.timer
+                                };
+                                logger.info({
+                                    gameId,
+                                    questionUid: currentQuestion.uid,
+                                    foundVia: fullState.gameState.timer?.questionUid ? 'timer.questionUid' : 'currentQuestionIndex',
+                                    originalTimeLeft: fullState.gameState.timer?.timeLeftMs,
+                                    originalStatus: fullState.gameState.timer?.status,
+                                    actualTimeLeft: actualTimer?.timeLeftMs,
+                                    actualStatus: actualTimer?.status,
+                                    elapsed: fullState.gameState.timer?.timestamp ? Date.now() - fullState.gameState.timer.timestamp : 'no timestamp'
+                                }, 'Added current question data and corrected timer to projection state');
+                            }
+                        }
+                    }
+                    catch (questionFetchError) {
+                        logger.warn({ error: questionFetchError, gameId }, 'Failed to fetch current question for projection, sending without question data');
+                    }
+                }
+                const payload = {
+                    accessCode: gameInstance.accessCode,
+                    gameState: enhancedGameState,
+                    participants: fullState.participants,
+                    answers: fullState.answers,
+                    leaderboard: fullState.leaderboard
+                };
+                // Detailed logging of the payload being sent
+                logger.info({
+                    gameId,
+                    accessCode: gameInstance.accessCode,
+                    payloadKeys: Object.keys(payload),
+                    gameStateKeys: enhancedGameState ? Object.keys(enhancedGameState) : null,
+                    timerState: enhancedGameState?.timer,
+                    questionData: enhancedGameState?.questionData ? 'present' : 'missing',
+                    questionDataUid: enhancedGameState?.questionData?.uid,
+                    participantsCount: fullState?.participants?.length || 0,
+                    answersKeys: fullState?.answers ? Object.keys(fullState.answers) : null,
+                    leaderboardCount: fullState?.leaderboard?.length || 0
+                }, 'Initial projection state payload details');
+                socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, payload);
+                logger.info({ gameId, accessCode: gameInstance.accessCode }, 'Initial projection state sent');
+            }
+            catch (stateError) {
+                logger.error({ error: stateError, gameId }, 'Failed to send initial projection state');
+            }
         }
         catch (error) {
             logger.error({ error, payload }, 'Error joining projection room');
@@ -73,6 +199,7 @@ function projectionHandler(io, socket) {
      * Leave projection room
      */
     socket.on(events_1.SOCKET_EVENTS.PROJECTOR.LEAVE_PROJECTION, async (payload) => {
+        logger.info({ socketId: socket.id, payload }, 'ProjectionHandler: Received LEAVE_PROJECTION event');
         try {
             const { gameId } = payload;
             if (gameId && typeof gameId === 'string') {
