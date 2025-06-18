@@ -179,3 +179,245 @@
 **Files affected:**
 - plan.md (updated with Phase 7 critical issues)
 - quality-monitor/reports/* (generated comprehensive analysis)
+
+## 2025-06-18 - Redis Configuration Fix
+
+**What was done**: Fixed missing REDIS_URL environment variable causing backend startup crash
+
+**Issue**: 
+- Backend crashed with error: "REDIS_URL is not defined in environment variables"
+- The .env file was missing from /backend directory after git restore
+- Redis client configuration requires REDIS_URL to be set
+
+**How it was fixed**:
+1. Created missing `/backend/.env` file based on `/backend/example.env`
+2. Set REDIS_URL="redis://localhost:6379" for local development
+3. Added all other required environment variables (DATABASE_URL, JWT_SECRET, etc.)
+
+**Files affected**:
+- `/backend/.env` - Created with proper Redis configuration
+- **Plan Update**: Added Phase 8 for immediate environment fixes
+
+**Relates to**: Phase 8 checklist item - Fix missing REDIS_URL configuration
+
+## 2025-06-18 - PostgreSQL Configuration Fix
+
+**What was done**: Fixed PostgreSQL connection and database migration issues
+
+**Issue**: 
+- Backend login failing with PrismaClientInitializationError
+- Database connection using wrong/lost password after git restore
+- Migration history out of sync with database schema
+
+**How it was fixed**:
+1. Reset PostgreSQL user password: `ALTER USER postgre PASSWORD 'dev123';`
+2. Updated DATABASE_URL in .env: `postgresql://postgre:dev123@localhost:5432/mathquest`
+3. Marked all pending migrations as applied with `npx prisma migrate resolve --applied`
+4. Regenerated Prisma client with `npx prisma generate`
+
+**Files affected**:
+- `/backend/.env` - Updated DATABASE_URL with correct credentials
+- Database migration status - All migrations now marked as applied
+
+**Validation**:
+- `npx prisma migrate status` shows "Database schema is up to date!"
+- Prisma client successfully generated
+- Backend should now be able to authenticate users
+
+**Relates to**: Phase 8 checklist items - Fix PostgreSQL connection and sync database migrations
+
+## 2025-06-18 - React Hooks Order Violation Fix
+
+**What was done**: Fixed React Hooks order violation in practice session page causing crashes
+
+**Issue**: 
+- Practice session page at `/student/practice/[accessCode]` crashing with hooks order error
+- `useEffect` hook was being called conditionally after early returns
+- Error: "React has detected a change in the order of Hooks called by PracticeSessionWithAccessCodePage"
+
+**Root Cause**:
+- The redirect `useEffect` hook was placed after conditional return statements
+- This violated React's Rules of Hooks which require all hooks to be called in the same order every render
+
+**How it was fixed**:
+1. Moved all hooks to the top of the component before any conditional returns
+2. Created a second `useEffect` hook that handles redirect logic when gameInstance is ready
+3. Replaced conditional returns for invalid practice settings with error state management
+4. Consolidated practice settings extraction logic into the redirect useEffect
+
+**Files affected**:
+- `/frontend/src/app/student/practice/[accessCode]/page.tsx` - Fixed hook ordering
+
+**Technical Changes**:
+- First `useEffect`: Fetches game instance data
+- Second `useEffect`: Handles redirect when data is ready (triggers on gameInstance, loading, error changes)
+- Error handling: Uses `setError()` instead of early returns for invalid configurations
+
+**Validation**: Practice session page should now load without React hook violations
+
+**Relates to**: Phase 8 checklist item - Fix React Hooks order violation
+
+## 2025-06-18 - Practice Session URL Redirect Fix
+
+**What was done**: Fixed practice session page to stay on access code URL instead of redirecting
+
+**Issue**: 
+- Practice session page was redirecting from `/student/practice/3233` to `/student/practice/session?discipline=...&gradeLevel=...`
+- URL was being polluted with query parameters instead of staying clean with just the access code
+- User experience was confusing with URL changes
+
+**Root Cause**:
+- The `/student/practice/[accessCode]` page was designed as a redirect page
+- It was extracting practice settings and forwarding to `/student/practice/session` with URL parameters
+- This violated the expected UX of keeping the simple access code URL
+
+**How it was fixed**:
+1. Removed the redirect logic from the `useEffect` hook
+2. Transformed the page into the actual practice session interface
+3. Added proper practice session UI with:
+   - Header showing access code prominently
+   - Session details (subject, level, topics, question count)
+   - Clean practice session interface
+   - Exit session button
+4. Extracted practice settings from game instance for display
+
+**Files affected**:
+- `/frontend/src/app/student/practice/[accessCode]/page.tsx` - Converted from redirect to practice session page
+
+**User Experience Improvements**:
+- URL stays clean: `/student/practice/3233` (no query parameters)
+- Access code is prominently displayed
+- Session configuration is clearly shown
+- Professional practice session interface
+
+**Validation**: Navigate to `/student/practice/3233` - should stay on that URL and show practice session interface
+
+**Relates to**: Phase 8 checklist item - Fix URL redirect behavior
+
+## 2025-06-18 - Practice Session Complete Rebuild
+
+**What was done**: Replaced buggy practice session page with working session page foundation
+
+**Issue**: 
+- Custom practice session implementation was buggy and had UI/UX issues
+- User wanted the same look and functionality as the working `/session` page
+- Previous attempts to modify the page created new bugs and layout problems
+
+**Root Cause**:
+- Trying to modify existing broken code instead of using the working foundation
+- Custom UI implementation vs proven working components
+- Parameter extraction logic was different from working session page
+
+**How it was fixed**:
+1. **Copied entire working session page** as foundation (`session/page.tsx` → `[accessCode]/page.tsx`)
+2. **Modified parameter extraction**:
+   - Changed from `useSearchParams()` to `useParams()` to get access code
+   - Added game instance fetching logic to extract practice settings
+   - Replaced URL parameter parsing with game instance data extraction
+3. **Updated imports** to include necessary API types and functions
+4. **Maintained all working functionality**:
+   - Same UI components (QuestionCard, MathJaxWrapper, etc.)
+   - Same answer handling logic
+   - Same feedback and statistics modals
+   - Same loading and error states
+5. **Added access code-specific error handling** for game instance loading
+
+**Files affected**:
+- `/frontend/src/app/student/practice/[accessCode]/page.tsx` - Complete rebuild using session page
+- Created backup at `page_backup.tsx`
+
+**Technical Changes**:
+- Uses `useParams()` instead of `useSearchParams()`
+- Fetches game instance via `/api/games/${accessCode}`
+- Extracts practice settings from game instance or game template
+- Auto-starts practice session when parameters are ready
+- Maintains clean URL without redirects
+
+**User Experience**:
+- Identical look and feel to working session page
+- Immediate practice session start (no landing page)
+- Clean URL stays at `/student/practice/3233`
+- All functionality preserved (questions, answers, stats, feedback)
+
+**Validation**: Practice session should now work exactly like the `/session` page but with access code URL
+
+**Relates to**: Phase 8 checklist item - Replace practice session with working code
+
+## 2025-06-18 - Archive Unused NavbarStates Components
+
+**What was done**: Archived unused navigation system components to clean up active codebase
+
+**Issue**: 
+- Discovered entire `NavbarStates/` folder with 5 components that were never used
+- Alternative navigation system (NavbarStateManager, StudentNavbar, etc.) was developed but never integrated
+- App uses `AppNav.tsx` instead, making NavbarStates redundant
+- Components were taking up space and causing confusion in active codebase
+
+**Investigation findings**:
+- `NavbarStateManager.tsx` - Central orchestrator, never imported in layout.tsx
+- `StudentNavbar.tsx`, `TeacherNavbar.tsx`, `GuestNavbar.tsx`, `AnonymousNavbar.tsx` - Complete 4-state auth system
+- Only self-references within the unused system
+- Well-written code but completely redundant to current AppNav system
+
+**How it was archived**:
+1. Created `frontend/src/components/auth/archive/` directory
+2. Moved `NavbarStates/` → `archive/NavbarStates-unused-2025-06-18/`
+3. Created comprehensive README.md explaining what was archived and why
+4. Updated cleanup script to reflect archival action
+5. Preserved all code for potential future reference
+
+**Files affected**:
+- **Moved**: `frontend/src/components/auth/NavbarStates/` → `archive/NavbarStates-unused-2025-06-18/`
+- **Created**: `archive/README.md` with restoration instructions
+- **Updated**: `scripts/cleanup-backup-files.sh`
+
+**Benefits**:
+- Cleaned up active codebase by removing 5 unused components
+- Preserved work for potential future use
+- Reduced confusion about which navigation system is active
+- Improved codebase maintainability
+
+**Code preserved**: 5 navigation components with complete 4-state auth system, responsive design, theme switching
+
+**Relates to**: Phase 8 checklist item - Archive unused NavbarStates components
+
+## 2025-06-18 - Archive Obsolete Practice Session Page & Fix Navigation
+
+**What was done**: Archived unused practice session page and updated navigation menus
+
+**Issues**: 
+1. **Obsolete practice session route**: `/student/practice/session` page was no longer used
+2. **Broken navigation links**: Menu items still pointed to old session route
+3. **TypeScript compilation errors**: Archived components in src/ causing import path errors
+
+**Root Cause**:
+- Practice sessions moved to unified flow at `/student/create-game?training=true`
+- Navigation menus (`useAuthState.ts`) still referenced old `/student/practice/session` route
+- Old session page used URL parameters approach which is obsolete
+- Archive location in `src/` directory was being compiled by TypeScript
+
+**How it was fixed**:
+1. **Fixed navigation menus**: Updated `useAuthState.ts` to point "Entraînement libre" links to `/student/create-game?training=true`
+2. **Moved archive location**: Relocated `archive/` from `src/components/auth/` to root `archive/frontend-components/`
+3. **Archived practice session page**: Moved `/student/practice/session/` → `archive/frontend-components/practice-session-page-unused-2025-06-18/`
+4. **Updated documentation**: Enhanced archive README with details about both archived systems
+5. **Updated cleanup script**: Reflected new archival actions
+
+**Files affected**:
+- **Updated**: `frontend/src/hooks/useAuthState.ts` - Fixed navigation menu links
+- **Moved**: `archive/` → `archive/frontend-components/` (outside src/ to avoid TypeScript compilation)
+- **Archived**: `frontend/src/app/student/practice/session/` → `archive/frontend-components/practice-session-page-unused-2025-06-18/`
+- **Updated**: `scripts/cleanup-backup-files.sh` and `archive/frontend-components/README.md`
+
+**Navigation Flow Changes**:
+- **Before**: "Entraînement libre" → `/student/practice/session` (URL parameters)
+- **After**: "Entraînement libre" → `/student/create-game?training=true` (unified flow)
+
+**Benefits**:
+- ✅ Fixed broken navigation menu links
+- ✅ Resolved TypeScript compilation errors  
+- ✅ Cleaned up obsolete 520-line practice session page
+- ✅ Consolidated practice session flow to single entry point
+- ✅ Preserved all archived code with restoration instructions
+
+**Relates to**: Phase 8 checklist items - Fix navigation menu links and Archive obsolete practice session page

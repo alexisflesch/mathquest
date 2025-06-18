@@ -101,14 +101,14 @@ export function useNavigationItems() {
                 return [
                     ...baseItems,
                     { label: 'Rejoindre un tournoi', href: '/student/join', icon: 'Users' },
-                    { label: 'Entraînement libre', href: '/student/practice/session', icon: 'Dumbbell' },
+                    { label: 'Entraînement libre', href: '/student/create-game?training=true', icon: 'Dumbbell' },
                     { label: 'Créer un compte', href: '/login?mode=student', icon: 'UserPlus', highlight: true },
                 ];
 
             case 'student':
                 return [
                     ...baseItems,
-                    { label: 'Entraînement libre', href: '/student/practice/session', icon: 'Dumbbell' },
+                    { label: 'Entraînement libre', href: '/student/create-game?training=true', icon: 'Dumbbell' },
                     { label: 'Rejoindre un tournoi', href: '/student/join', icon: 'Users' },
                     { label: 'Créer un tournoi', href: '/student/create-game', icon: 'PlusCircle' },
                     { label: 'Mes tournois', href: '/my-tournaments', icon: 'ClipboardList' },
