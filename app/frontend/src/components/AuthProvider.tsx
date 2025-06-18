@@ -626,7 +626,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     };
                 }
             } else if (data.authState === 'guest') {
-                // Guest state - check for fallback auth tokens
+                // Guest user authenticated in database - preserve localStorage profile
+                detectedState = 'guest';
+                studentLoggedIn = false;
+                teacherLoggedIn = false;
+
+                // Keep existing localStorage profile, but add userId from database if available
+                if (profile.username && profile.avatar && data.user?.id) {
+                    profile.userId = data.user.id;
+                    logger.debug('Guest user authenticated, preserving localStorage profile with database userId', {
+                        localUsername: profile.username,
+                        localAvatar: profile.avatar,
+                        databaseUserId: data.user.id,
+                        databaseUsername: data.user?.username,
+                        databaseAvatar: data.user?.avatar
+                    });
+                } else {
+                    // Fallback to database profile if localStorage is empty
+                    if (data.user) {
+                        profile = {
+                            username: data.user.username,
+                            avatar: data.user.avatar || '🐼',
+                            cookieId: profile.cookieId,
+                            userId: data.user.id
+                        };
+                        logger.debug('Guest user authenticated, using database profile as fallback', {
+                            databaseUsername: data.user.username,
+                            databaseAvatar: data.user.avatar
+                        });
+                    }
+                }
+            } else if (data.authState === 'anonymous') {
+                // Check for fallback auth tokens (backward compatibility)
                 if (data.hasTeacherToken) {
                     detectedState = 'teacher';
                     teacherLoggedIn = true;

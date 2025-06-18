@@ -504,3 +504,12 @@
 **Expected Behavior Now**:
 - Tournament: Full 5-second countdown, then redirect (game stays 'pending' during countdown)
 - Quiz: Immediate redirect when teacher starts from dashboard
+
+## 🐛 NEW BUG DISCOVERED: Guest User Identity Loss
+**Date**: 2025-06-18  
+**Issue**: Guest users experience identity loss on page refresh/navigation
+- Username changes from chosen name (e.g., "zozo") to generated format ("guest-77ea...")
+- Avatar reverts to default instead of chosen avatar
+- Suggests issue with guest user persistence in AuthProvider
+
+**Next Steps**: Investigate AuthProvider guest user state management

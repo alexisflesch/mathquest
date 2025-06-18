@@ -171,7 +171,7 @@ exports.UpgradeAccountResponseSchema = zod_1.z.object({
     user: ApiUserSchema
 });
 exports.AuthStatusResponseSchema = zod_1.z.object({
-    authState: zod_1.z.string(),
+    authState: zod_1.z.enum(['anonymous', 'student', 'teacher', 'guest']),
     cookiesFound: zod_1.z.number(),
     cookieNames: zod_1.z.array(zod_1.z.string()),
     hasAuthToken: zod_1.z.boolean(),

@@ -1250,6 +1250,10 @@ textarea:focus {
   /* Reasonable space for usernames - long names will be truncated with "..." */
 }
 
+.appnav-username.guest {
+  color: var(--guest) !important;
+}
+
 /* Simple Question List - Clean list style for question selection */
 .question-list-simple {
   background: var(--card);

@@ -701,8 +701,15 @@ router.get('/status', auth_1.optionalAuth, async (req, res) => {
                 role: userRole
             };
         }
-        // Determine auth state
-        const authState = userRole === 'TEACHER' ? 'teacher' : 'student';
+        // Determine auth state - distinguish between guest users and actual students
+        let authState = 'student';
+        if (userRole === 'TEACHER') {
+            authState = 'teacher';
+        }
+        else if (userRole === 'STUDENT') {
+            // Check if user has email (actual student) or no email (guest)
+            authState = user?.email ? 'student' : 'guest';
+        }
         // Legacy fields for backward compatibility
         const isTeacher = userRole === 'TEACHER';
         const teacherId = isTeacher ? userId : undefined;

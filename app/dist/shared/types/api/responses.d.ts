@@ -60,7 +60,7 @@ export interface PasswordResetConfirmResponse {
     message: string;
 }
 export interface AuthStatusResponse {
-    authState: 'anonymous' | 'student' | 'teacher';
+    authState: 'anonymous' | 'student' | 'teacher' | 'guest';
     cookiesFound: number;
     cookieNames: string[];
     hasAuthToken: boolean;

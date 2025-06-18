@@ -202,7 +202,7 @@ export const UpgradeAccountResponseSchema = z.object({
 });
 
 export const AuthStatusResponseSchema = z.object({
-    authState: z.string(),
+    authState: z.enum(['anonymous', 'student', 'teacher', 'guest']),
     cookiesFound: z.number(),
     cookieNames: z.array(z.string()),
     hasAuthToken: z.boolean(),

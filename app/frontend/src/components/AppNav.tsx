@@ -135,6 +135,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
         'Déconnexion': LogOut,
         'Profil': User,
         'Mon profil': User,
+        'Profil invité': User,
         // New icons for 4-state system
         'Se connecter': LogIn,
         'Enregistrer mon compte': UserPlus,
@@ -152,16 +153,25 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                 ];
 
             case 'guest':
-            case 'student':
-                // State 2 & 3: Guest (profile set but no account) and Student (full account)
-                // Same menu for consistent student experience
+                // State 2: Guest (profile set but no account)
                 return [
                     { label: 'Accueil', href: '/' },
                     { label: 'Entraînement libre', href: '/student/create-game?training=true' },
                     { label: 'Rejoindre un tournoi', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
                     { label: 'Mes tournois', href: '/my-tournaments' },
-                    { label: 'Profil', href: '/profile' },
+                    { label: 'Profil invité', href: '/profile' },
+                ];
+
+            case 'student':
+                // State 3: Student (full account)
+                return [
+                    { label: 'Accueil', href: '/' },
+                    { label: 'Entraînement libre', href: '/student/create-game?training=true' },
+                    { label: 'Rejoindre un tournoi', href: '/student/join' },
+                    { label: 'Créer un tournoi', href: '/student/create-game' },
+                    { label: 'Mes tournois', href: '/my-tournaments' },
+                    { label: 'Mon profil', href: '/profile' },
                 ];
 
             case 'teacher':
@@ -225,7 +235,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
         const content = (
             <div className="flex items-center min-w-0 w-full">
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm ml-2 whitespace-nowrap overflow-hidden text-ellipsis min-w-0 flex-1">
+                <span className={`text-sm ml-2 whitespace-nowrap overflow-hidden text-ellipsis min-w-0 flex-1 ${label === 'Profil invité' ? 'text-[color:var(--guest)] font-semibold' : ''}`}>
                     {label}
                     {children}
                 </span>
@@ -282,7 +292,8 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     {(userState === 'guest' || userState === 'student' || userState === 'teacher') && (
                         <div className="flex items-center justify-start h-full pl-10 pr-2 overflow-hidden">
                             {/* Username - positioned on the left, will be naturally cropped by sidebar overflow */}
-                            <span className="text-sm whitespace-nowrap overflow-hidden min-w-0 flex-1 mr-3 text-right">
+                            <span className={`text-sm whitespace-nowrap overflow-hidden min-w-0 flex-1 mr-3 text-right ${userState === 'guest' ? 'text-[color:var(--guest)] font-semibold' : ''
+                                }`}>
                                 {username || (isLoading ? 'Chargement...' : userState === 'teacher' ? 'Enseignant' : 'Étudiant')}
                             </span>
 
@@ -408,7 +419,18 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     {/* User section */}
                     <div className="appnav-user-section">
                         {userState === 'guest' ? (
-                            <span className="guest-label">Invité</span>
+                            <>
+                                {avatar && (
+                                    <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)] flex-shrink-0">
+                                        {avatar}
+                                    </div>
+                                )}
+                                {username ? (
+                                    <span className="appnav-username guest">{username}</span>
+                                ) : (
+                                    <span className="guest-label">Invité</span>
+                                )}
+                            </>
                         ) : (userState === 'student' || userState === 'teacher') ? (
                             <>
                                 {avatar && (
@@ -439,7 +461,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     {/* Overlay click closes menu with animation */}
                     <div className="absolute inset-0" onClick={() => setOpen(false)} />
                     <nav
-                        className={`absolute left-0 top-0 w-64 h-full bg-[color:var(--navbar)] text-white p-0 shadow-lg transition-transform duration-300 transform ${open ? 'translate-x-0' : '-translate-x-full'}`}
+                        className={`absolute left-0 top-0 w-64 h-full bg-[color:var(--navbar)] text-white p-0 shadow-lg transition-transform duration-300 transform flex flex-col ${open ? 'translate-x-0' : '-translate-x-full'}`}
                         style={{ willChange: 'transform' }}
                     >
                         {/* Header row: close icon left, theme toggle right */}
@@ -460,56 +482,68 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                                 {theme === 'system' && <Monitor className="w-5 text-green-400" />}
                             </Link>
                         </div>
-                        <div className="p-6 space-y-1">
-                            {menu.map((item, index) => {
-                                const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
+                        
+                        {/* Main content area - flex column to push bottom items down */}
+                        <div className="flex-1 flex flex-col">
+                            {/* Menu items */}
+                            <div className="p-6 space-y-1 flex-1">
+                                {menu.map((item, index) => {
+                                    const Icon = (iconMap as Record<string, typeof Home>)[item.label] || Home;
 
-                                // Handle section headers
-                                if (item.defaultMode === 'section') {
-                                    return (
-                                        <div key={`mobile-section-${index}`} className="pt-3 pb-1">
-                                            <div className="flex items-center gap-2 px-2">
-                                                <div className="flex-1 border-t border-white/30"></div>
-                                                <span className="text-xs font-semibold text-white/70 uppercase tracking-wider px-2">
-                                                    {item.label}
-                                                </span>
-                                                <div className="flex-1 border-t border-white/30"></div>
+                                    // Handle section headers
+                                    if (item.defaultMode === 'section') {
+                                        return (
+                                            <div key={`mobile-section-${index}`} className="pt-3 pb-1">
+                                                <div className="flex items-center gap-2 px-2">
+                                                    <div className="flex-1 border-t border-white/30"></div>
+                                                    <span className="text-xs font-semibold text-white/70 uppercase tracking-wider px-2">
+                                                        {item.label}
+                                                    </span>
+                                                    <div className="flex-1 border-t border-white/30"></div>
+                                                </div>
                                             </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div key={item.label}>
+                                            {item.href && (
+                                                <Link href={item.href} className="flex items-center gap-3 px-4 py-1.5 rounded hover:bg-gray-700 text-sm" onClick={() => setOpen(false)}>
+                                                    <Icon className="w-5 h-5" />
+                                                    <span className={item.label === 'Profil invité' ? 'text-[color:var(--guest)] font-semibold' : ''}>
+                                                        {item.label}
+                                                    </span>
+                                                </Link>
+                                            )}
                                         </div>
                                     );
-                                }
+                                })}
+                            </div>
 
-                                return (
-                                    <div key={item.label}>
-                                        {item.href && (
-                                            <Link href={item.href} className="flex items-center gap-3 px-4 py-1.5 rounded hover:bg-gray-700 text-sm" onClick={() => setOpen(false)}>
-                                                <Icon className="w-5 h-5" />
-                                                <span>{item.label}</span>
-                                            </Link>
-                                        )}
-                                    </div>
-                                );
-                            })}
-
-                            {/* Theme toggle and logout for mobile */}
-                            <div className="pt-4 mt-4 border-t border-white/20 space-y-1">
-                                <button onClick={() => { toggleTheme(); }}
-                                    className={`flex items-center gap-3 w-full text-left px-4 py-1.5 rounded transition-colors text-sm ${theme === 'light' ? 'text-yellow-400' : theme === 'dark' ? 'text-blue-400' : 'text-green-400'}`}>
-                                    {theme === 'light' && <Sun className="w-5 h-5" />}
-                                    {theme === 'dark' && <Moon className="w-5 h-5" />}
-                                    {theme === 'system' && <Monitor className="w-5 h-5" />}
-                                    <span>
-                                        {theme === 'light' ? 'Thème clair' : theme === 'dark' ? 'Thème sombre' : 'Thème système'}
-                                    </span>
-                                </button>
-
-                                {(userState === 'guest' || userState === 'student' || userState === 'teacher') && (
-                                    <button onClick={() => { setOpen(false); handleDisconnect(); }}
-                                        className="flex items-center gap-3 w-full text-left px-4 py-1.5 rounded bg-gray-700 hover:bg-red-600 text-sm">
-                                        <LogOut className="w-5 h-5" />
-                                        <span>Déconnexion</span>
+                            {/* Bottom section: Theme toggle and logout - matches desktop layout */}
+                            <div className="p-6 mt-auto">
+                                {/* Separator line */}
+                                <div className="border-t border-white/20 mb-4"></div>
+                                
+                                <div className="space-y-1">
+                                    <button onClick={() => { toggleTheme(); }}
+                                        className={`flex items-center gap-3 w-full text-left px-4 py-1.5 rounded transition-colors text-sm ${theme === 'light' ? 'text-yellow-400' : theme === 'dark' ? 'text-blue-400' : 'text-green-400'}`}>
+                                        {theme === 'light' && <Sun className="w-5 h-5" />}
+                                        {theme === 'dark' && <Moon className="w-5 h-5" />}
+                                        {theme === 'system' && <Monitor className="w-5 h-5" />}
+                                        <span>
+                                            {theme === 'light' ? 'Thème clair' : theme === 'dark' ? 'Thème sombre' : 'Thème système'}
+                                        </span>
                                     </button>
-                                )}
+
+                                    {(userState === 'guest' || userState === 'student' || userState === 'teacher') && (
+                                        <button onClick={() => { setOpen(false); handleDisconnect(); }}
+                                            className="flex items-center gap-3 w-full text-left px-4 py-1.5 rounded bg-gray-700 hover:bg-red-600 text-sm">
+                                            <LogOut className="w-5 h-5" />
+                                            <span>Déconnexion</span>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </nav>

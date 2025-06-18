@@ -45,7 +45,7 @@ export async function GET() {
         const authToken = cookieStore.get('authToken');
         const teacherToken = cookieStore.get('teacherToken');
 
-        let authState = 'anonymous';
+        let authState: 'anonymous' | 'student' | 'teacher' | 'guest' = 'anonymous';
         if (teacherToken) {
             authState = 'teacher';
         } else if (authToken) {
