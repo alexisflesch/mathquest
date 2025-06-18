@@ -21,7 +21,7 @@ function mapPrismaToGameParticipant(prismaParticipant: any): GameParticipant {
         id: prismaParticipant.id,
         userId: prismaParticipant.userId,
         username: prismaParticipant.user?.username || 'Unknown',
-        avatar: prismaParticipant.user?.avatarEmoji || '😀',
+        avatarEmoji: prismaParticipant.user?.avatarEmoji || '😀',
         score: prismaParticipant.score || 0,
         joinedAt: prismaParticipant.joinedAt?.toISOString() || new Date().toISOString(),
         online: true // Default to online when mapping

@@ -34,6 +34,26 @@ async function getFormattedLeaderboard(accessCode) {
             ? Object.values(participantsHash).map(p => JSON.parse(p))
             : [];
         const leaderboardRaw = await redis_1.redisClient.zrevrange(`${GAME_LEADERBOARD_PREFIX}${accessCode}`, 0, -1, 'WITHSCORES');
+        // If Redis leaderboard is empty, try to get from database
+        if (leaderboardRaw.length === 0) {
+            logger.info({ accessCode }, "Redis leaderboard empty, checking database");
+            const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
+                where: { accessCode },
+                select: { leaderboard: true }
+            });
+            if (gameInstance?.leaderboard && Array.isArray(gameInstance.leaderboard)) {
+                logger.info({ accessCode, count: gameInstance.leaderboard.length }, "Using database leaderboard");
+                return gameInstance.leaderboard.map((entry, index) => ({
+                    ...entry,
+                    avatarEmoji: entry.avatarEmoji || entry.avatar, // Ensure consistent field name
+                    rank: index + 1
+                }));
+            }
+            else {
+                logger.warn({ accessCode }, "No leaderboard found in database either");
+                return [];
+            }
+        }
         const leaderboardPromises = [];
         for (let i = 0; i < leaderboardRaw.length; i += 2) {
             const userId = leaderboardRaw[i];
@@ -43,7 +63,7 @@ async function getFormattedLeaderboard(accessCode) {
                 leaderboardPromises.push(Promise.resolve({
                     userId,
                     username: playerInfo.username,
-                    avatarEmoji: playerInfo.avatarEmoji,
+                    avatarEmoji: playerInfo.avatarEmoji, // Use canonical avatarEmoji field name
                     score
                 }));
             }
@@ -59,7 +79,7 @@ async function getFormattedLeaderboard(accessCode) {
                         return {
                             userId,
                             username: user.username || 'Unknown Player',
-                            avatarEmoji: user.avatarEmoji || undefined,
+                            avatarEmoji: user.avatarEmoji || undefined, // Use canonical avatarEmoji field name
                             score
                         };
                     }
@@ -67,25 +87,25 @@ async function getFormattedLeaderboard(accessCode) {
                     return {
                         userId,
                         username: 'Unknown Player',
-                        avatarEmoji: undefined,
+                        avatarEmoji: undefined, // Use canonical avatarEmoji field name
                         score
                     };
                 });
                 leaderboardPromises.push(userPromise);
             }
         }
-        let leaderboard = await Promise.all(leaderboardPromises);
+        let finalLeaderboard = await Promise.all(leaderboardPromises);
         // Sort by score descending, then by username ascending as a tie-breaker
-        leaderboard.sort((a, b) => {
+        finalLeaderboard.sort((a, b) => {
             if (b.score !== a.score) {
                 return b.score - a.score;
             }
             return (a.username || '').localeCompare(b.username || '');
         });
         // Add rank after sorting
-        leaderboard = leaderboard.map((entry, index) => ({ ...entry, rank: index + 1 }));
-        logger.info({ accessCode, count: leaderboard.length }, "Formatted leaderboard from Redis/DB.");
-        return leaderboard;
+        finalLeaderboard = finalLeaderboard.map((entry, index) => ({ ...entry, rank: index + 1 }));
+        logger.info({ accessCode, count: finalLeaderboard.length }, "Formatted leaderboard from Redis/DB.");
+        return finalLeaderboard;
     }
     catch (error) {
         logger.error({ accessCode, error }, 'Error fetching formatted leaderboard');
@@ -439,8 +459,22 @@ async function calculateScores(accessCode, questionUid) {
                 }
                 let points = 0;
                 if (isCorrect) {
-                    const timeSpent = Math.max(0, answerData.timeSpent || (question.timeLimit || 30));
-                    points = Math.max(100, 1000 - Math.floor(timeSpent * 10));
+                    // Fix timeSpent calculation - if it's a large timestamp, treat it as such
+                    let actualTimeSpent;
+                    if (answerData.timeSpent > 1000000000000) { // If it's a timestamp (> year 2001 in ms)
+                        // This is likely a timestamp, we need the actual time spent
+                        // For now, we'll use a default reasonable time or try to calculate from timestamp
+                        actualTimeSpent = question.timeLimit || 30; // Default to question time limit
+                        logger.warn({ accessCode, userId, questionUid, originalTimeSpent: answerData.timeSpent }, 'Received timestamp instead of time spent, using question time limit');
+                    }
+                    else {
+                        // Convert to seconds if it was in milliseconds
+                        actualTimeSpent = answerData.timeSpent > 1000 ? answerData.timeSpent / 1000 : answerData.timeSpent;
+                    }
+                    // Calculate points: base score 1000, minus time penalty, minimum 100 points
+                    const timePenalty = Math.floor(actualTimeSpent * 10);
+                    points = Math.max(100, 1000 - timePenalty);
+                    logger.debug({ accessCode, userId, questionUid, actualTimeSpent, timePenalty, points }, 'Score calculation details');
                 }
                 participant.score = (participant.score || 0) + points;
                 participant.lastAnswerAt = answerData.timestamp || Date.now();

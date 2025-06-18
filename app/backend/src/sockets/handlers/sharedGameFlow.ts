@@ -93,6 +93,36 @@ export async function runGameFlow(
             io.to(`game_${accessCode}`).emit('game_question', gameQuestionPayload);
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
 
+            // Track question start time for all users currently in the room for server-side timing
+            try {
+                const roomName = `game_${accessCode}`;
+                const socketsInRoom = await io.in(roomName).fetchSockets();
+                const currentTime = Date.now();
+
+                for (const socket of socketsInRoom) {
+                    if (socket.data.userId) {
+                        const questionStartKey = `mathquest:game:question_start:${accessCode}:${questions[i].uid}:${socket.data.userId}`;
+                        // Only set if not already set (in case of reconnections)
+                        const existingStartTime = await redisClient.get(questionStartKey);
+                        if (!existingStartTime) {
+                            await redisClient.set(questionStartKey, currentTime.toString(), 'EX', 300); // Expire after 5 minutes
+                        }
+                    }
+                }
+
+                logger.debug({
+                    accessCode,
+                    questionUid: questions[i].uid,
+                    userCount: socketsInRoom.length
+                }, 'Tracked question start time for all users in room');
+            } catch (error) {
+                logger.error({
+                    accessCode,
+                    questionUid: questions[i].uid,
+                    error
+                }, 'Failed to track question start times for users');
+            }
+
             // Emit timer update to start frontend countdown
             const gameTimerUpdatePayload = {
                 questionUid: questions[i].uid,
@@ -174,6 +204,17 @@ export async function runGameFlow(
                 options.onFeedback?.(i); // Still call the callback for consistency
             }
         }
+
+        // Game completed - persist final leaderboard to database
+        try {
+            const { calculateLeaderboard, persistLeaderboardToGameInstance } = await import('./sharedLeaderboard');
+            const finalLeaderboard = await calculateLeaderboard(accessCode);
+            await persistLeaderboardToGameInstance(accessCode, finalLeaderboard);
+            logger.info({ accessCode, leaderboard: finalLeaderboard }, '[SharedGameFlow] Final leaderboard persisted to database');
+        } catch (error) {
+            logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');
+        }
+
         // Game completed, emit game_ended with stats for navigation
         const gameEndedPayload = {
             accessCode,

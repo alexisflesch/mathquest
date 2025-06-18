@@ -482,7 +482,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                                 {theme === 'system' && <Monitor className="w-5 text-green-400" />}
                             </Link>
                         </div>
-                        
+
                         {/* Main content area - flex column to push bottom items down */}
                         <div className="flex-1 flex flex-col">
                             {/* Menu items */}
@@ -524,7 +524,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                             <div className="p-6 mt-auto">
                                 {/* Separator line */}
                                 <div className="border-t border-white/20 mb-4"></div>
-                                
+
                                 <div className="space-y-1">
                                     <button onClick={() => { toggleTheme(); }}
                                         className={`flex items-center gap-3 w-full text-left px-4 py-1.5 rounded transition-colors text-sm ${theme === 'light' ? 'text-yellow-400' : theme === 'dark' ? 'text-blue-400' : 'text-green-400'}`}>

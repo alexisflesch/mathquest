@@ -178,7 +178,7 @@ describe('Games API Integration Tests', () => {
                     id: 'participant-123',
                     userId,
                     username: 'TestPlayer',
-                    avatar: '🎮',
+                    avatarEmoji: '🎮',
                     score: 0
                 }
             };

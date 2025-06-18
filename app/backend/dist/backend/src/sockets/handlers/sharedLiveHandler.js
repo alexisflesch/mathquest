@@ -40,6 +40,7 @@ exports.registerSharedLiveHandlers = registerSharedLiveHandlers;
 const sharedLeaderboard_1 = require("./sharedLeaderboard");
 const sharedAnswers_1 = require("./sharedAnswers");
 const sharedScore_1 = require("./sharedScore");
+const timingService_1 = __importDefault(require("@/services/timingService"));
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = require("@/core/gameStateService");
 const redis_1 = require("@/config/redis");
@@ -167,6 +168,8 @@ function registerSharedLiveHandlers(io, socket) {
                         questionIndex: gs.currentQuestionIndex,
                         totalQuestions: gs.questionUids.length
                     });
+                    // Track when this user first sees this question for server-side timing
+                    await timingService_1.default.trackQuestionStart(accessCode, questionUid, userId);
                     // Send timer state as a separate event
                     if (gs.timer) {
                         // Calculate actual remaining time for late joiners
@@ -410,6 +413,9 @@ function registerSharedLiveHandlers(io, socket) {
                 });
                 return;
             }
+            // Calculate server-side time spent using TimingService
+            const serverTimeSpent = await timingService_1.default.calculateAndCleanupTimeSpent(accessCode, questionUid, userId);
+            logger.info({ accessCode, userId, questionUid, serverTimeSpent }, 'TimingService.calculateAndCleanupTimeSpent result');
             // Determine if the answer is correct
             // This is a simplified check, adapt as per your actual answer structure and correctness logic
             let isCorrect = false;
@@ -429,14 +435,17 @@ function registerSharedLiveHandlers(io, socket) {
             }
             const answerForScoring = {
                 isCorrect,
-                timeSpent, // timeSpent from payload
-                // Add any other properties 'calculateScore' might need from the 'answer' payload
+                serverTimeSpent, // SERVER-CALCULATED time spent
                 value: answer
             };
+            logger.info({ accessCode, userId, questionUid, answerForScoring }, 'Scoring input');
             const score = (0, sharedScore_1.calculateScore)(answerForScoring, question); // Corrected call
+            logger.info({ accessCode, userId, questionUid, score, answerForScoring }, 'Score calculated');
             participantData.score = (participantData.score || 0) + score;
+            logger.info({ accessCode, userId, questionUid, newScore: participantData.score }, 'Participant score updated');
             await redis_1.redisClient.hset(participantKey, userId, JSON.stringify(participantData));
             await redis_1.redisClient.zadd(`mathquest:game:leaderboard:${accessCode}`, 'INCR', score, userId);
+            logger.info({ accessCode, userId, questionUid, score, leaderboardKey: `mathquest:game:leaderboard:${accessCode}` }, 'Leaderboard updated');
             socket.emit('answer_feedback', { status: 'ok', questionUid, scoreAwarded: score });
             logger.info({ accessCode, userId, questionUid, scoreAwarded: score }, 'Answer processed, feedback sent');
             if (currentPlayMode === 'quiz') {

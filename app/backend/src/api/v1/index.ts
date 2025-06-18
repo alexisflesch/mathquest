@@ -9,6 +9,7 @@ import gamesRouter from './games'; // Re-enabled gamesRouter
 import questionsRouter from './questions'; // Import questionsRouter
 import studentRouter from './student'; // Import studentRouter
 import usersRouter from './users'; // Import usersRouter
+import myTournamentsRouter from './myTournaments'; // Import myTournamentsRouter
 import practiceSessionsRouter from './practice/sessions'; // Import practiceSessionsRouter
 // import gameSessionsRouter from './gameSessions';
 import { teacherAuth } from '@/middleware/auth';
@@ -47,6 +48,9 @@ router.use('/users', usersRouter);
 
 // Mount the practice sessions router
 router.use('/practice/sessions', practiceSessionsRouter);
+
+// Mount the my-tournaments router
+router.use('/my-tournaments', myTournamentsRouter);
 
 // User management routes
 // router.use('/users', usersManagementRouter); // Commented out

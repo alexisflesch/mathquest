@@ -5,6 +5,7 @@ import { GameTemplateService } from '@/core/services/gameTemplateService';
 // Import specific functions from gameStateService
 import { initializeGameState, getFullGameState, getFormattedLeaderboard } from '@/core/gameStateService';
 import { redisClient } from '@/config/redis';
+import { prisma } from '@/db/prisma';
 import { teacherAuth, optionalAuth } from '@/middleware/auth';
 import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
@@ -666,6 +667,60 @@ router.delete('/:id', teacherAuth, async (req: Request, res: Response): Promise<
         } else {
             res.status(500).json({ error: 'An error occurred while deleting the game instance' });
         }
+    }
+});
+
+/**
+ * Check if a user can play a game in differed mode
+ * GET /api/v1/games/:code/can-play-differed?userId=:userId
+ * Public endpoint - no authentication required
+ */
+router.get('/:code/can-play-differed', async (req: Request, res: Response) => {
+    try {
+        const { code } = req.params;
+        const { userId } = req.query;
+
+        if (!code || !userId) {
+            res.status(400).json({ error: 'Missing required parameters: code and userId' });
+            return;
+        }
+
+        // Get the game instance
+        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+
+        // Check if the game is configured for differed play
+        if (!gameInstance.isDiffered || !gameInstance.differedAvailableTo) {
+            res.json({ canPlay: false });
+            return;
+        }
+
+        // Check if the differed window is still open
+        const now = new Date();
+        const isStillAvailable = new Date(gameInstance.differedAvailableTo) > now;
+
+        if (!isStillAvailable) {
+            res.json({ canPlay: false });
+            return;
+        }
+
+        // Check if the user has already participated
+        const existingParticipation = await prisma.gameParticipant.findFirst({
+            where: {
+                gameInstanceId: gameInstance.id,
+                userId: userId as string
+            }
+        });
+
+        // User can play if they haven't participated yet or if they haven't completed it
+        const canPlay = !existingParticipation || !existingParticipation.completedAt;
+        res.json({ canPlay });
+    } catch (error) {
+        logger.error('Failed to check differed play availability', error);
+        res.status(500).json({ error: 'Failed to check differed play availability' });
     }
 });
 

@@ -6,10 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.gameAnswerHandler = gameAnswerHandler;
 const gameParticipantService_1 = require("@/core/services/gameParticipantService");
 const prisma_1 = require("@/db/prisma");
+const redis_1 = require("@/config/redis");
 const gameStateService_1 = require("@/core/gameStateService");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const sharedLeaderboard_1 = require("../sharedLeaderboard");
+const sharedScore_1 = require("../sharedScore");
+const timingService_1 = require("@/services/timingService");
 const helpers_1 = require("../teacherControl/helpers");
 const logger = (0, logger_1.default)('GameAnswerHandler');
 function gameAnswerHandler(io, socket) {
@@ -211,11 +214,46 @@ function gameAnswerHandler(io, socket) {
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
             });
+            // Calculate server-side time spent using TimingService
+            const serverTimeSpent = await timingService_1.TimingService.calculateAndCleanupTimeSpent(accessCode, questionUid, userId);
+            logger.info({ accessCode, userId, questionUid, serverTimeSpent }, 'TimingService.calculateAndCleanupTimeSpent result');
             // Determine if the answer is correct
             const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
             if (question && Array.isArray(question.correctAnswers) && typeof answer === 'number' && answer >= 0 && answer < question.correctAnswers.length) {
                 isCorrect = question.correctAnswers[answer] === true;
                 logger.debug({ isCorrect, questionUid, answer }, 'Determined answer correctness');
+            }
+            // Calculate score using server-side timing
+            if (question) {
+                const answerForScoring = {
+                    isCorrect,
+                    serverTimeSpent, // SERVER-CALCULATED time spent
+                    value: answer
+                };
+                logger.info({ accessCode, userId, questionUid, answerForScoring }, 'Scoring input');
+                const score = (0, sharedScore_1.calculateScore)(answerForScoring, question);
+                logger.info({ accessCode, userId, questionUid, score, answerForScoring }, 'Score calculated');
+                // Update participant score in database
+                if (score > 0) {
+                    const updatedParticipant = await prisma_1.prisma.gameParticipant.update({
+                        where: { id: participant.id },
+                        data: {
+                            score: {
+                                increment: score
+                            }
+                        }
+                    });
+                    logger.info({ accessCode, userId, questionUid, newScore: updatedParticipant.score, scoreAdded: score }, 'Participant score updated in database');
+                    // Also update Redis participant data to sync with database
+                    const participantKey = `mathquest:game:participants:${accessCode}`;
+                    const redisParticipantData = await redis_1.redisClient.hget(participantKey, userId);
+                    if (redisParticipantData) {
+                        const participantData = JSON.parse(redisParticipantData);
+                        participantData.score = updatedParticipant.score;
+                        await redis_1.redisClient.hset(participantKey, userId, JSON.stringify(participantData));
+                        logger.info({ accessCode, userId, questionUid, redisScore: participantData.score }, 'Redis participant score synchronized with database');
+                    }
+                }
             }
             // Emit real-time answer statistics to teacher dashboard
             try {

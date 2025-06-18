@@ -6,6 +6,7 @@
  * - Automatic timestamps
  * - Contextual prefixes for easier log filtering
  * - Environment-based configuration
+ * - Both console and file logging using Winston
  *
  * Usage:
  *   import createLogger from '../utils/logger';
@@ -16,55 +17,73 @@
  *   logger.error('Error condition', errorObject);
  */
 
-// Log levels and their priorities
-enum LogLevel {
-    DEBUG = 0,
-    INFO = 1,
-    WARN = 2,
-    ERROR = 3,
-    NONE = 4
-}
+import winston from 'winston';
+import path from 'path';
 
-// Set minimum log level based on environment (can be overridden via env var)
-// Default level is DEBUG in development, INFO in production, and INFO in test (was WARN)
-const DEFAULT_LOG_LEVEL: LogLevel = process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
-let MIN_LOG_LEVEL: LogLevel =
-    process.env.NODE_ENV === 'test'
-        ? LogLevel.INFO // Show info+ in test
-        : (process.env.LOG_LEVEL
-            ? (LogLevel[process.env.LOG_LEVEL.toUpperCase() as keyof typeof LogLevel] ?? DEFAULT_LOG_LEVEL)
-            : DEFAULT_LOG_LEVEL);
-// Allow override from global (for test patching)
-if (typeof global !== 'undefined' && (global as any).MIN_LOG_LEVEL !== undefined) {
-    MIN_LOG_LEVEL = (global as any).MIN_LOG_LEVEL;
-}
-
-// ANSI color codes for different log levels
-const COLORS = {
-    DEBUG: '\x1b[36m', // Cyan
-    INFO: '\x1b[32m',  // Green
-    WARN: '\x1b[33m',  // Yellow
-    ERROR: '\x1b[31m', // Red
-    RESET: '\x1b[0m'   // Reset
+// Winston log levels and their priorities
+const logLevels = {
+    error: 0,
+    warn: 1,
+    info: 2,
+    debug: 3
 };
 
-/**
- * Format the current timestamp
- * @returns {string} Formatted timestamp [YYYY-MM-DD HH:MM:SS.mmm]
- */
-function getTimestamp(): string {
-    const now = new Date();
-    // Pad single digit numbers with a leading zero
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const YYYY = now.getFullYear();
-    const MM = pad(now.getMonth() + 1);
-    const DD = pad(now.getDate());
-    const HH = pad(now.getHours());
-    const mm = pad(now.getMinutes());
-    const ss = pad(now.getSeconds());
-    const mmm = now.getMilliseconds().toString().padStart(3, '0');
-    return `[${YYYY}-${MM}-${DD} ${HH}:${mm}:${ss}.${mmm}]`;
-}
+// Set minimum log level based on environment (can be overridden via env var)
+const DEFAULT_LOG_LEVEL = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+const LOG_LEVEL = process.env.NODE_ENV === 'test' ? 'info' : (process.env.LOG_LEVEL || DEFAULT_LOG_LEVEL);
+
+// Determine log directory
+const LOG_DIR = path.join(process.cwd(), 'logs');
+
+// Winston configuration
+const winstonConfig = {
+    levels: logLevels,
+    level: LOG_LEVEL,
+    format: winston.format.combine(
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+    ),
+    transports: [
+        // Console transport with colors for development
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+                winston.format.printf(({ timestamp, level, message, component, ...meta }) => {
+                    const componentStr = component ? `[${component}] ` : '';
+                    const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+                    return `${timestamp} ${level} ${componentStr}${message}${metaStr}`;
+                })
+            )
+        }),
+        // Combined log file (all logs)
+        new winston.transports.File({
+            filename: path.join(LOG_DIR, 'combined.log'),
+            level: 'debug', // Explicitly log all levels
+            maxsize: 10 * 1024 * 1024, // 10MB
+            maxFiles: 5,
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+            )
+        }),
+        // Error log file (errors only)
+        new winston.transports.File({
+            filename: path.join(LOG_DIR, 'error.log'),
+            level: 'error',
+            maxsize: 10 * 1024 * 1024, // 10MB
+            maxFiles: 5,
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+            )
+        })
+    ]
+};
+
+// Create the base winston logger
+const baseLogger = winston.createLogger(winstonConfig);
 
 interface Logger {
     debug: (...args: any[]) => void;
@@ -74,55 +93,55 @@ interface Logger {
 }
 
 /**
- * Creates a logger instance with a specific prefix.
- * @param prefix - The prefix to use for log messages (e.g., component name)
+ * Creates a logger instance with a specific component prefix.
+ * @param component - The component name to use for log messages (e.g., component name)
  * @returns Logger instance
  */
-function createLogger(prefix: string): Logger {
-    const log = (level: LogLevel, color: string, ...args: any[]): void => {
-        if (level >= MIN_LOG_LEVEL) {
-            const timestamp = getTimestamp();
-            const prefixStr = `[${prefix}]`;
-
-            // Convert all arguments to strings, handling objects and errors
-            const processedArgs = args.map(arg => {
-                if (arg instanceof Error) {
-                    return `${arg.message}${arg.stack ? `\n${arg.stack}` : ''}`;
-                }
-                if (typeof arg === 'object' && arg !== null) {
-                    try {
-                        return JSON.stringify(arg, null, 2); // Pretty print objects
-                    } catch (e) {
-                        return '[Unserializable Object]';
-                    }
-                }
-                return arg;
-            });
-
-            console.log(`${timestamp} ${color}${levelToString(level).padEnd(5)}${COLORS.RESET} ${prefixStr}`, ...processedArgs);
-        }
-    };
-
-    const levelToString = (level: LogLevel): string => {
-        switch (level) {
-            case LogLevel.DEBUG: return 'DEBUG';
-            case LogLevel.INFO: return 'INFO';
-            case LogLevel.WARN: return 'WARN';
-            case LogLevel.ERROR: return 'ERROR';
-            default: return 'LOG';
-        }
-    };
-
+function createLogger(component: string): Logger {
     return {
-        debug: (...args: any[]) => log(LogLevel.DEBUG, COLORS.DEBUG, ...args),
-        info: (...args: any[]) => log(LogLevel.INFO, COLORS.INFO, ...args),
-        warn: (...args: any[]) => log(LogLevel.WARN, COLORS.WARN, ...args),
-        error: (...args: any[]) => log(LogLevel.ERROR, COLORS.ERROR, ...args),
+        debug: (...args: any[]) => {
+            baseLogger.debug(formatMessage(...args), { component });
+        },
+        info: (...args: any[]) => {
+            baseLogger.info(formatMessage(...args), { component });
+        },
+        warn: (...args: any[]) => {
+            baseLogger.warn(formatMessage(...args), { component });
+        },
+        error: (...args: any[]) => {
+            baseLogger.error(formatMessage(...args), { component });
+        }
     };
+}
+
+/**
+ * Helper function to format log messages consistently
+ */
+function formatMessage(...args: any[]): string {
+    return args.map(arg => {
+        if (arg instanceof Error) {
+            return `${arg.message}${arg.stack ? `\n${arg.stack}` : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+            try {
+                return JSON.stringify(arg, null, 2);
+            } catch (e) {
+                return '[Unserializable Object]';
+            }
+        }
+        return String(arg);
+    }).join(' ');
 }
 
 // Create default logger instance
 export const logger = createLogger('Server');
+
+// Startup message to verify winston is working
+logger.info('Winston logger initialized successfully', {
+    logLevel: LOG_LEVEL,
+    logDir: LOG_DIR,
+    nodeEnv: process.env.NODE_ENV
+});
 
 // Export for CommonJS environments (e.g., Node.js)
 export default createLogger;

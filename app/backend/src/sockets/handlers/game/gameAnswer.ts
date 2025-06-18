@@ -1,6 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { GameParticipantService } from '@/core/services/gameParticipantService';
 import { prisma } from '@/db/prisma';
+import { redisClient } from '@/config/redis';
 import { getFullGameState } from '@/core/gameStateService';
 import createLogger from '@/utils/logger';
 import {
@@ -13,9 +14,10 @@ import {
 } from '@shared/types/socketEvents';
 import { z } from 'zod';
 import { gameAnswerPayloadSchema } from '@shared/types/socketEvents.zod';
-import { calculateLeaderboard } from '../sharedLeaderboard';
+import { calculateLeaderboard, persistLeaderboardToGameInstance } from '../sharedLeaderboard';
 import { collectAnswers } from '../sharedAnswers';
 import { calculateScore } from '../sharedScore';
+import { TimingService } from '@/services/timingService';
 import { GAME_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import { getAnswerStats } from '../teacherControl/helpers';
 import type { DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
@@ -243,11 +245,55 @@ export function gameAnswerHandler(
                 userId: userId // Include required userId field
             });
 
+            // Calculate server-side time spent using TimingService
+            const serverTimeSpent = await TimingService.calculateAndCleanupTimeSpent(
+                accessCode,
+                questionUid,
+                userId
+            );
+            logger.info({ accessCode, userId, questionUid, serverTimeSpent }, 'TimingService.calculateAndCleanupTimeSpent result');
+
             // Determine if the answer is correct
             const question = await prisma.question.findUnique({ where: { uid: questionUid } });
             if (question && Array.isArray(question.correctAnswers) && typeof answer === 'number' && answer >= 0 && answer < question.correctAnswers.length) {
                 isCorrect = question.correctAnswers[answer] === true;
                 logger.debug({ isCorrect, questionUid, answer }, 'Determined answer correctness');
+            }
+
+            // Calculate score using server-side timing
+            if (question) {
+                const answerForScoring = {
+                    isCorrect,
+                    serverTimeSpent, // SERVER-CALCULATED time spent
+                    value: answer
+                };
+                logger.info({ accessCode, userId, questionUid, answerForScoring }, 'Scoring input');
+
+                const score = calculateScore(answerForScoring, question);
+                logger.info({ accessCode, userId, questionUid, score, answerForScoring }, 'Score calculated');
+
+                // Update participant score in database
+                if (score > 0) {
+                    const updatedParticipant = await prisma.gameParticipant.update({
+                        where: { id: participant.id },
+                        data: {
+                            score: {
+                                increment: score
+                            }
+                        }
+                    });
+                    logger.info({ accessCode, userId, questionUid, newScore: updatedParticipant.score, scoreAdded: score }, 'Participant score updated in database');
+
+                    // Also update Redis participant data to sync with database
+                    const participantKey = `mathquest:game:participants:${accessCode}`;
+                    const redisParticipantData = await redisClient.hget(participantKey, userId);
+                    if (redisParticipantData) {
+                        const participantData = JSON.parse(redisParticipantData);
+                        participantData.score = updatedParticipant.score;
+                        await redisClient.hset(participantKey, userId, JSON.stringify(participantData));
+                        logger.info({ accessCode, userId, questionUid, redisScore: participantData.score }, 'Redis participant score synchronized with database');
+                    }
+                }
             }
 
             // Emit real-time answer statistics to teacher dashboard

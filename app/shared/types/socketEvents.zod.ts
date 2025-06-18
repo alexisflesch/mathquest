@@ -65,9 +65,8 @@ export const participantDataSchema = z.object({
   id: z.string().min(1, { message: "Participant ID cannot be empty." }),
   userId: z.string().min(1, { message: "Player ID cannot be empty." }),
   username: z.string().min(1, { message: "Username cannot be empty." }),
-  avatar: z.string().min(1, { message: "Avatar cannot be empty." }),
+  avatarEmoji: z.string().min(1, { message: "Avatar emoji cannot be empty." }),
   score: z.number().int({ message: "Score must be an integer." }),
-  avatarEmoji: z.string().optional(), // For backward compatibility
   online: z.boolean().optional(),
   joinedAt: z.union([z.string().datetime({ message: "Invalid datetime string for joinedAt" }), z.number()]).optional(),
   socketId: z.string().optional(),

@@ -15,8 +15,8 @@ export interface BaseParticipant {
     id: string;
     /** Display name for the participant */
     username: string;
-    /** Avatar representation (emoji or URL) */
-    avatar: string;
+    /** Avatar emoji representation */
+    avatarEmoji: string;
     /** Current score in the game/tournament */
     score: number;
 }
@@ -30,8 +30,8 @@ export interface LobbyParticipant {
     id: string;
     /** Display name for the participant */
     username: string;
-    /** Avatar representation (emoji or URL) */
-    avatar: string;
+    /** Avatar emoji representation */
+    avatarEmoji: string;
     /** Optional cookie ID for session tracking */
     cookie_id?: string;
 }
@@ -75,8 +75,8 @@ export interface LeaderboardEntry {
     userId: string;
     /** Display name */
     username: string;
-    /** Avatar representation */
-    avatar?: string;
+    /** Avatar emoji representation */
+    avatarEmoji?: string;
     /** Current score */
     score: number;
     /** Calculated rank position */
@@ -111,12 +111,11 @@ export interface TournamentAnswer {
 }
 
 /**
- * Participant data interface for socket events
+ * Participant data interface for socket communication
  * Used in real-time communication payloads
  */
 export interface ParticipantData extends GameParticipant {
-    /** Optional avatar emoji for backward compatibility */
-    avatarEmoji?: string;
+    // Inherits avatarEmoji as required string from GameParticipant
 }
 
 /**

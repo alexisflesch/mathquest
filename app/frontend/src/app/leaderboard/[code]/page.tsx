@@ -17,8 +17,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Share2 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
-import { TournamentVerificationResponseSchema, TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
-import type { TournamentVerificationResponse } from '@shared/types/api/schemas';
+import { TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
 import type { LeaderboardEntry } from '@shared/types/core/participant';
 
 // Extend shared LeaderboardEntry with tournament-specific fields
@@ -44,10 +43,10 @@ export default function TournamentLeaderboardPage() {
     useEffect(() => {
         async function fetchLeaderboard() {
             try {
-                const tournoi = await makeApiRequest<TournamentVerificationResponse>(`tournament?code=${code}`, {}, undefined, TournamentVerificationResponseSchema);
-                if (!tournoi || !tournoi.verified) throw new Error('Tournoi introuvable ou non vérifié');
+                const gameResponse = await makeApiRequest<any>(`games/${code}`, {}, undefined, undefined);
+                if (!gameResponse || !gameResponse.gameInstance) throw new Error('Tournoi introuvable');
 
-                const lb = await makeApiRequest<TournamentLeaderboardResponse>(`tournament-leaderboard?code=${code}`, {}, undefined, TournamentLeaderboardResponseSchema);
+                const lb = await makeApiRequest<TournamentLeaderboardResponse>(`games/${code}/leaderboard`, {}, undefined, TournamentLeaderboardResponseSchema);
                 setLeaderboard(lb.leaderboard || []);
 
                 // Vérifier si l'utilisateur peut jouer en différé
@@ -57,7 +56,7 @@ export default function TournamentLeaderboardPage() {
                 }
                 if (userId) {
                     try {
-                        const differedResponse = await makeApiRequest<CanPlayDifferedResponse>(`can-play-differed?code=${code}&userId=${encodeURIComponent(userId)}`, {}, undefined, CanPlayDifferedResponseSchema);
+                        const differedResponse = await makeApiRequest<CanPlayDifferedResponse>(`games/${code}/can-play-differed?userId=${encodeURIComponent(userId)}`, {}, undefined, CanPlayDifferedResponseSchema);
                         setCanPlayDiffered(!!differedResponse.canPlay);
                     } catch (err) {
                         console.error('Error checking differed play availability:', err);
@@ -141,7 +140,7 @@ export default function TournamentLeaderboardPage() {
                                 currentusername &&
                                 currentAvatar &&
                                 p.username === currentusername &&
-                                p.avatar === currentAvatar;
+                                p.avatarEmoji === currentAvatar;
                             return (
                                 <li
                                     key={p.userId}
@@ -159,7 +158,7 @@ export default function TournamentLeaderboardPage() {
                                             boxShadow: "0 0 0 2px var(--border), 0 1px 2px 0 rgba(0,0,0,0.07)"
                                         }}
                                     >
-                                        {p.avatar}
+                                        {p.avatarEmoji}
                                     </div>
                                     <span className="w-8 text-center">#{idx + 1}</span>
                                     <span className="flex-1 flex items-center gap-2">

@@ -68,22 +68,19 @@ export function joinGameHandler(
             await socket.join(practiceRoomName);
             socket.data.currentGameRoom = practiceRoomName;
 
-            logger.debug({ practiceRoomName, socketId: socket.id }, 'Player joined practice room');
-
-            // Send successful join response for practice mode
-            const gameJoinedPayload: GameJoinedPayload = {
-                accessCode: 'PRACTICE',
-                gameStatus: 'active', // Practice mode is immediately active
-                isDiffered: false, // Practice mode is not deferred
-                participant: {
-                    id: userId,
-                    userId: userId, // Same as id for practice mode
-                    username,
-                    avatar: avatarEmoji || '🐼', // Use avatarEmoji as avatar
-                    avatarEmoji: avatarEmoji || '🐼',
-                    score: 0
-                }
-            };
+            logger.debug({ practiceRoomName, socketId: socket.id }, 'Player joined practice room');        // Send successful join response for practice mode
+        const gameJoinedPayload: GameJoinedPayload = {
+            accessCode: 'PRACTICE',
+            gameStatus: 'active', // Practice mode is immediately active
+            isDiffered: false, // Practice mode is not deferred
+            participant: {
+                id: userId,
+                userId: userId, // Same as id for practice mode
+                username,
+                avatarEmoji: avatarEmoji || '🐼', // Ensure avatarEmoji is never undefined
+                score: 0
+            }
+        };
 
             logger.info({ gameJoinedPayload }, 'Emitting game_joined for practice mode');
             socket.emit('game_joined', gameJoinedPayload);
@@ -173,7 +170,6 @@ export function joinGameHandler(
                 id: joinResult.participant.id,
                 userId: joinResult.participant.userId,
                 username: username || 'Unknown',
-                avatar: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '�', // Use parameter first, then user avatar, then default
                 score: joinResult.participant.score ?? 0, // Ensure it's always a number
                 avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼', // Use parameter first, then user avatar, then default
                 joinedAt: (joinResult.participant as any).joinedAt ?
@@ -200,7 +196,6 @@ export function joinGameHandler(
                     id: joinResult.participant.id,
                     userId: joinResult.participant.userId,
                     username: username || 'Unknown',
-                    avatar: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '�',
                     score: joinResult.participant.score ?? 0, // Ensure it's always a number
                     avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼',
                     joinedAt: (joinResult.participant as any).joinedAt ?
@@ -299,9 +294,8 @@ export function joinGameHandler(
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
                         username: username || 'Unknown',
-                        avatar: (joinResult.participant as any).user?.avatarEmoji || '�',
                         score: joinResult.participant.score ?? 0, // Ensure it's always a number
-                        avatarEmoji: (joinResult.participant as any).user?.avatarEmoji || '🐼',
+                        avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼',
                         online: true
                     }
                 };

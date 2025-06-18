@@ -9,8 +9,8 @@ exports.calculateScore = calculateScore;
 const logger_1 = __importDefault(require("@/utils/logger"));
 const logger = (0, logger_1.default)('ScoreUtils');
 /**
- * Calculate score for a single answer
- * @param answer The answer object (should include correctness, timeSpent, etc.)
+ * Calculate score for a single answer - SERVER-SIDE ONLY
+ * @param answer The answer object (should include correctness, serverTimeSpent, etc.)
  * @param question The question object (should include timeLimit, difficulty, etc.)
  * @returns The score for this answer
  */
@@ -21,6 +21,16 @@ function calculateScore(answer, question) {
     if (!answer.isCorrect)
         return 0;
     const base = 1000;
-    const timePenalty = Math.floor((answer.timeSpent || 0) * 10); // 10 points per second
-    return Math.max(base - timePenalty, 0);
+    // Use server-calculated time spent (in milliseconds), convert to seconds for penalty calculation
+    const serverTimeSpentSeconds = Math.max(0, (answer.serverTimeSpent || 0) / 1000);
+    const timePenalty = Math.floor(serverTimeSpentSeconds * 10); // 10 points per second
+    const finalScore = Math.max(base - timePenalty, 0);
+    logger.debug({
+        base,
+        serverTimeSpentMs: answer.serverTimeSpent,
+        serverTimeSpentSeconds,
+        timePenalty,
+        finalScore
+    }, 'Score calculation');
+    return finalScore;
 }

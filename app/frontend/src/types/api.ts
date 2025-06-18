@@ -234,7 +234,7 @@ export type CanPlayDifferedResponse = {
     canPlay: boolean;
 };
 export type MyTournamentsResponse = {
-    created: Array<{
+    pending: Array<{
         id: string;
         code: string;
         name: string;
@@ -242,9 +242,13 @@ export type MyTournamentsResponse = {
         createdAt: string;
         date_debut: string | null;
         date_fin: string | null;
+        creatorUsername: string;
         leaderboard?: unknown[];
+        // For participated tournaments
+        position?: number;
+        score?: number;
     }>;
-    played: Array<{
+    active: Array<{
         id: string;
         code: string;
         name: string;
@@ -252,9 +256,25 @@ export type MyTournamentsResponse = {
         createdAt: string;
         date_debut: string | null;
         date_fin: string | null;
+        creatorUsername: string;
         leaderboard?: unknown[];
-        position: number;
-        score: number;
+        // For participated tournaments
+        position?: number;
+        score?: number;
+    }>;
+    ended: Array<{
+        id: string;
+        code: string;
+        name: string;
+        statut: string;
+        createdAt: string;
+        date_debut: string | null;
+        date_fin: string | null;
+        creatorUsername: string;
+        leaderboard?: unknown[];
+        // For participated tournaments
+        position?: number;
+        score?: number;
     }>;
 };
 
@@ -282,7 +302,7 @@ export const TournamentLeaderboardResponseSchema = z.object({
     leaderboard: z.array(z.object({
         userId: z.string(), // Use userId to match shared LeaderboardEntry type
         username: z.string(),
-        avatar: z.string().optional(), // Make optional to match shared type
+        avatarEmoji: z.string().optional(), // Use canonical avatarEmoji field name
         score: z.number(),
         rank: z.number().optional(), // Add rank field from shared type
         isDiffered: z.boolean().optional()
@@ -294,7 +314,7 @@ export const CanPlayDifferedResponseSchema = z.object({
 });
 
 export const MyTournamentsResponseSchema = z.object({
-    created: z.array(z.object({
+    pending: z.array(z.object({
         id: z.string(),
         code: z.string(),
         name: z.string(),
@@ -302,19 +322,39 @@ export const MyTournamentsResponseSchema = z.object({
         createdAt: z.string(),
         date_debut: z.string().nullable(),
         date_fin: z.string().nullable(),
-        leaderboard: z.array(z.unknown()).optional()
-    })),
-    played: z.array(z.object({
-        id: z.string(),
-        code: z.string(),
-        name: z.string(),
-        statut: z.string(),
-        createdAt: z.string(),
-        date_debut: z.string().nullable(),
-        date_fin: z.string().nullable(),
+        creatorUsername: z.string(),
         leaderboard: z.array(z.unknown()).optional(),
-        position: z.number(),
-        score: z.number()
+        // For participated tournaments
+        position: z.number().optional(),
+        score: z.number().optional()
+    })),
+    active: z.array(z.object({
+        id: z.string(),
+        code: z.string(),
+        name: z.string(),
+        statut: z.string(),
+        createdAt: z.string(),
+        date_debut: z.string().nullable(),
+        date_fin: z.string().nullable(),
+        creatorUsername: z.string(),
+        leaderboard: z.array(z.unknown()).optional(),
+        // For participated tournaments
+        position: z.number().optional(),
+        score: z.number().optional()
+    })),
+    ended: z.array(z.object({
+        id: z.string(),
+        code: z.string(),
+        name: z.string(),
+        statut: z.string(),
+        createdAt: z.string(),
+        date_debut: z.string().nullable(),
+        date_fin: z.string().nullable(),
+        creatorUsername: z.string(),
+        leaderboard: z.array(z.unknown()).optional(),
+        // For participated tournaments
+        position: z.number().optional(),
+        score: z.number().optional()
     }))
 });
 

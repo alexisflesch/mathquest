@@ -68,6 +68,9 @@ if (process.env.NODE_ENV !== 'test') {
 if (process.env.NODE_ENV !== 'test') {
     server.listen(port, () => {
         logger.info(`Backend server listening on port ${port}`);
+        logger.info(`Backend process.cwd(): ${process.cwd()}`);
+        logger.error('Forced error log at startup (should appear in error.log and combined.log)');
+        logger.info('Forced info log at startup (should appear in combined.log)');
     });
 }
 else {

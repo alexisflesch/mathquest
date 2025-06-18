@@ -2,11 +2,45 @@
 // Shared game flow logic for quiz and tournament modes
 // Place all core progression, timer, answer reveal, feedback, and leaderboard logic here
 // This module should be imported by both quiz and tournament handlers
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runGameFlow = runGameFlow;
+const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
@@ -72,6 +106,34 @@ async function runGameFlow(io, accessCode, questions, options) {
             logger.info({ room: `game_${accessCode}`, event: 'game_question', payload: gameQuestionPayload }, '[DEBUG] Emitting game_question');
             io.to(`game_${accessCode}`).emit('game_question', gameQuestionPayload);
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
+            // Track question start time for all users currently in the room for server-side timing
+            try {
+                const roomName = `game_${accessCode}`;
+                const socketsInRoom = await io.in(roomName).fetchSockets();
+                const currentTime = Date.now();
+                for (const socket of socketsInRoom) {
+                    if (socket.data.userId) {
+                        const questionStartKey = `mathquest:game:question_start:${accessCode}:${questions[i].uid}:${socket.data.userId}`;
+                        // Only set if not already set (in case of reconnections)
+                        const existingStartTime = await redis_1.redisClient.get(questionStartKey);
+                        if (!existingStartTime) {
+                            await redis_1.redisClient.set(questionStartKey, currentTime.toString(), 'EX', 300); // Expire after 5 minutes
+                        }
+                    }
+                }
+                logger.debug({
+                    accessCode,
+                    questionUid: questions[i].uid,
+                    userCount: socketsInRoom.length
+                }, 'Tracked question start time for all users in room');
+            }
+            catch (error) {
+                logger.error({
+                    accessCode,
+                    questionUid: questions[i].uid,
+                    error
+                }, 'Failed to track question start times for users');
+            }
             // Emit timer update to start frontend countdown
             const gameTimerUpdatePayload = {
                 questionUid: questions[i].uid,
@@ -146,6 +208,16 @@ async function runGameFlow(io, accessCode, questions, options) {
                 logger.info({ accessCode, questionUid: questions[i].uid }, '[DEBUG] Skipping feedback phase - no explanation available');
                 options.onFeedback?.(i); // Still call the callback for consistency
             }
+        }
+        // Game completed - persist final leaderboard to database
+        try {
+            const { calculateLeaderboard, persistLeaderboardToGameInstance } = await Promise.resolve().then(() => __importStar(require('./sharedLeaderboard')));
+            const finalLeaderboard = await calculateLeaderboard(accessCode);
+            await persistLeaderboardToGameInstance(accessCode, finalLeaderboard);
+            logger.info({ accessCode, leaderboard: finalLeaderboard }, '[SharedGameFlow] Final leaderboard persisted to database');
+        }
+        catch (error) {
+            logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');
         }
         // Game completed, emit game_ended with stats for navigation
         const gameEndedPayload = {
