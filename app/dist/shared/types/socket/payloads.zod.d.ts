@@ -150,16 +150,16 @@ export declare const joinTournamentPayloadSchema: z.ZodObject<{
     userId?: string | undefined;
     username?: string | undefined;
     avatar?: string | undefined;
-    isDeferred?: boolean | undefined;
     cookieId?: string | undefined;
+    isDeferred?: boolean | undefined;
     classId?: string | undefined;
 }, {
     code: string;
     userId?: string | undefined;
     username?: string | undefined;
     avatar?: string | undefined;
-    isDeferred?: boolean | undefined;
     cookieId?: string | undefined;
+    isDeferred?: boolean | undefined;
     classId?: string | undefined;
 }>;
 export declare const tournamentAnswerPayloadSchema: z.ZodObject<{

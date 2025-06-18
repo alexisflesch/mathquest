@@ -4,12 +4,12 @@ export declare const chronoSchema: z.ZodObject<{
     running: z.ZodBoolean;
     status: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"play">, z.ZodLiteral<"pause">, z.ZodLiteral<"stop">]>>;
 }, "strip", z.ZodTypeAny, {
-    running: boolean;
     timeLeftMs: number | null;
+    running: boolean;
     status?: "play" | "pause" | "stop" | undefined;
 }, {
-    running: boolean;
     timeLeftMs: number | null;
+    running: boolean;
     status?: "play" | "pause" | "stop" | undefined;
 }>;
 export declare const questionTimerSchema: z.ZodObject<{
@@ -35,12 +35,12 @@ export declare const baseQuizStateSchema: z.ZodObject<{
         running: z.ZodBoolean;
         status: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"play">, z.ZodLiteral<"pause">, z.ZodLiteral<"stop">]>>;
     }, "strip", z.ZodTypeAny, {
-        running: boolean;
         timeLeftMs: number | null;
+        running: boolean;
         status?: "play" | "pause" | "stop" | undefined;
     }, {
-        running: boolean;
         timeLeftMs: number | null;
+        running: boolean;
         status?: "play" | "pause" | "stop" | undefined;
     }>;
     locked: z.ZodBoolean;
@@ -50,8 +50,8 @@ export declare const baseQuizStateSchema: z.ZodObject<{
     questions: any[];
     locked: boolean;
     chrono: {
-        running: boolean;
         timeLeftMs: number | null;
+        running: boolean;
         status?: "play" | "pause" | "stop" | undefined;
     };
     ended: boolean;
@@ -60,8 +60,8 @@ export declare const baseQuizStateSchema: z.ZodObject<{
     questions: any[];
     locked: boolean;
     chrono: {
-        running: boolean;
         timeLeftMs: number | null;
+        running: boolean;
         status?: "play" | "pause" | "stop" | undefined;
     };
     ended: boolean;
@@ -74,12 +74,12 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
         running: z.ZodBoolean;
         status: z.ZodOptional<z.ZodUnion<[z.ZodLiteral<"play">, z.ZodLiteral<"pause">, z.ZodLiteral<"stop">]>>;
     }, "strip", z.ZodTypeAny, {
-        running: boolean;
         timeLeftMs: number | null;
+        running: boolean;
         status?: "play" | "pause" | "stop" | undefined;
     }, {
-        running: boolean;
         timeLeftMs: number | null;
+        running: boolean;
         status?: "play" | "pause" | "stop" | undefined;
     }>;
     locked: z.ZodBoolean;
@@ -126,8 +126,8 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
     currentQuestionUid: string | null;
     locked: boolean;
     chrono: {
-        running: boolean;
         timeLeftMs: number | null;
+        running: boolean;
         status?: "play" | "pause" | "stop" | undefined;
     };
     ended: boolean;
@@ -161,8 +161,8 @@ export declare const extendedQuizStateSchema: z.ZodObject<{
     currentQuestionUid: string | null;
     locked: boolean;
     chrono: {
-        running: boolean;
         timeLeftMs: number | null;
+        running: boolean;
         status?: "play" | "pause" | "stop" | undefined;
     };
     ended: boolean;
