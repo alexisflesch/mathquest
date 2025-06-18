@@ -20,11 +20,11 @@ export declare const questionStateSchema: z.ZodObject<{
     totalTime: z.ZodNumber;
     correctAnswers: z.ZodUnion<[z.ZodNumber, z.ZodArray<z.ZodNumber, "many">]>;
 }, "strip", z.ZodTypeAny, {
-    correctAnswers: number | number[];
     uid: string;
+    correctAnswers: number | number[];
     totalTime: number;
 }, {
-    correctAnswers: number | number[];
     uid: string;
+    correctAnswers: number | number[];
     totalTime: number;
 }>;

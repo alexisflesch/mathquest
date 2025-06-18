@@ -26,15 +26,15 @@ export declare const timerActionPayloadSchema: z.ZodObject<{
     teacherId: z.ZodOptional<z.ZodString>;
     tournamentCode: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    questionUid: string;
     status: "play" | "pause" | "stop";
+    questionUid: string;
     quizId: string;
     timeLeftMs?: number | undefined;
     teacherId?: string | undefined;
     tournamentCode?: string | undefined;
 }, {
-    questionUid: string;
     status: "play" | "pause" | "stop";
+    questionUid: string;
     quizId: string;
     timeLeftMs?: number | undefined;
     teacherId?: string | undefined;
@@ -228,29 +228,29 @@ export declare const gameTimerUpdatePayloadSchema: z.ZodObject<{
         isPaused: z.ZodOptional<z.ZodBoolean>;
         timeRemainingMs: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        durationMs?: number | undefined;
         startedAt?: number | undefined;
+        durationMs?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     }, {
-        durationMs?: number | undefined;
         startedAt?: number | undefined;
+        durationMs?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     questionUid?: string | undefined;
     timer?: {
-        durationMs?: number | undefined;
         startedAt?: number | undefined;
+        durationMs?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     } | undefined;
 }, {
     questionUid?: string | undefined;
     timer?: {
-        durationMs?: number | undefined;
         startedAt?: number | undefined;
+        durationMs?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     } | undefined;

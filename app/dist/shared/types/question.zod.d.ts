@@ -27,9 +27,9 @@ export declare const baseQuestionSchema: z.ZodObject<{
     explanation: z.ZodOptional<z.ZodString>;
     tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
+    uid: string;
     text: string;
     questionType: string;
-    uid: string;
     answers: {
         text: string;
         correct: boolean;
@@ -38,9 +38,9 @@ export declare const baseQuestionSchema: z.ZodObject<{
     tags?: string[] | undefined;
     time?: number | undefined;
 }, {
+    uid: string;
     text: string;
     questionType: string;
-    uid: string;
     answers: {
         text: string;
         correct: boolean;
