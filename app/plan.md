@@ -111,6 +111,30 @@ Complete modernization of the Math## Phase 8: 🚧 IMMEDIATE - Critical Environm
 - [ ] Performance testing of modernized codebase
 - [ ] Update documentation with final architecture
 
+## Phase 10: 🚨 CRITICAL - Tournament/Quiz Lobby Redirect Bug
+**Status**: 🔄 IN PROGRESS
+
+**Issue**: Backend sends conflicting events for tournament/quiz start logic
+- Tournament lobbies: Backend sends immediate redirect + 5s countdown (should only be countdown)
+- Quiz lobbies: Should send immediate redirect when teacher starts quiz (currently uses tournament flow)
+
+**Current Tasks**:
+- [ ] Fix tournament mode: Remove immediate redirect, keep only 5s countdown
+- [ ] Fix quiz mode: Send immediate redirect from teacher dashboard when setting first question
+- [ ] Update frontend lobby to handle quiz vs tournament modes differently
+- [ ] Test both flows to ensure correct redirect timing
+
+**Technical Details**:
+- Tournament mode: Use only countdown events (`tournament_starting`, `countdown_tick`, `countdown_complete`)
+- Quiz mode: Trigger redirect via `LOBBY_EVENTS.GAME_STARTED` when teacher sets first question and status changes from pending→active
+- Frontend: `isQuizLinked` flag determines if lobby shows start button (false for quiz mode)
+
+**Files Being Modified**:
+- `backend/src/sockets/handlers/tournamentHandler.ts` - Split quiz vs tournament logic
+- `backend/src/sockets/handlers/teacherControl/setQuestion.ts` - Add quiz redirect trigger
+- `backend/src/sockets/handlers/lobbyHandler.ts` - Add quiz mode flag to participants list
+- `frontend/src/app/lobby/[code]/page.tsx` - Handle immediate redirect for quiz mode
+
 ---
 
 ## 🔍 Current Focus: Phase 6 - TypeScript Error Resolution

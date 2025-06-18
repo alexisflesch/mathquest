@@ -4,7 +4,7 @@ import gameStateService from '@/core/gameStateService';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
 import createLogger from '@/utils/logger';
 import { SetQuestionPayload } from './types';
-import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, TEACHER_EVENTS, LOBBY_EVENTS } from '@shared/types/socket/events';
 import { GameTimerState } from '@shared/types/core/timer';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import type {
@@ -285,6 +285,13 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                     status: 'active',
                     ended: false
                 } as DashboardGameStatusChangedPayload);
+
+                // CRITICAL: For quiz mode, emit the redirect event to lobby when game starts
+                if (gameInstance.playMode === 'quiz') {
+                    const lobbyRoom = `lobby_${gameInstance.accessCode}`;
+                    logger.info({ gameId, accessCode: gameInstance.accessCode, playMode: gameInstance.playMode }, 'Quiz started: Emitting immediate redirect to lobby');
+                    io.to(lobbyRoom).emit(LOBBY_EVENTS.GAME_STARTED, { accessCode: gameInstance.accessCode, gameId });
+                }
             }
 
             // Notify dashboard about question change

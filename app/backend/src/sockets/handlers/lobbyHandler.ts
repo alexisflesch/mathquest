@@ -170,7 +170,8 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                     id: true,
                     status: true,
                     name: true,
-                    gameTemplateId: true
+                    gameTemplateId: true,
+                    playMode: true
                 }
             });
 
@@ -302,7 +303,8 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANTS_LIST, {
                 participants,
                 gameId: gameInstance.id,
-                gameName: gameInstance.name
+                gameName: gameInstance.name,
+                isQuizLinked: gameInstance.playMode === 'quiz'
             });
 
             // Emit updated participant count to teacher dashboard
@@ -388,8 +390,17 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             // Notify others that someone left
             socket.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socket.id });
 
+            // Get game details for isQuizLinked flag
+            const gameInstance = await prisma.gameInstance.findUnique({
+                where: { accessCode },
+                select: { playMode: true }
+            });
+
             // Send updated participants list
-            io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANTS_LIST, { participants });
+            io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANTS_LIST, {
+                participants,
+                isQuizLinked: gameInstance?.playMode === 'quiz'
+            });
 
             // Emit room_left event to the socket that left
             socket.emit(LOBBY_EVENTS.ROOM_LEFT, { accessCode });
@@ -442,7 +453,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             // Get game details
             const gameInstance = await prisma.gameInstance.findUnique({
                 where: { accessCode },
-                select: { id: true, name: true, status: true }
+                select: { id: true, name: true, status: true, playMode: true }
             });
 
             if (!gameInstance) {
@@ -483,7 +494,8 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             socket.emit(LOBBY_EVENTS.PARTICIPANTS_LIST, {
                 participants,
                 gameId: gameInstance.id,
-                gameName: gameInstance.name
+                gameName: gameInstance.name,
+                isQuizLinked: gameInstance.playMode === 'quiz'
             });
 
         } catch (error) {

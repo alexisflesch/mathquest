@@ -288,6 +288,12 @@ function setQuestionHandler(io, socket) {
                     status: 'active',
                     ended: false
                 });
+                // CRITICAL: For quiz mode, emit the redirect event to lobby when game starts
+                if (gameInstance.playMode === 'quiz') {
+                    const lobbyRoom = `lobby_${gameInstance.accessCode}`;
+                    logger.info({ gameId, accessCode: gameInstance.accessCode, playMode: gameInstance.playMode }, 'Quiz started: Emitting immediate redirect to lobby');
+                    io.to(lobbyRoom).emit(events_1.LOBBY_EVENTS.GAME_STARTED, { accessCode: gameInstance.accessCode, gameId });
+                }
             }
             // Notify dashboard about question change
             const dashboardRoom = `dashboard_${gameId}`;

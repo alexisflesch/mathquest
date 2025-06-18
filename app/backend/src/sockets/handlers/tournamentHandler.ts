@@ -86,15 +86,21 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
             return;
         }
 
-        // Emit game_started to lobby for 5-second countdown (unified for all tournament/quiz modes)
+        // Handle quiz vs tournament modes differently
         const tournamentRoom = `game_${accessCode}`;
         const lobbyRoom = `lobby_${accessCode}`;
 
-        logger.debug({ accessCode, playMode: gameInstance.playMode, socketId: socket.id }, '[DEBUG] Emitting unified 5-second countdown for all tournament types');
-        io.to(lobbyRoom).emit(LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId: gameInstance.id }); // TODO: Define shared type if missing
+        if (gameInstance.playMode === 'quiz') {
+            // Quiz mode: Send immediate redirect event (no countdown)
+            logger.debug({ accessCode, playMode: gameInstance.playMode, socketId: socket.id }, '[DEBUG] Quiz mode: Emitting immediate redirect');
+            io.to(lobbyRoom).emit(LOBBY_EVENTS.GAME_STARTED, { accessCode, gameId: gameInstance.id });
 
-        // Short delay to allow clients to process redirect before game state changes affect them
-        await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
+            // Short delay to allow clients to process redirect before game state changes affect them
+            await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
+        } else {
+            // Tournament mode: Only do countdown (no immediate redirect)
+            logger.debug({ accessCode, playMode: gameInstance.playMode, socketId: socket.id }, '[DEBUG] Tournament mode: Starting 5-second countdown without immediate redirect');
+        }
 
         if (!gameInstance.gameTemplate || !gameInstance.gameTemplate.questions || gameInstance.gameTemplate.questions.length === 0) {
             logger.error({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, 'Game instance is missing game template or has no questions');
@@ -157,28 +163,37 @@ export function tournamentHandler(io: SocketIOServer, socket: Socket) { // Chang
             playMode: flowPlayMode,
         };
 
-        await gameInstanceService.updateGameStatus(gameInstance.id, { status: 'active', currentQuestionIndex: -1 }); // currentQuestionIndex to -1 for countdown phase
-        const liveRoom = `game_${accessCode}`;
-        const countdownDuration = 5; // 5 seconds
-        logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, '[DEBUG] Updated game status to active (countdown phase)');
-        logger.info({ room: liveRoom, duration: countdownDuration, accessCode, socketId: socket.id }, `[TournamentHandler] Emitting tournament_starting and waiting ${countdownDuration}s before starting game.`);
+        if (gameInstance.playMode === 'tournament') {
+            // Tournament mode: Do the 5-second countdown
+            // Keep game status as 'pending' during countdown so late joiners go to lobby, not game room
+            const liveRoom = `game_${accessCode}`;
+            const countdownDuration = 5; // 5 seconds
+            logger.info({ room: liveRoom, duration: countdownDuration, accessCode, socketId: socket.id }, `[TournamentHandler] Tournament mode: Starting ${countdownDuration}s countdown.`);
 
-        // Start countdown with ticking - emit to both lobby and game rooms
-        io.to(liveRoom).emit('tournament_starting', { countdown: countdownDuration }); // TODO: Define shared type if missing
-        io.to(lobbyRoom).emit('tournament_starting', { countdown: countdownDuration }); // TODO: Define shared type if missing
+            // Start countdown with ticking - emit to both lobby and game rooms
+            io.to(liveRoom).emit('tournament_starting', { countdown: countdownDuration }); // TODO: Define shared type if missing
+            io.to(lobbyRoom).emit('tournament_starting', { countdown: countdownDuration }); // TODO: Define shared type if missing
 
-        // Emit countdown tick every second to both rooms
-        for (let i = countdownDuration; i > 0; i--) {
-            logger.debug({ accessCode, countdown: i, socketId: socket.id }, `[TournamentHandler] Countdown tick: ${i}`);
-            io.to(liveRoom).emit('countdown_tick', { countdown: i }); // TODO: Define shared type if missing
-            io.to(lobbyRoom).emit('countdown_tick', { countdown: i }); // TODO: Define shared type if missing
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            // Emit countdown tick every second to both rooms
+            for (let i = countdownDuration; i > 0; i--) {
+                logger.debug({ accessCode, countdown: i, socketId: socket.id }, `[TournamentHandler] Countdown tick: ${i}`);
+                io.to(liveRoom).emit('countdown_tick', { countdown: i }); // TODO: Define shared type if missing
+                io.to(lobbyRoom).emit('countdown_tick', { countdown: i }); // TODO: Define shared type if missing
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            }
+
+            // NOW set game status to active after countdown completes
+            await gameInstanceService.updateGameStatus(gameInstance.id, { status: 'active', currentQuestionIndex: 0 });
+            logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown complete. Game marked as active.`);
+            io.to(liveRoom).emit('countdown_complete'); // TODO: Define shared type if missing
+            io.to(lobbyRoom).emit('countdown_complete'); // TODO: Define shared type if missing
+        } else {
+            // Quiz mode: Skip countdown and go directly to game
+            logger.info({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Quiz mode: Skipping countdown, starting game immediately.`);
+            await gameInstanceService.updateGameStatus(gameInstance.id, { status: 'active', currentQuestionIndex: 0 });
         }
 
-        logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown complete. About to start game flow.`);
-        io.to(liveRoom).emit('countdown_complete'); // TODO: Define shared type if missing
-        io.to(lobbyRoom).emit('countdown_complete'); // TODO: Define shared type if missing
-        logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Countdown finished. Calling runGameFlow.`);
+        logger.debug({ accessCode, gameInstanceId: gameInstance.id, socketId: socket.id }, `[TournamentHandler] Ready to start game flow.`);
 
         // Update currentQuestionIndex to 0 before starting game flow
         // Also ensure other required fields for GameState are present or updated as necessary

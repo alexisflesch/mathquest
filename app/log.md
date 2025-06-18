@@ -421,3 +421,86 @@
 - ✅ Preserved all archived code with restoration instructions
 
 **Relates to**: Phase 8 checklist items - Fix navigation menu links and Archive obsolete practice session page
+
+## 2025-06-18 - Tournament/Quiz Lobby Redirect Bug Fix Started
+
+**What is being done**: Fixing critical bug where backend sends conflicting redirect events for tournament vs quiz modes
+
+**Issue Identified**:
+- Tournament mode: Backend sends BOTH immediate redirect AND 5s countdown → causes confusion
+- Quiz mode: Should send immediate redirect when teacher clicks play on dashboard, but currently uses tournament flow
+
+**Root Cause Analysis**:
+1. **Tournament Handler** (`tournamentHandler.ts`): Both quiz and tournament modes use same `START_TOURNAMENT` event
+2. **Immediate Redirect Issue**: `io.to(lobbyRoom).emit(LOBBY_EVENTS.GAME_STARTED)` is sent for ALL modes
+3. **Missing Quiz Logic**: No redirect event when teacher sets first question in quiz mode
+4. **Frontend Confusion**: Lobby receives both immediate redirect and countdown events
+
+**Changes Made So Far**:
+
+1. **Fixed Tournament Handler** (`backend/src/sockets/handlers/tournamentHandler.ts`):
+   - Split logic: Quiz mode → immediate redirect only, Tournament mode → countdown only
+   - Removed `LOBBY_EVENTS.GAME_STARTED` for tournament mode (lines 89-94)
+   - Added conditional countdown logic (only for tournament mode)
+
+2. **Added Quiz Start Logic** (`backend/src/sockets/handlers/teacherControl/setQuestion.ts`):
+   - Added `LOBBY_EVENTS` import
+   - Added redirect trigger when game status changes from pending→active for quiz mode
+   - Emits `LOBBY_EVENTS.GAME_STARTED` to lobby when teacher sets first question
+
+3. **Started Lobby Handler Updates** (`backend/src/sockets/handlers/lobbyHandler.ts`):
+   - Need to add `isQuizLinked` flag to participants list responses
+   - Need to fetch game `playMode` to determine quiz vs tournament
+
+**Next Steps**:
+- [ ] Complete lobby handler updates to include quiz mode flag
+- [ ] Update frontend lobby to handle immediate redirect for quiz mode
+- [ ] Test both tournament and quiz flows
+- [ ] Validate that redirect timing is correct for each mode
+
+**Files Modified**:
+- `backend/src/sockets/handlers/tournamentHandler.ts` - Split quiz/tournament logic
+- `backend/src/sockets/handlers/teacherControl/setQuestion.ts` - Added quiz redirect trigger
+
+**Relation to Checklist**: Phase 10 - Tournament/Quiz Lobby Redirect Bug
+
+**Expected Behavior After Fix**:
+- Tournament: 5s countdown only, no immediate redirect
+- Quiz: Immediate redirect when teacher starts, no countdown
+
+## 2025-06-18 - Tournament Countdown Bug Fixed
+
+**What was done**: Fixed critical bug in tournament handler causing immediate redirect instead of 5-second countdown
+
+**Issue**: 
+- Tournament countdown was being bypassed - users redirected immediately
+- Logs showed "Live game is active, sending current state to late joiner" even for new tournaments
+- Root cause: `countdown_complete` event being emitted immediately due to misplaced code
+
+**Root Cause Analysis**:
+1. **Double emit bug**: `countdown_complete` was being emitted outside the if-else block, triggering immediate redirect
+2. **Early status change**: Game status was set to 'active' before countdown started, causing late joiners to bypass lobby
+3. **Mixed timing**: Countdown logic was correct but game state changes were premature
+
+**How it was fixed**:
+1. **Fixed code placement**: Moved `countdown_complete` emission inside tournament countdown completion only
+2. **Fixed game status timing**: Game status now stays 'pending' during countdown, only changes to 'active' after countdown completes
+3. **Separated timing**: Tournament mode now properly waits for full countdown before marking game as active
+
+**Technical Changes**:
+- Removed misplaced `io.to(lobbyRoom).emit('countdown_complete')` that was outside conditional blocks
+- Moved `gameInstanceService.updateGameStatus(gameInstance.id, { status: 'active' })` to AFTER countdown completes
+- Added proper logging to track countdown completion
+
+**Files affected**:
+- `/backend/src/sockets/handlers/tournamentHandler.ts` - Fixed countdown timing and event emission
+
+**Validation Steps**:
+- Create tournament → join lobby → click "Démarrer le tournoi" → should see full 5-second countdown → then redirect
+- Users joining during countdown should stay in lobby (not treated as late joiners)
+
+**Relates to**: Phase 10 - Tournament/Quiz Lobby Redirect Bug (FIXED)
+
+**Expected Behavior Now**:
+- Tournament: Full 5-second countdown, then redirect (game stays 'pending' during countdown)
+- Quiz: Immediate redirect when teacher starts from dashboard

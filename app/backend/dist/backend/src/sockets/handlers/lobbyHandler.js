@@ -136,7 +136,8 @@ function registerLobbyHandlers(io, socket) {
                     id: true,
                     status: true,
                     name: true,
-                    gameTemplateId: true
+                    gameTemplateId: true,
+                    playMode: true
                 }
             });
             if (!gameInstance) {
@@ -246,7 +247,8 @@ function registerLobbyHandlers(io, socket) {
             io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
                 participants,
                 gameId: gameInstance.id,
-                gameName: gameInstance.name
+                gameName: gameInstance.name,
+                isQuizLinked: gameInstance.playMode === 'quiz'
             });
             // Emit updated participant count to teacher dashboard
             await (0, participantCountUtils_1.emitParticipantCount)(io, accessCode);
@@ -317,8 +319,16 @@ function registerLobbyHandlers(io, socket) {
             }
             // Notify others that someone left
             socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socket.id });
+            // Get game details for isQuizLinked flag
+            const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
+                where: { accessCode },
+                select: { playMode: true }
+            });
             // Send updated participants list
-            io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, { participants });
+            io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
+                participants,
+                isQuizLinked: gameInstance?.playMode === 'quiz'
+            });
             // Emit room_left event to the socket that left
             socket.emit(events_1.LOBBY_EVENTS.ROOM_LEFT, { accessCode });
             // Emit the updated participant count to all clients in the lobby
@@ -362,7 +372,7 @@ function registerLobbyHandlers(io, socket) {
             // Get game details
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
                 where: { accessCode },
-                select: { id: true, name: true, status: true }
+                select: { id: true, name: true, status: true, playMode: true }
             });
             if (!gameInstance) {
                 socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
@@ -397,7 +407,8 @@ function registerLobbyHandlers(io, socket) {
             socket.emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
                 participants,
                 gameId: gameInstance.id,
-                gameName: gameInstance.name
+                gameName: gameInstance.name,
+                isQuizLinked: gameInstance.playMode === 'quiz'
             });
         }
         catch (error) {

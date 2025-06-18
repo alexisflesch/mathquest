@@ -364,11 +364,31 @@ export default function LobbyPage() {
             logger.debug("Participant left", { id: participant.id, username: participant.username });
         });
 
-        // Listen for game_started event - unified 5-second countdown for all game types
+        // Listen for game_started event
         socket.on(SOCKET_EVENTS.LOBBY.GAME_STARTED, ({ accessCode, gameId }) => {
             const targetCode = accessCode || code;
-            logger.info(`Game started (code: ${targetCode}), waiting for backend countdown events`);
-            // Don't start our own countdown timer - wait for backend events
+            logger.info(`Game started (code: ${targetCode})`);
+
+            // For quiz mode: immediate redirect (no countdown)
+            // For tournament mode: wait for countdown events
+            if (isQuizLinked) {
+                logger.info(`Quiz mode: Immediate redirect to /live/${targetCode}`);
+
+                // Force-leave the lobby room before redirecting
+                socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: targetCode });
+
+                // Use immediate window.location navigation for more reliable redirects
+                window.location.href = `/live/${targetCode}`;
+
+                // Also try router as fallback
+                try {
+                    router.replace(`/live/${targetCode}`);
+                } catch (err) {
+                    logger.error(`Router redirect error: ${err}`);
+                }
+            } else {
+                logger.info(`Tournament mode: Waiting for countdown events`);
+            }
         });
 
         // Listen for backend countdown events
