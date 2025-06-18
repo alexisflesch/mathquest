@@ -28,10 +28,7 @@ export {
     QuizCreationResponseSchema,
     QuestionsFiltersResponseSchema,
     GameTemplateCreationResponseSchema,
-    CanPlayDifferedResponseSchema,
-    MyTournamentsResponseSchema,
     TournamentCodeResponseSchema,
-    TournamentLeaderboardResponseSchema,
     QuestionsCountResponseSchema
 } from './api/schemas';
 
@@ -59,11 +56,6 @@ export type {
     QuestionFiltersResponse as QuestionsFiltersResponse,
     GameTemplateCreationResponse,
     GameJoinResponse,
-    CanPlayDifferedResponse,
-    MyTournamentsResponse,
-    TournamentCodeResponse,
-    TournamentLeaderboardResponse,
-    QuestionsCountResponse
 } from './api/responses';
 
 // Re-export Question type from the correct location
