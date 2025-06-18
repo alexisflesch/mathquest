@@ -180,19 +180,6 @@ function projectionHandler(io, socket) {
                 }, 'Initial projection state payload details');
                 socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, payload);
                 logger.info({ gameId, accessCode: gameInstance.accessCode }, 'Initial projection state sent');
-                // If there's a running timer, emit a timer update to trigger countdown in useSimpleTimer
-                if (enhancedGameState?.timer?.status === 'play' && enhancedGameState.timer.timeLeftMs > 0) {
-                    logger.info({
-                        gameId,
-                        timer: enhancedGameState.timer
-                    }, 'Emitting timer update for running timer in projection');
-                    const timerUpdatePayload = {
-                        timer: enhancedGameState.timer,
-                        questionUid: enhancedGameState.timer.questionUid
-                    };
-                    // Emit timer update immediately after the initial state
-                    socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, timerUpdatePayload);
-                }
             }
             catch (stateError) {
                 logger.error({ error: stateError, gameId }, 'Failed to send initial projection state');
