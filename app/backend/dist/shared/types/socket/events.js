@@ -93,7 +93,8 @@ exports.PROJECTOR_EVENTS = {
     PROJECTION_QUESTION_CHANGED: 'projection_question_changed',
     PROJECTION_TIMER_UPDATED: 'projection_timer_updated',
     PROJECTION_CONNECTED_COUNT: 'projection_connected_count',
-    PROJECTION_STATE: 'projection_state'
+    PROJECTION_STATE: 'projection_state',
+    PROJECTION_LEADERBOARD_UPDATE: 'projection_leaderboard_update' // For real-time leaderboard updates on projection display
 };
 // ===== Student/Game Events =====
 exports.GAME_EVENTS = {
@@ -112,6 +113,7 @@ exports.GAME_EVENTS = {
     GAME_ENDED: 'game_ended',
     GAME_ERROR: 'game_error',
     GAME_ANSWERS_LOCK_CHANGED: 'game_answers_lock_changed',
+    LEADERBOARD_UPDATE: 'leaderboard_update', // For broadcasting leaderboard changes
     // Timer events
     GAME_TIMER_UPDATED: 'game_timer_updated', // Primary backend timer event
     TIMER_UPDATE: 'timer_update',

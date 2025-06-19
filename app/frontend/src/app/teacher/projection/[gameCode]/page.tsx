@@ -70,7 +70,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     });
 
     // --- Listen for leaderboard/correct answer updates ---
-    const [leaderboard, setLeaderboard] = useState<{ username: string; avatar: string; score: number }[]>([]); // Specify type
+    // Note: leaderboard now comes from hookLeaderboard via useProjectionQuizSocket
     const [correctAnswers, setCorrectAnswers] = useState<boolean[]>([]);
 
     // --- Stats state ---
@@ -131,7 +131,8 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         timeLeftMs,
         connectedCount,
         gameStatus,
-        isAnswersLocked
+        isAnswersLocked,
+        leaderboard: hookLeaderboard
     } = useProjectionQuizSocket(gameCode, gameId); // Pass both gameCode and gameId
 
     // Debug what we're getting from the hook
@@ -148,6 +149,16 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
             connectedCount
         });
     }, [gameState, gameStatus, connectedCount]);
+
+    // Debug leaderboard updates from hook
+    useEffect(() => {
+        logger.info('🏆 [Projection] Leaderboard updated from hook:', {
+            leaderboardLength: hookLeaderboard.length,
+            leaderboard: hookLeaderboard,
+            gameCode,
+            gameId
+        });
+    }, [hookLeaderboard, gameCode, gameId]);
 
     // Extract tournament code from game state when available
     useEffect(() => {
@@ -547,12 +558,12 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                             >
                                 <ClassementPodium
                                     key={podiumKey}
-                                    top3={leaderboard.slice(0, 3).map((entry) => ({
+                                    top3={hookLeaderboard.slice(0, 3).map((entry) => ({
                                         name: entry.username,
-                                        avatarEmoji: entry.avatar,
+                                        avatarEmoji: entry.avatarEmoji || '👤',
                                         score: entry.score,
                                     }))}
-                                    others={leaderboard.slice(3).map((entry) => ({
+                                    others={hookLeaderboard.slice(3).map((entry) => ({
                                         name: entry.username,
                                         score: entry.score,
                                     }))}

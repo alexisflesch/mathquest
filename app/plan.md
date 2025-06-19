@@ -14,7 +14,22 @@ Complete modernization of the Math## Phase 8: 🚧 IMMEDIATE - Critical Environm
 - [ ] Run cleanup script for backup files
 - [ ] Check for other missing environment variables
 - [ ] Verify database connectivity 
-- [ ] Test Redis connection app by eliminating all legacy code patterns and ensuring consistent use of shared types throughout the codebase.
+- [ ] Test Redis connection
+
+## Phase 9: ✅ COMPLETED - UX Enhancement: Real-time Leaderboard Population
+- [x] **Implement join-order bonus scoring system**
+  - [x] Backend: Add join-order tracking in Redis when students join games
+  - [x] Backend: Assign micro-scores based on join order (0.01, 0.009, 0.008, etc.)
+  - [x] Backend: Broadcast leaderboard updates when students join (before questions start)
+  - [x] Frontend: Update projection page to display populated leaderboard immediately
+- [x] **Enhance projection room leaderboard display**
+  - [x] Add leaderboard_update event listener to projection room
+  - [x] Display students with zero/micro scores before first question
+  - [x] Ensure smooth UX transition from join → populated leaderboard → question results
+- [x] **Test complete join-to-leaderboard flow**
+  - [x] Verify students appear on projection immediately after joining
+  - [x] Confirm join-order bonuses work correctly (first 10-20 students)
+  - [x] Test that real question scores properly override micro-scores app by eliminating all legacy code patterns and ensuring consistent use of shared types throughout the codebase.
 
 ---
 

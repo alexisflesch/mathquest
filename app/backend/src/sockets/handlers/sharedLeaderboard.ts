@@ -13,19 +13,71 @@ const logger = createLogger('LeaderboardUtils');
  * @returns Array of leaderboard entries sorted by score
  */
 export async function calculateLeaderboard(accessCode: string) {
-    // Fetch all participants and their scores from Redis
-    const participantsRaw = await redisClient.hgetall(`mathquest:game:participants:${accessCode}`);
-    if (!participantsRaw) return [];
-    const participants = Object.values(participantsRaw).map((json: any) => JSON.parse(json));
-    // Sort by score descending
-    return participants
-        .map((p: any) => ({
-            userId: p.userId,
-            username: p.username,
-            avatarEmoji: p.avatarEmoji,
-            score: p.score || 0
-        }))
-        .sort((a, b) => b.score - a.score);
+    logger.debug({ accessCode }, '📊 [LEADERBOARD-CALC] Starting leaderboard calculation');
+
+    try {
+        // Fetch all participants and their scores from Redis
+        const participantsKey = `mathquest:game:participants:${accessCode}`;
+        const participantsRaw = await redisClient.hgetall(participantsKey);
+
+        logger.debug({
+            accessCode,
+            participantsKey,
+            hasParticipants: !!participantsRaw,
+            participantKeys: participantsRaw ? Object.keys(participantsRaw) : [],
+            participantCount: participantsRaw ? Object.keys(participantsRaw).length : 0
+        }, '🔍 [LEADERBOARD-CALC] Raw participants data retrieved');
+
+        if (!participantsRaw || Object.keys(participantsRaw).length === 0) {
+            logger.info({ accessCode }, '📭 [LEADERBOARD-CALC] No participants found, returning empty leaderboard');
+            return [];
+        }
+
+        const participants = Object.values(participantsRaw).map((json: any) => {
+            try {
+                return JSON.parse(json);
+            } catch (parseError) {
+                logger.warn({
+                    accessCode,
+                    json,
+                    parseError: parseError instanceof Error ? parseError.message : String(parseError)
+                }, '⚠️ [LEADERBOARD-CALC] Failed to parse participant JSON');
+                return null;
+            }
+        }).filter(p => p !== null);
+
+        logger.debug({
+            accessCode,
+            participantCount: participants.length,
+            sampleParticipants: participants.slice(0, 3).map(p => ({ userId: p.userId, username: p.username, score: p.score }))
+        }, '🔍 [LEADERBOARD-CALC] Participants parsed');
+
+        // Sort by score descending
+        const leaderboard = participants
+            .map((p: any) => ({
+                userId: p.userId,
+                username: p.username,
+                avatarEmoji: p.avatarEmoji,
+                score: p.score || 0
+            }))
+            .sort((a, b) => b.score - a.score);
+
+        logger.info({
+            accessCode,
+            leaderboardCount: leaderboard.length,
+            topPlayers: leaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
+        }, '✅ [LEADERBOARD-CALC] Leaderboard calculation completed');
+
+        return leaderboard;
+
+    } catch (error) {
+        logger.error({
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            accessCode
+        }, '❌ [LEADERBOARD-CALC] Error calculating leaderboard');
+        return [];
+    }
 }
 
 /**

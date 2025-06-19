@@ -4,6 +4,8 @@ import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import { joinRoom, leaveRoom, getRoomMembers, broadcastToRoom } from '@/sockets/utils/roomUtils';
 import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
+import { assignJoinOrderBonus } from '@/utils/joinOrderBonus';
+import { broadcastLeaderboardToProjection } from '@/utils/projectionLeaderboardBroadcast';
 import { LOBBY_EVENTS } from '@shared/types/socket/events';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import {
@@ -309,6 +311,63 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
 
             // Emit updated participant count to teacher dashboard
             await emitParticipantCount(io, accessCode);
+
+            // UX ENHANCEMENT: For quiz mode, populate projection leaderboard when students join lobby
+            // This allows teachers to see who's ready before starting the quiz
+            if (gameInstance.playMode === 'quiz' && !isReconnection) {
+                try {
+                    // Assign join-order bonus for early lobby joiners
+                    const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
+
+                    if (joinOrderBonus > 0) {
+                        // Add participant to game participants with join-order bonus
+                        // This creates a "pre-game" leaderboard entry for immediate display
+                        const participantsKey = `mathquest:game:participants:${accessCode}`;
+                        const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`;
+
+                        const participantDataForGame = {
+                            id: `lobby_${socket.id}`, // Temporary ID for lobby participants
+                            userId: participant.userId,
+                            username: participant.username,
+                            score: joinOrderBonus, // Micro-score for join order
+                            avatarEmoji: participant.avatarEmoji,
+                            joinedAt: new Date().toISOString(),
+                            online: true,
+                            socketId: socket.id,
+                            isLobbyParticipant: true // Flag to distinguish from actual game participants
+                        };
+
+                        // Store in game participants for leaderboard calculation
+                        await redisClient.hset(participantsKey, participant.userId, JSON.stringify(participantDataForGame));
+
+                        // Add to leaderboard sorted set
+                        await redisClient.zadd(leaderboardKey, joinOrderBonus, participant.userId);
+
+                        // Set expiration for lobby participants (clean up after 4 hours)
+                        await redisClient.expire(participantsKey, 4 * 60 * 60);
+                        await redisClient.expire(leaderboardKey, 4 * 60 * 60);
+
+                        // Broadcast updated leaderboard to projection room
+                        await broadcastLeaderboardToProjection(io, accessCode, gameInstance.id);
+
+                        logger.info({
+                            accessCode,
+                            gameId: gameInstance.id,
+                            userId: participant.userId,
+                            username: participant.username,
+                            joinOrderBonus,
+                            playMode: gameInstance.playMode
+                        }, 'Quiz lobby join: Added participant to leaderboard with join-order bonus');
+                    }
+                } catch (error) {
+                    logger.error({
+                        error,
+                        accessCode,
+                        userId: participant.userId,
+                        playMode: gameInstance.playMode
+                    }, 'Error updating leaderboard for quiz lobby join');
+                }
+            }
 
             // Setup periodic game status checking
             setupGameStatusCheck(io, accessCode);

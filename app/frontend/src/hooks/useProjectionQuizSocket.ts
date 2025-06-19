@@ -33,6 +33,12 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
     // Use canonical GameState from backend response
     const [gameState, setGameState] = useState<GameState | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(0);
+    const [leaderboard, setLeaderboard] = useState<Array<{
+        userId: string;
+        username: string;
+        avatarEmoji?: string;
+        score: number;
+    }>>([]);
 
     // Use modern timer with projection role
     const timer = useSimpleTimer({
@@ -50,8 +56,23 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         if (!socket.socket || !gameId) return;
 
         const joinProjection = () => {
-            logger.info('🎬 Joining projection room for game:', gameId);
-            logger.debug('📡 Emitting join event with payload:', { gameId });
+            if (!gameId) {
+                logger.warn('🚫 [PROJECTION-FRONTEND] Cannot join projection: no gameId provided');
+                return;
+            }
+
+            logger.info('🎬 [PROJECTION-FRONTEND] Joining projection room for game:', {
+                gameId,
+                accessCode,
+                socketId: socket.socket?.id,
+                socketConnected: socket.socket?.connected
+            });
+
+            logger.debug('📡 [PROJECTION-FRONTEND] Emitting join event with payload:', {
+                gameId,
+                eventName: SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTION
+            });
+
             // Use shared constant for join event (temporary raw emit until types are updated)
             (socket.socket as any)?.emit(SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTION, { gameId });
         };
@@ -79,13 +100,21 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
         // Listen for projection join success
         const handleProjectionJoined = (payload: any) => {
-            logger.info('✅ [PROJECTION] Successfully joined projection room:', payload);
-            logger.debug('🎯 Projection room joined, should receive timer events now');
+            logger.info('✅ [PROJECTION-FRONTEND] Successfully joined projection room:', {
+                payload,
+                gameId,
+                accessCode
+            });
+            logger.debug('🎯 [PROJECTION-FRONTEND] Projection room joined, should receive timer and leaderboard events now');
         };
 
         // Listen for projection errors
         const handleProjectionError = (payload: any) => {
-            logger.error('❌ [PROJECTION] Error joining projection room:', payload);
+            logger.error('❌ [PROJECTION-FRONTEND] Error joining projection room:', {
+                payload,
+                gameId,
+                accessCode
+            });
         };
 
         socket.socket.on('connect', handleConnect);
@@ -121,6 +150,36 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         const handleConnectedCount = (payload: { count: number }) => {
             logger.debug('👥 Connected count update:', payload.count);
             setConnectedCount(payload.count);
+        };
+
+        // Handle leaderboard updates when students join (UX enhancement for teacher projection)
+        const handleLeaderboardUpdate = (payload: { leaderboard: Array<any>; accessCode?: string; timestamp?: number }) => {
+            logger.info('🏆 [PROJECTION-FRONTEND] Leaderboard update received:', {
+                hasLeaderboard: !!payload.leaderboard,
+                leaderboardLength: payload.leaderboard?.length || 0,
+                accessCode: payload.accessCode,
+                timestamp: payload.timestamp,
+                topPlayers: payload.leaderboard?.slice(0, 3).map((p: any) => ({ username: p.username, score: p.score })) || []
+            });
+
+            if (payload.leaderboard && Array.isArray(payload.leaderboard)) {
+                const processedLeaderboard = payload.leaderboard.map((entry: any) => ({
+                    userId: entry.userId,
+                    username: entry.username || 'Unknown Player',
+                    avatarEmoji: entry.avatarEmoji,
+                    score: entry.score || 0
+                }));
+
+                setLeaderboard(processedLeaderboard);
+
+                logger.info({
+                    accessCode: payload.accessCode,
+                    leaderboardCount: processedLeaderboard.length,
+                    topScores: processedLeaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
+                }, '✅ [PROJECTION-FRONTEND] Updated projection leaderboard state');
+            } else {
+                logger.warn('⚠️ [PROJECTION-FRONTEND] Invalid leaderboard payload received:', payload);
+            }
         };        // Handle game state updates (including initial state from getFullGameState)
         const handleGameStateUpdate = (payload: any) => {
             logger.info('🎮 Game state update received:', payload);
@@ -129,6 +188,17 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             if (payload.gameState) {
                 setGameState(payload.gameState);
                 logger.info('✅ Full projection state initialized from backend');
+
+                // Handle initial leaderboard data if present
+                if (payload.leaderboard && Array.isArray(payload.leaderboard)) {
+                    setLeaderboard(payload.leaderboard.map((entry: any) => ({
+                        userId: entry.userId,
+                        username: entry.username || 'Unknown Player',
+                        avatarEmoji: entry.avatarEmoji,
+                        score: entry.score || 0
+                    })));
+                    logger.info(`🎯 Initialized projection leaderboard with ${payload.leaderboard.length} students from initial state`);
+                }
 
                 // Debug: log the timer and question details
                 logger.debug('🔍 [DEBUG] Timer state:', {
@@ -158,14 +228,25 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
 
         // Listen to projection events using shared constants (with type casting until types are updated)
+        logger.debug('🎧 [PROJECTION-FRONTEND] Setting up projection event listeners:', {
+            events: [
+                SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED,
+                SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT,
+                SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE,
+                SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE
+            ]
+        });
+
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, handleQuestionChanged);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT, handleConnectedCount);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, handleLeaderboardUpdate);
 
         return () => {
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, handleQuestionChanged);
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT, handleConnectedCount);
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, handleLeaderboardUpdate);
         };
     }, [socket.socket]);
 
@@ -182,6 +263,9 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         gameStatus: gameState?.status ?? 'pending',
         isAnswersLocked: gameState?.answersLocked ?? false,
 
+        // Leaderboard data for projection display (UX enhancement)
+        leaderboard,
+
         // Modern timer interface - use live timer values from useSimpleTimer for countdown
         timerStatus: timer.status || gameState?.timer?.status,
         timerQuestionUid: timerQuestionUid, // Use the overridden value
@@ -196,6 +280,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         hasGameState: !!returnValue.gameState,
         gameStateKeys: returnValue.gameState ? Object.keys(returnValue.gameState) : null,
         connectedCount: returnValue.connectedCount,
+        leaderboardCount: returnValue.leaderboard.length,
         gameStatus: returnValue.gameStatus,
         isConnected: returnValue.isConnected,
         timerValues: {

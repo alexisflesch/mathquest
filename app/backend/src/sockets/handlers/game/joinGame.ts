@@ -26,6 +26,8 @@ import { GAME_EVENTS } from '@shared/types/socket/events';
 // Import core participant types
 import { GameParticipant, ParticipantData } from '@shared/types/core/participant';
 import { calculateTimerForLateJoiner } from '../../../core/timerUtils';
+import { assignJoinOrderBonus } from '@/utils/joinOrderBonus';
+import { broadcastLeaderboardToProjection } from '@/utils/projectionLeaderboardBroadcast';
 
 const logger = createLogger('JoinGameHandler');
 
@@ -165,12 +167,18 @@ export function joinGameHandler(
             const userIdToSocketIdKey = `mathquest:game:userIdToSocketId:${accessCode}`;
             const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
 
+            // UX ENHANCEMENT: Assign join-order bonus for early joiners (only if not already assigned in lobby)
+            const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
+
+            // Apply join-order bonus to participant score
+            const finalScore = (joinResult.participant.score ?? 0) + joinOrderBonus;
+
             // Create participant data using core types (map from Prisma structure)
             const participantDataForRedis: ParticipantData = {
                 id: joinResult.participant.id,
                 userId: joinResult.participant.userId,
                 username: username || 'Unknown',
-                score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                score: finalScore, // Include join-order bonus
                 avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼', // Use parameter first, then user avatar, then default
                 joinedAt: (joinResult.participant as any).joinedAt ?
                     (typeof (joinResult.participant as any).joinedAt === 'string' ?
@@ -180,9 +188,38 @@ export function joinGameHandler(
                 online: true,
                 socketId: socket.id // Track current socket ID
             };
+
+            // For live games (not differed), assign join-order bonus for better projection UX
+            if (!gameInstance.isDiffered && (gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament')) {
+                const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
+                if (joinOrderBonus > 0) {
+                    participantDataForRedis.score = (participantDataForRedis.score || 0) + joinOrderBonus;
+                    logger.info({
+                        accessCode,
+                        userId,
+                        username,
+                        joinOrderBonus,
+                        newScore: participantDataForRedis.score
+                    }, 'Applied join-order bonus for projection leaderboard UX');
+                }
+            }
+
             logger.debug({ participantsKey, userId: joinResult.participant.userId, participantDataForRedis }, 'Storing participant in Redis by userId');
+
             // Store main participant data keyed by userId
             await redisClient.hset(participantsKey, joinResult.participant.userId, JSON.stringify(participantDataForRedis));
+
+            // Update leaderboard in Redis with participant score (including any join-order bonus)
+            const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`;
+            await redisClient.zadd(leaderboardKey, finalScore, userId);
+
+            logger.debug({
+                accessCode,
+                userId,
+                finalScore,
+                joinOrderBonus,
+                leaderboardKey
+            }, 'Added participant to leaderboard with final score (including join-order bonus)');
 
             // Update mappings
             logger.debug({ userIdToSocketIdKey, userId, socketId: socket.id }, 'Updating userIdToSocketId mapping');
@@ -196,7 +233,7 @@ export function joinGameHandler(
                     id: joinResult.participant.id,
                     userId: joinResult.participant.userId,
                     username: username || 'Unknown',
-                    score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                    score: participantDataForRedis.score, // Use the score with join-order bonus
                     avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼',
                     joinedAt: (joinResult.participant as any).joinedAt ?
                         (typeof (joinResult.participant as any).joinedAt === 'string' ?
@@ -294,13 +331,27 @@ export function joinGameHandler(
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
                         username: username || 'Unknown',
-                        score: joinResult.participant.score ?? 0, // Ensure it's always a number
+                        score: participantDataForRedis.score, // Use the score with join-order bonus
                         avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼',
                         online: true
                     }
                 };
                 logger.info({ playerJoinedPayload, room: socket.data.currentGameRoom }, 'Emitting player_joined_game to room');
                 socket.to(socket.data.currentGameRoom).emit('player_joined_game', playerJoinedPayload);
+
+                // UX ENHANCEMENT: Broadcast updated leaderboard to projection room when student joins
+                // This ensures students appear on the projection leaderboard immediately for better teacher UX
+                try {
+                    await broadcastLeaderboardToProjection(io, accessCode, gameInstance.id);
+                    logger.info({
+                        accessCode,
+                        gameId: gameInstance.id,
+                        userId,
+                        username
+                    }, 'Broadcasted leaderboard update to projection room after student join');
+                } catch (error) {
+                    logger.error({ error, accessCode, userId }, 'Error broadcasting leaderboard to projection room after join');
+                }
             }
 
             // CRITICAL FIX: Start deferred tournament game flow for individual player

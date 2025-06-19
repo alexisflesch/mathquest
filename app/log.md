@@ -8,7 +8,7 @@
 - Backend was trusting frontend for `timeSpent` values in answer submissions
 - Users could send fake `timeSpent` values to manipulate their scores
 - Scoring algorithm directly used client-provided timing data without validation
-- This allowed cheating by sending minimal time values for maximum scores
+- This allowed cheating to some extent by sending minimal time values for maximum scores
 
 **Root Cause**: Client-side time tracking being passed directly to server-side scoring calculation
 
@@ -759,3 +759,73 @@
 **Files Modified**: `backend/src/sockets/handlers/game/joinGame.ts`
 
 **Verification**: Tournament 3270 should now start the deferred game flow when user joins
+
+## 2025-06-19 - 🎯 UX Enhancement: Real-time Leaderboard Population
+
+**What**: Implemented join-order bonus scoring and real-time leaderboard updates when students join games
+**Why**: Teacher UX improvement - projection leaderboard populates immediately instead of being empty until first question
+
+**Key Features Implemented**:
+
+1. **Join-Order Bonus System** (`backend/src/utils/joinOrderBonus.ts`):
+   - First 20 students get micro-bonuses: 0.01, 0.009, 0.008, etc.
+   - Prevents duplicate bonuses using Redis lists
+   - Automatic expiration (24 hours)
+
+2. **Lobby-Based Leaderboard for Quiz Mode** (`backend/src/sockets/handlers/lobbyHandler.ts`):
+   - Students joining quiz lobby immediately get join-order bonus
+   - Leaderboard updates broadcast to projection room
+   - Only for quiz mode (where students wait in lobby for teacher to start)
+
+3. **Game-Join Leaderboard Updates** (`backend/src/sockets/handlers/game/joinGame.ts`):
+   - All game modes get join-order bonuses when actually joining game
+   - Prevents double bonuses for students who were already in lobby
+   - Real-time leaderboard broadcast to projection
+
+4. **Projection Room Broadcast Utility** (`backend/src/utils/projectionLeaderboardBroadcast.ts`):
+   - Centralized leaderboard broadcasting to projection rooms
+   - Supports broadcasting to multiple room types (game, projection, dashboard)
+   - Top 20 leaderboard limit for projection display
+
+5. **Socket Events Enhanced** (`shared/types/socket/events.ts`):
+   - Added `LEADERBOARD_UPDATE` to GAME_EVENTS
+   - Added `PROJECTION_LEADERBOARD_UPDATE` to PROJECTOR_EVENTS
+
+6. **Frontend Projection Updates** (`frontend/src/hooks/useProjectionQuizSocket.ts`):
+   - Added leaderboard state and update handlers
+   - Listens for `PROJECTION_LEADERBOARD_UPDATE` events
+   - Handles initial leaderboard data from game state
+
+**UX Flow**:
+1. **Quiz Mode**: Student joins lobby → micro-bonus assigned → projection leaderboard updates → teacher sees populated leaderboard
+2. **Tournament Mode**: Student joins game → micro-bonus assigned → projection leaderboard updates
+3. **Question Phase**: Regular scores override micro-scores as expected
+
+**Files Modified**:
+- `backend/src/utils/joinOrderBonus.ts` - Join order tracking and bonus calculation
+- `backend/src/utils/projectionLeaderboardBroadcast.ts` - Projection room broadcast utility  
+- `backend/src/sockets/handlers/lobbyHandler.ts` - Quiz lobby leaderboard updates
+- `backend/src/sockets/handlers/game/joinGame.ts` - Game join leaderboard updates
+- `shared/types/socket/events.ts` - Added leaderboard socket events
+- `frontend/src/hooks/useProjectionQuizSocket.ts` - Frontend leaderboard handling
+
+**Result**: Teachers now see immediate leaderboard population on projection displays, significantly improving classroom UX and eliminating the "empty screen" problem.
+
+## 2025-06-19 17:15 - 🔧 FIXED: Avatar Emoji Display in Projection Leaderboard
+**What**: Fixed legacy avatar rendering issue in ClassementPodium component
+**Problem**: Component was trying to render avatarEmoji as Image URL instead of emoji text
+**Error**: `Failed to construct 'URL': Invalid URL` when students joined with emoji avatars
+**How it was fixed**:
+1. **Updated ClassementPodium.tsx**: Changed from `<Image src={user.avatarEmoji}>` to `<span>{user.avatarEmoji}</span>`
+2. **Removed unused import**: Removed `import Image from 'next/image'` since no longer needed
+3. **Verified emoji display**: Now correctly shows emoji (🐼, 😊, etc.) instead of broken image links
+
+**Result**: ✅ COMPLETE LEADERBOARD UX ENHANCEMENT
+- Students appear on projection leaderboard immediately after joining lobby (quiz mode)
+- Join-order bonuses work correctly (0.01, 0.009, 0.008... for first 20 students)
+- Avatar emojis display properly in leaderboard podium
+- Real-time updates flow: Student joins → Redis bonus → Leaderboard calc → Projection broadcast → UI update
+
+**Impact**: Teachers now see populated leaderboard immediately when students join, vastly improved UX
+**Files**: `frontend/src/components/ClassementPodium.tsx` - Fixed avatar emoji rendering
+**Testing**: Confirmed working in browser - students appear immediately with correct emoji avatars
