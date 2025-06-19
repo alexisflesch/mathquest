@@ -104,11 +104,10 @@ export default function EnhancedSingleSelectDropdown({
                         <button
                             key={opt}
                             type="button"
-                            className={`enhanced-single-dropdown-option w-full text-left px-3 py-2 cursor-pointer text-sm ${
-                                value === opt 
-                                    ? 'bg-gray-100 dark:bg-gray-700 font-medium text-gray-900 dark:text-gray-100' 
+                            className={`enhanced-single-dropdown-option w-full text-left px-3 py-2 cursor-pointer text-sm ${value === opt
+                                    ? 'bg-gray-100 dark:bg-gray-700 font-medium text-gray-900 dark:text-gray-100'
                                     : 'text-gray-900 dark:text-gray-100'
-                            }`}
+                                }`}
                             style={{
                                 border: "none",
                                 outline: "none",
