@@ -4,6 +4,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { ToggleProjectionStatsPayload } from '@shared/types/socket/payloads';
 import createLogger from '@/utils/logger';
 import { getAnswerStats } from './helpers';
+import { updateProjectionDisplayState } from '@/core/gameStateService';
 
 // Create a handler-specific logger
 const logger = createLogger('ToggleProjectionStatsHandler');
@@ -78,6 +79,13 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
                 timestamp: Date.now()
             };
 
+            // Update persistent projection display state
+            await updateProjectionDisplayState(gameInstance.accessCode, {
+                showStats: show,
+                currentStats: show ? answerStats : {},
+                statsQuestionUid: show ? questionUid : null
+            });
+
             // Emit to projection room
             const projectionRoom = `projection_${gameInstance.id}`;
             const eventType = show
@@ -90,8 +98,9 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
                 projectionRoom,
                 questionUid,
                 show,
-                eventType
-            }, 'Emitted stats toggle to projection room');
+                eventType,
+                statsPersisted: true
+            }, 'Emitted stats toggle to projection room and persisted state');
 
             logger.info({
                 socketId: socket.id,

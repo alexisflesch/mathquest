@@ -3,6 +3,7 @@ import { prisma } from '@/db/prisma';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { ShowCorrectAnswersPayload } from '@shared/types/socket/payloads';
 import createLogger from '@/utils/logger';
+import { updateProjectionDisplayState } from '@/core/gameStateService';
 
 // Create a handler-specific logger
 const logger = createLogger('ShowCorrectAnswersHandler');
@@ -111,10 +112,17 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
             const projectionRoom = `projection_${gameInstance.id}`;
             io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS, projectionCorrectAnswersPayload);
 
+            // Persist correct answers state for projection page refresh
+            await updateProjectionDisplayState(gameInstance.accessCode, {
+                showCorrectAnswers: true,
+                correctAnswersData: projectionCorrectAnswersPayload
+            });
+
             logger.info({
                 projectionRoom,
-                questionUid
-            }, 'Emitted correct answers to projection room');
+                questionUid,
+                statePersisted: true
+            }, 'Emitted correct answers to projection room and persisted state');
 
             // TODO: Mark question as "closed" in game state if needed
             // This could involve updating Redis game state to track question status

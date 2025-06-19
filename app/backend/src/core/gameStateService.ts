@@ -15,6 +15,7 @@ const GAME_KEY_PREFIX = 'mathquest:game:';
 const GAME_PARTICIPANTS_PREFIX = 'mathquest:game:participants:';
 const GAME_ANSWERS_PREFIX = 'mathquest:game:answers:';
 const GAME_LEADERBOARD_PREFIX = 'mathquest:game:leaderboard:';
+const PROJECTION_DISPLAY_PREFIX = 'mathquest:projection:display:';
 
 /**
  * Get formatted leaderboard data for a game
@@ -320,6 +321,15 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
 
         // Initialize answer collection for this question
         await redisClient.del(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionUid}`);
+
+        // Clear projection display state for new question
+        await updateProjectionDisplayState(accessCode, {
+            showStats: false,
+            currentStats: {},
+            statsQuestionUid: null,
+            showCorrectAnswers: false,
+            correctAnswersData: null
+        });
 
         // Update game state in Redis
         await redisClient.set(
@@ -685,6 +695,81 @@ export async function updateGameState(accessCode: string, gameState: GameState):
     }
 }
 
+/**
+ * Get projection display state for a game
+ * 
+ * @param accessCode The game access code
+ * @returns The projection display state
+ */
+export async function getProjectionDisplayState(accessCode: string): Promise<{
+    showStats: boolean;
+    currentStats: Record<string, number>;
+    statsQuestionUid: string | null;
+    showCorrectAnswers: boolean;
+    correctAnswersData: any | null;
+} | null> {
+    try {
+        const stateRaw = await redisClient.get(`${PROJECTION_DISPLAY_PREFIX}${accessCode}`);
+        if (!stateRaw) {
+            // Return default state if none exists
+            return {
+                showStats: false,
+                currentStats: {},
+                statsQuestionUid: null,
+                showCorrectAnswers: false,
+                correctAnswersData: null
+            };
+        }
+
+        return JSON.parse(stateRaw);
+    } catch (error) {
+        logger.error({ accessCode, error }, 'Error getting projection display state');
+        return null;
+    }
+}
+
+/**
+ * Update projection display state for a game
+ * 
+ * @param accessCode The game access code  
+ * @param state The projection display state to set
+ */
+export async function updateProjectionDisplayState(accessCode: string, state: {
+    showStats?: boolean;
+    currentStats?: Record<string, number>;
+    statsQuestionUid?: string | null;
+    showCorrectAnswers?: boolean;
+    correctAnswersData?: any | null;
+}): Promise<void> {
+    try {
+        // Get existing state or use defaults
+        const existing = await getProjectionDisplayState(accessCode) || {
+            showStats: false,
+            currentStats: {},
+            statsQuestionUid: null,
+            showCorrectAnswers: false,
+            correctAnswersData: null
+        };
+
+        // Merge with new state
+        const newState = {
+            ...existing,
+            ...state
+        };
+
+        await redisClient.set(
+            `${PROJECTION_DISPLAY_PREFIX}${accessCode}`,
+            JSON.stringify(newState),
+            'EX',
+            86400 // 24 hours
+        );
+
+        logger.debug({ accessCode, newState }, 'Updated projection display state');
+    } catch (error) {
+        logger.error({ accessCode, state, error }, 'Error updating projection display state');
+    }
+}
+
 export default {
     initializeGameState,
     setCurrentQuestion,
@@ -692,5 +777,7 @@ export default {
     endCurrentQuestion,
     calculateScores,
     updateGameState,
-    getFormattedLeaderboard // Add new function to default export
+    getFormattedLeaderboard,
+    getProjectionDisplayState,
+    updateProjectionDisplayState // Add new functions to default export
 };

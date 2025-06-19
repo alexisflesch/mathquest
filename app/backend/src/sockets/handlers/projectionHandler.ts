@@ -193,6 +193,36 @@ export function projectionHandler(io: Server, socket: Socket) {
                     // Emit timer update immediately after the initial state (works for both play and pause status)
                     socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, timerUpdatePayload);
                 }
+
+                // Send current projection display state if it exists
+                const displayState = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);
+                if (displayState) {
+                    logger.info({
+                        gameId,
+                        accessCode: gameInstance.accessCode,
+                        displayState
+                    }, 'Sending initial projection display state');
+
+                    // If stats are currently shown, send the show stats event
+                    if (displayState.showStats && displayState.statsQuestionUid) {
+                        socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, {
+                            questionUid: displayState.statsQuestionUid,
+                            show: true,
+                            stats: displayState.currentStats,
+                            timestamp: Date.now()
+                        });
+                        logger.info({ gameId, questionUid: displayState.statsQuestionUid }, 'Sent initial stats state (visible)');
+                    }
+
+                    // If correct answers are currently shown
+                    if (displayState.showCorrectAnswers && displayState.correctAnswersData) {
+                        socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS, {
+                            ...displayState.correctAnswersData,
+                            timestamp: Date.now()
+                        });
+                        logger.info({ gameId }, 'Sent initial correct answers state');
+                    }
+                }
             } catch (stateError) {
                 logger.error({ error: stateError, gameId }, 'Failed to send initial projection state');
             }
