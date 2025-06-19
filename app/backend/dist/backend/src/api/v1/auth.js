@@ -795,4 +795,80 @@ router.put('/profile', auth_1.optionalAuth, (0, validation_1.validateRequestBody
         res.status(500).json({ error: 'An error occurred while updating profile' });
     }
 });
+/**
+ * Upgrade authenticated student to teacher
+ * POST /api/v1/auth/upgrade-to-teacher
+ * Requires authentication via cookie and admin password
+ */
+router.post('/upgrade-to-teacher', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(schemas_1.TeacherUpgradeRequestSchema), async (req, res) => {
+    try {
+        const { adminPassword } = req.body;
+        // Check if user is authenticated
+        if (!req.user?.userId) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        // TODO: Validate admin password
+        // For now, we'll implement basic validation - you should replace this with your actual admin password logic
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'; // Set this in your environment
+        if (adminPassword !== ADMIN_PASSWORD) {
+            res.status(403).json({ error: 'Invalid admin password' });
+            return;
+        }
+        // Get current user
+        const currentUser = await getUserService().getUserById(req.user.userId);
+        if (!currentUser) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+        // Check if user is already a teacher
+        if (currentUser.role === 'TEACHER') {
+            res.status(400).json({ error: 'User is already a teacher' });
+            return;
+        }
+        // Check if user is a student (has email)
+        if (!currentUser.email) {
+            res.status(400).json({ error: 'Only student accounts can be upgraded to teacher' });
+            return;
+        }
+        // Upgrade the user to teacher using the new role upgrade method
+        const result = await getUserService().upgradeUserRole(currentUser.id, 'TEACHER');
+        // Check if the upgrade was successful
+        if (!result.success || !result.token || !result.user) {
+            res.status(500).json({ error: 'User upgrade failed' });
+            return;
+        }
+        // Set teacher token cookie
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        };
+        res.cookie('teacherToken', result.token, cookieOptions);
+        // Clear any existing auth token since they're now a teacher
+        res.clearCookie('authToken');
+        logger.info('Student upgraded to teacher successfully', {
+            userId: currentUser.id,
+            username: currentUser.username,
+            email: currentUser.email
+        });
+        res.status(200).json({
+            success: true,
+            message: 'Account upgraded to teacher successfully',
+            token: result.token,
+            user: {
+                id: result.user.id,
+                username: result.user.username,
+                email: result.user.email,
+                avatar: result.user.avatarEmoji || '🐼',
+                role: result.user.role
+            }
+        });
+    }
+    catch (error) {
+        logger.error({ error }, 'Error upgrading student to teacher');
+        res.status(500).json({ error: 'An error occurred while upgrading account' });
+    }
+});
 exports.default = router;

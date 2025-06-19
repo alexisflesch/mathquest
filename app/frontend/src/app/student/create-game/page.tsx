@@ -18,6 +18,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import CustomDropdown from "@/components/CustomDropdown";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
+import EnhancedSingleSelectDropdown from "@/components/EnhancedSingleSelectDropdown";
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsFiltersResponseSchema, QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
@@ -219,7 +220,7 @@ function StudentCreateTournamentPageInner() {
 
                 // Create practice GameInstance with access code
                 const requestBody = {
-                    name: `Entraînement - ${username}`,
+                    name: `${username}`,
                     playMode: 'practice',
                     gradeLevel: safeNiveau,
                     discipline: safeDiscipline,
@@ -350,7 +351,7 @@ function StudentCreateTournamentPageInner() {
                     {/* Step 1: Niveau */}
                     {step === 1 && (
                         <div className="w-full flex flex-col gap-4">
-                            <CustomDropdown
+                            <EnhancedSingleSelectDropdown
                                 label="Choisis un niveau"
                                 options={filters.gradeLevel}
                                 value={niveau}
@@ -362,7 +363,7 @@ function StudentCreateTournamentPageInner() {
                     {/* Step 2: Discipline */}
                     {step === 2 && (
                         <div className="w-full flex flex-col gap-4">
-                            <CustomDropdown
+                            <EnhancedSingleSelectDropdown
                                 label="Choisis une discipline"
                                 options={availableDisciplines}
                                 value={discipline}

@@ -12,6 +12,15 @@ class GameTemplateService {
      * Student-driven GameTemplate creation: randomly select questions and create a template
      */
     async createStudentGameTemplate(data) {
+        // Get the username if not provided
+        let username = data.username;
+        if (!username) {
+            const user = await prisma_1.prisma.user.findUnique({
+                where: { id: data.userId },
+                select: { username: true }
+            });
+            username = user?.username || 'Élève';
+        }
         // 1. Find random questions matching the filters
         const questions = await prisma_1.prisma.question.findMany({
             where: {
@@ -32,12 +41,13 @@ class GameTemplateService {
         // 2. Create the GameTemplate
         const gameTemplate = await prisma_1.prisma.gameTemplate.create({
             data: {
-                name: `Student Game (${data.discipline})`,
+                name: generateGameTemplateName(data.playMode, username, data.discipline),
                 creatorId: data.userId, // Use unified creatorId
                 gradeLevel: data.gradeLevel,
                 themes: data.themes,
                 discipline: data.discipline,
-                defaultMode: 'tournament',
+                description: "AUTO: Created from student UI",
+                defaultMode: data.playMode === 'practice' ? 'practice' : 'tournament',
                 questions: {
                     create: questions.map((q, idx) => ({
                         questionUid: q.uid,
@@ -245,3 +255,17 @@ class GameTemplateService {
     }
 }
 exports.GameTemplateService = GameTemplateService;
+/**
+ * Generate appropriate game template name based on play mode
+ */
+function generateGameTemplateName(playMode, username, discipline) {
+    const displayName = username || 'Élève';
+    switch (playMode) {
+        case 'practice':
+            return `Entraînement de ${displayName}`;
+        case 'tournament':
+            return `Tournoi de ${displayName}`;
+        default:
+            return `Jeu de ${displayName}`;
+    }
+}

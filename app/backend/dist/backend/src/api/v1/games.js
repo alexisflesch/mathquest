@@ -86,8 +86,12 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
         if (!gameTemplateId && (playMode === 'tournament' || playMode === 'practice') && gradeLevel && discipline && Array.isArray(themes) && nbOfQuestions) {
             try {
                 const gameTemplateService = new gameTemplateService_1.GameTemplateService();
+                // Extract username from settings if available
+                const username = settings?.username || undefined;
                 const template = await gameTemplateService.createStudentGameTemplate({
                     userId: userId,
+                    username: username,
+                    playMode: playMode,
                     gradeLevel,
                     discipline,
                     themes,

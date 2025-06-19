@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { makeApiRequest } from '@/config/api';
-import { ChevronDown, ChevronUp, ChevronRight, Plus, Play, Edit2, Copy, Trash2, Clock, BookOpen, Users, Target, Zap, MoreHorizontal, X, Share2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronRight, Plus, Rocket, Edit2, Copy, Trash2, Clock, BookOpen, Users, Target, Zap, Dumbbell, MoreHorizontal, X, Share2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Snackbar from '@/components/Snackbar';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -91,8 +91,8 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
         switch (mode) {
             case 'quiz': return <Target size={16} />;
             case 'tournament': return <Users size={16} />;
-            case 'practice': return <Zap size={16} />;
-            default: return <Play size={16} />;
+            case 'practice': return <Dumbbell size={16} />;
+            default: return <Rocket size={16} />;
         }
     };
 
@@ -156,7 +156,7 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                 className="p-2 text-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:bg-opacity-10 rounded transition-colors"
                                 title="Lancer l'activité"
                             >
-                                <Play size={16} />
+                                <Rocket size={16} />
                             </button>
                             <Link
                                 href={`/teacher/games/${template.id}/edit`}
@@ -380,20 +380,20 @@ function StartActivityModal({ isOpen, templateName, onClose, onStart }: StartAct
         {
             id: 'quiz' as const,
             name: 'Quiz',
-            description: 'Évaluation en temps réel avec classement instantané',
+            description: 'Pour une utilisation en classe',
             icon: <Target size={22} className="text-primary" />,
         },
         {
             id: 'tournament' as const,
             name: 'Tournoi',
-            description: 'Compétition par équipes avec élimination',
+            description: 'Compétition en direct ou en différé',
             icon: <Users size={22} className="text-accent" />,
         },
         {
             id: 'practice' as const,
             name: 'Entraînement',
             description: 'Pratique libre sans contrainte de temps',
-            icon: <Zap size={22} className="text-success" />,
+            icon: <Dumbbell size={22} className="text-success" />,
         }
     ];
 
@@ -431,7 +431,7 @@ function StartActivityModal({ isOpen, templateName, onClose, onStart }: StartAct
                             </div>
 
                             <p className="text-[color:var(--muted-foreground)] mb-6 text-sm">
-                                Choisissez le mode de jeu qui correspond le mieux à vos objectifs pédagogiques.
+                                Choisissez un mode de jeu.
                             </p>
 
                             <div className="space-y-3">
@@ -515,10 +515,10 @@ function StartActivityModal({ isOpen, templateName, onClose, onStart }: StartAct
 
                                     <div className="flex gap-3">
                                         <button
-                                            onClick={() => window.open(`/teacher/dashboard/${gameInfo.gameId}`, '_blank')}
+                                            onClick={() => window.open(`/teacher/dashboard/${gameInfo.mode === 'quiz' ? gameInfo.gameCode : gameInfo.gameId}`, '_blank')}
                                             className="flex-1 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors text-center"
                                         >
-                                            Surveiller l'activité
+                                            {gameInfo.mode === 'quiz' ? 'Piloter' : 'Surveiller l\'activité'}
                                         </button>
                                         <button
                                             onClick={handleClose}

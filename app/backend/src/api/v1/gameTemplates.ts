@@ -54,8 +54,16 @@ router.get('/', async (req: Request, res: Response<GameTemplatesResponse | Error
 
         logger.info({ userId }, 'Fetching game templates for teacher');
 
-        // Fetch templates created by this teacher
-        const result = await getGameTemplateService().getgameTemplates(userId, {}, { skip: 0, take: 50 });
+        // Fetch templates created by this teacher, excluding auto-generated ones
+        // Include templates with null description OR description that is not the auto-generated text
+        const filters = {
+            OR: [
+                { description: null },
+                { description: { not: "AUTO: Created from student UI" } }
+            ]
+        };
+
+        const result = await getGameTemplateService().getgameTemplates(userId, filters, { skip: 0, take: 50 });
 
         res.status(200).json({
             gameTemplates: result.gameTemplates,
