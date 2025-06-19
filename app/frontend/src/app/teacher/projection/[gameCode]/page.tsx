@@ -432,7 +432,19 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                     preventCollision={false}
                     compactType={null}
                     useCSSTransforms={true}
-                    onLayoutChange={(newLayout: Layout[]) => setLayout(newLayout)} // Handler type matches state type
+                    autoSize={false}
+                    verticalCompact={false}
+                    isBounded={false}
+                    onLayoutChange={(newLayout: Layout[]) => {
+                        // Only update layout if it's a real change, not just a z-index update
+                        if (JSON.stringify(newLayout) !== JSON.stringify(layout)) {
+                            setLayout(newLayout);
+                        }
+                    }}
+                    onDrag={(layout: Layout[], oldItem: any, newItem: any, placeholder: any, e: MouseEvent, element: HTMLElement) => {
+                        // Bring dragged element to front during drag
+                        bringToFront(newItem.i);
+                    }}
                     style={{ height: "calc(100vh - 56px)" }}
                     onDragStart={(layout, oldItem, newItem) => {
                         bringToFront(newItem.i);
