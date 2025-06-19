@@ -229,7 +229,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                     );
                 })}
             </ul>
-            {effectiveIsMultipleChoice && (
+            {effectiveIsMultipleChoice && !readonly && (
                 <button
                     className="btn btn-primary mt-2 self-end"
                     onClick={handleSubmitMultiple}
