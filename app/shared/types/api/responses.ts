@@ -90,7 +90,21 @@ export interface AuthStatusResponse {
 }
 
 export interface ProfileUpdateResponse {
+    success: boolean;
     message: string;
+    user: {
+        id: string;
+        username: string;
+        email?: string;
+        avatar: string;
+        role: UserRole;
+    };
+}
+
+export interface TeacherUpgradeResponse {
+    success: boolean;
+    message: string;
+    token: string;
     user: {
         id: string;
         username: string;

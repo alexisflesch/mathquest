@@ -47,6 +47,7 @@ export interface AuthContextType {
     registerStudent: (email: string, password: string, username: string, avatar: string) => Promise<void>;
     loginTeacher: (email: string, password: string) => Promise<void>;
     registerTeacher: (email: string, password: string, username: string, adminPassword: string, avatar: string) => Promise<void>;
+    upgradeToTeacher: (adminPassword: string) => Promise<void>;
 
     // Méthodes de profil
     updateProfile: (data: { username: string; avatar: string }) => Promise<void>;

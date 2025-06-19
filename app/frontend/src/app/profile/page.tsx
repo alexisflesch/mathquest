@@ -8,6 +8,7 @@ import { useAuth } from '../../components/AuthProvider';
 import ProfileForm from '../../components/profile/ProfileForm';
 import AccountUpgradeForm from '../../components/profile/AccountUpgradeForm';
 import TeacherUpgradeForm from '../../components/profile/TeacherUpgradeForm';
+import Snackbar from '../../components/Snackbar';
 
 function ProfilePageInner() {
     const router = useRouter();
@@ -16,13 +17,18 @@ function ProfilePageInner() {
         userProfile,
         setGuestProfile,
         upgradeGuestToAccount,
-        updateProfile
+        updateProfile,
+        upgradeToTeacher,
+        registerTeacher
     } = useAuth();
 
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [activeTab, setActiveTab] = useState<'profile' | 'upgrade' | 'teacher'>('profile');
+
+    // Snackbar state
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
 
     // Redirect if not authenticated
     useEffect(() => {
@@ -38,8 +44,7 @@ function ProfilePageInner() {
 
     const handleProfileUpdate = async (data: { username: string; avatar: string }) => {
         setIsLoading(true);
-        setError('');
-        setSuccess('');
+        setSnackbarOpen(false); // Close any existing snackbar
 
         try {
             if (userState === 'guest') {
@@ -49,9 +54,13 @@ function ProfilePageInner() {
                 // Update account profile via API
                 await updateProfile(data);
             }
-            setSuccess('Profil mis à jour avec succès !');
+            setSnackbarType('success');
+            setSnackbarMessage('Profil mis à jour avec succès !');
+            setSnackbarOpen(true);
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour du profil');
+            setSnackbarType('error');
+            setSnackbarMessage(err instanceof Error ? err.message : 'Erreur lors de la mise à jour du profil');
+            setSnackbarOpen(true);
         } finally {
             setIsLoading(false);
         }
@@ -59,27 +68,30 @@ function ProfilePageInner() {
 
     const handleAccountUpgrade = async (data: { email: string; password: string; confirmPassword: string; isTeacher?: boolean; adminPassword?: string }) => {
         setIsLoading(true);
-        setError('');
-        setSuccess('');
+        setSnackbarOpen(false); // Close any existing snackbar
 
         try {
             if (data.isTeacher && data.adminPassword) {
                 // Create teacher account directly
-                console.log('Creating teacher account:', { email: data.email, password: data.password, adminPassword: data.adminPassword });
-                // TODO: Implement teacher account creation API call
-                // await createTeacherAccount(data.email, data.password, data.adminPassword, userProfile.username, userProfile.avatar);
-                setSuccess('Compte enseignant créé avec succès !');
+                await registerTeacher(data.email, data.password, userProfile.username || '', data.adminPassword, userProfile.avatar || '');
+                setSnackbarType('success');
+                setSnackbarMessage('Compte enseignant créé avec succès !');
+                setSnackbarOpen(true);
                 // Switch to profile tab after successful teacher account creation
                 setTimeout(() => setActiveTab('profile'), 1500);
             } else {
                 // Create regular student account
                 await upgradeGuestToAccount(data.email, data.password);
-                setSuccess('Compte créé avec succès !');
+                setSnackbarType('success');
+                setSnackbarMessage('Compte créé avec succès !');
+                setSnackbarOpen(true);
                 // Switch to profile tab after successful account upgrade
                 setTimeout(() => setActiveTab('profile'), 1500);
             }
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Erreur lors de la création du compte');
+            setSnackbarType('error');
+            setSnackbarMessage(err instanceof Error ? err.message : 'Erreur lors de la création du compte');
+            setSnackbarOpen(true);
         } finally {
             setIsLoading(false);
         }
@@ -87,29 +99,30 @@ function ProfilePageInner() {
 
     const handleTeacherUpgrade = async (adminPassword: string, email?: string, password?: string) => {
         setIsLoading(true);
-        setError('');
-        setSuccess('');
+        setSnackbarOpen(false); // Close any existing snackbar
 
         try {
             if (userState === 'guest' && email && password) {
                 // For guests: create teacher account directly
-                // TODO: Implement teacher account creation API call
-                console.log('Creating teacher account:', { email, password, adminPassword });
-                // await createTeacherAccount(email, password, adminPassword, userProfile.username, userProfile.avatar);
-                setSuccess('Compte enseignant créé avec succès !');
+                await registerTeacher(email, password, userProfile.username || '', adminPassword, userProfile.avatar || '');
+                setSnackbarType('success');
+                setSnackbarMessage('Compte enseignant créé avec succès !');
+                setSnackbarOpen(true);
                 // Switch to profile tab after successful teacher account creation
                 setTimeout(() => setActiveTab('profile'), 1500);
             } else {
                 // For students: upgrade to teacher
-                // TODO: Implement teacher upgrade API call
-                console.log('Teacher upgrade with admin password:', adminPassword);
-                // await upgradeToTeacher(adminPassword);
-                setSuccess('Compte enseignant activé avec succès !');
+                await upgradeToTeacher(adminPassword);
+                setSnackbarType('success');
+                setSnackbarMessage('Compte enseignant activé avec succès !');
+                setSnackbarOpen(true);
                 // Switch to profile tab after successful teacher upgrade
                 setTimeout(() => setActiveTab('profile'), 1500);
             }
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Erreur lors de l\'upgrade enseignant');
+            setSnackbarType('error');
+            setSnackbarMessage(err instanceof Error ? err.message : 'Erreur lors de l\'upgrade enseignant');
+            setSnackbarOpen(true);
         } finally {
             setIsLoading(false);
         }
@@ -185,19 +198,6 @@ function ProfilePageInner() {
                             </div>
                         )}
 
-                        {/* Status Messages */}
-                        {error && (
-                            <div className="mb-4 p-3 bg-[color:var(--destructive-bg)] border border-[color:var(--destructive-border)] rounded-md">
-                                <p className="text-[color:var(--destructive)] text-sm">{error}</p>
-                            </div>
-                        )}
-
-                        {success && (
-                            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                                <p className="text-green-700 text-sm">{success}</p>
-                            </div>
-                        )}
-
                         {/* Tab Content */}
                         {activeTab === 'profile' && (
                             <ProfileForm
@@ -233,6 +233,14 @@ function ProfilePageInner() {
                     </div>
                 </div>
             </div>
+
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                type={snackbarType}
+                onClose={() => setSnackbarOpen(false)}
+            />
         </div>
     );
 }

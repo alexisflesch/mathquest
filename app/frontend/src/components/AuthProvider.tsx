@@ -39,6 +39,8 @@ import {
     type UniversalLoginResponse,
     ProfileUpdateResponseSchema,
     type ProfileUpdateResponse,
+    TeacherUpgradeResponseSchema,
+    type TeacherUpgradeResponse,
     LogoutResponseSchema,
     type LogoutResponse
 } from '@shared/types/api/schemas';
@@ -450,6 +452,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             logger.error('Error registering teacher:', error);
+            throw error;
+        }
+    }, []);
+
+    const upgradeToTeacher = useCallback(async (adminPassword: string) => {
+        try {
+            const result = await makeApiRequest<TeacherUpgradeResponse>(
+                '/api/auth/upgrade-to-teacher',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ adminPassword }),
+                },
+                undefined,
+                TeacherUpgradeResponseSchema
+            );
+
+            if (result.success && result.user && result.token) {
+                // Update to teacher state
+                setUserState('teacher');
+                setUserProfile({
+                    username: result.user.username,
+                    avatar: result.user.avatar || '',
+                    email: result.user.email,
+                    role: result.user.role,
+                    userId: result.user.id
+                });
+
+                logger.info('Student upgraded to teacher', {
+                    userId: result.user.id,
+                    email: result.user.email
+                });
+            } else {
+                throw new Error('Erreur lors de l\'upgrade enseignant');
+            }
+        } catch (error) {
+            logger.error('Error upgrading to teacher:', error);
             throw error;
         }
     }, []);
@@ -925,6 +963,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         registerStudent,
         loginTeacher,
         registerTeacher,
+        upgradeToTeacher,
         canCreateQuiz,
         canJoinGame,
         requiresAuth,

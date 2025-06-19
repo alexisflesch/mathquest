@@ -60,6 +60,10 @@ export const ProfileUpdateRequestSchema = z.object({
     avatar: z.string().min(1, 'Avatar is required')
 });
 
+export const TeacherUpgradeRequestSchema = z.object({
+    adminPassword: z.string().min(1, 'Admin password is required')
+});
+
 // --- Game API Request Schemas ---
 
 export const CreateGameRequestSchema = z.object({
@@ -215,6 +219,13 @@ export const AuthStatusResponseSchema = z.object({
 export const ProfileUpdateResponseSchema = z.object({
     success: z.boolean(),
     message: z.string(),
+    user: ApiUserSchema
+});
+
+export const TeacherUpgradeResponseSchema = z.object({
+    success: z.boolean(),
+    message: z.string(),
+    token: z.string(),
     user: ApiUserSchema
 });
 
@@ -459,6 +470,7 @@ export type UpgradeAccountRequest = z.infer<typeof UpgradeAccountRequestSchema>;
 export type PasswordResetRequest = z.infer<typeof PasswordResetRequestSchema>;
 export type PasswordResetConfirmRequest = z.infer<typeof PasswordResetConfirmRequestSchema>;
 export type ProfileUpdateRequest = z.infer<typeof ProfileUpdateRequestSchema>;
+export type TeacherUpgradeRequest = z.infer<typeof TeacherUpgradeRequestSchema>;
 export type SetQuestionRequest = z.infer<typeof SetQuestionRequestSchema>;
 // Backward compatibility aliases
 export type UpgradeRequest = UpgradeAccountRequest;
@@ -469,6 +481,7 @@ export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
 export type UpgradeAccountResponse = z.infer<typeof UpgradeAccountResponseSchema>;
 export type AuthStatusResponse = z.infer<typeof AuthStatusResponseSchema>;
 export type ProfileUpdateResponse = z.infer<typeof ProfileUpdateResponseSchema>;
+export type TeacherUpgradeResponse = z.infer<typeof TeacherUpgradeResponseSchema>;
 export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 export type GameCreationResponse = z.infer<typeof GameCreationResponseSchema>;

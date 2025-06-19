@@ -779,12 +779,13 @@ router.put('/profile', auth_1.optionalAuth, (0, validation_1.validateRequestBody
             avatar
         });
         res.status(200).json({
+            success: true,
             message: 'Profile updated successfully',
             user: {
                 id: updatedUser.id,
                 email: updatedUser.email || undefined,
                 username: updatedUser.username,
-                avatar: updatedUser.avatarEmoji || '�',
+                avatar: updatedUser.avatarEmoji || '🤖',
                 role: updatedUser.role
             }
         });

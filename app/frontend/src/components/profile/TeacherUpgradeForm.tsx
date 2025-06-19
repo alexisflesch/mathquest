@@ -44,7 +44,7 @@ export default function TeacherUpgradeForm({
                 <p className="text-sm text-[color:var(--muted-foreground)]">
                     {isGuest
                         ? 'Créez directement un compte enseignant pour accéder à toutes les fonctionnalités de création et gestion de quiz.'
-                        : 'Upgradez votre compte étudiant vers un compte enseignant pour accéder aux fonctionnalités de création et gestion de quiz.'
+                        : 'Mettez à niveau votre compte étudiant vers un compte enseignant pour accéder aux fonctionnalités de création et de gestion de quiz.'
                     }
                 </p>
             </div>

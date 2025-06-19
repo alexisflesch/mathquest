@@ -407,4 +407,73 @@ export class UserService {
             throw error;
         }
     }
+
+    /**
+     * Upgrade user role (student→teacher) without changing password
+     */
+    async upgradeUserRole(userId: string, targetRole: UserRole): Promise<AuthResponse> {
+        try {
+            // Check if user exists
+            const existingUser = await prisma.user.findUnique({
+                where: { id: userId },
+                include: {
+                    studentProfile: true,
+                    teacherProfile: true
+                }
+            });
+
+            if (!existingUser) {
+                throw new Error('User not found');
+            }
+
+            // Update user role
+            const updatedUser = await prisma.user.update({
+                where: { id: userId },
+                data: {
+                    role: targetRole,
+                    // Create teacher profile if upgrading to teacher
+                    ...(targetRole === 'TEACHER' && !existingUser.teacherProfile && {
+                        teacherProfile: {
+                            create: {}
+                        }
+                    })
+                },
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    role: true,
+                    avatarEmoji: true,
+                    createdAt: true
+                }
+            });
+
+            // Generate JWT token with new role
+            const token = jwt.sign(
+                { userId: updatedUser.id, username: updatedUser.username, role: updatedUser.role },
+                JWT_SECRET,
+                { expiresIn: JWT_EXPIRES_IN }
+            );
+
+            logger.info({ userId, targetRole }, 'User role upgraded successfully');
+
+            return {
+                success: true,
+                token,
+                userState: updatedUser.role === 'TEACHER' ? 'teacher' : 'student',
+                user: {
+                    id: updatedUser.id,
+                    username: updatedUser.username,
+                    email: updatedUser.email!,
+                    role: updatedUser.role,
+                    avatarEmoji: updatedUser.avatarEmoji || '🐼', // Fallback to default if null
+                    createdAt: updatedUser.createdAt,
+                    updatedAt: updatedUser.createdAt, // Use createdAt as updatedAt since updatedAt doesn't exist in schema
+                }
+            };
+        } catch (error) {
+            logger.error({ error, userId }, 'Error upgrading user role');
+            throw error;
+        }
+    }
 }
