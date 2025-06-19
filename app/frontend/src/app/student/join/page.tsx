@@ -78,7 +78,7 @@ export default function StudentJoinPage() {
                 router.push(`/live/${accessCode}`);
                 return;
             }
-            if (status === 'completed') {
+            if (status === 'completed' || status === 'ended') {
                 router.push(`/live/${accessCode}?differed=1`);
                 return;
             }

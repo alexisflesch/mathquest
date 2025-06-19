@@ -711,3 +711,51 @@
 - ✅ Leaderboard display: shows 982 points instead of 0
 **Impact**: Users can no longer manipulate scores by sending fake timeSpent values
 **Files**: All scoring system files now working together securely
+
+## 2025-06-19 - Tournament Ending Database Update Bug Fix
+
+**What**: Fix tournament ending flow to properly update database status and deferred availability fields
+
+**Issue Identified**: 
+- Tournament ending in `sharedGameFlow.ts` only persists leaderboard to database
+- Missing database updates for tournament lifecycle fields:
+  - `status` should be changed from "active" to "ended"
+  - `endedAt` should be set to current timestamp
+  - `differedAvailableFrom` should be set to same timestamp as endedAt
+  - `differedAvailableTo` should be set to endedAt + 7 days
+- This affects tournament lifecycle and deferred mode availability window
+
+**Root Cause**: Game ending logic in `sharedGameFlow.ts` line ~215 only calls leaderboard persistence but skips GameInstance field updates
+
+**Expected Fix**:
+1. Add database update call to set status="ended" when tournament completes
+2. Set timing fields (endedAt, differedAvailableFrom, differedAvailableTo) 
+3. Maintain existing leaderboard persistence functionality
+4. Test tournament completion flow to verify all fields are properly updated
+
+**Impact**: HIGH - Without this fix:
+- Tournaments remain in "active" status forever
+- Deferred mode window is not properly established
+- Tournament lifecycle management is broken
+
+**Files to modify**: `backend/src/sockets/handlers/sharedGameFlow.ts`
+
+## 2025-06-19 - ✅ FIXED: Deferred Tournament Game Flow Startup
+
+**Issue**: User joins deferred tournament successfully but gets stuck at "En attente de la prochaine question" because deferred game flow doesn't start.
+
+**Root Cause**: `joinGame.ts` was checking `gameInstance.isDiffered` condition which we removed when simplifying the logic. The deferred game flow was never starting.
+
+**Solution**:
+- ✅ Updated condition from `gameInstance.isDiffered && gameInstance.playMode === 'tournament'`
+- ✅ To: `gameInstance.status === 'completed' && gameInstance.playMode === 'tournament'`
+
+**Logic Flow**:
+1. User joins completed tournament → ✅ Access granted by gameParticipantService
+2. Socket joins game room → ✅ Working
+3. `game_joined` event emitted → ✅ Working  
+4. **NEW**: Deferred game flow starts automatically → ✅ Fixed
+
+**Files Modified**: `backend/src/sockets/handlers/game/joinGame.ts`
+
+**Verification**: Tournament 3270 should now start the deferred game flow when user joins

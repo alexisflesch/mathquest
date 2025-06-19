@@ -294,7 +294,7 @@ function joinGameHandler(io, socket) {
                 socket.to(socket.data.currentGameRoom).emit('player_joined_game', playerJoinedPayload);
             }
             // CRITICAL FIX: Start deferred tournament game flow for individual player
-            if (gameInstance.isDiffered && gameInstance.playMode === 'tournament') {
+            if (gameInstance.status === 'completed' && gameInstance.playMode === 'tournament') {
                 logger.info({ accessCode, userId }, 'Starting deferred tournament game flow for individual player');
                 // Import runGameFlow here to avoid circular dependencies
                 const { runGameFlow } = await Promise.resolve().then(() => __importStar(require('../sharedGameFlow')));

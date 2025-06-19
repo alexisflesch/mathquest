@@ -44,6 +44,7 @@ const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
+const prisma_1 = require("@/db/prisma");
 const logger = (0, logger_1.default)('SharedGameFlow');
 // Track running game flows to prevent duplicates
 const runningGameFlows = new Set();
@@ -218,6 +219,31 @@ async function runGameFlow(io, accessCode, questions, options) {
         }
         catch (error) {
             logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');
+        }
+        // Update tournament database fields when game ends
+        try {
+            const endedAt = new Date();
+            const differedAvailableFrom = endedAt;
+            const differedAvailableTo = new Date(endedAt.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 days
+            await prisma_1.prisma.gameInstance.update({
+                where: { accessCode },
+                data: {
+                    status: 'completed',
+                    endedAt: endedAt,
+                    differedAvailableFrom: differedAvailableFrom,
+                    differedAvailableTo: differedAvailableTo
+                }
+            });
+            logger.info({
+                accessCode,
+                status: 'completed',
+                endedAt: endedAt.toISOString(),
+                differedAvailableFrom: differedAvailableFrom.toISOString(),
+                differedAvailableTo: differedAvailableTo.toISOString()
+            }, '[SharedGameFlow] Tournament database fields updated on completion');
+        }
+        catch (error) {
+            logger.error({ accessCode, error }, '[SharedGameFlow] Error updating tournament database fields');
         }
         // Game completed, emit game_ended with stats for navigation
         const gameEndedPayload = {

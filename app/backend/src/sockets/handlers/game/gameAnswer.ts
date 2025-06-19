@@ -237,7 +237,9 @@ export function gameAnswerHandler(
 
             const participantService = new GameParticipantService();
             logger.debug({ userId, gameInstanceId: gameInstance.id, questionUid, answer, timeSpent }, 'Calling participantService.submitAnswer');
-            await participantService.submitAnswer(gameInstance.id, userId, {
+
+            // Submit answer using the new scoring service (handles duplicates and scoring)
+            const submissionResult = await participantService.submitAnswer(gameInstance.id, userId, {
                 questionUid: questionUid, // Use questionUid to match AnswerSubmissionPayload
                 answer,
                 timeSpent: timeSpent, // Use timeSpent to match AnswerSubmissionPayload
@@ -245,54 +247,57 @@ export function gameAnswerHandler(
                 userId: userId // Include required userId field
             });
 
-            // Calculate server-side time spent using TimingService
-            const serverTimeSpent = await TimingService.calculateAndCleanupTimeSpent(
-                accessCode,
-                questionUid,
-                userId
-            );
-            logger.info({ accessCode, userId, questionUid, serverTimeSpent }, 'TimingService.calculateAndCleanupTimeSpent result');
-
-            // Determine if the answer is correct
-            const question = await prisma.question.findUnique({ where: { uid: questionUid } });
-            if (question && Array.isArray(question.correctAnswers) && typeof answer === 'number' && answer >= 0 && answer < question.correctAnswers.length) {
-                isCorrect = question.correctAnswers[answer] === true;
-                logger.debug({ isCorrect, questionUid, answer }, 'Determined answer correctness');
+            if (!submissionResult.success) {
+                logger.error({ accessCode, userId, questionUid, error: submissionResult.error }, 'Answer submission failed');
+                socket.emit('game_error', {
+                    message: submissionResult.error || 'Failed to submit answer',
+                    code: 'SUBMISSION_ERROR'
+                });
+                return;
             }
 
-            // Calculate score using server-side timing
-            if (question) {
-                const answerForScoring = {
-                    isCorrect,
-                    serverTimeSpent, // SERVER-CALCULATED time spent
-                    value: answer
-                };
-                logger.info({ accessCode, userId, questionUid, answerForScoring }, 'Scoring input');
+            // Extract scoring information from the result
+            const scoreResult = submissionResult.scoreResult;
+            if (scoreResult) {
+                logger.info({
+                    accessCode,
+                    userId,
+                    questionUid,
+                    scoreUpdated: scoreResult.scoreUpdated,
+                    scoreAdded: scoreResult.scoreAdded,
+                    totalScore: scoreResult.totalScore,
+                    answerChanged: scoreResult.answerChanged,
+                    message: scoreResult.message
+                }, 'Answer processed with scoring result');
 
-                const score = calculateScore(answerForScoring, question);
-                logger.info({ accessCode, userId, questionUid, score, answerForScoring }, 'Score calculated');
-
-                // Update participant score in database
-                if (score > 0) {
-                    const updatedParticipant = await prisma.gameParticipant.update({
-                        where: { id: participant.id },
-                        data: {
-                            score: {
-                                increment: score
-                            }
-                        }
+                // Emit feedback about the submission
+                if (!scoreResult.scoreUpdated && scoreResult.answerChanged === false) {
+                    // Same answer resubmitted
+                    socket.emit('answer_received', {
+                        questionUid,
+                        timeSpent
                     });
-                    logger.info({ accessCode, userId, questionUid, newScore: updatedParticipant.score, scoreAdded: score }, 'Participant score updated in database');
-
-                    // Also update Redis participant data to sync with database
-                    const participantKey = `mathquest:game:participants:${accessCode}`;
-                    const redisParticipantData = await redisClient.hget(participantKey, userId);
-                    if (redisParticipantData) {
-                        const participantData = JSON.parse(redisParticipantData);
-                        participantData.score = updatedParticipant.score;
-                        await redisClient.hset(participantKey, userId, JSON.stringify(participantData));
-                        logger.info({ accessCode, userId, questionUid, redisScore: participantData.score }, 'Redis participant score synchronized with database');
-                    }
+                    logger.info({ userId, questionUid, message: 'Duplicate answer - no points added' }, 'Same answer resubmitted');
+                } else if (scoreResult.scoreUpdated) {
+                    // New score awarded
+                    socket.emit('answer_received', {
+                        questionUid,
+                        timeSpent
+                    });
+                    logger.info({
+                        userId,
+                        questionUid,
+                        scoreAdded: scoreResult.scoreAdded,
+                        totalScore: scoreResult.totalScore,
+                        answerChanged: scoreResult.answerChanged
+                    }, 'Answer scored successfully');
+                } else {
+                    // Answer recorded but no points
+                    socket.emit('answer_received', {
+                        questionUid,
+                        timeSpent
+                    });
+                    logger.info({ userId, questionUid, message: 'Answer recorded but no points' }, 'Answer processed');
                 }
             }
 

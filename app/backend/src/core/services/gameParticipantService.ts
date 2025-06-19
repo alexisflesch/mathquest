@@ -1,5 +1,6 @@
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import { ScoringService } from './scoringService';
 import type { GameParticipant, AnswerSubmissionPayload } from '@shared/types/core';
 
 // Create a service-specific logger
@@ -49,6 +50,7 @@ export class GameParticipantService {
                     id: true,
                     name: true,
                     status: true,
+                    playMode: true,
                     isDiffered: true,
                     differedAvailableFrom: true,
                     differedAvailableTo: true,
@@ -67,43 +69,41 @@ export class GameParticipantService {
                 };
             }
 
-            // If completed, only block if not deferred or not in window
+            // If completed, check deferred access rules based on playMode
             if (gameInstance.status === 'completed') {
-                const isDiffered = !!gameInstance.isDiffered;
-                const now = new Date();
-                const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
-                const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
-                if (!isDiffered || (from && (now < from)) || (to && (now > to))) {
-                    logger.info({ userId, accessCode }, 'Attempt to join a completed game (not allowed)');
+                // Tournaments are always available for deferred play (within time window)
+                // Quiz mode should not allow deferred access
+                const allowDeferred = gameInstance.playMode === 'tournament';
+
+                if (!allowDeferred) {
+                    logger.info({ userId, accessCode, playMode: gameInstance.playMode }, 'Attempt to join completed game - deferred mode not allowed for this playMode');
                     return {
                         success: false,
                         error: 'Game is already completed'
                     };
                 }
-            }
 
-            const now = new Date();
-            const isDiffered = !!gameInstance.isDiffered;
-            const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
-            const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
+                // For tournaments, check time window if set
+                const now = new Date();
+                const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
+                const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
 
-            if (isDiffered && from) {
-                if (now < from) {
+                if (from && now < from) {
                     return {
                         success: false,
-                        error: 'Game not available yet'
+                        error: 'Tournament not available yet'
                     };
                 }
                 if (to && now > to) {
                     return {
                         success: false,
-                        error: 'Game no longer available'
+                        error: 'Tournament no longer available'
                     };
                 }
             }
 
-            // Check if user has already played this differed game
-            if (isDiffered) {
+            // Check if user has already played this tournament
+            if (gameInstance.playMode === 'tournament') {
                 const existingParticipation = await prisma.gameParticipant.findFirst({
                     where: {
                         gameInstanceId: gameInstance.id,
@@ -275,74 +275,38 @@ export class GameParticipantService {
     }
 
     /**
-     * Submit an answer for a player in a game
+     * Submit an answer for a player in a game with proper duplicate checking and scoring
      * @param gameInstanceId The ID of the game instance
      * @param userId The ID of the player
      * @param data The answer data
-     * @returns The updated participant
+     * @returns The scoring result with details
      */
     async submitAnswer(gameInstanceId: string, userId: string, data: SubmitAnswerData) {
         try {
-            // Find the participant
-            const participant = await prisma.gameParticipant.findFirst({
-                where: {
-                    gameInstanceId,
-                    userId
-                }
-            });
+            // Use the new scoring service for all answer submissions
+            const scoreResult = await ScoringService.submitAnswerWithScoring(
+                gameInstanceId,
+                userId,
+                data
+            );
 
-            if (!participant) {
+            if (!scoreResult.scoreUpdated && scoreResult.message === 'Participant not found') {
                 return {
                     success: false,
                     error: 'Participant not found'
                 };
             }
 
-            // Parse answers as an array if it's a JSON object
-            const currentAnswers = Array.isArray(participant.answers) ? participant.answers : [];
-
-            // Update the answers
-            const answers = [...currentAnswers, {
-                questionUid: data.questionUid, // Map questionUid to questionUid for DB storage
-                answer: data.answer,
-                timeTakenMs: data.timeSpent, // Map timeSpent to timeTakenMs for DB storage
-                timestamp: new Date().toISOString()
-            }];
-
-            // Update the participant
-            const updatedParticipant = await prisma.gameParticipant.update({
-                where: {
-                    id: participant.id
-                },
-                data: {
-                    answers
-                }
-            });
-
-            // --- Write answer to Redis for scoring ---
-            // Find the game instance to get the access code
-            const gameInstance = await prisma.gameInstance.findUnique({ where: { id: gameInstanceId } });
-            if (gameInstance) {
-                // Use the same structure as scoring expects
-                const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${data.questionUid}`; // Use questionUid
-                // Use userId as the field (or socketId if available, but userId is unique per participant)
-                await import('@/config/redis').then(({ redisClient }) =>
-                    redisClient.hset(
-                        redisKey,
-                        userId,
-                        JSON.stringify({
-                            userId,
-                            answer: data.answer,
-                            timeSpent: data.timeSpent, // Use timeSpent
-                            submittedAt: Date.now()
-                        })
-                    )
-                );
-            }
+            logger.info({
+                gameInstanceId,
+                userId,
+                questionUid: data.questionUid,
+                scoreResult
+            }, 'Answer submitted via ScoringService');
 
             return {
                 success: true,
-                participant: updatedParticipant
+                scoreResult
             };
         } catch (error) {
             logger.error({ error, gameInstanceId, userId, data }, 'Error submitting answer');

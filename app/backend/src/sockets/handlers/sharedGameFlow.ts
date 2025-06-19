@@ -7,6 +7,7 @@ import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import gameStateService from '@/core/gameStateService';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
+import { prisma } from '@/db/prisma';
 
 const logger = createLogger('SharedGameFlow');
 
@@ -213,6 +214,33 @@ export async function runGameFlow(
             logger.info({ accessCode, leaderboard: finalLeaderboard }, '[SharedGameFlow] Final leaderboard persisted to database');
         } catch (error) {
             logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');
+        }
+
+        // Update tournament database fields when game ends
+        try {
+            const endedAt = new Date();
+            const differedAvailableFrom = endedAt;
+            const differedAvailableTo = new Date(endedAt.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 days
+
+            await prisma.gameInstance.update({
+                where: { accessCode },
+                data: {
+                    status: 'completed',
+                    endedAt: endedAt,
+                    differedAvailableFrom: differedAvailableFrom,
+                    differedAvailableTo: differedAvailableTo
+                }
+            });
+
+            logger.info({
+                accessCode,
+                status: 'completed',
+                endedAt: endedAt.toISOString(),
+                differedAvailableFrom: differedAvailableFrom.toISOString(),
+                differedAvailableTo: differedAvailableTo.toISOString()
+            }, '[SharedGameFlow] Tournament database fields updated on completion');
+        } catch (error) {
+            logger.error({ accessCode, error }, '[SharedGameFlow] Error updating tournament database fields');
         }
 
         // Game completed, emit game_ended with stats for navigation

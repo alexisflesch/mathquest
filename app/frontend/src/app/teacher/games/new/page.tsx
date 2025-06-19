@@ -167,11 +167,38 @@ export default function CreateActivityPage() {
 
             logger.debug('Enhanced filters API response:', data);
 
+            // Helper function to process filter arrays with selection-based compatibility
+            const processFilterOptions = (
+                apiResponse: (string | FilterOption)[],
+                currentSelected: string[]
+            ): FilterOption[] => {
+                const result: FilterOption[] = [];
+
+                // Extract compatible options from API response (normalize to strings first)
+                const compatibleOptions = apiResponse.map(item =>
+                    typeof item === 'string' ? item : item.value
+                );
+
+                // Add all compatible options from API (these are always compatible)
+                compatibleOptions.forEach(option => {
+                    result.push({ value: option, isCompatible: true });
+                });
+
+                // Add any selected options that are NOT in the API response (these are incompatible)
+                currentSelected.forEach(selected => {
+                    if (!compatibleOptions.includes(selected)) {
+                        result.push({ value: selected, isCompatible: false });
+                    }
+                });
+
+                return result;
+            };
+
             const processedFilters: EnhancedFilters = {
-                levels: data.gradeLevel || [],
-                disciplines: data.disciplines || [],
-                themes: data.themes || [],
-                authors: data.authors || []
+                levels: processFilterOptions(data.gradeLevel || [], selectedLevels),
+                disciplines: processFilterOptions(data.disciplines || [], selectedDisciplines),
+                themes: processFilterOptions(data.themes || [], selectedThemes),
+                authors: processFilterOptions(data.authors || [], selectedAuthors)
             };
 
             logger.debug('Processed dynamic filters:', processedFilters);

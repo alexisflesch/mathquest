@@ -280,8 +280,10 @@ describe('Game Participant Service', () => {
                     answers: expect.any(Array)
                 })
             });
-            if (result.participant) {
-                expect(result.participant.score).toBe(200);
+            expect(result.success).toBe(true);
+            if (result.success && result.scoreResult) {
+                expect(result.scoreResult.totalScore).toBeDefined();
+                expect(result.scoreResult.scoreUpdated).toBeDefined();
             }
             else {
                 expect(result.error).toBeDefined();

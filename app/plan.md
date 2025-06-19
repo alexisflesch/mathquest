@@ -190,6 +190,34 @@ Complete modernization of the Math## Phase 8: 🚧 IMMEDIATE - Critical Environm
 
 ---
 
+## Phase 12: ✅ COMPLETED - Tournament Ending Database Update Fix
+- [x] **Fix tournament ending database fields update**
+  - [x] Update sharedGameFlow.ts to set status="completed" when tournament completes (following strict naming)
+  - [x] Set endedAt to current timestamp
+  - [x] Set isDiffered=true to enable deferred mode access
+  - [x] Set differedAvailableFrom to same timestamp as endedAt
+  - [x] Set differedAvailableTo to endedAt + 7 days
+  - [x] Test tournament completion flow to verify database updates
+  - [x] Verify deferred mode availability window is correctly set
+
+**Issue**: Tournament ending only persisted leaderboard but didn't update status/timing fields
+**Impact**: HIGH - Affects tournament lifecycle and deferred mode availability
+**Resolution**: Fixed database updates in `backend/src/sockets/handlers/sharedGameFlow.ts`
+**Status**: COMPLETE - Tournaments now properly transition to completed status with 7-day deferred window
+
+---
+
+## Current Phase: Tournament Flow Bug Fixes
+
+### ✅ Completed Tasks
+- [x] Fix tournament ending - update database fields (status, endedAt, differedAvailableFrom, differedAvailableTo)
+
+### 🔄 Current Tasks  
+- [ ] Fix deferred tournament access - allow joining ended tournaments for async play
+  - [ ] Investigate where "Code erroné (status: ended)" error is coming from
+  - [ ] Update backend logic to allow joining ended tournaments if within deferred window
+  - [ ] Test deferred mode functionality
+
 ## 🔍 Current Focus: Phase 6 - TypeScript Error Resolution
 
 ### Immediate Tasks:
