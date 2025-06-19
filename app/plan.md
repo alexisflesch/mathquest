@@ -312,3 +312,40 @@ Complete modernization of the Math## Phase 8: 🚧 IMMEDIATE - Critical Environm
 - Zero backward compatibility maintained as per requirements
 - Each phase builds upon previous completed work
 - Documentation updated continuously in log.md
+
+---
+
+# Plan: Remove Offline Participants from Lobby
+
+## Problem
+Disconnected users remain in the lobby participant list as "offline", causing the lobby to appear populated by users who are no longer present.
+
+## Goals
+- Ensure the lobby only displays currently connected (online) users.
+- Remove participant objects from Redis and backend state when users disconnect.
+
+## Steps
+
+1. **Audit Current Disconnect Handling**
+   - Review the code that handles socket disconnects and participant cleanup.
+   - Identify where participants are marked as offline but not removed.
+
+2. **Update Disconnect Logic**
+   - Modify the disconnect handler to remove participant objects from Redis and backend state when a user disconnects.
+   - Ensure this does not interfere with game state if the user is in an active game.
+
+3. **Update Lobby Participant Query**
+   - Ensure any code that fetches the lobby participant list only includes users with `online: true`.
+
+4. **Test Cases**
+   - User joins and leaves lobby: should be removed from the list.
+   - Multiple users join/leave: only online users are shown.
+   - User disconnects during a game: ensure correct handling (may differ from lobby).
+
+5. **Logging and Monitoring**
+   - Add logs for participant removal events.
+   - Monitor for unexpected removals or errors.
+
+6. **Deployment and Verification**
+   - Deploy changes to staging.
+   - Verify with manual and automated tests.
