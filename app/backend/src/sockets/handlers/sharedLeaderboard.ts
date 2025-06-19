@@ -33,9 +33,18 @@ export async function calculateLeaderboard(accessCode: string) {
             return [];
         }
 
-        const participants = Object.values(participantsRaw).map((json: any) => {
+        const participants = Object.values(participantsRaw).map((json: any, index: number) => {
             try {
-                return JSON.parse(json);
+                const parsed = JSON.parse(json);
+                logger.debug({
+                    accessCode,
+                    index,
+                    originalJson: json,
+                    parsedData: parsed,
+                    username: parsed.username,
+                    userId: parsed.userId
+                }, '🔍 [LEADERBOARD-CALC] Parsing individual participant');
+                return parsed;
             } catch (parseError) {
                 logger.warn({
                     accessCode,
@@ -54,12 +63,25 @@ export async function calculateLeaderboard(accessCode: string) {
 
         // Sort by score descending
         const leaderboard = participants
-            .map((p: any) => ({
-                userId: p.userId,
-                username: p.username,
-                avatarEmoji: p.avatarEmoji,
-                score: p.score || 0
-            }))
+            .map((p: any, index: number) => {
+                const leaderboardEntry = {
+                    userId: p.userId,
+                    username: p.username,
+                    avatarEmoji: p.avatarEmoji,
+                    score: p.score || 0
+                };
+
+                logger.debug({
+                    accessCode,
+                    index,
+                    originalParticipant: p,
+                    leaderboardEntry,
+                    usernamePresent: !!p.username,
+                    usernameValue: p.username
+                }, '🔍 [LEADERBOARD-CALC] Mapping participant to leaderboard entry');
+
+                return leaderboardEntry;
+            })
             .sort((a, b) => b.score - a.score);
 
         logger.info({

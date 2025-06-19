@@ -2,7 +2,7 @@ import { redisClient } from '@/config/redis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
-import { GameState } from '@shared/types/core';
+import { GameState, LeaderboardEntry } from '@shared/types/core';
 
 // Re-export GameState for backward compatibility
 export { GameState } from '@shared/types/core';
@@ -22,12 +22,21 @@ const GAME_LEADERBOARD_PREFIX = 'mathquest:game:leaderboard:';
  * @param accessCode The game access code
  * @returns The formatted leaderboard data
  */
-export async function getFormattedLeaderboard(accessCode: string): Promise<any[]> {
+export async function getFormattedLeaderboard(accessCode: string): Promise<LeaderboardEntry[]> {
     try {
         const participantsHash = await redisClient.hgetall(`${GAME_PARTICIPANTS_PREFIX}${accessCode}`);
         const participantsFromRedis = participantsHash
             ? Object.values(participantsHash).map(p => JSON.parse(p as string) as { userId: string, username: string, avatarEmoji: string, [key: string]: any })
             : [];
+
+        // DEBUG: Log participants hash state
+        logger.info({
+            accessCode,
+            participantsHashKeys: participantsHash ? Object.keys(participantsHash) : null,
+            participantsHashCount: participantsHash ? Object.keys(participantsHash).length : 0,
+            participantsFromRedisCount: participantsFromRedis.length,
+            participantsFromRedis: participantsFromRedis.map(p => ({ userId: p.userId, username: p.username, avatarEmoji: p.avatarEmoji }))
+        }, '🔍 [DEBUG-LEADERBOARD] Participants hash state in getFormattedLeaderboard');
 
         const leaderboardRaw = await redisClient.zrevrange(
             `${GAME_LEADERBOARD_PREFIX}${accessCode}`,
@@ -59,11 +68,27 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<any[]
         }
 
         const leaderboardPromises = [];
+
+        // DEBUG: Log leaderboard raw state
+        logger.info({
+            accessCode,
+            leaderboardRawLength: leaderboardRaw.length,
+            leaderboardRaw: leaderboardRaw.slice(0, 10) // First 10 items (5 users)
+        }, '🔍 [DEBUG-LEADERBOARD] Raw leaderboard state in getFormattedLeaderboard');
+
         for (let i = 0; i < leaderboardRaw.length; i += 2) {
             const userId = leaderboardRaw[i];
             const score = parseInt(leaderboardRaw[i + 1], 10);
 
             let playerInfo = participantsFromRedis.find(p => p.userId === userId);
+
+            logger.debug({
+                accessCode,
+                userId,
+                score,
+                playerInfoFound: !!playerInfo,
+                playerInfo: playerInfo ? { username: playerInfo.username, avatarEmoji: playerInfo.avatarEmoji } : null
+            }, '🔍 [DEBUG-LEADERBOARD] Processing leaderboard entry');
 
             if (playerInfo) {
                 leaderboardPromises.push(Promise.resolve({
@@ -80,6 +105,14 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<any[]
                     where: { id: userId },
                     select: { username: true, avatarEmoji: true }
                 }).then(user => {
+                    logger.info({
+                        accessCode,
+                        userId,
+                        userFound: !!user,
+                        username: user?.username,
+                        avatarEmoji: user?.avatarEmoji
+                    }, '🔍 [DEBUG-LEADERBOARD] DB lookup result for missing participant');
+
                     if (user) {
                         return {
                             userId,
@@ -314,7 +347,7 @@ export async function getFullGameState(accessCode: string): Promise<{
     gameState: GameState;
     participants: any[];
     answers: Record<string, any[]>;
-    leaderboard: any[];
+    leaderboard: LeaderboardEntry[];
 } | null> {
     try {
         // Get basic game state
@@ -331,6 +364,14 @@ export async function getFullGameState(accessCode: string): Promise<{
         const participants = participantsHash
             ? Object.values(participantsHash).map(p => JSON.parse(p as string))
             : [];
+
+        // DEBUG: Log participants state for getFullGameState
+        logger.info({
+            accessCode,
+            participantsHashKeys: participantsHash ? Object.keys(participantsHash) : null,
+            participantsCount: participants.length,
+            participants: participants.map(p => ({ userId: p.userId, username: p.username, avatarEmoji: p.avatarEmoji }))
+        }, '🔍 [DEBUG-FULLGAMESTATE] Participants loaded in getFullGameState');
 
         // Get answers for the current question
         const answers: Record<string, any[]> = {};
@@ -355,16 +396,48 @@ export async function getFullGameState(accessCode: string): Promise<{
         );
 
         const leaderboard = [];
+
+        // DEBUG: Log leaderboard raw data before processing
+        logger.info({
+            accessCode,
+            leaderboardRawLength: leaderboardRaw.length,
+            leaderboardRaw: leaderboardRaw.slice(0, 10) // First 10 items (5 users)
+        }, '🔍 [DEBUG-FULLGAMESTATE] Raw leaderboard data in getFullGameState');
+
         for (let i = 0; i < leaderboardRaw.length; i += 2) {
             const userId = leaderboardRaw[i];
             const score = parseInt(leaderboardRaw[i + 1], 10);
 
             // Find player info from participants
             const player = participants.find(p => p.userId === userId);
+
+            logger.debug({
+                accessCode,
+                userId,
+                score,
+                playerFound: !!player,
+                playerInfo: player ? { username: player.username, avatarEmoji: player.avatarEmoji } : null
+            }, '🔍 [DEBUG-FULLGAMESTATE] Processing leaderboard entry in getFullGameState');
+
             if (player) {
                 leaderboard.push({
                     userId,
+                    username: player.username, // 🔧 FIXED: Add missing username field
                     avatarEmoji: player.avatarEmoji,
+                    score
+                });
+            } else {
+                // Player not found in participants - this should not happen ideally
+                logger.warn({
+                    accessCode,
+                    userId,
+                    score
+                }, '⚠️ [FULLGAMESTATE] Player not found in participants for leaderboard entry');
+
+                leaderboard.push({
+                    userId,
+                    username: 'Unknown Player', // Fallback
+                    avatarEmoji: undefined,
                     score
                 });
             }

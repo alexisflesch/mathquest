@@ -188,7 +188,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         e.stopPropagation();
         setIsStatsDisplayed((prev) => {
             const newState = !prev;
-            if (onStatsToggle) onStatsToggle(newState);
+            // Use setTimeout to avoid setState-during-render warning
+            setTimeout(() => {
+                if (onStatsToggle) onStatsToggle(newState);
+            }, 0);
             return newState;
         });
     };

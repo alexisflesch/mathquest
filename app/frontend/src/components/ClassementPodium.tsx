@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 export type PodiumUser = {
+    userId?: string;
     name: string;
     avatarEmoji?: string;
     score: number;
@@ -9,7 +10,7 @@ export type PodiumUser = {
 
 export type ClassementPodiumProps = {
     top3: PodiumUser[]; // max 3
-    others: { name: string; score: number }[];
+    others: { userId?: string; name: string; score: number }[];
     zoomFactor?: number; // Add optional zoomFactor prop
     correctAnswers?: boolean[]; // Allow correctAnswers prop - changed to boolean[]
 };
@@ -38,7 +39,7 @@ export default function ClassementPodium({ top3, others, zoomFactor = 1, correct
 
                     return (
                         <motion.div
-                            key={user.name}
+                            key={user.userId || `player-${podiumIdx}`}
                             // Utiliser une valeur relative à la hauteur du viewport
                             initial={{ y: "-100vh", opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
@@ -59,20 +60,20 @@ export default function ClassementPodium({ top3, others, zoomFactor = 1, correct
                                 {user.avatarEmoji ? (
                                     <span className="text-3xl">{user.avatarEmoji}</span>
                                 ) : (
-                                    <span className="text-2xl font-bold text-gray-700">{user.name.slice(0, 2).toUpperCase()}</span>
+                                    <span className="text-2xl font-bold text-gray-700">{(user.name || 'UP').slice(0, 2).toUpperCase()}</span>
                                 )}
                             </div>
                             <span
                                 className="font-semibold text-center truncate max-w-[100px]"
                                 style={{ fontSize: `calc(1.125rem * ${zoomFactor})` }} // Base size text-lg (1.125rem)
                             >
-                                {user.name}
+                                {user.name || 'Unknown Player'}
                             </span>
                             <span
                                 className="font-bold text-primary"
                                 style={{ fontSize: `calc(1.25rem * ${zoomFactor})` }} // Base size text-xl (1.25rem)
                             >
-                                {user.score}
+                                {Math.round(user.score)}
                             </span>
                             <span
                                 className=""
@@ -91,15 +92,15 @@ export default function ClassementPodium({ top3, others, zoomFactor = 1, correct
                 <div className="flex flex-col gap-2 w-full px-2">
                     {others.map((user, idx) => (
                         <motion.div
-                            key={user.name}
+                            key={user.userId || `other-${idx}`}
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ duration: 0.5, delay: idx * 0.05 }}
                             className="w-full flex flex-row items-center justify-between bg-base-200/80 rounded-lg px-4 py-2 shadow"
                         >
                             <span className="font-mono w-8 text-center text-sm">{idx + 4}</span>
-                            <span className="flex-1 text-left truncate mx-2">{user.name}</span>
-                            <span className="font-bold text-primary w-12 text-right">{user.score}</span>
+                            <span className="flex-1 text-left truncate mx-2">{user.name || 'Unknown Player'}</span>
+                            <span className="font-bold text-primary w-12 text-right">{Math.round(user.score)}</span>
                         </motion.div>
                     ))}
                 </div>

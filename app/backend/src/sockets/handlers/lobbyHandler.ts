@@ -146,8 +146,10 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
             username,
             socketId: socket.id,
             isAuthenticated: !!socket.data.user,
-            source: socket.data.user ? 'socket.data.user' : 'payload'
-        }, 'Player joining lobby');
+            source: socket.data.user ? 'socket.data.user' : 'payload',
+            payloadData: { payloadUserId, payloadUsername, payloadAvatarEmoji },
+            socketData: socket.data.user
+        }, '🔍 [LOBBY-JOIN] Player joining lobby - username sources');
 
         if (!userId || !username) {
             logger.error({
@@ -261,6 +263,15 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                 joinedAt: Date.now()
             };
 
+            logger.debug({
+                accessCode,
+                socketId: socket.id,
+                participant,
+                originalUsername: username,
+                originalUserId: userId,
+                originalAvatarEmoji: avatarEmoji
+            }, '🔍 [LOBBY-JOIN] Creating participant object for Redis storage');
+
             await redisClient.hset(
                 `${LOBBY_KEY_PREFIX}${accessCode}`,
                 socket.id,
@@ -323,9 +334,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                         // Add participant to game participants with join-order bonus
                         // This creates a "pre-game" leaderboard entry for immediate display
                         const participantsKey = `mathquest:game:participants:${accessCode}`;
-                        const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`;
-
-                        const participantDataForGame = {
+                        const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`; const participantDataForGame = {
                             id: `lobby_${socket.id}`, // Temporary ID for lobby participants
                             userId: participant.userId,
                             username: participant.username,
@@ -336,6 +345,16 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
                             socketId: socket.id,
                             isLobbyParticipant: true // Flag to distinguish from actual game participants
                         };
+
+                        logger.debug({
+                            accessCode,
+                            userId: participant.userId,
+                            participantDataForGame,
+                            originalParticipant: participant,
+                            usernameSource: username,
+                            payloadUsernameSource: payloadUsername,
+                            socketDataUsername: socket.data.user?.username
+                        }, '🔍 [LOBBY-LEADERBOARD] Participant data being stored in Redis');
 
                         // Store in game participants for leaderboard calculation
                         await redisClient.hset(participantsKey, participant.userId, JSON.stringify(participantDataForGame));

@@ -8,6 +8,8 @@ import { TEACHER_EVENTS } from '@shared/types/socket/events';
 import { getParticipantCount } from '@/sockets/utils/participantCountUtils';
 import { joinDashboardPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { ErrorPayload } from '@shared/types/socketEvents';
+import { calculateTimerForLateJoiner } from '@/core/timerUtils';
+import * as gameStateService from '@/core/gameStateService';
 
 // Create a handler-specific logger
 const logger = createLogger('JoinDashboardHandler');
@@ -245,6 +247,26 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             }
             // Send the comprehensive initial state
             socket.emit(TEACHER_EVENTS.GAME_CONTROL_STATE, controlState);
+
+            // Send initial timer state to the dashboard timer hook
+            // Get current game state to access the up-to-date timer state (like live page does)
+            const currentGameState = await gameStateService.getFullGameState(gameInstance.accessCode);
+            if (currentGameState?.gameState?.timer) {
+                // Calculate actual remaining time for late joiners (like live page does)
+                const actualTimer = calculateTimerForLateJoiner(currentGameState.gameState.timer);
+                const timerToSend = actualTimer || currentGameState.gameState.timer;
+
+                logger.info('Sending initial timer state to dashboard:', {
+                    original: currentGameState.gameState.timer,
+                    calculated: actualTimer,
+                    sending: timerToSend
+                });
+
+                socket.emit(TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, {
+                    timer: timerToSend,
+                    questionUid: controlState.currentQuestionUid
+                });
+            }
 
             // Send initial participant count to the teacher
             const participantCount = await getParticipantCount(io, gameInstance.accessCode);

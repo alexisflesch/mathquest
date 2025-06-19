@@ -96,5 +96,7 @@ export type {
     DashboardJoinedPayload,
     ConnectedCountPayload,
     QuestionForDashboard,
-    GameControlStatePayload
+    GameControlStatePayload,
+    ShowCorrectAnswersPayload,
+    ToggleProjectionStatsPayload
 } from './dashboardPayloads';

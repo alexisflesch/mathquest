@@ -29,7 +29,7 @@ export default function Scoreboard({ scores = [] }: { scores?: { username: strin
                             <div className="w-8 h-8 text-lg rounded-full flex items-center justify-center emoji-avatar bg-[color:var(--muted)] border border-[color:var(--primary)]">
                                 {s.avatar}
                             </div>
-                        )} {s.username} - {s.score} pts
+                        )} {s.username} - {Math.round(s.score)} pts
                     </li>
                 ))}
             </ol>

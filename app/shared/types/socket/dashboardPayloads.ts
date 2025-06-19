@@ -107,6 +107,29 @@ export interface ConnectedCountPayload {
     count: number;
 }
 
+/**
+ * NEW: Teacher-triggered correct answers display
+ * For the trophy button functionality
+ */
+export interface ShowCorrectAnswersPayload {
+    gameId?: string;
+    accessCode?: string;
+    questionUid: string;
+    teacherId?: string;
+}
+
+/**
+ * NEW: Teacher-triggered projection stats toggle  
+ * For the bar graph button functionality
+ */
+export interface ToggleProjectionStatsPayload {
+    gameId?: string;
+    accessCode?: string;
+    questionUid: string;
+    show: boolean; // true to show stats, false to hide
+    teacherId?: string;
+}
+
 // ===== Dashboard State Payloads =====
 
 /**

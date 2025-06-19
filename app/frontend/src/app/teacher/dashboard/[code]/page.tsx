@@ -17,6 +17,7 @@ import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { UsersRound } from "lucide-react";
 import { type Question } from '@/types/api';
 import InfinitySpin from '@/components/InfinitySpin';
+import LoadingScreen from '@/components/LoadingScreen';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { io, Socket } from 'socket.io-client';
@@ -99,7 +100,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
         // Use socket-based connection (no API calls needed)
         logger.info('Setting up socket connection for game code:', code);
-        setLoading(false); // Remove loading immediately for now
+        // Keep loading=true until socket data arrives
     }, [code, authLoading, isAuthenticated, isTeacher]);
 
     // Initialize socket
@@ -131,6 +132,9 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             if (eventName !== 'timer_updated' && eventName !== 'dashboard_timer_updated') {
                 // Avoid spamming with timer events, but log all others
                 logger.debug(`Socket received event: ${eventName}`, args);
+            } else {
+                // Special logging for timer events
+                logger.info(`🕒 Socket received TIMER event: ${eventName}`, args);
             }
         }); socket.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, (state: any) => {
             logger.info('Dashboard state received:', state);
@@ -152,6 +156,27 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
                 const processedQuestions = state.questions.map(mapToCanonicalQuestion);
                 setQuestions(processedQuestions);
                 logger.info('Questions loaded:', processedQuestions.length);
+            }
+
+            // NEW: Set current question from initial state
+            if (state.currentQuestionUid) {
+                setQuestionActiveUid(state.currentQuestionUid);
+                logger.info('Setting current question from initial state:', state.currentQuestionUid);
+            }
+
+            // NEW: Load initial answer stats from state if available
+            if (state.answerStats && state.currentQuestionUid) {
+                setAnswerStats(prev => ({
+                    ...prev,
+                    [state.currentQuestionUid]: state.answerStats
+                }));
+                logger.info('✅ Loaded initial answer stats for question:', state.currentQuestionUid, state.answerStats);
+            }
+
+            // CRITICAL: Initial timer state will be sent separately by backend
+            if (state.timer) {
+                logger.info('📡 Received initial timer state from backend:', state.timer);
+                logger.info('📡 Backend should emit dashboard_timer_updated event separately');
             }
 
             setQuizState(state);
@@ -243,7 +268,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         };
     }, [isAuthenticated, isTeacher, code]);
 
-    // Simple timer hook (only initialize when we have gameId and socket)
+    // Simple timer hook (following the live page pattern exactly)
     const {
         status: timerStatus,
         questionUid: timerQuestionUid,
@@ -254,10 +279,28 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         stopTimer
     } = useSimpleTimer({
         role: 'teacher',
-        gameId: gameId || undefined,
-        accessCode: code || '',
-        socket: gameId ? quizSocket : null  // Only pass socket when we have a gameId
+        accessCode: typeof code === 'string' ? code : '',
+        socket: quizSocket
     });
+
+    // DEBUG: Log when timer hook dependencies change (simplified)
+    useEffect(() => {
+        logger.info('[TeacherDashboard] useSimpleTimer dependencies changed:', {
+            hasSocket: !!quizSocket,
+            accessCode: typeof code === 'string' ? code : '',
+            codeType: typeof code
+        });
+    }, [code, quizSocket]);
+
+    // Log timer state changes for debugging (less frequently)
+    useEffect(() => {
+        logger.info('Dashboard timer state changed:', {
+            timerStatus,
+            timerQuestionUid,
+            timeLeftMs: timeLeftMs,
+            hasSocket: !!quizSocket
+        });
+    }, [timerStatus, timerQuestionUid, timeLeftMs]);
 
     // Keep a ref to the current timer state for reliable access during callbacks
     const timerStateRef = useRef({
@@ -438,6 +481,56 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         setPendingPlayIdx(null);
     }, []);
 
+    // NEW: Handle trophy button (show correct answers and close question)
+    const handleShowResults = useCallback((questionUid: string) => {
+        if (!quizSocket) {
+            logger.warn('Cannot show results: no socket connection');
+            return;
+        }
+
+        logger.info({ questionUid }, 'Teacher requesting to show correct answers (trophy button)');
+
+        const payload = {
+            accessCode: code,
+            gameId,
+            questionUid,
+            teacherId: userProfile?.userId
+        };
+
+        quizSocket.emit(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, payload);
+
+        // Use setTimeout to avoid setState during render
+        setTimeout(() => {
+            setSnackbarMessage(`Affichage des bonnes réponses pour la question ${questionUid}`);
+        }, 0);
+    }, [quizSocket, code, gameId, userProfile?.userId]);
+
+    // NEW: Handle bar graph button (toggle stats display on projection)
+    const handleStatsToggle = useCallback((questionUid: string, show: boolean) => {
+        if (!quizSocket) {
+            logger.warn('Cannot toggle stats: no socket connection');
+            return;
+        }
+
+        logger.info({ questionUid, show }, 'Teacher requesting to toggle projection stats (bar graph button)');
+
+        const payload = {
+            accessCode: code,
+            gameId,
+            questionUid,
+            show,
+            teacherId: userProfile?.userId
+        };
+
+        quizSocket.emit(SOCKET_EVENTS.TEACHER.TOGGLE_PROJECTION_STATS, payload);
+
+        // Use setTimeout to avoid setState during render
+        setTimeout(() => {
+            const action = show ? 'affichage' : 'masquage';
+            setSnackbarMessage(`${action} des statistiques pour la question ${questionUid}`);
+        }, 0);
+    }, [quizSocket, code, gameId, userProfile?.userId]);
+
     // End quiz handlers
     const handleEndQuiz = () => {
         setShowEndQuizConfirm(true);
@@ -455,7 +548,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
     };
 
     // Render loading/error states
-    if (loading) return <div className="p-8">Chargement du tableau de bord...</div>;
+    if (authLoading) return <LoadingScreen message="Vérification de l'authentification..." />;
+    if (loading) return <LoadingScreen message="Chargement du tableau de bord..." />;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
     if (!code) return <div className="p-8 text-orange-600">Aucun code d'accès fourni.</div>;
 
@@ -568,6 +662,8 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
                                 }
                                 return undefined;
                             }}
+                            onShowResults={handleShowResults}
+                            onStatsToggle={handleStatsToggle}
                         />
                     </section>
                 )}

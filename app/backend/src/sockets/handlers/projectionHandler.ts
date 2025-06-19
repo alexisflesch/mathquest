@@ -147,6 +147,19 @@ export function projectionHandler(io: Server, socket: Socket) {
                     leaderboard: fullState.leaderboard
                 };
 
+                // DEBUG: Log the leaderboard being sent to projection
+                logger.info({
+                    gameId,
+                    accessCode: gameInstance.accessCode,
+                    leaderboardCount: fullState.leaderboard?.length || 0,
+                    leaderboard: fullState.leaderboard?.map((entry: any) => ({
+                        userId: entry.userId,
+                        username: entry.username,
+                        avatarEmoji: entry.avatarEmoji,
+                        score: entry.score
+                    })) || []
+                }, '🔍 [DEBUG-PROJECTION] Sending initial leaderboard to projection');
+
                 // Detailed logging of the payload being sent
                 logger.info({
                     gameId,
@@ -164,19 +177,20 @@ export function projectionHandler(io: Server, socket: Socket) {
                 socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, payload);
                 logger.info({ gameId, accessCode: gameInstance.accessCode }, 'Initial projection state sent');
 
-                // If there's a running timer, emit a timer update to trigger countdown in useSimpleTimer
-                if (enhancedGameState?.timer?.status === 'play' && enhancedGameState.timer.timeLeftMs > 0) {
+                // If there's an active timer (playing or paused), emit a timer update to trigger proper state in useSimpleTimer
+                if (enhancedGameState?.timer && (enhancedGameState.timer.status === 'play' || enhancedGameState.timer.status === 'pause') && enhancedGameState.timer.timeLeftMs > 0) {
                     logger.info({
                         gameId,
-                        timer: enhancedGameState.timer
-                    }, 'Emitting timer update for running timer in projection');
+                        timer: enhancedGameState.timer,
+                        status: enhancedGameState.timer.status
+                    }, 'Emitting timer update for active timer in projection');
 
                     const timerUpdatePayload = {
                         timer: enhancedGameState.timer,
                         questionUid: enhancedGameState.timer.questionUid
                     };
 
-                    // Emit timer update immediately after the initial state
+                    // Emit timer update immediately after the initial state (works for both play and pause status)
                     socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, timerUpdatePayload);
                 }
             } catch (stateError) {

@@ -7,6 +7,8 @@ import { endGameHandler } from './endGame';
 import { startTimerHandler } from './startTimer';
 import { pauseTimerHandler } from './pauseTimer';
 import { disconnectHandler } from './disconnect';
+import { showCorrectAnswersHandler } from './showCorrectAnswers';
+import { toggleProjectionStatsHandler } from './toggleProjectionStats';
 import { TEACHER_EVENTS } from '@shared/types/socket/events';
 import createLogger from '@/utils/logger';
 
@@ -49,6 +51,14 @@ export function registerTeacherControlHandlers(io: SocketIOServer, socket: Socke
     // Handle pause_timer event
     logger.info({ event: TEACHER_EVENTS.PAUSE_TIMER }, 'Registering pause_timer handler');
     socket.on(TEACHER_EVENTS.PAUSE_TIMER, pauseTimerHandler(io, socket));
+
+    // NEW: Handle show correct answers (trophy button)
+    logger.info({ event: TEACHER_EVENTS.SHOW_CORRECT_ANSWERS }, 'Registering show_correct_answers handler');
+    socket.on(TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, showCorrectAnswersHandler(io, socket));
+
+    // NEW: Handle toggle projection stats (bar graph button)
+    logger.info({ event: TEACHER_EVENTS.TOGGLE_PROJECTION_STATS }, 'Registering toggle_projection_stats handler');
+    socket.on(TEACHER_EVENTS.TOGGLE_PROJECTION_STATS, toggleProjectionStatsHandler(io, socket));
 
     // Handle disconnect
     logger.info('Registering disconnect handler');

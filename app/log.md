@@ -234,7 +234,7 @@
 - Implement ZERO TOLERANCE fixes with no backward compatibility
 - Focus on root cause elimination, not patches
 
-**Files affected:**
+**Files affected**:
 - plan.md (updated with Phase 7 critical issues)
 - quality-monitor/reports/* (generated comprehensive analysis)
 
@@ -828,4 +828,97 @@
 
 **Impact**: Teachers now see populated leaderboard immediately when students join, vastly improved UX
 **Files**: `frontend/src/components/ClassementPodium.tsx` - Fixed avatar emoji rendering
-**Testing**: Confirmed working in browser - students appear immediately with correct emoji avatars
+
+## 2025-06-19 - UX: Score Display Rounding
+
+**What was done**: Rounded all score displays to nearest integer for cleaner UX
+
+**Details**:
+- Updated `ClassementPodium.tsx` to display `Math.round(user.score)` for both podium and others list
+- Updated leaderboard page `/app/leaderboard/[code]/page.tsx` to round scores
+- Updated `Scoreboard.tsx` component to round scores
+- Ensures join-order bonus micro-scores (0.01, 0.009, etc.) display as clean integers
+- Improves readability and reduces visual clutter on projection displays
+
+**Files modified**:
+- `/frontend/src/components/ClassementPodium.tsx`
+- `/frontend/src/app/leaderboard/[code]/page.tsx` 
+- `/frontend/src/components/Scoreboard.tsx`
+
+**Result**: All score displays now show rounded integers while maintaining precise scoring internally
+
+---
+
+## 2025-06-19 18:30 - CRITICAL: Discovered Socket Payload Type Inconsistency
+
+**Root Cause Found**: The "Unknown Player" username issue is caused by **inconsistent leaderboard payload structures** between two different code paths:
+
+1. **Socket broadcasts** (working): Uses `calculateLeaderboard()` → includes `username` field ✅
+2. **Initial projection state** (broken): Uses `getFullGameState()` → **missing `username` field** ❌
+
+**Evidence from logs**:
+- Socket events show correct usernames: "snouff", "Claudia", "Polo", "Alexis"
+- Initial state payload missing username field entirely: `{ "userId": "...", "avatarEmoji": "🐸", "score": 0 }` (no username!)
+
+**Violation of Modernization Guidelines**:
+- `.instructions.md` requires: "All API contracts and socket events must use canonical shared types"
+- Shared types define `LeaderboardEntry` with **required `username` field**
+- `getFullGameState()` in `backend/src/core/gameStateService.ts` lines 387-394 builds leaderboard without username
+
+**Fix Required**: 
+- Update `getFullGameState()` to return proper `LeaderboardEntry[]` types
+- Ensure both code paths use identical payload structure
+- Add Zod validation for outgoing socket payloads
+
+**Files needing updates**:
+- `backend/src/core/gameStateService.ts` (getFullGameState leaderboard construction)
+- Add shared type imports and enforce LeaderboardEntry interface
+
+## 2025-06-19 19:00 - DISCOVERY: Missing Teacher Dashboard Socket Features
+
+**Investigation Result**: Trophy and bar graph buttons in teacher dashboard are **UI placeholders** - they exist but are not connected to any backend functionality.
+
+**Analysis**:
+1. **Trophy Button** (🏆): Exists in `QuestionDisplay.tsx` with `onShowResults` prop, but teacher dashboard doesn't pass this handler
+2. **Bar Graph Button** (📊): Exists with `onStatsToggle` prop, but also not connected  
+3. **Component Structure**: `DraggableQuestionsList` accepts both props but teacher dashboard ignores them
+4. **Backend Events**: `correct_answers` events exist but only in automated game flows, not teacher-triggered
+
+**Required Architecture**:
+- Teacher-triggered socket events for manual control
+- Projection room integration for real-time updates  
+- Strongly typed payloads following modernization guidelines
+- Question state management (open/closed status)
+
+**Implementation Plan**: Added Phase 10 to plan.md with detailed technical requirements.
+
+## 2025-06-19 20:00 - MAJOR IMPLEMENTATION: Teacher Dashboard Socket Actions
+
+**What was implemented**: Complete end-to-end implementation of trophy and bar graph button functionality for teacher dashboard.
+
+**Backend Implementation**:
+- ✅ **New Socket Events**: Added `show_correct_answers` and `toggle_projection_stats` to `TEACHER_EVENTS`
+- ✅ **Projection Events**: Added `projection_show_stats`, `projection_hide_stats`, `projection_correct_answers` to `PROJECTOR_EVENTS`
+- ✅ **Strongly Typed Payloads**: Created `ShowCorrectAnswersPayload` and `ToggleProjectionStatsPayload` with Zod-ready structure
+- ✅ **Handler Implementation**: Created complete backend handlers in `teacherControl/` directory
+- ✅ **Game State Integration**: Handlers fetch game instances, validate questions, and emit to both student and projection rooms
+
+**Frontend Implementation**:
+- ✅ **Dashboard Handlers**: Added `handleShowResults` and `handleStatsToggle` to teacher dashboard page
+- ✅ **Component Integration**: Connected handlers to `DraggableQuestionsList` via `onShowResults` and `onStatsToggle` props
+- ✅ **Projection Hook Enhancement**: Extended `useProjectionQuizSocket` with new state and event listeners
+- ✅ **Real-time State**: Added `showStats`, `currentStats`, `showCorrectAnswers`, `correctAnswersData` to projection hook
+
+**Technical Architecture**:
+- **Event Flow**: Teacher Dashboard → Socket Emit → Backend Handler → Projection Room Broadcast → Projection Hook → UI State
+- **Type Safety**: All payloads use shared types from `@shared/types/socket/payloads`
+- **Modernization Compliance**: Follows `.instructions.md` guidelines with strongly typed socket events
+
+**Files Modified**:
+- `shared/types/socket/events.ts` (new events)
+- `shared/types/socket/dashboardPayloads.ts` (new payload types)
+- `backend/src/sockets/handlers/teacherControl/` (new handlers)
+- `frontend/src/app/teacher/dashboard/[code]/page.tsx` (dashboard integration)
+- `frontend/src/hooks/useProjectionQuizSocket.ts` (projection state management)
+
+**Next Steps**: UI components for displaying stats and correct answers on projection page, Zod validation schemas.

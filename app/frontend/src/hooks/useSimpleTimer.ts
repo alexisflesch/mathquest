@@ -71,7 +71,27 @@ export interface SimpleTimerHook extends SimpleTimerState, SimpleTimerActions {
 export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     const { gameId, accessCode, socket, role } = config;
 
-    // Core timer state
+    // Debug: Log only if config changes significantly
+    const configKey = `${role}-${gameId || 'undefined'}-${accessCode}-${!!socket}`;
+    const prevConfigRef = useRef<string>('');
+
+    if (prevConfigRef.current !== configKey) {
+        logger.debug('[SimpleTimer] Config changed:', {
+            role,
+            gameId,
+            accessCode,
+            hasSocket: !!socket
+        });
+        prevConfigRef.current = configKey;
+    }
+
+    // DEBUG: Add stack trace for excessive calls
+    if (typeof accessCode === 'string' && accessCode.length > 10) {
+        logger.warn('[SimpleTimer] Suspicious accessCode detected (might be gameId):', { accessCode });
+        console.trace('Timer hook called with long accessCode');
+    }
+
+    // Core timer state - start with default values
     const [timerState, setTimerState] = useState<SimpleTimerState>({
         timeLeftMs: 0,
         status: 'stop',

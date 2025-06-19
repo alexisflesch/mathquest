@@ -40,6 +40,17 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         score: number;
     }>>([]);
 
+    // NEW: Projection display state
+    const [showStats, setShowStats] = useState<boolean>(false);
+    const [currentStats, setCurrentStats] = useState<Record<string, number>>({});
+    const [showCorrectAnswers, setShowCorrectAnswers] = useState<boolean>(false);
+    const [correctAnswersData, setCorrectAnswersData] = useState<{
+        questionUid: string;
+        correctAnswers: boolean[];
+        questionText?: string;
+        answerOptions?: string[];
+    } | null>(null);
+
     // Use modern timer with projection role
     const timer = useSimpleTimer({
         gameId: gameId || undefined,
@@ -70,7 +81,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
             logger.debug('📡 [PROJECTION-FRONTEND] Emitting join event with payload:', {
                 gameId,
-                eventName: SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTION
+                eventName: SOCKET_EVENTS.PROJECTOR.JOIN_PROJECTION,
+                expectedProjectionRoom: `projection_${gameId}`
             });
 
             // Use shared constant for join event (temporary raw emit until types are updated)
@@ -163,6 +175,19 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             });
 
             if (payload.leaderboard && Array.isArray(payload.leaderboard)) {
+                // Add detailed logging to debug username issues
+                payload.leaderboard.forEach((entry: any, index: number) => {
+                    logger.debug({
+                        index,
+                        entry,
+                        username: entry.username,
+                        usernameType: typeof entry.username,
+                        usernameLength: entry.username?.length,
+                        isTruthy: !!entry.username,
+                        fallbackWillTrigger: !entry.username
+                    }, '🔍 [FRONTEND-DEBUG] Processing leaderboard entry for username');
+                });
+
                 const processedLeaderboard = payload.leaderboard.map((entry: any) => ({
                     userId: entry.userId,
                     username: entry.username || 'Unknown Player',
@@ -191,6 +216,19 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
                 // Handle initial leaderboard data if present
                 if (payload.leaderboard && Array.isArray(payload.leaderboard)) {
+                    // Add detailed logging to debug username issues
+                    payload.leaderboard.forEach((entry: any, index: number) => {
+                        logger.debug({
+                            index,
+                            entry,
+                            username: entry.username,
+                            usernameType: typeof entry.username,
+                            usernameLength: entry.username?.length,
+                            isTruthy: !!entry.username,
+                            fallbackWillTrigger: !entry.username
+                        }, '🔍 [FRONTEND-DEBUG-INITIAL] Processing initial leaderboard entry for username');
+                    });
+
                     setLeaderboard(payload.leaderboard.map((entry: any) => ({
                         userId: entry.userId,
                         username: entry.username || 'Unknown Player',
@@ -227,13 +265,65 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             }
         };
 
+        // NEW: Handle projection stats show/hide
+        const handleProjectionShowStats = (payload: { questionUid: string; stats: Record<string, number>; timestamp?: number }) => {
+            console.log('🔥🔥🔥 [PROJECTION HOOK] RECEIVED SHOW STATS EVENT!');
+            console.log('📊 Payload:', payload);
+            console.log('🔥🔥🔥 Setting showStats to TRUE and updating currentStats');
+
+            logger.info('📊 [PROJECTION-FRONTEND] Show stats request received:', payload);
+            setCurrentStats(payload.stats || {});
+            setShowStats(true);
+
+            console.log('✅ Stats state updated successfully');
+        };
+
+        const handleProjectionHideStats = (payload: { questionUid: string; timestamp?: number }) => {
+            console.log('🔥🔥🔥 [PROJECTION HOOK] RECEIVED HIDE STATS EVENT!');
+            console.log('📊 Payload:', payload);
+            console.log('🔥🔥🔥 Setting showStats to FALSE');
+
+            logger.info('📊 [PROJECTION-FRONTEND] Hide stats request received:', payload);
+            setShowStats(false);
+            setCurrentStats({});
+
+            console.log('✅ Stats hidden successfully');
+        };
+
+        // NEW: Handle projection correct answers display
+        const handleProjectionCorrectAnswers = (payload: {
+            questionUid: string;
+            correctAnswers: boolean[];
+            questionText?: string;
+            answerOptions?: string[];
+            timestamp?: number;
+        }) => {
+            logger.info('🏆 [PROJECTION-FRONTEND] Show correct answers request received:', payload);
+            setCorrectAnswersData({
+                questionUid: payload.questionUid,
+                correctAnswers: payload.correctAnswers,
+                questionText: payload.questionText,
+                answerOptions: payload.answerOptions
+            });
+            setShowCorrectAnswers(true);
+
+            // Optional: Auto-hide after some time
+            setTimeout(() => {
+                setShowCorrectAnswers(false);
+                setCorrectAnswersData(null);
+            }, 15000); // Hide after 15 seconds
+        };
+
         // Listen to projection events using shared constants (with type casting until types are updated)
         logger.debug('🎧 [PROJECTION-FRONTEND] Setting up projection event listeners:', {
             events: [
                 SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED,
                 SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT,
                 SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE,
-                SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE
+                SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE,
+                SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS,
+                SOCKET_EVENTS.PROJECTOR.PROJECTION_HIDE_STATS,
+                SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS
             ]
         });
 
@@ -242,11 +332,48 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, handleLeaderboardUpdate);
 
+        // NEW: Listen to projection display control events
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, handleProjectionShowStats);
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_HIDE_STATS, handleProjectionHideStats);
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS, handleProjectionCorrectAnswers);
+
+        // DEBUG: Add a catch-all listener to see what events are being received
+        const handleAnyEvent = (eventName: string, ...args: any[]) => {
+            if (eventName.includes('projection') || eventName.includes('stats')) {
+                console.log('🔍🔍🔍 [DEBUG-PROJECTION] Event received:', { eventName, args });
+                logger.info('🔍 [DEBUG-PROJECTION] Event received:', { eventName, args });
+            }
+        };
+
+        // Listen for all events for debugging
+        (socket.socket as any).onAny?.(handleAnyEvent);
+
+        // DEBUG: Add generic listeners to catch all projection events
+        (socket.socket as any).on('projection_show_stats', (payload: any) => {
+            console.log('🔍 [DEBUG-PROJECTION] Raw projection_show_stats event received:', payload);
+            logger.info('🔍 [DEBUG-PROJECTION] Raw projection_show_stats event received:', payload);
+            handleProjectionShowStats(payload);
+        });
+        (socket.socket as any).on('projection_hide_stats', (payload: any) => {
+            console.log('🔍 [DEBUG-PROJECTION] Raw projection_hide_stats event received:', payload);
+            logger.info('🔍 [DEBUG-PROJECTION] Raw projection_hide_stats event received:', payload);
+            handleProjectionHideStats(payload);
+        });
+
         return () => {
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, handleQuestionChanged);
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT, handleConnectedCount);
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, handleLeaderboardUpdate);
+
+            // NEW: Clean up projection display event listeners
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, handleProjectionShowStats);
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_HIDE_STATS, handleProjectionHideStats);
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS, handleProjectionCorrectAnswers);
+
+            (socket.socket as any)?.offAny?.(handleAnyEvent);
+            (socket.socket as any)?.off('projection_show_stats');
+            (socket.socket as any)?.off('projection_hide_stats');
         };
     }, [socket.socket]);
 
@@ -266,6 +393,12 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         // Leaderboard data for projection display (UX enhancement)
         leaderboard,
 
+        // NEW: Projection display state
+        showStats,
+        currentStats,
+        showCorrectAnswers,
+        correctAnswersData,
+
         // Modern timer interface - use live timer values from useSimpleTimer for countdown
         timerStatus: timer.status || gameState?.timer?.status,
         timerQuestionUid: timerQuestionUid, // Use the overridden value
@@ -276,6 +409,13 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
     };
 
     // Debug logging to see what we're returning
+    console.log('🚀 [HOOK] PROJECTION STATE VALUES:', {
+        showStats,
+        currentStats,
+        showCorrectAnswers,
+        correctAnswersData
+    });
+
     logger.debug('🔍 useProjectionQuizSocket returning:', {
         hasGameState: !!returnValue.gameState,
         gameStateKeys: returnValue.gameState ? Object.keys(returnValue.gameState) : null,
@@ -283,6 +423,12 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         leaderboardCount: returnValue.leaderboard.length,
         gameStatus: returnValue.gameStatus,
         isConnected: returnValue.isConnected,
+        // NEW: Include projection display state in debug logs
+        showStats: returnValue.showStats,
+        currentStats: returnValue.currentStats,
+        showCorrectAnswers: returnValue.showCorrectAnswers,
+        hasCorrectAnswersData: !!returnValue.correctAnswersData,
+        hasCurrentStats: Object.keys(returnValue.currentStats).length > 0,
         timerValues: {
             gameStateTimeLeft: gameState?.timer?.timeLeftMs,
             simpleTimerTimeLeft: timer.timeLeftMs,

@@ -76,7 +76,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     // --- Stats state ---
     type StatsData = { stats: number[]; totalAnswers: number };
     const [questionStats, setQuestionStats] = useState<Record<string, StatsData>>({});
-    const [showStats, setShowStats] = useState<Record<string, boolean>>({});
+    const [localShowStats, setLocalShowStats] = useState<Record<string, boolean>>({});
 
     // State for gameId (fetched from gameCode)
     const [gameId, setGameId] = useState<string | null>(null);
@@ -132,8 +132,21 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         connectedCount,
         gameStatus,
         isAnswersLocked,
-        leaderboard: hookLeaderboard
+        leaderboard: hookLeaderboard,
+        // NEW: Projection display state
+        showStats,
+        currentStats,
+        showCorrectAnswers,
+        correctAnswersData
     } = useProjectionQuizSocket(gameCode, gameId); // Pass both gameCode and gameId
+
+    // NEW: Connect projection display state to QuestionCard props  
+    // Convert currentStats format from {0: 25, 1: 50, 2: 15, 3: 10} to StatsData format
+    const statsToShow: StatsData = {
+        stats: Object.values(currentStats), // Convert object values to array
+        totalAnswers: Object.values(currentStats).reduce((sum, count) => sum + count, 0)
+    };
+    const showStatsFlag = showStats; // From useProjectionQuizSocket hook
 
     // Debug what we're getting from the hook
     useEffect(() => {
@@ -146,9 +159,31 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                 timerQuestionUid: gameState.timer?.questionUid
             } : null,
             gameStatus,
-            connectedCount
+            connectedCount,
+            // NEW: Log projection display state
+            showStats,
+            showCorrectAnswers,
+            hasCurrentStats: Object.keys(currentStats).length > 0,
+            hasCorrectAnswersData: !!correctAnswersData?.questionUid
         });
-    }, [gameState, gameStatus, connectedCount]);
+    }, [gameState, gameStatus, connectedCount, showStats, showCorrectAnswers, currentStats, correctAnswersData]);
+
+    // Debug projection display state changes
+    useEffect(() => {
+        if (showStats) {
+            console.log('📊 STATS SHOULD BE VISIBLE NOW!');
+        }
+        if (showCorrectAnswers) {
+            console.log('� CORRECT ANSWERS SHOULD BE VISIBLE NOW!');
+        }
+
+        logger.info('📊 [Projection] Display state changed:', {
+            showStats,
+            currentStats,
+            showCorrectAnswers,
+            correctAnswersData
+        });
+    }, [showStats, currentStats, showCorrectAnswers, correctAnswersData]);
 
     // Debug leaderboard updates from hook
     useEffect(() => {
@@ -371,8 +406,6 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         ? { question: currentQuestion }
         : null;
     const currentQuestionUid = currentQuestion?.uid;
-    const statsToShow = currentQuestionUid && showStats[currentQuestionUid] ? questionStats[currentQuestionUid] : undefined;
-    const showStatsFlag = !!(currentQuestionUid && showStats[currentQuestionUid]);
 
     // Generate the full tournament URL for the QR code
     const tournamentUrl = currentTournamentCode ? `${baseUrl}/live/${currentTournamentCode}` : '';
@@ -559,12 +592,14 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                 <ClassementPodium
                                     key={podiumKey}
                                     top3={hookLeaderboard.slice(0, 3).map((entry) => ({
-                                        name: entry.username,
+                                        userId: entry.userId,
+                                        name: entry.username || 'Unknown Player',
                                         avatarEmoji: entry.avatarEmoji || '👤',
                                         score: entry.score,
                                     }))}
                                     others={hookLeaderboard.slice(3).map((entry) => ({
-                                        name: entry.username,
+                                        userId: entry.userId,
+                                        name: entry.username || 'Unknown Player',
                                         score: entry.score,
                                     }))}
                                     correctAnswers={correctAnswers}

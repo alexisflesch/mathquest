@@ -16,6 +16,53 @@ Complete modernization of the Math## Phase 8: 🚧 IMMEDIATE - Critical Environm
 - [ ] Verify database connectivity 
 - [ ] Test Redis connection
 
+## Phase 10: 🚧 CRITICAL - Implement Missing Teacher Dashboard Socket Actions
+**Root Cause**: Trophy and bar graph buttons exist in UI but are **not connected** to any socket events.
+
+**Current State Analysis**:
+- ✅ **UI Elements**: Trophy and ChartBarBig buttons exist in `QuestionDisplay.tsx`
+- ✅ **Component Props**: `DraggableQuestionsList` accepts `onShowResults` and `onStatsToggle` props
+- ❌ **Dashboard Integration**: Teacher dashboard page **NOT** passing these handlers to `DraggableQuestionsList`
+- ✅ **Existing Events**: `correct_answers` and `dashboard_answer_stats_update` events already defined
+- ✅ **Backend Handlers**: Some `correct_answers` emission exists in game flow handlers
+
+**Required Implementation**:
+
+### 1. Trophy Button (Show Results & Close Question)
+- [x] **Frontend**: Add `handleShowResults(questionUid)` handler in teacher dashboard
+- [x] **Socket Event**: Create teacher-triggered `show_correct_answers` event  
+- [x] **Backend**: Implement handler to emit `correct_answers` to students + projection room
+- [x] **Projection**: Update hook to handle `projection_correct_answers` events
+- [x] **Types**: Add strongly typed `ShowCorrectAnswersPayload` with `questionUid` and teacher authorization
+
+### 2. Bar Graph Button (Toggle Stats Display)  
+- [x] **Frontend**: Add `handleStatsToggle(questionUid, show)` handler in teacher dashboard
+- [x] **Socket Event**: Create `toggle_projection_stats` event for projection room
+- [x] **Backend**: Implement handler to toggle stats visibility on projection page
+- [x] **Projection**: Update hook to handle `projection_show_stats`/`projection_hide_stats` events
+- [x] **Types**: Add strongly typed `ToggleProjectionStatsPayload` with `questionUid`, `show: boolean`, and stats data
+
+### 3. Shared Types & Validation
+- [x] **Payload Types**: Add `ShowCorrectAnswersPayload` and `ToggleProjectionStatsPayload` to shared types
+- [ ] **Zod Schemas**: Add validation schemas for both payloads  
+- [x] **Event Constants**: Add new events to `SOCKET_EVENTS.TEACHER` and `SOCKET_EVENTS.PROJECTOR`
+- [ ] **Backend Validation**: Use Zod to validate incoming teacher requests
+
+### 4. Frontend Integration
+- [x] **Dashboard**: Connect handlers to DraggableQuestionsList component
+- [x] **Projection Hook**: Add state and event listeners for new projection features
+- [ ] **Projection UI**: Update projection page to display stats and correct answers
+
+**Current Status**: ✅ Backend handlers, frontend handlers, and socket events fully implemented. Need UI components and validation.
+
+**Exit Criteria**: Trophy and bar graph buttons fully functional with real-time projection updates.
+
+---
+
+## Phase 11: ✅ COMPLETED - Fix Socket Payload Type Inconsistencies
+
+---
+
 ## Phase 9: ✅ COMPLETED - UX Enhancement: Real-time Leaderboard Population
 - [x] **Implement join-order bonus scoring system**
   - [x] Backend: Add join-order tracking in Redis when students join games

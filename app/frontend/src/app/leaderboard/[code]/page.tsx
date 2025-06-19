@@ -169,7 +169,7 @@ export default function TournamentLeaderboardPage() {
                                         )}
                                         {p.username || 'Joueur'}
                                     </span>
-                                    <span className="font-mono text-lg">{p.score}</span>
+                                    <span className="font-mono text-lg">{Math.round(p.score)}</span>
                                 </li>
                             );
                         })}

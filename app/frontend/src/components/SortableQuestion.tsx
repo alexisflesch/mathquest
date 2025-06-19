@@ -4,12 +4,10 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Check, X } from 'lucide-react';
 import type { Question } from "@/types/api";
-import type { QuizState } from "../types";
 import { createLogger } from '@/clientLogger';
 import { formatTime } from "@/utils";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import QuestionDisplay from "@/components/QuestionDisplay"; // Import du nouveau composant
-import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
 
 const logger = createLogger('SortableQuestion');
 
@@ -21,7 +19,7 @@ export interface SortableQuestionProps {
     // idx: number;
     isActive?: boolean;
     // isRunning?: boolean; // Gardé pour la logique interne si besoin
-    quizState?: QuizState | null; // Gardé pour la logique interne si besoin
+    // quizState removed - timer state managed externally
     open: boolean;
     setOpen: () => void;
     onPlay: (uid: string, timeMs: number) => void; // timeMs in milliseconds per documentation
@@ -235,8 +233,8 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         setEditingTimer(false);
     };
 
-    // Removed destructuring of subscribeToTimerUpdate as it no longer exists
-    const { quizSocket, quizState, timerStatus, ...rest } = useTeacherQuizSocket(quizId, currentTournamentCode);
+    // Timer state and socket connection should be managed by parent component
+    // This component now only handles local UI state for editing, etc.
 
     // Simplified validateEditHandler to remove subscribeToTimerUpdate logic
     const validateEditHandler = (e: React.MouseEvent | React.KeyboardEvent<HTMLInputElement>) => {

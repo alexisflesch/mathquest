@@ -37,47 +37,15 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
     // Use modern hooks instead of legacy UnifiedGameManager
     const socket = useGameSocket('teacher', quizId || null);
 
-    const timer = useSimpleTimer({
-        gameId: quizId || undefined,
-        accessCode: accessCode || '',
-        socket: socket.socket,
-        role: 'teacher'
-    });
+    // Timer logic removed - timer should be managed at the component level that needs it
+    // This hook only handles quiz state and socket communications
 
     // State management
     const [quizState, setQuizState] = useState<QuizState | null>(null);
     const [connectedCount, setConnectedCount] = useState<number>(0);
     const [answerStats, setAnswerStats] = useState<Record<string, number>>({});
 
-    // Update quiz state based on timer state changes
-    useEffect(() => {
-        if (timer.questionUid || timer.timeLeftMs !== null) {
-            setQuizState(prev => {
-                if (!prev) return null;
-
-                const newState = {
-                    ...prev,
-                    chrono: {
-                        timeLeftMs: timer.timeLeftMs || 0,
-                        running: timer.status === 'play',
-                        status: timer.status
-                    },
-                    timerStatus: timer.status,
-                    timerQuestionUid: timer.questionUid,
-                    timerTimeLeft: timer.timeLeftMs || 0
-                };
-
-                // Only update if there are meaningful changes
-                if (prev.chrono.timeLeftMs !== newState.chrono.timeLeftMs ||
-                    prev.chrono.running !== newState.chrono.running ||
-                    prev.timerStatus !== newState.timerStatus ||
-                    prev.timerQuestionUid !== newState.timerQuestionUid) {
-                    return newState;
-                }
-                return prev;
-            });
-        }
-    }, [timer.timeLeftMs, timer.status, timer.questionUid]);
+    // Timer state is now managed externally - this hook only handles quiz/socket state
 
     // Set up socket event handlers
     useEffect(() => {
@@ -184,10 +152,10 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             socket.socket.emit('quiz_timer_action', {
                 accessCode: accessCode,
                 action: 'pause',
-                questionUid: timer.questionUid || undefined
+                questionUid: undefined // Timer state managed externally
             });
         }
-    }, [socket.socket, accessCode, timer.questionUid]);
+    }, [socket.socket, accessCode]);
 
     const emitResumeQuiz = useCallback(() => {
         logger.info('emitResumeQuiz called');
@@ -196,10 +164,10 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
             socket.socket.emit('quiz_timer_action', {
                 accessCode: accessCode,
                 action: 'resume',
-                questionUid: timer.questionUid || undefined
+                questionUid: undefined // Timer state managed externally
             });
         }
-    }, [socket.socket, accessCode, timer.questionUid]);
+    }, [socket.socket, accessCode]);
 
     const emitSetTimer = useCallback((newTime: number, questionUid?: string) => {
         logger.info('emitSetTimer called', { newTime, questionUid });
@@ -273,18 +241,18 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         // Socket instance
         quizSocket: socket.socket,
 
-        // State - use modern timer values
+        // State - timer state now managed externally
         quizState,
-        timerStatus: timer.status,
-        timerQuestionUid: timer.questionUid,
-        timeLeftMs: timer.timeLeftMs,
-        localTimeLeftMs: timer.timeLeftMs, // Use timer's value directly
+        timerStatus: 'stop' as const, // Default value - actual timer state managed externally
+        timerQuestionUid: null, // Default value - actual timer state managed externally
+        timeLeftMs: 0, // Default value - actual timer state managed externally
+        localTimeLeftMs: 0, // Default value - actual timer state managed externally
         connectedCount,
         answerStats,
 
         // Setters (deprecated - for backward compatibility only)
         setLocalTimeLeft: () => {
-            logger.warn('setLocalTimeLeft is deprecated - timer state is managed by useSimpleTimer');
+            logger.warn('setLocalTimeLeft is deprecated - timer state is managed externally');
         },
 
         // Actions
