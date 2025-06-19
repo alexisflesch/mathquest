@@ -168,22 +168,7 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
         });
     }, [gameState, gameStatus, connectedCount, showStats, showCorrectAnswers, currentStats, correctAnswersData]);
 
-    // Debug projection display state changes
-    useEffect(() => {
-        if (showStats) {
-            console.log('📊 STATS SHOULD BE VISIBLE NOW!');
-        }
-        if (showCorrectAnswers) {
-            console.log('� CORRECT ANSWERS SHOULD BE VISIBLE NOW!');
-        }
 
-        logger.info('📊 [Projection] Display state changed:', {
-            showStats,
-            currentStats,
-            showCorrectAnswers,
-            correctAnswersData
-        });
-    }, [showStats, currentStats, showCorrectAnswers, correctAnswersData]);
 
     // Debug leaderboard updates from hook
     useEffect(() => {
@@ -392,6 +377,20 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     // const fakeTop3 = [...];
     // const fakeOthers = [...];
 
+    const currentQuestion = getCurrentQuestion();
+    const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
+        ? { question: currentQuestion }
+        : null;
+    const currentQuestionUid = currentQuestion?.uid;
+    const tournamentUrl = currentTournamentCode ? `${baseUrl}/live/${currentTournamentCode}` : '';
+
+    // Helper: should show QR code for a component if its data is not available
+    const shouldShowQRCode = {
+        timer: timeLeftMs == null || isNaN(timeLeftMs),
+        question: !currentTournamentQuestion,
+        classement: !hookLeaderboard || hookLeaderboard.length === 0,
+    };
+
     // Defensive: Only render grid if layout is defined and not empty
     if (authLoading) return <div className="p-8">Vérification de l'authentification...</div>;
     if (loading) return <div className="p-8">Chargement de la vue projection...</div>;
@@ -399,16 +398,6 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
     if (!gameCode) return <div className="p-8 text-orange-600">Aucun code de jeu fourni.</div>;
     if (!gameState) return <div className="p-8">Connexion au jeu en cours...</div>;
     if (!layout || layout.length === 0) return <div className="p-8 text-orange-600">Aucun layout défini pour la projection.</div>;
-
-    const currentQuestion = getCurrentQuestion();
-    // Use canonical shared types directly - no unnecessary mapping
-    const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
-        ? { question: currentQuestion }
-        : null;
-    const currentQuestionUid = currentQuestion?.uid;
-
-    // Generate the full tournament URL for the QR code
-    const tournamentUrl = currentTournamentCode ? `${baseUrl}/live/${currentTournamentCode}` : '';
 
     return (
         <div className="main-content w-full max-w-none px-0">
@@ -436,13 +425,11 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                     verticalCompact={false}
                     isBounded={false}
                     onLayoutChange={(newLayout: Layout[]) => {
-                        // Only update layout if it's a real change, not just a z-index update
                         if (JSON.stringify(newLayout) !== JSON.stringify(layout)) {
                             setLayout(newLayout);
                         }
                     }}
                     onDrag={(layout: Layout[], oldItem: any, newItem: any, placeholder: any, e: MouseEvent, element: HTMLElement) => {
-                        // Bring dragged element to front during drag
                         bringToFront(newItem.i);
                     }}
                     style={{ height: "calc(100vh - 56px)" }}
@@ -461,24 +448,22 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                         }}
                         onClick={() => bringToFront("live-timer")}
                     >
-                        <div className="flex items-center gap-2 w-full h-full justify-center">
-                            <Timer
-                                className="w-8 h-8 block flex-shrink-0"
-                                style={{ color: 'var(--light-foreground)' }}
-                            />
-                            <span
-                                className="font-bold text-3xl"
-                                style={{
-                                    color: 'var(--light-foreground)',
-                                    lineHeight: '1',
-                                }}
-                            >
-                                {formatTimerMs(timeLeftMs)}
-                            </span>
-                        </div>
+                        {shouldShowQRCode.timer ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                                <QRCode value={tournamentUrl} size={128} style={{ width: '100%', height: '100%' }} />
+                                <div className="font-mono text-center mt-2 break-all text-xs">{currentTournamentCode}</div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 w-full h-full justify-center">
+                                <Timer className="w-8 h-8 block flex-shrink-0" style={{ color: 'var(--light-foreground)' }} />
+                                <span className="font-bold text-3xl" style={{ color: 'var(--light-foreground)', lineHeight: '1' }}>
+                                    {formatTimerMs(timeLeftMs)}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Question display - ajout de la scrollbar */}
+                    {/* Question display */}
                     <div
                         key="question"
                         className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center overflow-hidden relative"
@@ -490,20 +475,21 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                             onZoomIn={() => handleZoom("question", 'in')}
                             onZoomOut={() => handleZoom("question", 'out')}
                         />
-                        {/* Conteneur principal avec overflow-auto pour permettre le défilement */}
                         <div className="card-body w-full h-full p-4 overflow-auto">
-                            {currentTournamentQuestion ? (
+                            {shouldShowQRCode.question ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center">
+                                    <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
+                                    <div className="font-mono text-center mt-2 break-all text-base">{currentTournamentCode}</div>
+                                </div>
+                            ) : (
                                 <div
                                     className="w-full h-full flex items-start justify-center"
-                                    style={{
-                                        position: 'relative'
-                                    }}
+                                    style={{ position: 'relative' }}
                                 >
-                                    {/* Conteneur avec transformation pour zoom */}
                                     <div
                                         style={{
                                             transform: `scale(${zoomFactors.question})`,
-                                            transformOrigin: 'top center', // Alignement en haut
+                                            transformOrigin: 'top center',
                                             width: `calc(100% / ${zoomFactors.question})`,
                                             maxWidth: `calc(100% / ${zoomFactors.question})`,
                                             display: 'flex',
@@ -511,36 +497,34 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                                             justifyContent: 'center',
                                         }}
                                     >
-                                        <QuestionCard
-                                            key={questionKey}
-                                            currentQuestion={currentTournamentQuestion}
-                                            questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex(uid => uid === currentQuestionUid) ?? 0 : 0}
-                                            totalQuestions={gameState?.questionUids.length ?? 0}
-                                            isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-                                            selectedAnswer={null}
-                                            setSelectedAnswer={noopSetState}
-                                            selectedAnswers={[]}
-                                            setSelectedAnswers={noopSetState}
-                                            handleSingleChoice={noopHandler}
-                                            handleSubmitMultiple={noopHandler}
-                                            answered={false}
-                                            isQuizMode={true}
-                                            readonly={true}
-                                            correctAnswers={correctAnswers}
-                                            stats={statsToShow}
-                                            showStats={showStatsFlag}
-                                        />
+                                        {currentTournamentQuestion && (
+                                            <QuestionCard
+                                                key={questionKey}
+                                                currentQuestion={currentTournamentQuestion}
+                                                questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex(uid => uid === currentQuestionUid) ?? 0 : 0}
+                                                totalQuestions={gameState?.questionUids.length ?? 0}
+                                                isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
+                                                selectedAnswer={null}
+                                                setSelectedAnswer={noopSetState}
+                                                selectedAnswers={[]}
+                                                setSelectedAnswers={noopSetState}
+                                                handleSingleChoice={noopHandler}
+                                                handleSubmitMultiple={noopHandler}
+                                                answered={false}
+                                                isQuizMode={true}
+                                                readonly={true}
+                                                correctAnswers={correctAnswers}
+                                                stats={statsToShow}
+                                                showStats={showStatsFlag}
+                                            />
+                                        )}
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="text-gray-500 flex items-center justify-center w-full h-full">
-                                    Aucune question active
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* QR Code Component */}
+                    {/* QR Code Component (always shows QR) */}
                     <div
                         key="qrcode"
                         className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center overflow-hidden relative"
@@ -549,34 +533,17 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                     >
                         <div className="card-body w-full h-full p-0 flex flex-col items-center justify-center">
                             <div className="w-full h-full flex flex-col items-center justify-center p-0">
-                                {/* QR Code */}
-                                <div className="bg-white p-0 rounded-lg w-full flex items-center justify-center"
-                                    style={{ maxHeight: '85%', aspectRatio: '1/1' }}>
-                                    <QRCode
-                                        value={tournamentUrl}
-                                        size={256}
-                                        style={{
-                                            height: '100%',
-                                            width: '100%',
-                                            maxWidth: '100%',
-                                            maxHeight: '100%',
-                                            aspectRatio: '1/1',
-                                        }}
-                                        viewBox={`0 0 256 256`}
-                                    />
+                                <div className="bg-white p-0 rounded-lg w-full flex items-center justify-center" style={{ maxHeight: '85%', aspectRatio: '1/1' }}>
+                                    <QRCode value={tournamentUrl} size={256} style={{ height: '100%', width: '100%', maxWidth: '100%', maxHeight: '100%', aspectRatio: '1/1' }} viewBox={`0 0 256 256`} />
                                 </div>
-
-                                {/* Tournament Code */}
                                 <div className="text-center mt-2" style={{ maxHeight: '15%' }}>
-                                    <div className="font-mono font-bold text-xl">
-                                        {currentTournamentCode}
-                                    </div>
+                                    <div className="font-mono font-bold text-xl">{currentTournamentCode}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Classement Podium - structure optimisée pour l'animation */}
+                    {/* Classement Podium */}
                     <div
                         key="classement"
                         className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center relative"
@@ -588,35 +555,40 @@ export default function ProjectionPage({ params }: { params: Promise<{ gameCode:
                             onZoomIn={() => handleZoom("classement", 'in')}
                             onZoomOut={() => handleZoom("classement", 'out')}
                         />
-                        {/* Conteneur sans margin et sans scrollbar */}
                         <div className="card-body w-full h-full p-4 flex flex-col items-start justify-start overflow-hidden">
-                            {/* Conteneur principal pour le contenu zoomable */}
-                            <div
-                                style={{
-                                    transform: `scale(${zoomFactors.classement})`,
-                                    transformOrigin: 'top center',
-                                    width: `calc(100% / ${zoomFactors.classement})`,
-                                    maxWidth: `calc(100% / ${zoomFactors.classement})`,
-                                    height: `calc(100% / ${zoomFactors.classement})`,
-                                    position: 'relative',
-                                }}
-                            >
-                                <ClassementPodium
-                                    key={podiumKey}
-                                    top3={hookLeaderboard.slice(0, 3).map((entry) => ({
-                                        userId: entry.userId,
-                                        name: entry.username || 'Unknown Player',
-                                        avatarEmoji: entry.avatarEmoji || '👤',
-                                        score: entry.score,
-                                    }))}
-                                    others={hookLeaderboard.slice(3).map((entry) => ({
-                                        userId: entry.userId,
-                                        name: entry.username || 'Unknown Player',
-                                        score: entry.score,
-                                    }))}
-                                    correctAnswers={correctAnswers}
-                                />
-                            </div>
+                            {shouldShowQRCode.classement ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center">
+                                    <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
+                                    <div className="font-mono text-center mt-2 break-all text-base">{currentTournamentCode}</div>
+                                </div>
+                            ) : (
+                                <div
+                                    style={{
+                                        transform: `scale(${zoomFactors.classement})`,
+                                        transformOrigin: 'top center',
+                                        width: `calc(100% / ${zoomFactors.classement})`,
+                                        maxWidth: `calc(100% / ${zoomFactors.classement})`,
+                                        height: `calc(100% / ${zoomFactors.classement})`,
+                                        position: 'relative',
+                                    }}
+                                >
+                                    <ClassementPodium
+                                        key={podiumKey}
+                                        top3={hookLeaderboard.slice(0, 3).map((entry) => ({
+                                            userId: entry.userId,
+                                            name: entry.username || 'Unknown Player',
+                                            avatarEmoji: entry.avatarEmoji || '👤',
+                                            score: entry.score,
+                                        }))}
+                                        others={hookLeaderboard.slice(3).map((entry) => ({
+                                            userId: entry.userId,
+                                            name: entry.username || 'Unknown Player',
+                                            score: entry.score,
+                                        }))}
+                                        correctAnswers={correctAnswers}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </ResponsiveGridLayout>
