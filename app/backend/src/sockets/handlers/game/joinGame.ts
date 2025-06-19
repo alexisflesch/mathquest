@@ -69,18 +69,18 @@ export function joinGameHandler(
             socket.data.currentGameRoom = practiceRoomName;
 
             logger.debug({ practiceRoomName, socketId: socket.id }, 'Player joined practice room');        // Send successful join response for practice mode
-        const gameJoinedPayload: GameJoinedPayload = {
-            accessCode: 'PRACTICE',
-            gameStatus: 'active', // Practice mode is immediately active
-            isDiffered: false, // Practice mode is not deferred
-            participant: {
-                id: userId,
-                userId: userId, // Same as id for practice mode
-                username,
-                avatarEmoji: avatarEmoji || '🐼', // Ensure avatarEmoji is never undefined
-                score: 0
-            }
-        };
+            const gameJoinedPayload: GameJoinedPayload = {
+                accessCode: 'PRACTICE',
+                gameStatus: 'active', // Practice mode is immediately active
+                isDiffered: false, // Practice mode is not deferred
+                participant: {
+                    id: userId,
+                    userId: userId, // Same as id for practice mode
+                    username,
+                    avatarEmoji: avatarEmoji || '🐼', // Ensure avatarEmoji is never undefined
+                    score: 0
+                }
+            };
 
             logger.info({ gameJoinedPayload }, 'Emitting game_joined for practice mode');
             socket.emit('game_joined', gameJoinedPayload);
