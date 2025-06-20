@@ -4,6 +4,7 @@ import { Socket } from 'socket.io-client';
 import type { QuizState } from '@/hooks/useTeacherQuizSocket';
 import { makeApiRequest } from '@/config/api';
 import { TournamentCodeResponseSchema, type TournamentCodeResponse } from '@/types/api';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('CodeManager');
 

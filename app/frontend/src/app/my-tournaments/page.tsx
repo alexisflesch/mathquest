@@ -6,6 +6,7 @@ import { SquareArrowRight, BarChart3 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
 import { MyTournamentsResponseSchema, type MyTournamentsResponse } from '@/types/api';
 import { useAuth } from '@/components/AuthProvider';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface Tournament {
     id: string;

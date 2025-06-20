@@ -47,6 +47,7 @@ import type {
 
 import { isTournamentQuestion } from '@shared/types/tournament/question';
 import { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // --- Type Guards for Shared Types ---
 

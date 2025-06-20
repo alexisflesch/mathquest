@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Middleware for route protection and authentication-based redirects

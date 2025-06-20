@@ -25,6 +25,7 @@ import React, { createContext, useContext, useCallback, useState, useEffect } fr
 import { createLogger } from '@/clientLogger';
 import { STORAGE_KEYS } from '@/constants/auth';
 import { makeApiRequest } from '@/config/api';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import {
     AuthStatusResponseSchema,
     type AuthStatusResponse,

@@ -34,6 +34,7 @@ import Snackbar from '@/components/Snackbar';
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('CreateActivityPage');
 

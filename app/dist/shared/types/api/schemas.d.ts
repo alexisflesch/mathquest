@@ -104,6 +104,13 @@ export declare const ProfileUpdateRequestSchema: z.ZodObject<{
     username: string;
     avatar: string;
 }>;
+export declare const TeacherUpgradeRequestSchema: z.ZodObject<{
+    adminPassword: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    adminPassword: string;
+}, {
+    adminPassword: string;
+}>;
 export declare const CreateGameRequestSchema: z.ZodObject<{
     name: z.ZodString;
     gameTemplateId: z.ZodOptional<z.ZodString>;
@@ -627,6 +634,52 @@ export declare const ProfileUpdateResponseSchema: z.ZodObject<{
     success: boolean;
 }, {
     message: string;
+    user: {
+        username: string;
+        role: "STUDENT" | "TEACHER";
+        avatar: string;
+        id: string;
+        email?: string | undefined;
+    };
+    success: boolean;
+}>;
+export declare const TeacherUpgradeResponseSchema: z.ZodObject<{
+    success: z.ZodBoolean;
+    message: z.ZodString;
+    token: z.ZodString;
+    user: z.ZodObject<{
+        id: z.ZodString;
+        username: z.ZodString;
+        email: z.ZodOptional<z.ZodString>;
+        avatar: z.ZodString;
+        role: z.ZodEnum<["STUDENT", "TEACHER"]>;
+    }, "strip", z.ZodTypeAny, {
+        username: string;
+        role: "STUDENT" | "TEACHER";
+        avatar: string;
+        id: string;
+        email?: string | undefined;
+    }, {
+        username: string;
+        role: "STUDENT" | "TEACHER";
+        avatar: string;
+        id: string;
+        email?: string | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    message: string;
+    token: string;
+    user: {
+        username: string;
+        role: "STUDENT" | "TEACHER";
+        avatar: string;
+        id: string;
+        email?: string | undefined;
+    };
+    success: boolean;
+}, {
+    message: string;
+    token: string;
     user: {
         username: string;
         role: "STUDENT" | "TEACHER";
@@ -3664,6 +3717,7 @@ export type UpgradeAccountRequest = z.infer<typeof UpgradeAccountRequestSchema>;
 export type PasswordResetRequest = z.infer<typeof PasswordResetRequestSchema>;
 export type PasswordResetConfirmRequest = z.infer<typeof PasswordResetConfirmRequestSchema>;
 export type ProfileUpdateRequest = z.infer<typeof ProfileUpdateRequestSchema>;
+export type TeacherUpgradeRequest = z.infer<typeof TeacherUpgradeRequestSchema>;
 export type SetQuestionRequest = z.infer<typeof SetQuestionRequestSchema>;
 export type UpgradeRequest = UpgradeAccountRequest;
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
@@ -3671,6 +3725,7 @@ export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
 export type UpgradeAccountResponse = z.infer<typeof UpgradeAccountResponseSchema>;
 export type AuthStatusResponse = z.infer<typeof AuthStatusResponseSchema>;
 export type ProfileUpdateResponse = z.infer<typeof ProfileUpdateResponseSchema>;
+export type TeacherUpgradeResponse = z.infer<typeof TeacherUpgradeResponseSchema>;
 export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 export type GameCreationResponse = z.infer<typeof GameCreationResponseSchema>;

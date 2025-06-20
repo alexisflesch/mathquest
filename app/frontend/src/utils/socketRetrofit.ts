@@ -9,6 +9,7 @@ import { Socket } from 'socket.io-client';
 import { z } from 'zod';
 import { createLogger } from '@/clientLogger';
 import { SocketSchemas, validateSocketPayload } from './socketValidation';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('SocketRetrofit');
 

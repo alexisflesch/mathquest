@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { STORAGE_KEYS } from '@/constants/auth';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function DebugCookiesPage() {
     const [cookies, setCookies] = useState<string>('');

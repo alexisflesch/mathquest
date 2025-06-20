@@ -1,5 +1,6 @@
 import React from 'react';
 import InfinitySpin from '@/components/InfinitySpin';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface LoadingScreenProps {
     message?: string;

@@ -16,6 +16,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle } from 'lucide-react';
 import InfinitySpin from '@/components/InfinitySpin';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface ConfirmationModalProps {
     isOpen: boolean;

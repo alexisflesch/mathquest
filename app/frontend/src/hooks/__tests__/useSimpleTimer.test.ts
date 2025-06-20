@@ -6,6 +6,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useSimpleTimer } from '../useSimpleTimer';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock logger with relative path
 jest.mock('../../clientLogger', () => ({

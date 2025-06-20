@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Shield, Lock, Mail, User } from 'lucide-react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface TeacherUpgradeFormProps {
     onUpgrade: (adminPassword: string, email?: string, password?: string) => Promise<void>;

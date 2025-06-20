@@ -7,6 +7,7 @@ import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/l
 import type { QuestionData, TournamentQuestion } from '@shared/types/socketEvents';
 import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('QuestionCard');
 

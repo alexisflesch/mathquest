@@ -4,6 +4,7 @@
  * Comprehensive logging utility for debugging timer issues
  */
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('TimerDebug');
 

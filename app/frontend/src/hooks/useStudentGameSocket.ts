@@ -4,6 +4,10 @@ import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { createSocketConfig } from '@/utils';
+import {
+    joinGamePayloadSchema,
+    gameAnswerPayloadSchema
+} from '@shared/types/socketEvents.zod';
 
 // Import shared types - organized by module
 import type {
@@ -28,7 +32,6 @@ import type {
     FilteredQuestion
 } from '@shared/types/quiz/liveQuestion';
 
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Import type guards for runtime validation
 import {
@@ -411,7 +414,14 @@ export function useStudentGameSocket({
         logger.info(`Joining game ${accessCode}`, { userId, username, isDiffered });
 
         const payload: JoinGamePayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼', isDiffered };
-        socket.emit('join_game', payload);
+
+        // Validate payload before emitting
+        try {
+            const validatedPayload = joinGamePayloadSchema.parse(payload);
+            socket.emit('join_game', validatedPayload);
+        } catch (error) {
+            logger.error('Invalid join_game payload:', error);
+        }
     }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
 
     const submitAnswer = useCallback((questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => {
@@ -423,7 +433,14 @@ export function useStudentGameSocket({
         logger.info("Submitting answer", { questionUid, answer, timeSpent });
 
         const payload: GameAnswerPayload = { accessCode, userId, questionUid, answer, timeSpent };
-        socket.emit('game_answer', payload);
+
+        // Validate payload before emitting
+        try {
+            const validatedPayload = gameAnswerPayloadSchema.parse(payload);
+            socket.emit('game_answer', validatedPayload);
+        } catch (error) {
+            logger.error('Invalid game_answer payload:', error);
+        }
     }, [socket, accessCode, userId]);
 
     const requestNextQuestion = useCallback((currentQuestionUid: string) => {

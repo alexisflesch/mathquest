@@ -1,6 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface WrongAnswerProps {
     iconColor?: string;

@@ -23,6 +23,7 @@ jest.mock('../useSimpleTimer', () => ({
 }));
 
 import { useSimpleTimer } from '../useSimpleTimer';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 describe('useSimpleTimer Interface', () => {
     beforeEach(() => {

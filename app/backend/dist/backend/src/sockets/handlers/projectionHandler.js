@@ -165,6 +165,18 @@ function projectionHandler(io, socket) {
                     answers: fullState.answers,
                     leaderboard: fullState.leaderboard
                 };
+                // DEBUG: Log the leaderboard being sent to projection
+                logger.info({
+                    gameId,
+                    accessCode: gameInstance.accessCode,
+                    leaderboardCount: fullState.leaderboard?.length || 0,
+                    leaderboard: fullState.leaderboard?.map((entry) => ({
+                        userId: entry.userId,
+                        username: entry.username,
+                        avatarEmoji: entry.avatarEmoji,
+                        score: entry.score
+                    })) || []
+                }, '🔍 [DEBUG-PROJECTION] Sending initial leaderboard to projection');
                 // Detailed logging of the payload being sent
                 logger.info({
                     gameId,
@@ -180,18 +192,46 @@ function projectionHandler(io, socket) {
                 }, 'Initial projection state payload details');
                 socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, payload);
                 logger.info({ gameId, accessCode: gameInstance.accessCode }, 'Initial projection state sent');
-                // If there's a running timer, emit a timer update to trigger countdown in useSimpleTimer
-                if (enhancedGameState?.timer?.status === 'play' && enhancedGameState.timer.timeLeftMs > 0) {
+                // If there's an active timer (playing or paused), emit a timer update to trigger proper state in useSimpleTimer
+                if (enhancedGameState?.timer && (enhancedGameState.timer.status === 'play' || enhancedGameState.timer.status === 'pause') && enhancedGameState.timer.timeLeftMs > 0) {
                     logger.info({
                         gameId,
-                        timer: enhancedGameState.timer
-                    }, 'Emitting timer update for running timer in projection');
+                        timer: enhancedGameState.timer,
+                        status: enhancedGameState.timer.status
+                    }, 'Emitting timer update for active timer in projection');
                     const timerUpdatePayload = {
                         timer: enhancedGameState.timer,
                         questionUid: enhancedGameState.timer.questionUid
                     };
-                    // Emit timer update immediately after the initial state
+                    // Emit timer update immediately after the initial state (works for both play and pause status)
                     socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, timerUpdatePayload);
+                }
+                // Send current projection display state if it exists
+                const displayState = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);
+                if (displayState) {
+                    logger.info({
+                        gameId,
+                        accessCode: gameInstance.accessCode,
+                        displayState
+                    }, 'Sending initial projection display state');
+                    // If stats are currently shown, send the show stats event
+                    if (displayState.showStats && displayState.statsQuestionUid) {
+                        socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, {
+                            questionUid: displayState.statsQuestionUid,
+                            show: true,
+                            stats: displayState.currentStats,
+                            timestamp: Date.now()
+                        });
+                        logger.info({ gameId, questionUid: displayState.statsQuestionUid }, 'Sent initial stats state (visible)');
+                    }
+                    // If correct answers are currently shown
+                    if (displayState.showCorrectAnswers && displayState.correctAnswersData) {
+                        socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS, {
+                            ...displayState.correctAnswersData,
+                            timestamp: Date.now()
+                        });
+                        logger.info({ gameId }, 'Sent initial correct answers state');
+                    }
                 }
             }
             catch (stateError) {

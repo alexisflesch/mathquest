@@ -4,6 +4,7 @@ import { useStudentGameSocket, AnswerReceived } from '../useStudentGameSocket';
 import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
 import type { GameTimerState } from '@shared/types/core/timer';
 import { QUESTION_TYPES } from '@shared/types';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Helper function to create proper timer state
 const createTimerState = (durationMs: number, questionUid: string, status: 'play' | 'pause' | 'stop' = 'play'): GameTimerState => ({

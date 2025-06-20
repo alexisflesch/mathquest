@@ -1,0 +1,111 @@
+🔍 Socket Payload Validator - Project root: /home/aflesch/mathquest/app
+📂 Loading files from: shared
+📂 Loading files from: backend/src
+📂 Loading files from: frontend/src
+✅ Loaded 895 TypeScript files
+📋 Loading shared references...
+✅ Found 265 shared types
+✅ Found 6 socket event constants
+✅ Found 200 Zod schemas
+🔍 Starting Socket Payload Validation Analysis...\n
+🔍 Finding socket handlers...
+✅ Found 42 socket handlers
+🔍 Finding socket emitters...
+✅ Found 104 socket emitters
+🔍 Analyzing payload validation patterns...
+🔍 Checking shared type usage...
+🔍 Validating naming consistency...
+💡 Generating recommendations...
+\n📊 SOCKET PAYLOAD VALIDATION RESULTS\n
+============================================================
+\n📈 SUMMARY:
+   Socket Handlers: 42
+   Socket Emitters: 104
+   Total Issues: 387
+   Shared Types Available: 265
+\n🔴 ISSUES FOUND:
+\n   MISSINGZODVALIDATION (38 issues):
+   • frontend/src/hooks/useGameSocket.ts:280 - Missing Zod schema validation
+     Event: game_joined
+   • frontend/src/hooks/useGameSocket.ts:315 - Missing Zod schema validation
+     Event: timer_update
+   • frontend/src/hooks/usePracticeSession.ts:269 - Missing Zod schema validation
+     Event: connect
+   • frontend/src/hooks/usePracticeSession.ts:274 - Missing Zod schema validation
+     Event: disconnect
+   • frontend/src/hooks/usePracticeSession.ts:279 - Missing Zod schema validation
+     Event: connect_error
+   ... and 33 more
+\n   HARDCODEDEVENTNAMES (146 issues):
+   • frontend/src/hooks/useGameSocket.ts:280 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: game_joined
+   • frontend/src/hooks/useGameSocket.ts:315 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: timer_update
+   • frontend/src/hooks/usePracticeSession.ts:269 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: connect
+   • frontend/src/hooks/usePracticeSession.ts:274 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: disconnect
+   • frontend/src/hooks/usePracticeSession.ts:279 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: connect_error
+   ... and 141 more
+\n   UNSHAREDPAYLOADTYPES (104 issues):
+   • frontend/src/hooks/useGameSocket.ts:263 - Emitter not using shared payload types
+     Event: game_answer
+   • frontend/src/hooks/useGameSocket.ts:271 - Emitter not using shared payload types
+     Event: join_game
+   • frontend/src/hooks/useGameSocket.ts:298 - Emitter not using shared payload types
+     Event: quiz_timer_action
+   • frontend/src/hooks/useStudentGameSocket.ts:413 - Emitter not using shared payload types
+     Event: join_game
+   • frontend/src/hooks/useStudentGameSocket.ts:425 - Emitter not using shared payload types
+     Event: game_answer
+   ... and 99 more
+\n   MISSINGTYPEGUARDS (15 issues):
+   • frontend/src/hooks/usePracticeSession.ts:269 - Missing runtime type validation
+     Event: connect
+   • frontend/src/hooks/usePracticeSession.ts:274 - Missing runtime type validation
+     Event: disconnect
+   • frontend/src/hooks/usePracticeSession.ts:279 - Missing runtime type validation
+     Event: connect_error
+   • frontend/src/hooks/usePracticeSession.ts:300 - Missing runtime type validation
+     Event: PRACTICE_SESSION_CREATED
+   • frontend/src/hooks/usePracticeSession.ts:301 - Missing runtime type validation
+     Event: PRACTICE_QUESTION_READY
+   ... and 10 more
+\n   UNDOCUMENTEDEVENTS (42 issues):
+   • frontend/src/hooks/useGameSocket.ts:280 - Socket handler not documented
+     Event: game_joined
+   • frontend/src/hooks/useGameSocket.ts:315 - Socket handler not documented
+     Event: timer_update
+   • frontend/src/hooks/usePracticeSession.ts:269 - Socket handler not documented
+     Event: connect
+   • frontend/src/hooks/usePracticeSession.ts:274 - Socket handler not documented
+     Event: disconnect
+   • frontend/src/hooks/usePracticeSession.ts:279 - Socket handler not documented
+     Event: connect_error
+   ... and 37 more
+\n   ANYTYPEDPAYLOADS (42 issues):
+   • frontend/src/hooks/useGameSocket.ts:280 - Payload typed as any
+     Event: game_joined
+   • frontend/src/hooks/useGameSocket.ts:315 - Payload typed as any
+     Event: timer_update
+   • frontend/src/hooks/usePracticeSession.ts:269 - Payload typed as any
+     Event: connect
+   • frontend/src/hooks/usePracticeSession.ts:274 - Payload typed as any
+     Event: disconnect
+   • frontend/src/hooks/usePracticeSession.ts:279 - Payload typed as any
+     Event: connect_error
+   ... and 37 more
+\n💡 RECOMMENDATIONS:
+\n1. 🔴 HIGH: Add Zod validation to 38 socket handlers
+   Socket handlers should validate incoming payloads with Zod schemas
+   Action: Import and use appropriate Zod schemas from @shared/types/socketEvents.zod
+\n2. 🟡 MEDIUM: Replace 146 hardcoded event names
+   Use SOCKET_EVENTS constants instead of hardcoded strings
+   Action: Import SOCKET_EVENTS from @shared/types/socket/events and use constants
+\n3. 🔴 HIGH: Convert 104 local types to shared types
+   Socket payloads should use canonical shared types
+   Action: Replace local interface definitions with imports from @shared/types
+\n============================================================
+Analysis completed at: 2025-06-20T12:28:29.395Z
+\n⚠️  Found 387 issues that need attention.

@@ -7,6 +7,7 @@ import type { Question } from "@/types/api";
 import { createLogger } from '@/clientLogger';
 import { formatTime } from "@/utils";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import QuestionDisplay from "@/components/QuestionDisplay"; // Import du nouveau composant
 
 const logger = createLogger('SortableQuestion');

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Debug route to clear all cookies from the browser

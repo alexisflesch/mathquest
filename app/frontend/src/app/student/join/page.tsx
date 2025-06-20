@@ -24,6 +24,7 @@ import { makeApiRequest } from '@/config/api';
 import { GameJoinResponse } from '@/types/api';
 import { useAuthState } from '@/hooks/useAuthState';
 import type { GameStatus } from '@shared/types/core/game';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");

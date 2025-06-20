@@ -22,6 +22,7 @@ import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { Check, X, Search } from 'lucide-react';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsFiltersResponseSchema, QuestionsResponseSchema } from '@/types/api';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 
 // Remove local interface Question and use QuestionData everywhere

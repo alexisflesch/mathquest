@@ -11,6 +11,7 @@ import StudentAuthForm from '../../components/auth/StudentAuthForm';
 import AvatarGrid from '../../components/ui/AvatarGrid';
 import Image from 'next/image';
 import InfinitySpin from '@/components/InfinitySpin';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 function LoginPageInner() {
     const router = useRouter();

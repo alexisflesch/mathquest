@@ -23,6 +23,7 @@ import { useAuth } from './AuthProvider'; // Corrected import path
 import Image from 'next/image';
 import { makeApiRequest } from '@/config/api';
 import { STORAGE_KEYS } from '@/constants/auth';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import {
     Home,
     Users,

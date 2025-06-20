@@ -15,6 +15,8 @@ export declare const TEACHER_EVENTS: {
     PAUSE_TIMER: string;
     LOCK_ANSWERS: string;
     END_GAME: string;
+    SHOW_CORRECT_ANSWERS: string;
+    TOGGLE_PROJECTION_STATS: string;
     GAME_CONTROL_STATE: string;
     DASHBOARD_JOINED: string;
     TIMER_UPDATE: string;
@@ -72,6 +74,10 @@ export declare const PROJECTOR_EVENTS: {
     PROJECTION_TIMER_UPDATED: string;
     PROJECTION_CONNECTED_COUNT: string;
     PROJECTION_STATE: string;
+    PROJECTION_LEADERBOARD_UPDATE: string;
+    PROJECTION_SHOW_STATS: string;
+    PROJECTION_HIDE_STATS: string;
+    PROJECTION_CORRECT_ANSWERS: string;
 };
 export declare const GAME_EVENTS: {
     JOIN_GAME: string;
@@ -87,6 +93,7 @@ export declare const GAME_EVENTS: {
     GAME_ENDED: string;
     GAME_ERROR: string;
     GAME_ANSWERS_LOCK_CHANGED: string;
+    LEADERBOARD_UPDATE: string;
     GAME_TIMER_UPDATED: string;
     TIMER_UPDATE: string;
     GAME_UPDATE: string;
@@ -116,6 +123,8 @@ export declare const SOCKET_EVENTS: {
         PAUSE_TIMER: string;
         LOCK_ANSWERS: string;
         END_GAME: string;
+        SHOW_CORRECT_ANSWERS: string;
+        TOGGLE_PROJECTION_STATS: string;
         GAME_CONTROL_STATE: string;
         DASHBOARD_JOINED: string;
         TIMER_UPDATE: string;
@@ -141,6 +150,7 @@ export declare const SOCKET_EVENTS: {
         GAME_ENDED: string;
         GAME_ERROR: string;
         GAME_ANSWERS_LOCK_CHANGED: string;
+        LEADERBOARD_UPDATE: string;
         GAME_TIMER_UPDATED: string;
         TIMER_UPDATE: string;
         GAME_UPDATE: string;
@@ -206,6 +216,10 @@ export declare const SOCKET_EVENTS: {
         PROJECTION_TIMER_UPDATED: string;
         PROJECTION_CONNECTED_COUNT: string;
         PROJECTION_STATE: string;
+        PROJECTION_LEADERBOARD_UPDATE: string;
+        PROJECTION_SHOW_STATS: string;
+        PROJECTION_HIDE_STATS: string;
+        PROJECTION_CORRECT_ANSWERS: string;
     };
     CONNECT: string;
     DISCONNECT: string;

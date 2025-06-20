@@ -12,19 +12,15 @@ import type {
     GameTimerUpdatePayload,
     ErrorPayload,
     ServerToClientEvents,
-    ParticipantData
+    ParticipantData,
+    SharedJoinPayload,
+    SharedAnswerPayload
 } from '@shared/types/socketEvents';
 import {
     sharedJoinPayloadSchema,
     sharedAnswerPayloadSchema,
     requestParticipantsPayloadSchema
 } from '@shared/types/socketEvents.zod';
-
-import type {
-    ErrorPayload,
-    SharedJoinPayload,
-    SharedAnswerPayload
-} from '@shared/types/socketEvents';
 
 const logger = createLogger('SharedLiveHandler');
 

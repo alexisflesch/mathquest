@@ -2,6 +2,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useStudentGameSocket } from '../useStudentGameSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock socket.io-client
 jest.mock('socket.io-client');

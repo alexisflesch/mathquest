@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { makeApiRequest } from '@/config/api';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function Page() {
     const [password, setPassword] = useState('');

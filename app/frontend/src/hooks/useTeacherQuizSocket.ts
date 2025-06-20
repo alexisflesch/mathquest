@@ -12,7 +12,7 @@ import { useGameSocket } from './useGameSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Import core types
-import type { Question } from '@shared/types/core';
+import type { Question, TimerStatus } from '@shared/types/core';
 import type { QuestionData, ServerToClientEvents } from '@shared/types/socketEvents';
 import type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
 import type { DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
@@ -243,7 +243,7 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
 
         // State - timer state now managed externally
         quizState,
-        timerStatus: 'stop' as const, // Default value - actual timer state managed externally
+        timerStatus: 'stop' as TimerStatus, // Default value - actual timer state managed externally
         timerQuestionUid: null, // Default value - actual timer state managed externally
         timeLeftMs: 0, // Default value - actual timer state managed externally
         localTimeLeftMs: 0, // Default value - actual timer state managed externally

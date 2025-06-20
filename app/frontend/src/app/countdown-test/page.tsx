@@ -3,6 +3,7 @@
 import InfinityToOpenedEight from "@/components/InfinityCountDown";
 import React, { useState } from 'react';
 // import InfinityToOpenedEight from './InfinityToOpenedEight';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function Demo() {
     const [key, setKey] = useState(Date.now());

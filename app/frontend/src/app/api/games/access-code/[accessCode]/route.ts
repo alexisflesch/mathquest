@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { makeApiRequest } from '@/config/api';
 import type { GameInstanceResponse, ErrorResponse } from '@shared/types/api/responses';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('GamesByAccessCodeAPI');
 

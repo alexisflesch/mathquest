@@ -9,6 +9,7 @@ import { logger, getCurrentLogLevel, setLogLevel, LogLevel } from '@/clientLogge
 import { MathJaxContext } from 'better-react-mathjax';
 import AppNav from '@/components/AppNav';
 import InfinitySpin from '@/components/InfinitySpin';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const inter = Inter({
   subsets: ["latin"],

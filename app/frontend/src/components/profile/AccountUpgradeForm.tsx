@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, User, Camera, Shield } from 'lucide-react';
 import AvatarGrid from '../ui/AvatarGrid';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface AccountUpgradeFormProps {
     guestUsername: string;

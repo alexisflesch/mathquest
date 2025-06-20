@@ -18,6 +18,7 @@ import { renderHook } from '@testing-library/react';
 import { io } from 'socket.io-client';
 import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // --- Mocks ---
 const mockedIo = io as jest.MockedFunction<typeof io>;

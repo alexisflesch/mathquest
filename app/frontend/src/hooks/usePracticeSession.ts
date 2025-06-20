@@ -10,8 +10,8 @@ import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
-// Import practice session types
 import type {
     PracticeSession,
     PracticeQuestionData,
@@ -19,21 +19,21 @@ import type {
     PracticeStatistics
 } from '@shared/types/practice/session';
 
-import type {
+import {
     PRACTICE_EVENTS,
-    StartPracticeSessionPayload,
-    SubmitPracticeAnswerPayload,
-    RequestPracticeFeedbackPayload,
-    GetNextPracticeQuestionPayload,
-    EndPracticeSessionPayload,
-    GetPracticeSessionStatePayload,
-    PracticeSessionCreatedPayload,
-    PracticeQuestionReadyPayload,
-    PracticeAnswerSubmittedPayload,
-    PracticeAnswerFeedbackPayload,
-    PracticeSessionCompletedPayload,
-    PracticeSessionErrorPayload,
-    PracticeSessionStatePayload
+    type StartPracticeSessionPayload,
+    type SubmitPracticeAnswerPayload,
+    type RequestPracticeFeedbackPayload,
+    type GetNextPracticeQuestionPayload,
+    type EndPracticeSessionPayload,
+    type GetPracticeSessionStatePayload,
+    type PracticeSessionCreatedPayload,
+    type PracticeQuestionReadyPayload,
+    type PracticeAnswerSubmittedPayload,
+    type PracticeAnswerFeedbackPayload,
+    type PracticeSessionCompletedPayload,
+    type PracticeSessionErrorPayload,
+    type PracticeSessionStatePayload
 } from '@shared/types/practice/events';
 
 // Import socket event types
@@ -270,12 +270,12 @@ export function usePracticeSession({
                 updateState({ connected: true, connecting: false });
             });
 
-            socket.on('disconnect', (reason) => {
+            socket.on('disconnect', (reason: string) => {
                 logger.info('Practice session socket disconnected', { reason });
                 updateState({ connected: false });
             });
 
-            socket.on('connect_error', (error) => {
+            socket.on('connect_error', (error: Error) => {
                 logger.error('Practice session socket connection error', error);
 
                 // Provide user-friendly error messages based on error type
@@ -295,50 +295,94 @@ export function usePracticeSession({
                 });
             });
 
-            // Practice session events
-            socket.on('PRACTICE_SESSION_CREATED', handleSessionCreated);
-            socket.on('PRACTICE_QUESTION_READY', handleQuestionReady);
-            socket.on('PRACTICE_ANSWER_FEEDBACK', handleAnswerFeedback);
-            socket.on('PRACTICE_SESSION_COMPLETED', handleSessionCompleted);
-            socket.on('PRACTICE_SESSION_ERROR', handleSessionError);
-            socket.on('PRACTICE_SESSION_STATE', handleSessionState);
+            // Practice session events - use constants and add validation
+            socket.on(PRACTICE_EVENTS.PRACTICE_SESSION_CREATED, (payload: any) => {
+                try {
+                    handleSessionCreated(payload);
+                } catch (error) {
+                    logger.error('Error in PRACTICE_SESSION_CREATED handler:', error);
+                }
+            });
+            socket.on(PRACTICE_EVENTS.PRACTICE_QUESTION_READY, (payload: any) => {
+                try {
+                    handleQuestionReady(payload);
+                } catch (error) {
+                    logger.error('Error in PRACTICE_QUESTION_READY handler:', error);
+                }
+            });
+            socket.on(PRACTICE_EVENTS.PRACTICE_ANSWER_FEEDBACK, (payload: any) => {
+                try {
+                    handleAnswerFeedback(payload);
+                } catch (error) {
+                    logger.error('Error in PRACTICE_ANSWER_FEEDBACK handler:', error);
+                }
+            });
+            socket.on(PRACTICE_EVENTS.PRACTICE_SESSION_COMPLETED, (payload: any) => {
+                try {
+                    handleSessionCompleted(payload);
+                } catch (error) {
+                    logger.error('Error in PRACTICE_SESSION_COMPLETED handler:', error);
+                }
+            });
+            socket.on(PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, (payload: any) => {
+                try {
+                    handleSessionError(payload);
+                } catch (error) {
+                    logger.error('Error in PRACTICE_SESSION_ERROR handler:', error);
+                }
+            });
+            socket.on(PRACTICE_EVENTS.PRACTICE_SESSION_STATE, (payload: any) => {
+                try {
+                    handleSessionState(payload);
+                } catch (error) {
+                    logger.error('Error in PRACTICE_SESSION_STATE handler:', error);
+                }
+            });
 
             // Canonical tournament-style events (emitted by backend for practice sessions)
             socket.on('correct_answers', (payload: { questionUid: string; correctAnswers?: boolean[] }) => {
-                logger.debug('Received canonical correct_answers event', payload);
-                if (payload.correctAnswers) {
-                    const correctAnswers = payload.correctAnswers;
-                    setState(prevState => ({
-                        ...prevState,
-                        lastFeedback: prevState.lastFeedback ? {
-                            ...prevState.lastFeedback,
-                            correctAnswers: correctAnswers
-                        } : {
-                            isCorrect: false,
-                            correctAnswers: correctAnswers,
-                            explanation: undefined,
-                            canRetry: false,
-                            statistics: {
-                                questionsAnswered: 0,
-                                correctCount: 0,
-                                accuracyPercentage: 0
+                try {
+                    logger.debug('Received canonical correct_answers event', payload);
+                    if (payload.correctAnswers) {
+                        const correctAnswers = payload.correctAnswers;
+                        setState(prevState => ({
+                            ...prevState,
+                            lastFeedback: prevState.lastFeedback ? {
+                                ...prevState.lastFeedback,
+                                correctAnswers: correctAnswers
+                            } : {
+                                isCorrect: false,
+                                correctAnswers: correctAnswers,
+                                explanation: undefined,
+                                canRetry: false,
+                                statistics: {
+                                    questionsAnswered: 0,
+                                    correctCount: 0,
+                                    accuracyPercentage: 0
+                                }
                             }
-                        }
-                    }));
+                        }));
+                    }
+                } catch (error) {
+                    logger.error('Error in correct_answers handler:', error);
                 }
             });
 
             socket.on('feedback', (payload: { questionUid: string; feedbackRemaining: number;[key: string]: any }) => {
-                logger.debug('Received canonical feedback event', payload);
-                const explanation = payload.explanation as string | undefined;
-                if (explanation) {
-                    setState(prevState => ({
-                        ...prevState,
-                        lastFeedback: prevState.lastFeedback ? {
-                            ...prevState.lastFeedback,
-                            explanation: explanation
-                        } : null
-                    }));
+                try {
+                    logger.debug('Received canonical feedback event', payload);
+                    const explanation = payload.explanation as string | undefined;
+                    if (explanation) {
+                        setState(prevState => ({
+                            ...prevState,
+                            lastFeedback: prevState.lastFeedback ? {
+                                ...prevState.lastFeedback,
+                                explanation: explanation
+                            } : null
+                        }));
+                    }
+                } catch (error) {
+                    logger.error('Error in feedback handler:', error);
                 }
             });
 

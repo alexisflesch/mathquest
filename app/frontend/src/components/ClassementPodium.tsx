@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export type PodiumUser = {
     userId?: string;

@@ -24,6 +24,7 @@ import { makeApiRequest } from '@/config/api';
 import { QuestionsFiltersResponseSchema, QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { useAuth } from '@/components/AuthProvider';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Create a logger for this component
 const logger = createLogger('CreateTournament');

@@ -8,6 +8,7 @@
  */
 
 import { FRONTEND_AUTH_ENDPOINTS } from './api';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Cookie Names
 export const COOKIE_NAMES = {

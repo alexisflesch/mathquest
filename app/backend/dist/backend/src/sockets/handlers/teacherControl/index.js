@@ -12,6 +12,8 @@ const endGame_1 = require("./endGame");
 const startTimer_1 = require("./startTimer");
 const pauseTimer_1 = require("./pauseTimer");
 const disconnect_1 = require("./disconnect");
+const showCorrectAnswers_1 = require("./showCorrectAnswers");
+const toggleProjectionStats_1 = require("./toggleProjectionStats");
 const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
 // Create a handler-specific logger
@@ -45,6 +47,12 @@ function registerTeacherControlHandlers(io, socket) {
     // Handle pause_timer event
     logger.info({ event: events_1.TEACHER_EVENTS.PAUSE_TIMER }, 'Registering pause_timer handler');
     socket.on(events_1.TEACHER_EVENTS.PAUSE_TIMER, (0, pauseTimer_1.pauseTimerHandler)(io, socket));
+    // NEW: Handle show correct answers (trophy button)
+    logger.info({ event: events_1.TEACHER_EVENTS.SHOW_CORRECT_ANSWERS }, 'Registering show_correct_answers handler');
+    socket.on(events_1.TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, (0, showCorrectAnswers_1.showCorrectAnswersHandler)(io, socket));
+    // NEW: Handle toggle projection stats (bar graph button)
+    logger.info({ event: events_1.TEACHER_EVENTS.TOGGLE_PROJECTION_STATS }, 'Registering toggle_projection_stats handler');
+    socket.on(events_1.TEACHER_EVENTS.TOGGLE_PROJECTION_STATS, (0, toggleProjectionStats_1.toggleProjectionStatsHandler)(io, socket));
     // Handle disconnect
     logger.info('Registering disconnect handler');
     socket.on('disconnect', (0, disconnect_1.disconnectHandler)(io, socket));

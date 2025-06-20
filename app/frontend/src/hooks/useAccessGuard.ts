@@ -3,6 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { useEffect, ComponentType, ReactNode, createElement } from 'react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export interface AccessGuardOptions {
     redirectTo?: string;

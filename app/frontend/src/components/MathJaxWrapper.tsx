@@ -28,6 +28,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MathJaxContext, MathJax } from 'better-react-mathjax';
 import { createLogger } from '../clientLogger';
 import dynamic from 'next/dynamic';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('MathJaxWrapper');
 

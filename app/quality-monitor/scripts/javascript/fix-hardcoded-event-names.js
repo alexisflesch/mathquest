@@ -126,7 +126,7 @@ function processDirectory(dirPath) {
 }
 
 // Main execution
-const frontendDir = path.join(__dirname, '../../frontend/src');
+const frontendDir = path.join(__dirname, '../../../frontend/src');
 console.log('🔧 Starting hardcoded event names fix...');
 console.log(`📂 Processing directory: ${frontendDir}`);
 

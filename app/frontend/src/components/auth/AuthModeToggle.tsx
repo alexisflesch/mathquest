@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export type AuthMode = 'guest' | 'student' | 'teacher';
 

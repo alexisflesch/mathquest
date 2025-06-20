@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // TODO: Replace with real scoreboard logic and props
 export default function Scoreboard({ scores = [] }: { scores?: { username: string; score: number; avatar?: string }[] }) {

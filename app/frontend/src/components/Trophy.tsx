@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Trophy as LucideTrophy } from "lucide-react";
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface TrophyProps {
     size?: number;

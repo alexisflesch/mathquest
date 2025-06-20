@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { makeApiRequest } from '@/config/api';
 import { useAuth } from '@/components/AuthProvider';
 import { AuthStatusResponseSchema, LogoutResponseSchema } from '@shared/types/api/schemas';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Authentication Debug Page

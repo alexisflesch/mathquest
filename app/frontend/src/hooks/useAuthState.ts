@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/components/AuthProvider';
 import { useMemo } from 'react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Enhanced hook for accessing authentication state with additional utilities

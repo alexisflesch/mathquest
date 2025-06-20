@@ -19,6 +19,7 @@ import { Share2 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
 import { TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
 import type { LeaderboardEntry } from '@shared/types/core/participant';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Extend shared LeaderboardEntry with tournament-specific fields
 type TournamentLeaderboardEntry = LeaderboardEntry & {

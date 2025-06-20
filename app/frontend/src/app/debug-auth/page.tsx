@@ -2,6 +2,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { useEffect, useState } from 'react';
 import { STORAGE_KEYS } from '@/constants/auth';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function DebugAuthPage() {
     const { userState, userProfile, isStudent, isTeacher, isLoading } = useAuth();

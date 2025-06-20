@@ -1,5 +1,6 @@
 import { STORAGE_KEYS } from '@/constants/auth';
 import { SocketConfig } from '@/types/socket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Format time for display (expects milliseconds, converts to MM:SS format)

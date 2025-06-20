@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Proxy POST /api/games/[gameId]/join to backend /api/v1/games/:accessCode/join
 export async function POST(req: NextRequest, { params }: { params: Promise<{ gameId: string }> }) {

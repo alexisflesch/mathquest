@@ -6,6 +6,7 @@
  */
 
 import { describe, it } from '@jest/globals';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 describe('useStudentGameSocket timer functionality', () => {
     it('should use useSimpleTimer hook for timer functionality', () => {

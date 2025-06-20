@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Create a simple test component
 const SimpleComponent = () => {

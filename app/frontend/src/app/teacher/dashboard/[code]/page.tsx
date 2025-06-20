@@ -118,7 +118,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             autoConnect: true // Override for dashboard connection
         });
 
-        socket.on('connect', () => {
+        socket.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info('Socket connected:', socket.id);
             logger.info('Joining dashboard with accessCode:', code);
             socket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { accessCode: code });

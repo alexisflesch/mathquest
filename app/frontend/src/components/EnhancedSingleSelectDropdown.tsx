@@ -18,6 +18,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface EnhancedSingleSelectDropdownProps {
     options: string[];

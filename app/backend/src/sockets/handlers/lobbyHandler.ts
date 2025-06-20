@@ -38,11 +38,6 @@ export interface LobbyParticipant {
     joinedAt: number;     // Timestamp when joined
 }
 
-// Define event payload types using Zod inference
-export type JoinLobbyPayload = z.infer<typeof joinLobbyPayloadSchema>;
-export type LeaveLobbyPayload = z.infer<typeof leaveLobbyPayloadSchema>;
-export type GetParticipantsPayload = z.infer<typeof getParticipantsPayloadSchema>;
-
 /**
  * Setup periodic game status checking for a lobby
  * This checks if the game has become active and notifies participants

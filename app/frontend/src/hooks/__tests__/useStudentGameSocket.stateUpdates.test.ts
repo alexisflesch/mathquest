@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { useStudentGameSocket } from '../useStudentGameSocket';
 import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import { QUESTION_TYPES } from '@shared/types';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock socket.io-client
 jest.mock('socket.io-client');

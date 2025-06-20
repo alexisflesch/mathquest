@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createApiUrl } from '@/config/api';
 import { AuthStatusResponseSchema, type AuthStatusResponse } from '@shared/types/api/schemas';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Auth status API endpoint - Proxies to backend to get complete auth state with user profile

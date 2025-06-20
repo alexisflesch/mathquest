@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Logout API route that clears authentication cookies

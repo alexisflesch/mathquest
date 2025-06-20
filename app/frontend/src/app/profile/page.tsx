@@ -9,6 +9,7 @@ import ProfileForm from '../../components/profile/ProfileForm';
 import AccountUpgradeForm from '../../components/profile/AccountUpgradeForm';
 import TeacherUpgradeForm from '../../components/profile/TeacherUpgradeForm';
 import Snackbar from '../../components/Snackbar';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 function ProfilePageInner() {
     const router = useRouter();

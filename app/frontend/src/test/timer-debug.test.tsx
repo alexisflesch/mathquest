@@ -9,6 +9,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
 import type { TimerStatus } from '@shared/types/core/timer';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock the logger
 jest.mock('@/clientLogger', () => ({

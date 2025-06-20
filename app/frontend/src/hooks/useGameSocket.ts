@@ -23,6 +23,11 @@ import type {
     SocketData
 } from '@shared/types/socketEvents';
 import type { TimerRole, TimerState } from './useGameTimer';
+import {
+    joinGamePayloadSchema,
+    gameAnswerPayloadSchema,
+    timerActionPayloadSchema
+} from '@shared/types/socketEvents.zod';
 
 const logger = createLogger('useGameSocket');
 
@@ -260,7 +265,15 @@ export function useGameSocket(
             logger.warn(`[${role.toUpperCase()}] Cannot emit game_answer: socket not connected`);
             return;
         }
-        socket.emit('game_answer', payload);
+
+        // Validate payload before emitting
+        try {
+            const validatedPayload = gameAnswerPayloadSchema.parse(payload);
+            // TODO: Use SOCKET_EVENTS.GAME.GAME_ANSWER when TypeScript types allow constants
+            socket.emit('game_answer', validatedPayload);
+        } catch (error) {
+            logger.error(`[${role.toUpperCase()}] Invalid game_answer payload:`, error);
+        }
     }, [socket, role]);
 
     const emitJoinGame = useCallback((payload: Parameters<ClientToServerEvents['join_game']>[0]) => {
@@ -268,7 +281,15 @@ export function useGameSocket(
             logger.warn(`[${role.toUpperCase()}] Cannot emit join_game: socket not connected`);
             return;
         }
-        socket.emit('join_game', payload);
+
+        // Validate payload before emitting
+        try {
+            const validatedPayload = joinGamePayloadSchema.parse(payload);
+            // TODO: Use SOCKET_EVENTS.GAME.JOIN_GAME when TypeScript types allow constants
+            socket.emit('join_game', validatedPayload);
+        } catch (error) {
+            logger.error(`[${role.toUpperCase()}] Invalid join_game payload:`, error);
+        }
     }, [socket, role]);
 
     // Fix onGameJoined defaultMode: registration function returning cleanup
@@ -277,9 +298,20 @@ export function useGameSocket(
             logger.warn(`[${role.toUpperCase()}] Cannot register handler for game_joined: no socket`);
             return () => { };
         }
-        socket.on('game_joined', handler);
+
+        const validatedHandler = (payload: any) => {
+            // Add runtime validation for game_joined payload if schema exists
+            try {
+                handler(payload);
+            } catch (error) {
+                logger.error(`[${role.toUpperCase()}] Error in game_joined handler:`, error);
+            }
+        };
+
+        // TODO: Use SOCKET_EVENTS.GAME.GAME_JOINED when TypeScript types allow constants
+        socket.on('game_joined', validatedHandler);
         return () => {
-            socket.off('game_joined', handler);
+            socket.off('game_joined', validatedHandler);
         };
     }, [socket, role]);
 
@@ -295,12 +327,21 @@ export function useGameSocket(
             return;
         }
         if (role === 'teacher') {
-            socket.emit('quiz_timer_action', {
+            const payload = {
                 accessCode,
                 action,
                 duration,
                 questionUid
-            });
+            };
+
+            // Validate payload before emitting
+            try {
+                const validatedPayload = timerActionPayloadSchema.parse(payload);
+                // TODO: Use SOCKET_EVENTS.TEACHER.TIMER_ACTION when TypeScript types allow constants
+                socket.emit('quiz_timer_action', validatedPayload);
+            } catch (error) {
+                logger.error(`[${role.toUpperCase()}] Invalid quiz_timer_action payload:`, error);
+            }
         }
         // Add other roles as needed
     }, [socket, role]);
@@ -310,11 +351,22 @@ export function useGameSocket(
             logger.warn(`[${role.toUpperCase()}] Cannot register timer update handler: no socket`);
             return () => { };
         }
+
+        const validatedHandler = (payload: any) => {
+            try {
+                // Validate timer state payload if needed
+                handler(payload);
+            } catch (error) {
+                logger.error(`[${role.toUpperCase()}] Error in timer_update handler:`, error);
+            }
+        };
+
         // Only listen to allowed timer update events for teacher
         if (role === 'teacher') {
-            socket.on('timer_update', handler as any);
+            // TODO: Use SOCKET_EVENTS.GAME.TIMER_UPDATE when TypeScript types allow constants
+            socket.on('timer_update', validatedHandler);
             return () => {
-                socket.off('timer_update', handler as any);
+                socket.off('timer_update', validatedHandler);
             };
         }
         // Add other roles as needed

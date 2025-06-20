@@ -10,6 +10,7 @@ import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsResponseSchema, QuizCreationResponseSchema, GameTemplateCreationResponseSchema, type QuestionsResponse, type QuizCreationResponse } from '@/types/api';
 import { Search } from 'lucide-react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/types'; // Import QUESTION_TYPES
 
 // Use canonical shared Question type directly - no more local interfaces!

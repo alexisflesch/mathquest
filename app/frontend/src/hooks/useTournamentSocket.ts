@@ -7,6 +7,7 @@
 
 import { useSimpleTimer } from './useSimpleTimer';
 import { useGameSocket } from './useGameSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export interface TournamentSocketConfig {
     accessCode: string;

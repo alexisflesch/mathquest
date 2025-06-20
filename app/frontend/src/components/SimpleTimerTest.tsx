@@ -10,6 +10,7 @@
 import React from 'react';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { useGameSocket } from '@/hooks/useGameSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface SimpleTimerTestProps {
     gameId: string;

@@ -16,6 +16,7 @@ import type { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import type { TournamentQuestion } from '@shared/types';
 import type { GameInstanceResponse } from '@shared/types/api/responses';
 import type { GameInstance } from '@shared/types/core/game';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('PracticeSessionWithAccessCode');
 

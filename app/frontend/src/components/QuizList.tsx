@@ -16,6 +16,7 @@
  */
 
 import React from 'react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // TODO: Replace with real quiz list logic and props
 export default function QuizList({ quizzes = [], onSelect }: { quizzes?: { id: string; name: string }[]; onSelect?: (id: string) => void }) {

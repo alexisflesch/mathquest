@@ -8,6 +8,7 @@
 import { Socket } from 'socket.io-client';
 import { z } from 'zod';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import {
     validateSocketPayload,
     createEnhancedSafeEventHandler,

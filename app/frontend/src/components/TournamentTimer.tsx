@@ -1,5 +1,6 @@
 import React from "react";
 import { Timer } from 'lucide-react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface TournamentTimerProps {
     timerS: number | null; // Timer value in seconds for display

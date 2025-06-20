@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface StudentAuthFormProps {
     mode: 'login' | 'signup';

@@ -34,19 +34,39 @@ const JOIN_ORDER_CONFIG = {
  * @returns Promise<number> - The bonus score assigned (0 if no bonus)
  */
 async function assignJoinOrderBonus(accessCode, userId) {
+    logger.info({
+        accessCode,
+        userId
+    }, '🎯 [JOIN-ORDER-BONUS] Starting join order bonus assignment');
     try {
         const joinOrderKey = `mathquest:game:join_order:${accessCode}`;
         // Get current join count using Redis LLEN (list length)
         const currentJoinCount = await redis_1.redisClient.llen(joinOrderKey);
+        logger.debug({
+            accessCode,
+            userId,
+            joinOrderKey,
+            currentJoinCount
+        }, '📊 [JOIN-ORDER-BONUS] Current join count retrieved');
         // Check if this user already has a join order (prevent duplicates)
         const existingJoinOrders = await redis_1.redisClient.lrange(joinOrderKey, 0, -1);
         if (existingJoinOrders.includes(userId)) {
-            logger.debug({ accessCode, userId, currentJoinCount }, 'User already has join order bonus');
+            logger.debug({
+                accessCode,
+                userId,
+                currentJoinCount,
+                existingJoinOrders
+            }, '⏭️ [JOIN-ORDER-BONUS] User already has join order bonus');
             return 0;
         }
         // Only first MAX_BONUS_RECIPIENTS get bonuses
         if (currentJoinCount >= JOIN_ORDER_CONFIG.MAX_BONUS_RECIPIENTS) {
-            logger.debug({ accessCode, userId, currentJoinCount, maxRecipients: JOIN_ORDER_CONFIG.MAX_BONUS_RECIPIENTS }, 'Join order bonus limit reached');
+            logger.debug({
+                accessCode,
+                userId,
+                currentJoinCount,
+                maxRecipients: JOIN_ORDER_CONFIG.MAX_BONUS_RECIPIENTS
+            }, '🚫 [JOIN-ORDER-BONUS] Join order bonus limit reached');
             return 0;
         }
         // Add user to join order list
@@ -61,12 +81,18 @@ async function assignJoinOrderBonus(accessCode, userId) {
             userId,
             joinPosition: joinPosition + 1, // 1-indexed for logging
             bonusScore,
-            totalJoinersWithBonus: currentJoinCount + 1
-        }, 'Assigned join order bonus');
+            totalJoinersWithBonus: currentJoinCount + 1,
+            config: JOIN_ORDER_CONFIG
+        }, '✅ [JOIN-ORDER-BONUS] Assigned join order bonus');
         return bonusScore;
     }
     catch (error) {
-        logger.error({ error, accessCode, userId }, 'Error assigning join order bonus');
+        logger.error({
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            accessCode,
+            userId
+        }, '❌ [JOIN-ORDER-BONUS] Error assigning join order bonus');
         return 0;
     }
 }

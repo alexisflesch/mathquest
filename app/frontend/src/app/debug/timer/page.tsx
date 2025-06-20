@@ -9,6 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { createLogger } from '@/clientLogger';
 import { useTeacherQuizSocket } from '@/hooks/useTeacherQuizSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('TimerDebugPage');
 
@@ -126,7 +127,7 @@ export default function TimerDebugPage() {
                     <div>
                         <div className="text-sm font-medium">Status</div>
                         <div className={`text-2xl font-bold ${timerStatus === 'play' ? 'text-green-600' :
-                            timerStatus === 'pause' ? 'text-yellow-600' : 'text-red-600'
+                                timerStatus === 'pause' ? 'text-yellow-600' : 'text-red-600'
                             }`}>
                             {timerStatus}
                         </div>

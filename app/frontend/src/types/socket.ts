@@ -6,6 +6,7 @@
  */
 
 import { Socket } from 'socket.io-client';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Only keep these if not covered by shared types:
 export type AnswerValue = number | number[] | string | string[] | boolean;

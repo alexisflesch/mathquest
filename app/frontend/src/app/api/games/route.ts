@@ -8,6 +8,7 @@ import {
 } from '@shared/types/api/schemas';
 import { type GameCreationResponse } from '@shared/types/api/responses';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('GamesAPI');
 

@@ -28,6 +28,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { Clock, GripVertical, X, ShoppingCart, Plus } from 'lucide-react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { Question } from '@shared/types/core/question'; // Use canonical shared type
 
 // Filter request interface

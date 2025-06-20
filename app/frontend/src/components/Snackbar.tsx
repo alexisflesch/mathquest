@@ -18,6 +18,7 @@
  */
 
 import React from "react";
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface SnackbarProps {
   open: boolean;

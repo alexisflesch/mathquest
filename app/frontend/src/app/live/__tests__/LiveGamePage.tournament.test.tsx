@@ -22,6 +22,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
 import '@testing-library/jest-dom';
 import { QUESTION_TYPES } from '@shared/types';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock dependencies
 jest.mock('next/navigation');

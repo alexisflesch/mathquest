@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { User, Camera } from 'lucide-react';
 import AvatarGrid from '../ui/AvatarGrid';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface ProfileFormProps {
     initialUsername: string;

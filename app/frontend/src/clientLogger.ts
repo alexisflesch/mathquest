@@ -9,6 +9,7 @@
  * 
  * Usage:
  *   import { createLogger } from './clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
  *   const logger = createLogger('ComponentName');
  *   logger.debug('Detailed info for debugging');
  *   logger.info('Normal operation information');

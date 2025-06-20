@@ -10,6 +10,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { Search } from 'lucide-react';
 import type { GameTemplate } from '@shared/types/core/game';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function UseQuizPage() {
     // Access guard: Require teacher access for quiz usage

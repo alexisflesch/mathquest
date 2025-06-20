@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BACKEND_API_BASE_URL } from '@/config/api';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Allow GET for authenticated users (both teachers and students)
 export async function GET(

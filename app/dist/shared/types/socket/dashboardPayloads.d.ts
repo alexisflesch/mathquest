@@ -7,11 +7,31 @@
 import type { GameTimerState } from '../core/timer';
 import type { Question } from '../core/question';
 /**
+ * Base interface for payloads that identify a game instance
+ * Provides either gameId (preferred) or accessCode (legacy) for game identification
+ */
+export interface GameIdentificationPayload {
+    /** Database ID of the game instance (preferred) */
+    gameId?: string;
+    /** Access code of the game (legacy support) */
+    accessCode?: string;
+}
+/**
  * Payload for joining teacher dashboard
  */
-export interface JoinDashboardPayload {
-    gameId?: string;
-    accessCode?: string;
+export interface JoinDashboardPayload extends GameIdentificationPayload {
+}
+/**
+ * Payload for starting a timer (semantically distinct from pausing)
+ */
+export interface StartTimerPayload extends GameIdentificationPayload {
+    /** Duration in seconds to set for the timer */
+    duration: number;
+}
+/**
+ * Payload for pausing a timer (semantically distinct from joining dashboard)
+ */
+export interface PauseTimerPayload extends GameIdentificationPayload {
 }
 /**
  * Consolidated SetQuestionPayload with consistent naming
@@ -88,6 +108,27 @@ export interface DashboardJoinedPayload {
  */
 export interface ConnectedCountPayload {
     count: number;
+}
+/**
+ * NEW: Teacher-triggered correct answers display
+ * For the trophy button functionality
+ */
+export interface ShowCorrectAnswersPayload {
+    gameId?: string;
+    accessCode?: string;
+    questionUid: string;
+    teacherId?: string;
+}
+/**
+ * NEW: Teacher-triggered projection stats toggle
+ * For the bar graph button functionality
+ */
+export interface ToggleProjectionStatsPayload {
+    gameId?: string;
+    accessCode?: string;
+    questionUid: string;
+    show: boolean;
+    teacherId?: string;
 }
 /**
  * Question data optimized for dashboard display (with teacher-only fields)

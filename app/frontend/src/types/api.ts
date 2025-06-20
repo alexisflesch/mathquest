@@ -280,6 +280,7 @@ export type MyTournamentsResponse = {
 
 // Additional frontend-specific schemas that aren't in shared
 import { questionSchema as QuestionSchema } from '@shared/types/quiz/question.zod';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export const PlayerCookieResponseSchema = z.object({
     user: z.object({

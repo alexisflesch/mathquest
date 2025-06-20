@@ -15,6 +15,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Available animal emojis for avatars
 function getAvatarList() {

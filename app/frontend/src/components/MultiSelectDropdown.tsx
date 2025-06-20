@@ -19,6 +19,7 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface MultiSelectDropdownProps {
     label?: string;

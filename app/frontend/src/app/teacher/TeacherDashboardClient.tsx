@@ -4,6 +4,7 @@ import QuizList from '@/components/QuizList';
 import QuestionSelector from '@/components/QuestionSelector';
 import { makeApiRequest } from '@/config/api';
 import { QuizListResponseSchema, QuizCreationResponseSchema, type QuizListResponse, type QuizCreationResponse } from '@/types/api';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function TeacherDashboard({ teacherId }: { teacherId: string }) {
     const [quizzes, setQuizzes] = useState<{ id: string; name: string }[]>([]);

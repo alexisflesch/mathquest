@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BookOpenCheck, CheckCircle, XCircle, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface AnswerFeedbackOverlayProps {
     explanation: string;

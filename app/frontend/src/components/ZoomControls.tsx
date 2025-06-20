@@ -1,5 +1,6 @@
 import React from 'react';
 import { ZoomIn, ZoomOut } from 'lucide-react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface ZoomControlsProps {
     zoomFactor: number;

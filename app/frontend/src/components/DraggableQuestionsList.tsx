@@ -24,6 +24,7 @@ import { Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import type { Question } from "@/types/api";
 import { SortableQuestion } from './SortableQuestion';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Create a logger for this component
 const logger = createLogger('DraggableQuestions');

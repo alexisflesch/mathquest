@@ -6,6 +6,7 @@
  */
 
 import { SOCKET_TIMING_CONFIG } from '@/config/gameConfig';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Backend API URL from environment variable with fallback for local dev
 export const API_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:3007';

@@ -20,6 +20,7 @@ import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
 import type { QuestionData } from '@shared/types/socketEvents';
 import { Chrono } from '@shared/types/quiz/state';
 import { QUESTION_TYPES } from '@shared/types';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // --- Define QuizState locally ---
 export interface QuizState { // Export if needed by other test files, or keep local

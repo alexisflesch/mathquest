@@ -23,6 +23,7 @@ jest.mock('../useUnifiedGameManager', () => ({
 }));
 
 import { useTeacherGameManager } from '../useUnifiedGameManager';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 describe('Timer Debug Tests', () => {
     let mockSocket: any;

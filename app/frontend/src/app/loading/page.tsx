@@ -2,6 +2,7 @@
 
 import React from 'react';
 import InfinitySpin from '@/components/InfinitySpin';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Loading screen component (copied from layout.tsx)
 function LoadingScreen() {

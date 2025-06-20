@@ -6,6 +6,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock the debug logger
 jest.mock('@/utils/timerDebugLogger', () => ({

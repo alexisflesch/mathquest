@@ -10,6 +10,8 @@ exports.getFullGameState = getFullGameState;
 exports.endCurrentQuestion = endCurrentQuestion;
 exports.calculateScores = calculateScores;
 exports.updateGameState = updateGameState;
+exports.getProjectionDisplayState = getProjectionDisplayState;
+exports.updateProjectionDisplayState = updateProjectionDisplayState;
 const redis_1 = require("@/config/redis");
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
@@ -21,6 +23,7 @@ const GAME_KEY_PREFIX = 'mathquest:game:';
 const GAME_PARTICIPANTS_PREFIX = 'mathquest:game:participants:';
 const GAME_ANSWERS_PREFIX = 'mathquest:game:answers:';
 const GAME_LEADERBOARD_PREFIX = 'mathquest:game:leaderboard:';
+const PROJECTION_DISPLAY_PREFIX = 'mathquest:projection:display:';
 /**
  * Get formatted leaderboard data for a game
  *
@@ -33,6 +36,14 @@ async function getFormattedLeaderboard(accessCode) {
         const participantsFromRedis = participantsHash
             ? Object.values(participantsHash).map(p => JSON.parse(p))
             : [];
+        // DEBUG: Log participants hash state
+        logger.info({
+            accessCode,
+            participantsHashKeys: participantsHash ? Object.keys(participantsHash) : null,
+            participantsHashCount: participantsHash ? Object.keys(participantsHash).length : 0,
+            participantsFromRedisCount: participantsFromRedis.length,
+            participantsFromRedis: participantsFromRedis.map(p => ({ userId: p.userId, username: p.username, avatarEmoji: p.avatarEmoji }))
+        }, '🔍 [DEBUG-LEADERBOARD] Participants hash state in getFormattedLeaderboard');
         const leaderboardRaw = await redis_1.redisClient.zrevrange(`${GAME_LEADERBOARD_PREFIX}${accessCode}`, 0, -1, 'WITHSCORES');
         // If Redis leaderboard is empty, try to get from database
         if (leaderboardRaw.length === 0) {
@@ -55,10 +66,23 @@ async function getFormattedLeaderboard(accessCode) {
             }
         }
         const leaderboardPromises = [];
+        // DEBUG: Log leaderboard raw state
+        logger.info({
+            accessCode,
+            leaderboardRawLength: leaderboardRaw.length,
+            leaderboardRaw: leaderboardRaw.slice(0, 10) // First 10 items (5 users)
+        }, '🔍 [DEBUG-LEADERBOARD] Raw leaderboard state in getFormattedLeaderboard');
         for (let i = 0; i < leaderboardRaw.length; i += 2) {
             const userId = leaderboardRaw[i];
             const score = parseInt(leaderboardRaw[i + 1], 10);
             let playerInfo = participantsFromRedis.find(p => p.userId === userId);
+            logger.debug({
+                accessCode,
+                userId,
+                score,
+                playerInfoFound: !!playerInfo,
+                playerInfo: playerInfo ? { username: playerInfo.username, avatarEmoji: playerInfo.avatarEmoji } : null
+            }, '🔍 [DEBUG-LEADERBOARD] Processing leaderboard entry');
             if (playerInfo) {
                 leaderboardPromises.push(Promise.resolve({
                     userId,
@@ -75,6 +99,13 @@ async function getFormattedLeaderboard(accessCode) {
                     where: { id: userId },
                     select: { username: true, avatarEmoji: true }
                 }).then(user => {
+                    logger.info({
+                        accessCode,
+                        userId,
+                        userFound: !!user,
+                        username: user?.username,
+                        avatarEmoji: user?.avatarEmoji
+                    }, '🔍 [DEBUG-LEADERBOARD] DB lookup result for missing participant');
                     if (user) {
                         return {
                             userId,
@@ -253,6 +284,14 @@ async function setCurrentQuestion(accessCode, questionIndex) {
         };
         // Initialize answer collection for this question
         await redis_1.redisClient.del(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionUid}`);
+        // Clear projection display state for new question
+        await updateProjectionDisplayState(accessCode, {
+            showStats: false,
+            currentStats: {},
+            statsQuestionUid: null,
+            showCorrectAnswers: false,
+            correctAnswersData: null
+        });
         // Update game state in Redis
         await redis_1.redisClient.set(`${GAME_KEY_PREFIX}${accessCode}`, JSON.stringify(gameState), 'EX', 86400 // 24 hours
         );
@@ -284,6 +323,13 @@ async function getFullGameState(accessCode) {
         const participants = participantsHash
             ? Object.values(participantsHash).map(p => JSON.parse(p))
             : [];
+        // DEBUG: Log participants state for getFullGameState
+        logger.info({
+            accessCode,
+            participantsHashKeys: participantsHash ? Object.keys(participantsHash) : null,
+            participantsCount: participants.length,
+            participants: participants.map(p => ({ userId: p.userId, username: p.username, avatarEmoji: p.avatarEmoji }))
+        }, '🔍 [DEBUG-FULLGAMESTATE] Participants loaded in getFullGameState');
         // Get answers for the current question
         const answers = {};
         if (gameState.currentQuestionIndex >= 0) {
@@ -300,15 +346,43 @@ async function getFullGameState(accessCode) {
         // Get leaderboard
         const leaderboardRaw = await redis_1.redisClient.zrevrange(`${GAME_LEADERBOARD_PREFIX}${accessCode}`, 0, -1, 'WITHSCORES');
         const leaderboard = [];
+        // DEBUG: Log leaderboard raw data before processing
+        logger.info({
+            accessCode,
+            leaderboardRawLength: leaderboardRaw.length,
+            leaderboardRaw: leaderboardRaw.slice(0, 10) // First 10 items (5 users)
+        }, '🔍 [DEBUG-FULLGAMESTATE] Raw leaderboard data in getFullGameState');
         for (let i = 0; i < leaderboardRaw.length; i += 2) {
             const userId = leaderboardRaw[i];
             const score = parseInt(leaderboardRaw[i + 1], 10);
             // Find player info from participants
             const player = participants.find(p => p.userId === userId);
+            logger.debug({
+                accessCode,
+                userId,
+                score,
+                playerFound: !!player,
+                playerInfo: player ? { username: player.username, avatarEmoji: player.avatarEmoji } : null
+            }, '🔍 [DEBUG-FULLGAMESTATE] Processing leaderboard entry in getFullGameState');
             if (player) {
                 leaderboard.push({
                     userId,
+                    username: player.username, // 🔧 FIXED: Add missing username field
                     avatarEmoji: player.avatarEmoji,
+                    score
+                });
+            }
+            else {
+                // Player not found in participants - this should not happen ideally
+                logger.warn({
+                    accessCode,
+                    userId,
+                    score
+                }, '⚠️ [FULLGAMESTATE] Player not found in participants for leaderboard entry');
+                leaderboard.push({
+                    userId,
+                    username: 'Unknown Player', // Fallback
+                    avatarEmoji: undefined,
                     score
                 });
             }
@@ -525,6 +599,61 @@ async function updateGameState(accessCode, gameState) {
         throw new Error(`Failed to update game state: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+/**
+ * Get projection display state for a game
+ *
+ * @param accessCode The game access code
+ * @returns The projection display state
+ */
+async function getProjectionDisplayState(accessCode) {
+    try {
+        const stateRaw = await redis_1.redisClient.get(`${PROJECTION_DISPLAY_PREFIX}${accessCode}`);
+        if (!stateRaw) {
+            // Return default state if none exists
+            return {
+                showStats: false,
+                currentStats: {},
+                statsQuestionUid: null,
+                showCorrectAnswers: false,
+                correctAnswersData: null
+            };
+        }
+        return JSON.parse(stateRaw);
+    }
+    catch (error) {
+        logger.error({ accessCode, error }, 'Error getting projection display state');
+        return null;
+    }
+}
+/**
+ * Update projection display state for a game
+ *
+ * @param accessCode The game access code
+ * @param state The projection display state to set
+ */
+async function updateProjectionDisplayState(accessCode, state) {
+    try {
+        // Get existing state or use defaults
+        const existing = await getProjectionDisplayState(accessCode) || {
+            showStats: false,
+            currentStats: {},
+            statsQuestionUid: null,
+            showCorrectAnswers: false,
+            correctAnswersData: null
+        };
+        // Merge with new state
+        const newState = {
+            ...existing,
+            ...state
+        };
+        await redis_1.redisClient.set(`${PROJECTION_DISPLAY_PREFIX}${accessCode}`, JSON.stringify(newState), 'EX', 86400 // 24 hours
+        );
+        logger.debug({ accessCode, newState }, 'Updated projection display state');
+    }
+    catch (error) {
+        logger.error({ accessCode, state, error }, 'Error updating projection display state');
+    }
+}
 exports.default = {
     initializeGameState,
     setCurrentQuestion,
@@ -532,5 +661,7 @@ exports.default = {
     endCurrentQuestion,
     calculateScores,
     updateGameState,
-    getFormattedLeaderboard // Add new function to default export
+    getFormattedLeaderboard,
+    getProjectionDisplayState,
+    updateProjectionDisplayState // Add new functions to default export
 };

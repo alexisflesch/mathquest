@@ -20,6 +20,7 @@ function getAnswersForDisplay(question: QuestionDisplayProps['question']) {
 }
 
 import type { Question } from '@shared/types/core/question';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Types (modernized to use shared question format)
 export interface QuestionDisplayProps {

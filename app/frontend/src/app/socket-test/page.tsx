@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_CONFIG } from '@/config';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * SocketTest - A simple component to test Socket.IO connections

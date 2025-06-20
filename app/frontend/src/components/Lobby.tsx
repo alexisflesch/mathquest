@@ -18,6 +18,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // TODO: Replace with real tournament lobby logic and props
 export default function Lobby({ players = [], code = '', onStart }: { players?: { username: string; avatar?: string }[]; code?: string; onStart?: () => void }) {

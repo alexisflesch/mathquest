@@ -7,8 +7,8 @@
  * Types are inferred from Zod schemas for runtime validation.
  */
 import type { PlayMode } from '../core/game';
-export type { LoginRequest, RegisterRequest, CreateGameRequest, GameJoinRequest, GameStatusUpdateRequest, CreateGameTemplateRequest, UpdateGameTemplateRequest, CreateQuestionRequest, UpdateQuestionRequest, UpdateUserRequest, CreateQuizTemplateRequest, UpdateQuizTemplateRequest, UpgradeAccountRequest, PasswordResetRequest, PasswordResetConfirmRequest, ProfileUpdateRequest, SetQuestionRequest } from './schemas';
-export { LoginRequestSchema, RegisterRequestSchema, CreateGameRequestSchema, GameJoinRequestSchema, GameStatusUpdateRequestSchema, CreateGameTemplateRequestSchema, UpdateGameTemplateRequestSchema, CreateQuestionRequestSchema, UpdateQuestionRequestSchema, UpdateUserRequestSchema, CreateQuizTemplateRequestSchema, UpdateQuizTemplateRequestSchema, UpgradeAccountRequestSchema, PasswordResetRequestSchema, PasswordResetConfirmRequestSchema, ProfileUpdateRequestSchema, SetQuestionRequestSchema } from './schemas';
+export type { LoginRequest, RegisterRequest, CreateGameRequest, GameJoinRequest, GameStatusUpdateRequest, CreateGameTemplateRequest, UpdateGameTemplateRequest, CreateQuestionRequest, UpdateQuestionRequest, UpdateUserRequest, CreateQuizTemplateRequest, UpdateQuizTemplateRequest, UpgradeAccountRequest, PasswordResetRequest, PasswordResetConfirmRequest, ProfileUpdateRequest, TeacherUpgradeRequest, SetQuestionRequest } from './schemas';
+export { LoginRequestSchema, RegisterRequestSchema, CreateGameRequestSchema, GameJoinRequestSchema, GameStatusUpdateRequestSchema, CreateGameTemplateRequestSchema, UpdateGameTemplateRequestSchema, CreateQuestionRequestSchema, UpdateQuestionRequestSchema, UpdateUserRequestSchema, CreateQuizTemplateRequestSchema, UpdateQuizTemplateRequestSchema, UpgradeAccountRequestSchema, PasswordResetRequestSchema, PasswordResetConfirmRequestSchema, ProfileUpdateRequestSchema, TeacherUpgradeRequestSchema, SetQuestionRequestSchema } from './schemas';
 export interface TeacherRegisterRequest {
     username: string;
     email?: string;

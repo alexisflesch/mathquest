@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import * as flubber from 'flubber';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /* ========== Réglages ========== */
 const SIZE = 200;      // px

@@ -15,6 +15,7 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { ChevronDown, AlertTriangle } from "lucide-react";
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface FilterOption {
     value: string;

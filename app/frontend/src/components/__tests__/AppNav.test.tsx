@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import AppNav from '../AppNav';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock useAuth to return a default unauthenticated state
 jest.mock('../AuthProvider', () => ({

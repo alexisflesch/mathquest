@@ -8,6 +8,7 @@
 "use client";
 import React, { useState } from 'react';
 import { Mail, Lock, User, Crown } from 'lucide-react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 interface GuestUpgradeFormProps {
     onSubmit: (data: { email: string; password: string }) => void;

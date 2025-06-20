@@ -10,6 +10,7 @@
 
 import { io, Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('SocketConnectionPool');
 
@@ -158,15 +159,15 @@ export class OptimizedSocket {
     private setupPerformanceMonitoring() {
         if (!this.config.enablePerformanceMonitoring) return;
 
-        this.socket.on('connect', () => {
+        this.socket.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info('Socket connected', { id: this.socket.id });
         });
 
-        this.socket.on('disconnect', (reason) => {
+        this.socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
             logger.warn('Socket disconnected', { reason, id: this.socket.id });
         });
 
-        this.socket.on('connect_error', (error) => {
+        this.socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {
             logger.error('Socket connection error', { error: error.message });
         });
     }
@@ -178,7 +179,7 @@ export class OptimizedSocket {
         let reconnectAttempts = 0;
         let reconnectDelay = this.config.reconnectDelay;
 
-        this.socket.on('disconnect', () => {
+        this.socket.on(SOCKET_EVENTS.DISCONNECT, () => {
             if (reconnectAttempts < this.config.reconnectAttempts) {
                 setTimeout(() => {
                     reconnectAttempts++;
@@ -195,7 +196,7 @@ export class OptimizedSocket {
             }
         });
 
-        this.socket.on('connect', () => {
+        this.socket.on(SOCKET_EVENTS.CONNECT, () => {
             // Reset reconnection state on successful connection
             reconnectAttempts = 0;
             reconnectDelay = this.config.reconnectDelay;

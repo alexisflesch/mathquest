@@ -23,11 +23,22 @@ const logger = (0, logger_1.default)('ProjectionLeaderboardBroadcast');
  * @param gameId - Game instance ID
  */
 async function broadcastLeaderboardToProjection(io, accessCode, gameId) {
+    logger.info({
+        accessCode,
+        gameId
+    }, '🎯 [PROJECTION-BROADCAST] Starting leaderboard broadcast to projection room');
     try {
         // Calculate current leaderboard including join-order bonuses
+        logger.debug({ accessCode }, '🔍 [PROJECTION-BROADCAST] Calculating leaderboard from Redis');
         const leaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
+        logger.info({
+            accessCode,
+            gameId,
+            leaderboardCount: leaderboard.length,
+            topPlayers: leaderboard.slice(0, 3).map(p => ({ username: p.username, score: p.score }))
+        }, '📊 [PROJECTION-BROADCAST] Leaderboard calculated');
         if (leaderboard.length === 0) {
-            logger.debug({ accessCode, gameId }, 'No participants yet, skipping leaderboard broadcast');
+            logger.warn({ accessCode, gameId }, '⚠️ [PROJECTION-BROADCAST] No participants yet, skipping leaderboard broadcast');
             return;
         }
         // Prepare leaderboard data for projection
@@ -36,23 +47,48 @@ async function broadcastLeaderboardToProjection(io, accessCode, gameId) {
             accessCode,
             timestamp: Date.now()
         };
-        // Broadcast to projection room
+        // Check if projection room has any sockets
         const projectionRoom = `projection_${gameId}`;
+        const projectionRoomSockets = io.sockets.adapter.rooms.get(projectionRoom);
+        const socketCount = projectionRoomSockets ? projectionRoomSockets.size : 0;
+        logger.info({
+            accessCode,
+            gameId,
+            projectionRoom,
+            socketCount,
+            socketIds: projectionRoomSockets ? Array.from(projectionRoomSockets) : []
+        }, '🎪 [PROJECTION-BROADCAST] Projection room status');
+        if (socketCount === 0) {
+            logger.warn({
+                accessCode,
+                gameId,
+                projectionRoom
+            }, '⚠️ [PROJECTION-BROADCAST] No sockets in projection room - broadcast will have no recipients');
+        }
+        // Broadcast to projection room
+        logger.debug({
+            eventName: events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE,
+            projectionRoom,
+            payloadSize: JSON.stringify(projectionLeaderboardPayload).length
+        }, '📡 [PROJECTION-BROADCAST] Emitting leaderboard update event');
         io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, projectionLeaderboardPayload);
         logger.info({
             accessCode,
             gameId,
             projectionRoom,
             leaderboardCount: leaderboard.length,
-            topPlayers: leaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
-        }, 'Broadcasted leaderboard update to projection room');
+            topPlayers: leaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score })),
+            recipientSockets: socketCount,
+            eventEmitted: events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE
+        }, '✅ [PROJECTION-BROADCAST] Successfully broadcasted leaderboard update to projection room');
     }
     catch (error) {
         logger.error({
-            error,
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
             accessCode,
             gameId
-        }, 'Error broadcasting leaderboard to projection room');
+        }, '❌ [PROJECTION-BROADCAST] Error broadcasting leaderboard to projection room');
     }
 }
 /**

@@ -33,6 +33,7 @@ import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Create a logger for this component
 const logger = createLogger('LiveGamePage');

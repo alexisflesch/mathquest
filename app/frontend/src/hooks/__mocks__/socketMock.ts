@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io-client';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export function createMockSocket(): jest.Mocked<Socket> {
     return {

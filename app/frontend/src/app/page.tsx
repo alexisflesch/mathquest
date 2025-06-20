@@ -26,6 +26,7 @@ import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
 import InfinitySpin from '@/components/InfinitySpin';
 import { useEffect } from 'react';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function Home() {
   const { isStudent, isTeacher, isLoading, refreshAuth, canJoinGame } = useAuth();

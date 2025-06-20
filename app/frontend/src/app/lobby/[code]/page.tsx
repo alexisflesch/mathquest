@@ -281,7 +281,7 @@ export default function LobbyPage() {
         socketRef.current = socket;
 
         // Add connection success logging
-        socket.on('connect', () => {
+        socket.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info(`Socket connected successfully! Socket ID: ${socket.id}`);
         });
 

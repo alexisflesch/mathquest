@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Snackbar from '@/components/Snackbar';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import InfinitySpin from '@/components/InfinitySpin';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Interface for game template from backend
 interface GameTemplate {

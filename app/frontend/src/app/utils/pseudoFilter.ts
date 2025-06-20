@@ -2,6 +2,7 @@ import Filter from 'bad-words-next';
 import fs from 'fs';
 import path from 'path';
 import frenchBadwordsList from 'french-badwords-list';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Charger zacangerWords
 const zacangerWords = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'dictionaries', 'words.json'), 'utf-8'));

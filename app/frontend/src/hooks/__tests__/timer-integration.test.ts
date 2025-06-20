@@ -13,6 +13,7 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock dependencies
 jest.mock('@/clientLogger', () => ({

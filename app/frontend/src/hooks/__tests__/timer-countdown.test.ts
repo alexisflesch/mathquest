@@ -9,6 +9,7 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useTeacherQuizSocket } from '../useTeacherQuizSocket';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Enable fake timers for precise timer testing
 jest.useFakeTimers();

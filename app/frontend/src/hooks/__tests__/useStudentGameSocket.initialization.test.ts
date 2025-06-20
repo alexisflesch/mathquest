@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { useStudentGameSocket } from '../useStudentGameSocket';
 import { SOCKET_CONFIG } from '@/config';
 import { createSocketConfig } from '@/utils';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Mock socket.io-client
 jest.mock('socket.io-client');

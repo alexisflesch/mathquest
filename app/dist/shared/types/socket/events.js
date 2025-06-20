@@ -23,6 +23,9 @@ exports.TEACHER_EVENTS = {
     // Game control
     LOCK_ANSWERS: 'lock_answers',
     END_GAME: 'end_game',
+    // NEW: Teacher-triggered question actions
+    SHOW_CORRECT_ANSWERS: 'show_correct_answers', // Trophy button: Close question and show answers
+    TOGGLE_PROJECTION_STATS: 'toggle_projection_stats', // Bar graph button: Toggle stats on projection
     // Broadcast events (from server to client)
     GAME_CONTROL_STATE: 'game_control_state',
     DASHBOARD_JOINED: 'dashboard_joined',
@@ -93,7 +96,12 @@ exports.PROJECTOR_EVENTS = {
     PROJECTION_QUESTION_CHANGED: 'projection_question_changed',
     PROJECTION_TIMER_UPDATED: 'projection_timer_updated',
     PROJECTION_CONNECTED_COUNT: 'projection_connected_count',
-    PROJECTION_STATE: 'projection_state'
+    PROJECTION_STATE: 'projection_state',
+    PROJECTION_LEADERBOARD_UPDATE: 'projection_leaderboard_update', // For real-time leaderboard updates on projection display
+    // NEW: Projection content display controls
+    PROJECTION_SHOW_STATS: 'projection_show_stats', // Show answer statistics
+    PROJECTION_HIDE_STATS: 'projection_hide_stats', // Hide answer statistics
+    PROJECTION_CORRECT_ANSWERS: 'projection_correct_answers' // Display correct answers (from teacher trophy button)
 };
 // ===== Student/Game Events =====
 exports.GAME_EVENTS = {
@@ -112,6 +120,7 @@ exports.GAME_EVENTS = {
     GAME_ENDED: 'game_ended',
     GAME_ERROR: 'game_error',
     GAME_ANSWERS_LOCK_CHANGED: 'game_answers_lock_changed',
+    LEADERBOARD_UPDATE: 'leaderboard_update', // For broadcasting leaderboard changes
     // Timer events
     GAME_TIMER_UPDATED: 'game_timer_updated', // Primary backend timer event
     TIMER_UPDATE: 'timer_update',

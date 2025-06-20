@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export async function GET(request: NextRequest) {
     // Get all cookies from the request

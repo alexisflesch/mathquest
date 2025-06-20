@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { SimpleTimerTest } from '@/components/SimpleTimerTest';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function SimpleTimerDebugPage() {
     const [gameId, setGameId] = useState<string>('test-game-id');

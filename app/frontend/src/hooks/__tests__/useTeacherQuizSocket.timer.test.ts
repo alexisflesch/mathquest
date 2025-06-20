@@ -19,6 +19,7 @@ import { useTeacherQuizSocket, QuizState as HookQuizState } from '../useTeacherQ
 import { QuestionData } from '@shared/types/socketEvents';
 import { QUESTION_TYPES } from '@shared/types';
 import { useTeacherGameManager } from '../useUnifiedGameManager';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 
 // --- Mocks ---

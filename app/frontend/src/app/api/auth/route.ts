@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BACKEND_API_BASE_URL } from '@/config/api';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Next.js API route that proxies authentication requests to the backend

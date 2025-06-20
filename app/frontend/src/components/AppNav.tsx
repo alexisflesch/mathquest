@@ -43,6 +43,7 @@ import {
     User,
 } from 'lucide-react';
 import { motion, useAnimation } from 'framer-motion';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
     sidebarCollapsed: boolean,

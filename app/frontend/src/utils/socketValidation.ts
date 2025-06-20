@@ -7,6 +7,7 @@
 
 import { z } from 'zod';
 import { createLogger } from '@/clientLogger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Import existing Zod schemas from shared types
 import {
