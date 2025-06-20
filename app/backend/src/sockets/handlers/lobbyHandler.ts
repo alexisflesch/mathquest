@@ -7,7 +7,12 @@ import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
 import { assignJoinOrderBonus } from '@/utils/joinOrderBonus';
 import { broadcastLeaderboardToProjection } from '@/utils/projectionLeaderboardBroadcast';
 import { LOBBY_EVENTS } from '@shared/types/socket/events';
-import type { ErrorPayload } from '@shared/types/socketEvents';
+import type {
+    ErrorPayload,
+    JoinLobbyPayload,
+    LeaveLobbyPayload,
+    GetParticipantsPayload
+} from '@shared/types/socketEvents';
 import {
     joinLobbyPayloadSchema,
     leaveLobbyPayloadSchema,
@@ -111,7 +116,7 @@ function stopGameStatusCheck(accessCode: string): void {
  */
 export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void {
     // Join a game lobby
-    socket.on(LOBBY_EVENTS.JOIN_LOBBY, async (payload: any) => {
+    socket.on(LOBBY_EVENTS.JOIN_LOBBY, async (payload: JoinLobbyPayload) => {
         // Runtime validation with Zod
         const parseResult = joinLobbyPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -404,7 +409,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
     });
 
     // Leave a game lobby
-    socket.on(LOBBY_EVENTS.LEAVE_LOBBY, async (payload: any) => {
+    socket.on(LOBBY_EVENTS.LEAVE_LOBBY, async (payload: LeaveLobbyPayload) => {
         // Runtime validation with Zod
         const parseResult = leaveLobbyPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -495,7 +500,7 @@ export function registerLobbyHandlers(io: SocketIOServer, socket: Socket): void 
     });
 
     // Request current participants list
-    socket.on(LOBBY_EVENTS.GET_PARTICIPANTS, async (payload: any) => {
+    socket.on(LOBBY_EVENTS.GET_PARTICIPANTS, async (payload: GetParticipantsPayload) => {
         // Runtime validation with Zod
         const parseResult = getParticipantsPayloadSchema.safeParse(payload);
         if (!parseResult.success) {

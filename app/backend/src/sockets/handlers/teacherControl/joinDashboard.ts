@@ -15,7 +15,7 @@ import * as gameStateService from '@/core/gameStateService';
 const logger = createLogger('JoinDashboardHandler');
 
 export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
-    return async (payload: any, callback?: (data: any) => void) => {
+    return async (payload: JoinDashboardPayload, callback?: (data: any) => void) => {
         // Runtime validation with Zod
         const parseResult = joinDashboardPayloadSchema.safeParse(payload);
         if (!parseResult.success) {

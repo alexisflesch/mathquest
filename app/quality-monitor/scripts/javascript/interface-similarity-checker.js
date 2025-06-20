@@ -31,16 +31,30 @@ class InterfaceSimilarityChecker {
         this.projectRoot = path.resolve(rootPath);
         console.log(`🔍 Project root: ${this.projectRoot}`);
 
-        const tsConfigPath = path.join(this.projectRoot, 'tsconfig.json');
-        console.log(`📋 Looking for tsconfig at: ${tsConfigPath}`);
-
-        if (!fs.existsSync(tsConfigPath)) {
-            throw new Error(`TypeScript config not found at: ${tsConfigPath}`);
-        }
+        // Try to load project without tsconfig due to syntax errors in project configs
+        console.log(`📋 Creating TypeScript project...`);
 
         this.project = new Project({
-            tsConfigFilePath: tsConfigPath,
+            compilerOptions: {
+                target: 'ES2020',
+                module: 'commonjs',
+                strict: true,
+                esModuleInterop: true,
+                skipLibCheck: true,
+                forceConsistentCasingInFileNames: true
+            }
         });
+
+        // Manually add source files from key directories
+        const dirsToAdd = ['shared', 'backend/src', 'frontend/src'];
+        for (const dir of dirsToAdd) {
+            const dirPath = path.join(this.projectRoot, dir);
+            if (fs.existsSync(dirPath)) {
+                console.log(`📂 Adding files from: ${dir}`);
+                this.project.addSourceFilesAtPaths(`${dirPath}/**/*.ts`);
+                this.project.addSourceFilesAtPaths(`${dirPath}/**/*.tsx`);
+            }
+        }
 
         this.sharedTypes = new Map();
         this.localInterfaces = new Map();
@@ -269,12 +283,19 @@ class InterfaceSimilarityChecker {
     extractProperties(interface_) {
         const properties = new Map();
 
-        for (const prop of interface_.getProperties()) {
-            properties.set(prop.getName(), {
-                name: prop.getName(),
-                type: prop.getTypeNodeOrThrow().getText(),
-                optional: prop.hasQuestionToken()
-            });
+        try {
+            for (const prop of interface_.getProperties()) {
+                const name = prop.getName();
+                if (name) {
+                    properties.set(name, {
+                        name: name,
+                        type: prop.getTypeNodeOrThrow().getText(),
+                        optional: prop.hasQuestionToken()
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn(`⚠️  Could not extract properties from interface ${interface_.getName()}: ${e.message}`);
         }
 
         return properties;
@@ -287,15 +308,29 @@ class InterfaceSimilarityChecker {
         const properties = new Map();
         const typeNode = typeAlias.getTypeNode();
 
-        if (typeNode && typeNode.getKind() === 185) { // TypeLiteral
-            for (const prop of typeNode.getProperties()) {
-                if (prop.getKind() === 165) { // PropertySignature
-                    properties.set(prop.getName(), {
-                        name: prop.getName(),
-                        type: prop.getTypeNode()?.getText() || 'unknown',
-                        optional: prop.hasQuestionToken()
-                    });
+        if (!typeNode) return properties;
+
+        // Check if it's a TypeLiteral (object type)
+        if (typeNode.getKind() === 185) { // TypeLiteral
+            try {
+                const props = typeNode.getProperties();
+                if (props && typeof props[Symbol.iterator] === 'function') {
+                    for (const prop of props) {
+                        if (prop.getKind() === 165) { // PropertySignature
+                            const name = prop.getName();
+                            if (name) {
+                                properties.set(name, {
+                                    name: name,
+                                    type: prop.getTypeNode()?.getText() || 'unknown',
+                                    optional: prop.hasQuestionToken()
+                                });
+                            }
+                        }
+                    }
                 }
+            } catch (e) {
+                // If getProperties fails, try alternative approach
+                console.warn(`⚠️  Could not extract properties from type alias ${typeAlias.getName()}: ${e.message}`);
             }
         }
 

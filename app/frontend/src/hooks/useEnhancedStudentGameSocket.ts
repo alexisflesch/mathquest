@@ -240,7 +240,7 @@ export function useEnhancedStudentGameSocket({
     const setupStandardEventHandlers = (socket: Socket) => {
         logger.warn('Using standard event handlers without validation');
 
-        socket.on('game_joined', (payload: GameJoinedPayload) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_JOINED, (payload: GameJoinedPayload) => {
             logger.info('Standard game_joined event', payload);
             setGameState(prev => ({
                 ...prev,
@@ -249,7 +249,7 @@ export function useEnhancedStudentGameSocket({
             }));
         });
 
-        socket.on('game_question', (payload: QuestionData) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_QUESTION, (payload: QuestionData) => {
             logger.info('Standard game_question event', payload);
             setGameState(prev => ({
                 ...prev,
@@ -261,7 +261,7 @@ export function useEnhancedStudentGameSocket({
             }));
         });
 
-        socket.on('game_error', (payload: ErrorPayload) => {
+        socket.on(SOCKET_EVENTS.GAME.GAME_ERROR, (payload: ErrorPayload) => {
             logger.error('Standard game_error event', payload);
             setError(payload.message || 'Unknown game error');
         });
@@ -284,10 +284,10 @@ export function useEnhancedStudentGameSocket({
 
         if (validationMiddleware) {
             // Use validated emit
-            validationMiddleware.emit('join_game', payload, SocketSchemas.joinGame);
+            validationMiddleware.emit(SOCKET_EVENTS.GAME.JOIN_GAME, payload, SocketSchemas.joinGame);
         } else {
             // Standard emit
-            socket.emit('join_game', payload);
+            socket.emit(SOCKET_EVENTS.GAME.JOIN_GAME, payload);
         }
 
         logger.info(`Enhanced joining game ${accessCode}`, { userId, username, isDiffered });
@@ -309,10 +309,10 @@ export function useEnhancedStudentGameSocket({
 
         if (validationMiddleware) {
             // Use validated emit
-            validationMiddleware.emit('game_answer', payload, SocketSchemas.gameAnswer);
+            validationMiddleware.emit(SOCKET_EVENTS.GAME.GAME_ANSWER, payload, SocketSchemas.gameAnswer);
         } else {
             // Standard emit
-            socket.emit('game_answer', payload);
+            socket.emit(SOCKET_EVENTS.GAME.GAME_ANSWER, payload);
         }
 
         setGameState(prev => ({ ...prev, answered: true }));

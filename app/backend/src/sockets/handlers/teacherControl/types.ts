@@ -8,6 +8,8 @@ import type {
 // Import consolidated dashboard payload types
 import type {
     JoinDashboardPayload,
+    PauseTimerPayload,
+    StartTimerPayload,
     SetQuestionPayload,
     LockAnswersPayload,
     EndGamePayload,
@@ -24,6 +26,8 @@ import type {
 // Re-export for local use
 export type {
     JoinDashboardPayload,
+    PauseTimerPayload,
+    StartTimerPayload,
     SetQuestionPayload,
     LockAnswersPayload,
     EndGamePayload,
@@ -41,17 +45,6 @@ export type {
 export type TimerActionPayload = CoreTimerActionPayload & {
     gameId: string;      // Database ID of the game instance (required for teacher control)
 };
-
-export interface StartTimerPayload {
-    gameId?: string;     // Database ID of the game instance
-    accessCode?: string; // Access code (legacy support)
-    duration: number;    // Duration in milliseconds
-}
-
-export interface PauseTimerPayload {
-    gameId?: string;     // Database ID of the game instance
-    accessCode?: string; // Access code (legacy support)
-}
 
 // Use core timer state instead of local definition
 export type TimerState = GameTimerState;

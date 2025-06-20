@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { createSocketConfig } from '@/utils';
 
 // Import shared types - organized by module

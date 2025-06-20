@@ -83,7 +83,9 @@ export * from './dashboardPayloads';
 
 // Re-export for backward compatibility
 export type {
+    GameIdentificationPayload,
     JoinDashboardPayload,
+    PauseTimerPayload,
     SetQuestionPayload as DashboardSetQuestionPayload,
     LockAnswersPayload,
     EndGamePayload,

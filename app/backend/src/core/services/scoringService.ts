@@ -9,6 +9,7 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { redisClient } from '@/config/redis';
 import { TimingService } from '@/services/timingService';
+import type { AnswerSubmissionPayload } from '@shared/types';
 
 const logger = createLogger('ScoringService');
 
@@ -25,14 +26,6 @@ export interface ScoreResult {
     previousAnswer?: any;
     /** Feedback message */
     message: string;
-}
-
-export interface AnswerData {
-    questionUid: string;
-    answer: any;
-    timeSpent: number;
-    accessCode: string;
-    userId: string;
 }
 
 /**
@@ -101,7 +94,7 @@ export function checkAnswerCorrectness(question: any, answer: any): boolean {
 export async function submitAnswerWithScoring(
     gameInstanceId: string,
     userId: string,
-    answerData: AnswerData
+    answerData: AnswerSubmissionPayload
 ): Promise<ScoreResult> {
     try {
         // Find the participant

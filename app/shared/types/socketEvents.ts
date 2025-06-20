@@ -106,6 +106,74 @@ export interface QuestionData {
     explanation?: string; // Question explanation
 }
 
+// ===== Lobby Event Payloads =====
+
+/**
+ * Payload for joining a game lobby
+ */
+export interface JoinLobbyPayload {
+    accessCode: string;
+    userId: string;
+    username: string;
+    avatarEmoji?: string;
+}
+
+/**
+ * Payload for leaving a game lobby
+ */
+export interface LeaveLobbyPayload {
+    accessCode: string;
+    userId?: string;
+}
+
+/**
+ * Payload for requesting participants list
+ */
+export interface GetParticipantsPayload {
+    accessCode: string;
+}
+
+// ===== Projector Event Payloads =====
+
+/**
+ * Payload for joining a projection session
+ */
+export interface JoinProjectorPayload {
+    gameId: string;
+}
+
+/**
+ * Payload for leaving a projection session
+ */
+export interface LeaveProjectorPayload {
+    gameId: string;
+}
+
+// ===== Shared Live Handler Payloads =====
+
+/**
+ * Shared payload for joining live games (both quiz and tournament modes)
+ */
+export interface SharedJoinPayload {
+    accessCode: string;
+    userId: string;
+    username: string;
+    avatarEmoji?: string;
+    playMode?: 'quiz' | 'tournament' | 'practice';
+}
+
+/**
+ * Shared payload for answering questions in live games
+ */
+export interface SharedAnswerPayload {
+    accessCode: string;
+    userId: string;
+    questionUid: string;
+    answer: string | number | string[] | number[];
+    timeSpent: number;
+    playMode?: 'quiz' | 'tournament' | 'practice';
+}
+
 // --- Core Socket.IO Event Definitions ---
 
 // Events emitted by the client and listened to by the server

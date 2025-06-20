@@ -20,10 +20,16 @@ import {
     requestParticipantsPayloadSchema
 } from '@shared/types/socketEvents.zod';
 
+import type {
+    ErrorPayload,
+    SharedJoinPayload,
+    SharedAnswerPayload
+} from '@shared/types/socketEvents';
+
 const logger = createLogger('SharedLiveHandler');
 
 export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
-    const joinHandler = async (payload: any) => {
+    const joinHandler = async (payload: SharedJoinPayload) => {
         // Runtime validation with Zod
         const parseResult = sharedJoinPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -266,7 +272,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         logger.info({ accessCode, userId, playMode }, 'Participant joined live room via sharedLiveHandler');
     };
 
-    const answerHandler = async (payload: any) => {
+    const answerHandler = async (payload: SharedAnswerPayload) => {
         // Runtime validation with Zod
         const parseResult = sharedAnswerPayloadSchema.safeParse(payload);
         if (!parseResult.success) {

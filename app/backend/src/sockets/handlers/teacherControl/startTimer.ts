@@ -7,11 +7,13 @@ import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import { startTimerPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 
+import { StartTimerPayload } from './types';
+
 // Create a handler-specific logger
 const logger = createLogger('StartTimerHandler');
 
 export function startTimerHandler(io: SocketIOServer, socket: Socket) {
-    return async (payload: any, callback?: (data: any) => void) => {
+    return async (payload: StartTimerPayload, callback?: (data: any) => void) => {
         // Runtime validation with Zod
         const parseResult = startTimerPayloadSchema.safeParse(payload);
         if (!parseResult.success) {

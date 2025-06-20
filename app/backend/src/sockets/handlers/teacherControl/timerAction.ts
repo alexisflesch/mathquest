@@ -107,7 +107,7 @@ function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, 
 }
 
 export function timerActionHandler(io: SocketIOServer, socket: Socket) {
-    return async (payload: any) => {
+    return async (payload: TimerActionPayload) => {
         // Runtime validation with Zod
         const parseResult = timerActionPayloadSchema.safeParse(payload);
         if (!parseResult.success) {

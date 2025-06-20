@@ -15,8 +15,10 @@
     "deps-analyze": "node scripts/javascript/dependency-graph.js",
     "ts-analyze": "node scripts/javascript/typescript-analyzer.js",
     "interface-check": "node scripts/javascript/interface-similarity-checker.js",
+    "socket-check": "node scripts/javascript/socket-payload-validator.js",
     "nav-analyze": "node scripts/javascript/navigation-graph-analyzer.js",
-    "semantic-check": "npm run interface-check && npm run nav-analyze"
+    "semantic-check": "npm run interface-check && npm run nav-analyze",
+    "validation-check": "npm run socket-check && npm run interface-check"
   },
   "keywords": [
     "code-quality",

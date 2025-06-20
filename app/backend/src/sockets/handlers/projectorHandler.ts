@@ -4,7 +4,7 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { PROJECTOR_EVENTS, GAME_EVENTS } from '@shared/types/socket/events';
 import { joinProjectorPayloadSchema, leaveProjectorPayloadSchema } from '@shared/types/socketEvents.zod';
-import type { ErrorPayload } from '@shared/types/socketEvents';
+import type { ErrorPayload, JoinProjectorPayload, LeaveProjectorPayload } from '@shared/types/socketEvents';
 
 const logger = createLogger('ProjectorHandler');
 
@@ -17,7 +17,7 @@ export function projectorHandler(io: Server, socket: Socket) {
      * Join projector room for a specific gameId
      * @param gameId - The database ID of the GameInstance
      */
-    socket.on(PROJECTOR_EVENTS.JOIN_PROJECTION, async (payload: any) => {
+    socket.on(PROJECTOR_EVENTS.JOIN_PROJECTION, async (payload: JoinProjectorPayload) => {
         // Runtime validation with Zod
         const parseResult = joinProjectorPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -69,7 +69,7 @@ export function projectorHandler(io: Server, socket: Socket) {
     /**
      * Leave projector room
      */
-    socket.on(PROJECTOR_EVENTS.LEAVE_PROJECTION, (payload: any) => {
+    socket.on(PROJECTOR_EVENTS.LEAVE_PROJECTION, (payload: LeaveProjectorPayload) => {
         // Runtime validation with Zod
         const parseResult = leaveProjectorPayloadSchema.safeParse(payload);
         if (!parseResult.success) {

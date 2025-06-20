@@ -2,15 +2,17 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import gameStateService from '@/core/gameStateService';
 import createLogger from '@/utils/logger';
-import { SOCKET_EVENTS, TEACHER_EVENTS  } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import { endGamePayloadSchema } from '@shared/types/socketEvents.zod';
+
+import { EndGamePayload } from './types';
 
 // Create a handler-specific logger
 const logger = createLogger('EndGameHandler');
 
 export function endGameHandler(io: SocketIOServer, socket: Socket) {
-    return async (payload: any, callback?: (data: any) => void) => {
+    return async (payload: EndGamePayload, callback?: (data: any) => void) => {
         // Runtime validation with Zod
         const parseResult = endGamePayloadSchema.safeParse(payload);
         if (!parseResult.success) {

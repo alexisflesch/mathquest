@@ -457,10 +457,6 @@ export interface ProjectorJoinedRoomPayload {
     socketId: string;
 }
 
-export interface ProjectorConnectedCountPayload {
-    count: number;
-}
-
 export interface ProjectorTimerUpdatePayload {
     timer?: {
         startedAt: number;
@@ -505,7 +501,7 @@ export function isProjectorJoinedRoomPayload(data: unknown): data is ProjectorJo
     );
 }
 
-export function isProjectorConnectedCountPayload(data: unknown): data is ProjectorConnectedCountPayload {
+export function isProjectorConnectedCountPayload(data: unknown): data is ConnectedCountPayload {
     if (!data || typeof data !== 'object') return false;
 
     const p = data as Record<string, unknown>;
