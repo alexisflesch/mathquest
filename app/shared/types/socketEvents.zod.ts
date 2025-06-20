@@ -184,6 +184,48 @@ export const requestNextQuestionPayloadSchema = z.object({
   currentQuestionUid: z.string().min(1, { message: "Current question UID cannot be empty." }),
 });
 
+// Canonical event payload schemas (for tournament-style events)
+export const correctAnswersPayloadSchema = z.object({
+  questionUid: z.string().min(1, { message: "Question UID cannot be empty." }),
+  correctAnswers: z.array(z.boolean()).optional(),
+});
+
+export const feedbackPayloadSchema = z.object({
+  questionUid: z.string().min(1, { message: "Question UID cannot be empty." }),
+  feedbackRemaining: z.number().int().nonnegative({ message: "Feedback remaining must be non-negative." }),
+}).catchall(z.any()); // Allow additional properties for flexibility
+
+// Game state update payload schema
+export const gameStateUpdatePayloadSchema = z.object({
+  status: z.enum(['waiting', 'active', 'paused', 'finished']).optional(),
+  currentQuestion: questionDataSchema.optional(),
+  questionIndex: z.number().int().nonnegative().optional(),
+  totalQuestions: z.number().int().positive().optional(),
+  timer: z.number().int().nonnegative().optional(),
+  participants: z.array(participantDataSchema).optional(),
+}).catchall(z.any()); // Allow additional properties for flexibility
+
+// Answer received payload schema
+export const answerReceivedPayloadSchema = z.object({
+  questionUid: z.string().min(1, { message: "Question UID cannot be empty." }),
+  timeSpent: z.number().int().nonnegative({ message: "Time spent must be a non-negative integer." }),
+  correct: z.boolean().optional(),
+  correctAnswers: z.array(z.boolean()).optional(),
+  explanation: z.string().optional(),
+});
+
+// Answer feedback payload schema
+export const answerFeedbackPayloadSchema = z.object({
+  status: z.enum(['ok', 'error'], { message: "Status must be 'ok' or 'error'." }),
+  questionUid: z.string().min(1, { message: "Question UID cannot be empty." }).optional(),
+  scoreAwarded: z.number().int().nonnegative({ message: "Score awarded must be a non-negative integer." }).optional(),
+  code: z.string().optional(),
+  message: z.string().optional(),
+  isCorrect: z.boolean().optional(),
+  correctAnswers: z.array(z.boolean()).optional(),
+  explanation: z.string().optional(),
+}).catchall(z.any()); // Allow additional properties for flexibility
+
 export const serverToClientEventsSchema = z.object({
   connect: z.function().args().returns(z.void()),
   disconnect: z.function().args(z.string()).returns(z.void()),
@@ -199,15 +241,7 @@ export const serverToClientEventsSchema = z.object({
     .returns(z.void()),
   game_joined: z.function().args(gameJoinedPayloadSchema).returns(z.void()),
   game_question: z.function().args(questionDataSchema).returns(z.void()),
-  answer_received: z
-    .function()
-    .args(
-      z.object({
-        questionUid: z.string().min(1),
-        timeSpent: z.number().int().nonnegative(),
-      }),
-    )
-    .returns(z.void()),
+  answer_received: z.function().args(answerReceivedPayloadSchema).returns(z.void()),
   leaderboard_update: z
     .function()
     .args(
@@ -237,7 +271,7 @@ export const serverToClientEventsSchema = z.object({
       }),
     )
     .returns(z.void()),
-  game_state_update: z.function().args(z.any()).returns(z.void()),
+  game_state_update: z.function().args(gameStateUpdatePayloadSchema).returns(z.void()),
   timer_update: z
     .function()
     .args(
@@ -323,6 +357,9 @@ export const serverToClientEventsSchema = z.object({
   timer_action: z.function().args(timerActionPayloadSchema).returns(z.void()),
   lock_answers: z.function().args(lockAnswersPayloadSchema).returns(z.void()),
   end_game: z.function().args(endGamePayloadSchema).returns(z.void()),
+  // Canonical tournament/practice events
+  correct_answers: z.function().args(correctAnswersPayloadSchema).returns(z.void()),
+  feedback: z.function().args(feedbackPayloadSchema).returns(z.void()),
 });
 
 // Additional teacher control schemas
@@ -403,4 +440,50 @@ export const sharedAnswerPayloadSchema = z.object({
   ]),
   timeSpent: z.number().int({ message: "Time spent must be an integer." }).nonnegative({ message: "Time spent cannot be negative." }),
   playMode: z.enum(['quiz', 'tournament', 'practice']).optional(),
+});
+
+// Dashboard payload schemas
+export const connectedCountPayloadSchema = z.object({
+  count: z.number().int().nonnegative({ message: "Count must be a non-negative integer." }),
+});
+
+// Test-specific schemas for unit tests
+export const joinRoomPayloadSchema = z.object({
+  roomName: z.string().min(1, { message: "Room name cannot be empty." }),
+});
+
+export const testConnectionPayloadSchema = z.object({
+  // No payload for connection event, but we can validate the socket metadata
+});
+
+// Game ended payload schema
+export const gameEndedPayloadSchema = z.object({
+  accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
+  endedAt: z.string().datetime({ message: "Invalid datetime string for endedAt. Must be an ISO string." }).optional(),
+  score: z.number().int().nonnegative({ message: "Score must be a non-negative integer." }).optional(),
+  totalQuestions: z.number().int().nonnegative({ message: "Total questions must be a non-negative integer." }).optional(),
+  correct: z.number().int().nonnegative({ message: "Correct answers count must be a non-negative integer." }).optional(),
+  total: z.number().int().nonnegative({ message: "Total answers count must be a non-negative integer." }).optional(),
+});
+
+// Connection established payload schema
+export const connectionEstablishedPayloadSchema = z.object({
+  socketId: z.string().min(1, { message: "Socket ID cannot be empty." }),
+  timestamp: z.string().datetime({ message: "Invalid datetime string for timestamp. Must be an ISO string." }),
+  user: z.object({
+    userId: z.string().optional(),
+    username: z.string().optional(),
+    role: z.enum(['player', 'teacher', 'admin', 'projector']).optional(),
+    accessCode: z.string().optional(),
+    currentGameRoom: z.string().optional(),
+    practiceSessionId: z.string().optional(),
+    practiceUserId: z.string().optional(),
+  }).partial(),
+});
+
+// Timer update payload schema
+export const timerUpdatePayloadSchema = z.object({
+  timeLeftMs: z.number().int().nonnegative().nullable(),
+  running: z.boolean(),
+  durationMs: z.number().int().positive().optional(),
 });

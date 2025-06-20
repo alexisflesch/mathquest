@@ -37,6 +37,12 @@ exports.TEACHER_EVENTS = {
     DASHBOARD_ANSWERS_LOCK_CHANGED: 'dashboard_answers_lock_changed',
     DASHBOARD_GAME_STATUS_CHANGED: 'dashboard_game_status_changed',
     DASHBOARD_ANSWER_STATS_UPDATE: 'dashboard_answer_stats_update',
+    // Additional dashboard events
+    STATS_UPDATE: 'stats_update',
+    ANSWERS_LOCKED: 'answers_locked',
+    ANSWER_STATS_UPDATE: 'answer_stats_update',
+    // Teacher control responses
+    TIMER_UPDATE_RESPONSE: 'timer_update_response',
     // Error handling
     ERROR_DASHBOARD: 'error_dashboard'
 };
@@ -81,6 +87,7 @@ exports.LOBBY_EVENTS = {
     PARTICIPANT_LEFT: 'participant_left',
     PARTICIPANTS_LIST: 'participants_list',
     ROOM_LEFT: 'room_left',
+    ROOM_JOINED: 'room_joined',
     REDIRECT_TO_GAME: 'redirect_to_game', // Canonical redirect event
     GAME_STARTED: 'game_started'
 };
@@ -117,6 +124,7 @@ exports.GAME_EVENTS = {
     GAME_PARTICIPANTS: 'game_participants',
     GAME_QUESTION: 'game_question',
     ANSWER_RECEIVED: 'answer_received',
+    ANSWER_FEEDBACK: 'answer_feedback',
     GAME_ENDED: 'game_ended',
     GAME_ERROR: 'game_error',
     GAME_ANSWERS_LOCK_CHANGED: 'game_answers_lock_changed',
@@ -127,6 +135,7 @@ exports.GAME_EVENTS = {
     GAME_UPDATE: 'game_update',
     TIMER_SET: 'timer_set',
     // Game state events
+    GAME_STATE_UPDATE: 'game_state_update',
     CORRECT_ANSWERS: 'correct_answers',
     GAME_ALREADY_PLAYED: 'game_already_played',
     GAME_REDIRECT_TO_LOBBY: 'game_redirect_to_lobby',
@@ -155,5 +164,6 @@ exports.SOCKET_EVENTS = {
     // Connection events
     CONNECT: 'connect',
     DISCONNECT: 'disconnect',
-    CONNECT_ERROR: 'connect_error'
+    CONNECT_ERROR: 'connect_error',
+    CONNECTION_ESTABLISHED: 'connection_established'
 };

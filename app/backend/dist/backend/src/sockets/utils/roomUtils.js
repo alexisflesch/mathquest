@@ -10,6 +10,7 @@ exports.roomExists = roomExists;
 exports.broadcastToRoom = broadcastToRoom;
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const events_1 = require("@shared/types/socket/events");
 // Create a utility-specific logger
 const logger = (0, logger_1.default)('RoomUtils');
 // Key prefix for room data in Redis
@@ -43,10 +44,11 @@ async function joinRoom(socket, roomName, userData) {
             user
         }, 'Socket joined room');
         // Emit an event to the socket that it has joined the room
-        socket.emit('room_joined', {
+        const roomJoinedPayload = {
             room: roomName,
             timestamp: new Date().toISOString()
-        }); // TODO: Define shared type if missing
+        };
+        socket.emit(events_1.SOCKET_EVENTS.LOBBY.ROOM_JOINED, roomJoinedPayload);
     }
     catch (error) {
         logger.error({
@@ -79,10 +81,11 @@ async function leaveRoom(socket, roomName) {
             user
         }, 'Socket left room');
         // Emit an event to the socket that it has left the room
-        socket.emit('room_left', {
+        const roomLeftPayload = {
             room: roomName,
             timestamp: new Date().toISOString()
-        }); // TODO: Define shared type if missing
+        };
+        socket.emit(events_1.SOCKET_EVENTS.LOBBY.ROOM_LEFT, roomLeftPayload);
     }
     catch (error) {
         logger.error({
@@ -168,12 +171,3 @@ function broadcastToRoom(io, roomName, eventName, data, excludeSocketId) {
         throw error;
     }
 }
-// TODO: Sweep the rest of the file and update all emits to use shared types or add TODOs for missing types.
-// TODO: Import or define types for:
-// - room_joined
-// - room_left
-// - broadcastToRoom (eventName/data)
-// Example refactor for emits (repeat for all emits in this file):
-// socket.emit('room_joined', joinedPayload); // TODO: Define shared type if missing
-// socket.emit('room_left', leftPayload); // TODO: Define shared type if missing
-// io.to(roomName).emit(eventName, data); // TODO: Ensure data uses shared type if eventName is known

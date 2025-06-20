@@ -72,12 +72,12 @@ function ExampleQuestionComponent(props: { question: Question }) {
  */
 // For this example file (within the types package), we need relative imports
 import type { Server, Socket } from 'socket.io';
-import type { SetQuestionPayload } from '../socket/payloads';
+import type { SetQuestionPayload } from '../socket/dashboardPayloads';
 
 // Example of a backend handler using shared types
 function exampleSocketHandler(io: Server, socket: Socket, payload: Partial<SetQuestionPayload>) {
     // Using type guard to validate payload
-    if (!payload || typeof payload !== 'object' || !payload.gameId) {
+    if (!payload || typeof payload !== 'object' || !payload.accessCode) {
         socket.emit('error', { message: 'Invalid payload' });
         return;
     }

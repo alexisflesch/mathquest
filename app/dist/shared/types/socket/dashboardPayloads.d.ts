@@ -37,7 +37,7 @@ export interface PauseTimerPayload extends GameIdentificationPayload {
  * Consolidated SetQuestionPayload with consistent naming
  */
 export interface SetQuestionPayload {
-    gameId: string;
+    accessCode: string;
     questionUid: string;
     questionIndex?: number;
 }
@@ -52,7 +52,7 @@ export interface LockAnswersPayload {
  * Payload for ending a game
  */
 export interface EndGamePayload {
-    gameId: string;
+    accessCode: string;
 }
 /**
  * Dashboard question changed notification

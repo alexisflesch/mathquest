@@ -8,6 +8,9 @@ import { redisClient } from '@/config/redis';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
 import { GameTimerState } from '@shared/types/core/timer';
 import { GameState } from '@shared/types/core/game';
+import { ErrorPayload } from '@shared/types/socketEvents';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { errorPayloadSchema } from '@shared/types/socketEvents.zod';
 
 const logger = createLogger('DeferredTournamentFlow');
 
@@ -125,9 +128,16 @@ export async function startDeferredTournamentSession(
         socket.leave(playerRoom);
 
         // Emit error to player
-        socket.emit('game_error', {
+        const errorPayload: ErrorPayload = {
             message: 'Error starting deferred tournament session'
-        });
+        };
+
+        try {
+            errorPayloadSchema.parse(errorPayload);
+            socket.emit(SOCKET_EVENTS.GAME.ERROR, errorPayload);
+        } catch (error) {
+            logger.error('Invalid game_error payload:', error);
+        }
     }
 }
 
@@ -277,9 +287,16 @@ async function runDeferredQuestionSequence(
         logger.error({ accessCode, userId, error }, 'Error in deferred question sequence');
 
         // Emit error to player
-        io.to(playerRoom).emit('game_error', {
+        const errorPayload: ErrorPayload = {
             message: 'Error during tournament question sequence'
-        });
+        };
+
+        try {
+            errorPayloadSchema.parse(errorPayload);
+            io.to(playerRoom).emit('game_error', errorPayload);
+        } catch (validationError) {
+            logger.error('Invalid game_error payload:', validationError);
+        }
     } finally {
         // Clean up session tracking
         runningDeferredSessions.delete(userId);

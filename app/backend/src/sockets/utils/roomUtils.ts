@@ -1,7 +1,8 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
-import type { ErrorPayload } from '@shared/types/socketEvents';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import type { ErrorPayload, RoomJoinedPayload, RoomLeftPayload } from '@shared/types/socketEvents';
 
 // Create a utility-specific logger
 const logger = createLogger('RoomUtils');
@@ -43,10 +44,11 @@ export async function joinRoom(socket: Socket, roomName: string, userData?: Reco
         }, 'Socket joined room');
 
         // Emit an event to the socket that it has joined the room
-        socket.emit('room_joined', {
+        const roomJoinedPayload: RoomJoinedPayload = {
             room: roomName,
             timestamp: new Date().toISOString()
-        }); // TODO: Define shared type if missing
+        };
+        socket.emit(SOCKET_EVENTS.LOBBY.ROOM_JOINED, roomJoinedPayload);
     } catch (error) {
         logger.error({
             error,
@@ -84,10 +86,11 @@ export async function leaveRoom(socket: Socket, roomName: string): Promise<void>
         }, 'Socket left room');
 
         // Emit an event to the socket that it has left the room
-        socket.emit('room_left', {
+        const roomLeftPayload: RoomLeftPayload = {
             room: roomName,
             timestamp: new Date().toISOString()
-        }); // TODO: Define shared type if missing
+        };
+        socket.emit(SOCKET_EVENTS.LOBBY.ROOM_LEFT, roomLeftPayload);
     } catch (error) {
         logger.error({
             error,
@@ -183,13 +186,3 @@ export function broadcastToRoom(
         throw error;
     }
 }
-
-// TODO: Sweep the rest of the file and update all emits to use shared types or add TODOs for missing types.
-// TODO: Import or define types for:
-// - room_joined
-// - room_left
-// - broadcastToRoom (eventName/data)
-// Example refactor for emits (repeat for all emits in this file):
-// socket.emit('room_joined', joinedPayload); // TODO: Define shared type if missing
-// socket.emit('room_left', leftPayload); // TODO: Define shared type if missing
-// io.to(roomName).emit(eventName, data); // TODO: Ensure data uses shared type if eventName is known

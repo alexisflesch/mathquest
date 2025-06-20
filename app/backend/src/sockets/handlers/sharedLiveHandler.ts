@@ -6,7 +6,7 @@ import TimingService from '@/services/timingService';
 import createLogger from '@/utils/logger';
 import { getFullGameState, GameState } from '@/core/gameStateService';
 import { redisClient as redis } from '@/config/redis';
-import { GAME_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
+import { GAME_EVENTS, TOURNAMENT_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';
 import type {
     GameJoinedPayload,
     GameTimerUpdatePayload,
@@ -19,8 +19,13 @@ import type {
 import {
     sharedJoinPayloadSchema,
     sharedAnswerPayloadSchema,
-    requestParticipantsPayloadSchema
+    requestParticipantsPayloadSchema,
+    answerFeedbackPayloadSchema
 } from '@shared/types/socketEvents.zod';
+import { z } from 'zod';
+
+// Derive types from Zod schemas
+type AnswerFeedbackPayload = z.infer<typeof answerFeedbackPayloadSchema>;
 
 const logger = createLogger('SharedLiveHandler');
 
@@ -43,7 +48,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 details: errorDetails
             };
 
-            socket.emit('game_error', errorPayload);
+            socket.emit(SOCKET_EVENTS.GAME.ERROR, errorPayload);
             return;
         }
 
@@ -150,7 +155,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                     const filteredQuestion = filterQuestionForClient(patchedQuestion);
 
                     // Send the question as a separate event
-                    socket.emit('game_question', {
+                    socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION, {
                         question: filteredQuestion,
                         questionIndex: gs.currentQuestionIndex,
                         totalQuestions: gs.questionUids.length
@@ -172,7 +177,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                         }
 
                         // When emitting game_timer_updated, use the canonical GameTimerState format:
-                        socket.emit('game_timer_updated', {
+                        socket.emit(SOCKET_EVENTS.GAME.TIMER_UPDATE, {
                             timer: {
                                 status: gs.timer.status,
                                 timeLeftMs: actualTimeLeftMs,
@@ -213,20 +218,20 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                     }
 
                     if (shouldSendCorrectAnswers) {
-                        socket.emit('correct_answers', {
+                        socket.emit(SOCKET_EVENTS.GAME.CORRECT_ANSWERS as any, {
                             questionUid,
                             correctAnswers: question.correctAnswers || []
                         } as { questionUid: string; correctAnswers: boolean[] }); // TODO: Define shared type if missing
                     }
                     if (shouldSendFeedback) {
                         const safeFeedbackRemaining = Number.isFinite(feedbackRemaining) ? Math.max(0, Math.ceil(feedbackRemaining)) : 0;
-                        socket.emit('feedback', { questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining } as { questionUid: string; feedbackRemaining: number }); // TODO: Define shared type if missing
+                        socket.emit(SOCKET_EVENTS.GAME.FEEDBACK as any, { questionUid: questionUid, feedbackRemaining: safeFeedbackRemaining } as { questionUid: string; feedbackRemaining: number }); // TODO: Define shared type if missing
                     }
                 }
             }
         }
 
-        socket.emit('game_joined', gameJoinedPayload as GameJoinedPayload);
+        socket.emit(SOCKET_EVENTS.GAME.GAME_JOINED, gameJoinedPayload as GameJoinedPayload);
         logger.info({ accessCode, userId, room, playMode, gameJoinedPayload }, '[DEBUG] Emitted game_joined with correct payload structure');
 
         // const participantUsername = typeof username === 'string' ? username : 'Anonymous'; // Moved up
@@ -286,11 +291,18 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
                 details: errorDetails
             };
 
-            socket.emit('answer_feedback', {
+            const answerFeedbackPayload: AnswerFeedbackPayload = {
                 status: 'error',
                 code: 'VALIDATION_ERROR',
                 message: 'Format de réponse invalide.'
-            });
+            };
+
+            try {
+                answerFeedbackPayloadSchema.parse(answerFeedbackPayload);
+                socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, answerFeedbackPayload);
+            } catch (error) {
+                logger.error('Invalid answer_feedback payload:', error);
+            }
             return;
         }
 
@@ -331,11 +343,19 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
         const fullGameState = await getFullGameState(accessCode);
         if (!fullGameState || !fullGameState.gameState) {
             logger.warn({ accessCode, userId, questionUid }, 'Game state not found for answer validation.');
-            socket.emit('answer_feedback', {
+
+            const answerFeedbackPayload: AnswerFeedbackPayload = {
                 status: 'error',
                 code: 'GAME_NOT_FOUND',
                 message: 'Jeu non trouvé. Impossible de soumettre la réponse.'
-            });
+            };
+
+            try {
+                answerFeedbackPayloadSchema.parse(answerFeedbackPayload);
+                socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, answerFeedbackPayload);
+            } catch (error) {
+                logger.error('Invalid answer_feedback payload:', error);
+            }
             return;
         }
 
@@ -343,7 +363,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
         if (gameState.status !== 'active') {
             logger.warn({ accessCode, userId, questionUid, gameStatus: gameState.status, playMode: currentPlayMode }, 'Answer submitted but game is not active.');
-            socket.emit('answer_feedback', {
+            socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, {
                 status: 'error',
                 code: 'GAME_NOT_ACTIVE',
                 message: 'Le jeu n\'est pas actif ou est terminé.'
@@ -353,7 +373,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
         if (gameState.answersLocked) {
             logger.warn({ accessCode, userId, questionUid }, 'Answers are locked. Submission rejected.');
-            socket.emit('answer_feedback', {
+            socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, {
                 status: 'error',
                 code: 'ANSWERS_LOCKED',
                 message: 'Les réponses sont verrouillées pour cette question.'
@@ -374,7 +394,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
                 if (timeLeftMs <= 0) {
                     logger.warn({ accessCode, userId, questionUid }, 'Answer submitted after timer expired (tournament mode).');
-                    socket.emit('answer_feedback', {
+                    socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, {
                         status: 'error',
                         code: 'TIME_EXPIRED',
                         message: 'Le temps est écoulé pour cette question.'
@@ -386,7 +406,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
         if (!gameState.questionUids || gameState.currentQuestionIndex === undefined || questionUid !== gameState.questionUids[gameState.currentQuestionIndex]) {
             logger.warn({ accessCode, userId, questionUid, currentQId: gameState.questionUids ? gameState.questionUids[gameState.currentQuestionIndex] : 'N/A' }, 'Answer submitted for wrong question.');
-            socket.emit('answer_feedback', {
+            socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, {
                 status: 'error',
                 code: 'WRONG_QUESTION',
                 message: 'Réponse soumise pour une question incorrecte ou non active.'
@@ -426,7 +446,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
             if (!question) {
                 logger.error({ accessCode, userId, questionUid }, "Question not found for scoring");
-                socket.emit('answer_feedback', {
+                socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, {
                     status: 'error',
                     code: 'QUESTION_NOT_FOUND',
                     message: 'Question non trouvée pour le calcul du score.'
@@ -475,7 +495,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
             await redis.zadd(`mathquest:game:leaderboard:${accessCode}`, 'INCR', score, userId);
             logger.info({ accessCode, userId, questionUid, score, leaderboardKey: `mathquest:game:leaderboard:${accessCode}` }, 'Leaderboard updated');
 
-            socket.emit('answer_feedback', { status: 'ok', questionUid, scoreAwarded: score });
+            socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, { status: 'ok', questionUid, scoreAwarded: score });
             logger.info({ accessCode, userId, questionUid, scoreAwarded: score }, 'Answer processed, feedback sent');
 
             if (currentPlayMode === 'quiz') {
@@ -488,7 +508,7 @@ export function registerSharedLiveHandlers(io: SocketIOServer, socket: Socket) {
 
         } catch (error: any) {
             logger.error({ accessCode: payload.accessCode, userId: payload.userId, questionUid: payload.questionUid, error: error.message, stack: error.stack }, 'Error processing answer in sharedLiveHandler');
-            socket.emit('answer_feedback', {
+            socket.emit(SOCKET_EVENTS.GAME.ANSWER_FEEDBACK, {
                 status: 'error',
                 code: 'PROCESSING_ERROR',
                 message: 'Erreur lors du traitement de la réponse.'

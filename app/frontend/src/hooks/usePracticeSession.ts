@@ -44,6 +44,17 @@ import type {
     SocketData
 } from '@shared/types/socketEvents';
 
+// Import Zod schemas for canonical events
+import {
+    correctAnswersPayloadSchema,
+    feedbackPayloadSchema
+} from '@shared/types/socketEvents.zod';
+import { z } from 'zod';
+
+// Derive types from Zod schemas for canonical events
+type CorrectAnswersPayload = z.infer<typeof correctAnswersPayloadSchema>;
+type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
+
 const logger = createLogger('usePracticeSession');
 
 // --- Hook State Types ---
@@ -340,11 +351,14 @@ export function usePracticeSession({
             });
 
             // Canonical tournament-style events (emitted by backend for practice sessions)
-            socket.on('correct_answers', (payload: { questionUid: string; correctAnswers?: boolean[] }) => {
+            socket.on(SOCKET_EVENTS.GAME.CORRECT_ANSWERS as any, (payload: CorrectAnswersPayload) => {
                 try {
-                    logger.debug('Received canonical correct_answers event', payload);
-                    if (payload.correctAnswers) {
-                        const correctAnswers = payload.correctAnswers;
+                    // Validate payload with Zod schema
+                    const validatedPayload = correctAnswersPayloadSchema.parse(payload);
+
+                    logger.debug('Received canonical correct_answers event', validatedPayload);
+                    if (validatedPayload.correctAnswers) {
+                        const correctAnswers = validatedPayload.correctAnswers;
                         setState(prevState => ({
                             ...prevState,
                             lastFeedback: prevState.lastFeedback ? {
@@ -368,10 +382,13 @@ export function usePracticeSession({
                 }
             });
 
-            socket.on('feedback', (payload: { questionUid: string; feedbackRemaining: number;[key: string]: any }) => {
+            socket.on(SOCKET_EVENTS.GAME.FEEDBACK as any, (payload: FeedbackPayload) => {
                 try {
-                    logger.debug('Received canonical feedback event', payload);
-                    const explanation = payload.explanation as string | undefined;
+                    // Validate payload with Zod schema
+                    const validatedPayload = feedbackPayloadSchema.parse(payload);
+
+                    logger.debug('Received canonical feedback event', validatedPayload);
+                    const explanation = validatedPayload.explanation as string | undefined;
                     if (explanation) {
                         setState(prevState => ({
                             ...prevState,

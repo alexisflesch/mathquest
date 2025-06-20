@@ -1,0 +1,97 @@
+🔍 Socket Payload Validator - Project root: /home/aflesch/mathquest/app
+📂 Loading files from: shared
+📂 Loading files from: backend/src
+📂 Loading files from: frontend/src
+✅ Loaded 895 TypeScript files
+📋 Loading shared references...
+✅ Found 269 shared types
+✅ Found 6 socket event constants
+✅ Found 209 Zod schemas
+🔍 Starting Socket Payload Validation Analysis...\n
+🔍 Finding socket handlers...
+✅ Found 26 socket handlers
+🔍 Finding socket emitters...
+✅ Found 100 socket emitters
+🔍 Analyzing payload validation patterns...
+🔍 Checking shared type usage...
+🔍 Validating naming consistency...
+💡 Generating recommendations...
+\n📊 SOCKET PAYLOAD VALIDATION RESULTS\n
+============================================================
+\n📈 SUMMARY:
+   Socket Handlers: 26
+   Socket Emitters: 100
+   Total Issues: 267
+   Shared Types Available: 269
+\n🔴 ISSUES FOUND:
+\n   HARDCODEDEVENTNAMES (126 issues):
+   • frontend/src/hooks/useGameSocket.ts:321 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: game_joined
+   • frontend/src/hooks/useGameSocket.ts:382 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: timer_update
+   • frontend/src/hooks/usePracticeSession.ts:354 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: correct_answers
+   • frontend/src/hooks/usePracticeSession.ts:385 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: feedback
+   • frontend/src/hooks/useStudentGameSocket.ts:244 - Hardcoded event name instead of SOCKET_EVENTS constant
+     Event: game_joined
+   ... and 121 more
+\n   UNSHAREDPAYLOADTYPES (89 issues):
+   • backend/src/sockets/handlers/connectionHandlers.ts:25 - Uses local type instead of shared type
+     Event: connection
+     Type: Socket<ClientToServerEvents
+   • backend/src/tests/unit/participantCount.test.ts:65 - Uses local type instead of shared type
+     Event: join-room
+     Type: { roomName: string }
+   • frontend/src/hooks/useTeacherQuizSocket.ts:275 - Emitter not using shared payload types
+     Event: quiz_timer_action
+   • backend/src/sockets/handlers/deferredTournamentFlow.ts:136 - Emitter not using shared payload types
+     Event: game_error
+   • backend/src/sockets/handlers/practiceSessionHandler.ts:238 - Emitter not using shared payload types
+     Event: correct_answers
+   ... and 84 more
+\n   MISSINGTYPEGUARDS (5 issues):
+   • frontend/src/hooks/usePracticeSession.ts:354 - Missing runtime type validation
+     Event: correct_answers
+   • frontend/src/hooks/usePracticeSession.ts:385 - Missing runtime type validation
+     Event: feedback
+   • backend/src/tests/unit/participantCount.test.ts:31 - Missing runtime type validation
+     Event: connection
+   • backend/src/tests/unit/participantCount.test.ts:58 - Missing runtime type validation
+     Event: connection
+   • backend/src/tests/unit/participantCount.test.ts:65 - Missing runtime type validation
+     Event: join-room
+\n   UNDOCUMENTEDEVENTS (26 issues):
+   • frontend/src/hooks/useGameSocket.ts:321 - Socket handler not documented
+     Event: game_joined
+   • frontend/src/hooks/useGameSocket.ts:382 - Socket handler not documented
+     Event: timer_update
+   • frontend/src/hooks/usePracticeSession.ts:354 - Socket handler not documented
+     Event: correct_answers
+   • frontend/src/hooks/usePracticeSession.ts:385 - Socket handler not documented
+     Event: feedback
+   • frontend/src/hooks/useStudentGameSocket.ts:244 - Socket handler not documented
+     Event: game_joined
+   ... and 21 more
+\n   ANYTYPEDPAYLOADS (21 issues):
+   • frontend/src/hooks/useGameSocket.ts:321 - Payload typed as any
+     Event: game_joined
+   • frontend/src/hooks/useGameSocket.ts:382 - Payload typed as any
+     Event: timer_update
+   • frontend/src/hooks/useStudentGameSocket.ts:244 - Payload typed as any
+     Event: game_joined
+   • frontend/src/hooks/useStudentGameSocket.ts:251 - Payload typed as any
+     Event: game_question
+   • frontend/src/hooks/useStudentGameSocket.ts:279 - Payload typed as any
+     Event: game_state_update
+   ... and 16 more
+\n💡 RECOMMENDATIONS:
+\n1. 🟡 MEDIUM: Replace 126 hardcoded event names
+   Use SOCKET_EVENTS constants instead of hardcoded strings
+   Action: Import SOCKET_EVENTS from @shared/types/socket/events and use constants
+\n2. 🔴 HIGH: Convert 89 local types to shared types
+   Socket payloads should use canonical shared types
+   Action: Replace local interface definitions with imports from @shared/types
+\n============================================================
+Analysis completed at: 2025-06-20T14:47:34.742Z
+\n⚠️  Found 267 issues that need attention.

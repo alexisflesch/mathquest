@@ -20,8 +20,16 @@ import InfinitySpin from '@/components/InfinitySpin';
 import LoadingScreen from '@/components/LoadingScreen';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { connectedCountPayloadSchema, joinDashboardPayloadSchema, endGamePayloadSchema } from '@shared/types/socketEvents.zod';
+import { z } from 'zod';
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_CONFIG } from '@/config';
+import type { DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
+
+// Derive type from Zod schema for type safety
+type ConnectedCountPayload = z.infer<typeof connectedCountPayloadSchema>;
+type JoinDashboardPayload = z.infer<typeof joinDashboardPayloadSchema>;
+type EndGamePayload = z.infer<typeof endGamePayloadSchema>;
 
 const logger = createLogger('TeacherDashboard');
 
@@ -121,7 +129,14 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         socket.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info('Socket connected:', socket.id);
             logger.info('Joining dashboard with accessCode:', code);
-            socket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, { accessCode: code });
+
+            const payload: JoinDashboardPayload = { accessCode: code };
+            try {
+                joinDashboardPayloadSchema.parse(payload);
+                socket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, payload);
+            } catch (error) {
+                logger.error('Invalid join_dashboard payload:', error);
+            }
 
             // Debug: Log all socket events to debug room joining
             logger.info('📡 Dashboard attempting to join rooms via JOIN_DASHBOARD event');
@@ -183,12 +198,18 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
             setLoading(false);
         });
 
-        socket.on('quiz_connected_count', (data: { count: number }) => {
-            setConnectedCount(data.count);
+        socket.on('quiz_connected_count', (data: ConnectedCountPayload) => {
+            // Validate payload with Zod schema
+            const validation = connectedCountPayloadSchema.safeParse(data);
+            if (!validation.success) {
+                logger.error('quiz_connected_count validation failed:', validation.error);
+                return;
+            }
+            setConnectedCount(validation.data.count);
         });
 
         // Listen for answer stats updates
-        socket.on('dashboard_answer_stats_update', (payload: any) => {
+        socket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_ANSWER_STATS_UPDATE, (payload: DashboardAnswerStatsUpdatePayload) => {
             logger.info('🎯 RECEIVED answer stats update:', payload);
             logger.info('🎯 Stats payload breakdown:', {
                 hasStats: !!payload.stats,
@@ -215,7 +236,7 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
         });
 
         // Also listen for any stats-related events (in case the event name is different)
-        socket.on('answer_stats_update', (payload: any) => {
+        socket.on(SOCKET_EVENTS.TEACHER.ANSWER_STATS_UPDATE, (payload: DashboardAnswerStatsUpdatePayload) => {
             logger.info('🎯 RECEIVED alternative answer stats update:', payload);
             if (payload.stats && payload.questionUid) {
                 setAnswerStats(prev => ({
@@ -538,8 +559,14 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
     const confirmEndQuiz = () => {
         setShowEndQuizConfirm(false);
-        if (quizSocket && gameId) {
-            quizSocket.emit(SOCKET_EVENTS.TEACHER.END_GAME, { gameId });
+        if (quizSocket && code) {
+            const payload: EndGamePayload = { accessCode: code };
+            try {
+                endGamePayloadSchema.parse(payload);
+                quizSocket.emit(SOCKET_EVENTS.TEACHER.END_GAME, payload);
+            } catch (error) {
+                logger.error('Invalid end_game payload:', error);
+            }
         }
     };
 

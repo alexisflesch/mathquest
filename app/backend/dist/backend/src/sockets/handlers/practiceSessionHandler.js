@@ -13,7 +13,9 @@ exports.registerPracticeSessionHandlers = registerPracticeSessionHandlers;
 exports.handlePracticeSessionDisconnect = handlePracticeSessionDisconnect;
 const practiceSessionService_1 = require("@/core/services/practiceSessionService");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const events_1 = require("@shared/types/practice/events");
+const events_1 = require("@shared/types/socket/events");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const events_2 = require("@shared/types/practice/events");
 const logger = (0, logger_1.default)('PracticeSessionHandler');
 /**
  * Register practice session socket event handlers
@@ -24,7 +26,7 @@ function registerPracticeSessionHandlers(io, socket) {
     /**
      * START_PRACTICE_SESSION - Create and start a new practice session
      */
-    socket.on(events_1.PRACTICE_EVENTS.START_PRACTICE_SESSION, async (payload) => {
+    socket.on(events_2.PRACTICE_EVENTS.START_PRACTICE_SESSION, async (payload) => {
         try {
             logger.info({
                 socketId: socket.id,
@@ -48,7 +50,7 @@ function registerPracticeSessionHandlers(io, socket) {
                 session,
                 message: 'Practice session created successfully'
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_CREATED, response);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_CREATED, response);
             logger.info({
                 sessionId: session.sessionId,
                 userId: payload.userId,
@@ -68,13 +70,13 @@ function registerPracticeSessionHandlers(io, socket) {
                 errorType: 'server_error',
                 message: error instanceof Error ? error.message : 'Unknown error'
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
         }
     });
     /**
      * GET_NEXT_PRACTICE_QUESTION - Get the next question in the session
      */
-    socket.on(events_1.PRACTICE_EVENTS.GET_NEXT_PRACTICE_QUESTION, async (payload) => {
+    socket.on(events_2.PRACTICE_EVENTS.GET_NEXT_PRACTICE_QUESTION, async (payload) => {
         try {
             logger.debug({
                 sessionId: payload.sessionId,
@@ -98,7 +100,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     },
                     completionMessage: 'Practice session completed - no more questions'
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_COMPLETED, completedResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_COMPLETED, completedResponse);
                 return;
             }
             // Get session data to build proper progress
@@ -108,7 +110,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     errorType: 'session_not_found',
                     message: 'Practice session not found'
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
                 return;
             }
             // Build proper question ready payload with progress
@@ -122,7 +124,7 @@ function registerPracticeSessionHandlers(io, socket) {
                 },
                 isRetry: false
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_QUESTION_READY, questionResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_QUESTION_READY, questionResponse);
             logger.debug({
                 sessionId: payload.sessionId,
                 questionId: questionData.uid,
@@ -135,13 +137,13 @@ function registerPracticeSessionHandlers(io, socket) {
                 errorType: 'server_error',
                 message: error instanceof Error ? error.message : 'Failed to get next question'
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
         }
     });
     /**
      * SUBMIT_PRACTICE_ANSWER - Submit answer for current question
      */
-    socket.on(events_1.PRACTICE_EVENTS.SUBMIT_PRACTICE_ANSWER, async (payload) => {
+    socket.on(events_2.PRACTICE_EVENTS.SUBMIT_PRACTICE_ANSWER, async (payload) => {
         try {
             logger.debug({
                 sessionId: payload.sessionId,
@@ -164,21 +166,35 @@ function registerPracticeSessionHandlers(io, socket) {
                     selectedAnswers: payload.selectedAnswers,
                     message: 'Answer submitted successfully'
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_ANSWER_SUBMITTED, submittedResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_ANSWER_SUBMITTED, submittedResponse);
                 // 2. Get question details first to get boolean[] correct answers and explanation
                 const questionDetails = await practiceSessionService_1.practiceSessionService.getQuestionDetails(payload.questionUid);
                 // 3. Send correct answers immediately using canonical event (like live tournaments)
-                socket.emit('correct_answers', {
+                const correctAnswersPayload = {
                     questionUid: payload.questionUid,
                     correctAnswers: questionDetails?.correctAnswers || []
-                });
+                };
+                try {
+                    socketEvents_zod_1.correctAnswersPayloadSchema.parse(correctAnswersPayload);
+                    socket.emit(events_1.SOCKET_EVENTS.GAME.CORRECT_ANSWERS, correctAnswersPayload);
+                }
+                catch (error) {
+                    logger.error('Invalid correct_answers payload:', error);
+                }
                 // 4. Send feedback with explanation if available using canonical event (like live tournaments)
                 if (questionDetails?.explanation) {
-                    socket.emit('feedback', {
+                    const feedbackPayload = {
                         questionUid: payload.questionUid,
                         feedbackRemaining: 0, // No timer in practice mode
                         explanation: questionDetails.explanation
-                    });
+                    };
+                    try {
+                        socketEvents_zod_1.feedbackPayloadSchema.parse(feedbackPayload);
+                        socket.emit(events_1.SOCKET_EVENTS.GAME.FEEDBACK, feedbackPayload);
+                    }
+                    catch (error) {
+                        logger.error('Invalid feedback payload:', error);
+                    }
                 }
                 // 5. Send practice-specific statistics update
                 const statisticsResponse = {
@@ -194,7 +210,7 @@ function registerPracticeSessionHandlers(io, socket) {
                         accuracyPercentage: result.updatedSession.statistics.accuracyPercentage
                     }
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_ANSWER_FEEDBACK, statisticsResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_ANSWER_FEEDBACK, statisticsResponse);
                 logger.info({
                     sessionId: payload.sessionId,
                     questionUid: payload.questionUid,
@@ -211,7 +227,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     selectedAnswers: payload.selectedAnswers,
                     message: 'Answer submitted successfully'
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_ANSWER_SUBMITTED, submittedResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_ANSWER_SUBMITTED, submittedResponse);
                 logger.info({
                     sessionId: payload.sessionId,
                     questionUid: payload.questionUid,
@@ -225,13 +241,13 @@ function registerPracticeSessionHandlers(io, socket) {
                 errorType: 'server_error',
                 message: error instanceof Error ? error.message : 'Failed to submit answer'
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
         }
     });
     /**
      * GET_PRACTICE_SESSION_STATE - Get current session state
      */
-    socket.on(events_1.PRACTICE_EVENTS.GET_PRACTICE_SESSION_STATE, async (payload) => {
+    socket.on(events_2.PRACTICE_EVENTS.GET_PRACTICE_SESSION_STATE, async (payload) => {
         try {
             logger.debug({
                 sessionId: payload.sessionId,
@@ -244,7 +260,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     errorType: 'session_not_found',
                     message: 'Practice session not found'
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
                 return;
             }
             const stateResponse = {
@@ -252,7 +268,7 @@ function registerPracticeSessionHandlers(io, socket) {
                 session,
                 success: true
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_STATE, stateResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_STATE, stateResponse);
         }
         catch (error) {
             logger.error({ error, payload }, 'Failed to get practice session state');
@@ -260,13 +276,13 @@ function registerPracticeSessionHandlers(io, socket) {
                 errorType: 'server_error',
                 message: error instanceof Error ? error.message : 'Failed to get session state'
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
         }
     });
     /**
      * END_PRACTICE_SESSION - End the current practice session
      */
-    socket.on(events_1.PRACTICE_EVENTS.END_PRACTICE_SESSION, async (payload) => {
+    socket.on(events_2.PRACTICE_EVENTS.END_PRACTICE_SESSION, async (payload) => {
         try {
             logger.info({
                 sessionId: payload.sessionId,
@@ -295,7 +311,7 @@ function registerPracticeSessionHandlers(io, socket) {
                 },
                 completionMessage: 'Practice session ended successfully'
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_COMPLETED, completedResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_COMPLETED, completedResponse);
             logger.info({
                 sessionId: payload.sessionId,
                 finalStatistics: finalSession.statistics
@@ -307,13 +323,13 @@ function registerPracticeSessionHandlers(io, socket) {
                 errorType: 'server_error',
                 message: error instanceof Error ? error.message : 'Failed to end session'
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
         }
     });
     /**
      * REQUEST_PRACTICE_FEEDBACK - Request feedback for submitted answer
      */
-    socket.on(events_1.PRACTICE_EVENTS.REQUEST_PRACTICE_FEEDBACK, async (payload) => {
+    socket.on(events_2.PRACTICE_EVENTS.REQUEST_PRACTICE_FEEDBACK, async (payload) => {
         try {
             logger.debug({
                 sessionId: payload.sessionId,
@@ -327,7 +343,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     errorType: 'question_not_found',
                     message: 'Question not found'
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
                 return;
             }
             // Get current session to access statistics
@@ -337,7 +353,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     errorType: 'session_not_found',
                     message: 'Session not found'
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
                 return;
             }
             // Find the submitted answer for this question
@@ -347,7 +363,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     errorType: 'invalid_answer',
                     message: 'No submitted answer found for this question'
                 };
-                socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+                socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
                 return;
             }
             // Send feedback to client
@@ -364,7 +380,7 @@ function registerPracticeSessionHandlers(io, socket) {
                     accuracyPercentage: session.statistics.accuracyPercentage
                 }
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_ANSWER_FEEDBACK, feedbackResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_ANSWER_FEEDBACK, feedbackResponse);
             logger.info({
                 sessionId: payload.sessionId,
                 questionUid: payload.questionUid,
@@ -377,7 +393,7 @@ function registerPracticeSessionHandlers(io, socket) {
                 errorType: 'server_error',
                 message: error instanceof Error ? error.message : 'Failed to get feedback'
             };
-            socket.emit(events_1.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
+            socket.emit(events_2.PRACTICE_EVENTS.PRACTICE_SESSION_ERROR, errorResponse);
         }
     });
     logger.debug({ socketId: socket.id }, 'Practice session handlers registered');

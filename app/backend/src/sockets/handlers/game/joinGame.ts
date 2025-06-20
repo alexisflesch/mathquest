@@ -7,6 +7,7 @@ import { redisClient } from '@/config/redis';
 import { z } from 'zod';
 import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
 import gameStateService from '@/core/gameStateService';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 // Import shared types
 import {
     ClientToServerEvents,
@@ -55,7 +56,7 @@ export function joinGameHandler(
                 code: 'INVALID_PAYLOAD',
             };
             logger.warn({ errorPayload }, 'Emitting game_error due to invalid payload');
-            socket.emit('game_error', errorPayload);
+            socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
             return;
         }
         const { accessCode, userId, username, avatarEmoji } = parseResult.data;
@@ -85,7 +86,7 @@ export function joinGameHandler(
             };
 
             logger.info({ gameJoinedPayload }, 'Emitting game_joined for practice mode');
-            socket.emit('game_joined', gameJoinedPayload);
+            socket.emit(SOCKET_EVENTS.GAME.GAME_JOINED as any, gameJoinedPayload);
             return;
         }
 
@@ -107,7 +108,7 @@ export function joinGameHandler(
             if (!gameInstance) {
                 const errorPayload: ErrorPayload = { message: 'Game not found.' };
                 logger.warn({ errorPayload }, 'Emitting game_error: game not found');
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
             const now = new Date();
@@ -119,7 +120,7 @@ export function joinGameHandler(
                 if (!inDifferedWindow) {
                     const errorPayload: ErrorPayload = { message: 'Differed mode not available at this time.' };
                     logger.warn({ errorPayload }, 'Emitting game_error: differed window not available');
-                    socket.emit('game_error', errorPayload);
+                    socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                     return;
                 }
                 const existing = await prisma.gameParticipant.findFirst({
@@ -129,7 +130,7 @@ export function joinGameHandler(
                 if (existing && existing.completedAt) {
                     const gameAlreadyPlayedPayload: GameAlreadyPlayedPayload = { accessCode };
                     logger.info({ gameAlreadyPlayedPayload }, 'Emitting game_already_played');
-                    socket.emit('game_already_played', gameAlreadyPlayedPayload);
+                    socket.emit(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED as any, gameAlreadyPlayedPayload);
                     return;
                 }
             } else {
@@ -155,7 +156,7 @@ export function joinGameHandler(
             if (!joinResult.success || !joinResult.participant) {
                 const errorPayload: ErrorPayload = { message: joinResult.error || 'Join failed.' };
                 logger.warn({ errorPayload }, 'Emitting game_error: join failed');
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
             socket.data.userId = userId;
@@ -248,7 +249,7 @@ export function joinGameHandler(
                 differedAvailableTo: gameInstance.differedAvailableTo?.toISOString(),
             };
             logger.info({ gameJoinedPayload }, 'Emitting game_joined');
-            socket.emit('game_joined', gameJoinedPayload);
+            socket.emit(SOCKET_EVENTS.GAME.GAME_JOINED as any, gameJoinedPayload);
 
             // For live games (quiz and tournament, not deferred), check if game is active and send current state to late joiners
             if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
@@ -307,7 +308,7 @@ export function joinGameHandler(
                                     payload: lateJoinerQuestionPayload
                                 }, 'Sending current question to late joiner');
 
-                                socket.emit('game_question', lateJoinerQuestionPayload);
+                                socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, lateJoinerQuestionPayload);
 
                                 // Also send timer update
                                 if (actualTimer) {
@@ -315,7 +316,7 @@ export function joinGameHandler(
                                         timer: actualTimer,
                                         questionUid: actualTimer.questionUid ?? undefined
                                     };
-                                    socket.emit('game_timer_updated', timerUpdatePayload);
+                                    socket.emit(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED as any, timerUpdatePayload);
                                 }
                             }
                         }
@@ -465,7 +466,7 @@ export function joinGameHandler(
         } catch (err) {
             logger.error({ err, accessCode, userId, stack: err instanceof Error ? err.stack : undefined }, 'Error in joinGameHandler');
             const errorPayload: ErrorPayload = { message: 'Internal error joining game.' };
-            socket.emit('game_error', errorPayload);
+            socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
         }
     };
 }

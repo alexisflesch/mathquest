@@ -21,10 +21,10 @@
 \n📈 SUMMARY:
    Socket Handlers: 36
    Socket Emitters: 104
-   Total Issues: 346
+   Total Issues: 342
    Shared Types Available: 265
 \n🔴 ISSUES FOUND:
-\n   MISSINGZODVALIDATION (21 issues):
+\n   MISSINGZODVALIDATION (17 issues):
    • frontend/src/hooks/usePracticeSession.ts:268 - Missing Zod schema validation
      Event: connect
    • frontend/src/hooks/usePracticeSession.ts:273 - Missing Zod schema validation
@@ -33,13 +33,13 @@
      Event: connect_error
    • frontend/src/hooks/usePracticeSession.ts:343 - Missing Zod schema validation
      Event: correct_answers
-   • frontend/src/hooks/usePracticeSession.ts:371 - Missing Zod schema validation
+   • frontend/src/hooks/usePracticeSession.ts:377 - Missing Zod schema validation
      Event: feedback
-   ... and 16 more
+   ... and 12 more
 \n   HARDCODEDEVENTNAMES (140 issues):
-   • frontend/src/hooks/useGameSocket.ts:326 - Hardcoded event name instead of SOCKET_EVENTS constant
+   • frontend/src/hooks/useGameSocket.ts:332 - Hardcoded event name instead of SOCKET_EVENTS constant
      Event: game_joined
-   • frontend/src/hooks/useGameSocket.ts:381 - Hardcoded event name instead of SOCKET_EVENTS constant
+   • frontend/src/hooks/useGameSocket.ts:387 - Hardcoded event name instead of SOCKET_EVENTS constant
      Event: timer_update
    • frontend/src/hooks/usePracticeSession.ts:268 - Hardcoded event name instead of SOCKET_EVENTS constant
      Event: connect
@@ -49,15 +49,15 @@
      Event: connect_error
    ... and 135 more
 \n   UNSHAREDPAYLOADTYPES (104 issues):
-   • frontend/src/hooks/useGameSocket.ts:287 - Emitter not using shared payload types
+   • frontend/src/hooks/useGameSocket.ts:293 - Emitter not using shared payload types
      Event: game_answer
-   • frontend/src/hooks/useGameSocket.ts:303 - Emitter not using shared payload types
+   • frontend/src/hooks/useGameSocket.ts:309 - Emitter not using shared payload types
      Event: join_game
-   • frontend/src/hooks/useGameSocket.ts:355 - Emitter not using shared payload types
+   • frontend/src/hooks/useGameSocket.ts:361 - Emitter not using shared payload types
      Event: quiz_timer_action
-   • frontend/src/hooks/useStudentGameSocket.ts:426 - Emitter not using shared payload types
+   • frontend/src/hooks/useStudentGameSocket.ts:424 - Emitter not using shared payload types
      Event: join_game
-   • frontend/src/hooks/useStudentGameSocket.ts:445 - Emitter not using shared payload types
+   • frontend/src/hooks/useStudentGameSocket.ts:443 - Emitter not using shared payload types
      Event: game_answer
    ... and 99 more
 \n   MISSINGTYPEGUARDS (9 issues):
@@ -69,13 +69,13 @@
      Event: connect_error
    • frontend/src/hooks/usePracticeSession.ts:343 - Missing runtime type validation
      Event: correct_answers
-   • frontend/src/hooks/usePracticeSession.ts:371 - Missing runtime type validation
+   • frontend/src/hooks/usePracticeSession.ts:377 - Missing runtime type validation
      Event: feedback
    ... and 4 more
 \n   UNDOCUMENTEDEVENTS (36 issues):
-   • frontend/src/hooks/useGameSocket.ts:326 - Socket handler not documented
+   • frontend/src/hooks/useGameSocket.ts:332 - Socket handler not documented
      Event: game_joined
-   • frontend/src/hooks/useGameSocket.ts:381 - Socket handler not documented
+   • frontend/src/hooks/useGameSocket.ts:387 - Socket handler not documented
      Event: timer_update
    • frontend/src/hooks/usePracticeSession.ts:268 - Socket handler not documented
      Event: connect
@@ -85,9 +85,9 @@
      Event: connect_error
    ... and 31 more
 \n   ANYTYPEDPAYLOADS (36 issues):
-   • frontend/src/hooks/useGameSocket.ts:326 - Payload typed as any
+   • frontend/src/hooks/useGameSocket.ts:332 - Payload typed as any
      Event: game_joined
-   • frontend/src/hooks/useGameSocket.ts:381 - Payload typed as any
+   • frontend/src/hooks/useGameSocket.ts:387 - Payload typed as any
      Event: timer_update
    • frontend/src/hooks/usePracticeSession.ts:268 - Payload typed as any
      Event: connect
@@ -97,7 +97,7 @@
      Event: connect_error
    ... and 31 more
 \n💡 RECOMMENDATIONS:
-\n1. 🔴 HIGH: Add Zod validation to 21 socket handlers
+\n1. 🔴 HIGH: Add Zod validation to 17 socket handlers
    Socket handlers should validate incoming payloads with Zod schemas
    Action: Import and use appropriate Zod schemas from @shared/types/socketEvents.zod
 \n2. 🟡 MEDIUM: Replace 140 hardcoded event names
@@ -107,5 +107,5 @@
    Socket payloads should use canonical shared types
    Action: Replace local interface definitions with imports from @shared/types
 \n============================================================
-Analysis completed at: 2025-06-20T12:53:54.305Z
-\n⚠️  Found 346 issues that need attention.
+Analysis completed at: 2025-06-20T13:08:12.752Z
+\n⚠️  Found 342 issues that need attention.

@@ -8,6 +8,12 @@ import { disconnectHandler } from './disconnectHandler';
 import { registerPracticeSessionHandlers, handlePracticeSessionDisconnect } from './practiceSessionHandler';
 import { projectionHandler } from './projectionHandler';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
+import { socketDataSchema, connectionEstablishedPayloadSchema } from '@shared/types/socketEvents.zod';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { z } from 'zod';
+
+// Derive types from Zod schemas
+type ConnectionEstablishedPayload = z.infer<typeof connectionEstablishedPayloadSchema>;
 
 // Create a handler-specific logger
 const logger = createLogger('ConnectionHandlers');
@@ -44,9 +50,32 @@ export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEven
  */
 function handleConnection(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
     const { id } = socket;
-    // socket.data is now typed as SocketData
-    // Fix: extract user from socket.data.user if present
-    const user = (socket.data && (socket.data as any).user) ? (socket.data as any).user : (socket.data || { role: 'anonymous' });
+
+    // Validate socket data structure using Zod schema
+    let user: any;
+    try {
+        // socket.data is now typed as SocketData
+        const rawUser = (socket.data && (socket.data as any).user) ? (socket.data as any).user : (socket.data || { role: 'anonymous' });
+
+        // Validate the user data against our schema
+        const validationResult = socketDataSchema.partial().safeParse(rawUser);
+        if (!validationResult.success) {
+            logger.warn({
+                socketId: id,
+                validationErrors: validationResult.error.errors,
+                rawUserData: rawUser
+            }, 'Socket connection data validation failed, using defaults');
+            user = { role: 'anonymous' };
+        } else {
+            user = validationResult.data;
+        }
+    } catch (error) {
+        logger.error({
+            socketId: id,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }, 'Error validating socket connection data');
+        user = { role: 'anonymous' };
+    }
 
     logger.info({
         socketId: id,
@@ -65,11 +94,18 @@ function handleConnection(socket: Socket<ClientToServerEvents, ServerToClientEve
     Object.keys(userPayload).forEach(key => userPayload[key as keyof typeof userPayload] === undefined && delete userPayload[key as keyof typeof userPayload]);
 
     // Emit welcome event to the client - this will be type-checked
-    socket.emit('connection_established', {
+    const payload: ConnectionEstablishedPayload = {
         socketId: id,
         timestamp: new Date().toISOString(),
         user: userPayload
-    });
+    };
+
+    try {
+        connectionEstablishedPayloadSchema.parse(payload);
+        socket.emit(SOCKET_EVENTS.CONNECTION_ESTABLISHED as any, payload);
+    } catch (error) {
+        logger.error('Invalid connection_established payload:', error);
+    }
 
     // Register any other connection-specific event handlers here
 }

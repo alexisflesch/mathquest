@@ -43,7 +43,7 @@ export interface PauseTimerPayload extends GameIdentificationPayload { }
  * Consolidated SetQuestionPayload with consistent naming
  */
 export interface SetQuestionPayload {
-    gameId: string;          // Database ID of the game instance
+    accessCode: string;      // Access code of the game instance
     questionUid: string;     // UID of the question to show (consistent naming)
     questionIndex?: number;  // Index of the question (legacy support)
 }
@@ -60,7 +60,7 @@ export interface LockAnswersPayload {
  * Payload for ending a game
  */
 export interface EndGamePayload {
-    gameId: string;      // Database ID of the game instance
+    accessCode: string;  // Access code of the game instance
 }
 
 // ===== Dashboard Server-to-Client Event Payloads =====

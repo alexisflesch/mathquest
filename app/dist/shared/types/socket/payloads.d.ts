@@ -37,6 +37,15 @@ export interface ResumeTournamentPayload {
  * Quiz/Teacher Control Payloads
  * Note: SetQuestionPayload and other dashboard payloads are now in ./dashboardPayloads.ts
  */
+export interface SetTimerPayload {
+    gameId: string;
+    time: number;
+    questionUid?: string;
+}
+export interface UpdateTournamentCodePayload {
+    gameId: string;
+    newCode: string;
+}
 export interface QuizTimerActionPayload {
     /** Game access code (legacy, optional for new backend) */
     accessCode?: string;
@@ -57,6 +66,28 @@ export interface LockUnlockPayload {
 export interface EndQuizPayload {
     accessCode: string;
     teacherId?: string;
+}
+/**
+ * Game end result payload
+ */
+export interface GameEndedPayload {
+    accessCode: string;
+    endedAt?: string;
+    score?: number;
+    totalQuestions?: number;
+    correct?: number;
+    total?: number;
+}
+/**
+ * Room management payloads
+ */
+export interface RoomJoinedPayload {
+    room: string;
+    timestamp: string;
+}
+export interface RoomLeftPayload {
+    room: string;
+    timestamp: string;
 }
 /**
  * Socket event handler function types

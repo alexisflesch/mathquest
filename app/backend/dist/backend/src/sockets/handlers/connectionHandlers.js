@@ -12,6 +12,8 @@ const tournament_1 = require("./tournament");
 const disconnectHandler_1 = require("./disconnectHandler");
 const practiceSessionHandler_1 = require("./practiceSessionHandler");
 const projectionHandler_1 = require("./projectionHandler");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const events_1 = require("@shared/types/socket/events");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('ConnectionHandlers');
 /**
@@ -43,9 +45,32 @@ function registerConnectionHandlers(io) {
  */
 function handleConnection(socket) {
     const { id } = socket;
-    // socket.data is now typed as SocketData
-    // Fix: extract user from socket.data.user if present
-    const user = (socket.data && socket.data.user) ? socket.data.user : (socket.data || { role: 'anonymous' });
+    // Validate socket data structure using Zod schema
+    let user;
+    try {
+        // socket.data is now typed as SocketData
+        const rawUser = (socket.data && socket.data.user) ? socket.data.user : (socket.data || { role: 'anonymous' });
+        // Validate the user data against our schema
+        const validationResult = socketEvents_zod_1.socketDataSchema.partial().safeParse(rawUser);
+        if (!validationResult.success) {
+            logger.warn({
+                socketId: id,
+                validationErrors: validationResult.error.errors,
+                rawUserData: rawUser
+            }, 'Socket connection data validation failed, using defaults');
+            user = { role: 'anonymous' };
+        }
+        else {
+            user = validationResult.data;
+        }
+    }
+    catch (error) {
+        logger.error({
+            socketId: id,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }, 'Error validating socket connection data');
+        user = { role: 'anonymous' };
+    }
     logger.info({
         socketId: id,
         user,
@@ -61,11 +86,18 @@ function handleConnection(socket) {
     // Remove undefined keys for clean payload
     Object.keys(userPayload).forEach(key => userPayload[key] === undefined && delete userPayload[key]);
     // Emit welcome event to the client - this will be type-checked
-    socket.emit('connection_established', {
+    const payload = {
         socketId: id,
         timestamp: new Date().toISOString(),
         user: userPayload
-    });
+    };
+    try {
+        socketEvents_zod_1.connectionEstablishedPayloadSchema.parse(payload);
+        socket.emit(events_1.SOCKET_EVENTS.CONNECTION_ESTABLISHED, payload);
+    }
+    catch (error) {
+        logger.error('Invalid connection_established payload:', error);
+    }
     // Register any other connection-specific event handlers here
 }
 /**

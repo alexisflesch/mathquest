@@ -13,6 +13,8 @@ const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
 const redis_1 = require("@/config/redis");
 const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
+const events_1 = require("@shared/types/socket/events");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('DeferredTournamentFlow');
 // Track running deferred tournament sessions by userId
 const runningDeferredSessions = new Map(); // userId -> accessCode
@@ -100,9 +102,16 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
         runningDeferredSessions.delete(userId);
         socket.leave(playerRoom);
         // Emit error to player
-        socket.emit('game_error', {
+        const errorPayload = {
             message: 'Error starting deferred tournament session'
-        });
+        };
+        try {
+            socketEvents_zod_1.errorPayloadSchema.parse(errorPayload);
+            socket.emit(events_1.SOCKET_EVENTS.GAME.ERROR, errorPayload);
+        }
+        catch (error) {
+            logger.error('Invalid game_error payload:', error);
+        }
     }
 }
 /**
@@ -227,9 +236,16 @@ async function runDeferredQuestionSequence(io, socket, session) {
     catch (error) {
         logger.error({ accessCode, userId, error }, 'Error in deferred question sequence');
         // Emit error to player
-        io.to(playerRoom).emit('game_error', {
+        const errorPayload = {
             message: 'Error during tournament question sequence'
-        });
+        };
+        try {
+            socketEvents_zod_1.errorPayloadSchema.parse(errorPayload);
+            io.to(playerRoom).emit('game_error', errorPayload);
+        }
+        catch (validationError) {
+            logger.error('Invalid game_error payload:', validationError);
+        }
     }
     finally {
         // Clean up session tracking

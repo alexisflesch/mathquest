@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { getFullGameState } from '@/core/gameStateService';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
-import { PROJECTOR_EVENTS, GAME_EVENTS } from '@shared/types/socket/events';
+import { PROJECTOR_EVENTS, GAME_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';
 import { joinProjectorPayloadSchema, leaveProjectorPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { ErrorPayload, JoinProjectorPayload, LeaveProjectorPayload } from '@shared/types/socketEvents';
 
@@ -35,7 +35,7 @@ export function projectorHandler(io: Server, socket: Socket) {
                 details: errorDetails
             };
 
-            socket.emit('projector_error', errorPayload);
+            socket.emit(PROJECTOR_EVENTS.PROJECTION_ERROR, errorPayload);
             return;
         }
 
@@ -87,7 +87,7 @@ export function projectorHandler(io: Server, socket: Socket) {
                 details: errorDetails
             };
 
-            socket.emit('projector_error', errorPayload);
+            socket.emit(PROJECTOR_EVENTS.PROJECTION_ERROR, errorPayload);
             return;
         }
 

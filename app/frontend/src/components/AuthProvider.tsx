@@ -750,9 +750,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const key = localStorage.key(i);
                 if (key) allLocal[key] = localStorage.getItem(key);
             }
-            // eslint-disable-next-line no-console
+             
             console.log('[AuthProvider] localStorage:', allLocal);
-            // eslint-disable-next-line no-console
+             
             console.log('[AuthProvider] document.cookie:', document.cookie);
         }
     }, []);

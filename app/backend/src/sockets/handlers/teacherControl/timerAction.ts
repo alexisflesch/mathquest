@@ -179,7 +179,7 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 message: 'gameId is required to control the timer',
                 code: 'GAME_ID_REQUIRED'
             };
-            socket.emit('error_dashboard', errorPayload);
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
             return;
         }
 
@@ -189,7 +189,7 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 message: 'Authentication required to control the timer',
                 code: 'AUTHENTICATION_REQUIRED'
             };
-            socket.emit('error_dashboard', errorPayload);
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
             return;
         }
 
@@ -216,7 +216,7 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     message: 'Not authorized to control this game',
                     code: 'NOT_AUTHORIZED'
                 };
-                socket.emit('error_dashboard', errorPayload);
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
                 return;
             }
 
@@ -228,7 +228,7 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     message: 'Could not retrieve game state',
                     code: 'STATE_ERROR'
                 };
-                socket.emit('error_dashboard', errorPayload);
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
                 return;
             }
 
@@ -522,7 +522,7 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 message: 'Failed to update timer',
                 code: 'TIMER_ERROR'
             };
-            socket.emit('error_dashboard', errorPayload);
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
         }
     };
 }

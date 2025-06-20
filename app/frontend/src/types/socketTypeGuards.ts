@@ -16,7 +16,9 @@ import type {
     GameTimerUpdatePayload,
     TimerActionPayload,
     GameStateUpdatePayload,
-    TournamentQuestion
+    TournamentQuestion,
+    AnswerReceivedPayload,
+    FeedbackPayload
 } from '@shared/types/socketEvents';
 
 import type {
@@ -529,22 +531,14 @@ export function isProjectorTimerUpdatePayload(data: unknown): data is ProjectorT
 
 // --- Answer Received Type Guards ---
 
-export interface AnswerReceivedPayload {
-    questionUid?: string;
-    timeSpent: number;
-    correct?: boolean;
-    correctAnswers?: boolean[];
-    explanation?: string;
-}
-
-export function isAnswerReceivedPayload(data: unknown): data is AnswerReceivedPayload {
-    if (!data || typeof data !== 'object') return false;
-
-    const a = data as Record<string, unknown>;
-    return (
-        typeof a.questionUid === 'string' &&
-        typeof a.timeSpent === 'number'
-    );
+export function isAnswerReceivedPayload(data: any): data is AnswerReceivedPayload {
+    return data &&
+        typeof data === 'object' &&
+        typeof data.questionUid === 'string' &&
+        typeof data.timeSpent === 'number' &&
+        (data.correct === undefined || typeof data.correct === 'boolean') &&
+        (data.correctAnswers === undefined || Array.isArray(data.correctAnswers)) &&
+        (data.explanation === undefined || typeof data.explanation === 'string');
 }
 
 // --- Game State Update Type Guard ---
@@ -616,5 +610,15 @@ export function isLiveQuestionPayload(data: unknown): data is LiveQuestionPayloa
         (lq.questionState === undefined || typeof lq.questionState === 'string') &&
         (lq.modeSpecificData === undefined || typeof lq.modeSpecificData === 'object') &&
         (lq.feedbackWaitTime === undefined || typeof lq.feedbackWaitTime === 'number')
+    );
+}
+
+export function isFeedbackPayload(data: unknown): data is FeedbackPayload {
+    if (!data || typeof data !== 'object') return false;
+
+    const f = data as Record<string, unknown>;
+    return (
+        typeof f.questionUid === 'string' &&
+        typeof f.feedbackRemaining === 'number'
     );
 }

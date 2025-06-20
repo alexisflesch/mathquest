@@ -39,7 +39,7 @@ function ExampleQuestionComponent(props) {
 // Example of a backend handler using shared types
 function exampleSocketHandler(io, socket, payload) {
     // Using type guard to validate payload
-    if (!payload || typeof payload !== 'object' || !payload.gameId) {
+    if (!payload || typeof payload !== 'object' || !payload.accessCode) {
         socket.emit('error', { message: 'Invalid payload' });
         return;
     }

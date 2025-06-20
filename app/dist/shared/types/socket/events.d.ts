@@ -26,6 +26,10 @@ export declare const TEACHER_EVENTS: {
     DASHBOARD_ANSWERS_LOCK_CHANGED: string;
     DASHBOARD_GAME_STATUS_CHANGED: string;
     DASHBOARD_ANSWER_STATS_UPDATE: string;
+    STATS_UPDATE: string;
+    ANSWERS_LOCKED: string;
+    ANSWER_STATS_UPDATE: string;
+    TIMER_UPDATE_RESPONSE: string;
     ERROR_DASHBOARD: string;
 };
 export declare const TOURNAMENT_EVENTS: {
@@ -61,6 +65,7 @@ export declare const LOBBY_EVENTS: {
     PARTICIPANT_LEFT: string;
     PARTICIPANTS_LIST: string;
     ROOM_LEFT: string;
+    ROOM_JOINED: string;
     REDIRECT_TO_GAME: string;
     GAME_STARTED: string;
 };
@@ -90,6 +95,7 @@ export declare const GAME_EVENTS: {
     GAME_PARTICIPANTS: string;
     GAME_QUESTION: string;
     ANSWER_RECEIVED: string;
+    ANSWER_FEEDBACK: string;
     GAME_ENDED: string;
     GAME_ERROR: string;
     GAME_ANSWERS_LOCK_CHANGED: string;
@@ -98,6 +104,7 @@ export declare const GAME_EVENTS: {
     TIMER_UPDATE: string;
     GAME_UPDATE: string;
     TIMER_SET: string;
+    GAME_STATE_UPDATE: string;
     CORRECT_ANSWERS: string;
     GAME_ALREADY_PLAYED: string;
     GAME_REDIRECT_TO_LOBBY: string;
@@ -134,6 +141,10 @@ export declare const SOCKET_EVENTS: {
         DASHBOARD_ANSWERS_LOCK_CHANGED: string;
         DASHBOARD_GAME_STATUS_CHANGED: string;
         DASHBOARD_ANSWER_STATS_UPDATE: string;
+        STATS_UPDATE: string;
+        ANSWERS_LOCKED: string;
+        ANSWER_STATS_UPDATE: string;
+        TIMER_UPDATE_RESPONSE: string;
         ERROR_DASHBOARD: string;
     };
     GAME: {
@@ -147,6 +158,7 @@ export declare const SOCKET_EVENTS: {
         GAME_PARTICIPANTS: string;
         GAME_QUESTION: string;
         ANSWER_RECEIVED: string;
+        ANSWER_FEEDBACK: string;
         GAME_ENDED: string;
         GAME_ERROR: string;
         GAME_ANSWERS_LOCK_CHANGED: string;
@@ -155,6 +167,7 @@ export declare const SOCKET_EVENTS: {
         TIMER_UPDATE: string;
         GAME_UPDATE: string;
         TIMER_SET: string;
+        GAME_STATE_UPDATE: string;
         CORRECT_ANSWERS: string;
         GAME_ALREADY_PLAYED: string;
         GAME_REDIRECT_TO_LOBBY: string;
@@ -203,6 +216,7 @@ export declare const SOCKET_EVENTS: {
         PARTICIPANT_LEFT: string;
         PARTICIPANTS_LIST: string;
         ROOM_LEFT: string;
+        ROOM_JOINED: string;
         REDIRECT_TO_GAME: string;
         GAME_STARTED: string;
     };
@@ -224,4 +238,5 @@ export declare const SOCKET_EVENTS: {
     CONNECT: string;
     DISCONNECT: string;
     CONNECT_ERROR: string;
+    CONNECTION_ESTABLISHED: string;
 };

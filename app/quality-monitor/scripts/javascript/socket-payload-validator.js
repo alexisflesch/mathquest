@@ -233,6 +233,11 @@ class SocketPayloadValidator {
 
                         // Check if it's likely a socket object
                         if (objectName.includes('socket') || objectName === 'io') {
+                            // Skip native Socket.IO events
+                            if (this.isNativeSocketEvent(eventName)) {
+                                continue;
+                            }
+
                             const socketHandler = {
                                 file: sourceFile.getFilePath(),
                                 line: lineNum + 1,
@@ -245,6 +250,17 @@ class SocketPayloadValidator {
                                 payloadType: 'any',
                                 isDocumented: false
                             };
+
+                            // Extract payload type from callback parameter
+                            const callbackMatch = line.match(/\(([^)]*)\)\s*=>/);
+                            if (callbackMatch && callbackMatch[1]) {
+                                const param = callbackMatch[1].trim();
+                                const typeMatch = param.match(/:\s*([^,)]+)/);
+                                if (typeMatch) {
+                                    socketHandler.payloadType = typeMatch[1].trim();
+                                    socketHandler.usesSharedTypes = this.isSharedType(socketHandler.payloadType, sourceFile);
+                                }
+                            }
 
                             // Check for Zod validation in surrounding code
                             socketHandler.hasZodValidation = this.checkForZodValidationInFile(sourceFile, eventName);
@@ -302,6 +318,11 @@ class SocketPayloadValidator {
 
                         // Check if it's likely a socket object
                         if (objectName.includes('socket') || objectName === 'io') {
+                            // Skip native Socket.IO events
+                            if (this.isNativeSocketEvent(eventName)) {
+                                continue;
+                            }
+
                             const socketEmitter = {
                                 file: sourceFile.getFilePath(),
                                 line: lineNum + 1,
@@ -312,6 +333,11 @@ class SocketPayloadValidator {
                                 payloadType: 'inferred',
                                 usesSharedTypes: false
                             };
+
+                            // Try to detect payload type from function parameters or validation
+                            const payloadTypeInfo = this.detectEmitterPayloadType(line, sourceFile, eventName);
+                            socketEmitter.payloadType = payloadTypeInfo.type;
+                            socketEmitter.usesSharedTypes = payloadTypeInfo.usesSharedTypes;
 
                             this.results.socketEmitters = this.results.socketEmitters || [];
                             this.results.socketEmitters.push(socketEmitter);
@@ -414,15 +440,112 @@ class SocketPayloadValidator {
     }
 
     /**
-     * Check if type name is from shared types
+     * Detect payload type for socket emitters
      */
-    isSharedType(typeName) {
+    detectEmitterPayloadType(line, sourceFile, eventName) {
+        try {
+            // Look for function parameter types like: emitFunction(payload: PayloadType)
+            const functionParamMatch = line.match(/\(payload:\s*([^)]+)\)/);
+            if (functionParamMatch) {
+                const type = functionParamMatch[1].trim();
+                return {
+                    type: type,
+                    usesSharedTypes: this.isSharedType(type, sourceFile)
+                };
+            }
+
+            // Look for validation patterns like: schema.parse(payload)
+            const sourceText = sourceFile.getFullText();
+            const lines = sourceText.split('\n');
+            const currentLineIndex = lines.findIndex(l => l.includes(line.trim()));
+
+            // Search surrounding lines for validation
+            for (let i = Math.max(0, currentLineIndex - 5); i < Math.min(lines.length, currentLineIndex + 5); i++) {
+                const nearbyLine = lines[i];
+                const validationMatch = nearbyLine.match(/(\w+)\.parse\(payload\)/);
+                if (validationMatch) {
+                    const schemaName = validationMatch[1];
+                    // Check if this is a Zod schema
+                    if (schemaName.includes('Schema') || schemaName.includes('schema')) {
+                        return {
+                            type: 'Zod-validated',
+                            usesSharedTypes: true
+                        };
+                    }
+                }
+            }
+
+            return {
+                type: 'inferred',
+                usesSharedTypes: false
+            };
+        } catch (error) {
+            return {
+                type: 'unknown',
+                usesSharedTypes: false
+            };
+        }
+    }
+
+    /**
+     * Check if type name is from shared types or Zod-derived
+     */
+    isSharedType(typeName, sourceFile = null) {
         if (!typeName || typeName === 'any' || typeName === 'unknown') return false;
 
         // Clean up the type name (remove generics, etc.)
         const cleanTypeName = typeName.split('<')[0].split('|')[0].trim();
 
-        return this.sharedTypes.has(cleanTypeName);
+        // Check if it's in shared types
+        if (this.sharedTypes.has(cleanTypeName)) return true;
+
+        // Check if it's a Zod-derived type (z.infer<typeof schema>)
+        if (sourceFile && this.isZodDerivedType(cleanTypeName, sourceFile)) return true;
+
+        // Check if imported from shared types
+        if (sourceFile && this.isImportedFromSharedTypes(cleanTypeName, sourceFile)) return true;
+
+        return false;
+    }
+
+    /**
+     * Check if type is derived from Zod schema (z.infer<typeof schema>)
+     */
+    isZodDerivedType(typeName, sourceFile) {
+        try {
+            const sourceText = sourceFile.getFullText();
+            // Look for type definitions like: type TypeName = z.infer<typeof schemaName>
+            const zodTypeRegex = new RegExp(`type\\s+${typeName}\\s*=\\s*z\\.infer<typeof\\s+\\w+>`);
+            return zodTypeRegex.test(sourceText);
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if type is imported from shared types
+     */
+    isImportedFromSharedTypes(typeName, sourceFile) {
+        try {
+            const sourceText = sourceFile.getFullText();
+            // Look for imports from shared types
+            const sharedImportRegex = new RegExp(`import.*{[^}]*\\b${typeName}\\b[^}]*}.*from\\s*['"]@shared/types`);
+            return sharedImportRegex.test(sourceText);
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if event is a native Socket.IO event that should be excluded
+     */
+    isNativeSocketEvent(eventName) {
+        const nativeEvents = [
+            'connect', 'disconnect', 'connect_error', 'reconnect',
+            'reconnect_attempt', 'reconnecting', 'reconnect_error',
+            'reconnect_failed', 'ping', 'pong', 'error'
+        ];
+        return nativeEvents.includes(eventName);
     }
 
     /**
@@ -653,23 +776,23 @@ class SocketPayloadValidator {
 
         // Recommendations
         if (recommendations.length > 0) {
-            console.log(`\\n💡 RECOMMENDATIONS:`);
+            console.log(`\n💡 RECOMMENDATIONS:`);
             recommendations.forEach((rec, i) => {
                 const priority = rec.priority.toUpperCase();
                 const badge = priority === 'HIGH' ? '🔴' : priority === 'MEDIUM' ? '🟡' : '🟢';
-                console.log(`\\n${i + 1}. ${badge} ${priority}: ${rec.title}`);
+                console.log(`\n${i + 1}. ${badge} ${priority}: ${rec.title}`);
                 console.log(`   ${rec.description}`);
                 console.log(`   Action: ${rec.action}`);
             });
         }
 
-        console.log('\\n' + '='.repeat(60));
+        console.log('\n' + '='.repeat(60));
         console.log(`Analysis completed at: ${summary.analyzedAt}`);
 
         if (summary.totalIssues === 0) {
-            console.log('\\n✅ No socket payload validation issues found!');
+            console.log('\n✅ No socket payload validation issues found!');
         } else {
-            console.log(`\\n⚠️  Found ${summary.totalIssues} issues that need attention.`);
+            console.log(`\n⚠️  Found ${summary.totalIssues} issues that need attention.`);
         }
     }
 }

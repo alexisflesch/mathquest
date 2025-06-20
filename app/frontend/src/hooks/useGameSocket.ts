@@ -26,8 +26,18 @@ import type { TimerRole, TimerState } from './useGameTimer';
 import {
     joinGamePayloadSchema,
     gameAnswerPayloadSchema,
-    timerActionPayloadSchema
+    timerActionPayloadSchema,
+    gameJoinedPayloadSchema,
+    timerUpdatePayloadSchema
 } from '@shared/types/socketEvents.zod';
+import { z } from 'zod';
+
+// Derive types from Zod schemas for type safety
+type JoinGamePayload = z.infer<typeof joinGamePayloadSchema>;
+type GameAnswerPayload = z.infer<typeof gameAnswerPayloadSchema>;
+type TimerActionPayload = z.infer<typeof timerActionPayloadSchema>;
+type GameJoinedPayload = z.infer<typeof gameJoinedPayloadSchema>;
+type TimerUpdatePayload = z.infer<typeof timerUpdatePayloadSchema>;
 
 const logger = createLogger('useGameSocket');
 
@@ -60,8 +70,8 @@ export interface GameSocketHook {
     reconnect: () => void;
 
     // Event emitters
-    emitGameAnswer?: (payload: Parameters<ClientToServerEvents['game_answer']>[0]) => void;
-    emitJoinGame?: (payload: Parameters<ClientToServerEvents['join_game']>[0]) => void;
+    emitGameAnswer?: (payload: GameAnswerPayload) => void;
+    emitJoinGame?: (payload: JoinGamePayload) => void;
 
     // Event listeners (returns cleanup function)
     onGameJoined?: (handler: (payload: Parameters<ServerToClientEvents['game_joined']>[0]) => void) => () => void;
@@ -257,10 +267,8 @@ export function useGameSocket(
     const reconnect = useCallback(() => {
         disconnect();
         setTimeout(connect, 100);
-    }, [disconnect, connect]);
-
-    // --- Event Management ---
-    const emitGameAnswer = useCallback((payload: Parameters<ClientToServerEvents['game_answer']>[0]) => {
+    }, [disconnect, connect]);    // --- Event Management ---
+    const emitGameAnswer = useCallback((payload: GameAnswerPayload) => {
         if (!socket?.connected) {
             logger.warn(`[${role.toUpperCase()}] Cannot emit game_answer: socket not connected`);
             return;
@@ -276,7 +284,7 @@ export function useGameSocket(
         }
     }, [socket, role]);
 
-    const emitJoinGame = useCallback((payload: Parameters<ClientToServerEvents['join_game']>[0]) => {
+    const emitJoinGame = useCallback((payload: JoinGamePayload) => {
         if (!socket?.connected) {
             logger.warn(`[${role.toUpperCase()}] Cannot emit join_game: socket not connected`);
             return;
@@ -293,25 +301,26 @@ export function useGameSocket(
     }, [socket, role]);
 
     // Fix onGameJoined defaultMode: registration function returning cleanup
-    const onGameJoined = useCallback((handler: (payload: Parameters<ServerToClientEvents['game_joined']>[0]) => void) => {
+    const onGameJoined = useCallback((handler: (payload: GameJoinedPayload) => void) => {
         if (!socket) {
             logger.warn(`[${role.toUpperCase()}] Cannot register handler for game_joined: no socket`);
             return () => { };
         }
 
-        const validatedHandler = (payload: any) => {
-            // Add runtime validation for game_joined payload if schema exists
+        const validatedHandler = (payload: GameJoinedPayload) => {
+            // Add runtime validation for game_joined payload
             try {
-                handler(payload);
+                const validatedPayload = gameJoinedPayloadSchema.parse(payload);
+                handler(validatedPayload);
             } catch (error) {
-                logger.error(`[${role.toUpperCase()}] Error in game_joined handler:`, error);
+                logger.error(`[${role.toUpperCase()}] Invalid game_joined payload:`, error);
             }
         };
 
-        // TODO: Use SOCKET_EVENTS.GAME.GAME_JOINED when TypeScript types allow constants
-        socket.on('game_joined', validatedHandler);
+        // Use SOCKET_EVENTS constants for consistency
+        socket.on(SOCKET_EVENTS.GAME.GAME_JOINED as any, validatedHandler);
         return () => {
-            socket.off('game_joined', validatedHandler);
+            socket.off(SOCKET_EVENTS.GAME.GAME_JOINED as any, validatedHandler);
         };
     }, [socket, role]);
 
@@ -352,21 +361,27 @@ export function useGameSocket(
             return () => { };
         }
 
-        const validatedHandler = (payload: any) => {
+        const validatedHandler = (payload: TimerUpdatePayload) => {
             try {
-                // Validate timer state payload if needed
-                handler(payload);
+                const validatedPayload = timerUpdatePayloadSchema.parse(payload);
+                // Convert to GameTimerState format
+                const timerState: Partial<TimerState> = {
+                    timeLeftMs: validatedPayload.timeLeftMs ?? 0,
+                    isRunning: validatedPayload.running,
+                    durationMs: validatedPayload.durationMs,
+                };
+                handler(timerState);
             } catch (error) {
-                logger.error(`[${role.toUpperCase()}] Error in timer_update handler:`, error);
+                logger.error(`[${role.toUpperCase()}] Invalid timer_update payload:`, error);
             }
         };
 
         // Only listen to allowed timer update events for teacher
         if (role === 'teacher') {
-            // TODO: Use SOCKET_EVENTS.GAME.TIMER_UPDATE when TypeScript types allow constants
-            socket.on('timer_update', validatedHandler);
+            // Use SOCKET_EVENTS constants for consistency  
+            socket.on(SOCKET_EVENTS.GAME.TIMER_UPDATE as any, validatedHandler);
             return () => {
-                socket.off('timer_update', validatedHandler);
+                socket.off(SOCKET_EVENTS.GAME.TIMER_UPDATE as any, validatedHandler);
             };
         }
         // Add other roles as needed

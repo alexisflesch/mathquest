@@ -270,7 +270,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
 
             // Send initial participant count to the teacher
             const participantCount = await getParticipantCount(io, gameInstance.accessCode);
-            socket.emit('quiz_connected_count', { count: participantCount });
+            socket.emit(TEACHER_EVENTS.CONNECTED_COUNT as any, { count: participantCount });
 
             logger.info({ gameId, userId: effectiveUserId, socketId: socket.id }, 'User joined dashboard successfully');
 

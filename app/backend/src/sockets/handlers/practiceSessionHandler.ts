@@ -14,6 +14,12 @@ import {
     InterServerEvents,
     SocketData
 } from '@shared/types/socketEvents';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import {
+    correctAnswersPayloadSchema,
+    feedbackPayloadSchema
+} from '@shared/types/socketEvents.zod';
+import { z } from 'zod';
 import {
     PRACTICE_EVENTS,
     StartPracticeSessionPayload,
@@ -32,6 +38,10 @@ import {
     PracticeSessionErrorPayload,
     PracticeSessionStatePayload
 } from '@shared/types/practice/events';
+
+// Derive types from Zod schemas for canonical events
+type CorrectAnswersPayload = z.infer<typeof correctAnswersPayloadSchema>;
+type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
 
 const logger = createLogger('PracticeSessionHandler');
 
@@ -219,18 +229,32 @@ export function registerPracticeSessionHandlers(
                 const questionDetails = await practiceSessionService.getQuestionDetails(payload.questionUid);
 
                 // 3. Send correct answers immediately using canonical event (like live tournaments)
-                socket.emit('correct_answers', {
+                const correctAnswersPayload: CorrectAnswersPayload = {
                     questionUid: payload.questionUid,
                     correctAnswers: questionDetails?.correctAnswers || []
-                });
+                };
+
+                try {
+                    correctAnswersPayloadSchema.parse(correctAnswersPayload);
+                    socket.emit(SOCKET_EVENTS.GAME.CORRECT_ANSWERS as any, correctAnswersPayload);
+                } catch (error) {
+                    logger.error('Invalid correct_answers payload:', error);
+                }
 
                 // 4. Send feedback with explanation if available using canonical event (like live tournaments)
                 if (questionDetails?.explanation) {
-                    socket.emit('feedback', {
+                    const feedbackPayload: FeedbackPayload = {
                         questionUid: payload.questionUid,
                         feedbackRemaining: 0, // No timer in practice mode
                         explanation: questionDetails.explanation
-                    });
+                    };
+
+                    try {
+                        feedbackPayloadSchema.parse(feedbackPayload);
+                        socket.emit(SOCKET_EVENTS.GAME.FEEDBACK as any, feedbackPayload);
+                    } catch (error) {
+                        logger.error('Invalid feedback payload:', error);
+                    }
                 }
 
                 // 5. Send practice-specific statistics update

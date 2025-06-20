@@ -36,7 +36,7 @@ function projectorHandler(io, socket) {
                 code: 'VALIDATION_ERROR',
                 details: errorDetails
             };
-            socket.emit('projector_error', errorPayload);
+            socket.emit(events_1.PROJECTOR_EVENTS.PROJECTION_ERROR, errorPayload);
             return;
         }
         const { gameId } = parseResult.data;
@@ -82,7 +82,7 @@ function projectorHandler(io, socket) {
                 code: 'VALIDATION_ERROR',
                 details: errorDetails
             };
-            socket.emit('projector_error', errorPayload);
+            socket.emit(events_1.PROJECTOR_EVENTS.PROJECTION_ERROR, errorPayload);
             return;
         }
         const { gameId } = parseResult.data;

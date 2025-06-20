@@ -366,7 +366,7 @@ export function useGameTimer(
             });
 
             // Always use status from payload if present, fallback to running
-            let newStatus: TimerStatus = timerUpdate.status || (timerUpdate.running ? 'play' : 'stop');
+            const newStatus: TimerStatus = timerUpdate.status || (timerUpdate.running ? 'play' : 'stop');
 
             // TimerUpdatePayload.timeLeftMs is expected to be in milliseconds
             const timeLeftInMs = timerUpdate.timeLeftMs || 0;

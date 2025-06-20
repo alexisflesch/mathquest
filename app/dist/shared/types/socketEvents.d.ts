@@ -1,6 +1,9 @@
+import { feedbackPayloadSchema } from './socketEvents.zod';
+import type { z } from 'zod';
+export type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
 import type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload, AnswerSubmissionPayload as GameAnswerPayload, LeaderboardEntry } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
-import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload } from './socket/dashboardPayloads';
+import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload, JoinDashboardPayload } from './socket/dashboardPayloads';
 import type { PracticeClientToServerEvents, PracticeServerToClientEvents } from './practice/events';
 type LeaderboardEntryData = LeaderboardEntry;
 export interface JoinGamePayload {
@@ -17,6 +20,14 @@ export interface ErrorPayload {
     message: string;
     code?: string | number;
     details?: Record<string, any>;
+}
+export interface RoomJoinedPayload {
+    room: string;
+    timestamp: string;
+}
+export interface RoomLeftPayload {
+    room: string;
+    timestamp: string;
 }
 export interface GameAlreadyPlayedPayload {
     accessCode: string;
@@ -35,6 +46,9 @@ export interface PlayerJoinedGamePayload {
 export interface NotificationPayload {
     message: string;
     defaultMode: 'info' | 'warning' | 'error' | 'success';
+}
+export interface GameParticipantsPayload {
+    participants: ParticipantData[];
 }
 export interface GameStateUpdatePayload {
     status: 'waiting' | 'active' | 'paused' | 'finished';
@@ -139,9 +153,7 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
         accessCode: string;
         gameId?: string;
     }) => void;
-    join_dashboard: (payload: {
-        accessCode: string;
-    }) => void;
+    join_dashboard: (payload: JoinDashboardPayload) => void;
     get_game_state: (payload: {
         accessCode: string;
     }) => void;
@@ -174,13 +186,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     }) => void;
     game_joined: (payload: GameJoinedPayload) => void;
     game_question: (payload: LiveQuestionPayload) => void;
-    answer_received: (payload: {
-        questionUid: string;
-        timeSpent: number;
-        correct?: boolean;
-        correctAnswers?: boolean[];
-        explanation?: string;
-    }) => void;
+    answer_received: (payload: AnswerReceivedPayload) => void;
     leaderboard_update: (payload: {
         leaderboard: LeaderboardEntryData[];
     }) => void;
@@ -266,3 +272,13 @@ export interface SocketData {
     practiceUserId?: string;
 }
 export type { TournamentQuestion } from './tournament/question';
+/**
+ * Payload for answer received confirmation
+ */
+export interface AnswerReceivedPayload {
+    questionUid: string;
+    timeSpent: number;
+    correct?: boolean;
+    correctAnswers?: boolean[];
+    explanation?: string;
+}

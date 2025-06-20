@@ -26,38 +26,32 @@ export declare const timerActionPayloadSchema: z.ZodObject<{
     teacherId: z.ZodOptional<z.ZodString>;
     tournamentCode: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "play" | "pause" | "stop";
     questionUid: string;
+    status: "pause" | "stop" | "play";
     quizId: string;
     timeLeftMs?: number | undefined;
     teacherId?: string | undefined;
     tournamentCode?: string | undefined;
 }, {
-    status: "play" | "pause" | "stop";
     questionUid: string;
+    status: "pause" | "stop" | "play";
     quizId: string;
     timeLeftMs?: number | undefined;
     teacherId?: string | undefined;
     tournamentCode?: string | undefined;
 }>;
 export declare const setTimerPayloadSchema: z.ZodObject<{
-    quizId: z.ZodString;
-    timeLeftMs: z.ZodNumber;
-    teacherId: z.ZodOptional<z.ZodString>;
-    tournamentCode: z.ZodOptional<z.ZodString>;
+    gameId: z.ZodString;
+    time: z.ZodNumber;
     questionUid: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    timeLeftMs: number;
-    quizId: string;
+    gameId: string;
+    time: number;
     questionUid?: string | undefined;
-    teacherId?: string | undefined;
-    tournamentCode?: string | undefined;
 }, {
-    timeLeftMs: number;
-    quizId: string;
+    gameId: string;
+    time: number;
     questionUid?: string | undefined;
-    teacherId?: string | undefined;
-    tournamentCode?: string | undefined;
 }>;
 export declare const lockUnlockPayloadSchema: z.ZodObject<{
     quizId: z.ZodString;
@@ -107,12 +101,12 @@ export declare const joinQuizPayloadSchema: z.ZodObject<{
     teacherId: z.ZodOptional<z.ZodString>;
     studentId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    role: "student" | "teacher" | "projector";
+    role: "teacher" | "projector" | "student";
     quizId: string;
     teacherId?: string | undefined;
     studentId?: string | undefined;
 }, {
-    role: "student" | "teacher" | "projector";
+    role: "teacher" | "projector" | "student";
     quizId: string;
     teacherId?: string | undefined;
     studentId?: string | undefined;
@@ -149,17 +143,17 @@ export declare const joinTournamentPayloadSchema: z.ZodObject<{
     code: string;
     userId?: string | undefined;
     username?: string | undefined;
-    avatar?: string | undefined;
-    cookieId?: string | undefined;
     isDeferred?: boolean | undefined;
+    cookieId?: string | undefined;
+    avatar?: string | undefined;
     classId?: string | undefined;
 }, {
     code: string;
     userId?: string | undefined;
     username?: string | undefined;
-    avatar?: string | undefined;
-    cookieId?: string | undefined;
     isDeferred?: boolean | undefined;
+    cookieId?: string | undefined;
+    avatar?: string | undefined;
     classId?: string | undefined;
 }>;
 export declare const tournamentAnswerPayloadSchema: z.ZodObject<{
@@ -169,30 +163,27 @@ export declare const tournamentAnswerPayloadSchema: z.ZodObject<{
     clientTimestamp: z.ZodNumber;
     isDeferred: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    code: string;
     questionUid: string;
+    code: string;
     answerIdx: number | number[];
     clientTimestamp: number;
     isDeferred?: boolean | undefined;
 }, {
-    code: string;
     questionUid: string;
+    code: string;
     answerIdx: number | number[];
     clientTimestamp: number;
     isDeferred?: boolean | undefined;
 }>;
 export declare const updateTournamentCodePayloadSchema: z.ZodObject<{
-    quizId: z.ZodString;
+    gameId: z.ZodString;
     newCode: z.ZodString;
-    teacherId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    quizId: string;
+    gameId: string;
     newCode: string;
-    teacherId?: string | undefined;
 }, {
-    quizId: string;
+    gameId: string;
     newCode: string;
-    teacherId?: string | undefined;
 }>;
 export declare const updateAvatarPayloadSchema: z.ZodObject<{
     tournamentCode: z.ZodString;
@@ -210,12 +201,12 @@ export declare const quizTimerActionPayloadSchema: z.ZodObject<{
     questionUid: z.ZodOptional<z.ZodString>;
     durationMs: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    action: "pause" | "stop" | "start" | "resume" | "set_duration";
+    action: "start" | "pause" | "resume" | "stop" | "set_duration";
     gameId: string;
     questionUid?: string | undefined;
     durationMs?: number | undefined;
 }, {
-    action: "pause" | "stop" | "start" | "resume" | "set_duration";
+    action: "start" | "pause" | "resume" | "stop" | "set_duration";
     gameId: string;
     questionUid?: string | undefined;
     durationMs?: number | undefined;
@@ -228,29 +219,29 @@ export declare const gameTimerUpdatePayloadSchema: z.ZodObject<{
         isPaused: z.ZodOptional<z.ZodBoolean>;
         timeRemainingMs: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        startedAt?: number | undefined;
         durationMs?: number | undefined;
+        startedAt?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     }, {
-        startedAt?: number | undefined;
         durationMs?: number | undefined;
+        startedAt?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     questionUid?: string | undefined;
     timer?: {
-        startedAt?: number | undefined;
         durationMs?: number | undefined;
+        startedAt?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     } | undefined;
 }, {
     questionUid?: string | undefined;
     timer?: {
-        startedAt?: number | undefined;
         durationMs?: number | undefined;
+        startedAt?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     } | undefined;
@@ -279,3 +270,5 @@ export declare const resumeTournamentPayloadSchema: z.ZodObject<{
 }, {
     code: string;
 }>;
+export type SetTimerPayload = z.infer<typeof setTimerPayloadSchema>;
+export type UpdateTournamentCodePayload = z.infer<typeof updateTournamentCodePayloadSchema>;

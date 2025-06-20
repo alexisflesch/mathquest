@@ -2,6 +2,11 @@ import { Server as SocketIOServer } from 'socket.io';
 import Client from 'socket.io-client';
 import { createServer } from 'http';
 import { emitParticipantCount, getParticipantCount } from '@/sockets/utils/participantCountUtils';
+import { joinRoomPayloadSchema, testConnectionPayloadSchema } from '@shared/types/socketEvents.zod';
+import { ZodError, z } from 'zod';
+
+// Derive types from Zod schemas
+type JoinRoomPayload = z.infer<typeof joinRoomPayloadSchema>;
 
 // Mock prisma
 jest.mock('@/db/prisma', () => ({
@@ -27,6 +32,11 @@ describe('Participant Count Functionality', () => {
             const port = (httpServer.address() as any).port;
             clientSocket = require('socket.io-client')(`http://localhost:${port}`);
             io.on('connection', (socket) => {
+                // Validate connection event
+                const connectionValidation = testConnectionPayloadSchema.safeParse({});
+                if (!connectionValidation.success) {
+                    console.warn('Test connection validation failed:', connectionValidation.error);
+                }
                 serverSocket = socket;
             });
             clientSocket.on('connect', done);
@@ -47,9 +57,23 @@ describe('Participant Count Functionality', () => {
     test('emitParticipantCount should emit to dashboard room', (done) => {
         const accessCode = 'TEST123';
 
-        // Set up server-side join handler
+        // Set up server-side join handler with Zod validation
         io.on('connection', (socket) => {
-            socket.on('join-room', (roomName) => {
+            // Validate connection (no payload to validate, but we can log)
+            const connectionValidation = testConnectionPayloadSchema.safeParse({});
+            if (!connectionValidation.success) {
+                console.warn('Test connection validation failed:', connectionValidation.error);
+            }
+
+            socket.on('join-room', (payload: JoinRoomPayload) => {
+                // Validate room name payload
+                const validation = joinRoomPayloadSchema.safeParse(payload);
+                if (!validation.success) {
+                    console.warn('join-room validation failed:', validation.error);
+                    return;
+                }
+
+                const { roomName } = payload;
                 socket.join(roomName);
             });
         });
@@ -58,7 +82,7 @@ describe('Participant Count Functionality', () => {
         const dashboardClient = require('socket.io-client')(`http://localhost:${(httpServer.address() as any).port}`);
 
         dashboardClient.on('connect', () => {
-            dashboardClient.emit('join-room', `dashboard_mock-game-id`);
+            dashboardClient.emit('join-room', { roomName: `dashboard_mock-game-id` });
 
             dashboardClient.on('quiz_connected_count', (data: { count: number }) => {
                 expect(data).toHaveProperty('count');

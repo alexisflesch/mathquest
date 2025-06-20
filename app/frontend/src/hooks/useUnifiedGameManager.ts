@@ -491,12 +491,12 @@ function createRoleSpecificActions(
     const actions: any = {};
     if (role === 'teacher') {
         actions.setQuestion = (questionUid: string, duration?: number) => {
-            if (!config.gameId) {
-                logger.error('Missing gameId for setQuestion');
+            if (!config.accessCode) {
+                logger.error('Missing accessCode for setQuestion');
                 return;
             }
             const payload: import('@shared/types/socket/dashboardPayloads').SetQuestionPayload = {
-                gameId: String(config.gameId),
+                accessCode: config.accessCode,
                 questionUid: questionUid,
                 questionIndex: 0 // TODO: Replace with actual index if available
             };

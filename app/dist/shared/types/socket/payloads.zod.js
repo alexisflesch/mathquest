@@ -19,10 +19,8 @@ exports.timerActionPayloadSchema = zod_1.z.object({
     tournamentCode: zod_1.z.string().optional(),
 });
 exports.setTimerPayloadSchema = zod_1.z.object({
-    quizId: zod_1.z.string(),
-    timeLeftMs: zod_1.z.number(),
-    teacherId: zod_1.z.string().optional(),
-    tournamentCode: zod_1.z.string().optional(),
+    gameId: zod_1.z.string(),
+    time: zod_1.z.number(),
     questionUid: zod_1.z.string().optional(),
 });
 exports.lockUnlockPayloadSchema = zod_1.z.object({
@@ -76,9 +74,8 @@ exports.tournamentAnswerPayloadSchema = zod_1.z.object({
     isDeferred: zod_1.z.boolean().optional(),
 });
 exports.updateTournamentCodePayloadSchema = zod_1.z.object({
-    quizId: zod_1.z.string(),
+    gameId: zod_1.z.string(),
     newCode: zod_1.z.string(),
-    teacherId: zod_1.z.string().optional(),
 });
 exports.updateAvatarPayloadSchema = zod_1.z.object({
     tournamentCode: zod_1.z.string(),

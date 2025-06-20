@@ -19,7 +19,6 @@ import { Share2 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
 import { TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
 import type { LeaderboardEntry } from '@shared/types/core/participant';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Extend shared LeaderboardEntry with tournament-specific fields
 type TournamentLeaderboardEntry = LeaderboardEntry & {
@@ -44,7 +43,7 @@ export default function TournamentLeaderboardPage() {
     useEffect(() => {
         async function fetchLeaderboard() {
             try {
-                const gameResponse = await makeApiRequest<any>(`games/${code}`, {}, undefined, undefined);
+                const gameResponse = await makeApiRequest<{ gameInstance: unknown }>(`games/${code}`, {}, undefined, undefined);
                 if (!gameResponse || !gameResponse.gameInstance) throw new Error('Tournoi introuvable');
 
                 const lb = await makeApiRequest<TournamentLeaderboardResponse>(`games/${code}/leaderboard`, {}, undefined, TournamentLeaderboardResponseSchema);

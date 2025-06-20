@@ -1,0 +1,26 @@
+MATHQUEST QUALITY MONITOR REPORT
+========================================
+Generated: 20250620_195521
+Project: ..
+
+SUMMARY:
+  Files Analyzed: 77
+  Total Issues: 0
+  Critical Issues: 0
+  Warnings: 0
+  Auto-fixable: 0
+  Overall Score: 48.0/100
+
+CATEGORY SCORES:
+  Bundle Health: 98.0/100
+  Dependencies: 70.0/100
+  Code Quality: 24.0/100
+  Type Safety: 0.0/100
+
+TOP RECOMMENDATIONS:
+  1. [MEDIUM] Found 16 files using '@/types' instead of '@shared/types'
+     Action: Update imports to use shared types consistently
+  2. [LOW] Found 7 suspicious files
+     Action: Review files with suspicious names (backup, temp, old)
+  3. [INFO] No critical code quality issues found
+     Action: Code quality looks good! Consider fixing any remaining warnings

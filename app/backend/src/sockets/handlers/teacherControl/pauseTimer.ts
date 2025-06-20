@@ -30,7 +30,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 details: errorDetails
             };
 
-            socket.emit('error_dashboard', errorPayload);
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
             if (callback) {
                 callback({
                     success: false,
@@ -48,7 +48,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
         let gameAccessCode: string | null = null;
 
         if (!userId) {
-            socket.emit('error_dashboard', {
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control timer',
             } as ErrorPayload);
@@ -82,7 +82,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                     gameAccessCode = accessCode;
                 }
             } else {
-                socket.emit('error_dashboard', {
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, {
                     code: 'MISSING_PARAMS',
                     message: 'Either game ID or access code must be provided',
                 } as ErrorPayload);
@@ -97,7 +97,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             }
 
             if (!gameInstance) {
-                socket.emit('error_dashboard', {
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, {
                     code: 'GAME_NOT_FOUND',
                     message: 'Game not found with the provided ID or access code',
                 } as ErrorPayload);
@@ -116,7 +116,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
                 gameInstance.gameTemplate?.creatorId === userId;
 
             if (!isAuthorized) {
-                socket.emit('error_dashboard', {
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, {
                     code: 'NOT_AUTHORIZED',
                     message: 'You are not authorized to control this game',
                 } as ErrorPayload);
@@ -132,7 +132,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
 
             // Need accessCode for game state operations
             if (!gameAccessCode) {
-                socket.emit('error_dashboard', {
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, {
                     code: 'MISSING_ACCESS_CODE',
                     message: 'Access code is required to manage game state',
                 } as ErrorPayload);
@@ -152,7 +152,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             // Get current game state
             const fullState = await gameStateService.getFullGameState(accessCodeStr);
             if (!fullState || !fullState.gameState) {
-                socket.emit('error_dashboard', {
+                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, {
                     code: 'STATE_ERROR',
                     message: 'Could not retrieve game state',
                 } as ErrorPayload);
@@ -178,7 +178,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             // Skip if timer is already paused
             if (timer.isPaused) {
                 // If already paused, just return current state
-                socket.emit('timer_update_response', {
+                socket.emit(TEACHER_EVENTS.TIMER_UPDATE_RESPONSE as any, {
                     success: true,
                     timer
                 });
@@ -245,7 +245,7 @@ export function pauseTimerHandler(io: SocketIOServer, socket: Socket) {
             }
         } catch (error) {
             logger.error({ accessCode, error }, 'Error pausing timer');
-            socket.emit('error_dashboard', {
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, {
                 code: 'TIMER_ERROR',
                 message: 'Failed to pause timer',
                 details: { error: error instanceof Error ? error.message : String(error) }

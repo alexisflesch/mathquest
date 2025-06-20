@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.requestNextQuestionHandler = requestNextQuestionHandler;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const events_1 = require("@shared/types/socket/events");
 const questionTypes_1 = require("@shared/constants/questionTypes");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('RequestNextQuestionHandler');
@@ -26,7 +27,7 @@ function requestNextQuestionHandler(io, socket) {
                 code: 'VALIDATION_ERROR',
                 details: errorDetails
             };
-            socket.emit('game_error', errorPayload);
+            socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
             return;
         }
         const validPayload = parseResult.data;
@@ -45,14 +46,14 @@ function requestNextQuestionHandler(io, socket) {
             });
             if (!gameInstance) {
                 const errorPayload = { message: 'Game not found.' };
-                socket.emit('game_error', errorPayload);
+                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
                 return;
             }
             // Allow request_next_question for practice mode
             if (gameInstance.playMode !== 'practice') {
                 logger.warn({ accessCode, userId }, 'Request next question is only for practice mode.');
                 const errorPayload = { message: 'This operation is only for practice mode.' };
-                socket.emit('game_error', errorPayload);
+                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
                 return;
             }
             // 2. Get participant
@@ -61,7 +62,7 @@ function requestNextQuestionHandler(io, socket) {
             });
             if (!participant) {
                 const errorPayload = { message: 'Participant not found.' };
-                socket.emit('game_error', errorPayload);
+                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
                 return;
             }
             // 3. Get all questions
@@ -134,7 +135,7 @@ function requestNextQuestionHandler(io, socket) {
                     questionState: 'active'
                 };
                 // Send the question data using the proper LiveQuestionPayload structure
-                socket.emit('game_question', liveQuestionPayload); // TODO: Define shared type if missing
+                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, liveQuestionPayload);
             }
             else {
                 // All questions answered: compute and send final score
@@ -152,13 +153,14 @@ function requestNextQuestionHandler(io, socket) {
                 }
                 // Send final score
                 logger.info({ accessCode, userId, correctCount, total }, 'Practice mode completed, sending final score');
-                socket.emit('game_ended', {
+                const gameEndedPayload = {
                     accessCode,
                     score: correctCount,
                     totalQuestions: total,
                     correct: correctCount,
                     total: total
-                }); // TODO: Define shared type if missing
+                };
+                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ENDED, gameEndedPayload);
                 // Update participant as completed
                 await prisma_1.prisma.gameParticipant.update({
                     where: { id: participant.id },
@@ -169,7 +171,7 @@ function requestNextQuestionHandler(io, socket) {
         catch (err) {
             logger.error({ err, socketId: socket.id }, 'Error handling request_next_question');
             const errorPayload = { message: 'Error processing next question request.' };
-            socket.emit('game_error', errorPayload);
+            socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
         }
     };
 }

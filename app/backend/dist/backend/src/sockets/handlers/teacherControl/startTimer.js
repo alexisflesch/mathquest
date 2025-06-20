@@ -28,7 +28,7 @@ function startTimerHandler(io, socket) {
                 code: 'VALIDATION_ERROR',
                 details: errorDetails
             };
-            socket.emit('error_dashboard', errorPayload);
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
             if (callback) {
                 callback({
                     success: false,
@@ -43,7 +43,7 @@ function startTimerHandler(io, socket) {
         let gameInstance = null;
         let gameAccessCode = null;
         if (!userId) {
-            socket.emit('error_dashboard', {
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control timer',
             });
@@ -77,7 +77,7 @@ function startTimerHandler(io, socket) {
                 }
             }
             else {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'MISSING_PARAMS',
                     message: 'Either game ID or access code must be provided',
                 });
@@ -91,7 +91,7 @@ function startTimerHandler(io, socket) {
                 return;
             }
             if (!gameInstance) {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'GAME_NOT_FOUND',
                     message: 'Game not found with the provided ID or access code',
                 });
@@ -112,7 +112,7 @@ function startTimerHandler(io, socket) {
                 const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
                 // If we're in a test environment and both IDs exist, we'll allow it
                 if (!isTestEnvironment) {
-                    socket.emit('error_dashboard', {
+                    socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                         code: 'NOT_AUTHORIZED',
                         message: 'You are not authorized to control this game',
                     });
@@ -129,7 +129,7 @@ function startTimerHandler(io, socket) {
             }
             // Need accessCode for game state operations
             if (!gameAccessCode) {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'MISSING_ACCESS_CODE',
                     message: 'Access code is required to manage game state',
                 });
@@ -168,7 +168,7 @@ function startTimerHandler(io, socket) {
                 };
             }
             else {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'STATE_ERROR',
                     message: 'Could not retrieve game state',
                 });
@@ -218,7 +218,7 @@ function startTimerHandler(io, socket) {
         }
         catch (error) {
             logger.error({ accessCode, duration, error }, 'Error starting timer');
-            socket.emit('error_dashboard', {
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'TIMER_ERROR',
                 message: 'Failed to start timer',
                 details: error instanceof Error ? error.message : String(error)

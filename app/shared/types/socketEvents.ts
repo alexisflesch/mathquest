@@ -2,6 +2,17 @@
 // This file defines the types for Socket.IO events and their payloads,
 // shared between the backend and frontend.
 
+// Import Zod schemas for type derivation
+import {
+    feedbackPayloadSchema,
+    answerFeedbackPayloadSchema,
+    gameStateUpdatePayloadSchema
+} from './socketEvents.zod';
+import type { z } from 'zod';
+
+// Derive types from Zod schemas
+export type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
+
 // Import consolidated core types
 import type {
     ParticipantData,
@@ -12,7 +23,7 @@ import type {
     LeaderboardEntry
 } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
-import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload } from './socket/dashboardPayloads';
+import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload, JoinDashboardPayload } from './socket/dashboardPayloads';
 import type {
     PracticeClientToServerEvents,
     PracticeServerToClientEvents
@@ -44,6 +55,17 @@ export interface ErrorPayload {
     details?: Record<string, any>; // Optional error details for validation errors
 }
 
+// Room management payloads
+export interface RoomJoinedPayload {
+    room: string;
+    timestamp: string;
+}
+
+export interface RoomLeftPayload {
+    room: string;
+    timestamp: string;
+}
+
 // Payload for when a player has already played/completed a differed game
 export interface GameAlreadyPlayedPayload {
     accessCode: string;
@@ -72,6 +94,11 @@ export interface PlayerJoinedGamePayload {
 export interface NotificationPayload {
     message: string;
     defaultMode: 'info' | 'warning' | 'error' | 'success';
+}
+
+// Game participants list payload
+export interface GameParticipantsPayload {
+    participants: ParticipantData[];
 }
 
 // --- Specific Data Structures for Payloads ---
@@ -188,7 +215,7 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
     quiz_timer_action: (payload: TimerActionPayload) => void;
     lock_answers: (payload: { accessCode?: string; gameId?: string; lock: boolean }) => void;
     end_game: (payload: { accessCode: string; gameId?: string }) => void;
-    join_dashboard: (payload: { accessCode: string }) => void;
+    join_dashboard: (payload: JoinDashboardPayload) => void;
     get_game_state: (payload: { accessCode: string }) => void;
     set_timer: (payload: { gameId?: string; time: number; questionUid?: string }) => void;
     update_tournament_code: (payload: { gameId: string; newCode: string }) => void;
@@ -205,13 +232,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
 
     game_joined: (payload: GameJoinedPayload) => void; // Updated to use GameJoinedPayload
     game_question: (payload: LiveQuestionPayload) => void;
-    answer_received: (payload: {
-        questionUid: string;
-        timeSpent: number;
-        correct?: boolean;
-        correctAnswers?: boolean[];
-        explanation?: string;
-    }) => void;
+    answer_received: (payload: AnswerReceivedPayload) => void;
     leaderboard_update: (payload: { leaderboard: LeaderboardEntryData[] }) => void;
     player_joined_game: (payload: PlayerJoinedGamePayload) => void; // Updated to use PlayerJoinedGamePayload
     player_left_game: (payload: { userId: string; socketId: string }) => void; // Broadcast when a player leaves
@@ -275,3 +296,14 @@ export interface SocketData {
 
 // Re-export tournament question types for easy access
 export type { TournamentQuestion } from './tournament/question';
+
+/**
+ * Payload for answer received confirmation
+ */
+export interface AnswerReceivedPayload {
+    questionUid: string;
+    timeSpent: number;
+    correct?: boolean;
+    correctAnswers?: boolean[];
+    explanation?: string;
+}

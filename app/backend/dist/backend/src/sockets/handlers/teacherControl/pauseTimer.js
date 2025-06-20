@@ -28,7 +28,7 @@ function pauseTimerHandler(io, socket) {
                 code: 'VALIDATION_ERROR',
                 details: errorDetails
             };
-            socket.emit('error_dashboard', errorPayload);
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
             if (callback) {
                 callback({
                     success: false,
@@ -43,7 +43,7 @@ function pauseTimerHandler(io, socket) {
         let gameInstance = null;
         let gameAccessCode = null;
         if (!userId) {
-            socket.emit('error_dashboard', {
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'AUTHENTICATION_REQUIRED',
                 message: 'Authentication required to control timer',
             });
@@ -77,7 +77,7 @@ function pauseTimerHandler(io, socket) {
                 }
             }
             else {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'MISSING_PARAMS',
                     message: 'Either game ID or access code must be provided',
                 });
@@ -91,7 +91,7 @@ function pauseTimerHandler(io, socket) {
                 return;
             }
             if (!gameInstance) {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'GAME_NOT_FOUND',
                     message: 'Game not found with the provided ID or access code',
                 });
@@ -108,7 +108,7 @@ function pauseTimerHandler(io, socket) {
             const isAuthorized = gameInstance.initiatorUserId === userId ||
                 gameInstance.gameTemplate?.creatorId === userId;
             if (!isAuthorized) {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'NOT_AUTHORIZED',
                     message: 'You are not authorized to control this game',
                 });
@@ -123,7 +123,7 @@ function pauseTimerHandler(io, socket) {
             }
             // Need accessCode for game state operations
             if (!gameAccessCode) {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'MISSING_ACCESS_CODE',
                     message: 'Access code is required to manage game state',
                 });
@@ -141,7 +141,7 @@ function pauseTimerHandler(io, socket) {
             // Get current game state
             const fullState = await gameStateService_1.default.getFullGameState(accessCodeStr);
             if (!fullState || !fullState.gameState) {
-                socket.emit('error_dashboard', {
+                socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                     code: 'STATE_ERROR',
                     message: 'Could not retrieve game state',
                 });
@@ -164,7 +164,7 @@ function pauseTimerHandler(io, socket) {
             // Skip if timer is already paused
             if (timer.isPaused) {
                 // If already paused, just return current state
-                socket.emit('timer_update_response', {
+                socket.emit(events_1.TEACHER_EVENTS.TIMER_UPDATE_RESPONSE, {
                     success: true,
                     timer
                 });
@@ -224,7 +224,7 @@ function pauseTimerHandler(io, socket) {
         }
         catch (error) {
             logger.error({ accessCode, error }, 'Error pausing timer');
-            socket.emit('error_dashboard', {
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
                 code: 'TIMER_ERROR',
                 message: 'Failed to pause timer',
                 details: { error: error instanceof Error ? error.message : String(error) }

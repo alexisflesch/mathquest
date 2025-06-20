@@ -1,16 +1,14 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { redisClient } from '@/config/redis';
 import { z } from 'zod';
-import { GAME_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import type { GameParticipantsPayload } from '@shared/types/socketEvents';
 
 // Inline schema for request_participants event
 const requestParticipantsPayloadSchema = z.object({ accessCode: z.string().min(1) });
 export type RequestParticipantsPayload = z.infer<typeof requestParticipantsPayloadSchema>;
 
 const PARTICIPANTS_KEY_PREFIX = 'mathquest:game:participants:';
-
-// TODO: Import or define type for:
-// - game_participants
 
 export function requestParticipantsHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: RequestParticipantsPayload) => {
@@ -20,6 +18,7 @@ export function requestParticipantsHandler(io: SocketIOServer, socket: Socket) {
         const { accessCode } = parseResult.data;
         const participantsHash = await redisClient.hgetall(`${PARTICIPANTS_KEY_PREFIX}${accessCode}`);
         const participants = Object.values(participantsHash).map((p: any) => JSON.parse(p));
-        socket.emit('game_participants', { participants }); // TODO: Define shared type if missing
+        const gameParticipantsPayload: GameParticipantsPayload = { participants };
+        socket.emit(SOCKET_EVENTS.GAME.GAME_PARTICIPANTS as any, gameParticipantsPayload);
     };
 }

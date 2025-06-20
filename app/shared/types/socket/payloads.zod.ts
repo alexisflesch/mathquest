@@ -19,10 +19,8 @@ export const timerActionPayloadSchema = z.object({
 });
 
 export const setTimerPayloadSchema = z.object({
-  quizId: z.string(),
-  timeLeftMs: z.number(),
-  teacherId: z.string().optional(),
-  tournamentCode: z.string().optional(),
+  gameId: z.string(),
+  time: z.number(),
   questionUid: z.string().optional(),
 });
 
@@ -85,9 +83,8 @@ export const tournamentAnswerPayloadSchema = z.object({
 });
 
 export const updateTournamentCodePayloadSchema = z.object({
-  quizId: z.string(),
+  gameId: z.string(),
   newCode: z.string(),
-  teacherId: z.string().optional(),
 });
 
 export const updateAvatarPayloadSchema = z.object({
@@ -132,3 +129,7 @@ export const pauseTournamentPayloadSchema = z.object({
 export const resumeTournamentPayloadSchema = z.object({
   code: z.string(),
 });
+
+// Type exports from Zod schemas
+export type SetTimerPayload = z.infer<typeof setTimerPayloadSchema>;
+export type UpdateTournamentCodePayload = z.infer<typeof updateTournamentCodePayloadSchema>;

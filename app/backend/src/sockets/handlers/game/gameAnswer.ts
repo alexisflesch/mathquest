@@ -4,6 +4,7 @@ import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
 import { getFullGameState } from '@/core/gameStateService';
 import createLogger from '@/utils/logger';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import {
     ClientToServerEvents,
     ServerToClientEvents,
@@ -57,7 +58,7 @@ export function gameAnswerHandler(
             };
 
             // Emit error response
-            socket.emit('game_error', errorPayload);
+            socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
             return;
         }
         const { accessCode, userId, questionUid, answer, timeSpent } = parseResult.data;
@@ -80,7 +81,7 @@ export function gameAnswerHandler(
                 logger.warn({ socketId: socket.id, error: 'Game not found', accessCode }, 'EARLY RETURN: Game instance not found');
                 const errorPayload: ErrorPayload = { message: 'Game not found.' };
                 logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: game not found');
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
             if (gameInstance.isDiffered) {
@@ -93,7 +94,7 @@ export function gameAnswerHandler(
                     logger.warn({ socketId: socket.id, error: 'Differed mode not available', accessCode }, 'EARLY RETURN: Differed window not available');
                     const errorPayload: ErrorPayload = { message: 'Differed mode not available at this time.' };
                     logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: differed window not available');
-                    socket.emit('game_error', errorPayload);
+                    socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                     return;
                 }
             }
@@ -107,7 +108,7 @@ export function gameAnswerHandler(
                 });
             } catch (err) {
                 logger.error({ err, accessCode, userId, questionUid }, 'Error during participant lookup');
-                socket.emit('game_error', { message: 'Error looking up participant.' });
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, { message: 'Error looking up participant.' });
                 return;
             }
             logger.debug({ participant }, 'Result of participant lookup');
@@ -115,14 +116,14 @@ export function gameAnswerHandler(
                 logger.warn({ socketId: socket.id, error: 'Participant not found', userId, gameInstanceId: gameInstance.id }, 'EARLY RETURN: Participant not found');
                 const errorPayload: ErrorPayload = { message: 'Participant not found.' };
                 logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: participant not found');
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
             if (gameInstance.isDiffered && participant.completedAt) {
                 logger.warn({ socketId: socket.id, error: 'Already completed', userId, gameInstanceId: gameInstance.id }, 'EARLY RETURN: Already completed tournament');
                 const errorPayload: ErrorPayload = { message: 'You have already completed this tournament.' };
                 logger.warn({ errorPayload }, 'Emitting game_error: already completed');
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
 
@@ -132,7 +133,7 @@ export function gameAnswerHandler(
             if (!fullGameState) {
                 logger.warn({ socketId: socket.id, error: 'Game state not found', accessCode }, 'EARLY RETURN: Game state not found');
                 const errorPayload: ErrorPayload = { message: 'Game state not found.' };
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
 
@@ -152,7 +153,7 @@ export function gameAnswerHandler(
                     message: 'Game is not active. Answers cannot be submitted.',
                     code: 'GAME_NOT_ACTIVE'
                 };
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
 
@@ -163,7 +164,7 @@ export function gameAnswerHandler(
                     message: 'Answers are locked for this question.',
                     code: 'ANSWERS_LOCKED'
                 };
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
 
@@ -202,7 +203,7 @@ export function gameAnswerHandler(
                         code: 'TIMER_STOPPED'
                     };
                     logger.info({ errorPayload, socketId: socket.id }, 'Emitting game_error: timer stopped');
-                    socket.emit('game_error', errorPayload);
+                    socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                     return;
                 }
 
@@ -229,7 +230,7 @@ export function gameAnswerHandler(
                             message: 'Time has expired for this question.',
                             code: 'TIME_EXPIRED'
                         };
-                        socket.emit('game_error', errorPayload);
+                        socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                         return;
                     }
                 }
@@ -249,7 +250,7 @@ export function gameAnswerHandler(
 
             if (!submissionResult.success) {
                 logger.error({ accessCode, userId, questionUid, error: submissionResult.error }, 'Answer submission failed');
-                socket.emit('game_error', {
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, {
                     message: submissionResult.error || 'Failed to submit answer',
                     code: 'SUBMISSION_ERROR'
                 });
@@ -273,14 +274,14 @@ export function gameAnswerHandler(
                 // Emit feedback about the submission
                 if (!scoreResult.scoreUpdated && scoreResult.answerChanged === false) {
                     // Same answer resubmitted
-                    socket.emit('answer_received', {
+                    socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, {
                         questionUid,
                         timeSpent
                     });
                     logger.info({ userId, questionUid, message: 'Duplicate answer - no points added' }, 'Same answer resubmitted');
                 } else if (scoreResult.scoreUpdated) {
                     // New score awarded
-                    socket.emit('answer_received', {
+                    socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, {
                         questionUid,
                         timeSpent
                     });
@@ -293,7 +294,7 @@ export function gameAnswerHandler(
                     }, 'Answer scored successfully');
                 } else {
                     // Answer recorded but no points
-                    socket.emit('answer_received', {
+                    socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, {
                         questionUid,
                         timeSpent
                     });
@@ -320,7 +321,7 @@ export function gameAnswerHandler(
                     playMode: gameInstance.playMode
                 }, 'Emitting answer stats update to dashboard room');
 
-                io.to(dashboardRoom).emit('dashboard_answer_stats_update', dashboardStatsPayload);
+                io.to(dashboardRoom).emit(TEACHER_EVENTS.DASHBOARD_ANSWER_STATS_UPDATE as any, dashboardStatsPayload);
             } catch (statsError) {
                 logger.error({
                     accessCode,
@@ -339,7 +340,7 @@ export function gameAnswerHandler(
                 // This should ideally not happen if the previous findFirst succeeded
                 const errorPayload: ErrorPayload = { message: 'Error fetching updated participant data.' };
                 logger.warn({ errorPayload }, 'Emitting game_error: error fetching updated participant');
-                socket.emit('game_error', errorPayload);
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
             // Use shared leaderboard calculation
@@ -348,7 +349,7 @@ export function gameAnswerHandler(
             if (gameInstance.isDiffered) {
                 // Practice mode: send correctAnswers and feedback immediately
                 const question = await prisma.question.findUnique({ where: { uid: questionUid } });
-                socket.emit('answer_received', {
+                socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, {
                     questionUid,
                     timeSpent,
                     correct: isCorrect,
@@ -358,7 +359,7 @@ export function gameAnswerHandler(
                 // 3. Get GameInstance to find gameTemplateId
                 const gameInst = await prisma.gameInstance.findUnique({ where: { id: participant.gameInstanceId } });
                 if (!gameInst) {
-                    socket.emit('game_error', { message: 'Game instance not found for participant.' });
+                    socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, { message: 'Game instance not found for participant.' });
                     return;
                 }
                 const allQuestions = await prisma.questionsInGameTemplate.findMany({
@@ -430,11 +431,11 @@ export function gameAnswerHandler(
                     roomName = `game_${accessCode}`;
                 }
                 logger.info({ leaderboard, roomName }, 'Emitting leaderboard_update to room');
-                io.to(roomName).emit('leaderboard_update', { leaderboard });
+                io.to(roomName).emit(SOCKET_EVENTS.GAME.LEADERBOARD_UPDATE as any, { leaderboard });
                 // Only emit answer_received with minimal info (NO correct field for tournament/quiz)
                 logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode (without correct field)');
                 try {
-                    socket.emit('answer_received', { questionUid, timeSpent });
+                    socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });
                     console.log(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
                 } catch (emitError) {
                     logger.error({ emitError, socketId: socket.id }, 'Error emitting answer_received');
@@ -446,11 +447,11 @@ export function gameAnswerHandler(
 
             try {
                 // Try to send error response
-                socket.emit('game_error', { message: 'Unexpected error during answer submission.' });
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, { message: 'Unexpected error during answer submission.' });
 
                 // Also send back answer_received to unblock the client (without correct field)
                 if (questionUid && timeSpent !== undefined) {
-                    socket.emit('answer_received', { questionUid, timeSpent });
+                    socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });
                     console.log(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
                 }
             } catch (emitError) {
