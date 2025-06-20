@@ -87,13 +87,10 @@ export function requestNextQuestionHandler(
                 }
             });
 
-            // 4. Use participant.answers to determine which questions are answered
-            const answersArr = Array.isArray(participant.answers) ? participant.answers : [];
-            const answeredSet = new Set(
-                answersArr
-                    .filter(a => a && typeof a === 'object' && 'questionUid' in a)
-                    .map((a: any) => a.questionUid)
-            );
+            // Since answers field was removed, we'll use a simple progression for now
+            // TODO: Implement Redis-based answer tracking if needed
+            const answersArr: any[] = [];
+            const answeredSet = new Set<string>();
 
             // 5. Find next unanswered question - skip the current one
             let nextQuestion = null;
@@ -185,10 +182,9 @@ export function requestNextQuestionHandler(
                 socket.emit(SOCKET_EVENTS.GAME.GAME_ENDED as any, gameEndedPayload);
 
                 // Update participant as completed
-                await prisma.gameParticipant.update({
-                    where: { id: participant.id },
-                    data: { completedAt: new Date() }
-                });
+                // Remove completedAt update since field was removed
+                // Tournament completion is now tracked differently
+                logger.info({ participantId: participant.id }, 'Tournament completed (no database update needed)');
             }
         } catch (err) {
             logger.error({ err, socketId: socket.id }, 'Error handling request_next_question');

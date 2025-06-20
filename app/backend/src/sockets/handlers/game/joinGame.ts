@@ -123,16 +123,8 @@ export function joinGameHandler(
                     socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                     return;
                 }
-                const existing = await prisma.gameParticipant.findFirst({
-                    where: { gameInstanceId: gameInstance.id, userId }
-                });
-                logger.debug({ existing }, 'Existing participant for differed game');
-                if (existing && existing.completedAt) {
-                    const gameAlreadyPlayedPayload: GameAlreadyPlayedPayload = { accessCode };
-                    logger.info({ gameAlreadyPlayedPayload }, 'Emitting game_already_played');
-                    socket.emit(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED as any, gameAlreadyPlayedPayload);
-                    return;
-                }
+                // Note: Tournament replay prevention is now handled by GameParticipantService.joinGame()
+                // This ensures consistent replay blocking for both live and deferred tournaments
             } else {
                 let roomName = accessCode;
                 if (gameInstance.playMode === 'quiz') {
@@ -154,6 +146,7 @@ export function joinGameHandler(
             const joinResult = await participantService.joinGame(userId, accessCode, username, avatarEmoji);
             logger.debug({ joinResult }, 'Result of participantService.joinGame');
             if (!joinResult.success || !joinResult.participant) {
+                // Handle join errors
                 const errorPayload: ErrorPayload = { message: joinResult.error || 'Join failed.' };
                 logger.warn({ errorPayload }, 'Emitting game_error: join failed');
                 socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);

@@ -49,8 +49,8 @@ jest.mock('@/components/MathJaxWrapper', () => {
 
 // Mock components that use complex rendering
 jest.mock('@/components/TournamentTimer', () => {
-    return function TournamentTimer({ timer }: { timer: number | null }) {
-        return <div data-testid="tournament-timer">Timer: {timer || 'No timer'}</div>;
+    return function TournamentTimer({ timerS }: { timerS: number | null }) {
+        return <div data-testid="tournament-timer">Timer: {timerS || 'No timer'}</div>;
     };
 });
 
@@ -363,7 +363,7 @@ describe('LiveGamePage - Tournament Mode', () => {
             connected: true,
             gameState: {
                 ...defaultGameState,
-                gameStatus: 'finished'
+                gameStatus: 'completed'
             }
         });
 
@@ -397,6 +397,7 @@ describe('LiveGamePage - Tournament Mode', () => {
             connected: true,
             gameState: {
                 ...defaultGameState,
+                gameMode: 'practice', // Set practice mode
                 currentQuestion: {
                     uid: questionPayload.question.uid,
                     text: questionPayload.question.text,
@@ -422,7 +423,11 @@ describe('LiveGamePage - Tournament Mode', () => {
         // Should show answered state
         expect(screen.getByTestId('answered-state')).toBeInTheDocument();
 
-        // Should show next question button
+        // In practice mode with feedback, first close the feedback overlay to access progression buttons
+        const feedbackCloseButtons = screen.getAllByTestId('feedback-close');
+        fireEvent.click(feedbackCloseButtons[0]); // Click the first close button
+
+        // Should show next question button after closing feedback
         expect(screen.getByText(/question suivante|terminer l'entraînement/i)).toBeInTheDocument();
     });
 

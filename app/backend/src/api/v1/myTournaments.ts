@@ -165,8 +165,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                                     userId: targetUserId
                                 },
                                 select: {
-                                    score: true,
-                                    rank: true
+                                    score: true
                                 }
                             });
                             return { gameId: game.id, participant };
@@ -186,7 +185,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                             date_debut: game.startedAt?.toISOString() || null,
                             date_fin: game.endedAt?.toISOString() || null,
                             creatorUsername: game.initiatorUser?.username || 'Inconnu',
-                            position: participation?.rank || 0,
+                            position: 0, // Rank removed - would need to calculate from leaderboard if needed
                             score: participation?.score || 0
                         };
 

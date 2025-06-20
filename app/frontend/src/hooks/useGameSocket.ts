@@ -22,7 +22,7 @@ import type {
     InterServerEvents,
     SocketData
 } from '@shared/types/socketEvents';
-import type { TimerRole, TimerState } from './useGameTimer';
+import type { TimerRole, GameTimerState } from '@shared/types';
 import {
     joinGamePayloadSchema,
     gameAnswerPayloadSchema,
@@ -78,7 +78,7 @@ export interface GameSocketHook {
 
     // Timer-specific events
     emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', accessCode: string, questionUid?: string, duration?: number) => void;
-    onTimerUpdate: (handler: (timerState: Partial<TimerState>) => void) => () => void;
+    onTimerUpdate: (handler: (timerState: Partial<GameTimerState>) => void) => () => void;
 }
 
 // --- Default Socket Configurations by Role ---
@@ -355,7 +355,7 @@ export function useGameSocket(
         // Add other roles as needed
     }, [socket, role]);
 
-    const onTimerUpdate = useCallback((handler: (timerState: Partial<TimerState>) => void) => {
+    const onTimerUpdate = useCallback((handler: (timerState: Partial<GameTimerState>) => void) => {
         if (!socket) {
             logger.warn(`[${role.toUpperCase()}] Cannot register timer update handler: no socket`);
             return () => { };
@@ -365,7 +365,7 @@ export function useGameSocket(
             try {
                 const validatedPayload = timerUpdatePayloadSchema.parse(payload);
                 // Convert to GameTimerState format
-                const timerState: Partial<TimerState> = {
+                const timerState: Partial<GameTimerState> = {
                     timeLeftMs: validatedPayload.timeLeftMs ?? 0,
                     isRunning: validatedPayload.running,
                     durationMs: validatedPayload.durationMs,

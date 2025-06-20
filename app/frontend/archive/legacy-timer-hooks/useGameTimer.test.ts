@@ -97,10 +97,8 @@ describe('useGameTimer Hook', () => {
                 SOCKET_EVENTS.TEACHER.TIMER_UPDATE,
                 expect.any(Function)
             );
-            expect(mockSocket.on).toHaveBeenCalledWith(
-                SOCKET_EVENTS.TEACHER.DASHBOARD_TIMER_UPDATED,
-                expect.any(Function)
-            );
+            // NOTE: dashboard_timer_updated is handled by useTeacherQuizSocket to avoid duplicate listeners
+            // so we don't expect it to be registered here
         });
 
         it('should register socket events for student role', () => {

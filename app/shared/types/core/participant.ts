@@ -7,6 +7,14 @@
  */
 
 /**
+ * Participation type enum to distinguish between live and deferred participation
+ */
+export enum ParticipationType {
+    LIVE = 'LIVE',
+    DEFERRED = 'DEFERRED'
+}
+
+/**
  * Base participant interface with core properties
  * Used as foundation for all participant-related types
  */
@@ -51,6 +59,10 @@ export interface GameParticipant extends BaseParticipant {
     joinedAt?: number | string;
     /** Whether participant is in deferred mode */
     isDeferred?: boolean;
+    /** Type of participation (live or deferred) */
+    participationType?: ParticipationType;
+    /** Number of attempts for this tournament */
+    attemptCount?: number;
     /** Backup identifier for session management */
     cookieId?: string;
 }
@@ -81,6 +93,12 @@ export interface LeaderboardEntry {
     score: number;
     /** Calculated rank position */
     rank?: number;
+    /** Type of participation (live or deferred) */
+    participationType?: ParticipationType;
+    /** Number of attempts for this tournament */
+    attemptCount?: number;
+    /** Unique ID for this specific participation (optional for backwards compatibility) */
+    participationId?: string;
 }
 
 /**

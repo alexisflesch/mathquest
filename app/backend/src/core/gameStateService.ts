@@ -2,7 +2,7 @@ import { redisClient } from '@/config/redis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
-import { GameState, LeaderboardEntry } from '@shared/types/core';
+import { GameState, LeaderboardEntry, ParticipationType } from '@shared/types/core';
 
 // Re-export GameState for backward compatibility
 export { GameState } from '@shared/types/core';
@@ -18,137 +18,62 @@ const GAME_LEADERBOARD_PREFIX = 'mathquest:game:leaderboard:';
 const PROJECTION_DISPLAY_PREFIX = 'mathquest:projection:display:';
 
 /**
- * Get formatted leaderboard data for a game
+ * Get formatted leaderboard data for a game showing ALL participations
  * 
  * @param accessCode The game access code
- * @returns The formatted leaderboard data
+ * @returns The formatted leaderboard data with all participations
  */
 export async function getFormattedLeaderboard(accessCode: string): Promise<LeaderboardEntry[]> {
     try {
-        const participantsHash = await redisClient.hgetall(`${GAME_PARTICIPANTS_PREFIX}${accessCode}`);
-        const participantsFromRedis = participantsHash
-            ? Object.values(participantsHash).map(p => JSON.parse(p as string) as { userId: string, username: string, avatarEmoji: string, [key: string]: any })
-            : [];
+        logger.info({ accessCode }, "Fetching all participations for leaderboard");
 
-        // DEBUG: Log participants hash state
-        logger.info({
-            accessCode,
-            participantsHashKeys: participantsHash ? Object.keys(participantsHash) : null,
-            participantsHashCount: participantsHash ? Object.keys(participantsHash).length : 0,
-            participantsFromRedisCount: participantsFromRedis.length,
-            participantsFromRedis: participantsFromRedis.map(p => ({ userId: p.userId, username: p.username, avatarEmoji: p.avatarEmoji }))
-        }, '🔍 [DEBUG-LEADERBOARD] Participants hash state in getFormattedLeaderboard');
-
-        const leaderboardRaw = await redisClient.zrevrange(
-            `${GAME_LEADERBOARD_PREFIX}${accessCode}`,
-            0,
-            -1,
-            'WITHSCORES'
-        );
-
-        // If Redis leaderboard is empty, try to get from database
-        if (leaderboardRaw.length === 0) {
-            logger.info({ accessCode }, "Redis leaderboard empty, checking database");
-
-            const gameInstance = await prisma.gameInstance.findUnique({
-                where: { accessCode },
-                select: { leaderboard: true }
-            });
-
-            if (gameInstance?.leaderboard && Array.isArray(gameInstance.leaderboard)) {
-                logger.info({ accessCode, count: gameInstance.leaderboard.length }, "Using database leaderboard");
-                return (gameInstance.leaderboard as any[]).map((entry, index) => ({
-                    ...entry,
-                    avatarEmoji: entry.avatarEmoji || entry.avatar, // Ensure consistent field name
-                    rank: index + 1
-                }));
-            } else {
-                logger.warn({ accessCode }, "No leaderboard found in database either");
-                return [];
-            }
-        }
-
-        const leaderboardPromises = [];
-
-        // DEBUG: Log leaderboard raw state
-        logger.info({
-            accessCode,
-            leaderboardRawLength: leaderboardRaw.length,
-            leaderboardRaw: leaderboardRaw.slice(0, 10) // First 10 items (5 users)
-        }, '🔍 [DEBUG-LEADERBOARD] Raw leaderboard state in getFormattedLeaderboard');
-
-        for (let i = 0; i < leaderboardRaw.length; i += 2) {
-            const userId = leaderboardRaw[i];
-            const score = parseInt(leaderboardRaw[i + 1], 10);
-
-            let playerInfo = participantsFromRedis.find(p => p.userId === userId);
-
-            logger.debug({
-                accessCode,
-                userId,
-                score,
-                playerInfoFound: !!playerInfo,
-                playerInfo: playerInfo ? { username: playerInfo.username, avatarEmoji: playerInfo.avatarEmoji } : null
-            }, '🔍 [DEBUG-LEADERBOARD] Processing leaderboard entry');
-
-            if (playerInfo) {
-                leaderboardPromises.push(Promise.resolve({
-                    userId,
-                    username: playerInfo.username,
-                    avatarEmoji: playerInfo.avatarEmoji, // Use canonical avatarEmoji field name
-                    score
-                }));
-            } else {
-                // Participant not in Redis hash (e.g., disconnected)
-                // Try to fetch from User table in DB as a fallback for username/avatar
-                logger.warn({ accessCode, userId }, "Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.");
-                const userPromise = prisma.user.findUnique({
-                    where: { id: userId },
+        // Get ALL participants directly from the database to show all participations
+        const participants = await prisma.gameParticipant.findMany({
+            where: {
+                gameInstance: { accessCode }
+            },
+            include: {
+                user: {
                     select: { username: true, avatarEmoji: true }
-                }).then(user => {
-                    logger.info({
-                        accessCode,
-                        userId,
-                        userFound: !!user,
-                        username: user?.username,
-                        avatarEmoji: user?.avatarEmoji
-                    }, '🔍 [DEBUG-LEADERBOARD] DB lookup result for missing participant');
-
-                    if (user) {
-                        return {
-                            userId,
-                            username: user.username || 'Unknown Player',
-                            avatarEmoji: user.avatarEmoji || undefined, // Use canonical avatarEmoji field name
-                            score
-                        };
-                    }
-                    logger.warn({ accessCode, userId }, "User details not found in DB for leaderboard entry.");
-                    return {
-                        userId,
-                        username: 'Unknown Player',
-                        avatarEmoji: undefined, // Use canonical avatarEmoji field name
-                        score
-                    };
-                });
-                leaderboardPromises.push(userPromise);
-            }
-        }
-
-        let finalLeaderboard = await Promise.all(leaderboardPromises);
-
-        // Sort by score descending, then by username ascending as a tie-breaker
-        finalLeaderboard.sort((a, b) => {
-            if (b.score !== a.score) {
-                return b.score - a.score;
-            }
-            return (a.username || '').localeCompare(b.username || '');
+                }
+            },
+            orderBy: [
+                { score: 'desc' },
+                { joinedAt: 'asc' }  // Secondary sort by join time for consistent ordering
+            ]
         });
 
-        // Add rank after sorting
-        finalLeaderboard = finalLeaderboard.map((entry, index) => ({ ...entry, rank: index + 1 }));
+        if (participants.length === 0) {
+            logger.warn({ accessCode }, "No participants found for leaderboard");
+            return [];
+        }
 
-        logger.info({ accessCode, count: finalLeaderboard.length }, "Formatted leaderboard from Redis/DB.");
-        return finalLeaderboard;
+        logger.info({
+            accessCode,
+            totalParticipations: participants.length,
+            uniqueUsers: new Set(participants.map(p => p.userId)).size
+        }, "Found participations for leaderboard");
+
+        // Map all participations to leaderboard entries
+        const leaderboard = participants.map((participant, index) => ({
+            userId: participant.userId,
+            username: participant.user?.username || 'Unknown Player',
+            avatarEmoji: participant.user?.avatarEmoji || undefined,
+            score: participant.score || 0,
+            rank: index + 1,
+            participationType: participant.participationType as ParticipationType,
+            attemptCount: participant.attemptCount || 1,
+            participationId: participant.id  // Add unique ID for each participation
+        }));
+
+        logger.info({
+            accessCode,
+            count: leaderboard.length,
+            liveCount: leaderboard.filter(p => p.participationType === 'LIVE').length,
+            deferredCount: leaderboard.filter(p => p.participationType === 'DEFERRED').length
+        }, "Formatted leaderboard with all participations");
+
+        return leaderboard;
 
     } catch (error) {
         logger.error({ accessCode, error }, 'Error fetching formatted leaderboard');

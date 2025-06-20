@@ -117,21 +117,16 @@ model GameInstance {
 }
 
 model GameParticipant {
-  id             String       @id @default(uuid())
-  gameInstanceId String       @map("game_instance_id")
-  score          Int          @default(0)
-  rank           Int?
-  timeTakenMs    Int?         @map("time_taken_ms")
-  joinedAt       DateTime     @default(now()) @map("joined_at")
-  completedAt    DateTime?    @map("completed_at")
-  answers        Json?
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-  userId         String       @map("user_id")
-  gameInstance   GameInstance @relation(fields: [gameInstanceId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String            @id @default(uuid())
+  gameInstanceId    String            @map("game_instance_id")
+  userId            String            @map("user_id")
+  score             Int               @default(0)
+  joinedAt          DateTime          @default(now()) @map("joined_at")
+  participationType ParticipationType @default(LIVE) @map("participation_type")
+  attemptCount      Int               @default(1) @map("attempt_count")
+  gameInstance      GameInstance      @relation(fields: [gameInstanceId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([gameInstanceId, userId])
   @@map("game_participants")
 }
 
@@ -145,4 +140,9 @@ enum PlayMode {
   tournament
   practice
   class
+}
+
+enum ParticipationType {
+  LIVE
+  DEFERRED
 }

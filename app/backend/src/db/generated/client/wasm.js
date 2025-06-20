@@ -204,15 +204,11 @@ exports.Prisma.GameInstanceScalarFieldEnum = {
 exports.Prisma.GameParticipantScalarFieldEnum = {
   id: 'id',
   gameInstanceId: 'gameInstanceId',
+  userId: 'userId',
   score: 'score',
-  rank: 'rank',
-  timeTakenMs: 'timeTakenMs',
   joinedAt: 'joinedAt',
-  completedAt: 'completedAt',
-  answers: 'answers',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  userId: 'userId'
+  participationType: 'participationType',
+  attemptCount: 'attemptCount'
 };
 
 exports.Prisma.SortOrder = {
@@ -250,6 +246,11 @@ exports.PlayMode = exports.$Enums.PlayMode = {
   tournament: 'tournament',
   practice: 'practice',
   class: 'class'
+};
+
+exports.ParticipationType = exports.$Enums.ParticipationType = {
+  LIVE: 'LIVE',
+  DEFERRED: 'DEFERRED'
 };
 
 exports.Prisma.ModelName = {

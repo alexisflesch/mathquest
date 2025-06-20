@@ -119,13 +119,8 @@ export function gameAnswerHandler(
                 socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
                 return;
             }
-            if (gameInstance.isDiffered && participant.completedAt) {
-                logger.warn({ socketId: socket.id, error: 'Already completed', userId, gameInstanceId: gameInstance.id }, 'EARLY RETURN: Already completed tournament');
-                const errorPayload: ErrorPayload = { message: 'You have already completed this tournament.' };
-                logger.warn({ errorPayload }, 'Emitting game_error: already completed');
-                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
-                return;
-            }
+            // Remove completedAt check since field was removed
+            // For deferred tournaments, we now allow unlimited replays
 
             // CRITICAL: Add timer validation before processing answer
             // Fetch current game state to check timer status
@@ -367,7 +362,11 @@ export function gameAnswerHandler(
                     orderBy: { sequence: 'asc' }
                 });
                 // 4. Use participant.answers (array) to determine which questions are answered
-                const answersArr = Array.isArray(participant.answers) ? participant.answers : [];
+                // Since answers field was removed, we'll track progress differently
+                // For now, we'll use Redis or another method to track answered questions
+                const answersArr: any[] = [];
+
+                // TODO: Implement Redis-based answer tracking if needed
 
                 // For practice mode, we don't automatically send the next question
                 // Instead, the client will request the next question after showing feedback

@@ -86,7 +86,7 @@ describe('useStudentGameSocket - Emitters', () => {
             accessCode: 'TEST123',
             userId: 'user-123',
             username: 'TestUser',
-            avatarEmoji: undefined,
+            avatarEmoji: '🐼', // Default avatar when none provided
             isDiffered: true
         });
     });

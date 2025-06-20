@@ -366,8 +366,18 @@ export function useStudentGameSocket({
             const uniqueErrorMessage = `${error.message || 'Unknown game error'}|${Date.now()}`;
             setError(uniqueErrorMessage);
         }, isErrorPayload, SOCKET_EVENTS.GAME.GAME_ERROR));
-        socket.on(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED as any, createSafeEventHandler<GameAlreadyPlayedPayload>(() => {
-            setError('You have already played this game');
+        socket.on(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED as any, createSafeEventHandler<GameAlreadyPlayedPayload>((payload) => {
+            logger.info('=== GAME ALREADY PLAYED ===', { accessCode: payload.accessCode });
+
+            // For tournaments, redirect to leaderboard instead of showing error
+            // This provides better UX since users get useful information (their rank/score)
+            if (typeof window !== 'undefined') {
+                const tournamentCode = payload.accessCode;
+                logger.info(`Tournament already played, redirecting to leaderboard: /leaderboard/${tournamentCode}`);
+
+                // Silent redirect to leaderboard with a parameter to show a subtle notification
+                window.location.href = `/leaderboard/${tournamentCode}?already_played=1`;
+            }
         }, (d): d is GameAlreadyPlayedPayload => true, SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED));
 
         // Listen for backend game end signal - this should control navigation

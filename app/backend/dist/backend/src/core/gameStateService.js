@@ -48,20 +48,32 @@ async function getFormattedLeaderboard(accessCode) {
         // If Redis leaderboard is empty, try to get from database
         if (leaderboardRaw.length === 0) {
             logger.info({ accessCode }, "Redis leaderboard empty, checking database");
-            const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
-                where: { accessCode },
-                select: { leaderboard: true }
+            // Get participants directly from the database with participation data
+            const participants = await prisma_1.prisma.gameParticipant.findMany({
+                where: {
+                    gameInstance: { accessCode }
+                },
+                include: {
+                    user: {
+                        select: { username: true, avatarEmoji: true }
+                    }
+                },
+                orderBy: { score: 'desc' }
             });
-            if (gameInstance?.leaderboard && Array.isArray(gameInstance.leaderboard)) {
-                logger.info({ accessCode, count: gameInstance.leaderboard.length }, "Using database leaderboard");
-                return gameInstance.leaderboard.map((entry, index) => ({
-                    ...entry,
-                    avatarEmoji: entry.avatarEmoji || entry.avatar, // Ensure consistent field name
-                    rank: index + 1
+            if (participants.length > 0) {
+                logger.info({ accessCode, count: participants.length }, "Using database participants for leaderboard");
+                return participants.map((participant, index) => ({
+                    userId: participant.userId,
+                    username: participant.user?.username || 'Unknown Player',
+                    avatarEmoji: participant.user?.avatarEmoji || undefined,
+                    score: participant.score || 0,
+                    rank: index + 1,
+                    participationType: participant.participationType,
+                    attemptCount: participant.attemptCount || 1
                 }));
             }
             else {
-                logger.warn({ accessCode }, "No leaderboard found in database either");
+                logger.warn({ accessCode }, "No participants found in database either");
                 return [];
             }
         }
@@ -83,47 +95,65 @@ async function getFormattedLeaderboard(accessCode) {
                 playerInfoFound: !!playerInfo,
                 playerInfo: playerInfo ? { username: playerInfo.username, avatarEmoji: playerInfo.avatarEmoji } : null
             }, '🔍 [DEBUG-LEADERBOARD] Processing leaderboard entry');
-            if (playerInfo) {
-                leaderboardPromises.push(Promise.resolve({
-                    userId,
-                    username: playerInfo.username,
-                    avatarEmoji: playerInfo.avatarEmoji, // Use canonical avatarEmoji field name
-                    score
-                }));
-            }
-            else {
-                // Participant not in Redis hash (e.g., disconnected)
-                // Try to fetch from User table in DB as a fallback for username/avatar
-                logger.warn({ accessCode, userId }, "Participant info not found in Redis for leaderboard. Attempting DB lookup for user details.");
-                const userPromise = prisma_1.prisma.user.findUnique({
-                    where: { id: userId },
-                    select: { username: true, avatarEmoji: true }
-                }).then(user => {
-                    logger.info({
-                        accessCode,
-                        userId,
-                        userFound: !!user,
-                        username: user?.username,
-                        avatarEmoji: user?.avatarEmoji
-                    }, '🔍 [DEBUG-LEADERBOARD] DB lookup result for missing participant');
-                    if (user) {
-                        return {
-                            userId,
-                            username: user.username || 'Unknown Player',
-                            avatarEmoji: user.avatarEmoji || undefined, // Use canonical avatarEmoji field name
-                            score
-                        };
+            // Always fetch participant data from database to get participationType and attemptCount
+            const participantPromise = prisma_1.prisma.gameParticipant.findFirst({
+                where: {
+                    userId: userId,
+                    gameInstance: { accessCode }
+                },
+                include: {
+                    user: {
+                        select: { username: true, avatarEmoji: true }
                     }
-                    logger.warn({ accessCode, userId }, "User details not found in DB for leaderboard entry.");
+                }
+            }).then(participant => {
+                logger.debug({
+                    accessCode,
+                    userId,
+                    participantFound: !!participant,
+                    participationType: participant?.participationType,
+                    attemptCount: participant?.attemptCount
+                }, '🔍 [DEBUG-LEADERBOARD] DB participant lookup result');
+                if (participant && participant.user) {
                     return {
                         userId,
-                        username: 'Unknown Player',
-                        avatarEmoji: undefined, // Use canonical avatarEmoji field name
-                        score
+                        username: participant.user.username || 'Unknown Player',
+                        avatarEmoji: participant.user.avatarEmoji || undefined,
+                        score,
+                        participationType: participant.participationType,
+                        attemptCount: participant.attemptCount || 1
                     };
-                });
-                leaderboardPromises.push(userPromise);
-            }
+                }
+                else if (playerInfo) {
+                    // Fallback to Redis data if DB participant not found
+                    return {
+                        userId,
+                        username: playerInfo.username,
+                        avatarEmoji: playerInfo.avatarEmoji,
+                        score,
+                        participationType: undefined,
+                        attemptCount: undefined
+                    };
+                }
+                else {
+                    // Last resort: lookup user only
+                    return prisma_1.prisma.user.findUnique({
+                        where: { id: userId },
+                        select: { username: true, avatarEmoji: true }
+                    }).then(user => {
+                        logger.warn({ accessCode, userId }, "Participant not found in DB, using user data only");
+                        return {
+                            userId,
+                            username: user?.username || 'Unknown Player',
+                            avatarEmoji: user?.avatarEmoji || undefined,
+                            score,
+                            participationType: undefined,
+                            attemptCount: undefined
+                        };
+                    });
+                }
+            });
+            leaderboardPromises.push(participantPromise);
         }
         let finalLeaderboard = await Promise.all(leaderboardPromises);
         // Sort by score descending, then by username ascending as a tie-breaker
@@ -134,9 +164,9 @@ async function getFormattedLeaderboard(accessCode) {
             return (a.username || '').localeCompare(b.username || '');
         });
         // Add rank after sorting
-        finalLeaderboard = finalLeaderboard.map((entry, index) => ({ ...entry, rank: index + 1 }));
-        logger.info({ accessCode, count: finalLeaderboard.length }, "Formatted leaderboard from Redis/DB.");
-        return finalLeaderboard;
+        const rankedLeaderboard = finalLeaderboard.map((entry, index) => ({ ...entry, rank: index + 1 }));
+        logger.info({ accessCode, count: rankedLeaderboard.length }, "Formatted leaderboard from Redis/DB.");
+        return rankedLeaderboard;
     }
     catch (error) {
         logger.error({ accessCode, error }, 'Error fetching formatted leaderboard');

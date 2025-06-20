@@ -458,9 +458,26 @@ export default function LobbyPage() {
         // Listen for potential lobby errors from the server
         socket.on(SOCKET_EVENTS.LOBBY.LOBBY_ERROR, ({ error, message }) => {
             logger.error(`Lobby error received: ${message} (${error})`);
-            // TODO: Display this error to the user appropriately
-            alert(`Erreur: ${message}`); // Simple alert for now
-            router.replace('/'); // Redirect home on error
+            // Redirect home on error without showing alerts
+            router.replace('/');
+        });
+
+        // Listen for game_already_played event - redirect to leaderboard instead of live game
+        socket.on(SOCKET_EVENTS.GAME.GAME_ALREADY_PLAYED, ({ accessCode: tournamentCode }) => {
+            logger.info(`Received game_already_played event for code ${tournamentCode}. Redirecting to leaderboard...`);
+
+            // Force-leave the lobby room before redirecting
+            socket.emit(SOCKET_EVENTS.LOBBY.LEAVE_LOBBY, { accessCode: tournamentCode || code });
+
+            // Redirect to leaderboard with already_played parameter for notification
+            const targetCode = tournamentCode || code;
+            window.location.href = `/leaderboard/${targetCode}?already_played=1`;
+
+            try {
+                router.replace(`/leaderboard/${targetCode}?already_played=1`);
+            } catch (err) {
+                logger.error(`Router redirect error: ${err}`);
+            }
         });
 
         // Debug: log all socket events
@@ -555,7 +572,8 @@ export default function LobbyPage() {
             });
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert("Lien copié dans le presse-papier !");
+            // Could add a toast notification here instead of alert
+            logger.info('Tournament link copied to clipboard');
         }
     };
 

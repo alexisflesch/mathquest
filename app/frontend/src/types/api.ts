@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { ParticipationType } from '@shared/types/core/participant';
 
 // Import schemas directly for use in API_SCHEMAS object
 import {
@@ -306,7 +307,8 @@ export const TournamentLeaderboardResponseSchema = z.object({
         avatarEmoji: z.string().optional(), // Use canonical avatarEmoji field name
         score: z.number(),
         rank: z.number().optional(), // Add rank field from shared type
-        isDiffered: z.boolean().optional()
+        participationType: z.nativeEnum(ParticipationType).optional(), // Type of participation
+        attemptCount: z.number().optional() // Number of attempts
     }))
 });
 

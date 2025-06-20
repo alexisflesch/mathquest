@@ -73,14 +73,27 @@ function checkAnswerCorrectness(question, answer) {
  */
 async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
     try {
-        // Find the participant
+        logger.info({
+            gameInstanceId,
+            userId,
+            questionUid: answerData.questionUid,
+            answer: answerData.answer
+        }, 'Starting answer submission with scoring');
+        // Find the participant - get the most recent one if multiple exist
         const participant = await prisma_1.prisma.gameParticipant.findFirst({
             where: {
                 gameInstanceId,
                 userId
+            },
+            orderBy: {
+                joinedAt: 'desc'
             }
         });
         if (!participant) {
+            logger.error({
+                gameInstanceId,
+                userId
+            }, 'BUG INVESTIGATION: Participant not found in scoring service');
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
@@ -89,8 +102,19 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
                 message: 'Participant not found'
             };
         }
-        // Parse current answers
-        const currentAnswers = Array.isArray(participant.answers) ? participant.answers : [];
+        logger.info({
+            gameInstanceId,
+            userId,
+            participantId: participant.id,
+            currentScore: participant.score,
+            participationType: participant.participationType,
+            attemptCount: participant.attemptCount,
+            joinedAt: participant.joinedAt
+        }, 'BUG INVESTIGATION: Found participant in scoring service');
+        // Since we removed the answers field, we'll track answers in Redis instead
+        // For now, let's simplify and assume each answer submission is new
+        const currentAnswers = [];
+        // TODO: Implement Redis-based answer tracking if needed for duplicate detection
         // Find existing answer for this question
         const existingAnswerIndex = currentAnswers.findIndex((ans) => ans.questionUid === answerData.questionUid);
         const existingAnswer = existingAnswerIndex >= 0 ? currentAnswers[existingAnswerIndex] : null;
@@ -180,14 +204,41 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
             // Add new answer
             updatedAnswers = [...currentAnswers, newAnswerEntry];
         }
-        // Update participant with new answers and score
-        const scoreUpdate = scoreToAdd > 0 ? { increment: scoreToAdd } : undefined;
+        // Update participant with new score
+        // For DEFERRED mode: if this is a new attempt (score is 0), replace the score instead of adding
+        // For LIVE mode: always increment the score
+        let scoreUpdateData = {};
+        if (scoreToAdd > 0) {
+            if (participant.participationType === 'DEFERRED' && participant.score === 0) {
+                // For deferred mode with a fresh attempt (score is 0), set the score directly
+                scoreUpdateData.score = scoreToAdd;
+                logger.info({
+                    gameInstanceId,
+                    userId,
+                    participantId: participant.id,
+                    participationType: participant.participationType,
+                    scoreToAdd,
+                    currentScore: participant.score,
+                    action: 'REPLACE'
+                }, 'BUG INVESTIGATION: Setting score directly for DEFERRED fresh attempt');
+            }
+            else {
+                // For live mode or deferred mode with existing score, increment
+                scoreUpdateData.score = { increment: scoreToAdd };
+                logger.info({
+                    gameInstanceId,
+                    userId,
+                    participantId: participant.id,
+                    participationType: participant.participationType,
+                    scoreToAdd,
+                    currentScore: participant.score,
+                    action: 'INCREMENT'
+                }, 'BUG INVESTIGATION: Incrementing score');
+            }
+        }
         const updatedParticipant = await prisma_1.prisma.gameParticipant.update({
             where: { id: participant.id },
-            data: {
-                answers: updatedAnswers,
-                ...(scoreUpdate && { score: scoreUpdate })
-            }
+            data: scoreUpdateData
         });
         // Update Redis for answer tracking
         if (gameInstance) {
@@ -209,6 +260,17 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
                 participantData.score = updatedParticipant.score;
                 await redis_1.redisClient.hset(participantKey, userId, JSON.stringify(participantData));
             }
+            // CRITICAL FIX: Update Redis leaderboard ZSET with the participant's total score
+            // This ensures leaderboard displays reflect the correct accumulated scores
+            const leaderboardKey = `mathquest:game:leaderboard:${gameInstance.accessCode}`;
+            await redis_1.redisClient.zadd(leaderboardKey, updatedParticipant.score || 0, userId);
+            logger.debug({
+                gameInstanceId,
+                userId,
+                accessCode: gameInstance.accessCode,
+                totalScore: updatedParticipant.score,
+                leaderboardKey
+            }, 'Updated Redis leaderboard ZSET with participant total score');
         }
         logger.info({
             gameInstanceId,

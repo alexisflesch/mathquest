@@ -18,12 +18,10 @@ import Link from 'next/link';
 import { Share2 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
 import { TournamentLeaderboardResponseSchema, CanPlayDifferedResponseSchema, type TournamentLeaderboardResponse, type CanPlayDifferedResponse } from '@/types/api';
-import type { LeaderboardEntry } from '@shared/types/core/participant';
+import type { LeaderboardEntry, ParticipationType } from '@shared/types/core/participant';
 
-// Extend shared LeaderboardEntry with tournament-specific fields
-type TournamentLeaderboardEntry = LeaderboardEntry & {
-    isDiffered?: boolean;
-};
+// Use the shared LeaderboardEntry type directly
+type TournamentLeaderboardEntry = LeaderboardEntry;
 
 export default function TournamentLeaderboardPage() {
     const { code } = useParams();
@@ -31,6 +29,22 @@ export default function TournamentLeaderboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [canPlayDiffered, setCanPlayDiffered] = useState(false);
+    const [showReplayNotification, setShowReplayNotification] = useState(false);
+
+    // Check if user was redirected here due to replay attempt
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('already_played') === '1') {
+                setShowReplayNotification(true);
+                // Clean URL by removing the parameter
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+                // Auto-hide notification after 5 seconds
+                setTimeout(() => setShowReplayNotification(false), 5000);
+            }
+        }
+    }, []);
 
     // Get current player username and avatar from localStorage
     let currentusername: string | null = null;
@@ -99,6 +113,13 @@ export default function TournamentLeaderboardPage() {
         <div className="min-h-screen flex items-center justify-center bg-base-200">
             <div className="card w-full max-w-xl shadow-xl bg-base-100">
                 <div className="card-body items-center gap-8">
+                    {/* Subtle notification for tournament replay attempts */}
+                    {showReplayNotification && (
+                        <div className="alert alert-info w-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>Vous avez déjà participé à ce tournoi. Voici vos résultats !</span>
+                        </div>
+                    )}
                     {/* Row: Retour à l'accueil + share icon */}
                     <div className="w-full flex justify-between items-center mb-2">
                         <Link href="/" className="text-primary underline hover:text-primary/80 font-semibold">
@@ -132,7 +153,8 @@ export default function TournamentLeaderboardPage() {
                         {/* Legend */}
                         <div className="flex gap-4 mb-2 text-sm items-center">
                             <span><span role="img" aria-label="live">⚡</span> = Live</span>
-                            <span><span role="img" aria-label="differed">🕒</span> = Différé</span>
+                            <span><span role="img" aria-label="deferred">🕒</span> = Différé</span>
+                            <span className="text-xs opacity-75">Toutes les participations sont affichées</span>
                         </div>
                         {leaderboard.map((p, idx) => {
                             // Highlight if current player (username and avatar match)
@@ -141,9 +163,16 @@ export default function TournamentLeaderboardPage() {
                                 currentAvatar &&
                                 p.username === currentusername &&
                                 p.avatarEmoji === currentAvatar;
+
+                            // Determine if this is a deferred participation
+                            const isDeferred = p.participationType === 'DEFERRED';
+
+                            // Use participationId as key if available, otherwise fallback to userId + index
+                            const uniqueKey = p.participationId || `${p.userId}-${idx}`;
+
                             return (
                                 <li
-                                    key={p.userId}
+                                    key={uniqueKey}
                                     className={
                                         "flex items-center gap-4 p-2 rounded " +
                                         (isCurrent
@@ -162,12 +191,17 @@ export default function TournamentLeaderboardPage() {
                                     </div>
                                     <span className="w-8 text-center">#{idx + 1}</span>
                                     <span className="flex-1 flex items-center gap-2">
-                                        {p.isDiffered ? (
-                                            <span title="Différé" role="img" aria-label="differed">🕒</span>
+                                        {isDeferred ? (
+                                            <span title="Différé" role="img" aria-label="deferred">🕒</span>
                                         ) : (
                                             <span title="Live" role="img" aria-label="live">⚡</span>
                                         )}
                                         {p.username || 'Joueur'}
+                                        {/* Show participation type and attempt count */}
+                                        <span className="text-xs opacity-75 ml-1">
+                                            ({isDeferred ? 'Différé' : 'Live'}
+                                            {p.attemptCount && p.attemptCount > 1 && ` - Tentative ${p.attemptCount}`})
+                                        </span>
                                     </span>
                                     <span className="font-mono text-lg">{Math.round(p.score)}</span>
                                 </li>

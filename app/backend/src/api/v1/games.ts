@@ -721,8 +721,9 @@ router.get('/:code/can-play-differed', async (req: Request, res: Response) => {
             }
         });
 
-        // User can play if they haven't participated yet or if they haven't completed it
-        const canPlay = !existingParticipation || !existingParticipation.completedAt;
+        // User can always play now since we removed the completedAt field
+        // For deferred tournaments, we allow unlimited replays
+        const canPlay = true;
         res.json({ canPlay });
     } catch (error) {
         logger.error('Failed to check differed play availability', error);
