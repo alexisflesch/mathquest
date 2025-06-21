@@ -18,6 +18,7 @@ const myTournaments_1 = __importDefault(require("./myTournaments")); // Import m
 const sessions_1 = __importDefault(require("./practice/sessions")); // Import practiceSessionsRouter
 // import gameSessionsRouter from './gameSessions';
 const auth_2 = require("@/middleware/auth");
+const validate_page_access_1 = __importDefault(require("./validate-page-access"));
 const router = express_1.default.Router();
 // Mount the auth router
 router.use('/auth', auth_1.default);
@@ -43,6 +44,8 @@ router.use('/users', users_1.default);
 router.use('/practice/sessions', sessions_1.default);
 // Mount the my-tournaments router
 router.use('/my-tournaments', myTournaments_1.default);
+// Mount the validate page access router
+router.use('/validate-page-access', validate_page_access_1.default);
 // User management routes
 // router.use('/users', usersManagementRouter); // Commented out
 exports.default = router;

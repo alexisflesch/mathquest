@@ -13,6 +13,7 @@ import myTournamentsRouter from './myTournaments'; // Import myTournamentsRouter
 import practiceSessionsRouter from './practice/sessions'; // Import practiceSessionsRouter
 // import gameSessionsRouter from './gameSessions';
 import { teacherAuth } from '@/middleware/auth';
+import validatePageAccessRouter from './validatePageAccess';
 
 const router = express.Router();
 
@@ -51,6 +52,9 @@ router.use('/practice/sessions', practiceSessionsRouter);
 
 // Mount the my-tournaments router
 router.use('/my-tournaments', myTournamentsRouter);
+
+// Mount the validate page access router
+router.use('/validate-page-access', validatePageAccessRouter);
 
 // User management routes
 // router.use('/users', usersManagementRouter); // Commented out

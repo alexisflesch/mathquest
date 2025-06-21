@@ -14,11 +14,11 @@ async function validateDashboardAccess(code: string) {
     if (!code || code === 'undefined') {
         return { valid: false, reason: 'INVALID_CODE' };
     }
-    // Call backend API for access validation
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/validate-dashboard-access`, {
+    // Call unified backend API for access validation
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/validate-page-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessCode: code }),
+        body: JSON.stringify({ pageType: 'dashboard', accessCode: code }),
         credentials: 'include', // send cookies if needed
         cache: 'no-store',
     });
@@ -28,7 +28,7 @@ async function validateDashboardAccess(code: string) {
         return { valid: false, reason };
     }
     const data = await res.json();
-    return { valid: data.valid, gameId: data.gameId };
+    return { valid: data.valid, gameId: data.gameId, reason: data.reason };
 }
 
 export default async function TeacherDashboardPage({ params }: { params: Promise<{ code: string }> }) {

@@ -32,6 +32,7 @@ export async function validateGameAccess(options: GameAccessOptions): Promise<{
             };
         }
 
+        logger.debug({ gameInstance });
         // Check authorization - user must be either the game initiator or the template creator
         const isAuthorized = gameInstance.initiatorUserId === userId ||
             gameInstance.gameTemplate?.creatorId === userId;
