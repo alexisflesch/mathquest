@@ -1308,3 +1308,21 @@ textarea:focus {
 html[data-theme="dark"] .question-list-simple .question-display .card:hover {
   background-color: var(--muted) !important;
 }
+
+@layer components {
+  .btn-neutral-outline {
+    background: transparent !important;
+    color: var(--foreground) !important;
+    border: 2px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    font-weight: 600;
+    transition: background 0.15s, color 0.15s;
+    min-height: 2.75rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .btn-neutral-outline:hover {
+    background: var(--muted) !important;
+    color: var(--foreground) !important;
+  }
+}

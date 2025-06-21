@@ -10,6 +10,7 @@ import MathJaxWrapper from '@/components/MathJaxWrapper';
 import QuestionCard from '@/components/QuestionCard';
 import Snackbar from '@/components/Snackbar';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
+import InfoModal from '@/components/SharedModal';
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
 import type { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
@@ -528,77 +529,54 @@ export default function PracticeSessionWithAccessCodePage() {
                         </div>
                     </div>
                 )}
-            </div>            {/* Stats Modal - styled like feedback overlay with dark theme compatibility */}
-            {showStatsModal && (
-                <div
-                    className="feedback-overlay"
-                    role="dialog"
-                    aria-live="polite"
-                    onClick={() => setShowStatsModal(false)}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <div className="feedback-overlay-inner">
-                        <div
-                            className="feedback-card max-w-md w-[95%] mx-2"
-                            onClick={() => setShowStatsModal(false)}
-                        >
-                            {/* Close button */}
-                            <button
-                                onClick={() => setShowStatsModal(false)}
-                                className="absolute top-2 right-2 btn btn-sm btn-circle btn-ghost"
-                                aria-label="Fermer le bilan"
-                            >
-                                <X size={16} />
-                            </button>
+            </div>            {/* Stats Modal using SharedModal component */}
+            <InfoModal
+                isOpen={showStatsModal}
+                onClose={() => setShowStatsModal(false)}
+                title={
+                    <div className="flex items-center gap-3 justify-center">
+                        <BarChart3 size={24} strokeWidth={2.4} />
+                        <span>Bilan de l'entraînement</span>
+                    </div>
+                }
+                size="md"
+            >
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-[color:var(--muted-foreground)]">Discipline :</span>
+                        <span className="font-semibold">{practiceParams.discipline}</span>
+                    </div>
 
-                            {/* Modal header with icon and title centered */}
-                            <div className="feedback-header justify-center">
-                                <span className="feedback-icon">
-                                    <BarChart3 size={32} strokeWidth={2.4} />
-                                </span>
-                                <span className="feedback-title">Bilan de l'entraînement</span>
-                            </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[color:var(--muted-foreground)]">Niveau :</span>
+                        <span className="font-semibold">{practiceParams.level}</span>
+                    </div>
 
-                            {/* Modal content */}
-                            <div className="feedback-text space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-base-content/70">Discipline :</span>
-                                    <span className="font-semibold">{practiceParams.discipline}</span>
-                                </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[color:var(--muted-foreground)]">{practiceParams.themes.length === 1 ? 'Thème' : 'Thèmes'} :</span>
+                        <span className="font-semibold text-right flex-1 ml-2">
+                            {practiceParams.themes.length > 0 ? practiceParams.themes.join(', ') : 'Tous'}
+                        </span>
+                    </div>
 
-                                <div className="flex justify-between items-center">
-                                    <span className="text-base-content/70">Niveau :</span>
-                                    <span className="font-semibold">{practiceParams.level}</span>
-                                </div>
+                    <hr className="border-[color:var(--border)]" />
 
-                                <div className="flex justify-between items-center">
-                                    <span className="text-base-content/70">{practiceParams.themes.length === 1 ? 'Thème' : 'Thèmes'} :</span>
-                                    <span className="font-semibold text-right flex-1 ml-2">
-                                        {practiceParams.themes.length > 0 ? practiceParams.themes.join(', ') : 'Tous'}
-                                    </span>
-                                </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[color:var(--muted-foreground)]">Questions traitées :</span>
+                        <span className="font-semibold">{practiceState.session?.statistics.questionsAttempted || 0}</span>
+                    </div>
 
-                                <hr className="border-base-content/20" />
+                    <div className="flex justify-between items-center">
+                        <span className="text-[color:var(--muted-foreground)]">Réponses correctes :</span>
+                        <span className="font-semibold text-green-600 dark:text-green-400">{practiceState.session?.statistics.correctAnswers || 0}</span>
+                    </div>
 
-                                <div className="flex justify-between items-center">
-                                    <span className="text-base-content/70">Questions traitées :</span>
-                                    <span className="font-semibold">{practiceState.session?.statistics.questionsAttempted || 0}</span>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-base-content/70">Réponses correctes :</span>
-                                    <span className="font-semibold text-success">{practiceState.session?.statistics.correctAnswers || 0}</span>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-base-content/70">Précision :</span>
-                                    <span className="font-semibold text-primary">{Math.round(practiceState.session?.statistics.accuracyPercentage || 0)}%</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[color:var(--muted-foreground)]">Précision :</span>
+                        <span className="font-semibold text-[color:var(--primary)]">{Math.round(practiceState.session?.statistics.accuracyPercentage || 0)}%</span>
                     </div>
                 </div>
-            )}
+            </InfoModal>
 
             {/* Snackbar for notifications - exactly like live page */}
             <Snackbar

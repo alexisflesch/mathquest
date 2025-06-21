@@ -5,6 +5,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import * as gameStateService from '@/core/gameStateService';
 import { calculateTimerForLateJoiner } from '../../core/timerUtils';
+import { validateGameAccess } from '@/utils/gameAuthorization';
 
 const logger = createLogger('ProjectionHandler');
 
@@ -34,21 +35,61 @@ export function projectionHandler(io: Server, socket: Socket) {
                 return;
             }
 
-            // Verify the game exists
-            const gameInstance = await prisma.gameInstance.findUnique({
-                where: { id: gameId },
-                select: { id: true, accessCode: true, status: true }
-            });
+            // Get userId from socket.data (should be populated by auth middleware)
+            let effectiveUserId = socket.data?.userId || socket.data?.user?.userId;
 
-            if (!gameInstance) {
+            // Debug authentication data
+            logger.info({
+                socketId: socket.id,
+                socketData: socket.data,
+                auth: socket.handshake.auth,
+                headers: socket.handshake.headers
+            }, 'Projection socket authentication data');
+
+            if (!effectiveUserId) {
+                logger.warn({ gameId, socketId: socket.id }, 'No userId on socket.data for projection');
+
+                // Try to get userId from auth directly for testing purposes
+                const testUserId = socket.handshake.auth.userId;
+
+                if (testUserId && socket.handshake.auth.userType === 'teacher') {
+                    logger.info({ testUserId }, 'Using userId from auth directly for testing (projection)');
+                    // Set the userId on socket.data for future usage
+                    socket.data.userId = testUserId;
+                    socket.data.user = { userId: testUserId, role: 'teacher' };
+                    effectiveUserId = testUserId;
+                } else {
+                    // No userId found anywhere, return error
+                    const errorPayload: ErrorPayload = {
+                        message: 'Authentication required to join projection',
+                        code: 'AUTHENTICATION_REQUIRED',
+                        details: { gameId }
+                    };
+                    socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_ERROR, errorPayload);
+                    return;
+                }
+            }
+
+            // Use shared authorization helper
+            const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
+            const authResult = await validateGameAccess({
+                gameId,
+                userId: effectiveUserId,
+                isTestEnvironment,
+                requireQuizMode: true
+            }); // QUIZ ONLY
+
+            if (!authResult.isAuthorized) {
                 const errorPayload: ErrorPayload = {
-                    message: 'Game not found',
-                    code: 'GAME_NOT_FOUND',
+                    message: authResult.errorMessage || 'Authorization failed',
+                    code: authResult.errorCode || 'AUTHORIZATION_ERROR',
                     details: { gameId }
                 };
                 socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_ERROR, errorPayload);
                 return;
             }
+
+            const gameInstance = authResult.gameInstance;
 
             // Join the projection room
             const projectionRoom = `projection_${gameId}`;

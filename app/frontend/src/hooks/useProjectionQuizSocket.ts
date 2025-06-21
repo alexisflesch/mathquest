@@ -51,6 +51,9 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         answerOptions?: string[];
     } | null>(null);
 
+    // Error state that page can handle
+    const [socketError, setSocketError] = useState<any>(null);
+
     // Use modern timer with projection role
     const timer = useSimpleTimer({
         gameId: gameId || undefined,
@@ -127,6 +130,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                 gameId,
                 accessCode
             });
+            // Expose error to component via state
+            setSocketError(payload);
         };
 
         socket.socket.on('connect', handleConnect);
@@ -403,6 +408,9 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         timerStatus: timer.status || gameState?.timer?.status,
         timerQuestionUid: timerQuestionUid, // Use the overridden value
         timeLeftMs: timer.timeLeftMs, // Always use live countdown from useSimpleTimer
+
+        // Socket error for auth handling (DRY principle)
+        socketError,
 
         // Socket reference (if needed for advanced usage)
         socket: socket.socket

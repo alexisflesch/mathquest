@@ -8,8 +8,10 @@ import { ChevronDown, ChevronUp, ChevronRight, Plus, Rocket, Edit2, Copy, Trash2
 import { AnimatePresence, motion } from 'framer-motion';
 import Snackbar from '@/components/Snackbar';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import InfoModal from '@/components/SharedModal';
 import InfinitySpin from '@/components/InfinitySpin';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import StartActivityModal from '@/components/StartActivityModal';
 
 // Interface for game template from backend
 interface GameTemplate {
@@ -314,318 +316,6 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                 />
             )}
         </>
-    );
-}
-
-// StartActivityModal Component
-interface StartActivityModalProps {
-    isOpen: boolean;
-    templateName: string;
-    onClose: () => void;
-    onStart: (mode: 'quiz' | 'tournament' | 'practice') => Promise<{ gameId: string; gameCode?: string; mode: 'quiz' | 'tournament' | 'practice' }>;
-}
-
-function StartActivityModal({ isOpen, templateName, onClose, onStart }: StartActivityModalProps) {
-    const [currentStep, setCurrentStep] = useState<'selection' | 'success'>('selection');
-    const [gameInfo, setGameInfo] = useState<{
-        gameId: string;
-        gameCode?: string;
-        mode: 'quiz' | 'tournament' | 'practice';
-    } | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-
-    if (!isOpen) return null;
-
-    const handleStart = async (mode: 'quiz' | 'tournament' | 'practice') => {
-        setIsLoading(true);
-        try {
-            const result = await onStart(mode);
-            setGameInfo(result);
-            setCurrentStep('success');
-        } catch (error) {
-            console.error('Error starting activity:', error);
-            alert('Erreur lors du démarrage de l\'activité');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleClose = () => {
-        setCurrentStep('selection');
-        setGameInfo(null);
-        setIsLoading(false);
-        onClose();
-    };
-
-    const copyGameCode = () => {
-        if (gameInfo?.gameCode) {
-            navigator.clipboard.writeText(gameInfo.gameCode);
-            setSnackbarOpen(true);
-        }
-    };
-
-    const shareGameCode = () => {
-        if (gameInfo?.gameCode && navigator.share) {
-            navigator.share({
-                title: `Code d'accès pour ${templateName}`,
-                text: `Rejoignez l'activité "${templateName}" avec le code: ${gameInfo.gameCode}`,
-            }).catch(console.error);
-        } else if (gameInfo?.gameCode) {
-            // Fallback to copy if Web Share API is not available
-            copyGameCode();
-        }
-    };
-
-    const modes = [
-        {
-            id: 'quiz' as const,
-            name: 'Quiz',
-            description: 'Pour une utilisation en classe',
-            icon: <Target size={22} className="text-primary" />,
-        },
-        {
-            id: 'tournament' as const,
-            name: 'Tournoi',
-            description: 'Compétition en direct ou en différé',
-            icon: <Users size={22} className="text-accent" />,
-        },
-        {
-            id: 'practice' as const,
-            name: 'Entraînement',
-            description: 'Pratique libre sans contrainte de temps',
-            icon: <Dumbbell size={22} className="text-success" />,
-        }
-    ];
-
-    return (
-        <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleClose}
-        >
-            <motion.div
-                className="bg-[color:var(--card)] rounded-lg p-6 w-full max-w-md mx-4 relative"
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <AnimatePresence mode="wait">
-                    {currentStep === 'selection' && (
-                        <motion.div
-                            key="selection"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                        >
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-semibold">Démarrer "{templateName}"</h3>
-                                <button
-                                    onClick={handleClose}
-                                    className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            <p className="text-[color:var(--muted-foreground)] mb-6 text-sm">
-                                Choisissez un mode de jeu.
-                            </p>
-
-                            <div className="space-y-3">
-                                {modes.map((mode) => (
-                                    <button
-                                        key={mode.id}
-                                        onClick={() => handleStart(mode.id)}
-                                        disabled={isLoading}
-                                        className="w-full p-4 text-left border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition-colors disabled:opacity-50"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="flex-shrink-0">{mode.icon}</span>
-                                            <div className="flex-1">
-                                                <div className="font-medium text-[color:var(--primary)]">{mode.name}</div>
-                                                <div className="text-sm text-[color:var(--muted-foreground)] mt-1">
-                                                    {mode.description}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-
-                            {isLoading && (
-                                <div className="flex items-center justify-center mt-4">
-                                    <InfinitySpin size={24} />
-                                    <span className="ml-2 text-sm text-[color:var(--muted-foreground)]">Création en cours...</span>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {currentStep === 'success' && gameInfo && (
-                        <motion.div
-                            key="success"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                        >
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-semibold text-[color:var(--foreground)]">Activité créée !</h3>
-                                <button
-                                    onClick={handleClose}
-                                    className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            {gameInfo.mode === 'quiz' ? (
-                                <>
-                                    <div className="bg-[color:var(--muted)] border border-[color:var(--border)] rounded-lg p-4 mb-4">
-                                        <div className="text-sm text-[color:var(--success)] mb-2">
-                                            Code d'accès pour vos élèves :
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <code className="bg-[color:var(--card)] px-3 py-2 rounded border text-lg font-mono font-bold text-[color:var(--success)] flex-1">
-                                                {gameInfo.gameCode}
-                                            </code>
-                                            <button
-                                                onClick={copyGameCode}
-                                                className="p-2 text-[color:var(--success)] hover:bg-[color:var(--muted)] rounded"
-                                                title="Copier le code"
-                                            >
-                                                <Copy size={16} />
-                                            </button>
-                                            <button
-                                                onClick={shareGameCode}
-                                                className="p-2 text-[color:var(--success)] hover:bg-[color:var(--muted)] rounded"
-                                                title="Partager le code"
-                                            >
-                                                <Share2 size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-[color:var(--muted-foreground)] mb-6 text-sm">
-                                        Partagez ce code avec vos élèves pour qu'ils puissent rejoindre l'activité.
-                                        Vous pouvez maintenant surveiller leur progression en temps réel.
-                                    </p>
-
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => window.open(`/teacher/dashboard/${gameInfo.mode === 'quiz' ? gameInfo.gameCode : gameInfo.gameId}`, '_blank')}
-                                            className="flex-1 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors text-center"
-                                        >
-                                            {gameInfo.mode === 'quiz' ? 'Piloter' : 'Surveiller l\'activité'}
-                                        </button>
-                                        <button
-                                            onClick={handleClose}
-                                            className="px-4 py-2 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition-colors"
-                                        >
-                                            Fermer
-                                        </button>
-                                    </div>
-                                </>
-                            ) : gameInfo.mode === 'tournament' ? (
-                                <>
-                                    <div className="bg-[color:var(--muted)] border border-[color:var(--border)] rounded-lg p-4 mb-4">
-                                        <div className="text-sm text-[color:var(--accent)] mb-2">
-                                            Code d'accès pour vos élèves :
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <code className="bg-[color:var(--card)] px-3 py-2 rounded border text-lg font-mono font-bold text-[color:var(--accent)] flex-1">
-                                                {gameInfo.gameCode}
-                                            </code>
-                                            <button
-                                                onClick={copyGameCode}
-                                                className="p-2 text-[color:var(--accent)] hover:bg-[color:var(--muted)] rounded"
-                                                title="Copier le code"
-                                            >
-                                                <Copy size={16} />
-                                            </button>
-                                            <button
-                                                onClick={shareGameCode}
-                                                className="p-2 text-[color:var(--accent)] hover:bg-[color:var(--muted)] rounded"
-                                                title="Partager le code"
-                                            >
-                                                <Share2 size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-[color:var(--muted-foreground)] mb-6 text-sm">
-                                        Partagez ce code avec vos élèves pour qu'ils puissent rejoindre le tournoi.
-                                        Les équipes s'affronteront dans une compétition passionnante !
-                                    </p>
-
-                                    <div className="flex justify-center">
-                                        <button
-                                            onClick={handleClose}
-                                            className="px-6 py-2 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition-colors"
-                                        >
-                                            Fermer
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="bg-[color:var(--muted)] border border-[color:var(--border)] rounded-lg p-4 mb-4">
-                                        <div className="text-sm text-[color:var(--primary)] mb-2">
-                                            Code d'accès pour vos élèves :
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <code className="bg-[color:var(--card)] px-3 py-2 rounded border text-lg font-mono font-bold text-[color:var(--primary)] flex-1">
-                                                {gameInfo.gameCode}
-                                            </code>
-                                            <button
-                                                onClick={copyGameCode}
-                                                className="p-2 text-[color:var(--primary)] hover:bg-[color:var(--muted)] rounded"
-                                                title="Copier le code"
-                                            >
-                                                <Copy size={16} />
-                                            </button>
-                                            <button
-                                                onClick={shareGameCode}
-                                                className="p-2 text-[color:var(--primary)] hover:bg-[color:var(--muted)] rounded"
-                                                title="Partager le code"
-                                            >
-                                                <Share2 size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-[color:var(--muted-foreground)] mb-6 text-sm">
-                                        En mode pratique, les élèves peuvent s'entraîner à leur rythme sans contrainte de temps.
-                                        Partagez ce code pour qu'ils puissent accéder à l'activité.
-                                    </p>
-
-                                    <div className="flex justify-center">
-                                        <button
-                                            onClick={handleClose}
-                                            className="px-6 py-2 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition-colors"
-                                        >
-                                            Fermer
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.div>
-
-            {/* Snackbar for copy notification */}
-            <Snackbar
-                open={snackbarOpen}
-                message="Copié dans le presse-papier"
-                type="success"
-                onClose={() => setSnackbarOpen(false)}
-                duration={2000}
-            />
-        </motion.div>
     );
 }
 
@@ -942,7 +632,7 @@ export default function TeacherGamesPage() {
             </div>
 
             {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
                 {loading && (
                     <div className="flex flex-col items-center justify-center py-16">
                         <InfinitySpin size={48} />
@@ -999,6 +689,35 @@ export default function TeacherGamesPage() {
                         ))}
                     </div>
                 )}
+
+                {/* Delete Confirmation Modal - Positioned relative to content area */}
+                <ConfirmationModal
+                    isOpen={deleteModal.isOpen}
+                    title="Supprimer l'activité"
+                    message={deleteModal.forceDelete
+                        ? `Il existe des sessions de jeu liées à "${deleteModal.templateName}". Voulez-vous supprimer l'activité ET toutes ses sessions ? Cette action est irréversible.`
+                        : `Êtes-vous sûr de vouloir supprimer "${deleteModal.templateName}" ? Cette action est irréversible.`
+                    }
+                    confirmText={deleteModal.forceDelete ? "Supprimer tout" : "Supprimer"}
+                    cancelText="Annuler"
+                    onConfirm={handleConfirmDelete}
+                    onCancel={handleCancelDelete}
+                    type="danger"
+                    isLoading={deleteModal.isLoading}
+                />
+
+                {/* Delete Instance Confirmation Modal - Positioned relative to content area */}
+                <ConfirmationModal
+                    isOpen={deleteInstanceModal.isOpen}
+                    title="Supprimer la session de jeu"
+                    message={`Êtes-vous sûr de vouloir supprimer la session "${deleteInstanceModal.instanceName}" ? Cette action est irréversible.`}
+                    confirmText="Supprimer"
+                    cancelText="Annuler"
+                    onConfirm={handleConfirmDeleteInstance}
+                    onCancel={handleCancelDeleteInstance}
+                    type="danger"
+                    isLoading={deleteInstanceModal.isLoading}
+                />
             </div>
 
             {/* Mobile FAB */}
@@ -1010,35 +729,6 @@ export default function TeacherGamesPage() {
                     <Plus size={24} />
                 </Link>
             </div>
-
-            {/* Delete Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={deleteModal.isOpen}
-                title="Supprimer l'activité"
-                message={deleteModal.forceDelete
-                    ? `Il existe des sessions de jeu liées à "${deleteModal.templateName}". Voulez-vous supprimer l'activité ET toutes ses sessions ? Cette action est irréversible.`
-                    : `Êtes-vous sûr de vouloir supprimer "${deleteModal.templateName}" ? Cette action est irréversible.`
-                }
-                confirmText={deleteModal.forceDelete ? "Supprimer tout" : "Supprimer"}
-                cancelText="Annuler"
-                onConfirm={handleConfirmDelete}
-                onCancel={handleCancelDelete}
-                type="danger"
-                isLoading={deleteModal.isLoading}
-            />
-
-            {/* Delete Instance Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={deleteInstanceModal.isOpen}
-                title="Supprimer la session de jeu"
-                message={`Êtes-vous sûr de vouloir supprimer la session "${deleteInstanceModal.instanceName}" ? Cette action est irréversible.`}
-                confirmText="Supprimer"
-                cancelText="Annuler"
-                onConfirm={handleConfirmDeleteInstance}
-                onCancel={handleCancelDeleteInstance}
-                type="danger"
-                isLoading={deleteInstanceModal.isLoading}
-            />
 
             {/* Success/Error Snackbar */}
             <Snackbar

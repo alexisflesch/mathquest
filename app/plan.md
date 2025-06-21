@@ -1,496 +1,175 @@
-# MathQuest App Modernization Plan
+# MathQuest App Security & UX Modernization
 
-## 🎯 Main Goal
-Complete modernization of the Math## Phase 8: 🚧 IMMEDIATE - Critical Environment Fixes
-- [x] **Fix missing REDIS_URL configuration** - Recreate .env file from example.env
-- [x] **Fix PostgreSQL connection** - Reset user password and update DATABASE_URL
-- [x] **Sync database migrations** - Mark existing migrations as applied
-- [x] **Fix React Hooks order violation** - Practice session page hook ordering fixed
-- [x] **Fix URL redirect behavior** - Practice session stays on access code URL
-- [x] **Replace practice session with working code** - Used session page as foundation
-- [x] **Archive unused NavbarStates components** - Moved to archive/ folder
-- [x] **Fix navigation menu links** - Updated useAuthState.ts to point to new practice flow
-- [x] **Archive obsolete practice session page** - Moved session/ page to archive
-- [ ] Run cleanup script for backup files
-- [ ] Check for other missing environment variables
-- [ ] Verify database connectivity 
-- [ ] Test Redis connection
-
-## Phase 10: 🚧 CRITICAL - Implement Missing Teacher Dashboard Socket Actions
-**Root Cause**: Trophy and bar graph buttons exist in UI but are **not connected** to any socket events.
-
-**Current State Analysis**:
-- ✅ **UI Elements**: Trophy and ChartBarBig buttons exist in `QuestionDisplay.tsx`
-- ✅ **Component Props**: `DraggableQuestionsList` accepts `onShowResults` and `onStatsToggle` props
-- ❌ **Dashboard Integration**: Teacher dashboard page **NOT** passing these handlers to `DraggableQuestionsList`
-- ✅ **Existing Events**: `correct_answers` and `dashboard_answer_stats_update` events already defined
-- ✅ **Backend Handlers**: Some `correct_answers` emission exists in game flow handlers
-
-**Required Implementation**:
-
-### 1. Trophy Button (Show Results & Close Question)
-- [x] **Frontend**: Add `handleShowResults(questionUid)` handler in teacher dashboard
-- [x] **Socket Event**: Create teacher-triggered `show_correct_answers` event  
-- [x] **Backend**: Implement handler to emit `correct_answers` to students + projection room
-- [x] **Projection**: Update hook to handle `projection_correct_answers` events
-- [x] **Types**: Add strongly typed `ShowCorrectAnswersPayload` with `questionUid` and teacher authorization
-
-### 2. Bar Graph Button (Toggle Stats Display)  
-- [x] **Frontend**: Add `handleStatsToggle(questionUid, show)` handler in teacher dashboard
-- [x] **Socket Event**: Create `toggle_projection_stats` event for projection room
-- [x] **Backend**: Implement handler to toggle stats visibility on projection page
-- [x] **Projection**: Update hook to handle `projection_show_stats`/`projection_hide_stats` events
-- [x] **Types**: Add strongly typed `ToggleProjectionStatsPayload` with `questionUid`, `show: boolean`, and stats data
-
-### 3. Shared Types & Validation
-- [x] **Payload Types**: Add `ShowCorrectAnswersPayload` and `ToggleProjectionStatsPayload` to shared types
-- [ ] **Zod Schemas**: Add validation schemas for both payloads  
-- [x] **Event Constants**: Add new events to `SOCKET_EVENTS.TEACHER` and `SOCKET_EVENTS.PROJECTOR`
-- [ ] **Backend Validation**: Use Zod to validate incoming teacher requests
-
-### 4. Frontend Integration
-- [x] **Dashboard**: Connect handlers to DraggableQuestionsList component
-- [x] **Projection Hook**: Add state and event listeners for new projection features
-- [ ] **Projection UI**: Update projection page to display stats and correct answers
-
-**Current Status**: ✅ Backend handlers, frontend handlers, and socket events fully implemented. Need UI components and validation.
-
-**Exit Criteria**: Trophy and bar graph buttons fully functional with real-time projection updates.
+### Implementation Tasks:
+- [x] **Frontend error handling**: Listen for backend authorization errors and redirect appropriately (Dashboard & Projection completed via shared hook)
+- [x] **DRY Refactoring**: Created shared `useSocketAuthHandler` hook to eliminate code duplication between dashboard and projection pages
+- [x] **Access code validation**: Enforce: Only QUIZ mode access codes are valid for dashboard and projection (NO tournament, NO practice)
+- [x] **Projection page validation**: Apply same ownership checks as dashboard - COMPLETED via shared `validateGameAccess` helper
+- [x] **Redirect logic**: Implement proper redirects to home page for unauthorized access (server-side, instant)
+- [x] **Error messaging**: Add user-friendly error states for access violations (server-side, branded error page)
+- [x] **Server-side access validation**: Move dashboard/projection access validation to server side (no client-side flash)
+- [x] **Instant error/redirect**: Ensure unauthorized users are redirected or shown error before any client-side code or socket connection
+- [x] **Update documentation**: Update checklist and log.md to reflect server-side validation
+- [x] **Test and validate**: Test server-side access control and error UX
 
 ---
 
-## Phase 11: ✅ COMPLETED - Fix Socket Payload Type Inconsistencies
+## Phase 1A: Backend Access Helper Refactor (Options Object, Type Safety, Logging)
+**Goal:** Refactor all backend access helpers to require a single options object for type safety, enforce quiz-only access, and robust logging.
+
+### Checklist:
+- [x] Refactor `validateGameAccessByCode` and related helpers in `/backend/src/utils/gameAuthorization.ts` to require a single options object (no default/optional params).
+- [x] Update all usages in `/backend/src/sockets/handlers/projectionHandler.ts` and `/backend/src/sockets/handlers/teacherControl/joinDashboard.ts` to use the new signature.
+- [x] Update or add Zod validation for the options object.
+- [x] Update shared types in `shared/` if used for access validation payloads.
+- [x] Update documentation in `plan.md` and `log.md` to reflect the refactor and checklist progress.
+- [x] Test and validate: Only quiz codes work for dashboard/projection, all denied attempts are logged and handled with clear errors.
+
+#### Troubleshooting & Root Cause Analysis
+- [x] **Backend code changes not taking effect:**
+    - Root cause: Stale backend process due to nodemon/ts-node not picking up file changes.
+    - Solution: Full backend rebuild and restart resolved the issue. Confirmed new access control and logging logic is now active.
+    - **Action:** Ensure nodemon/ts-node is configured to watch all backend source files. If changes are not picked up, stop all backend processes, run a clean build, and restart the backend.
+    - **Note:** Documented in `plan.md` and `log.md` as required by modernization guidelines.
 
 ---
 
-## Phase 9: ✅ COMPLETED - UX Enhancement: Real-time Leaderboard Population
-- [x] **Implement join-order bonus scoring system**
-  - [x] Backend: Add join-order tracking in Redis when students join games
-  - [x] Backend: Assign micro-scores based on join order (0.01, 0.009, 0.008, etc.)
-  - [x] Backend: Broadcast leaderboard updates when students join (before questions start)
-  - [x] Frontend: Update projection page to display populated leaderboard immediately
-- [x] **Enhance projection room leaderboard display**
-  - [x] Add leaderboard_update event listener to projection room
-  - [x] Display students with zero/micro scores before first question
-  - [x] Ensure smooth UX transition from join → populated leaderboard → question results
-- [x] **Test complete join-to-leaderboard flow**
-  - [x] Verify students appear on projection immediately after joining
-  - [x] Confirm join-order bonuses work correctly (first 10-20 students)
-  - [x] Test that real question scores properly override micro-scores app by eliminating all legacy code patterns and ensuring consistent use of shared types throughout the codebase.
+## Phase 1: 🔒 Dashboard & Projection Access Control
+**Goal**: Ensure only GameInstance creators can access dashboard and projection views, and ONLY for QUIZ mode (not tournament, not practice), with proper redirects for invalid access codes.
+
+### Security Requirements:
+- [x] **Creator-only access**: Backend already validates ownership in socket handlers
+- [x] **Quiz-only validation**: Access codes must correspond to actual quiz games (NO tournament, NO practice)
+- [x] **Invalid access redirect**: Non-creators and invalid access codes redirect to home page
+- [x] **Proper error handling**: Frontend must handle backend authorization errors
+- [x] **Server-side access validation**: Validate dashboard/projection access on the server before rendering page (no client-side flash, no socket connection if unauthorized)
+
+### Implementation Tasks:
+- [x] **Backend quiz-only enforcement**: Update shared helper and handlers to block non-quiz modes
+- [x] **Frontend error handling**: Show clear error for non-quiz access code
+- [x] **Server-side validation**: Move dashboard/projection access validation to server-side (Next.js server component or getServerSideProps)
+- [x] **Testing**: Validate that only quiz codes work for dashboard/projection, and that unauthorized users are redirected or shown error page instantly
+
+### Files to Modify:
+- [ ] `/frontend/src/app/teacher/dashboard/[code]/page.tsx`
+- [ ] `/frontend/src/app/teacher/projection/[code]/page.tsx`
+- [x] Backend socket handlers for dashboard/projection access
+- [x] Shared types for access validation payloads
 
 ---
 
-## Phase 1: ✅ COMPLETED - Project Structure Analysis
-- [x] Audit existing codebase for legacy patterns
-- [x] Identify type inconsistencies between frontend/backend
-- [x] Document current shared types usage
-- [x] Map out modernization requirements
+## Phase 1B: Server-Side Access Validation for Dashboard/Projection
+**Goal:** Move access validation for dashboard/projection to the server side (Next.js server components/loaders) to prevent any client-side flash and ensure instant redirect or error display.
 
-## Phase 2: ✅ COMPLETED - Shared Types Consolidation  
-- [x] Audit all type definitions across frontend/backend/shared
-- [x] Remove duplicate type definitions
-- [x] Ensure canonical shared types are used everywhere
-- [x] Add missing Zod validation schemas
-
-## Phase 3: ✅ COMPLETED - Socket Events Modernization
-- [x] Consolidate socket event definitions in shared/types
-- [x] Remove hardcoded event strings throughout codebase
-- [x] Ensure type safety for all socket communications
-- [x] Update both frontend and backend to use shared event constants
-
-## Phase 4: ✅ COMPLETED - API Response Standardization
-- [x] Ensure all API responses use shared types
-- [x] Remove custom response interfaces
-- [x] Standardize error handling with shared ErrorPayload type
-- [x] Validate API endpoint type consistency
-
-## Phase 5: ✅ COMPLETED - Component Props Modernization
-- [x] Update all React components to use shared types for props
-- [x] Remove local type definitions in components
-- [x] Ensure props interfaces use canonical shared types
-- [x] Fix Next.js page component prop constraints
-
-## Phase 6: 🔄 IN PROGRESS - Teacher Projection Page Modernization
-- [x] ~~Identify legacy patterns in projection page~~
-- [x] ~~Remove hardcoded event names, use shared constants~~
-- [x] ~~Fix type imports to use canonical shared types~~
-- [x] ~~Create modern useProjectionQuizSocket hook~~
-- [x] ~~Integrate useSimpleTimer for timer functionality~~
-- [x] ~~Update backend projection handler to use shared constants~~
-- [x] ~~Remove old projector handler file to avoid conflicts~~
-- [x] ~~Create clean room separation (projection_${gameId})~~
-- [ ] **🚧 CURRENT: Fix projection page TypeScript errors**
-  - [x] ~~Remove backup file causing import errors~~
-  - [ ] Fix projection page interface compatibility
-  - [ ] Update projection hook to return ExtendedQuizState-compatible data
-  - [ ] Fix property access (questions, tournament_code, id, etc.)
-  - [ ] Fix useUnifiedGameManager event name references
-  - [ ] Test complete projection page functionality
-- [ ] Final validation and testing
-
-## Phase 7: 🔥 CRITICAL - Quality Monitor Issues Resolution
-> **Priority: IMMEDIATE** - Based on Quality Monitor Report 2025-06-18
-
-### Critical Issues Requiring Automated Fixes:
-- [ ] **Fix 352 high-severity hardcoded strings**
-  - [ ] Extract 340 hardcoded socket event names to SOCKET_EVENTS constants
-  - [ ] Move user-facing messages to i18n system
-  - [ ] Extract SQL queries to proper query builders
-  - [ ] Replace magic numbers with named constants
-  
-- [ ] **Fix @/types vs @shared/types inconsistency (16 files)**
-  - [ ] Create automated script to replace import paths
-  - [ ] Validate all imports use canonical shared types
-  - [ ] Remove local type duplicates
-
-- [ ] **Address bundle size issues**
-  - [ ] Analyze main-app.js (6.5MB) for code splitting opportunities
-  - [ ] Implement lazy loading for heavy components
-  - [ ] Remove unused dependencies
-
-- [ ] **Fix React performance anti-patterns (532 issues)**
-  - [ ] Add missing useCallback/useMemo hooks
-  - [ ] Fix missing key props in lists
-  - [ ] Optimize unnecessary re-renders
-
-### Automation Scripts to Create:
-- [ ] `scripts/fix-import-paths.py` - Auto-fix @/types → @shared/types
-- [ ] `scripts/extract-socket-events.py` - Extract hardcoded socket events
-- [ ] `scripts/fix-react-performance.py` - Add missing React hooks
-- [ ] `scripts/bundle-optimization.py` - Implement code splitting suggestions
-
-## Phase 8: � IMMEDIATE - Critical Environment Fixes
-- [x] **Fix missing REDIS_URL configuration** - Recreate .env file from example.env
-- [ ] Check for other missing environment variables
-- [ ] Verify database connectivity 
-- [ ] Test Redis connection
-
-## Phase 9: �📋 PLANNED - Final Validation & Testing
-- [ ] Run comprehensive TypeScript compilation across all modules
-- [ ] Test all modernized components and pages
-- [ ] Verify socket connections and event handling
-- [ ] Validate API endpoints with proper type checking
-- [ ] Performance testing of modernized codebase
-- [ ] Update documentation with final architecture
-
-## Phase 11: ✅ COMPLETED - Server-Side Scoring Security Fix
-**Status**: ✅ COMPLETED - ALL OBJECTIVES ACHIEVED
-
-**Issue**: Major security vulnerability - Backend trusts frontend for time calculations in scoring
-- Frontend sends `timeSpent` directly in answer payload
-- Backend uses this value for scoring without validation
-- Users can manipulate scores by sending fake timeSpent values
-
-**Root Cause**: Client-side time tracking passed to server-side scoring algorithm
-
-**Solution**: Implement server-side time tracking service
-- [x] **Create `TimingService` for server-side question timing**
-  - [x] Track when users first see each question 
-  - [x] Calculate actual time spent server-side
-  - [x] Store timing data securely in Redis
-- [x] **Update scoring algorithm to use server-calculated time**
-  - [x] Remove `timeSpent` from client payload dependency
-  - [x] Use `serverTimeSpent` from TimingService
-  - [x] Add proper validation and logging
-- [x] **Fix answer submission handlers**
-  - [x] Update sharedLiveHandler.ts to use TimingService (not used for tournaments)
-  - [x] Update gameAnswer.ts handler with server-side timing and scoring
-  - [x] Add timing to question broadcast points in sharedGameFlow.ts
-- [x] **Test scoring integrity - VERIFIED WORKING**
-  - [x] Server-side timing working: 1854ms calculated correctly
-  - [x] Score calculation working: 982 points (1000 base - 18 time penalty)
-  - [x] Database persistence working: participant score updated correctly
-- [x] **✅ FIXED LEADERBOARD CALCULATION AND PERSISTENCE**
-  - [x] Added Redis-database synchronization for participant scores
-  - [x] Leaderboard now shows correct scores (982 points) instead of null/0
-  - [x] Added leaderboard persistence to database when game ends
-  - [x] Verified database storage: `[{"score":983,"userId":"...","username":"guest-68fbddc9","avatarEmoji":"🐼"}]`
-  - [x] Complete end-to-end functionality restored
-
-**Security Impact**: HIGH - Server-side scoring COMPLETE and tamper-proof
-**Status**: FULLY OPERATIONAL - Scoring system now secure, functional, and persistent
-
-**Verification Evidence (Tournament 3254)**:
-- TimingService: `serverTimeSpent: 1854ms` ✅
-- Scoring: `score: 982` (correct answer with time penalty) ✅  
-- Database: `newScore: 982, scoreAdded: 982` ✅
-- Redis sync: `Redis participant score synchronized` ✅
-- Leaderboard: `"score": 982` displayed correctly ✅
-
-**Files Modified**:
-- `backend/src/services/timingService.ts` - NEW: Server-side timing service
-- `backend/src/sockets/handlers/sharedScore.ts` - Fixed scoring algorithm
-- `backend/src/sockets/handlers/game/gameAnswer.ts` - Added server timing, scoring, and Redis sync
-- `backend/src/sockets/handlers/sharedGameFlow.ts` - Question timing tracking
-- `backend/src/utils/logger.ts` - Enhanced winston logging for debugging
+### Checklist:
+- [x] Refactor `/frontend/src/app/teacher/dashboard/[code]/page.tsx` to perform server-side access validation.
+- [x] Refactor `/frontend/src/app/teacher/projection/[gameCode]/page.tsx` for server-side access validation.
+- [x] Ensure instant redirect or error display for unauthorized access (no loading flash).
+- [x] Update documentation and checklist in `plan.md` and `log.md`.
+- [x] Test and validate server-side access control and error UX.
 
 ---
 
-## Phase 10: 🚨 CRITICAL - Tournament/Quiz Lobby Redirect Bug
-**Status**: 🔄 IN PROGRESS
+## Phase 2: 🗂️ Tournament List Filtering (My Tournaments Page)
+**Goal**: Remove pending quiz items from the my-tournaments page listing.
 
-**Issue**: Backend sends conflicting events for tournament/quiz start logic
-- Tournament lobbies: Backend sends immediate redirect + 5s countdown (should only be countdown)
-- Quiz lobbies: Should send immediate redirect when teacher starts quiz (currently uses tournament flow)
+### Current Issues:
+- [ ] **Analyze tournament listing logic**: Check what items are currently shown
+- [ ] **Identify quiz vs tournament distinction**: Understand how quiz and tournaments are differentiated
+- [ ] **Document filtering criteria**: Map out what should and shouldn't be shown
 
-**Current Tasks**:
-- [ ] Fix tournament mode: Remove immediate redirect, keep only 5s countdown
-- [ ] Fix quiz mode: Send immediate redirect from teacher dashboard when setting first question
-- [ ] Update frontend lobby to handle quiz vs tournament modes differently
-- [ ] Test both flows to ensure correct redirect timing
+### Requirements:
+- [ ] **Quiz exclusion**: Pending quiz instances should not appear in tournament lists
+- [ ] **Tournament-only display**: Only actual tournament instances should be shown
+- [ ] **Status-based filtering**: Consider game status in filtering logic
+- [ ] **Maintain functionality**: Ensure valid tournaments still appear correctly
 
-**Technical Details**:
-- Tournament mode: Use only countdown events (`tournament_starting`, `countdown_tick`, `countdown_complete`)
-- Quiz mode: Trigger redirect via `LOBBY_EVENTS.GAME_STARTED` when teacher sets first question and status changes from pending→active
-- Frontend: `isQuizLinked` flag determines if lobby shows start button (false for quiz mode)
+### Implementation Tasks:
+- [ ] **Backend filtering**: Update API endpoints to exclude quiz instances from tournament lists
+- [ ] **Frontend validation**: Add client-side filtering as backup
+- [ ] **Type safety**: Ensure proper typing for tournament vs quiz distinction
+- [ ] **UI consistency**: Verify tournament list displays correctly after filtering
 
-**Files Being Modified**:
-- `backend/src/sockets/handlers/tournamentHandler.ts` - Split quiz vs tournament logic
-- `backend/src/sockets/handlers/teacherControl/setQuestion.ts` - Add quiz redirect trigger
-- `backend/src/sockets/handlers/lobbyHandler.ts` - Add quiz mode flag to participants list
-- `frontend/src/app/lobby/[code]/page.tsx` - Handle immediate redirect for quiz mode
-
----
-
-## Phase 12: ✅ COMPLETED - Tournament Ending Database Update Fix
-- [x] **Fix tournament ending database fields update**
-  - [x] Update sharedGameFlow.ts to set status="completed" when tournament completes (following strict naming)
-  - [x] Set endedAt to current timestamp
-  - [x] Set isDiffered=true to enable deferred mode access
-  - [x] Set differedAvailableFrom to same timestamp as endedAt
-  - [x] Set differedAvailableTo to endedAt + 7 days
-  - [x] Test tournament completion flow to verify database updates
-  - [x] Verify deferred mode availability window is correctly set
-
-**Issue**: Tournament ending only persisted leaderboard but didn't update status/timing fields
-**Impact**: HIGH - Affects tournament lifecycle and deferred mode availability
-**Resolution**: Fixed database updates in `backend/src/sockets/handlers/sharedGameFlow.ts`
-**Status**: COMPLETE - Tournaments now properly transition to completed status with 7-day deferred window
+### Files to Modify:
+- [ ] `/frontend/src/app/my-tournaments/page.tsx`
+- [ ] Backend API endpoints for tournament listing
+- [ ] Database queries for tournament retrieval
+- [ ] Shared types for tournament/quiz distinction
 
 ---
 
-## Current Phase: Tournament Flow Bug Fixes
+## Phase 3: 🔐 Anonymous User Authentication Redirects
+**Goal**: Redirect anonymous users to login with return URL parameter for all protected pages.
 
-### ✅ Completed Tasks
-- [x] Fix tournament ending - update database fields (status, endedAt, differedAvailableFrom, differedAvailableTo)
+### Current Issues:
+- [ ] **Audit current authentication flow**: Check which pages require authentication
+- [ ] **Analyze redirect behavior**: Document current anonymous user handling
+- [ ] **Identify protected routes**: Map out pages that should require authentication
 
-### 🔄 Current Tasks  
-- [ ] Fix deferred tournament access - allow joining ended tournaments for async play
-  - [ ] Investigate where "Code erroné (status: ended)" error is coming from
-  - [ ] Update backend logic to allow joining ended tournaments if within deferred window
-  - [ ] Test deferred mode functionality
+### Requirements:
+- [ ] **Anonymous detection**: Identify when users are not authenticated
+- [ ] **Protected route enforcement**: All pages except login and home require authentication
+- [ ] **Return URL preservation**: Store intended destination for post-login redirect
+- [ ] **Seamless UX**: Smooth flow from login back to intended page
 
-## 🔍 Current Focus: Phase 6 - TypeScript Error Resolution
+### Implementation Tasks:
+- [ ] **Authentication middleware**: Create or enhance auth guards for protected routes
+- [ ] **URL parameter handling**: Implement returnUrl parameter in login flow
+- [ ] **Post-login redirect**: Redirect users to intended destination after successful login
+- [ ] **Route protection**: Apply authentication requirements to all protected pages
+- [ ] **Error handling**: Handle edge cases in redirect flow
 
-### Immediate Tasks:
-1. **Fix projection hook interface** - Update return type to match ExtendedQuizState
-2. **Fix projection page property access** - Update to use correct property names
-3. **Fix other files using old event names** - Update useUnifiedGameManager
-4. **Test complete flow** - Ensure projection page works end-to-end
+### Files to Modify:
+- [ ] `/frontend/src/hooks/useAuthState.ts` or authentication logic
+- [ ] `/frontend/src/app/login/page.tsx`
+- [ ] Protected page components (dashboard, projection, my-tournaments, etc.)
+- [ ] Route guards or middleware components
+- [ ] Navigation components that might need auth awareness
 
-### Technical Debt Identified:
-- Multiple similar handler files (projection vs projector) - ✅ RESOLVED
-- Inconsistent room naming patterns - ✅ RESOLVED  
-- Mixed type usage in projection components - 🔄 IN PROGRESS
+---
+
+## 🧪 Testing & Validation Plan
+
+### Phase 1 Testing:
+- [ ] **Creator access**: Verify game creators can access their dashboard/projection
+- [ ] **Non-creator blocking**: Verify non-creators are redirected appropriately
+- [ ] **Invalid access codes**: Test with non-existent or non-quiz access codes
+- [ ] **Error messaging**: Verify clear error states for unauthorized access
+
+### Phase 2 Testing:
+- [ ] **Tournament list filtering**: Verify only tournaments appear in my-tournaments
+- [ ] **Quiz exclusion**: Confirm pending quizzes are filtered out
+- [ ] **Edge cases**: Test with various game statuses and types
+
+### Phase 3 Testing:
+- [ ] **Anonymous redirect**: Test anonymous access to protected pages
+- [ ] **Return URL flow**: Verify login redirects to intended destination
+- [ ] **Edge cases**: Test with invalid return URLs and malformed parameters
 
 ---
 
 ## 🎯 Success Criteria
-- [ ] Zero TypeScript compilation errors across all modules
-- [ ] All components use canonical shared types
-- [ ] No hardcoded strings for socket events or API endpoints
-- [ ] Consistent error handling with shared types
-- [ ] All legacy type mappings removed
-- [ ] Modern timer integration working correctly
-- [ ] Clean room separation for socket events
-- [ ] Teacher projection page fully functional
+
+### Security:
+- [ ] Only game creators can access dashboard/projection views
+- [ ] Invalid access codes properly redirect to home page
+- [ ] No unauthorized access to game management features
+
+### UX:
+- [ ] Tournament list shows only relevant items (no pending quizzes)
+- [ ] Anonymous users smoothly redirected through login flow
+- [ ] Users land on intended pages after authentication
+
+### Technical:
+- [ ] All access control uses shared types and proper validation
+- [ ] No hardcoded strings or magic numbers in access control logic
+- [ ] Consistent error handling across all protected routes
 
 ---
 
 ## 📝 Notes
 - All changes follow .instructions.md guidelines strictly
 - Zero backward compatibility maintained as per requirements
-- Each phase builds upon previous completed work
-- Documentation updated continuously in log.md
-
----
-
-# Plan: Remove Offline Participants from Lobby
-
-## Problem
-Disconnected users remain in the lobby participant list as "offline", causing the lobby to appear populated by users who are no longer present.
-
-## Goals
-- Ensure the lobby only displays currently connected (online) users.
-- Remove participant objects from Redis and backend state when users disconnect.
-
-## Steps
-
-1. **Audit Current Disconnect Handling**
-   - Review the code that handles socket disconnects and participant cleanup.
-   - Identify where participants are marked as offline but not removed.
-
-2. **Update Disconnect Logic**
-   - Modify the disconnect handler to remove participant objects from Redis and backend state when a user disconnects.
-   - Ensure this does not interfere with game state if the user is in an active game.
-
-3. **Update Lobby Participant Query**
-   - Ensure any code that fetches the lobby participant list only includes users with `online: true`.
-
-4. **Test Cases**
-   - User joins and leaves lobby: should be removed from the list.
-   - Multiple users join/leave: only online users are shown.
-   - User disconnects during a game: ensure correct handling (may differ from lobby).
-
-5. **Logging and Monitoring**
-   - Add logs for participant removal events.
-   - Monitor for unexpected removals or errors.
-
-6. **Deployment and Verification**
-   - Deploy changes to staging.
-   - Verify with manual and automated tests.
-
-## Phase 11: 🔍 QUALITY MONITOR - Shared Interface Analysis Results
-
-**Analysis Date**: June 20, 2025
-**Tool**: Interface Similarity Checker
-**Findings**: 21 interface duplication issues identified
-
-### 🔴 HIGH PRIORITY - Replace Local Interfaces with Shared Types (11 issues)
-
-#### Frontend Issues (3)
-- [x] **Run interface similarity analysis** - Found 21 duplication issues
-- [x] `ProjectorConnectedCountPayload` → Replace with `ConnectedCountPayload` (100% match!)
-  - File: `frontend/src/types/socketTypeGuards.ts` - COMPLETED
-- [ ] `AnswerReceivedPayload` → Replace with `AnswerResponsePayload` (82% similarity)
-  - File: `frontend/src/types/socketTypeGuards.ts`
-
-#### Backend Issues (8)
-- [ ] `GameTemplateCreationData` → Replace with `GameTemplateCreationRequest` (89% similarity)
-  - File: `backend/src/core/services/gameTemplateService.ts`
-- [ ] `GameTemplateCreationData` → Replace with `GameTemplateUpdateRequest` (81% similarity)  
-  - File: `backend/src/core/services/gameTemplateService.ts`
-- [ ] `GameTemplateUpdateData` → Replace with `GameTemplateUpdateRequest` (80% similarity)
-  - File: `backend/src/core/services/gameTemplateService.ts`
-- [ ] `SubmitAnswerRequest` → Replace with `SubmitPracticeAnswerPayload` (83% similarity)
-  - File: `backend/src/core/services/practiceSessionService.ts`
-- [ ] `gameTemplateCreationData` → Replace with `GameTemplateCreationRequest` (87% similarity)
-  - File: `backend/src/core/services/quizTemplateService.ts`
-- [x] `AnswerData` → Replace with `AnswerSubmissionPayload` (100% match!)
-  - File: `backend/src/core/services/scoringService.ts` - COMPLETED
-- [x] `PauseTimerPayload` → **SEMANTIC SOLUTION** (100% match!)
-  - File: `backend/src/sockets/handlers/teacherControl/types.ts` - IMPROVED
-  - **Solution**: Created `GameIdentificationPayload` base interface for semantic clarity
-
-### 🟡 MEDIUM PRIORITY - Unify Duplicate Local Interfaces (10 issues)
-
-#### Frontend Interface Unification (4)
-- [ ] Unify `EnhancedStudentGameUIState` + `StudentGameUIState` (85% similarity)
-- [ ] Unify `EnhancedStudentGameSocketProps` + `StudentGameSocketHookProps` (74% similarity)
-- [ ] Unify `AnswerReceived` + `TournamentAnswerReceived` (73% similarity)
-- [ ] Unify `EnhancedFiltersResponse` + `EnhancedFilters` (72% similarity)
-
-#### Backend Interface Unification (6)
-- [ ] Unify `GameTemplateCreationData` + `gameTemplateCreationData` (74% similarity)
-- [ ] Unify `GameTemplateUpdateData` + `gameTemplateCreationData` (74% similarity)  
-- [ ] Unify `GameTemplateUpdateData` + `gameTemplateUpdateData` (87% similarity)
-- [ ] Unify `gameTemplateCreationData` + `gameTemplateUpdateData` (73% similarity)
-- [ ] Unify `StartTimerPayload` + `PauseTimerPayload` (77% similarity)
-- [ ] Unify tournament-specific payload types (85% similarity)
-
-### 📊 Analysis Summary
-- **Total issues found**: 21
-- **Shared types available**: 3,198
-- **Local interfaces scanned**: 116
-- **Perfect matches (100% similarity)**: 4 
-- **Near-perfect matches (>85% similarity)**: 7
-- **Root cause**: Missing imports of existing shared types
-
-**Next Action**: Start with 100% matches as they are guaranteed safe replacements.
-
----
-
-## Phase 12: 🚨 SOCKET VALIDATION AUDIT - Critical Security Issues Found
-
-**Analysis Date**: June 20, 2025
-**Tool**: Socket Payload Validator
-**Findings**: 431 socket validation violations discovered
-
-### 🔴 CRITICAL SECURITY ISSUES (High Priority)
-
-#### Missing Zod Validation (48 handlers)
-- [ ] **Frontend socket handlers lack schema validation** 
-  - Files: `useEnhancedStudentGameSocket.ts`, `useGameSocket.ts`, `usePracticeSession.ts`
-  - **Security Risk**: Unvalidated socket payloads can cause runtime errors or injection attacks
-  - **Action Required**: Import and implement Zod schemas from `@shared/types/socketEvents.zod`
-
-#### Non-Shared Payload Types (106 emitters)  
-- [ ] **Socket emitters not using canonical shared types**
-  - **Violation**: Direct breach of `.instructions.md` "USE shared types" mandate
-  - **Impact**: Type inconsistencies between frontend/backend socket communication
-  - **Action Required**: Replace local type definitions with shared type imports
-
-### 🟡 MEDIUM PRIORITY ISSUES
-
-#### Hardcoded Event Names (158 occurrences)
-- [ ] **Replace hardcoded socket event strings with constants**
-  - **Risk**: Typos causing silent socket communication failures
-  - **Action Required**: Import `SOCKET_EVENTS` from `@shared/types/socket/events`
-
-#### Missing Type Guards (15 handlers)
-- [ ] **Add runtime type validation to socket handlers**
-  - **Files**: Practice session and connection handlers primarily affected
-  - **Action Required**: Implement type guard functions for payload validation
-
-### 📊 VALIDATION COVERAGE GAPS
-
-#### Documentation Issues (52 handlers)  
-- [ ] **Add JSDoc documentation to socket handlers**
-  - **Impact**: Poor developer experience and maintenance difficulty
-
-#### Any-Typed Payloads (52 handlers)
-- [ ] **Replace `any` types with proper socket payload types**
-  - **Impact**: Loss of type safety benefits
-
-### 🎯 IMMEDIATE ACTIONS REQUIRED
-
-**Priority 1**: Fix Zod validation gaps (security critical)
-**Priority 2**: Implement shared type usage (architecture compliance)  
-**Priority 3**: Replace hardcoded event names (reliability)
-
-**Estimated Impact**: 431 fixes needed across socket communication layer
-
----
-
-## Phase 11: 🚧 CRITICAL - Fix Tournament Replay Prevention
-**Root Cause**: Users can replay tournaments they've already participated in, whether live or deferred.
-
-**Current State Analysis**:
-- ❌ **Weak Replay Check**: Only blocks replays if `completedAt` is set in database
-- ❌ **Deferred-Only Logic**: Socket handler only checks replays for deferred tournaments
-- ❌ **Late Participant Creation**: `GameParticipant` records might not be created until completion
-- ✅ **Error Handling**: `game_already_played` socket event exists and frontend handles it
-
-**Tournament Replay Rules**:
-- ✅ **Quiz/Practice**: Unlimited replays allowed
-- ❌ **Tournament Live**: Should be blocked once user joins game (sees any question)
-- ❌ **Tournament Deferred**: Should be blocked if user already played live OR deferred version
-
-**Required Implementation**:
-
-### 1. Strengthen GameParticipant Creation
-- [x] **Immediate Recording**: Create `GameParticipant` record as soon as user joins game (not lobby)
-- [x] **Early Participation Tracking**: Record participation when user sees first question
-- [x] **Tournament-Specific Logic**: Only apply strict replay prevention to tournament mode
-
-### 2. Fix Replay Prevention Logic
-- [x] **Update GameParticipantService**: Check for ANY existing participant record for tournaments
-- [x] **Update Socket Handler**: Apply replay check to both live and deferred tournaments
-- [x] **Remove CompletedAt Dependency**: Block replays based on participation, not completion
-
-### 3. Validation & Testing
-- [x] **Test Live Tournament**: Verify user blocked from rejoining live tournament after joining
-- [x] **Test Deferred Replay**: Verify user blocked from playing deferred after playing live
-- [x] **Test Cross-Mode**: Verify user blocked from playing live after playing deferred
-- [x] **Test Other Modes**: Verify quiz/practice replays still work
-- [x] **Improve UX**: Replace error alert with silent redirect to leaderboard + subtle notification
+- Each phase builds upon security and UX best practices
+- Focus on root cause fixes rather than patches
+- **Troubleshooting:** If backend code changes are not reflected, check nodemon/ts-node config and ensure all relevant files are watched. Manual restart may be required after config or new file changes.

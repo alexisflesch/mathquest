@@ -142,9 +142,10 @@ async function getGameControlState(gameId, userId, isTestEnvironment = false) {
             answerStats = await getAnswerStats(gameInstance.accessCode, currentQuestionUid);
         }
         // Construct and return the full game control state
-        return {
+        const controlState = {
             gameId: gameInstance.id,
             accessCode: gameInstance.accessCode,
+            templateName: gameTemplate.name,
             status: gameState.status,
             currentQuestionUid,
             questions,
@@ -153,6 +154,7 @@ async function getGameControlState(gameId, userId, isTestEnvironment = false) {
             participantCount,
             answerStats
         };
+        return controlState;
     }
     catch (error) {
         logger.error({ gameId, userId, error }, 'Error preparing game control state');

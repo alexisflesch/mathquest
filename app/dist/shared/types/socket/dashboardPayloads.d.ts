@@ -141,6 +141,7 @@ export interface QuestionForDashboard extends Question {
 export interface GameControlStatePayload {
     gameId: string;
     accessCode: string;
+    templateName: string;
     status: 'pending' | 'active' | 'paused' | 'completed';
     currentQuestionUid: string | null;
     questions: QuestionForDashboard[];

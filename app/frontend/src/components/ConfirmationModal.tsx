@@ -1,7 +1,7 @@
 /**
  * ConfirmationModal Component
  * 
- * A reusable modal component for confirmation dialogs.
+ * A minimalistic modal component for confirmation dialogs.
  * Provides a clean interface for destructive actions like deletions.
  * 
  * Features:
@@ -10,13 +10,12 @@
  * - Smooth animations
  * - Accessible with proper focus management
  * - Support for different button styles based on action type
+ * - Consistent with InfoModal design language
  */
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, AlertTriangle } from 'lucide-react';
-import InfinitySpin from '@/components/InfinitySpin';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { X } from 'lucide-react';
 
 interface ConfirmationModalProps {
     isOpen: boolean;
@@ -38,130 +37,83 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     cancelText = 'Annuler',
     onConfirm,
     onCancel,
-    type = 'danger',
+    type = 'info',
     isLoading = false
 }) => {
-    // Handle escape key press
-    React.useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen && !isLoading) {
-                onCancel();
-            }
-        };
+    const modalRef = useRef<HTMLDivElement>(null);
+    const [modalTop, setModalTop] = useState<string>('50%');
 
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'hidden';
+    useEffect(() => {
+        if (isOpen && modalRef.current) {
+            const modalHeight = modalRef.current.offsetHeight;
+            const viewportHeight = window.innerHeight;
+            const calculatedTop = `${(viewportHeight - modalHeight) / 2}px`;
+            setModalTop(calculatedTop);
         }
-
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'unset';
-        };
-    }, [isOpen, onCancel, isLoading]);
-
-    const getButtonStyles = () => {
-        switch (type) {
-            case 'danger':
-                return 'bg-red-600 hover:bg-red-700 text-white';
-            case 'warning':
-                return 'bg-orange-600 hover:bg-orange-700 text-white';
-            case 'info':
-                return 'bg-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:opacity-90 text-[color:var(--primary-foreground)]';
-            default:
-                return 'bg-red-600 hover:bg-red-700 text-white';
-        }
-    };
-
-    const getIconColor = () => {
-        switch (type) {
-            case 'danger':
-                return 'text-red-500';
-            case 'warning':
-                return 'text-orange-500';
-            case 'info':
-                return 'text-[color:var(--primary)]';
-            default:
-                return 'text-red-500';
-        }
-    };
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
     return (
         <AnimatePresence>
-            <motion.div
-                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={(e) => {
-                    if (e.target === e.currentTarget && !isLoading) {
-                        onCancel();
-                    }
-                }}
-            >
-                <motion.div
-                    className="bg-[color:var(--card)] rounded-lg p-6 w-full max-w-md mx-4 relative shadow-lg"
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full bg-opacity-20 ${type === 'danger' ? 'bg-red-500' : type === 'warning' ? 'bg-orange-500' : 'bg-[color:var(--primary)]'}`}>
-                                <AlertTriangle size={20} className={getIconColor()} />
-                            </div>
-                            <h3 className="text-lg font-semibold text-[color:var(--foreground)]">
-                                {title}
-                            </h3>
-                        </div>
-                        {!isLoading && (
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-0">
+                    {/* Backdrop */}
+                    <motion.div
+                        className="absolute inset-0 bg-black bg-opacity-50"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onCancel}
+                    />
+
+                    {/* Modal */}
+                    <motion.div
+                        ref={modalRef}
+                        className="relative bg-white rounded-lg shadow-lg w-full max-w-md border p-6 mx-4"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {/* Header */}
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold">{title}</h3>
                             <button
                                 onClick={onCancel}
-                                className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors"
+                                className="text-gray-500 hover:text-gray-800 transition-colors"
+                                aria-label="Close modal"
                             >
                                 <X size={20} />
                             </button>
-                        )}
-                    </div>
+                        </div>
 
-                    {/* Message */}
-                    <p className="text-[color:var(--muted-foreground)] mb-6">
-                        {message}
-                    </p>
+                        {/* Content */}
+                        <p className="text-gray-700 mb-6">{message}</p>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 justify-end">
-                        <button
-                            onClick={onCancel}
-                            disabled={isLoading}
-                            className="px-4 py-2 border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {cancelText}
-                        </button>
-                        <button
-                            onClick={onConfirm}
-                            disabled={isLoading}
-                            className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${getButtonStyles()}`}
-                        >
-                            {isLoading ? (
-                                <div className="flex items-center gap-2">
-                                    <InfinitySpin
-                                        size={16}
-                                        trailColor={type === 'info' ? 'var(--primary-foreground)' : 'white'}
-                                    />
-                                    <span>Suppression...</span>
-                                </div>
-                            ) : (
-                                confirmText
-                            )}
-                        </button>
-                    </div>
-                </motion.div>
-            </motion.div>
+                        {/* Actions */}
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={onCancel}
+                                disabled={isLoading}
+                                className="px-4 py-2 border rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+                            >
+                                {cancelText}
+                            </button>
+                            <button
+                                onClick={onConfirm}
+                                disabled={isLoading}
+                                className={`px-4 py-2 rounded-lg text-white transition disabled:opacity-50 ${type === 'danger' ? 'bg-red-600 hover:bg-red-700' :
+                                    type === 'warning' ? 'bg-yellow-600 hover:bg-yellow-700' :
+                                        'bg-blue-600 hover:bg-blue-700'
+                                    }`}
+                            >
+                                {isLoading ? 'Loading...' : confirmText}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </AnimatePresence>
     );
 };

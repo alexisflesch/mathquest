@@ -3,6 +3,7 @@ import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import { JoinDashboardPayload } from './types';
+import { validateGameAccessByCode, validateGameAccess } from '@/utils/gameAuthorization';
 import { DASHBOARD_PREFIX, getGameControlState } from './helpers';
 import { TEACHER_EVENTS } from '@shared/types/socket/events';
 import { getParticipantCount } from '@/sockets/utils/participantCountUtils';
@@ -16,6 +17,12 @@ const logger = createLogger('JoinDashboardHandler');
 
 export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: JoinDashboardPayload, callback?: (data: any) => void) => {
+        // CRITICAL: Log every join_dashboard event received, even before validation
+        logger.info({
+            socketId: socket.id,
+            rawPayload: payload
+        }, 'joinDashboardHandler: Event received (pre-validation)');
+
         // Runtime validation with Zod
         const parseResult = joinDashboardPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -107,19 +114,33 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
         logger.info({ gameId, accessCode, userId: effectiveUserId, socketId: socket.id }, 'User joining dashboard');
 
         try {
-            // Verify the game exists and belongs to this user
-            let gameInstance;
+            // Use shared authorization helper
+            const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
 
-            if (gameId) {
-                gameInstance = await prisma.gameInstance.findUnique({
-                    where: { id: gameId },
-                    include: { gameTemplate: true }
-                });
-            } else if (accessCode) {
-                gameInstance = await prisma.gameInstance.findUnique({
-                    where: { accessCode },
-                    include: { gameTemplate: true }
-                });
+            logger.info({
+                socketId: socket.id,
+                event: 'join_dashboard',
+                payload: validPayload,
+                userId: effectiveUserId,
+                accessCode,
+                gameId
+            }, 'joinDashboardHandler: Handler invoked, enforcing quiz-only access');
+
+            let authResult;
+            if (accessCode) {
+                authResult = await validateGameAccessByCode({
+                    accessCode,
+                    userId: effectiveUserId,
+                    isTestEnvironment,
+                    requireQuizMode: true
+                }); // QUIZ ONLY
+            } else if (gameId) {
+                authResult = await validateGameAccess({
+                    gameId,
+                    userId: effectiveUserId,
+                    isTestEnvironment,
+                    requireQuizMode: true
+                }); // QUIZ ONLY
             } else {
                 logger.warn({ socketId: socket.id }, 'No gameId or accessCode provided');
                 socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
@@ -129,44 +150,22 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                 return;
             }
 
-            if (!gameInstance) {
-                logger.warn({ gameId, accessCode }, 'Game not found');
+            if (!authResult.isAuthorized) {
                 socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
-                    code: 'GAME_NOT_FOUND',
-                    message: 'Game not found with the provided ID or access code',
+                    code: authResult.errorCode,
+                    message: authResult.errorMessage,
                 });
+
+                if (callback) {
+                    callback({
+                        success: false,
+                        error: authResult.errorMessage
+                    });
+                }
                 return;
             }
 
-            // Check authorization - user must be either the game initiator or the template creator
-            const isAuthorized = gameInstance.initiatorUserId === effectiveUserId ||
-                gameInstance.gameTemplate?.creatorId === effectiveUserId;
-
-            if (!isAuthorized) {
-                logger.warn({ gameId, userId: effectiveUserId, initiatorUserId: gameInstance.initiatorUserId, templateCreatorId: gameInstance.gameTemplate?.creatorId }, 'User not authorized for this game');
-
-                // For test environment, check if we should bypass auth check
-                const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
-
-                // If we're in a test environment and both IDs exist, we'll allow it
-                if (!isTestEnvironment) {
-                    socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
-                        code: 'NOT_AUTHORIZED',
-                        message: 'You are not authorized to control this game',
-                    });
-
-                    // Call callback with error if provided
-                    if (callback) {
-                        callback({
-                            success: false,
-                            error: 'Not authorized'
-                        });
-                    }
-                    return;
-                }
-
-                logger.info({ gameId, userId: effectiveUserId }, 'Test environment: Bypassing authorization check');
-            }
+            const gameInstance = authResult.gameInstance;
 
             // Join dashboard and projection rooms - consistent naming across all game types
             const dashboardRoom = `dashboard_${gameId}`;
@@ -200,12 +199,10 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             );
 
             // Get and send comprehensive game state for dashboard
-            const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
             const controlState = await getGameControlState(gameInstance.id, effectiveUserId, isTestEnvironment);
 
             if (!controlState) {
                 logger.warn({ gameId, userId: effectiveUserId }, 'Could not retrieve game control state');
-                const isTestEnvironment = process.env.NODE_ENV === 'test' || socket.handshake.auth?.isTestUser;
 
                 if (isTestEnvironment) {
                     // In test environment, return success anyway to not block tests
@@ -313,5 +310,10 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                 });
             }
         }
+
+        // Add a global catch-all event logger for deep debugging
+        socket.onAny((event, ...args) => {
+            logger.info({ event, args }, 'Socket.IO onAny event received');
+        });
     };
 }
