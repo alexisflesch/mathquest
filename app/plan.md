@@ -11,6 +11,7 @@
 - [x] **Instant error/redirect**: Ensure unauthorized users are redirected or shown error before any client-side code or socket connection
 - [x] **Update documentation**: Update checklist and log.md to reflect server-side validation
 - [x] **Test and validate**: Test server-side access control and error UX
+- [x] **Projection page error handling**: Top-level projection page now matches dashboard, showing branded AccessErrorPage for all error cases (not a quiz, not creator, not authenticated, etc).
 
 ---
 
@@ -125,6 +126,25 @@
 - [ ] Protected page components (dashboard, projection, my-tournaments, etc.)
 - [ ] Route guards or middleware components
 - [ ] Navigation components that might need auth awareness
+
+---
+
+## Phase 2: Dashboard UI Restoration & Testing
+**Goal:** Restore the full teacher dashboard UI and logic, replacing the placeholder client component, and ensure all features work as expected.
+
+### Checklist:
+- [x] Locate and review backup of full dashboard logic (`page.backup.tsx`).
+- [x] Restore full dashboard UI and logic into `TeacherDashboardClient.tsx` using the backup.
+- [ ] Test the restored dashboard UI in the browser to ensure all features work as expected.
+- [ ] Update documentation (`plan.md`, `log.md`) to record restoration and testing.
+- [ ] (Optional) Refactor or further modernize dashboard code for maintainability or new requirements.
+
+### Testing Instructions:
+1. Open the teacher dashboard page in the browser with a valid quiz access code.
+2. Confirm that all dashboard features (game controls, participant list, question display, etc.) are present and functional.
+3. Attempt access with an invalid or non-quiz code; confirm error page or redirect is shown instantly.
+4. Check for any UI/UX regressions or errors.
+5. Record results and any issues in `log.md`.
 
 ---
 

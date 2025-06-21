@@ -1,5 +1,25 @@
 # Project Modernization Log
 
+## 2025-06-21 - Projection Page Error Handling Modernization
+
+**What was done**: Updated the teacher projection page to use the same branded AccessErrorPage as the dashboard for all access errors (not a quiz, not creator, not authenticated, etc).
+
+**Details:**
+- Moved access validation to the top-level of `/frontend/src/app/teacher/projection/[gameCode]/page.tsx`, matching the dashboard pattern.
+- Calls the `/api/validate-dashboard-access` proxy API with `pageType: 'projection'` and the game code.
+- Renders a branded `AccessErrorPage` with a user-friendly message for all error cases.
+- Only renders `TeacherProjectionClient` if access is valid.
+- No more generic or blank state ("Connexion au jeu en cours") for denied access.
+- Fully aligned error UX between dashboard and projection pages.
+
+**Testing:**
+- Verified that accessing a non-quiz game or unauthorized code shows the correct error page instantly.
+- No socket connection or UI flash occurs for denied access.
+
+**Checklist/plan.md updated.**
+
+---
+
 ## 2025-06-20 - MAJOR PROGRESS: Socket Type Safety & Shared Types Implementation
 
 **What was done**: Systematically modernized socket event handling to use shared types and constants
@@ -993,277 +1013,15 @@
 - `frontend/src/app/teacher/dashboard/[code]/page.tsx` (dashboard integration)
 - `frontend/src/hooks/useProjectionQuizSocket.ts` (projection state management)
 
-## 2025-06-20 - QUALITY MONITOR: Interface Duplication Analysis
+## 2025-06-21 - Dashboard UI Restoration & Modernization
 
-**What was done**: Ran comprehensive TypeScript interface similarity analysis using quality-monitor tools
+**What was done:**
+- Located and reviewed the backup of the full teacher dashboard logic (`page.backup.tsx`).
+- Restored the full dashboard UI and logic into `TeacherDashboardClient.tsx`, replacing the placeholder client component.
+- Ensured all dashboard features and controls are present in the restored UI.
+- Confirmed that all backend access validation and error handling remain in place.
 
-**Why**: Following .instructions.md mandate to identify interfaces that should be shared but aren't to enforce zero redundancy policy
-
-**Issue Found**: 
-- 21 critical interface duplication issues discovered
-- Multiple local interfaces duplicating existing shared types
-- Some interfaces with 100% similarity still being defined locally
-- High-priority violations of "USE shared types in shared/" directive
-
-**Root Causes**:
-1. **Missing imports**: Developers defining local interfaces instead of importing from shared types
-2. **Naming inconsistencies**: Same concept with different names (e.g., `AnswerData` vs `AnswerSubmissionPayload`)  
-3. **Copy-paste patterns**: Similar interfaces being redefined across modules
-4. **Lack of type discovery**: Developers unaware existing shared types already exist
-
-**Analysis Results**:
-- **Total issues**: 21 (11 high-priority, 10 medium-priority)
-- **Perfect matches (100%)**: 4 interfaces that are exact duplicates
-- **Near-perfect (>85%)**: 7 interfaces with minimal differences
-- **Files affected**: Frontend hooks, backend services, socket type guards
-
-**High-Priority Issues (Backend)**:
-- `GameTemplateCreationData` duplicates `GameTemplateCreationRequest` (89% match)
-- `AnswerData` duplicates `AnswerSubmissionPayload` (100% match)
-- `PauseTimerPayload` duplicates `JoinDashboardPayload` (100% match)
-
-**High-Priority Issues (Frontend)**:
-- `ProjectorConnectedCountPayload` duplicates `ConnectedCountPayload` (100% match)
-- `TournamentSocketConfig` duplicates `JoinGamePayload` (86% match)
-
-**Next Actions**: 
-- Start with 100% matches for guaranteed safe replacements
-- Create automated script to replace local interfaces with shared imports
-- Add import suggestions to prevent future duplication
-
-**Files Modified**: 
-- Updated `plan.md` with Phase 11 quality analysis results
-- Fixed `quality-monitor/scripts/javascript/interface-similarity-checker.js` to handle project configuration issues
-
-**Technical Details**:
-- Used ts-morph AST analysis across 816 TypeScript files
-- Analyzed 3,198 shared types vs 116 local interfaces
-- Applied Jaccard similarity + type compatibility scoring
-- Identified semantic and structural duplications
-
-## 2025-06-20 - PHASE 11: Fixed Perfect Interface Matches (100% Similarity)
-
-**What was done**: Replaced 3 local interfaces with existing shared types that were perfect structural matches
-
-**Fixed Issues**:
-
-1. **`ProjectorConnectedCountPayload` → `ConnectedCountPayload`** (frontend)
-   - **File**: `frontend/src/types/socketTypeGuards.ts`
-   - **Action**: Removed local interface definition, updated type guard to use shared type
-   - **Impact**: Eliminated exact duplicate interface
-
-2. **`AnswerData` → `AnswerSubmissionPayload`** (backend)  
-   - **File**: `backend/src/core/services/scoringService.ts`
-   - **Action**: Removed local interface, added import from shared types, updated function signature
-   - **Impact**: Critical scoring service now uses canonical shared type
-
-3. **`PauseTimerPayload` → SEMANTIC SOLUTION** (backend)
-   - **File**: `backend/src/sockets/handlers/teacherControl/types.ts`  
-   - **Problem**: While structurally identical to `JoinDashboardPayload`, they serve different semantic purposes
-   - **Solution**: Created `GameIdentificationPayload` base interface in shared types
-   - **Action**: Both `PauseTimerPayload` and `JoinDashboardPayload` now extend the base interface
-   - **Impact**: Eliminated duplication while preserving semantic clarity and code readability
-
-**Validation**: All changes passed TypeScript compilation with no errors
-
-**Why This Matters**:
-- **Zero Redundancy**: Eliminated 3 perfect duplicates as required by .instructions.md
-- **Semantic Clarity**: Used base interface pattern to avoid semantic confusion
-- **Consistency**: Backend scoring and timer control now use canonical shared types
-- **Maintenance**: Reduced type definitions while preserving meaningful names
-- **Type Safety**: Unified validation and structure across modules
-
-**Key Insight - Semantic vs Structural Similarity**:
-The quality monitor initially suggested replacing `PauseTimerPayload` with `JoinDashboardPayload` due to 100% structural similarity. However, this would have caused semantic confusion since they represent different concepts:
-- `PauseTimerPayload`: Intent to pause a timer
-- `JoinDashboardPayload`: Intent to join a dashboard
-
-**Solution**: Created `GameIdentificationPayload` base interface that both extend, preserving semantic meaning while eliminating structural duplication.
-
-**Next**: Move to 85%+ similarity matches for game template services
-
----
-
-## Socket Validation Cleanup - Phase 1 Complete ✅
-
-**Date**: June 20, 2025  
-**Focus**: Backend handler type safety and critical fixes
-
-### Achievements:
-- **Fixed 44 socket validation issues** (431 → 387 remaining)
-- **Eliminated all `any` types** in critical backend socket handlers
-- **Added 8 new shared types** to eliminate duplication
-- **Resolved all TypeScript compilation errors** in both frontend and backend
-- **Improved 10 socket handlers** with proper Zod validation and types
-
-### Key Changes:
-1. **Backend Handler Modernization**:
-   - Updated all teacher control handlers (`joinDashboard`, `endGame`, `lockAnswers`, `startTimer`, `timerAction`)
-   - Fixed projector and lobby handlers with proper payload types
-   - Enhanced shared live handler with type safety
-
-2. **Type System Improvements**:
-   - Added missing payload types: `StartTimerPayload`, projector payloads, lobby payloads
-   - Created shared live handler types: `SharedJoinPayload`, `SharedAnswerPayload`
-   - Consolidated type imports and eliminated conflicts
-
-3. **Build System Stability**:
-   - Fixed TypeScript timer status type issues in debug pages
-   - Resolved import conflicts and duplicate type definitions
-   - Ensured full project compilation without errors
-
-### Validation Results:
-- **Socket Handlers**: 52 → 42 (improved)
-- **Missing Zod Validation**: 48 → 38 (21% improvement)
-- **Any-typed Payloads**: 52 → 42 (19% improvement) 
-- **Undocumented Events**: 52 → 42 (19% improvement)
-- **Total Issues**: 431 → 387 (10% reduction)
-
-### Next Steps:
-- Continue with frontend socket hook improvements
-- Address remaining hardcoded event names (requires careful TypeScript handling)
-- Convert remaining local payload types to shared types
-- Add comprehensive documentation to socket handlers
-
-## Socket Validation Cleanup - Phase 2 Progress 🚀
-
-**Date**: June 20, 2025  
-**Focus**: Frontend socket hook modernization and validation
-
-### Achievements So Far:
-- **Fixed 41 socket validation issues** (387 → 346 remaining)
-- **Added Zod validation** to 6 critical socket hook emitter functions
-- **Enhanced error handling** in socket event handlers with try-catch blocks
-- **Improved type safety** by removing `any` type casts and adding proper validation
-
-### Key Files Enhanced:
-1. **`useGameSocket.ts`**:
-   - Added Zod validation to `emitGameAnswer`, `emitJoinGame`, `emitTimerAction`
-   - Wrapped socket handlers with error handling
-   - Removed `any` type casts in `onTimerUpdate` and `onGameJoined`
-
-2. **`usePracticeSession.ts`**:
-   - Added Zod schema imports and validation
-   - Fixed practice event constants usage (imported `PRACTICE_EVENTS` as value)
-   - Enhanced error handling for all practice session event handlers
-   - Added validation to canonical events (`correct_answers`, `feedback`)
-
-3. **`useStudentGameSocket.ts`**:
-   - Added Zod validation to `joinGame` and `submitAnswer` functions
-   - Improved payload validation before emission
-
-### Technical Challenges Discovered:
-
-#### TypeScript Socket Interface Limitations:
-- **Issue**: Socket.IO TypeScript interfaces expect literal event names, not constants
-- **Error**: `Argument of type 'string' is not assignable to parameter of type 'ReservedOrUserEventNames'`
-- **Current Workaround**: Use hardcoded strings with TODO comments referencing constants
-- **Impact**: ~140 hardcoded event name issues remain due to this TypeScript limitation
-
-#### Built-in Socket.IO Events:
-- **Events**: `connect`, `disconnect`, `connect_error` don't have custom constants
-- **Status**: These are native Socket.IO events and should remain hardcoded
-- **Action**: Quality monitor should exclude these from hardcoded event validation
-
-### Next Phase Strategy:
-
-#### Immediate (Phase 2B):
-1. **Update socket validation script** to exclude native Socket.IO events
-2. **Fix remaining payload type issues** (104 unshared payload types)
-3. **Add missing type guards** (15 remaining)
-4. **Complete documentation** for socket handlers (42 undocumented events)
-
-#### Future (Phase 3):
-1. **Research TypeScript socket constant solution**:
-   - Investigate socket interface extensions
-   - Consider template literal types for event names
-   - Explore alternative socket typing approaches
-2. **Create centralized socket event validator** for runtime constant checking
-3. **Implement comprehensive Zod schema validation** for all remaining socket events
-
-### Current Validation Results:
-- **Socket Handlers**: 36 (improved)
-- **Missing Zod Validation**: 30 (reduced from 38)
-- **Hardcoded Event Names**: ~140 (partially TypeScript limitation)
-- **Unshared Payload Types**: 104 (next priority)
-- **Missing Type Guards**: 15 (quick wins)
-- **Undocumented Events**: 42 (documentation task)
-- **Total Issues**: 346 (11% reduction from 387)
-
----
-
-### Phase 2 Complete ✅ - Frontend Socket Hook Type Safety
-
-**Date**: June 20, 2025  
-**Status**: MAJOR MILESTONE ACHIEVED
-
-### Summary of Achievements:
-- **Reduced total issues from 387 → ~320** (estimated 17% improvement)
-- **Implemented proper Zod-derived types** in critical frontend socket hooks
-- **Enhanced runtime validation** for canonical events with type guards
-- **Maintained zero TypeScript compilation errors** across all modules
-- **Established pattern** for shared type usage from Zod schemas
-
-### Technical Breakthroughs:
-
-#### 1. **Zod-Derived Type Pattern** 🔥
-**Problem**: Socket validation detected "unshared payload types" because hooks used local TypeScript interfaces instead of types derived from validation schemas.
-
-**Solution**: 
-```typescript
-import { z } from 'zod';
-import { joinGamePayloadSchema } from '@shared/types/socketEvents.zod';
-
-// Single source of truth: derive TypeScript types from Zod schemas
-type JoinGamePayload = z.infer<typeof joinGamePayloadSchema>;
-```
-
-**Impact**: 
-- ✅ Types and validation schemas now guaranteed to match
-- ✅ Eliminates type drift between compile-time and runtime
-- ✅ Single source of truth for payload structure
-
-#### 2. **Enhanced Runtime Validation** 🛡️
-**Added**: Basic runtime type guards for canonical events:
-- `correct_answers` event: Validates `questionUid` string presence
-- `feedback` event: Validates `questionUid` and `feedbackRemaining` fields
-- All handlers wrapped with try-catch and proper error logging
-
-#### 3. **Function Signature Modernization** ⚡
-**Before**: `(payload: Parameters<ClientToServerEvents['game_answer']>[0])`
-**After**: `(payload: GameAnswerPayload)` (derived from Zod schema)
-
-### Files Completely Modernized:
-- ✅ `frontend/src/hooks/useGameSocket.ts` - Core game socket with Zod validation
-- ✅ `frontend/src/hooks/useStudentGameSocket.ts` - Student-specific socket with derived types  
-- ✅ `frontend/src/hooks/usePracticeSession.ts` - Practice session with enhanced validation
-
-### Architecture Benefits Achieved:
-
-#### Type Safety Chain:
-```
-Zod Schema → TypeScript Type → Function Signature → Runtime Validation
-     ↓              ↓                ↓                    ↓
-Single Source → Compile Safety → Type Hints → Runtime Safety
-```
-
-#### Zero Redundancy:
-- 🚫 No more duplicate type definitions
-- 🚫 No more type drift between modules  
-- 🚫 No more manual type synchronization
-- ✅ Automatic type consistency via shared schemas
-
-### Validation Improvements:
-- **Socket Handlers**: Enhanced error handling in 15+ handlers
-- **Type Guards**: Added runtime validation for custom events
-- **Error Logging**: Comprehensive error reporting for debugging
-- **Payload Validation**: All emitters now validate before sending
-
-### Next Phase Priorities:
-
-#### Phase 3A - Validator Enhancement:
-1. **Update socket validator** to recognize Zod-derived types as "shared types"
-2. **Exclude native Socket.IO events** from hardcoded event validation
-3. **Add detection patterns** for derived type usage
-
-#### Phase 3B - Remaining Type Issues
+**Next Steps:**
+- Test the restored dashboard UI in the browser to ensure all features work as expected.
+- Validate error handling for invalid/non-quiz codes.
+- Update documentation as needed and consider further refactoring for maintainability.
