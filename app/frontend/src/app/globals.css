@@ -36,6 +36,10 @@
   --dropdown: #fff;
   --dropdown-foreground: #23272f;
   --badge-stepper-color: #153B50;
+  --tab-active-bg: #e5e7eb;
+  --tab-bar-bg: #f3f4f6;
+  /* neutral-100/200 for light mode, not pure white */
+  /* neutral-200 for light mode */
 }
 
 /* Force theme by [data-theme] attribute on html, takes precedence over prefers-color-scheme */
@@ -74,7 +78,6 @@ html[data-theme="dark"] {
   /* Yellow color for guest users - same in both themes */
   --guest-foreground: #1f2937;
 }
-
 
 html[data-theme="dark"],
 html[data-theme="dark"] body {
@@ -1325,4 +1328,12 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
     background: var(--muted) !important;
     color: var(--foreground) !important;
   }
+}
+
+.tab-active-bg {
+  background-color: var(--tab-active-bg) !important;
+}
+
+.tab-bar-bg {
+  background-color: var(--tab-bar-bg) !important;
 }

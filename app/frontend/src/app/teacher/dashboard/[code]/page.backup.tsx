@@ -13,7 +13,6 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { useAuthState } from '@/hooks/useAuthState';
-import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { UsersRound } from "lucide-react";
 import { type Question } from '@/types/api';
 import InfinitySpin from '@/components/InfinitySpin';
@@ -56,10 +55,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
 
     // Authentication and access control (following established pattern)
     const { isTeacher, isAuthenticated, isLoading: authLoading, userState, userProfile } = useAuthState();
-    const { isAllowed } = useAccessGuard({
-        requireMinimum: 'teacher',
-        redirectTo: '/login'
-    });
 
     // Basic state
     const [questions, setQuestions] = useState<Question[]>([]);

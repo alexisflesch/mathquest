@@ -445,6 +445,32 @@ export const TournamentVerificationResponseSchema = z.object({
     gameTemplate: ApiGameTemplateSchema.optional()
 });
 
+// --- Tournament List Item & MyTournaments API Response Schemas ---
+
+export const TournamentListItemSchema = z.object({
+    id: z.string(),
+    code: z.string(),
+    name: z.string(),
+    statut: z.string(), // Consider stricter enum if possible
+    playMode: z.enum(['quiz', 'tournament', 'practice', 'class']),
+    createdAt: z.string(),
+    date_debut: z.string().nullable(),
+    date_fin: z.string().nullable(),
+    creatorUsername: z.string(),
+    leaderboard: z.array(z.any()).optional(),
+    position: z.number().optional(),
+    score: z.number().optional()
+});
+
+export const MyTournamentsResponseSchema = z.object({
+    pending: z.array(TournamentListItemSchema),
+    active: z.array(TournamentListItemSchema),
+    ended: z.array(TournamentListItemSchema)
+});
+
+export type TournamentListItem = z.infer<typeof TournamentListItemSchema>;
+export type MyTournamentsResponse = z.infer<typeof MyTournamentsResponseSchema>;
+
 // --- Generic Response Schemas ---
 
 export const SuccessResponseSchema = z.object({

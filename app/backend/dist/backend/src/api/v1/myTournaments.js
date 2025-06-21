@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const auth_1 = require("@/middleware/auth");
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const schemas_1 = require("@shared/types/api/schemas");
 const logger = (0, logger_1.default)('MyTournamentsAPI');
 const router = express_1.default.Router();
 /**
@@ -66,6 +67,7 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                         code: game.accessCode,
                         name: game.name || 'Tournoi sans nom',
                         statut: game.status,
+                        playMode: mode, // Add playMode to response
                         createdAt: game.createdAt.toISOString(),
                         date_debut: game.startedAt?.toISOString() || null,
                         date_fin: game.endedAt?.toISOString() || null,
@@ -174,6 +176,7 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                             code: game.accessCode,
                             name: game.name || 'Tournoi sans nom',
                             statut: game.status,
+                            playMode: mode, // Add playMode to response
                             createdAt: game.createdAt.toISOString(),
                             date_debut: game.startedAt?.toISOString() || null,
                             date_fin: game.endedAt?.toISOString() || null,
@@ -215,11 +218,36 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                 logger.error({ error, userId, cookieId }, 'Error fetching student tournaments');
             }
         }
-        res.status(200).json({
-            pending,
-            active,
-            ended
+        // At the end, before sending response:
+        // Exclude only quizzes with status 'pending' from the pending array
+        pending = pending.filter((item) => {
+            if (item.playMode === 'quiz' && item.statut === 'pending') {
+                logger.info({ id: item.id, code: item.code, name: item.name }, 'Excluding quiz with pending status from pending list');
+                return false;
+            }
+            return true;
         });
+        // Log any tournament objects missing playMode for investigation
+        const logMissingPlayMode = (arr, label) => {
+            arr.forEach((item, idx) => {
+                if (!item.playMode) {
+                    logger.error({ item, idx, label }, `Missing playMode in ${label}[${idx}]`);
+                }
+            });
+        };
+        logMissingPlayMode(pending, 'pending');
+        logMissingPlayMode(active, 'active');
+        logMissingPlayMode(ended, 'ended');
+        const response = { pending, active, ended };
+        try {
+            schemas_1.MyTournamentsResponseSchema.parse(response);
+        }
+        catch (validationError) {
+            logger.error({ validationError, response }, 'Invalid my-tournaments API response');
+            res.status(500).json({ error: 'Internal server error: invalid response structure' });
+            return;
+        }
+        res.status(200).json(response);
     }
     catch (error) {
         logger.error({ error }, 'Error in my-tournaments endpoint');

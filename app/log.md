@@ -1017,11 +1017,41 @@
 
 **What was done:**
 - Located and reviewed the backup of the full teacher dashboard logic (`page.backup.tsx`).
-- Restored the full dashboard UI and logic into `TeacherDashboardClient.tsx`, replacing the placeholder client component.
-- Ensured all dashboard features and controls are present in the restored UI.
-- Confirmed that all backend access validation and error handling remain in place.
+- Refactored `/frontend/src/app/my-tournaments/page.tsx` to use canonical shared types (`TournamentListItem`, `MyTournamentsResponse`) from `@shared/types/api/schemas`.
+- Removed all local/ad-hoc interfaces for tournaments and replaced with shared types.
+- Updated all state, props, and logic to use shared types and filter by `playMode`.
+- Fixed imports to use shared schemas directly, ensuring Zod validation and type safety.
+- Updated checklist in `plan.md` to reflect progress.
+- Next: Test the full flow and validate UI, then document results and update checklist.
 
-**Next Steps:**
-- Test the restored dashboard UI in the browser to ensure all features work as expected.
-- Validate error handling for invalid/non-quiz codes.
-- Update documentation as needed and consider further refactoring for maintainability.
+---
+
+## 2025-06-21 - Tournament List Modernization (Phase 2)
+
+**What was done:**
+- Refactored both backend and frontend to enforce strict use of canonical shared types and Zod validation for the "my tournaments" page and API.
+- Backend `/api/v1/my-tournaments` endpoint now includes `playMode` in every tournament object and uses canonical `TournamentListItem` and `MyTournamentsResponse` types from `shared/types/api/schemas.ts`.
+- Backend response is validated with Zod before sending; 500 error returned if validation fails.
+- Frontend `/frontend/src/app/my-tournaments/page.tsx` now imports and uses canonical shared types directly, with all local/ad-hoc interfaces removed.
+- All filtering and display logic now uses the canonical types and the `playMode` field for correct tournament/quiz/practice separation.
+- Build and typecheck successful after refactor.
+
+**Next steps:**
+- Test the full flow in the browser to ensure only tournaments are shown, quizzes/practice are excluded, and UI is correct.
+- Update this log and `plan.md` with test results and any further issues found.
+
+---
+
+## 2025-06-21: Centralized route protection via middleware
+- Implemented new access rules in `middleware.ts`:
+  - `/` and `/login` are public
+  - `/teacher/*` is teachers-only (non-teachers redirected to `/`)
+  - All other routes require authentication (anonymous redirected to `/login?returnTo=...`)
+- Removed all `useAccessGuard` usage from `/teacher/games/page.tsx`
+- Updated `plan.md` with Phase 4 and checklist
+- Verified no errors after refactor
+
+## 2025-06-21: Login page now supports returnTo param for post-login redirect
+- Updated `/frontend/src/app/login/page.tsx` to use `returnTo` query param for redirect after successful login (matches middleware)
+- Marked Phase 3 checklist items as complete in `plan.md`
+- Verified no errors after update

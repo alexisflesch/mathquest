@@ -22,7 +22,6 @@ import EnhancedSingleSelectDropdown from "@/components/EnhancedSingleSelectDropd
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
 import { QuestionsFiltersResponseSchema, QuestionsCountResponseSchema, GameCreationResponseSchema, type QuestionsFiltersResponse, type QuestionsCountResponse, type GameCreationResponse, type Question } from '@/types/api';
-import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { useAuth } from '@/components/AuthProvider';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
@@ -38,17 +37,6 @@ interface Filters {
 const QUESTION_OPTIONS = [5, 10, 20, 30];
 
 function StudentCreateTournamentPageInner() {
-    // Access guard: Require at least guest access to create tournaments
-    const { isAllowed, canCreateQuiz } = useAccessGuard({
-        requireMinimum: 'guest',
-        redirectTo: '/login'
-    });
-
-    // If access is denied, the guard will handle redirection
-    if (!isAllowed) {
-        return null; // Component won't render while redirecting
-    }
-
     const { userProfile } = useAuth();
 
     const [step, setStep] = useState(1);
@@ -496,3 +484,5 @@ export default function StudentCreateTournamentPage() {
         </Suspense>
     );
 }
+
+// Access is now enforced by middleware; no need for useAccessGuard

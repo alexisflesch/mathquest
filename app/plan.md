@@ -52,8 +52,8 @@
 - [x] **Testing**: Validate that only quiz codes work for dashboard/projection, and that unauthorized users are redirected or shown error page instantly
 
 ### Files to Modify:
-- [ ] `/frontend/src/app/teacher/dashboard/[code]/page.tsx`
-- [ ] `/frontend/src/app/teacher/projection/[code]/page.tsx`
+- [x] `/frontend/src/app/teacher/dashboard/[code]/page.tsx`
+- [x] `/frontend/src/app/teacher/projection/[code]/page.tsx`
 - [x] Backend socket handlers for dashboard/projection access
 - [x] Shared types for access validation payloads
 
@@ -72,30 +72,39 @@
 ---
 
 ## Phase 2: 🗂️ Tournament List Filtering (My Tournaments Page)
-**Goal**: Remove pending quiz items from the my-tournaments page listing.
+
+**2025-06-21**
+
+### Goal**: Remove pending quiz items from the my-tournaments page listing.
 
 ### Current Issues:
-- [ ] **Analyze tournament listing logic**: Check what items are currently shown
-- [ ] **Identify quiz vs tournament distinction**: Understand how quiz and tournaments are differentiated
-- [ ] **Document filtering criteria**: Map out what should and shouldn't be shown
+- [x] **Analyze tournament listing logic**: Check what items are currently shown
+- [x] **Identify quiz vs tournament distinction**: Understand how quiz and tournaments are differentiated
+- [x] **Document filtering criteria**: Map out what should and shouldn't be shown
+
+### Filtering Criteria (documented 2025-06-21):
+- Only show items with `playMode: 'tournament'` in the tournament list.
+- Exclude any item with `playMode: 'quiz'` or `playMode: 'practice'`.
+- Status-based filtering: Only show tournaments with valid statuses (`pending`, `active`, `ended`).
+- If possible, expose `playMode` in the backend API response for clarity and type safety.
 
 ### Requirements:
-- [ ] **Quiz exclusion**: Pending quiz instances should not appear in tournament lists
-- [ ] **Tournament-only display**: Only actual tournament instances should be shown
-- [ ] **Status-based filtering**: Consider game status in filtering logic
-- [ ] **Maintain functionality**: Ensure valid tournaments still appear correctly
+- [x] **Quiz exclusion**: Pending quiz instances should not appear in tournament lists
+- [x] **Tournament-only display**: Only actual tournament instances should be shown
+- [x] **Status-based filtering**: Consider game status in filtering logic
+- [x] **Maintain functionality**: Ensure valid tournaments still appear correctly
 
 ### Implementation Tasks:
-- [ ] **Backend filtering**: Update API endpoints to exclude quiz instances from tournament lists
-- [ ] **Frontend validation**: Add client-side filtering as backup
-- [ ] **Type safety**: Ensure proper typing for tournament vs quiz distinction
-- [ ] **UI consistency**: Verify tournament list displays correctly after filtering
+- [x] **Backend filtering**: Update API endpoints to exclude quiz instances from tournament lists
+- [x] **Frontend validation**: Add client-side filtering as backup
+- [x] **Type safety**: Ensure proper typing for tournament vs quiz distinction
+- [x] **UI consistency**: Verify tournament list displays correctly after filtering
 
 ### Files to Modify:
-- [ ] `/frontend/src/app/my-tournaments/page.tsx`
-- [ ] Backend API endpoints for tournament listing
-- [ ] Database queries for tournament retrieval
-- [ ] Shared types for tournament/quiz distinction
+- [x] `/frontend/src/app/my-tournaments/page.tsx`
+- [x] Backend API endpoints for tournament listing
+- [x] Database queries for tournament retrieval
+- [x] Shared types for tournament/quiz distinction
 
 ---
 
@@ -115,8 +124,8 @@
 
 ### Implementation Tasks:
 - [ ] **Authentication middleware**: Create or enhance auth guards for protected routes
-- [ ] **URL parameter handling**: Implement returnUrl parameter in login flow
-- [ ] **Post-login redirect**: Redirect users to intended destination after successful login
+- [x] **URL parameter handling**: Implement returnTo parameter in login flow
+- [x] **Post-login redirect**: Redirect users to intended destination after successful login
 - [ ] **Route protection**: Apply authentication requirements to all protected pages
 - [ ] **Error handling**: Handle edge cases in redirect flow
 
@@ -193,3 +202,45 @@
 - Each phase builds upon security and UX best practices
 - Focus on root cause fixes rather than patches
 - **Troubleshooting:** If backend code changes are not reflected, check nodemon/ts-node config and ensure all relevant files are watched. Manual restart may be required after config or new file changes.
+
+---
+
+## Phase 4: Centralized Route Protection & Middleware Modernization (2025-06-21)
+**Goal:** Enforce all route access rules via Next.js middleware, remove legacy per-page guards, and ensure all redirects are modern and consistent.
+
+### Access Rules:
+- `/` and `/login` are public (anyone can access)
+- `/teacher/*` is restricted to teachers only (non-teachers are redirected to `/`)
+- All other routes are protected (must be authenticated: guest, anonymous, or teacher)
+- Guests/anonymous can access non-teacher routes
+- Teachers can access everything
+
+### Checklist:
+- [ ] Implement/Update `middleware.ts` to enforce all access rules:
+    - [ ] Allow `/` and `/login` for everyone
+    - [ ] Redirect non-teachers from `/teacher/*` to `/`
+    - [ ] Redirect unauthenticated users from other protected routes to `/login?returnTo=...`
+    - [ ] Allow teachers everywhere
+- [x] Remove all `useAccessGuard` and per-page redirect logic from frontend pages
+- [ ] Test all protected routes for correct redirect and access behavior
+- [ ] Update `plan.md` and `log.md` to document all changes
+- [ ] Ensure no legacy `/teacher/login` or hardcoded login redirects remain
+
+### Files to Modify:
+- [ ] `/frontend/src/middleware.ts`
+- [ ] All frontend pages using `useAccessGuard`
+- [ ] Documentation: `plan.md`, `log.md`
+
+---
+
+## Phase X: Logger Reliability & Debugging
+**Goal:** Ensure all logger statements in backend are reliably output and visible in logs, including filter/debug logs in API endpoints.
+
+### Checklist:
+- [ ] Investigate and fix missing logger output for filter/debug statements in `/api/v1/my-tournaments` (e.g., excluded quizzes, missing playMode).
+- [ ] Confirm logger configuration (log level, transports, environment) is correct and consistent in all environments.
+- [ ] Add test logger statements and verify they appear in all expected log files and console outputs.
+- [ ] Document root cause and solution in `plan.md` and `log.md`.
+- [ ] Remove temporary debug logs after verification.
+- [ ] Ensure Winston logger outputs to stdout/console in development (not just files)
+- [ ] Improve Winston log formatting for human readability in development (colorized, pretty-print, etc)

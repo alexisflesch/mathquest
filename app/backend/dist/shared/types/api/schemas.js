@@ -7,7 +7,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuizTemplateUpdateResponseSchema = exports.QuizTemplateCreationResponseSchema = exports.QuizCreationResponseSchema = exports.QuizTemplatesResponseSchema = exports.QuizTemplateResponseSchema = exports.GameTemplateUpdateResponseSchema = exports.GameTemplateCreationResponseSchema = exports.GameTemplatesResponseSchema = exports.GameTemplateResponseSchema = exports.QuestionsCountResponseSchema = exports.QuestionsFiltersResponseSchema = exports.QuestionUidsResponseSchema = exports.QuestionsListResponseSchema = exports.QuestionsResponseSchema = exports.QuestionResponseSchema = exports.QuestionCreationResponseSchema = exports.GameInstancesByTemplateResponseSchema = exports.TeacherActiveGamesResponseSchema = exports.LeaderboardResponseSchema = exports.GameStateResponseSchema = exports.GameStatusUpdateResponseSchema = exports.GameJoinResponseSchema = exports.GameCreationResponseSchema = exports.UniversalLoginResponseSchema = exports.ErrorResponseSchema = exports.LogoutResponseSchema = exports.TeacherUpgradeResponseSchema = exports.ProfileUpdateResponseSchema = exports.AuthStatusResponseSchema = exports.UpgradeAccountResponseSchema = exports.RegisterResponseSchema = exports.LoginResponseSchema = exports.SetQuestionRequestSchema = exports.UpdateQuizTemplateRequestSchema = exports.CreateQuizTemplateRequestSchema = exports.UpdateUserRequestSchema = exports.UpdateQuestionRequestSchema = exports.CreateQuestionRequestSchema = exports.UpdateGameTemplateRequestSchema = exports.CreateGameTemplateRequestSchema = exports.GameStatusUpdateRequestSchema = exports.GameJoinRequestSchema = exports.CreateGameRequestSchema = exports.TeacherUpgradeRequestSchema = exports.ProfileUpdateRequestSchema = exports.PasswordResetConfirmRequestSchema = exports.PasswordResetRequestSchema = exports.UpgradeAccountRequestSchema = exports.RegisterRequestSchema = exports.LoginRequestSchema = void 0;
-exports.GetPracticeQuestionsApiResponseSchema = exports.GetPracticeSessionsApiResponseSchema = exports.GetPracticeSessionApiResponseSchema = exports.CreatePracticeSessionApiResponseSchema = exports.GetPracticeQuestionsApiRequestSchema = exports.UpdatePracticeSessionApiRequestSchema = exports.GetPracticeSessionsApiRequestSchema = exports.CreatePracticeSessionApiRequestSchema = exports.GetPracticeSessionStatePayloadSchema = exports.EndPracticeSessionPayloadSchema = exports.RetryPracticeQuestionPayloadSchema = exports.GetNextPracticeQuestionPayloadSchema = exports.SubmitPracticeAnswerPayloadSchema = exports.StartPracticeSessionPayloadSchema = exports.CreatePracticeSessionResponseSchema = exports.CreatePracticeSessionRequestSchema = exports.PracticeSessionSchema = exports.PracticeStatisticsSchema = exports.PracticeQuestionDataSchema = exports.PracticeAnswerSchema = exports.PracticeSettingsSchema = exports.SuccessResponseSchema = exports.TournamentVerificationResponseSchema = exports.TournamentCodeResponseSchema = exports.TeacherQuizQuestionsResponseSchema = exports.QuizListResponseSchema = exports.QuizTemplateQuestionResponseSchema = exports.QuizTemplateDeleteResponseSchema = void 0;
+exports.GetPracticeQuestionsApiResponseSchema = exports.GetPracticeSessionsApiResponseSchema = exports.GetPracticeSessionApiResponseSchema = exports.CreatePracticeSessionApiResponseSchema = exports.GetPracticeQuestionsApiRequestSchema = exports.UpdatePracticeSessionApiRequestSchema = exports.GetPracticeSessionsApiRequestSchema = exports.CreatePracticeSessionApiRequestSchema = exports.GetPracticeSessionStatePayloadSchema = exports.EndPracticeSessionPayloadSchema = exports.RetryPracticeQuestionPayloadSchema = exports.GetNextPracticeQuestionPayloadSchema = exports.SubmitPracticeAnswerPayloadSchema = exports.StartPracticeSessionPayloadSchema = exports.CreatePracticeSessionResponseSchema = exports.CreatePracticeSessionRequestSchema = exports.PracticeSessionSchema = exports.PracticeStatisticsSchema = exports.PracticeQuestionDataSchema = exports.PracticeAnswerSchema = exports.PracticeSettingsSchema = exports.SuccessResponseSchema = exports.MyTournamentsResponseSchema = exports.TournamentListItemSchema = exports.TournamentVerificationResponseSchema = exports.TournamentCodeResponseSchema = exports.TeacherQuizQuestionsResponseSchema = exports.QuizListResponseSchema = exports.QuizTemplateQuestionResponseSchema = exports.QuizTemplateDeleteResponseSchema = void 0;
 const zod_1 = require("zod");
 const question_zod_1 = require("../quiz/question.zod");
 const game_zod_1 = require("../core/game.zod");
@@ -370,6 +370,26 @@ exports.TournamentCodeResponseSchema = zod_1.z.object({
 exports.TournamentVerificationResponseSchema = zod_1.z.object({
     verified: zod_1.z.boolean(),
     gameTemplate: ApiGameTemplateSchema.optional()
+});
+// --- Tournament List Item & MyTournaments API Response Schemas ---
+exports.TournamentListItemSchema = zod_1.z.object({
+    id: zod_1.z.string(),
+    code: zod_1.z.string(),
+    name: zod_1.z.string(),
+    statut: zod_1.z.string(), // Consider stricter enum if possible
+    playMode: zod_1.z.enum(['quiz', 'tournament', 'practice', 'class']),
+    createdAt: zod_1.z.string(),
+    date_debut: zod_1.z.string().nullable(),
+    date_fin: zod_1.z.string().nullable(),
+    creatorUsername: zod_1.z.string(),
+    leaderboard: zod_1.z.array(zod_1.z.any()).optional(),
+    position: zod_1.z.number().optional(),
+    score: zod_1.z.number().optional()
+});
+exports.MyTournamentsResponseSchema = zod_1.z.object({
+    pending: zod_1.z.array(exports.TournamentListItemSchema),
+    active: zod_1.z.array(exports.TournamentListItemSchema),
+    ended: zod_1.z.array(exports.TournamentListItemSchema)
 });
 // --- Generic Response Schemas ---
 exports.SuccessResponseSchema = zod_1.z.object({

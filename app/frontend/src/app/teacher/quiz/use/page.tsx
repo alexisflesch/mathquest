@@ -7,22 +7,12 @@ import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 import { makeApiRequest } from '@/config/api';
 import { QuizListResponseSchema, QuestionsFiltersResponseSchema, type QuizListResponse, type QuestionsFiltersResponse } from '@/types/api';
 import { useAuth } from '@/components/AuthProvider';
-import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { Search } from 'lucide-react';
 import type { GameTemplate } from '@shared/types/core/game';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 export default function UseQuizPage() {
-    // Access guard: Require teacher access for quiz usage
-    const { isAllowed } = useAccessGuard({
-        allowStates: ['teacher'],
-        redirectTo: '/teacher/login'
-    });
-
-    // If access is denied, the guard will handle redirection
-    if (!isAllowed) {
-        return null; // Component won't render while redirecting
-    }
+    // Access is now enforced by middleware; no need for useAccessGuard
 
     const { teacherId } = useAuth();
     const [quizzes, setQuizzes] = useState<GameTemplate[]>([]);

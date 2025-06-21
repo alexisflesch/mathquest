@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { optionalAuth } from '@/middleware/auth';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
+import { TournamentListItemSchema, MyTournamentsResponseSchema } from '@shared/types/api/schemas';
 
 const logger = createLogger('MyTournamentsAPI');
 const router = express.Router();
@@ -69,6 +70,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                         code: game.accessCode,
                         name: game.name || 'Tournoi sans nom',
                         statut: game.status,
+                        playMode: mode, // Add playMode to response
                         createdAt: game.createdAt.toISOString(),
                         date_debut: game.startedAt?.toISOString() || null,
                         date_fin: game.endedAt?.toISOString() || null,
@@ -181,6 +183,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
                             code: game.accessCode,
                             name: game.name || 'Tournoi sans nom',
                             statut: game.status,
+                            playMode: mode, // Add playMode to response
                             createdAt: game.createdAt.toISOString(),
                             date_debut: game.startedAt?.toISOString() || null,
                             date_fin: game.endedAt?.toISOString() || null,
@@ -222,11 +225,38 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
             }
         }
 
-        res.status(200).json({
-            pending,
-            active,
-            ended
+        // At the end, before sending response:
+        // DEBUG: Log first 5 items in pending before filtering
+        logger.info({ sample: pending.slice(0, 5) }, 'Sample of pending array before filtering');
+        console.log('Sample of pending array before filtering:', JSON.stringify(pending.slice(0, 5), null, 2));
+        // Exclude only quizzes with status 'pending' from the pending array
+        pending = pending.filter((item: any) => {
+            if (item.playMode === 'quiz' && item.statut === 'pending') {
+                logger.info({ id: item.id, code: item.code, name: item.name }, 'Excluding quiz with pending status from pending list');
+                return false;
+            }
+            return true;
         });
+        // Log any tournament objects missing playMode for investigation
+        const logMissingPlayMode = (arr: any[], label: string) => {
+            arr.forEach((item: any, idx: number) => {
+                if (!item.playMode) {
+                    logger.error({ item, idx, label }, `Missing playMode in ${label}[${idx}]`);
+                }
+            });
+        };
+        logMissingPlayMode(pending, 'pending');
+        logMissingPlayMode(active, 'active');
+        logMissingPlayMode(ended, 'ended');
+        const response = { pending, active, ended };
+        try {
+            MyTournamentsResponseSchema.parse(response);
+        } catch (validationError) {
+            logger.error({ validationError, response }, 'Invalid my-tournaments API response');
+            res.status(500).json({ error: 'Internal server error: invalid response structure' });
+            return;
+        }
+        res.status(200).json(response);
     } catch (error) {
         logger.error({ error }, 'Error in my-tournaments endpoint');
         res.status(500).json({ error: 'An error occurred while fetching tournaments' });

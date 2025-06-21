@@ -4,7 +4,6 @@ import QuestionDisplay from '@/components/QuestionDisplay';
 import type { Question } from '@shared/types/core/question'; // Use canonical shared type
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { useAccessGuard } from '@/hooks/useAccessGuard';
 import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import EnhancedMultiSelectDropdown from '@/components/EnhancedMultiSelectDropdown';
@@ -100,16 +99,7 @@ function SortableCartQuestion({ question, onRemove }: {
 }
 
 export default function CreateActivityPage() {
-    // Access guard: Require teacher access for activity creation
-    const { isAllowed } = useAccessGuard({
-        allowStates: ['teacher'],
-        redirectTo: '/teacher/login'
-    });
-
-    // If access is denied, the guard will handle redirection
-    if (!isAllowed) {
-        return null; // Component won't render while redirecting
-    }
+    // Access is now enforced by middleware; no need for useAccessGuard
 
     const [selectedQuestions, setSelectedQuestions] = useState<CartQuestion[]>([]);
     const [activityMeta, setActivityMeta] = useState<{ levels: string[]; themes: string[] }>({ levels: [], themes: [] });

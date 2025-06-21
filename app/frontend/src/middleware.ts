@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Middleware for route protection and authentication-based redirects
@@ -23,17 +22,6 @@ function getUserState(request: NextRequest): 'anonymous' | 'guest' | 'student' |
     const authToken = request.cookies.get('authToken');
     const teacherToken = request.cookies.get('teacherToken');
 
-    // Debug log in dev environment - helpful to diagnose cookie issues
-    if (process.env.NODE_ENV !== 'production') {
-        console.log('[Middleware] Cookies detected:', {
-            authToken: authToken ? { name: authToken.name, value: '(hidden)' } : null,
-            teacherToken: teacherToken ? { name: teacherToken.name, value: '(hidden)' } : null,
-            allCookies: request.cookies.getAll().map(c => ({ name: c.name })),
-            url: request.url,
-            pathname: request.nextUrl.pathname
-        });
-    }
-
     if (teacherToken) {
         return 'teacher';
     }
@@ -49,41 +37,35 @@ function getUserState(request: NextRequest): 'anonymous' | 'guest' | 'student' |
 
 export function middleware(request: NextRequest) {
     const userState = getUserState(request);
-    const { pathname } = request.nextUrl;
+    const { pathname, origin, search } = request.nextUrl;
 
-    // Protected routes that require authentication
-    const teacherRoutes = ['/teacher/dashboard', '/teacher/quiz', '/teacher/results'];
-    const authenticatedRoutes = ['/my-tournaments'];
-
-    // Check if current path requires specific authentication level
-    const requiresTeacher = teacherRoutes.some(route => pathname.startsWith(route));
-    const requiresAuth = authenticatedRoutes.some(route => pathname.startsWith(route));
-
-    // Redirect unauthenticated users trying to access protected routes
-    if (requiresTeacher && userState !== 'teacher') {
-        return NextResponse.redirect(new URL('/login?mode=teacher', request.url));
-    }
-
-    if (requiresAuth && userState === 'anonymous') {
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // Allow access to login page for all users
-    // The AuthProvider will handle proper authentication validation and redirects
-    // This prevents the UX issue where users with expired tokens get locked out
-    if (pathname === '/login') {
+    // Allow home and login for everyone
+    if (pathname === '/' || pathname === '/login') {
         return NextResponse.next();
     }
 
+    // Restrict /teacher/* to teachers only
+    if (pathname.startsWith('/teacher')) {
+        if (userState !== 'teacher') {
+            // Redirect non-teachers to home
+            return NextResponse.redirect(new URL('/', origin));
+        }
+        return NextResponse.next();
+    }
+
+    // All other routes: must be authenticated (guest, student, teacher)
+    if (userState === 'anonymous') {
+        // Redirect to login with returnTo param
+        const returnTo = pathname + (search || '');
+        return NextResponse.redirect(new URL(`/login?returnTo=${encodeURIComponent(returnTo)}`, origin));
+    }
+
+    // Allow access
     return NextResponse.next();
 }
 
 export const config = {
     matcher: [
-        '/student/:path*',
-        '/teacher/:path*',
-        '/my-tournaments',
-        '/login'
-        // debug page is intentionally excluded to ensure it's always accessible
+        '/((?!_next|api|static|favicon.ico).*)',
     ],
 };

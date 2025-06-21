@@ -4,7 +4,6 @@ import QuestionDisplay from '@/components/QuestionDisplay';
 import type { Question } from '@shared/types/core/question'; // Use canonical shared type
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { useAccessGuard } from '@/hooks/useAccessGuard';
 import CustomDropdown from '@/components/CustomDropdown';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { makeApiRequest } from '@/config/api';
@@ -16,16 +15,7 @@ import { QUESTION_TYPES } from '@shared/types'; // Import QUESTION_TYPES
 // Use canonical shared Question type directly - no more local interfaces!
 
 export default function CreateQuizPage() {
-    // Access guard: Require teacher access for quiz creation
-    const { isAllowed } = useAccessGuard({
-        allowStates: ['teacher'],
-        redirectTo: '/teacher/login'
-    });
-
-    // If access is denied, the guard will handle redirection
-    if (!isAllowed) {
-        return null; // Component won't render while redirecting
-    }
+    // Access is now enforced by middleware; no need for useAccessGuard
 
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
     const [quizMeta, setQuizMeta] = useState<{ levels: string[]; themes: string[] }>({ levels: [], themes: [] }); // Removed categories

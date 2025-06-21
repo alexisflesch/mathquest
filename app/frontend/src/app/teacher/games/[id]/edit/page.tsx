@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { makeApiRequest } from '@/config/api';
 import InfinitySpin from '@/components/InfinitySpin';
 import { Search } from 'lucide-react';
@@ -158,16 +157,7 @@ function SortableCartQuestion({
 }
 
 export default function EditActivityPage() {
-    // Access guard: Require teacher access
-    const { isAllowed } = useAccessGuard({
-        allowStates: ['teacher'],
-        redirectTo: '/teacher/login'
-    });
-
-    // If access is denied, the guard will handle redirection
-    if (!isAllowed) {
-        return null;
-    }
+    // Access is now enforced by middleware; no need for useAccessGuard
 
     const params = useParams();
     const router = useRouter();

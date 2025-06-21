@@ -29,24 +29,22 @@ function LoginPageInner() {
     const [selectedAvatar, setSelectedAvatar] = useState('');
 
     // URL params for redirect after login  
-    const redirectTo = searchParams?.get('redirect') || '/';
+    const returnTo = searchParams?.get('returnTo') || '/';
     const gameCode = searchParams?.get('game');
 
     // If there's a game code, redirect to the live game after login
-    const finalRedirectUrl = gameCode ? `/live/${gameCode}` : redirectTo;
+    const finalRedirectUrl = gameCode ? `/live/${gameCode}` : returnTo;
 
     useEffect(() => {
         // Debug: log the current userState
         console.log('Login page - Current userState:', userState);
 
         // Redirect authenticated users away from login page
-        // - Guests can upgrade from profile page instead
-        // - Students/teachers shouldn't access login page at all
+        // If a returnTo param is present, use it; otherwise, go to home
         if (userState === 'guest' || userState === 'student' || userState === 'teacher') {
-            console.log('Login page - Redirecting authenticated user to home');
-            router.push('/');
+            router.push(finalRedirectUrl);
         }
-    }, [userState, router]);
+    }, [userState, router, finalRedirectUrl]);
 
     // Set initial auth mode based on URL params
     useEffect(() => {

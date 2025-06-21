@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { makeApiRequest } from '@/config/api';
 import { ChevronDown, ChevronUp, ChevronRight, Plus, Rocket, Edit2, Copy, Trash2, Clock, BookOpen, Users, Target, Zap, Dumbbell, MoreHorizontal, X, Share2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -320,16 +319,7 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
 }
 
 export default function TeacherGamesPage() {
-    // Access guard: Require teacher access
-    const { isAllowed } = useAccessGuard({
-        allowStates: ['teacher'],
-        redirectTo: '/teacher/login'
-    });
-
-    // If access is denied, the guard will handle redirection
-    if (!isAllowed) {
-        return null;
-    }
+    // Access is now enforced by middleware; no need for useAccessGuard
 
     const [games, setGames] = useState<GameTemplate[]>([]);
     const [loading, setLoading] = useState(true);

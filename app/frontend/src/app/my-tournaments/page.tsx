@@ -4,26 +4,9 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { SquareArrowRight, BarChart3 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
-import { MyTournamentsResponseSchema, type MyTournamentsResponse } from '@/types/api';
+import { TournamentListItem, MyTournamentsResponse, MyTournamentsResponseSchema } from '@shared/types/api/schemas';
 import { useAuth } from '@/components/AuthProvider';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
-
-interface Tournament {
-    id: string;
-    code: string;
-    name: string;
-    statut: string;
-    createdAt: string;
-    date_debut: string | null;
-    date_fin: string | null;
-    creatorUsername: string;
-    leaderboard?: unknown[];
-}
-
-interface PlayedTournament extends Tournament {
-    position?: number;
-    score?: number;
-}
 
 type GameMode = 'tournament' | 'quiz' | 'practice';
 
@@ -41,16 +24,16 @@ function GameModeToggle({ currentMode, onModeChange, className = "" }: GameModeT
     ];
 
     return (
-        <div className={`bg-gray-50 p-1 rounded-lg flex justify-between gap-1 ${className}`}>
+        <div className={`bg-[color:var(--muted)] p-1 rounded-lg flex justify-between gap-1 ${className}`}>
             {modes.map(({ key, label, icon }) => (
                 <button
                     key={key}
                     onClick={() => onModeChange(key)}
                     className={`
-                        flex-1 px-3 py-3 rounded-md text-base font-medium transition-all duration-200 whitespace-nowrap
+                        flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2
                         ${currentMode === key
-                            ? 'bg-white text-blue-600 shadow-sm'
-                            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                            ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm'
+                            : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)]'
                         }
                     `}
                 >
@@ -63,7 +46,7 @@ function GameModeToggle({ currentMode, onModeChange, className = "" }: GameModeT
 }
 
 // Helper function to format dates for display
-const formatActivityDate = (game: Tournament): string => {
+const formatActivityDate = (game: TournamentListItem): string => {
     let dateToFormat: string;
 
     // First try date_debut if available
@@ -86,9 +69,9 @@ const formatActivityDate = (game: Tournament): string => {
 export default function MyTournamentsPage() {
     const [loading, setLoading] = useState(true);
     const [gameMode, setGameMode] = useState<GameMode>('tournament');
-    const [pending, setPending] = useState<Tournament[]>([]);
-    const [active, setActive] = useState<PlayedTournament[]>([]);
-    const [ended, setEnded] = useState<PlayedTournament[]>([]);
+    const [pending, setPending] = useState<TournamentListItem[]>([]);
+    const [active, setActive] = useState<TournamentListItem[]>([]);
+    const [ended, setEnded] = useState<TournamentListItem[]>([]);
     const [error, setError] = useState<string | null>(null);
     const { userState, userProfile, isAuthenticated, isLoading } = useAuth();
 
@@ -150,7 +133,12 @@ export default function MyTournamentsPage() {
     if (isLoading || loading) return <div className="min-h-screen flex items-center justify-center bg-base-200">Chargement…</div>;
     if (error) return <div className="min-h-screen flex items-center justify-center bg-base-200"><div className="alert alert-error">{error}</div></div>;
 
-    const renderGameList = (games: PlayedTournament[], showScores: boolean = true, showDate: boolean = false, isPractice: boolean = false, isQuiz: boolean = false) => {
+    // Add filtering by playMode for each mode
+    const filteredPending = pending.filter(t => t.playMode === gameMode);
+    const filteredActive = active.filter(t => t.playMode === gameMode);
+    const filteredEnded = ended.filter(t => t.playMode === gameMode);
+
+    const renderGameList = (games: TournamentListItem[], showScores: boolean = true, showDate: boolean = false, isPractice: boolean = false, isQuiz: boolean = false) => {
         if (games.length === 0) {
             return <div className="text-base-content/60 mb-4">Aucune activité pour l&apos;instant.</div>;
         }
@@ -216,11 +204,11 @@ export default function MyTournamentsPage() {
     const renderTournamentSections = () => (
         <>
             {/* Section tournois en attente */}
-            {pending.length > 0 && (
+            {filteredPending.length > 0 && (
                 <div className="w-full text-left">
                     <h2 className="text-xl font-bold mb-4">En attente</h2>
                     <ul className="flex flex-col gap-2">
-                        {pending.map((t) => (
+                        {filteredPending.map((t) => (
                             <li key={t.id} className="flex items-center gap-4 pt-0 pb-0 pl-2 pr-1 rounded bg-base-200">
                                 <span className="font-mono text-lg">{t.code}</span>
                                 <span className="flex-1 truncate">{formatActivityDate(t)}</span>
@@ -233,14 +221,14 @@ export default function MyTournamentsPage() {
                 </div>
             )}
 
-            {pending.length > 0 && <hr className="w-full border-base-300 my-4" />}
+            {filteredPending.length > 0 && <hr className="w-full border-base-300 my-4" />}
 
             {/* Section tournois actifs */}
-            {active.length > 0 && (
+            {filteredActive.length > 0 && (
                 <div className="w-full text-left">
                     <h2 className="text-xl font-bold mb-4">Actifs</h2>
                     <ul className="flex flex-col gap-2">
-                        {active.map((t) => (
+                        {filteredActive.map((t) => (
                             <li key={t.id} className="flex items-center gap-4 pt-0 pb-0 pl-2 pr-1 rounded bg-base-200">
                                 <span className="font-mono text-lg">{t.code}</span>
                                 <span className="flex-1 truncate">{formatActivityDate(t)}</span>
@@ -254,14 +242,14 @@ export default function MyTournamentsPage() {
                 </div>
             )}
 
-            {active.length > 0 && <hr className="w-full border-base-300 my-4" />}
+            {filteredActive.length > 0 && <hr className="w-full border-base-300 my-4" />}
 
             {/* Section tournois terminés */}
             <div className="w-full text-left">
                 <h2 className="text-xl font-bold mb-4">Terminés</h2>
-                {ended.length === 0 && <div className="text-base-content/60 mb-4">Aucun tournoi terminé pour l&apos;instant.</div>}
+                {filteredEnded.length === 0 && <div className="text-base-content/60 mb-4">Aucun tournoi terminé pour l&apos;instant.</div>}
                 <ul className="flex flex-col gap-2">
-                    {ended.map((t) => (
+                    {filteredEnded.map((t) => (
                         <li key={t.id} className="flex items-center gap-4 pt-0 pb-0 pl-2 pr-1 rounded bg-base-200">
                             <span className="font-mono text-lg">{t.code}</span>
                             <span className="flex-1 truncate">{formatActivityDate(t)}</span>
