@@ -234,13 +234,26 @@
 ---
 
 ## Phase X: Logger Reliability & Debugging
-**Goal:** Ensure all logger statements in backend are reliably output and visible in logs, including filter/debug logs in API endpoints.
 
-### Checklist:
-- [ ] Investigate and fix missing logger output for filter/debug statements in `/api/v1/my-tournaments` (e.g., excluded quizzes, missing playMode).
-- [ ] Confirm logger configuration (log level, transports, environment) is correct and consistent in all environments.
-- [ ] Add test logger statements and verify they appear in all expected log files and console outputs.
-- [ ] Document root cause and solution in `plan.md` and `log.md`.
-- [ ] Remove temporary debug logs after verification.
-- [ ] Ensure Winston logger outputs to stdout/console in development (not just files)
-- [ ] Improve Winston log formatting for human readability in development (colorized, pretty-print, etc)
+- [x] Diagnose why Winston logs are not appearing in stdout/console during development
+- [x] Refactor logger: console transport only in development (pretty/colorized), file transport always present (all levels in dev, only errors in prod)
+- [x] Improve log formatting for human readability in development (colorized, pretty, no double-escaped newlines)
+- [x] Ensure logger outputs to both file and console as appropriate
+- [ ] Test logger in both dev and prod modes, confirm correct output
+- [ ] Document root cause and solution in log.md
+- [ ] Remove any temporary debug logs after verification
+- [ ] Confirm logger configuration is correct and consistent in all environments
+
+# Modernization Plan
+
+## Phase X: Logger Reliability & Debugging
+
+- [x] Investigate why logs are badly formatted (JSON with escaped newlines)
+- [x] Investigate why logs are not appearing in stdout/console during development
+- [ ] Refactor logger: in development, log to both console (pretty/colorized) and file (JSON)
+- [ ] Refactor logger: in production, log only errors to file (JSON), no console output
+- [ ] Test logger in development: verify pretty/colorized logs in console and JSON logs in file
+- [ ] Test logger in production: verify only error logs in file, no console output
+- [ ] Document root cause and solution in log.md
+- [ ] Remove any temporary debug logs after verification
+- [ ] Confirm logger config is correct and consistent in all environments

@@ -36,6 +36,63 @@ const LOG_LEVEL = process.env.NODE_ENV === 'test' ? 'info' : (process.env.LOG_LE
 const LOG_DIR = path.join(process.cwd(), 'logs');
 
 // Winston configuration
+const transports = [];
+
+if (process.env.NODE_ENV !== 'production') {
+    // Development: Console + file (all levels)
+    transports.push(
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+                winston.format.printf(({ timestamp, level, message, component, ...meta }) => {
+                    const componentStr = component ? `[${component}] ` : '';
+                    const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta, null, 2)}` : '';
+                    return `${timestamp} ${level} ${componentStr}${message}${metaStr}`;
+                })
+            )
+        })
+    );
+    transports.push(
+        new winston.transports.File({
+            filename: path.join(LOG_DIR, 'combined.log'),
+            level: 'debug',
+            maxsize: 10 * 1024 * 1024,
+            maxFiles: 5,
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+            )
+        })
+    );
+    transports.push(
+        new winston.transports.File({
+            filename: path.join(LOG_DIR, 'error.log'),
+            level: 'error',
+            maxsize: 10 * 1024 * 1024,
+            maxFiles: 5,
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+            )
+        })
+    );
+} else {
+    // Production: Only file, only errors
+    transports.push(
+        new winston.transports.File({
+            filename: path.join(LOG_DIR, 'error.log'),
+            level: 'error',
+            maxsize: 10 * 1024 * 1024,
+            maxFiles: 5,
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+            )
+        })
+    );
+}
+
 const winstonConfig = {
     levels: logLevels,
     level: LOG_LEVEL,
@@ -44,42 +101,7 @@ const winstonConfig = {
         winston.format.errors({ stack: true }),
         winston.format.json()
     ),
-    transports: [
-        // Console transport with colors for development
-        new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.colorize(),
-                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-                winston.format.printf(({ timestamp, level, message, component, ...meta }) => {
-                    const componentStr = component ? `[${component}] ` : '';
-                    const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
-                    return `${timestamp} ${level} ${componentStr}${message}${metaStr}`;
-                })
-            )
-        }),
-        // Combined log file (all logs)
-        new winston.transports.File({
-            filename: path.join(LOG_DIR, 'combined.log'),
-            level: 'debug', // Explicitly log all levels
-            maxsize: 10 * 1024 * 1024, // 10MB
-            maxFiles: 5,
-            format: winston.format.combine(
-                winston.format.timestamp(),
-                winston.format.json()
-            )
-        }),
-        // Error log file (errors only)
-        new winston.transports.File({
-            filename: path.join(LOG_DIR, 'error.log'),
-            level: 'error',
-            maxsize: 10 * 1024 * 1024, // 10MB
-            maxFiles: 5,
-            format: winston.format.combine(
-                winston.format.timestamp(),
-                winston.format.json()
-            )
-        })
-    ]
+    transports
 };
 
 // Create the base winston logger

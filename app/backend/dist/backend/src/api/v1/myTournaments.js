@@ -219,6 +219,9 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
             }
         }
         // At the end, before sending response:
+        // DEBUG: Log first 5 items in pending before filtering
+        logger.info({ sample: pending.slice(0, 5) }, 'Sample of pending array before filtering');
+        console.log('Sample of pending array before filtering:', JSON.stringify(pending.slice(0, 5), null, 2));
         // Exclude only quizzes with status 'pending' from the pending array
         pending = pending.filter((item) => {
             if (item.playMode === 'quiz' && item.statut === 'pending') {

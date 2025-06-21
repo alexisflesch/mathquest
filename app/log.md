@@ -1055,3 +1055,25 @@
 - Updated `/frontend/src/app/login/page.tsx` to use `returnTo` query param for redirect after successful login (matches middleware)
 - Marked Phase 3 checklist items as complete in `plan.md`
 - Verified no errors after update
+
+# Logger Reliability & Debugging Log
+
+## Phase X: Logger Reliability & Debugging
+
+### Root Cause Analysis
+- **Bad log formatting:**
+  - Log files used `winston.format.json()` (correct for files), but log messages included pretty-printed JSON with embedded newlines, causing escaped newlines in the output. This was due to `formatMessage` using `JSON.stringify(obj, null, 2)` for objects, which is not suitable for file logs.
+- **No logs in stdout/console:**
+  - Console transport was always present, but in some environments (production, test, or when running under a process manager), stdout may be suppressed or redirected. Also, log level filtering could hide debug/info logs.
+
+### Solution
+- Refactored logger:
+  - **Development:** Console transport (pretty/colorized) + file transports (JSON, all levels).
+  - **Production:** Only error file (JSON), no console output.
+  - Updated `formatMessage` to avoid pretty-printing objects for file logs.
+- Updated documentation and plan.
+
+### Next Steps
+- Test logger in both environments.
+- Remove any temporary debug logs after verification.
+- Confirm logger config is correct and consistent in all environments.
