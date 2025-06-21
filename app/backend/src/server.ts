@@ -102,3 +102,46 @@ export function setupServer(testPort?: number): { httpServer: http.Server, io: S
 
 export { app };
 export default server;
+
+// Graceful shutdown handling
+if (process.env.NODE_ENV !== 'test') {
+    process.on('SIGINT', async () => {
+        logger.info('Received SIGINT, shutting down gracefully...');
+
+        try {
+            // Close Socket.IO server
+            const io = getIO();
+            if (io) {
+                io.close();
+                logger.info('Socket.IO server closed');
+            }
+
+            // Close HTTP server
+            server.close((err) => {
+                if (err) {
+                    logger.error('Error closing HTTP server:', err);
+                } else {
+                    logger.info('HTTP server closed');
+                }
+
+                // Exit the process
+                process.exit(0);
+            });
+
+            // Force exit after 10 seconds if graceful shutdown fails
+            setTimeout(() => {
+                logger.error('Graceful shutdown timed out, forcing exit');
+                process.exit(1);
+            }, 10000);
+
+        } catch (error) {
+            logger.error('Error during shutdown:', error);
+            process.exit(1);
+        }
+    });
+
+    process.on('SIGTERM', async () => {
+        logger.info('Received SIGTERM, shutting down gracefully...');
+        process.emit('SIGINT'); // Reuse SIGINT handler
+    });
+}
