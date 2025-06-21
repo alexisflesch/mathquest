@@ -1,6 +1,5 @@
 import { STORAGE_KEYS } from '@/constants/auth';
 import { SocketConfig } from '@/types/socket';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 /**
  * Format time for display (expects milliseconds, converts to MM:SS format)
@@ -77,12 +76,12 @@ export const timerConversions = {
         if (ms === null) return 0;
         return Math.ceil(ms / 1000);
     },
-    
+
     /** Convert seconds to milliseconds for internal use */
     secondsToMsInternal: (seconds: number): number => {
         return seconds * 1000;
     },
-    
+
     /** Format milliseconds as MM:SS or SS display string */
     formatMsAsSeconds: (ms: number | null): string => {
         if (ms === null) return '-';

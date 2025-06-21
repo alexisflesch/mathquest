@@ -7,7 +7,6 @@
 
 import { z } from 'zod';
 import { createLogger } from '@/clientLogger';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Import existing Zod schemas from shared types
 import {
@@ -21,8 +20,7 @@ import {
 } from '@shared/types/socketEvents.zod';
 
 import {
-    timerActionPayloadSchema,
-    gameTimerUpdatePayloadSchema
+    timerActionPayloadSchema
 } from '@shared/types/socket/payloads.zod';
 
 const logger = createLogger('SocketValidation');
@@ -172,14 +170,14 @@ export const SocketSchemas = {
  * Convenience function to create a validated handler using common schemas
  */
 export function createValidatedHandler<K extends keyof typeof SocketSchemas>(
-    handler: (data: any) => void,
+    handler: (data: unknown) => void,
     schemaKey: K,
     eventName: string,
     options?: Parameters<typeof createZodValidatedHandler>[3]
 ) {
     return createZodValidatedHandler(
         handler,
-        SocketSchemas[schemaKey] as z.ZodSchema<any>,
+        SocketSchemas[schemaKey] as z.ZodSchema<unknown>,
         eventName,
         options
     );

@@ -4,20 +4,19 @@
  * Comprehensive logging utility for debugging timer issues
  */
 import { createLogger } from '@/clientLogger';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('TimerDebug');
 
-export function logTimerEvent(event: string, data: any) {
+export function logTimerEvent(event: string, data: unknown) {
     logger.info(`[TIMER_DEBUG] ${event}`, {
         timestamp: Date.now(),
         event,
         data,
-        dataKeys: data ? Object.keys(data) : null
+        dataKeys: data && typeof data === 'object' && data !== null ? Object.keys(data) : null
     });
 }
 
-export function logTimerState(context: string, state: any) {
+export function logTimerState(context: string, state: unknown) {
     logger.info(`[TIMER_STATE_DEBUG] ${context}`, {
         timestamp: Date.now(),
         context,
@@ -28,7 +27,7 @@ export function logTimerState(context: string, state: any) {
     });
 }
 
-export function logTimerCalculation(context: string, calculation: any) {
+export function logTimerCalculation(context: string, calculation: unknown) {
     logger.info(`[TIMER_CALC_DEBUG] ${context}`, {
         timestamp: Date.now(),
         context,
@@ -36,7 +35,7 @@ export function logTimerCalculation(context: string, calculation: any) {
     });
 }
 
-export function logTimerError(context: string, error: any, data?: any) {
+export function logTimerError(context: string, error: unknown, data?: unknown) {
     logger.error(`[TIMER_ERROR_DEBUG] ${context}`, {
         timestamp: Date.now(),
         context,

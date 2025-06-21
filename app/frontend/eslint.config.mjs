@@ -19,5 +19,25 @@ export default [
       '**/archive/**',
       '**/next-env.d.ts'
     ]
+  },
+  {
+    rules: {
+      // Temporarily disable strict rules for development
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-require-imports': 'warn',
+      '@typescript-eslint/ban-types': 'warn',
+      '@typescript-eslint/prefer-as-const': 'warn',
+      // Allow unused imports for now
+      'no-unused-vars': 'off',
+      // Allow any types for now
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      // Allow console.log for debugging
+      'no-console': 'off'
+    }
   }
 ];

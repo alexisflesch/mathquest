@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "tsc && npx prisma generate && cp -r src/db/generated dist/backend/src/db/",
+    "start": "node -r dotenv/config dist/backend/src/server.js",
     "dev": "nodemon src/server.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
@@ -16,7 +16,8 @@
     "type-check": "tsc --project tsconfig.json --noEmit --pretty"
   },
   "_moduleAliases": {
-    "@": "src"
+    "@": "dist/backend/src",
+    "@shared": "dist/shared"
   },
   "keywords": [],
   "author": "",
