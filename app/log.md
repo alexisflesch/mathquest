@@ -1115,3 +1115,31 @@
 [2025-06-22] Archived legacy timingService.ts to backend/archive/legacy-timers/timingService.ts. Replaced original with stub. No references remain in active code. All timer logic is now canonical/global only.
 
 [2025-06-22] Implemented answer deduplication and score replacement in scoringService.ts. Now, only changed answers are rescored; same answers do not update score. Multiple choice answers are compared as unordered arrays. Documented in plan.md.
+
+---
+
+## 2025-06-22 - Investigation: Timer Penalty Not Applied in Live Tournament Mode
+
+**Issue:**
+- Timer penalty is applied in quiz mode but not in live tournament mode (timer always 0ms elapsed in live tournament answers).
+- Both modes use the same canonical timer/scoring functions.
+
+**Actions:**
+- Added new phase and checklist to plan.md for root cause analysis and fix.
+- Will add debug logging to emitQuestionHandler, gameAnswer.ts, and canonicalTimerService.ts to trace timer start and elapsed calculation in all modes.
+- Will ensure startTimer is called exactly once per question and is idempotent.
+- Will check for any conditional logic that skips timer start in live tournament mode.
+- Will ensure timer state is shared and not re-initialized per user or per answer.
+
+**Next:**
+- Add debug logging and validate timer state transitions in all relevant handlers and services.
+
+---
+
+## 2025-06-22 - Debug logging added to all timer-related handlers and services.
+- emitQuestionHandler now logs timer start with playMode, isDiffered, accessCode, questionUid, and userId.
+- gameAnswerHandler now logs timer penalty calculation with all relevant state.
+- canonicalTimerService now logs all timer state transitions and elapsed calculations.
+- Checklist updated in plan.md.
+
+---

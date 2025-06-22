@@ -31,64 +31,72 @@ export class DifferedScoreService {
      * Get or create a differed participation for a user/tournament.
      * If a new attempt, resets score and increments attempt count.
      */
-    static async getOrCreateParticipation({ userId, tournamentId }: { userId: string; tournamentId: string; }): Promise<DifferedParticipation> {
-        // Find existing participation for user/tournament/mode='tournament'
-        let participation = await prisma.differedParticipation.findUnique({
-            where: { userId_tournamentId_mode: { userId, tournamentId, mode: 'tournament' } }
+    static async getOrCreateParticipation({ userId, gameInstanceId }: { userId: string; gameInstanceId: string; }): Promise<any> {
+        // Find existing DEFERRED participant for this user/gameInstance
+        let participant = await prisma.gameParticipant.findFirst({
+            where: {
+                gameInstanceId,
+                userId,
+                participationType: 'DEFERRED'
+            }
         });
-        if (!participation) {
-            // Create new participation
-            participation = await prisma.differedParticipation.create({
+        if (!participant) {
+            // Create new DEFERRED participant
+            participant = await prisma.gameParticipant.create({
                 data: {
+                    gameInstanceId,
                     userId,
-                    tournamentId,
-                    mode: 'tournament',
-                    attempt: 1,
                     score: 0,
-                    bestScore: 0
+                    participationType: 'DEFERRED',
+                    attemptCount: 1
                 }
             });
         } else {
-            // New attempt: increment attempt, reset score
-            participation = await prisma.differedParticipation.update({
-                where: { userId_tournamentId_mode: { userId, tournamentId, mode: 'tournament' } },
+            // New attempt: increment attemptCount, reset score
+            participant = await prisma.gameParticipant.update({
+                where: { id: participant.id },
                 data: {
-                    attempt: { increment: 1 },
+                    attemptCount: { increment: 1 },
                     score: 0
                 }
             });
         }
-        return participation;
+        return participant;
     }
 
     /**
-     * Update the score for a differed participation. If new score is higher, update bestScore.
+     * Update the score for a differed participation. If new score is higher, update score.
      */
-    static async updateScore({ userId, tournamentId, score }: { userId: string; tournamentId: string; score: number; }): Promise<DifferedParticipation> {
-        let participation = await prisma.differedParticipation.findUnique({
-            where: { userId_tournamentId_mode: { userId, tournamentId, mode: 'tournament' } }
-        });
-        if (!participation) throw new Error('Participation not found');
-        let bestScore = Math.max(participation.bestScore, score);
-        participation = await prisma.differedParticipation.update({
-            where: { userId_tournamentId_mode: { userId, tournamentId, mode: 'tournament' } },
-            data: {
-                score,
-                bestScore
+    static async updateScore({ userId, gameInstanceId, score }: { userId: string; gameInstanceId: string; score: number; }): Promise<any> {
+        let participant = await prisma.gameParticipant.findFirst({
+            where: {
+                gameInstanceId,
+                userId,
+                participationType: 'DEFERRED'
             }
         });
-        return participation;
+        if (!participant) throw new Error('Participant not found');
+        // Always replace score for DEFERRED, but you can keep best in Redis if needed
+        participant = await prisma.gameParticipant.update({
+            where: { id: participant.id },
+            data: { score }
+        });
+        return participant;
     }
 
     /**
      * Get the best score and attempt count for leaderboard display.
      */
-    static async getLeaderboardEntry({ userId, tournamentId }: { userId: string; tournamentId: string; }): Promise<Pick<DifferedParticipation, 'bestScore' | 'attempt'>> {
-        const participation = await prisma.differedParticipation.findUnique({
-            where: { userId_tournamentId_mode: { userId, tournamentId, mode: 'tournament' } }
+    static async getLeaderboardEntry({ userId, gameInstanceId }: { userId: string; gameInstanceId: string; }): Promise<{ score: number; attemptCount: number }> {
+        const participant = await prisma.gameParticipant.findFirst({
+            where: {
+                gameInstanceId,
+                userId,
+                participationType: 'DEFERRED'
+            }
         });
-        if (!participation) throw new Error('Participation not found');
-        return { bestScore: participation.bestScore, attempt: participation.attempt };
+        if (!participant) throw new Error('Participant not found');
+        return { score: participant.score, attemptCount: participant.attemptCount };
     }
 
     /**
@@ -157,6 +165,26 @@ export class DifferedScoreService {
             logger.error({ error, gameInstanceId, userId, currentAttemptScore }, 'Error finalizing deferred attempt');
             return { success: false, error: 'An error occurred while finalizing attempt' };
         }
+    }
+
+    /**
+     * For DEFERRED: get or update the best score for a user in Redis (for leaderboard)
+     */
+    static async updateBestScoreInRedis({ gameInstanceId, userId, score }: { gameInstanceId: string; userId: string; score: number }) {
+        const redisKey = `mathquest:deferred:best_score:${gameInstanceId}:${userId}`;
+        const previousBestScore = await redisClient.get(redisKey);
+        const bestScore = Math.max(score, previousBestScore ? parseInt(previousBestScore) : 0);
+        await redisClient.set(redisKey, bestScore.toString());
+        return bestScore;
+    }
+
+    /**
+     * For DEFERRED: get the best score for a user from Redis
+     */
+    static async getBestScoreFromRedis({ gameInstanceId, userId }: { gameInstanceId: string; userId: string }) {
+        const redisKey = `mathquest:deferred:best_score:${gameInstanceId}:${userId}`;
+        const bestScore = await redisClient.get(redisKey);
+        return bestScore ? parseInt(bestScore) : 0;
     }
 }
 

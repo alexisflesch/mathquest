@@ -31,32 +31,73 @@ class DifferedScoreService {
      * Get or create a differed participation for a user/tournament.
      * If a new attempt, resets score and increments attempt count.
      */
-    static async getOrCreateParticipation({ userId, tournamentId }) {
-        // TODO: Replace with actual DB logic
-        // Example pseudo-logic:
-        // 1. Find existing participation for user/tournament/mode=DIFFERED
-        // 2. If not found, create with attempt=1, score=0, bestScore=0
-        // 3. If found, increment attempt, reset score
-        // 4. Return participation
-        throw new Error('Not implemented: getOrCreateParticipation');
+    static async getOrCreateParticipation({ userId, gameInstanceId }) {
+        // Find existing DEFERRED participant for this user/gameInstance
+        let participant = await prisma_1.prisma.gameParticipant.findFirst({
+            where: {
+                gameInstanceId,
+                userId,
+                participationType: 'DEFERRED'
+            }
+        });
+        if (!participant) {
+            // Create new DEFERRED participant
+            participant = await prisma_1.prisma.gameParticipant.create({
+                data: {
+                    gameInstanceId,
+                    userId,
+                    score: 0,
+                    participationType: 'DEFERRED',
+                    attemptCount: 1
+                }
+            });
+        }
+        else {
+            // New attempt: increment attemptCount, reset score
+            participant = await prisma_1.prisma.gameParticipant.update({
+                where: { id: participant.id },
+                data: {
+                    attemptCount: { increment: 1 },
+                    score: 0
+                }
+            });
+        }
+        return participant;
     }
     /**
-     * Update the score for a differed participation. If new score is higher, update bestScore.
+     * Update the score for a differed participation. If new score is higher, update score.
      */
-    static async updateScore({ userId, tournamentId, score }) {
-        // TODO: Replace with actual DB logic
-        // 1. Find participation
-        // 2. Update score
-        // 3. If score > bestScore, update bestScore
-        // 4. Return updated participation
-        throw new Error('Not implemented: updateScore');
+    static async updateScore({ userId, gameInstanceId, score }) {
+        let participant = await prisma_1.prisma.gameParticipant.findFirst({
+            where: {
+                gameInstanceId,
+                userId,
+                participationType: 'DEFERRED'
+            }
+        });
+        if (!participant)
+            throw new Error('Participant not found');
+        // Always replace score for DEFERRED, but you can keep best in Redis if needed
+        participant = await prisma_1.prisma.gameParticipant.update({
+            where: { id: participant.id },
+            data: { score }
+        });
+        return participant;
     }
     /**
      * Get the best score and attempt count for leaderboard display.
      */
-    static async getLeaderboardEntry({ userId, tournamentId }) {
-        // TODO: Replace with actual DB logic
-        throw new Error('Not implemented: getLeaderboardEntry');
+    static async getLeaderboardEntry({ userId, gameInstanceId }) {
+        const participant = await prisma_1.prisma.gameParticipant.findFirst({
+            where: {
+                gameInstanceId,
+                userId,
+                participationType: 'DEFERRED'
+            }
+        });
+        if (!participant)
+            throw new Error('Participant not found');
+        return { score: participant.score, attemptCount: participant.attemptCount };
     }
     /**
      * Submit an answer and update score for a participant (delegates to ScoringService)
@@ -112,6 +153,24 @@ class DifferedScoreService {
             logger.error({ error, gameInstanceId, userId, currentAttemptScore }, 'Error finalizing deferred attempt');
             return { success: false, error: 'An error occurred while finalizing attempt' };
         }
+    }
+    /**
+     * For DEFERRED: get or update the best score for a user in Redis (for leaderboard)
+     */
+    static async updateBestScoreInRedis({ gameInstanceId, userId, score }) {
+        const redisKey = `mathquest:deferred:best_score:${gameInstanceId}:${userId}`;
+        const previousBestScore = await redis_1.redisClient.get(redisKey);
+        const bestScore = Math.max(score, previousBestScore ? parseInt(previousBestScore) : 0);
+        await redis_1.redisClient.set(redisKey, bestScore.toString());
+        return bestScore;
+    }
+    /**
+     * For DEFERRED: get the best score for a user from Redis
+     */
+    static async getBestScoreFromRedis({ gameInstanceId, userId }) {
+        const redisKey = `mathquest:deferred:best_score:${gameInstanceId}:${userId}`;
+        const bestScore = await redis_1.redisClient.get(redisKey);
+        return bestScore ? parseInt(bestScore) : 0;
     }
 }
 exports.DifferedScoreService = DifferedScoreService;

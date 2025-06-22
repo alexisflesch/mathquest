@@ -37,8 +37,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.joinGameHandler = joinGameHandler;
-const gameParticipantService_1 = require("@/core/services/gameParticipantService");
-// import { GameInstanceService } from '@/core/services/gameInstanceService'; // Not directly used, consider removing if not needed elsewhere
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const redis_1 = require("@/config/redis");
@@ -49,6 +47,8 @@ const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const timerUtils_1 = require("../../../core/timerUtils");
 const joinOrderBonus_1 = require("@/utils/joinOrderBonus");
 const projectionLeaderboardBroadcast_1 = require("@/utils/projectionLeaderboardBroadcast");
+const joinService_1 = require("@/core/services/gameParticipant/joinService");
+const scoreService_1 = require("@/core/services/gameParticipant/scoreService");
 const logger = (0, logger_1.default)('JoinGameHandler');
 // Update handler signature with shared types
 function joinGameHandler(io, socket) {
@@ -146,9 +146,13 @@ function joinGameHandler(io, socket) {
                 logger.debug({ roomName, socketId: socket.id, rooms: Array.from(socket.rooms) }, '[DEBUG] Player joined room');
                 socket.data.currentGameRoom = roomName;
             }
-            const participantService = new gameParticipantService_1.GameParticipantService();
-            logger.debug({ userId, accessCode, username, avatarEmoji }, 'Calling participantService.joinGame');
-            const joinResult = await participantService.joinGame(userId, accessCode, username, avatarEmoji);
+            // REPLACE legacy participantService with modular joinService
+            const joinResult = await (0, joinService_1.joinGame)({
+                userId,
+                accessCode,
+                username,
+                avatarEmoji
+            });
             logger.debug({ joinResult }, 'Result of participantService.joinGame');
             if (!joinResult.success || !joinResult.participant) {
                 // Handle join errors
@@ -237,6 +241,14 @@ function joinGameHandler(io, socket) {
             };
             logger.info({ gameJoinedPayload }, 'Emitting game_joined');
             socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_JOINED, gameJoinedPayload);
+            // Use modular scoreService for best score update if needed (for deferred)
+            if (gameInstance.isDiffered) {
+                await scoreService_1.DifferedScoreService.updateBestScoreInRedis({
+                    gameInstanceId: gameInstance.id,
+                    userId,
+                    score: joinResult.participant.score || 0
+                });
+            }
             // For live games (quiz and tournament, not deferred), check if game is active and send current state to late joiners
             if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
                 logger.info({ accessCode, userId, playMode: gameInstance.playMode }, 'Live game is active, sending current state to late joiner');

@@ -43,6 +43,15 @@ class CanonicalTimerService {
         const raw = await this.redis.get(key);
         if (raw)
             timer = JSON.parse(raw);
+        logger.info({
+            accessCode,
+            questionUid,
+            playMode,
+            isDiffered,
+            userId,
+            timerExists: !!timer,
+            timerState: timer
+        }, '[TIMER_DEBUG] startTimer called');
         if (!timer) {
             timer = {
                 questionUid,
@@ -110,6 +119,14 @@ class CanonicalTimerService {
         if (playMode === 'practice')
             return 0;
         const timer = await this.getTimer(accessCode, questionUid, playMode, isDiffered, userId);
+        logger.info({
+            accessCode,
+            questionUid,
+            playMode,
+            isDiffered,
+            userId,
+            timerState: timer
+        }, '[TIMER_DEBUG] getElapsedTimeMs called');
         if (!timer)
             return 0;
         if (timer.status === 'play') {

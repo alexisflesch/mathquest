@@ -1,6 +1,4 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { GameParticipantService } from '@/core/services/gameParticipantService';
-// import { GameInstanceService } from '@/core/services/gameInstanceService'; // Not directly used, consider removing if not needed elsewhere
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { redisClient } from '@/config/redis';
@@ -29,6 +27,8 @@ import { GameParticipant, ParticipantData } from '@shared/types/core/participant
 import { calculateTimerForLateJoiner } from '../../../core/timerUtils';
 import { assignJoinOrderBonus } from '@/utils/joinOrderBonus';
 import { broadcastLeaderboardToProjection } from '@/utils/projectionLeaderboardBroadcast';
+import { joinGame as joinGameModular } from '@/core/services/gameParticipant/joinService';
+import { DifferedScoreService } from '@/core/services/gameParticipant/scoreService';
 
 const logger = createLogger('JoinGameHandler');
 
@@ -141,9 +141,13 @@ export function joinGameHandler(
                 logger.debug({ roomName, socketId: socket.id, rooms: Array.from(socket.rooms) }, '[DEBUG] Player joined room');
                 socket.data.currentGameRoom = roomName;
             }
-            const participantService = new GameParticipantService();
-            logger.debug({ userId, accessCode, username, avatarEmoji }, 'Calling participantService.joinGame');
-            const joinResult = await participantService.joinGame(userId, accessCode, username, avatarEmoji);
+            // REPLACE legacy participantService with modular joinService
+            const joinResult = await joinGameModular({
+                userId,
+                accessCode,
+                username,
+                avatarEmoji
+            });
             logger.debug({ joinResult }, 'Result of participantService.joinGame');
             if (!joinResult.success || !joinResult.participant) {
                 // Handle join errors
@@ -243,6 +247,15 @@ export function joinGameHandler(
             };
             logger.info({ gameJoinedPayload }, 'Emitting game_joined');
             socket.emit(SOCKET_EVENTS.GAME.GAME_JOINED as any, gameJoinedPayload);
+
+            // Use modular scoreService for best score update if needed (for deferred)
+            if (gameInstance.isDiffered) {
+                await DifferedScoreService.updateBestScoreInRedis({
+                    gameInstanceId: gameInstance.id,
+                    userId,
+                    score: joinResult.participant.score || 0
+                });
+            }
 
             // For live games (quiz and tournament, not deferred), check if game is active and send current state to late joiners
             if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {

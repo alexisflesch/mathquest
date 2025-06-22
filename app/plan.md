@@ -544,3 +544,23 @@ Ensure that time penalties are correctly applied in practice/game mode by tracki
 - Replaced original with a stub and archive notice.
 - No references remain in active code.
 - All timer logic is now canonical/global only.
+
+---
+
+# Phase: Diagnose and Fix Timer Penalty in Live Tournament Mode
+
+## Goal
+- Ensure timer penalty is applied in live tournament mode exactly as in quiz mode, using canonical timer logic.
+
+## Checklist
+- [x] Confirmed: Quiz mode applies time penalty correctly; live tournament does not (timer always 0ms elapsed).
+- [x] Confirmed: Both modes use the same canonical timer/scoring functions.
+- [x] Add debug logging to:
+    - emitQuestionHandler (when timer is started, with mode and questionUid)
+    - gameAnswer.ts (when elapsed time is calculated/applied, with timer state, mode, and questionUid)
+    - canonicalTimerService.ts (startTimer and elapsed calculation, with all relevant params)
+- [ ] Ensure startTimer is called exactly once per question for all modes, and is idempotent.
+- [ ] Check for any conditional logic that skips timer start in live tournament mode.
+- [ ] Ensure timer state is shared and not re-initialized per user or per answer.
+- [ ] Test and validate: Timer penalty is applied in both quiz and live tournament modes.
+- [ ] Update plan.md and log.md with findings and checklist progress.

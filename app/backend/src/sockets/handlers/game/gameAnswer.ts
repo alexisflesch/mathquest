@@ -238,15 +238,36 @@ export function gameAnswerHandler(
             let canonicalElapsedMs: number | undefined = undefined;
             let timeSpentForSubmission: number = 0;
             const canonicalTimerService = new CanonicalTimerService(redisClient);
+            logger.info({
+                accessCode,
+                userId,
+                questionUid,
+                playMode: gameInstance.playMode,
+                isDiffered: gameInstance.isDiffered
+            }, '[TIMER_DEBUG] About to calculate elapsed time in gameAnswerHandler');
             if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !gameInstance.isDiffered)) {
                 // Global timer for quiz and live tournament
                 canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, gameInstance.isDiffered);
-                logger.info({ accessCode, userId, questionUid, canonicalElapsedMs }, '[TIMER] Canonical elapsed time for answer submission');
+                logger.info({
+                    accessCode,
+                    userId,
+                    questionUid,
+                    playMode: gameInstance.playMode,
+                    isDiffered: gameInstance.isDiffered,
+                    canonicalElapsedMs
+                }, '[TIMER_DEBUG] Canonical elapsed time for answer submission (quiz/live)');
                 timeSpentForSubmission = canonicalElapsedMs ?? 0;
             } else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
                 // Per-user session timer for differed tournaments
                 canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, gameInstance.isDiffered, userId);
-                logger.info({ accessCode, userId, questionUid, canonicalElapsedMs }, '[TIMER] Differed session elapsed time for answer submission');
+                logger.info({
+                    accessCode,
+                    userId,
+                    questionUid,
+                    playMode: gameInstance.playMode,
+                    isDiffered: gameInstance.isDiffered,
+                    canonicalElapsedMs
+                }, '[TIMER_DEBUG] Canonical elapsed time for answer submission (differed)');
                 timeSpentForSubmission = canonicalElapsedMs ?? 0;
             } else if (gameInstance.playMode === 'practice') {
                 // No timer for practice mode
