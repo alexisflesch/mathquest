@@ -71,7 +71,8 @@ function emitQuestionHandler(io, socket) {
             playMode: gameInstance.playMode,
             isDiffered: gameInstance.isDiffered
         }, '[TIMER_DEBUG] About to start timer in emitQuestionHandler');
-        if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !gameInstance.isDiffered)) {
+        // Always start timer for quiz and live tournament (not just quiz)
+        if ((gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament') && !gameInstance.isDiffered) {
             // Global timer for quiz and live tournament
             await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
             const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);

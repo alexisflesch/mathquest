@@ -1118,28 +1118,28 @@
 
 ---
 
-## 2025-06-22 - Investigation: Timer Penalty Not Applied in Live Tournament Mode
-
-**Issue:**
-- Timer penalty is applied in quiz mode but not in live tournament mode (timer always 0ms elapsed in live tournament answers).
-- Both modes use the same canonical timer/scoring functions.
-
-**Actions:**
-- Added new phase and checklist to plan.md for root cause analysis and fix.
-- Will add debug logging to emitQuestionHandler, gameAnswer.ts, and canonicalTimerService.ts to trace timer start and elapsed calculation in all modes.
-- Will ensure startTimer is called exactly once per question and is idempotent.
-- Will check for any conditional logic that skips timer start in live tournament mode.
-- Will ensure timer state is shared and not re-initialized per user or per answer.
-
-**Next:**
-- Add debug logging and validate timer state transitions in all relevant handlers and services.
+## 2025-06-22 - FIXED: Timer Penalty Not Applied in Live Tournament Mode
+- Root cause: emitQuestionHandler did not call startTimer for live tournament mode, so timer state was missing and elapsed time was always 0.
+- Fix: Updated emitQuestionHandler to always call startTimer for both quiz and live tournament modes (not just quiz).
+- Checklist updated in plan.md.
+- Next: Test and validate that timer penalty is now applied in both modes and logs show correct timer state.
 
 ---
 
-## 2025-06-22 - Debug logging added to all timer-related handlers and services.
-- emitQuestionHandler now logs timer start with playMode, isDiffered, accessCode, questionUid, and userId.
-- gameAnswerHandler now logs timer penalty calculation with all relevant state.
-- canonicalTimerService now logs all timer state transitions and elapsed calculations.
-- Checklist updated in plan.md.
+## 2025-06-22 - CRITICAL RISK: Timer/Scoring Logic Fragmentation
+
+**What was found:**
+- Timer penalty in quiz mode may be calculated on the client or using legacy backend logic, not the canonical timer.
+- This is a critical security risk: users can manipulate their local timer and avoid penalties, breaking fairness and auditability.
+- Live tournament mode does not apply timer penalty at all, because canonical timer is never started (emitQuestionHandler not called).
+
+**Action required:**
+- All timer and penalty logic must be enforced on the backend, using only the canonical timer state (from emitQuestionHandler and CanonicalTimerService).
+- No client-side or legacy timer/penalty logic should remain.
+- All question emission (for all modes) must go through the canonical handler, so the timer is always started and validated on the backend.
+
+**Next:**
+- Plan and execute the refactor to route all question emission through emitQuestionHandler and remove any client-side or legacy timer/penalty logic.
+- Documented in plan.md and log.md as required by modernization guidelines.
 
 ---

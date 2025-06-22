@@ -559,8 +559,32 @@ Ensure that time penalties are correctly applied in practice/game mode by tracki
     - emitQuestionHandler (when timer is started, with mode and questionUid)
     - gameAnswer.ts (when elapsed time is calculated/applied, with timer state, mode, and questionUid)
     - canonicalTimerService.ts (startTimer and elapsed calculation, with all relevant params)
-- [ ] Ensure startTimer is called exactly once per question for all modes, and is idempotent.
-- [ ] Check for any conditional logic that skips timer start in live tournament mode.
-- [ ] Ensure timer state is shared and not re-initialized per user or per answer.
+- [x] Ensure startTimer is called exactly once per question for all modes, and is idempotent.
+- [x] Check for any conditional logic that skips timer start in live tournament mode.
+- [x] Ensure timer state is shared and not re-initialized per user or per answer.
 - [ ] Test and validate: Timer penalty is applied in both quiz and live tournament modes.
 - [ ] Update plan.md and log.md with findings and checklist progress.
+
+---
+
+## PHASE: Timer & Scoring Canonicalization (IN PROGRESS)
+
+### Goal: Unify all timer and penalty logic to use canonical backend timer only (no client-side or legacy logic)
+
+#### Risks Identified:
+- [x] Timer penalty in quiz mode may be calculated on the client or using legacy backend logic, not the canonical timer.
+- [x] This allows users to manipulate their local timer and avoid penalties, breaking fairness and security.
+- [x] Live tournament mode does not apply timer penalty at all, because canonical timer is never started (emitQuestionHandler not called).
+
+#### Required Actions:
+- [ ] All question emission (quiz, tournament, differed, practice) must use canonical emitQuestionHandler so timer is always started and validated on backend.
+- [ ] Remove all client-side and legacy timer/penalty logic from backend and frontend.
+- [ ] Refactor sharedGameFlow.ts and all related code to route question emission through emitQuestionHandler.
+- [ ] Validate that timer and penalty are enforced on backend for all modes.
+- [ ] Document all changes and checklist progress in plan.md and log.md.
+
+#### Testing:
+- [ ] Test quiz and tournament modes to ensure timer penalty is enforced and cannot be bypassed by client.
+- [ ] Add/verify backend tests for timer/penalty logic.
+
+---

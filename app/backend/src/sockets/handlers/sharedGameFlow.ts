@@ -8,6 +8,7 @@ import createLogger from '@/utils/logger';
 import gameStateService from '@/core/gameStateService';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
 import { prisma } from '@/db/prisma';
+import { emitQuestionHandler } from './game/emitQuestionHandler';
 
 const logger = createLogger('SharedGameFlow');
 
@@ -90,8 +91,26 @@ export async function runGameFlow(
                 timer: timer // Use timer state for initial question emission
             };
 
-            logger.info({ room: `game_${accessCode}`, event: 'game_question', payload: gameQuestionPayload }, '[DEBUG] Emitting game_question');
-            io.to(`game_${accessCode}`).emit('game_question', gameQuestionPayload);
+            // Fetch all sockets in the room
+            const roomName = `game_${accessCode}`;
+            const socketsInRoom = await io.in(roomName).fetchSockets();
+            // Map userIds to real Socket instances (not RemoteSocket)
+            const allSockets = Array.from(io.sockets.sockets.values());
+            for (const remoteSocket of socketsInRoom) {
+                const userId = remoteSocket.data.userId;
+                if (!userId) continue;
+                // Find a real Socket instance for this userId
+                const realSocket = allSockets.find(s => s.data && s.data.userId === userId);
+                if (realSocket) {
+                    const emitQuestion = emitQuestionHandler(io, realSocket);
+                    await emitQuestion({
+                        accessCode,
+                        userId,
+                        questionUid: questions[i].uid
+                    });
+                }
+            }
+
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
 
             // Track question start time for all users currently in the room for server-side timing
