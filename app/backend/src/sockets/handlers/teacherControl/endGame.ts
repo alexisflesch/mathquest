@@ -1,6 +1,6 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import createLogger from '@/utils/logger';
 import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import type { ErrorPayload } from '@shared/types/socketEvents';

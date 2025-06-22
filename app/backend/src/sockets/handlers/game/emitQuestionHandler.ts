@@ -4,7 +4,7 @@ import createLogger from '@/utils/logger';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData, ErrorPayload } from '@shared/types/socketEvents';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
-import { CanonicalTimerService } from '@/services/canonicalTimerService';
+import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { redisClient } from '@/config/redis';
 
 const logger = createLogger('EmitQuestionHandler');

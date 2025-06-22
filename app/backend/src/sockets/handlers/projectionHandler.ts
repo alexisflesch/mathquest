@@ -3,8 +3,8 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { ErrorPayload } from '@shared/types/socketEvents';
-import * as gameStateService from '@/core/gameStateService';
-import { calculateTimerForLateJoiner } from '../../core/timerUtils';
+import * as gameStateService from '@/core/services/gameStateService';
+import { calculateTimerForLateJoiner } from '../../core/services/timerUtils';
 import { validateGameAccess } from '@/utils/gameAuthorization';
 
 const logger = createLogger('ProjectionHandler');

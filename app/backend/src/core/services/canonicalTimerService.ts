@@ -1,7 +1,7 @@
 import type { Redis } from 'ioredis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
-import type { PlayMode } from '../../../shared/types/core/game';
+import type { PlayMode } from '@shared/types/core/game';
 
 const logger = createLogger('CanonicalTimerService');
 

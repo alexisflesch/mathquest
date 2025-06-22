@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.endGameHandler = endGameHandler;
 const prisma_1 = require("@/db/prisma");
-const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
+const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");

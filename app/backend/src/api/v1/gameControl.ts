@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { teacherAuth } from '@/middleware/auth';
 import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import { getIO } from '@/sockets';
 import { prisma } from '@/db/prisma';
 import type {

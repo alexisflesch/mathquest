@@ -3,7 +3,7 @@ import { GameInstanceService } from '@/core/services/gameInstanceService';
 import { GameParticipantService } from '@/core/services/gameParticipantService';
 import { GameTemplateService } from '@/core/services/gameTemplateService';
 // Import specific functions from gameStateService
-import { initializeGameState, getFullGameState, getFormattedLeaderboard } from '@/core/gameStateService';
+import { initializeGameState, getFullGameState, getFormattedLeaderboard } from '@/core/services/gameStateService';
 import { redisClient } from '@/config/redis';
 import { prisma } from '@/db/prisma';
 import { teacherAuth, optionalAuth } from '@/middleware/auth';

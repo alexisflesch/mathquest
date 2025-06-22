@@ -26,7 +26,7 @@ const logger = (0, logger_1.default)('ScoringService');
  */
 function calculateAnswerScore(isCorrect, serverTimeSpent, question) {
     if (!isCorrect || !question)
-        return 0;
+        return { score: 0, timePenalty: 0 };
     const baseScore = 1000;
     // Convert milliseconds to seconds for penalty calculation
     const serverTimeSpentSeconds = Math.max(0, serverTimeSpent / 1000);
@@ -41,7 +41,11 @@ function calculateAnswerScore(isCorrect, serverTimeSpent, question) {
         finalScore,
         isCorrect
     }, 'Score calculation details (diagnostic)');
-    return finalScore;
+    // Return both score and timePenalty for answer record
+    return {
+        score: finalScore,
+        timePenalty
+    };
 }
 /**
  * Check if the answer is correct for a given question
@@ -99,6 +103,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
                 joinedAt: 'desc'
             }
         });
+        logger.info({ gameInstanceId, userId, found: !!participant, participantId: participant?.id }, '[LOG] Participant fetch result');
         if (!participant) {
             logger.error({
                 gameInstanceId,
@@ -121,18 +126,64 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
         let gameInstance = null;
         gameInstance = await prisma_1.prisma.gameInstance.findUnique({
             where: { id: gameInstanceId },
-            select: { playMode: true, accessCode: true }
+            select: { playMode: true, accessCode: true, isDiffered: true }
         });
-        if (gameInstance) {
-            const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}`;
-            const prev = await redis_1.redisClient.hget(redisKey, userId);
-            if (prev) {
-                previousAnswerObj = JSON.parse(prev);
-                previousScore = previousAnswerObj.score || 0;
-                previousIsCorrect = previousAnswerObj.isCorrect || false;
-                previousAnswer = previousAnswerObj.answer;
-                previousAnswerExists = true;
-            }
+        logger.info({ gameInstanceId, userId, playMode: gameInstance?.playMode, isDiffered: gameInstance?.isDiffered }, '[LOG] GameInstance fetch result');
+        // Determine answer key (namespace by attempt for DEFERRED)
+        let answerKey;
+        let attemptCount = participant.attemptCount || 1;
+        // FIX: Always use attempt-namespaced key for DEFERRED participants
+        if (participant.participationType === 'DEFERRED') {
+            answerKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}:${attemptCount}`;
+            logger.info({
+                gameInstanceId,
+                userId,
+                questionUid: answerData.questionUid,
+                attemptCount,
+                answerKey,
+                playMode: gameInstance?.playMode,
+                isDiffered: gameInstance?.isDiffered,
+                participationType: participant.participationType,
+                note: 'USING NAMESPACED ANSWER KEY for DEFERRED participant (forced)'
+            }, '[FIXED-2] Using attempt-based answer key for DEFERRED participant');
+        }
+        else {
+            answerKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}`;
+        }
+        logger.info({
+            gameInstanceId,
+            userId,
+            questionUid: answerData.questionUid,
+            answerKey,
+            attemptCount,
+            playMode: gameInstance?.playMode,
+            isDiffered: gameInstance?.isDiffered,
+            participationType: participant.participationType
+        }, '[DIAGNOSTIC] Using answer key for duplicate check and storage');
+        logger.info({ gameInstanceId, userId, answerKey }, '[LOG] About to read previous answer from Redis');
+        const prev = await redis_1.redisClient.hget(answerKey, userId);
+        logger.info({ gameInstanceId, userId, answerKey, prevFound: !!prev }, '[LOG] Redis hget result for previous answer');
+        if (prev) {
+            previousAnswerObj = JSON.parse(prev);
+            previousScore = previousAnswerObj.score || 0;
+            previousIsCorrect = previousAnswerObj.isCorrect || false;
+            previousAnswer = previousAnswerObj.answer;
+            previousAnswerExists = true;
+            logger.info({
+                gameInstanceId,
+                userId,
+                questionUid: answerData.questionUid,
+                attemptCount,
+                answerKey,
+                previousAnswer,
+                previousScore,
+                previousIsCorrect,
+                mode: gameInstance?.isDiffered ? 'DEFERRED' : 'LIVE/QUIZ',
+                note: 'Previous answer found for duplicate/score logic.'
+            }, '[DIAGNOSTIC] Previous answer state for duplicate/score logic');
+        }
+        else {
+            logger.info({ gameInstanceId, userId, answerKey }, '[LOG] No previous answer found in Redis for this key');
         }
         // Compare new answer to previous answer (handle single/multiple choice)
         let isSameAnswer = false;
@@ -158,6 +209,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
                 isSameAnswer = false;
             }
         }
+        logger.info({ gameInstanceId, userId, isSameAnswer, previousAnswerExists }, '[LOG] Answer comparison result');
         if (isSameAnswer) {
             // Same answer - no score update, just return current state
             logger.info({
@@ -165,8 +217,12 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
                 userId,
                 questionUid: answerData.questionUid,
                 answer: answerData.answer,
-                previousAnswer
-            }, 'Same answer resubmitted - no score update');
+                previousAnswer,
+                attemptCount,
+                answerKey,
+                mode: gameInstance?.isDiffered ? 'DEFERRED' : 'LIVE/QUIZ',
+                note: 'Duplicate answer detected, no score update.'
+            }, '[DIAGNOSTIC] Duplicate answer detected for DEFERRED/LIVE/QUIZ');
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
@@ -177,10 +233,12 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
             };
         }
         // Different answer or first submission - proceed with scoring
+        logger.info({ gameInstanceId, userId, questionUid: answerData.questionUid }, '[LOG] Proceeding to fetch question for scoring');
         const question = await prisma_1.prisma.question.findUnique({
             where: { uid: answerData.questionUid }
         });
         if (!question) {
+            logger.error({ gameInstanceId, userId, questionUid: answerData.questionUid }, '[ERROR] Question not found');
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
@@ -208,14 +266,25 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
             };
         }
         else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
-            // Differed tournament: timer attached to GameParticipant
+            // DEFERRED tournament: timer must be per-user/per-attempt
             serverTimeSpent = typeof answerData.timeSpent === 'number' ? answerData.timeSpent : 0;
             timerDebugInfo = {
                 playMode: gameInstance.playMode,
                 isDiffered: gameInstance.isDiffered,
                 answerDataTimeSpent: answerData.timeSpent,
-                serverTimeSpent
+                serverTimeSpent,
+                canonical: true,
+                note: 'Timer is per-user/per-attempt for DEFERRED mode.'
             };
+            logger.info({
+                gameInstanceId,
+                userId,
+                questionUid: answerData.questionUid,
+                attemptCount,
+                serverTimeSpent,
+                timerDebugInfo,
+                note: 'Timer/penalty logic for DEFERRED answer submission.'
+            }, '[DIAGNOSTIC] Timer/penalty logic for DEFERRED answer submission');
         }
         logger.info({
             gameInstanceId,
@@ -224,23 +293,38 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
             timerDebugInfo
         }, '[DIAGNOSE] Timer and mode info before scoring');
         const isCorrect = checkAnswerCorrectness(question, answerData.answer);
-        const newScore = calculateAnswerScore(isCorrect, serverTimeSpent, question);
+        logger.info({ gameInstanceId, userId, questionUid: answerData.questionUid, isCorrect }, '[LOG] Answer correctness check result');
+        const { score: newScore, timePenalty } = calculateAnswerScore(isCorrect, serverTimeSpent, question);
+        logger.info({ gameInstanceId, userId, questionUid: answerData.questionUid, newScore, timePenalty }, '[LOG] Calculated new score and time penalty');
         // Replace previous score for this question (not increment)
         let scoreDelta = newScore - previousScore;
         // For differed tournaments, always replace the score (not increment)
         let scoreUpdateData = { score: { increment: scoreDelta } };
         if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
             scoreUpdateData = { score: newScore };
+            logger.info({
+                gameInstanceId,
+                userId,
+                questionUid: answerData.questionUid,
+                previousScore,
+                newScore,
+                scoreDelta,
+                attemptCount,
+                timePenalty,
+                note: 'DEFERRED mode: replacing score for this attempt.'
+            }, '[DIAGNOSTIC] DEFERRED mode score replacement logic');
         }
+        logger.info({ gameInstanceId, userId, scoreUpdateData }, '[LOG] About to update participant score in DB');
         // Update participant score in DB
         const updatedParticipant = await prisma_1.prisma.gameParticipant.update({
             where: { id: participant.id },
             data: scoreUpdateData
         });
+        logger.info({ gameInstanceId, userId, updatedScore: updatedParticipant.score }, '[LOG] Updated participant score in DB');
         // Update Redis with new answer
         if (gameInstance) {
-            const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}`;
-            await redis_1.redisClient.hset(redisKey, userId, JSON.stringify({
+            logger.info({ gameInstanceId, userId, answerKey }, '[LOG] About to store answer in Redis');
+            await redis_1.redisClient.hset(answerKey, userId, JSON.stringify({
                 userId,
                 answer: answerData.answer,
                 timeSpent: answerData.timeSpent,
@@ -249,25 +333,40 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
                 isCorrect,
                 score: newScore
             }));
+            logger.info({
+                gameInstanceId,
+                userId,
+                questionUid: answerData.questionUid,
+                answerKey,
+                attemptCount,
+                playMode: gameInstance?.playMode,
+                isDiffered: gameInstance?.isDiffered
+            }, '[DIAGNOSTIC] Stored answer in Redis with attempt-based key');
             // Update Redis participant data to sync with database
             const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
+            logger.info({ gameInstanceId, userId, participantKey }, '[LOG] About to update participant data in Redis');
             const redisParticipantData = await redis_1.redisClient.hget(participantKey, userId);
             if (redisParticipantData) {
                 const participantData = JSON.parse(redisParticipantData);
                 participantData.score = updatedParticipant.score;
                 await redis_1.redisClient.hset(participantKey, userId, JSON.stringify(participantData));
+                logger.info({ gameInstanceId, userId, participantKey, updatedScore: updatedParticipant.score }, '[LOG] Updated participant data in Redis');
             }
             // Update Redis leaderboard ZSET
             const leaderboardKey = `mathquest:game:leaderboard:${gameInstance.accessCode}`;
+            logger.info({ gameInstanceId, userId, leaderboardKey, score: updatedParticipant.score }, '[LOG] About to update leaderboard ZSET');
             await redis_1.redisClient.zadd(leaderboardKey, updatedParticipant.score || 0, userId);
+            logger.info({ gameInstanceId, userId, leaderboardKey, score: updatedParticipant.score }, '[LOG] Updated leaderboard ZSET');
         }
+        logger.info({ gameInstanceId, userId, scoreDelta, totalScore: updatedParticipant.score }, '[LOG] Final score result for answer submission');
         return {
             scoreUpdated: scoreDelta !== 0,
             scoreAdded: scoreDelta,
             totalScore: updatedParticipant.score || 0,
             answerChanged: previousAnswerExists,
             previousAnswer,
-            message: scoreDelta !== 0 ? 'Score updated' : 'Answer recorded but no points awarded'
+            message: scoreDelta !== 0 ? 'Score updated' : 'Answer recorded but no points awarded',
+            timePenalty // Include timePenalty in the result
         };
     }
     catch (error) {

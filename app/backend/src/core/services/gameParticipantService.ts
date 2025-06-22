@@ -32,6 +32,45 @@ function mapPrismaToGameParticipant(prismaParticipant: any): GameParticipant {
     };
 }
 
+// Utility to clear or namespace answers for a new DEFERRED attempt
+async function clearDeferredAnswers(gameInstanceId: string, userId: string, attemptCount: number) {
+    // Canonical: Answers are stored as mathquest:game:answers:{accessCode}:{questionUid}:{attemptCount}
+    // Remove all answer keys for previous attempt for this user/game
+    const gameInstance = await prisma.gameInstance.findUnique({ where: { id: gameInstanceId }, select: { accessCode: true, gameTemplateId: true } });
+    if (!gameInstance) return;
+    const accessCode = gameInstance.accessCode;
+    // Fetch all questions for this game via gameTemplate
+    const questionsInTemplate = await prisma.questionsInGameTemplate.findMany({ where: { gameTemplateId: gameInstance.gameTemplateId }, select: { questionUid: true } });
+    if (!questionsInTemplate.length) {
+        logger.warn({ gameInstanceId, userId, attemptCount, gameTemplateId: gameInstance.gameTemplateId }, '[DEFERRED] No questions found for gameTemplate');
+        return;
+    }
+    for (const q of questionsInTemplate) {
+        const prevKey = `mathquest:game:answers:${accessCode}:${q.questionUid}:${attemptCount - 1}`;
+        await redisClient.hdel(prevKey, userId);
+        logger.info({ gameInstanceId, userId, prevAttempt: attemptCount - 1, prevKey }, '[DEFERRED] Cleared previous attempt answer for question');
+    }
+}
+
+// Utility to clear ALL answers for a user in a game (all attempts, all questions)
+async function clearAllDeferredAnswers(gameInstanceId: string, userId: string) {
+    const gameInstance = await prisma.gameInstance.findUnique({ where: { id: gameInstanceId }, select: { accessCode: true, gameTemplateId: true } });
+    if (!gameInstance) return;
+    const accessCode = gameInstance.accessCode;
+    const questionsInTemplate = await prisma.questionsInGameTemplate.findMany({ where: { gameTemplateId: gameInstance.gameTemplateId }, select: { questionUid: true } });
+    if (!questionsInTemplate.length) return;
+    for (const q of questionsInTemplate) {
+        // Delete all answer keys for all attempts for this question
+        // Use Redis SCAN to find all keys matching pattern
+        const pattern = `mathquest:game:answers:${accessCode}:${q.questionUid}:*`;
+        const keys = await redisClient.keys(pattern);
+        for (const key of keys) {
+            await redisClient.hdel(key, userId);
+            logger.info({ gameInstanceId, userId, key }, '[DEFERRED] Cleared ALL previous answers for question');
+        }
+    }
+}
+
 /**
  * GameParticipant service class for managing game participants
  */
@@ -211,24 +250,40 @@ export class GameParticipantService {
                 });
 
                 if (existingDeferredParticipant) {
-                    // Update existing deferred participant - increment attempt count, reset score to 0 for new attempt
+                    // [MODERNIZATION] On new DEFERRED attempt, do NOT reset score in DB; keep best score in DB.
+                    // Instead, track current attempt's score separately (e.g., in Redis), and clear/namespace answers for this attempt.
                     logger.info({
                         userId,
                         accessCode,
                         participantId: existingDeferredParticipant.id,
                         currentScore: existingDeferredParticipant.score,
                         currentAttemptCount: existingDeferredParticipant.attemptCount
-                    }, 'BUG INVESTIGATION: Updating existing DEFERRED participant for new attempt');
+                    }, '[DEFERRED] Starting new attempt: preserving best score, isolating answers');
 
-                    participant = await prisma.gameParticipant.update({
+                    // Only increment attemptCount if this is a true new attempt (not a reconnect or duplicate join)
+                    // [MODERNIZATION] Add diagnostic log for attemptCount increment
+                    const prevAttemptCount = existingDeferredParticipant.attemptCount;
+                    const participant = await prisma.gameParticipant.update({
                         where: { id: existingDeferredParticipant.id },
                         data: {
                             joinedAt: new Date(),
-                            score: 0, // Reset score for new attempt - will be updated during gameplay
                             attemptCount: { increment: 1 }
                         },
                         include: { user: true }
                     });
+                    logger.info({
+                        userId,
+                        accessCode,
+                        participantId: participant.id,
+                        prevAttemptCount,
+                        newAttemptCount: participant.attemptCount
+                    }, '[DIAGNOSTIC] Incremented attemptCount for DEFERRED participant');
+
+                    // Clear answers for previous attempt (isolation)
+                    await clearDeferredAnswers(gameInstance.id, userId, participant.attemptCount);
+
+                    // Clear ALL answers for previous attempts (isolation)
+                    await clearAllDeferredAnswers(gameInstance.id, userId);
 
                     logger.info({
                         userId,
@@ -236,8 +291,8 @@ export class GameParticipantService {
                         participantId: participant.id,
                         participationType: participant.participationType,
                         attemptCount: participant.attemptCount,
-                        resetScore: participant.score
-                    }, 'BUG INVESTIGATION: Updated existing DEFERRED participant for new attempt');
+                        preservedScore: participant.score
+                    }, '[DEFERRED] Updated existing DEFERRED participant for new attempt (score preserved)');
                 } else {
                     // Create new deferred participant
                     const newParticipant = await prisma.gameParticipant.create({
@@ -421,6 +476,16 @@ export class GameParticipantService {
             // Keep the best score between existing and new
             const bestScore = Math.max(existingParticipant.score, newScore);
 
+            logger.info({
+                gameInstanceId,
+                userId,
+                previousScore: existingParticipant.score,
+                newScore,
+                bestScore,
+                attemptCount: existingParticipant.attemptCount,
+                action: bestScore > existingParticipant.score ? 'updated' : 'preserved'
+            }, '[DIAGNOSTIC] updateDeferredScore: Best score logic for DEFERRED');
+
             const updatedParticipant = await prisma.gameParticipant.update({
                 where: { id: existingParticipant.id },
                 data: { score: bestScore },
@@ -488,6 +553,17 @@ export class GameParticipantService {
                 participant.score || 0
             );
 
+            logger.info({
+                gameInstanceId,
+                userId,
+                currentAttemptScore,
+                previousBestScore: previousBestScore ? parseInt(previousBestScore) : 0,
+                participantScore: participant.score,
+                bestScore,
+                attemptCount: participant.attemptCount,
+                action: bestScore > (previousBestScore ? parseInt(previousBestScore) : 0) ? 'updated' : 'preserved'
+            }, '[DIAGNOSTIC] finalizeDeferredAttempt: Best score logic for DEFERRED');
+
             // Update Redis with the best score
             await redisClient.set(redisKey, bestScore.toString());
 
@@ -507,15 +583,6 @@ export class GameParticipantService {
                 finalBestScore: bestScore,
                 attemptCount: participant.attemptCount
             }, 'Finalized deferred tournament attempt with best score');
-            // [DIAGNOSTIC] Logging best score logic for deferred tournaments
-            logger.debug({
-                gameInstanceId,
-                userId,
-                currentAttemptScore,
-                previousBestScore,
-                participantScore: participant.score,
-                bestScore
-            }, '[DIAGNOSTIC] finalizeDeferredAttempt: Best score logic for deferred tournament');
 
             return {
                 success: true,

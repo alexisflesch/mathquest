@@ -8,7 +8,7 @@ const http_1 = require("http");
 const socket_io_client_1 = __importDefault(require("socket.io-client"));
 const index_1 = require("@/sockets/index");
 const prisma_1 = require("@/db/prisma");
-const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
+const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const questionTypes_1 = require("@shared/constants/questionTypes");
 describe('Projector Mode Socket Handler', () => {
     jest.setTimeout(10000);

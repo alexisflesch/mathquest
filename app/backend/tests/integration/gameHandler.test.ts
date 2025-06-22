@@ -3,7 +3,7 @@ import ClientIO from 'socket.io-client';
 import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
 import { redisClient } from '../../src/config/redis';
-import gameStateService from '../../src/core/gameStateService';
+import gameStateService from '../../src/core/services/gameStateService';
 import generateStudentToken from '../helpers/jwt';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 

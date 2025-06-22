@@ -5,7 +5,7 @@ import { runGameFlow, GameFlowOptions } from './sharedGameFlow';
 import { TOURNAMENT_EVENTS, GAME_EVENTS, LOBBY_EVENTS } from '@shared/types/socket/events';
 import createLogger from '@/utils/logger';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import { registerSharedLiveHandlers } from './sharedLiveHandler';
 import { GameTimerState } from '@shared/types/core/timer';
 import type { ErrorPayload } from '@shared/types/socketEvents';

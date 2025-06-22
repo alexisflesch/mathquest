@@ -38,13 +38,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setQuestionHandler = setQuestionHandler;
 const prisma_1 = require("@/db/prisma");
-const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
+const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const emitQuestionHandler_1 = require("../game/emitQuestionHandler");
-const canonicalTimerService_1 = require("@/services/canonicalTimerService");
+const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const redis_1 = require("@/config/redis");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('SetQuestionHandler');

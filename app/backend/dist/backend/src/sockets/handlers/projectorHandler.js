@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.projectorHandler = projectorHandler;
 exports.broadcastProjectorState = broadcastProjectorState;
-const gameStateService_1 = require("@/core/gameStateService");
+const gameStateService_1 = require("@/core/services/gameStateService");
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");

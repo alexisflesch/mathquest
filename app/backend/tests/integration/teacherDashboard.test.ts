@@ -4,7 +4,7 @@ import { createServer, Server as HttpServer } from 'http';
 import { configureSocketServer, registerHandlers, closeSocketIORedisClients } from '../../src/sockets';
 import { prisma } from '../../src/db/prisma';
 import { startTestServer } from '../testSetup';
-import gameStateService from '../../src/core/gameStateService';
+import gameStateService from '../../src/core/services/gameStateService';
 import { testQuestions } from '../support/testQuestions';
 import createLogger from '../../src/utils/logger';
 import jwt from 'jsonwebtoken';

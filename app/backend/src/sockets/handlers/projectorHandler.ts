@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { getFullGameState } from '@/core/gameStateService';
+import { getFullGameState } from '@/core/services/gameStateService';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { PROJECTOR_EVENTS, GAME_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';

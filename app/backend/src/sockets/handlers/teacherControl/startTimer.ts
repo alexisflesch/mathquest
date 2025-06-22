@@ -1,7 +1,7 @@
 // filepath: /home/aflesch/mathquest/app/backend/src/sockets/handlers/teacherControl/startTimer.ts
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import createLogger from '@/utils/logger';
 import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import { startTimerPayloadSchema } from '@shared/types/socketEvents.zod';

@@ -3,7 +3,7 @@
 
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import createLogger from '@/utils/logger';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import { redisClient } from '@/config/redis';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
 import { GameTimerState } from '@shared/types/core/timer';
@@ -11,6 +11,7 @@ import { GameState } from '@shared/types/core/game';
 import { ErrorPayload } from '@shared/types/socketEvents';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { errorPayloadSchema } from '@shared/types/socketEvents.zod';
+import { prisma } from '@/db/prisma';
 
 const logger = createLogger('DeferredTournamentFlow');
 
@@ -182,6 +183,65 @@ async function runDeferredQuestionSequence(
                 localTimeLeftMs: null
             };
 
+            // [MODERNIZATION] Ensure timer is per-user/per-attempt for DEFERRED mode
+            // Timer key: mathquest:deferred:timer:{accessCode}:{userId}:{attemptCount}:{questionUid}
+            const attemptCount = await getDeferredAttemptCount(accessCode, userId);
+            const timerKey = `mathquest:deferred:timer:${accessCode}:${userId}:${attemptCount}:${question.uid}`;
+
+            // Check if a timer already exists for this attempt/question (should not, unless retrying same question in same attempt)
+            const existingTimerRaw = await redisClient.get(timerKey);
+            if (existingTimerRaw) {
+                logger.warn({
+                    accessCode,
+                    userId,
+                    attemptCount,
+                    timerKey,
+                    existingTimer: JSON.parse(existingTimerRaw)
+                }, '[DIAGNOSTIC] Timer already exists for this attempt/question (possible reuse or leakage)');
+            } else {
+                logger.info({
+                    accessCode,
+                    userId,
+                    attemptCount,
+                    timerKey
+                }, '[DIAGNOSTIC] No existing timer for this attempt/question, creating new timer');
+            }
+
+            await redisClient.set(timerKey, JSON.stringify(timer), 'EX', 300);
+            logger.info({
+                accessCode,
+                userId,
+                attemptCount,
+                timerKey,
+                timer
+            }, '[DIAGNOSTIC] Set per-user/per-attempt timer for DEFERRED mode');
+
+            // [EXTRA LOGGING] Log all timers for this user/attempt for this game (debugging timer leakage)
+            try {
+                const pattern = `mathquest:deferred:timer:${accessCode}:${userId}:*:${question.uid}`;
+                const allTimerKeys = await redisClient.keys(pattern);
+                const allTimers = [];
+                for (const key of allTimerKeys) {
+                    const val = await redisClient.get(key);
+                    allTimers.push({ key, timer: val ? JSON.parse(val) : null });
+                }
+                logger.debug({
+                    accessCode,
+                    userId,
+                    attemptCount,
+                    questionUid: question.uid,
+                    allTimers
+                }, '[DIAGNOSTIC] All timers for this user/question across attempts');
+            } catch (timerDebugError) {
+                logger.error({
+                    accessCode,
+                    userId,
+                    attemptCount,
+                    questionUid: question.uid,
+                    timerDebugError
+                }, '[DIAGNOSTIC] Error while fetching all timers for debugging');
+            }
+
             // Update session state
             const sessionStateKey = `deferred_session:${accessCode}:${userId}`;
             const currentState = await gameStateService.getFullGameState(sessionStateKey);
@@ -217,6 +277,8 @@ async function runDeferredQuestionSequence(
                 userId,
                 playerRoom,
                 questionIndex: i,
+                attemptCount,
+                timerKey,
                 timer
             }, '[DIAGNOSTIC] Deferred tournament timer state (should be per-user/per-attempt)');
 
@@ -330,4 +392,15 @@ export function getDeferredSessionAccessCode(userId: string): string | undefined
 export function cleanupDeferredSession(userId: string): void {
     runningDeferredSessions.delete(userId);
     logger.info({ userId }, 'Deferred session cleaned up');
+}
+
+// Utility to get current attemptCount for a user in a deferred tournament
+async function getDeferredAttemptCount(accessCode: string, userId: string): Promise<number> {
+    const gameInstance = await prisma.gameInstance.findUnique({ where: { accessCode }, select: { id: true } });
+    if (!gameInstance) return 1;
+    const participant = await prisma.gameParticipant.findFirst({
+        where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' },
+        select: { attemptCount: true }
+    });
+    return participant?.attemptCount || 1;
 }

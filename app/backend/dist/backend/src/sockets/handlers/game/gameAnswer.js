@@ -1,5 +1,5 @@
 "use strict";
-// [MODERNIZATION] All socket handlers in this directory use canonical shared types from shared/ and Zod validation for all payloads.
+// [MODERNIZATION] All socket handlers in this directory use canonical shared types from shared/and Zod validation for all payloads.
 // All event payloads are validated at runtime using schemas from @shared/types/socketEvents.zod or equivalent.
 // No legacy or untyped payloads remain.
 var __importDefault = (this && this.__importDefault) || function (mod) {
@@ -10,24 +10,40 @@ exports.gameAnswerHandler = gameAnswerHandler;
 const gameParticipantService_1 = require("@/core/services/gameParticipantService");
 const prisma_1 = require("@/db/prisma");
 const redis_1 = require("@/config/redis");
-const gameStateService_1 = require("@/core/gameStateService");
+const gameStateService_1 = require("@/core/services/gameStateService");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
 const sharedLeaderboard_1 = require("../sharedLeaderboard");
 const events_2 = require("@shared/types/socket/events");
 const helpers_1 = require("../teacherControl/helpers");
 const answer_1 = require("@shared/types/core/answer");
-const canonicalTimerService_1 = require("@/services/canonicalTimerService");
+const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const logger = (0, logger_1.default)('GameAnswerHandler');
 function gameAnswerHandler(io, socket) {
     logger.info({ socketId: socket.id }, 'gameAnswerHandler registered');
     // Define the handler function
     const handler = async (payload) => {
-        // First log to ensure we're receiving the event
-        logger.info('[GAME_ANSWER EVENT RECEIVED]', payload, 'Socket ID:', socket.id, 'Connected:', socket.connected);
-        logger.info({ socketId: socket.id, event: 'game_answer', payload, connected: socket.connected }, 'TOP OF HANDLER: gameAnswerHandler invoked');
+        // === ENTRY LOGGING ===
+        logger.info({
+            socketId: socket.id,
+            event: 'game_answer',
+            entry: true,
+            payload,
+            connected: socket.connected,
+            timestamp: new Date().toISOString()
+        }, '[DIAGNOSTIC] ENTRY: gameAnswerHandler invoked');
+        // Log every received payload, even if invalid
+        logger.info({
+            socketId: socket.id,
+            event: 'game_answer',
+            receivedPayload: payload,
+            timestamp: new Date().toISOString()
+        }, '[DIAGNOSTIC] PAYLOAD RECEIVED in gameAnswerHandler');
         // Variable to track answer correctness, defined at the top level so it's available to all code paths
         let isCorrect = false;
+        let scoringPerformed = false;
+        let scoringMode = 'unknown';
+        let scoringResult = null;
         // Zod validation for payload
         const parseResult = answer_1.AnswerSubmissionPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -36,12 +52,20 @@ function gameAnswerHandler(io, socket) {
                 error: 'Invalid answer submission payload',
                 details: parseResult.error.format(),
                 payload
-            }, 'Zod validation failed for answer submission');
+            }, '[DIAGNOSTIC] EARLY RETURN: Zod validation failed for answer submission');
             socket.emit('answer_feedback', {
                 status: 'error',
                 code: 'INVALID_PAYLOAD',
                 message: 'Invalid answer submission payload.'
             });
+            // Log unconditional early return for invalid payload
+            logger.info({
+                socketId: socket.id,
+                event: 'game_answer',
+                reason: 'invalid_payload',
+                payload,
+                timestamp: new Date().toISOString()
+            }, '[DIAGNOSTIC] EARLY RETURN: Invalid payload in gameAnswerHandler');
             return;
         }
         const validPayload = parseResult.data;
@@ -61,10 +85,19 @@ function gameAnswerHandler(io, socket) {
             });
             logger.debug({ gameInstance }, 'Result of gameInstance lookup');
             if (!gameInstance) {
-                logger.warn({ socketId: socket.id, error: 'Game not found', accessCode }, 'EARLY RETURN: Game instance not found');
+                logger.warn({ socketId: socket.id, error: 'Game not found', accessCode }, '[DIAGNOSTIC] EARLY RETURN: Game instance not found');
                 const errorPayload = { message: 'Game not found.' };
                 logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: game not found');
                 socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                logger.info({
+                    socketId: socket.id,
+                    event: 'game_answer',
+                    reason: 'game_not_found',
+                    accessCode,
+                    userId,
+                    questionUid,
+                    timestamp: new Date().toISOString()
+                }, '[DIAGNOSTIC] EARLY RETURN: Game instance not found in gameAnswerHandler');
                 return;
             }
             if (gameInstance.isDiffered) {
@@ -74,10 +107,19 @@ function gameAnswerHandler(io, socket) {
                 const inDifferedWindow = (!from || now >= from) && (!to || now <= to);
                 logger.debug({ inDifferedWindow, from, to, now }, 'Checking differed window');
                 if (!inDifferedWindow) {
-                    logger.warn({ socketId: socket.id, error: 'Differed mode not available', accessCode }, 'EARLY RETURN: Differed window not available');
+                    logger.warn({ socketId: socket.id, error: 'Differed mode not available', accessCode }, '[DIAGNOSTIC] EARLY RETURN: Differed window not available');
                     const errorPayload = { message: 'Differed mode not available at this time.' };
                     logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: differed window not available');
                     socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                    logger.info({
+                        socketId: socket.id,
+                        event: 'game_answer',
+                        reason: 'differed_window_not_available',
+                        accessCode,
+                        userId,
+                        questionUid,
+                        timestamp: new Date().toISOString()
+                    }, '[DIAGNOSTIC] EARLY RETURN: Differed window not available in gameAnswerHandler');
                     return;
                 }
             }
@@ -97,21 +139,58 @@ function gameAnswerHandler(io, socket) {
             }
             logger.debug({ participant }, 'Result of participant lookup');
             if (!participant) {
-                logger.warn({ socketId: socket.id, error: 'Participant not found', userId, gameInstanceId: gameInstance.id }, 'EARLY RETURN: Participant not found');
+                logger.warn({ socketId: socket.id, error: 'Participant not found', userId, gameInstanceId: gameInstance.id }, '[DIAGNOSTIC] EARLY RETURN: Participant not found');
                 const errorPayload = { message: 'Participant not found.' };
                 logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: participant not found');
                 socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                logger.info({
+                    socketId: socket.id,
+                    event: 'game_answer',
+                    reason: 'participant_not_found',
+                    accessCode,
+                    userId,
+                    questionUid,
+                    timestamp: new Date().toISOString()
+                }, '[DIAGNOSTIC] EARLY RETURN: Participant not found in gameAnswerHandler');
                 return;
             }
+            // After participant lookup, determine DEFERRED mode per participant
+            let isDifferedForLogic = false;
+            if (participant && participant.participationType === 'DEFERRED') {
+                isDifferedForLogic = true;
+            }
+            logger.info({
+                accessCode,
+                userId,
+                questionUid,
+                participationType: participant?.participationType,
+                attemptCount: participant?.attemptCount,
+                isDifferedForLogic,
+                gameInstanceIsDiffered: gameInstance.isDiffered,
+                // Log all answer keys for this user/question in Redis for debugging
+                answerKeys: [
+                    `mathquest:game:answers:${accessCode}:${questionUid}`,
+                    `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
+                ]
+            }, '[DIAGNOSTIC] DEFERRED mode determination and answer key debug for answer logic');
             // Remove completedAt check since field was removed
             // For deferred tournaments, we now allow unlimited replays
             // CRITICAL: Add timer validation before processing answer
             // Fetch current game state to check timer status
             const fullGameState = await (0, gameStateService_1.getFullGameState)(accessCode);
             if (!fullGameState) {
-                logger.warn({ socketId: socket.id, error: 'Game state not found', accessCode }, 'EARLY RETURN: Game state not found');
+                logger.warn({ socketId: socket.id, error: 'Game state not found', accessCode }, '[DIAGNOSTIC] EARLY RETURN: Game state not found');
                 const errorPayload = { message: 'Game state not found.' };
                 socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                logger.info({
+                    socketId: socket.id,
+                    event: 'game_answer',
+                    reason: 'game_state_not_found',
+                    accessCode,
+                    userId,
+                    questionUid,
+                    timestamp: new Date().toISOString()
+                }, '[DIAGNOSTIC] EARLY RETURN: Game state not found in gameAnswerHandler');
                 return;
             }
             const { gameState } = fullGameState;
@@ -124,22 +203,42 @@ function gameAnswerHandler(io, socket) {
                     questionUid,
                     gameStatus: gameState.status,
                     playMode: gameInstance.playMode
-                }, 'EARLY RETURN: Answer submitted but game is not active');
+                }, '[DIAGNOSTIC] EARLY RETURN: Answer submitted but game is not active');
                 const errorPayload = {
                     message: 'Game is not active. Answers cannot be submitted.',
                     code: 'GAME_NOT_ACTIVE'
                 };
                 socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                logger.info({
+                    socketId: socket.id,
+                    event: 'game_answer',
+                    reason: 'game_not_active',
+                    accessCode,
+                    userId,
+                    questionUid,
+                    gameStatus: gameState.status,
+                    playMode: gameInstance.playMode,
+                    timestamp: new Date().toISOString()
+                }, '[DIAGNOSTIC] EARLY RETURN: Game not active in gameAnswerHandler');
                 return;
             }
             // Check if answers are locked
             if (gameState.answersLocked) {
-                logger.warn({ socketId: socket.id, accessCode, userId, questionUid }, 'EARLY RETURN: Answers are locked');
+                logger.warn({ socketId: socket.id, accessCode, userId, questionUid }, '[DIAGNOSTIC] EARLY RETURN: Answers are locked');
                 const errorPayload = {
                     message: 'Answers are locked for this question.',
                     code: 'ANSWERS_LOCKED'
                 };
                 socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                logger.info({
+                    socketId: socket.id,
+                    event: 'game_answer',
+                    reason: 'answers_locked',
+                    accessCode,
+                    userId,
+                    questionUid,
+                    timestamp: new Date().toISOString()
+                }, '[DIAGNOSTIC] EARLY RETURN: Answers locked in gameAnswerHandler');
                 return;
             }
             // Check timer status and expiration
@@ -169,13 +268,24 @@ function gameAnswerHandler(io, socket) {
                         questionUid,
                         timerStatus: timerObj.status,
                         playMode: gameInstance.playMode
-                    }, 'EARLY RETURN: Answer submitted but timer is stopped');
+                    }, '[DIAGNOSTIC] EARLY RETURN: Answer submitted but timer is stopped');
                     const errorPayload = {
                         message: 'Trop tard ! Le temps est écoulé.',
                         code: 'TIMER_STOPPED'
                     };
                     logger.info({ errorPayload, socketId: socket.id }, 'Emitting game_error: timer stopped');
                     socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                    logger.info({
+                        socketId: socket.id,
+                        event: 'game_answer',
+                        reason: 'timer_stopped',
+                        accessCode,
+                        userId,
+                        questionUid,
+                        timerStatus: timerObj.status,
+                        playMode: gameInstance.playMode,
+                        timestamp: new Date().toISOString()
+                    }, '[DIAGNOSTIC] EARLY RETURN: Timer stopped in gameAnswerHandler');
                     return;
                 }
                 // For all modes: check if timer has expired
@@ -194,12 +304,23 @@ function gameAnswerHandler(io, socket) {
                             questionUid,
                             timeLeftMs,
                             playMode: gameInstance.playMode
-                        }, 'EARLY RETURN: Answer submitted after timer expired');
+                        }, '[DIAGNOSTIC] EARLY RETURN: Answer submitted after timer expired');
                         const errorPayload = {
                             message: 'Time has expired for this question.',
                             code: 'TIME_EXPIRED'
                         };
                         socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                        logger.info({
+                            socketId: socket.id,
+                            event: 'game_answer',
+                            reason: 'timer_expired',
+                            accessCode,
+                            userId,
+                            questionUid,
+                            timeLeftMs,
+                            playMode: gameInstance.playMode,
+                            timestamp: new Date().toISOString()
+                        }, '[DIAGNOSTIC] EARLY RETURN: Timer expired in gameAnswerHandler');
                         return;
                     }
                 }
@@ -215,30 +336,30 @@ function gameAnswerHandler(io, socket) {
                 userId,
                 questionUid,
                 playMode: gameInstance.playMode,
-                isDiffered: gameInstance.isDiffered
+                isDiffered: isDifferedForLogic
             }, '[TIMER_DEBUG] About to calculate elapsed time in gameAnswerHandler');
-            if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !gameInstance.isDiffered)) {
+            if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !isDifferedForLogic)) {
                 // Global timer for quiz and live tournament
-                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, gameInstance.isDiffered);
+                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, false);
                 logger.info({
                     accessCode,
                     userId,
                     questionUid,
                     playMode: gameInstance.playMode,
-                    isDiffered: gameInstance.isDiffered,
+                    isDiffered: false,
                     canonicalElapsedMs
                 }, '[TIMER_DEBUG] Canonical elapsed time for answer submission (quiz/live)');
                 timeSpentForSubmission = canonicalElapsedMs ?? 0;
             }
-            else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
+            else if (gameInstance.playMode === 'tournament' && isDifferedForLogic) {
                 // Per-user session timer for differed tournaments
-                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, gameInstance.isDiffered, userId);
+                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, true, userId);
                 logger.info({
                     accessCode,
                     userId,
                     questionUid,
                     playMode: gameInstance.playMode,
-                    isDiffered: gameInstance.isDiffered,
+                    isDiffered: true,
                     canonicalElapsedMs
                 }, '[TIMER_DEBUG] Canonical elapsed time for answer submission (differed)');
                 timeSpentForSubmission = canonicalElapsedMs ?? 0;
@@ -254,9 +375,33 @@ function gameAnswerHandler(io, socket) {
                 timeSpent: timeSpentForSubmission,
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
+                // Do NOT pass isDiffered here; DEFERRED logic is determined by participationType in handler and scoring service
             });
+            scoringPerformed = true;
+            scoringMode = isDifferedForLogic ? 'DEFERRED' : gameInstance.playMode;
+            scoringResult = submissionResult;
+            logger.info({
+                accessCode,
+                userId,
+                questionUid,
+                scoringMode,
+                scoringPerformed,
+                submissionResult,
+                attemptCount: participant?.attemptCount,
+                answerKeyUsed: isDifferedForLogic
+                    ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
+                    : `mathquest:game:answers:${accessCode}:${questionUid}`
+            }, '[DIAGNOSTIC] Scoring service called in gameAnswerHandler (with answer key and attempt)');
             if (!submissionResult.success) {
                 logger.error({ accessCode, userId, questionUid, error: submissionResult.error }, 'Answer submission failed');
+                logger.info({
+                    accessCode,
+                    userId,
+                    questionUid,
+                    scoringMode,
+                    scoringPerformed,
+                    submissionResult
+                }, '[DIAGNOSTIC] EXIT: gameAnswerHandler (submission failed)');
                 socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, {
                     message: submissionResult.error || 'Failed to submit answer',
                     code: 'SUBMISSION_ERROR'
@@ -274,14 +419,19 @@ function gameAnswerHandler(io, socket) {
                     scoreAdded: scoreResult.scoreAdded,
                     totalScore: scoreResult.totalScore,
                     answerChanged: scoreResult.answerChanged,
-                    message: scoreResult.message
-                }, 'Answer processed with scoring result');
+                    message: scoreResult.message,
+                    attemptCount: participant?.attemptCount,
+                    answerKeyUsed: isDifferedForLogic
+                        ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
+                        : `mathquest:game:answers:${accessCode}:${questionUid}`
+                }, '[DIAGNOSTIC] Answer processed with scoring result and answer key');
                 // Emit feedback about the submission
                 if (!scoreResult.scoreUpdated && scoreResult.answerChanged === false) {
                     // Same answer resubmitted
                     socket.emit(events_1.SOCKET_EVENTS.GAME.ANSWER_RECEIVED, {
                         questionUid,
-                        timeSpent
+                        timeSpent,
+                        timePenalty: scoreResult.timePenalty
                     });
                     logger.info({ userId, questionUid, message: 'Duplicate answer - no points added' }, 'Same answer resubmitted');
                 }
@@ -289,7 +439,8 @@ function gameAnswerHandler(io, socket) {
                     // New score awarded
                     socket.emit(events_1.SOCKET_EVENTS.GAME.ANSWER_RECEIVED, {
                         questionUid,
-                        timeSpent
+                        timeSpent,
+                        timePenalty: scoreResult.timePenalty
                     });
                     logger.info({
                         userId,
@@ -303,7 +454,8 @@ function gameAnswerHandler(io, socket) {
                     // Answer recorded but no points
                     socket.emit(events_1.SOCKET_EVENTS.GAME.ANSWER_RECEIVED, {
                         questionUid,
-                        timeSpent
+                        timeSpent,
+                        timePenalty: scoreResult.timePenalty
                     });
                     logger.info({ userId, questionUid, message: 'Answer recorded but no points' }, 'Answer processed');
                 }
@@ -447,6 +599,17 @@ function gameAnswerHandler(io, socket) {
         }
         catch (err) {
             logger.error({ err, accessCode, userId, questionUid }, 'Unexpected error in gameAnswerHandler');
+            logger.info({
+                accessCode,
+                userId,
+                questionUid,
+                scoringMode,
+                scoringPerformed,
+                scoringResult,
+                exit: true,
+                error: err,
+                timestamp: new Date().toISOString()
+            }, '[DIAGNOSTIC] EXIT: gameAnswerHandler (error path)');
             try {
                 // Try to send error response
                 socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, { message: 'Unexpected error during answer submission.' });
@@ -460,6 +623,17 @@ function gameAnswerHandler(io, socket) {
                 logger.error({ emitError, socketId: socket.id }, 'Error sending error response');
             }
         }
+        // At the end of the try block, before returning or exiting:
+        logger.info({
+            accessCode,
+            userId,
+            questionUid,
+            scoringMode,
+            scoringPerformed,
+            scoringResult,
+            exit: true,
+            timestamp: new Date().toISOString()
+        }, '[DIAGNOSTIC] EXIT: gameAnswerHandler (success path)');
     };
     // NOTE: Handler registration is done in game/index.ts to prevent duplicate registrations
     // Do NOT register the handler here: socket.on('game_answer', handler) - REMOVED

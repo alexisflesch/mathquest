@@ -9,7 +9,7 @@ const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const gameParticipantService_1 = require("@/core/services/gameParticipantService");
 const gameTemplateService_1 = require("@/core/services/gameTemplateService");
 // Import specific functions from gameStateService
-const gameStateService_1 = require("@/core/gameStateService");
+const gameStateService_1 = require("@/core/services/gameStateService");
 const prisma_1 = require("@/db/prisma");
 const auth_1 = require("@/middleware/auth");
 const validation_1 = require("@/middleware/validation");

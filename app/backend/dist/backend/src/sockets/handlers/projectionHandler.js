@@ -40,8 +40,8 @@ exports.projectionHandler = projectionHandler;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
-const gameStateService = __importStar(require("@/core/gameStateService"));
-const timerUtils_1 = require("../../core/timerUtils");
+const gameStateService = __importStar(require("@/core/services/gameStateService"));
+const timerUtils_1 = require("../../core/services/timerUtils");
 const gameAuthorization_1 = require("@/utils/gameAuthorization");
 const logger = (0, logger_1.default)('ProjectionHandler');
 /**

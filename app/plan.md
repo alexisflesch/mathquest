@@ -597,21 +597,58 @@ Ensure that time penalties are correctly applied in practice/game mode by tracki
 
 ### Checklist
 - [x] Audit all locations where scoring or answer submission logic exists (API, socket handlers, services, etc).
-- [x] Identify any code paths NOT using `scoringService.ts` (especially for live tournaments).
+- [x] Remove all code paths NOT using `scoringService.ts` (especially for live tournaments).
 - [x] Refactor all answer submission and scoring logic to use `submitAnswerWithScoring` from `scoringService.ts` exclusively. (DONE 2025-06-22)
-- [x] Remove or deprecate legacy/duplicate logic in `gameStateService.ts`, `sharedScore.ts`, and any other modules. (DONE 2025-06-22)
+- [x] Deprecate/remove legacy/duplicate logic in `gameStateService.ts`, `sharedScore.ts`, and any other modules. (DONE 2025-06-22)
 - [x] Update all socket handlers to use canonical shared types and Zod validation. (DONE 2025-06-22)
-- [x] Audit and fix differed tournament timer logic to ensure per-user/per-attempt timer is used (IN PROGRESS 2025-06-22)
-    - [x] Add diagnostic logging to differed tournament timer logic to confirm per-user/per-attempt state is used (2025-06-22)
-- [x] Audit and fix best score logic for differed tournaments to keep best score across attempts (IN PROGRESS 2025-06-22)
-    - [x] Add diagnostic logging to best score logic for differed tournaments (2025-06-22)
-- [ ] Test and validate with a differed tournament session (Agathe in 3177, expect nonzero score if answers submitted).
-- [ ] Add/verify tests for all scoring flows (quiz, live tournament, deferred, practice).
-- [ ] Document all changes, rationale, and test results in `plan.md` and `log.md`.
+- [x] Confirm live tournament and quiz scoring work as intended.
+- [x] Add modernization/deprecation notices to all relevant files.
+- [x] Update `plan.md` with new phases, checklists, and audit results.
+- [x] Remove all legacy calls to `gameStateService.calculateScores` in API, socket handlers, and tests.
+- [x] Update tests to use canonical scoring logic and required payloads.
+- [x] Add diagnostic logging to DEFERRED tournament timer logic in `deferredTournamentFlow.ts` and best score logic in `gameParticipantService.ts`.
+- [x] Locate and update all relevant files for DEFERRED attempt and best score logic: `gameParticipantService.ts`, `deferredTournamentFlow.ts`, `scoringService.ts`.
+- [x] Implement answer isolation for DEFERRED attempts: answers are now namespaced by `attemptCount` in Redis.
+- [x] Update `collectAnswers` and `getFullGameState` to support attempt-based answer keys and add diagnostic logging.
+- [x] Audit answer stats, leaderboard, and game state code for attempt-based answer retrieval.
+- [x] User retested and provided logs for new games (e.g., 3165, 3186, 3187, 3188).
+- [x] Investigate game 3187 and 3188 and determined the root cause is that DEFERRED answer submissions for Agathe are not being processed by the canonical scoring flow, and her score remains 0.
+- [x] Add unconditional diagnostic logging to the legacy `calculateScores` function to catch any accidental or indirect invocations at runtime.
+- [x] Audit `gameAnswer.ts` and confirmed that all answer submission and scoring logic is supposed to be routed through `scoringService.ts` (`submitAnswerWithScoring`), but actual calls to `submitAnswerWithScoring` are missing or not found in the handler.
+- [x] Audit and instrument `gameAnswer.ts` to add unconditional diagnostic logging at entry and exit, logging mode, userId, accessCode, questionUid, and whether scoring was performed.
+- [x] Explicitly log the result of the scoring call for all modes, especially DEFERRED.
+- [ ] Test and validate with user (Agathe) to confirm the fix for DEFERRED scoring and answer processing.
 
-#### 2025-06-22: Differed tournament issues found
-- Timer for differed tournaments previously used the live/global timer (should be per-user/per-attempt). Now fixed to use per-user/per-attempt timer.
-- Score reset to 0 on replay instead of keeping the best score across attempts. Now fixed to keep best score across attempts.
-- All differed tournament answer and scoring flows now use canonical `submitAnswerWithScoring` logic. Legacy code removed/deprecated.
-- Diagnostic logging added for differed answer submissions, timer, and best score logic.
-- Next: Test and validate with a differed tournament session (e.g., Agathe in 3177), add/verify tests for all scoring flows, and document results.
+---
+
+## Phase X: DEFERRED Tournament Scoring & Best Score Diagnostics (2025-06-22)
+
+### Goal: 
+- Ensure best score logic and answer isolation work for DEFERRED tournaments across multiple attempts.
+- Add diagnostic logging to all critical paths: best score update, answer isolation, and scoring for DEFERRED attempts.
+
+### Checklist:
+- [ ] Add diagnostic logging to best score update logic in `gameParticipantService.ts` (log previous, new, and best score, and when best score is preserved or updated).
+- [ ] Add diagnostic logging to answer isolation and attempt-based answer key usage in `scoringService.ts` (log answer key, attempt, and duplicate/ignored answer cases).
+- [ ] Add logging for all DEFERRED answer submissions, including when a score is not updated due to duplicate or lower score.
+- [ ] Test: Submit multiple DEFERRED attempts and confirm logs show correct best score logic and answer isolation.
+- [ ] Document findings and update checklist after validation.
+
+---
+
+## Phase X: Backend-Only Timer Logic for DEFERRED Tournaments (2025-06-22)
+
+### Goal:
+- Ensure time penalty logic for DEFERRED tournaments is fully backend-driven, DRY, and mirrors LIVE tournament logic.
+- No timing data is trusted from the frontend; all timing is tracked and calculated by the backend.
+
+### Checklist:
+- [ ] On DEFERRED question start, store a timer start timestamp in Redis, keyed by (accessCode, userId, questionUid, attemptCount).
+- [ ] On DEFERRED answer submit, fetch the timer start timestamp from Redis and compute the time delta.
+- [ ] Use the computed time delta in `calculateAnswerScore` for penalty calculation (identical to LIVE logic).
+- [ ] Add diagnostic logging for timer key, start timestamp, time delta, and penalty applied.
+- [ ] Add fallback logic if timer start is missing (log warning, apply max penalty or no penalty as appropriate).
+- [ ] Test: Multiple DEFERRED attempts, verify logs and scores reflect correct time penalty.
+- [ ] Document findings and update checklist after validation.
+
+---

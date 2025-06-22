@@ -9,7 +9,7 @@ exports.getAnswerStats = getAnswerStats;
 const prisma_1 = require("@/db/prisma");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
+const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('TeacherControlHelpers');
 // Redis key prefixes

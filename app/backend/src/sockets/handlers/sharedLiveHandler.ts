@@ -2,7 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { calculateLeaderboard } from './sharedLeaderboard';
 import { collectAnswers } from './sharedAnswers';
 import createLogger from '@/utils/logger';
-import { getFullGameState, GameState } from '@/core/gameStateService';
+import { getFullGameState, GameState } from '@/core/services/gameStateService';
 import { redisClient as redis } from '@/config/redis';
 import { GAME_EVENTS, TOURNAMENT_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';
 import type {

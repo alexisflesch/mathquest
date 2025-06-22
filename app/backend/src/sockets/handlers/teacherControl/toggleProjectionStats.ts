@@ -4,7 +4,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { ToggleProjectionStatsPayload } from '@shared/types/socket/payloads';
 import createLogger from '@/utils/logger';
 import { getAnswerStats } from './helpers';
-import { updateProjectionDisplayState } from '@/core/gameStateService';
+import { updateProjectionDisplayState } from '@/core/services/gameStateService';
 
 // Create a handler-specific logger
 const logger = createLogger('ToggleProjectionStatsHandler');

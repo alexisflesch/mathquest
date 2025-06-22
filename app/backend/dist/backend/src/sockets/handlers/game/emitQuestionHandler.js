@@ -8,7 +8,7 @@ const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
 const questionTypes_1 = require("@shared/constants/questionTypes");
-const canonicalTimerService_1 = require("@/services/canonicalTimerService");
+const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const redis_1 = require("@/config/redis");
 const logger = (0, logger_1.default)('EmitQuestionHandler');
 function emitQuestionHandler(io, socket) {

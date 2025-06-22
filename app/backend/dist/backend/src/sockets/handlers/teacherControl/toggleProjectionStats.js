@@ -8,7 +8,7 @@ const prisma_1 = require("@/db/prisma");
 const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const helpers_1 = require("./helpers");
-const gameStateService_1 = require("@/core/gameStateService");
+const gameStateService_1 = require("@/core/services/gameStateService");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('ToggleProjectionStatsHandler');
 /**

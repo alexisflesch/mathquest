@@ -5,7 +5,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
 import { prisma } from '@/db/prisma';
 import { emitQuestionHandler } from './game/emitQuestionHandler';

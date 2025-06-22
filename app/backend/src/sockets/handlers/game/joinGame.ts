@@ -4,7 +4,7 @@ import createLogger from '@/utils/logger';
 import { redisClient } from '@/config/redis';
 import { z } from 'zod';
 import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 // Import shared types
 import {
@@ -24,7 +24,7 @@ import {
 import { GAME_EVENTS } from '@shared/types/socket/events';
 // Import core participant types
 import { GameParticipant, ParticipantData } from '@shared/types/core/participant';
-import { calculateTimerForLateJoiner } from '../../../core/timerUtils';
+import { calculateTimerForLateJoiner } from '../../../core/services/timerUtils';
 import { assignJoinOrderBonus } from '@/utils/joinOrderBonus';
 import { broadcastLeaderboardToProjection } from '@/utils/projectionLeaderboardBroadcast';
 import { joinGame as joinGameModular } from '@/core/services/gameParticipant/joinService';

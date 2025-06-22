@@ -2,7 +2,7 @@ import { Server } from 'socket.io';
 import ClientIO from 'socket.io-client';
 import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
-import gameStateService from '../../src/core/gameStateService';
+import gameStateService from '../../src/core/services/gameStateService';
 import jwt from 'jsonwebtoken';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 

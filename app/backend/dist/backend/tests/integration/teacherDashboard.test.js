@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const socket_io_client_1 = require("socket.io-client");
 const prisma_1 = require("../../src/db/prisma");
 const testSetup_1 = require("../testSetup");
-const gameStateService_1 = __importDefault(require("../../src/core/gameStateService"));
+const gameStateService_1 = __importDefault(require("../../src/core/services/gameStateService"));
 const testQuestions_1 = require("../support/testQuestions");
 const logger_1 = __importDefault(require("../../src/utils/logger"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));

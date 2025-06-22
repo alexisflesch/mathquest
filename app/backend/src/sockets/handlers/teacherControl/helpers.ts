@@ -1,7 +1,7 @@
 import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import { GameControlStatePayload, QuestionForDashboard } from './types';
 import type { GameTimerState } from '@shared/types/core/timer';
 

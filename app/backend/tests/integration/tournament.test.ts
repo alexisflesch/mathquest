@@ -12,7 +12,7 @@ import { startTestServer } from '../testSetup';
 import { testQuestions } from '../support/testQuestions';
 import { redisClient } from '@/config/redis';
 import { closeSocketIORedisClients } from '@/sockets';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

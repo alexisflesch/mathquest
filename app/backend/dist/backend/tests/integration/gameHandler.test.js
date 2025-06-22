@@ -7,7 +7,7 @@ const socket_io_client_1 = __importDefault(require("socket.io-client"));
 const testSetup_1 = require("../testSetup");
 const prisma_1 = require("../../src/db/prisma");
 const redis_1 = require("../../src/config/redis");
-const gameStateService_1 = __importDefault(require("../../src/core/gameStateService"));
+const gameStateService_1 = __importDefault(require("../../src/core/services/gameStateService"));
 const jwt_1 = __importDefault(require("../helpers/jwt"));
 const questionTypes_1 = require("@shared/constants/questionTypes");
 // Global test variables

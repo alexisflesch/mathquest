@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runGameFlow = runGameFlow;
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const gameStateService_1 = __importDefault(require("@/core/gameStateService"));
+const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
 const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
 const prisma_1 = require("@/db/prisma");
 const emitQuestionHandler_1 = require("./game/emitQuestionHandler");

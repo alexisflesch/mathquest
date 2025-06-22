@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const socket_io_client_1 = __importDefault(require("socket.io-client"));
 const testSetup_1 = require("../testSetup");
 const prisma_1 = require("../../src/db/prisma");
-const gameStateService_1 = __importDefault(require("../../src/core/gameStateService"));
+const gameStateService_1 = __importDefault(require("../../src/core/services/gameStateService"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const questionTypes_1 = require("@shared/constants/questionTypes");
 // Helper to wait for an event with timeout

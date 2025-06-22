@@ -1,7 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
-import gameStateService, { GameState } from '@/core/gameStateService';
+import gameStateService, { GameState } from '@/core/services/gameStateService';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
 import createLogger from '@/utils/logger';
 import { TimerActionPayload } from './types';
@@ -15,7 +15,7 @@ import type {
 } from '@shared/types/socket/dashboardPayloads';
 import { timerActionPayloadSchema } from '@shared/types/socketEvents.zod';
 import { emitQuestionHandler } from '../game/emitQuestionHandler';
-import { CanonicalTimerService } from '@/services/canonicalTimerService';
+import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 
 // Create a handler-specific logger
 const logger = createLogger('TimerActionHandler');

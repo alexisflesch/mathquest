@@ -9,7 +9,7 @@ import ClientIO from 'socket.io-client';
 import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
 import { redisClient } from '../../src/config/redis';
-import gameStateService from '../../src/core/gameStateService';
+import gameStateService from '../../src/core/services/gameStateService';
 
 // Global test variables
 let io: Server;

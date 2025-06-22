@@ -45,8 +45,8 @@ const helpers_1 = require("./helpers");
 const events_1 = require("@shared/types/socket/events");
 const participantCountUtils_1 = require("@/sockets/utils/participantCountUtils");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
-const timerUtils_1 = require("@/core/timerUtils");
-const gameStateService = __importStar(require("@/core/gameStateService"));
+const timerUtils_1 = require("@/core/services/timerUtils");
+const gameStateService = __importStar(require("@/core/services/gameStateService"));
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('JoinDashboardHandler');
 function joinDashboardHandler(io, socket) {

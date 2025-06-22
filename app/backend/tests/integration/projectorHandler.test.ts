@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import Client, { Socket as ClientSocket } from 'socket.io-client';
 import { registerHandlers } from '@/sockets/index';
 import { prisma } from '@/db/prisma';
-import gameStateService from '@/core/gameStateService';
+import gameStateService from '@/core/services/gameStateService';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 
 describe('Projector Mode Socket Handler', () => {

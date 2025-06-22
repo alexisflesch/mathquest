@@ -9,8 +9,8 @@ import { TEACHER_EVENTS } from '@shared/types/socket/events';
 import { getParticipantCount } from '@/sockets/utils/participantCountUtils';
 import { joinDashboardPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { ErrorPayload } from '@shared/types/socketEvents';
-import { calculateTimerForLateJoiner } from '@/core/timerUtils';
-import * as gameStateService from '@/core/gameStateService';
+import { calculateTimerForLateJoiner } from '@/core/services/timerUtils';
+import * as gameStateService from '@/core/services/gameStateService';
 
 // Create a handler-specific logger
 const logger = createLogger('JoinDashboardHandler');
