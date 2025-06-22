@@ -83,6 +83,10 @@ export async function startDeferredTournamentSession(
         questionCount: questions.length
     }, 'Starting deferred tournament session');
 
+    // Catch-all entry log
+    // Place entry log after accessCode and userId are defined
+    logger.info({ accessCode, userId, logPoint: 'DEFERRED_SESSION_ENTRY' }, '[DEBUG] Entered startDeferredTournamentSession');
+
     try {
         // Initialize individual game state for this player
         const playerGameState: GameState = {
@@ -162,6 +166,10 @@ async function runDeferredQuestionSequence(
         // Process each question sequentially
         for (let i = 0; i < questions.length; i++) {
             const question = questions[i];
+            // Only declare attemptCount once per loop iteration
+            const attemptCount = await getDeferredAttemptCount(accessCode, userId);
+            logger.info({ accessCode, userId, attemptCount, questionUid: question.uid, logPoint: 'DEFERRED_QUESTION_LOOP_ENTRY' }, '[DEBUG] Entered deferred tournament question loop');
+
             const timeLimitSec = question.timeLimit || 30;
             const durationMs = timeLimitSec * 1000;
 
@@ -185,8 +193,20 @@ async function runDeferredQuestionSequence(
 
             // [MODERNIZATION] Ensure timer is per-user/per-attempt for DEFERRED mode
             // Timer key: mathquest:deferred:timer:{accessCode}:{userId}:{attemptCount}:{questionUid}
-            const attemptCount = await getDeferredAttemptCount(accessCode, userId);
             const timerKey = `mathquest:deferred:timer:${accessCode}:${userId}:${attemptCount}:${question.uid}`;
+
+            // Always log timer key and context when creating timer
+            logger.info({
+                accessCode,
+                userId,
+                attemptCount,
+                questionUid: question.uid,
+                timerKey, // <--- LOG TIMER KEY
+                timer,
+                logPoint: 'TIMER_CREATION_DEFERRED',
+                serverTimestamp: Date.now(),
+                participantAttemptCount: attemptCount
+            }, '[TIMER_DEBUG] Creating new timer for deferred tournament question');
 
             // Check if a timer already exists for this attempt/question (should not, unless retrying same question in same attempt)
             const existingTimerRaw = await redisClient.get(timerKey);
@@ -196,14 +216,16 @@ async function runDeferredQuestionSequence(
                     userId,
                     attemptCount,
                     timerKey,
-                    existingTimer: JSON.parse(existingTimerRaw)
+                    existingTimer: JSON.parse(existingTimerRaw),
+                    logPoint: 'TIMER_EXISTS_DEFERRED'
                 }, '[DIAGNOSTIC] Timer already exists for this attempt/question (possible reuse or leakage)');
             } else {
                 logger.info({
                     accessCode,
                     userId,
                     attemptCount,
-                    timerKey
+                    timerKey,
+                    logPoint: 'TIMER_NOT_EXISTS_DEFERRED'
                 }, '[DIAGNOSTIC] No existing timer for this attempt/question, creating new timer');
             }
 
@@ -212,9 +234,13 @@ async function runDeferredQuestionSequence(
                 accessCode,
                 userId,
                 attemptCount,
+                questionUid: question.uid,
                 timerKey,
-                timer
-            }, '[DIAGNOSTIC] Set per-user/per-attempt timer for DEFERRED mode');
+                timer,
+                logPoint: 'TIMER_SET_DEFERRED',
+                serverTimestamp: Date.now(),
+                participantAttemptCount: attemptCount
+            }, '[TIMER_DEBUG] Timer set in Redis for deferred tournament question');
 
             // [EXTRA LOGGING] Log all timers for this user/attempt for this game (debugging timer leakage)
             try {

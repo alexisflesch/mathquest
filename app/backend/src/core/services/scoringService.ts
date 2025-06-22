@@ -163,7 +163,7 @@ export async function submitAnswerWithScoring(
         logger.info({ gameInstanceId, userId, playMode: gameInstance?.playMode, isDiffered: gameInstance?.isDiffered }, '[LOG] GameInstance fetch result');
         // Determine answer key (namespace by attempt for DEFERRED)
         let answerKey: string;
-        let attemptCount = participant.attemptCount || 1;
+        const attemptCount = participant.attemptCount;
         // FIX: Always use attempt-namespaced key for DEFERRED participants
         if (participant.participationType === 'DEFERRED') {
             answerKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}:${attemptCount}`;
@@ -296,23 +296,101 @@ export async function submitAnswerWithScoring(
         } else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
             // DEFERRED tournament: timer must be per-user/per-attempt
             serverTimeSpent = typeof answerData.timeSpent === 'number' ? answerData.timeSpent : 0;
+            // Defensive: If timer is missing/null, force timeSpent = 0 to avoid incorrect penalty
+            const timerKey = `mathquest:deferred:timer:${gameInstance.accessCode}:${userId}:${attemptCount}:${answerData.questionUid}`;
+            let timerValue = null;
+            logger.info({
+                gameInstanceId,
+                userId,
+                accessCode: gameInstance.accessCode,
+                questionUid: answerData.questionUid,
+                attemptCount,
+                timerKey,
+                serverTimestamp: Date.now(),
+                logPoint: 'TIMER_LOOKUP_DEFERRED_ENTRY'
+            }, '[TIMER_DEBUG] Entering timer lookup for DEFERRED answer submission');
+            try {
+                timerValue = await redisClient.get(timerKey);
+                logger.info({
+                    gameInstanceId,
+                    userId,
+                    timerKey,
+                    timerValueRaw: timerValue,
+                    logPoint: 'TIMER_GET_DEFERRED',
+                    serverTimestamp: Date.now(),
+                    attemptCount,
+                    accessCode: gameInstance.accessCode,
+                    questionUid: answerData.questionUid
+                }, '[TIMER_DEBUG] Timer value fetched from Redis for DEFERRED');
+                let timerObj = null;
+                if (timerValue) {
+                    try {
+                        timerObj = JSON.parse(timerValue);
+                    } catch (parseErr) {
+                        logger.error({ gameInstanceId, userId, timerKey, timerValue, parseErr, logPoint: 'TIMER_PARSE_ERROR_DEFERRED' }, '[TIMER_DEBUG] Error parsing timer value from Redis');
+                    }
+                }
+                logger.info({
+                    gameInstanceId,
+                    userId,
+                    timerKey,
+                    timerObj,
+                    logPoint: 'TIMER_OBJECT_DEFERRED',
+                    serverTimestamp: Date.now(),
+                    attemptCount,
+                    accessCode: gameInstance.accessCode,
+                    questionUid: answerData.questionUid
+                }, '[TIMER_DEBUG] Timer object at lookup for DEFERRED');
+                // Log all time math for expiry calculation
+                if (timerObj && timerObj.timestamp && timerObj.durationMs) {
+                    const now = Date.now();
+                    const elapsed = now - timerObj.timestamp;
+                    const timeLeft = timerObj.durationMs - elapsed;
+                    logger.info({
+                        gameInstanceId,
+                        userId,
+                        timerKey,
+                        timerTimestamp: timerObj.timestamp,
+                        timerDurationMs: timerObj.durationMs,
+                        now,
+                        elapsed,
+                        timeLeft,
+                        logPoint: 'TIMER_EXPIRE_CALC_DEFERRED',
+                        attemptCount,
+                        accessCode: gameInstance.accessCode,
+                        questionUid: answerData.questionUid
+                    }, '[TIMER_DEBUG] Timer expiry calculation for DEFERRED');
+                }
+            } catch (timerFetchError) {
+                logger.error({ gameInstanceId, userId, timerKey, timerFetchError, logPoint: 'TIMER_FETCH_ERROR_DEFERRED', serverTimestamp: Date.now(), attemptCount, accessCode: gameInstance.accessCode, questionUid: answerData.questionUid }, '[TIMER_DEBUG] Error fetching timer value from Redis');
+            }
+            if (timerValue === null || timerValue === undefined) {
+                logger.warn({ gameInstanceId, userId, timerKey, note: 'Timer missing/null for DEFERRED mode, forcing serverTimeSpent = 0' }, '[TIMER_DEBUG] Defensive: Forcing serverTimeSpent = 0 for DEFERRED');
+                serverTimeSpent = 0;
+            }
             timerDebugInfo = {
                 playMode: gameInstance.playMode,
                 isDiffered: gameInstance.isDiffered,
                 answerDataTimeSpent: answerData.timeSpent,
                 serverTimeSpent,
                 canonical: true,
-                note: 'Timer is per-user/per-attempt for DEFERRED mode.'
+                timerKey,
+                timerValue,
+                attemptCount, // Log attemptCount used for lookup
+                userId,
+                questionUid: answerData.questionUid,
+                logPoint: 'TIMER_LOOKUP_DEFERRED'
             };
             logger.info({
                 gameInstanceId,
                 userId,
                 questionUid: answerData.questionUid,
                 attemptCount,
-                serverTimeSpent,
+                timerKey,
+                timerValue,
                 timerDebugInfo,
                 note: 'Timer/penalty logic for DEFERRED answer submission.'
-            }, '[DIAGNOSTIC] Timer/penalty logic for DEFERRED answer submission');
+            }, '[TIMER_DEBUG] Timer/penalty logic for DEFERRED answer submission');
         }
         logger.info({
             gameInstanceId,

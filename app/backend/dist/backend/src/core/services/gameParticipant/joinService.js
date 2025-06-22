@@ -101,7 +101,15 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
                     data: { joinedAt: new Date(), score: 0, attemptCount: { increment: 1 } },
                     include: { user: true }
                 });
-                logger.info({ userId, accessCode, participantId: participant.id, participationType: participant.participationType, attemptCount: participant.attemptCount, resetScore: participant.score }, 'Updated existing DEFERRED participant for new attempt');
+                logger.info({
+                    userId,
+                    accessCode,
+                    participantId: participant.id,
+                    participationType: participant.participationType,
+                    attemptCount: participant.attemptCount,
+                    resetScore: participant.score,
+                    logPoint: 'DEFERRED_PARTICIPANT_EXISTING_UPDATED'
+                }, 'Updated existing DEFERRED participant for new attempt');
             }
             else {
                 const newParticipant = await prisma_1.prisma.gameParticipant.create({
@@ -115,7 +123,14 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
                     }
                 });
                 participant = await prisma_1.prisma.gameParticipant.findUnique({ where: { id: newParticipant.id }, include: { user: true } });
-                logger.info({ userId, accessCode, participantId: participant?.id, participationType: 'DEFERRED' }, 'Created new DEFERRED participant');
+                logger.info({
+                    userId,
+                    accessCode,
+                    participantId: participant?.id,
+                    participationType: 'DEFERRED',
+                    attemptCount: participant?.attemptCount,
+                    logPoint: 'DEFERRED_PARTICIPANT_CREATED'
+                }, 'Created new DEFERRED participant');
             }
         }
         return { success: true, gameInstance, participant };

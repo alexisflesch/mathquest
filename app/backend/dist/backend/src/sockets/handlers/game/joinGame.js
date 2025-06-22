@@ -346,8 +346,6 @@ function joinGameHandler(io, socket) {
             // CRITICAL FIX: Start deferred tournament game flow for individual player
             if (gameInstance.status === 'completed' && gameInstance.playMode === 'tournament') {
                 logger.info({ accessCode, userId }, 'Starting deferred tournament game flow for individual player');
-                // Import runGameFlow here to avoid circular dependencies
-                const { runGameFlow } = await Promise.resolve().then(() => __importStar(require('../sharedGameFlow')));
                 // Get questions for this tournament
                 const gameInstanceWithQuestions = await prisma_1.prisma.gameInstance.findUnique({
                     where: { id: gameInstance.id },
@@ -368,31 +366,9 @@ function joinGameHandler(io, socket) {
                         .filter(q => q != null);
                     if (actualQuestions.length > 0) {
                         logger.info({ accessCode, userId, questionCount: actualQuestions.length }, 'Starting individual deferred tournament game flow');
-                        // Start game flow for this individual player
-                        // Use a unique room identifier for this player's session
-                        const playerRoom = `game_${accessCode}_${userId}`;
-                        socket.join(playerRoom);
-                        // Get current game state and merge updates
-                        const currentState = await gameStateService_1.default.getFullGameState(accessCode);
-                        if (currentState && currentState.gameState) {
-                            const updatedState = {
-                                ...currentState.gameState,
-                                status: 'active',
-                                currentQuestionIndex: 0,
-                                timer: {
-                                    status: 'play',
-                                    timeLeftMs: (actualQuestions[0]?.timeLimit || 30) * 1000,
-                                    durationMs: (actualQuestions[0]?.timeLimit || 30) * 1000,
-                                    questionUid: actualQuestions[0]?.uid || null,
-                                    timestamp: Date.now(),
-                                    localTimeLeftMs: null
-                                }
-                            };
-                            await gameStateService_1.default.updateGameState(accessCode, updatedState);
-                        }
-                        // Start the individual game flow using the player-specific room
-                        runGameFlow(io, accessCode, // Keep the same access code for game state consistency
-                        actualQuestions, { playMode: 'tournament' });
+                        // Use the new per-user deferred session logic
+                        const { startDeferredTournamentSession } = await Promise.resolve().then(() => __importStar(require('../deferredTournamentFlow')));
+                        await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions);
                     }
                 }
             }

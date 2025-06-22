@@ -76,9 +76,10 @@ export function emitQuestionHandler(
             playMode: gameInstance.playMode,
             isDiffered: gameInstance.isDiffered
         }, '[TIMER_DEBUG] About to start timer in emitQuestionHandler');
-        // Always start timer for quiz and live tournament (not just quiz)
+        // Always reset and start timer for all modes except practice
         if ((gameInstance.playMode === 'quiz' || gameInstance.playMode === 'tournament') && !gameInstance.isDiffered) {
             // Global timer for quiz and live tournament
+            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
             await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
             const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
             logger.info({
@@ -88,7 +89,7 @@ export function emitQuestionHandler(
                 playMode: gameInstance.playMode,
                 isDiffered: gameInstance.isDiffered,
                 elapsed
-            }, '[TIMER_DEBUG] Timer started and elapsed calculated in emitQuestionHandler');
+            }, '[TIMER_DEBUG] Timer reset, started, and elapsed calculated in emitQuestionHandler');
             timerPayload = {
                 status: 'play',
                 timeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed,
@@ -99,6 +100,7 @@ export function emitQuestionHandler(
             };
         } else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
             // Per-user session timer for differed tournaments
+            await canonicalTimerService.resetTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
             await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
             const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
             logger.info({
@@ -108,7 +110,7 @@ export function emitQuestionHandler(
                 playMode: gameInstance.playMode,
                 isDiffered: gameInstance.isDiffered,
                 elapsed
-            }, '[TIMER_DEBUG] Timer started and elapsed calculated in emitQuestionHandler (differed)');
+            }, '[TIMER_DEBUG] Timer reset, started, and elapsed calculated in emitQuestionHandler (differed)');
             timerPayload = {
                 status: 'play',
                 timeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed,
