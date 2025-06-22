@@ -8,8 +8,7 @@
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { redisClient } from '@/config/redis';
-import { TimingService } from '@/services/timingService';
-import type { AnswerSubmissionPayload } from '@shared/types';
+import type { AnswerSubmissionPayload } from '@shared/types/core/answer';
 
 const logger = createLogger('ScoringService');
 
@@ -142,32 +141,52 @@ export async function submitAnswerWithScoring(
             };
         }
 
-        logger.info({
-            gameInstanceId,
-            userId,
-            participantId: participant.id,
-            currentScore: participant.score,
-            participationType: participant.participationType,
-            attemptCount: participant.attemptCount,
-            joinedAt: participant.joinedAt
-        }, 'BUG INVESTIGATION: Found participant in scoring service');
-
-        // Since we removed the answers field, we'll track answers in Redis instead
-        // For now, let's simplify and assume each answer submission is new
-        const currentAnswers: any[] = [];
-
-        // TODO: Implement Redis-based answer tracking if needed for duplicate detection
-
-        // Find existing answer for this question
-        const existingAnswerIndex = currentAnswers.findIndex(
-            (ans: any) => ans.questionUid === answerData.questionUid
-        );
-
-        const existingAnswer = existingAnswerIndex >= 0 ? currentAnswers[existingAnswerIndex] as any : null;
-
-        // Check if this is the same answer as before
-        const isSameAnswer = existingAnswer && existingAnswer.answer === answerData.answer;
-
+        // Fetch previous answer from Redis (if any)
+        let previousAnswerObj: any = null;
+        let previousScore = 0;
+        let previousIsCorrect = false;
+        let previousAnswer: any = undefined;
+        let previousAnswerExists = false;
+        let gameInstance: any = null;
+        gameInstance = await prisma.gameInstance.findUnique({
+            where: { id: gameInstanceId },
+            select: { playMode: true, accessCode: true }
+        });
+        if (gameInstance) {
+            const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}`;
+            const prev = await redisClient.hget(redisKey, userId);
+            if (prev) {
+                previousAnswerObj = JSON.parse(prev);
+                previousScore = previousAnswerObj.score || 0;
+                previousIsCorrect = previousAnswerObj.isCorrect || false;
+                previousAnswer = previousAnswerObj.answer;
+                previousAnswerExists = true;
+            }
+        }
+        // Compare new answer to previous answer (handle single/multiple choice)
+        let isSameAnswer = false;
+        if (previousAnswerExists) {
+            const a1 = answerData.answer;
+            const a2 = previousAnswer;
+            if (Array.isArray(a1) && Array.isArray(a2)) {
+                const arr1 = a1 as any[];
+                const arr2 = a2 as any[];
+                // Multiple choice: compare arrays (order-insensitive)
+                isSameAnswer =
+                    arr1.length === arr2.length &&
+                    arr1.every((v) => arr2.includes(v)) &&
+                    arr2.every((v) => arr1.includes(v));
+            } else if (
+                (typeof a1 === 'string' || typeof a1 === 'number' || typeof a1 === 'boolean') &&
+                (typeof a2 === 'string' || typeof a2 === 'number' || typeof a2 === 'boolean')
+            ) {
+                // Single choice: compare directly
+                isSameAnswer = a1 === a2;
+            } else {
+                // Fallback: not the same
+                isSameAnswer = false;
+            }
+        }
         if (isSameAnswer) {
             // Same answer - no score update, just return current state
             logger.info({
@@ -175,193 +194,58 @@ export async function submitAnswerWithScoring(
                 userId,
                 questionUid: answerData.questionUid,
                 answer: answerData.answer,
-                previousAnswer: existingAnswer.answer
+                previousAnswer
             }, 'Same answer resubmitted - no score update');
-
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
                 totalScore: participant.score || 0,
                 answerChanged: false,
-                previousAnswer: existingAnswer?.answer,
+                previousAnswer,
                 message: 'Same answer already submitted'
             };
         }
-
         // Different answer or first submission - proceed with scoring
         const question = await prisma.question.findUnique({
             where: { uid: answerData.questionUid }
         });
-
         if (!question) {
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
                 totalScore: participant.score || 0,
-                answerChanged: !!existingAnswer,
-                previousAnswer: existingAnswer?.answer,
+                answerChanged: previousAnswerExists,
+                previousAnswer,
                 message: 'Question not found'
             };
         }
-
-        // Calculate server-side timing
-        const gameInstance = await prisma.gameInstance.findUnique({
-            where: { id: gameInstanceId },
-            select: { playMode: true, accessCode: true }
-        });
-        if (!gameInstance) {
-            return {
-                scoreUpdated: false,
-                scoreAdded: 0,
-                totalScore: participant.score || 0,
-                answerChanged: !!existingAnswer,
-                previousAnswer: existingAnswer?.answer,
-                message: 'Game instance not found'
-            };
+        // Calculate server-side timing (factorized by mode)
+        let serverTimeSpent: number = 0;
+        if (gameInstance.playMode === 'practice') {
+            // Practice mode: no timer
+            serverTimeSpent = 0;
+        } else if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !gameInstance.isDiffered)) {
+            // Quiz and live tournament: timer attached to GameInstance
+            serverTimeSpent = typeof answerData.timeSpent === 'number' ? answerData.timeSpent : 0;
+        } else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
+            // Differed tournament: timer attached to GameParticipant
+            serverTimeSpent = typeof answerData.timeSpent === 'number' ? answerData.timeSpent : 0;
         }
-        let serverTimeSpent: number;
-        if (gameInstance.playMode === 'quiz' && typeof answerData.timeSpent === 'number') {
-            // Use canonical timer value for quiz mode
-            serverTimeSpent = answerData.timeSpent;
-            logger.info({
-                questionUid: answerData.questionUid,
-                userId,
-                serverTimeSpent,
-                source: 'canonicalTimerService',
-                playMode: gameInstance.playMode
-            }, 'Using canonical timer for quiz mode');
-        } else {
-            // Use per-user timing for other modes
-            serverTimeSpent = await TimingService.calculateAndCleanupTimeSpent(
-                gameInstance.accessCode,
-                answerData.questionUid,
-                userId
-            );
-            logger.info({
-                questionUid: answerData.questionUid,
-                userId,
-                serverTimeSpent,
-                source: 'TimingService',
-                playMode: gameInstance.playMode
-            }, 'Using per-user timer for non-quiz mode');
-        }
-
-        logger.info({
-            questionUid: answerData.questionUid,
-            userId,
-            questionType: question.questionType,
-            serverTimeSpent,
-            answer: answerData.answer
-        }, 'DIAGNOSTIC: Time penalty and question type before score calculation');
-
-        // Check answer correctness
-        logger.info({
-            questionUid: answerData.questionUid,
-            userId,
-            answer: answerData.answer,
-            questionCorrectAnswers: question.correctAnswers,
-            questionType: question.questionType
-        }, 'DEBUG: Checking answer correctness input');
         const isCorrect = checkAnswerCorrectness(question, answerData.answer);
-        logger.info({
-            questionUid: answerData.questionUid,
-            userId,
-            answer: answerData.answer,
-            questionCorrectAnswers: question.correctAnswers,
-            questionType: question.questionType,
-            isCorrect
-        }, 'DEBUG: Answer correctness result');
-
-        // Calculate new score
         const newScore = calculateAnswerScore(isCorrect, serverTimeSpent, question);
-        logger.debug({
-            gameInstanceId,
-            userId,
-            questionUid: answerData.questionUid,
-            isCorrect,
-            serverTimeSpent,
-            newScore
-        }, 'DEBUG: Score calculation');
-
-        // If this is a changed answer, we need to subtract the old score first
-        let scoreToAdd = newScore;
-        logger.debug({
-            gameInstanceId,
-            userId,
-            questionUid: answerData.questionUid,
-            isCorrect,
-            newScore,
-            scoreToAdd,
-            participantScore: participant.score
-        }, 'DEBUG: Score to add and participant score before DB update');
-
-        // Update the answers array
-        const newAnswerEntry = {
-            questionUid: answerData.questionUid,
-            answer: answerData.answer,
-            timeTakenMs: answerData.timeSpent,
-            timestamp: new Date().toISOString(),
-            serverTimeSpent,
-            isCorrect,
-            score: newScore
-        };
-
-        let updatedAnswers;
-        if (existingAnswerIndex >= 0) {
-            // Replace existing answer
-            updatedAnswers = [...currentAnswers];
-            updatedAnswers[existingAnswerIndex] = newAnswerEntry;
-        } else {
-            // Add new answer
-            updatedAnswers = [...currentAnswers, newAnswerEntry];
+        // Replace previous score for this question (not increment)
+        let scoreDelta = newScore - previousScore;
+        // For differed tournaments, always replace the score (not increment)
+        let scoreUpdateData: any = { score: { increment: scoreDelta } };
+        if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
+            scoreUpdateData = { score: newScore };
         }
-
-        // Update participant with new score
-        // For DEFERRED mode: if this is a new attempt (score is 0), replace the score instead of adding
-        // For LIVE mode: always increment the score
-        let scoreUpdateData: any = {};
-
-        if (scoreToAdd > 0) {
-            if (participant.participationType === 'DEFERRED' && participant.score === 0) {
-                // For deferred mode with a fresh attempt (score is 0), set the score directly
-                scoreUpdateData.score = scoreToAdd;
-                logger.info({
-                    gameInstanceId,
-                    userId,
-                    participantId: participant.id,
-                    participationType: participant.participationType,
-                    scoreToAdd,
-                    currentScore: participant.score,
-                    action: 'REPLACE'
-                }, 'BUG INVESTIGATION: Setting score directly for DEFERRED fresh attempt');
-            } else {
-                // For live mode or deferred mode with existing score, increment
-                scoreUpdateData.score = { increment: scoreToAdd };
-                logger.info({
-                    gameInstanceId,
-                    userId,
-                    participantId: participant.id,
-                    participationType: participant.participationType,
-                    scoreToAdd,
-                    currentScore: participant.score,
-                    action: 'INCREMENT'
-                }, 'BUG INVESTIGATION: Incrementing score');
-            }
-        }
-
+        // Update participant score in DB
         const updatedParticipant = await prisma.gameParticipant.update({
             where: { id: participant.id },
             data: scoreUpdateData
         });
-        logger.debug({
-            gameInstanceId,
-            userId,
-            participantId: participant.id,
-            scoreUpdateData,
-            updatedScore: updatedParticipant.score
-        }, 'DEBUG: Participant DB score after update');
-
-        // Update Redis for answer tracking
+        // Update Redis with new answer
         if (gameInstance) {
             const redisKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}`;
             await redisClient.hset(
@@ -377,7 +261,6 @@ export async function submitAnswerWithScoring(
                     score: newScore
                 })
             );
-
             // Update Redis participant data to sync with database
             const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
             const redisParticipantData = await redisClient.hget(participantKey, userId);
@@ -386,41 +269,18 @@ export async function submitAnswerWithScoring(
                 participantData.score = updatedParticipant.score;
                 await redisClient.hset(participantKey, userId, JSON.stringify(participantData));
             }
-
-            // CRITICAL FIX: Update Redis leaderboard ZSET with the participant's total score
-            // This ensures leaderboard displays reflect the correct accumulated scores
+            // Update Redis leaderboard ZSET
             const leaderboardKey = `mathquest:game:leaderboard:${gameInstance.accessCode}`;
             await redisClient.zadd(leaderboardKey, updatedParticipant.score || 0, userId);
-
-            logger.debug({
-                gameInstanceId,
-                userId,
-                accessCode: gameInstance.accessCode,
-                totalScore: updatedParticipant.score,
-                leaderboardKey
-            }, 'Updated Redis leaderboard ZSET with participant total score');
         }
-
-        logger.info({
-            gameInstanceId,
-            userId,
-            questionUid: answerData.questionUid,
-            scoreAdded: scoreToAdd,
-            newTotalScore: updatedParticipant.score,
-            isCorrect,
-            answerChanged: !!existingAnswer,
-            serverTimeSpent
-        }, 'Answer scored and updated');
-
         return {
-            scoreUpdated: scoreToAdd > 0,
-            scoreAdded: scoreToAdd,
+            scoreUpdated: scoreDelta !== 0,
+            scoreAdded: scoreDelta,
             totalScore: updatedParticipant.score || 0,
-            answerChanged: !!existingAnswer,
-            previousAnswer: existingAnswer?.answer,
-            message: scoreToAdd > 0 ? 'Score updated' : 'Answer recorded but no points awarded'
+            answerChanged: previousAnswerExists,
+            previousAnswer,
+            message: scoreDelta !== 0 ? 'Score updated' : 'Answer recorded but no points awarded'
         };
-
     } catch (error) {
         logger.error({
             error,
@@ -428,7 +288,6 @@ export async function submitAnswerWithScoring(
             userId,
             answerData
         }, 'Error in submitAnswerWithScoring');
-
         return {
             scoreUpdated: false,
             scoreAdded: 0,

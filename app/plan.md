@@ -536,3 +536,11 @@ Ensure that time penalties are correctly applied in practice/game mode by tracki
 - [ ] 7. Validate with tests for all modes (quiz, live tournament, differed, practice).
 
 ---
+
+- Final cleanup: Removed unused import of TimingService from gameAnswer.ts. Confirmed no legacy timer logic remains in answer handler.
+- All timer and scoring logic is now unified and canonical/global as required.
+- No further dead code or legacy timer references found in gameAnswer.ts.
+- Archived legacy timingService.ts to backend/archive/legacy-timers/timingService.ts.
+- Replaced original with a stub and archive notice.
+- No references remain in active code.
+- All timer logic is now canonical/global only.

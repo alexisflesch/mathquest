@@ -529,19 +529,21 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
             socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
         }
 
-        // Canonical timer integration for quiz mode
-        if (gameInstance.playMode === 'quiz' && questionUid) {
+        // Canonical timer integration for all modes
+        if (questionUid) {
             try {
+                const playMode = gameInstance.playMode;
+                const isDiffered = !!gameInstance.isDiffered;
                 switch (action) {
                     case 'start':
                     case 'resume':
-                        await canonicalTimerService.startTimer(accessCode, questionUid);
+                        await canonicalTimerService.startTimer(accessCode, questionUid, playMode, isDiffered);
                         break;
                     case 'pause':
-                        await canonicalTimerService.pauseTimer(accessCode, questionUid);
+                        await canonicalTimerService.pauseTimer(accessCode, questionUid, playMode, isDiffered);
                         break;
                     case 'stop':
-                        await canonicalTimerService.resetTimer(accessCode, questionUid);
+                        await canonicalTimerService.resetTimer(accessCode, questionUid, playMode, isDiffered);
                         break;
                 }
             } catch (err) {

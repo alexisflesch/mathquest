@@ -1,7 +1,7 @@
 import type { Redis } from 'ioredis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
-import type { PlayMode } from '@/shared/types/core/game';
+import type { PlayMode } from '../../../shared/types/core/game';
 
 const logger = createLogger('CanonicalTimerService');
 
@@ -15,9 +15,10 @@ export interface CanonicalTimerState {
 
 /**
  * CanonicalTimerService: manages timer logic for all game modes.
- * - Global timer per question for quiz and live tournament.
- * - Per-user session timer for differed tournaments (tournament mode + isDiffered).
- * - No timer for practice mode.
+ *
+ * - Quiz & Live Tournament: timer is attached to GameInstance (global, no userId in key)
+ * - Differed Tournament: timer is attached to GameParticipant (per-user, userId in key)
+ * - Practice: no timer (all timer methods are no-ops)
  */
 export class CanonicalTimerService {
     private redis: Redis;
@@ -25,6 +26,11 @@ export class CanonicalTimerService {
         this.redis = redisClient;
     }
 
+    /**
+     * Returns the Redis key for the timer, based on mode:
+     * - Quiz & live tournament: timer:{accessCode}:{questionUid}
+     * - Differed tournament: timer:{accessCode}:{questionUid}:user:{userId}
+     */
     private getKey(accessCode: string, questionUid: string, userId?: string, playMode?: PlayMode, isDiffered?: boolean) {
         if (playMode === 'tournament' && isDiffered && userId) {
             return `timer:${accessCode}:${questionUid}:user:${userId}`;
@@ -34,6 +40,9 @@ export class CanonicalTimerService {
 
     /**
      * Start or resume the timer for a question, handling all modes.
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: no timer
      */
     async startTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string) {
         if (playMode === 'practice') return null; // No timer in practice mode
@@ -62,6 +71,9 @@ export class CanonicalTimerService {
 
     /**
      * Pause the timer for a question, handling all modes.
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: no timer
      */
     async pauseTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string) {
         if (playMode === 'practice') return null;
@@ -82,6 +94,9 @@ export class CanonicalTimerService {
 
     /**
      * Get the current timer state for a question, handling all modes.
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: no timer
      */
     async getTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string): Promise<CanonicalTimerState | null> {
         if (playMode === 'practice') return null;
@@ -93,6 +108,9 @@ export class CanonicalTimerService {
 
     /**
      * Compute elapsed play time (ms) for a question, handling all modes.
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: always returns 0
      */
     async getElapsedTimeMs(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string): Promise<number> {
         if (playMode === 'practice') return 0;
@@ -107,6 +125,9 @@ export class CanonicalTimerService {
 
     /**
      * Reset timer for a question (e.g., on new question), handling all modes.
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: no timer
      */
     async resetTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string) {
         if (playMode === 'practice') return;

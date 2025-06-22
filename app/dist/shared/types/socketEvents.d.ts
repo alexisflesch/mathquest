@@ -235,6 +235,11 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
         feedbackRemaining: number;
         [key: string]: any;
     }) => void;
+    answer_feedback: (payload: {
+        status: string;
+        code: string;
+        message: string;
+    }) => void;
     game_error: (payload: ErrorPayload) => void;
     game_already_played: (payload: GameAlreadyPlayedPayload) => void;
     notification: (payload: NotificationPayload) => void;

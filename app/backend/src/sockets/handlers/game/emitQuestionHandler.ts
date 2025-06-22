@@ -4,7 +4,8 @@ import createLogger from '@/utils/logger';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData, ErrorPayload } from '@shared/types/socketEvents';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
-import { TimingService } from '@/services/timingService';
+import { CanonicalTimerService } from '@/services/canonicalTimerService';
+import { redisClient } from '@/config/redis';
 
 const logger = createLogger('EmitQuestionHandler');
 
@@ -65,12 +66,36 @@ export function emitQuestionHandler(
             socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
             return;
         }
-        // Track timing for this question
-        try {
-            const wasSet = await TimingService.trackQuestionStart(accessCode, targetQuestion.uid, userId);
-            logger.info({ accessCode, userId, questionUid: targetQuestion.uid, wasSet }, '[DEBUG] TimingService.trackQuestionStart result');
-        } catch (err) {
-            logger.error({ accessCode, userId, questionUid: targetQuestion.uid, err }, '[ERROR] TimingService.trackQuestionStart failed');
+        // Modern timer logic
+        const canonicalTimerService = new CanonicalTimerService(redisClient);
+        let timerPayload = null;
+        if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !gameInstance.isDiffered)) {
+            // Global timer for quiz and live tournament
+            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
+            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered);
+            timerPayload = {
+                status: 'play',
+                timeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed,
+                durationMs: (targetQuestion.timeLimit || 30) * 1000,
+                questionUid: targetQuestion.uid,
+                timestamp: Date.now() - elapsed,
+                localTimeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed
+            };
+        } else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
+            // Per-user session timer for differed tournaments
+            await canonicalTimerService.startTimer(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
+            const elapsed = await canonicalTimerService.getElapsedTimeMs(accessCode, targetQuestion.uid, gameInstance.playMode, gameInstance.isDiffered, userId);
+            timerPayload = {
+                status: 'play',
+                timeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed,
+                durationMs: (targetQuestion.timeLimit || 30) * 1000,
+                questionUid: targetQuestion.uid,
+                timestamp: Date.now() - elapsed,
+                localTimeLeftMs: (targetQuestion.timeLimit || 30) * 1000 - elapsed
+            };
+        } else if (gameInstance.playMode === 'practice') {
+            // No timer for practice mode
+            timerPayload = null;
         }
         // Prepare payload
         const questionIndex = allQuestions.findIndex(q => q.questionUid === targetQuestion.uid);
@@ -82,14 +107,7 @@ export function emitQuestionHandler(
                 questionType: targetQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 answerOptions: targetQuestion.answerOptions || []
             },
-            timer: {
-                status: 'play' as const,
-                timeLeftMs: (targetQuestion.timeLimit || 30) * 1000,
-                durationMs: (targetQuestion.timeLimit || 30) * 1000,
-                questionUid: targetQuestion.uid,
-                timestamp: Date.now(),
-                localTimeLeftMs: (targetQuestion.timeLimit || 30) * 1000
-            },
+            ...(timerPayload ? { timer: timerPayload } : {}),
             questionIndex: questionIndex,
             totalQuestions: totalQuestions,
             questionState: 'active' as const

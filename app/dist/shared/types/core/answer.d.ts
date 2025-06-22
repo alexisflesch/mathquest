@@ -1,3 +1,4 @@
+import { z } from 'zod';
 /**
  * Core Answer Types
  *
@@ -60,22 +61,6 @@ export interface TournamentAnswer {
     timeMs?: number;
     /** Whether answer is correct */
     isCorrect?: boolean;
-}
-/**
- * Answer submission payload interface
- * Used for socket events when submitting answers
- */
-export interface AnswerSubmissionPayload {
-    /** Game access code */
-    accessCode: string;
-    /** User ID submitting answer */
-    userId: string;
-    /** Question UID being answered */
-    questionUid: string;
-    /** Answer value */
-    answer: any;
-    /** Time spent on question */
-    timeSpent: number;
 }
 /**
  * Answer response payload interface
@@ -153,3 +138,23 @@ export interface GameAnswerPayload {
     answer: any;
     timeSpent: number;
 }
+export declare const AnswerSubmissionPayloadSchema: z.ZodObject<{
+    accessCode: z.ZodString;
+    userId: z.ZodString;
+    questionUid: z.ZodString;
+    answer: z.ZodUnion<[z.ZodNumber, z.ZodString, z.ZodBoolean, z.ZodArray<z.ZodNumber, "many">, z.ZodArray<z.ZodString, "many">, z.ZodNull, z.ZodUndefined]>;
+    timeSpent: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    accessCode: string;
+    userId: string;
+    questionUid: string;
+    timeSpent: number;
+    answer?: string | number | boolean | number[] | string[] | null | undefined;
+}, {
+    accessCode: string;
+    userId: string;
+    questionUid: string;
+    timeSpent: number;
+    answer?: string | number | boolean | number[] | string[] | null | undefined;
+}>;
+export type AnswerSubmissionPayload = z.infer<typeof AnswerSubmissionPayloadSchema>;

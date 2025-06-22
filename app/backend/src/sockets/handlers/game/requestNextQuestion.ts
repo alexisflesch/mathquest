@@ -7,7 +7,6 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 import { requestNextQuestionPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
-import { TimingService } from '@/services/timingService';
 import { emitQuestionHandler } from './emitQuestionHandler';
 
 const logger = createLogger('RequestNextQuestionHandler');

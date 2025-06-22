@@ -1,7 +1,6 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { calculateLeaderboard } from './sharedLeaderboard';
 import { collectAnswers } from './sharedAnswers';
-import TimingService from '@/services/timingService';
 import createLogger from '@/utils/logger';
 import { getFullGameState, GameState } from '@/core/gameStateService';
 import { redisClient as redis } from '@/config/redis';

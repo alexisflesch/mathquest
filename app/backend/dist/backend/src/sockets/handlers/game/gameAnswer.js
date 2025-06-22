@@ -203,18 +203,31 @@ function gameAnswerHandler(io, socket) {
             }
             const participantService = new gameParticipantService_1.GameParticipantService();
             logger.debug({ userId, gameInstanceId: gameInstance.id, questionUid, answer, timeSpent }, 'Calling participantService.submitAnswer');
-            // Compute time penalty using canonical timer for quiz mode
+            // Compute time penalty using canonical timer for all modes
             let canonicalElapsedMs = undefined;
-            if (gameInstance.playMode === 'quiz' && questionUid) {
-                const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
-                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid);
+            let timeSpentForSubmission = 0;
+            const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
+            if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !gameInstance.isDiffered)) {
+                // Global timer for quiz and live tournament
+                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, gameInstance.isDiffered);
                 logger.info({ accessCode, userId, questionUid, canonicalElapsedMs }, '[TIMER] Canonical elapsed time for answer submission');
+                timeSpentForSubmission = canonicalElapsedMs ?? 0;
+            }
+            else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
+                // Per-user session timer for differed tournaments
+                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, gameInstance.isDiffered, userId);
+                logger.info({ accessCode, userId, questionUid, canonicalElapsedMs }, '[TIMER] Differed session elapsed time for answer submission');
+                timeSpentForSubmission = canonicalElapsedMs ?? 0;
+            }
+            else if (gameInstance.playMode === 'practice') {
+                // No timer for practice mode
+                timeSpentForSubmission = 0;
             }
             // Submit answer using the new scoring service (handles duplicates and scoring)
             const submissionResult = await participantService.submitAnswer(gameInstance.id, userId, {
                 questionUid: questionUid, // Use questionUid to match AnswerSubmissionPayload
                 answer,
-                timeSpent: canonicalElapsedMs !== undefined ? canonicalElapsedMs : timeSpent, // Use canonical timer for quiz mode
+                timeSpent: timeSpentForSubmission,
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
             });

@@ -1034,16 +1034,16 @@
 - Confirmed all logging is routed through the centralized Winston logger and includes userIds/counts for traceability.
 - Updated `plan.md` with new phase, checklist, and test/validation steps.
 
-**Root Cause:**
+**Root Cause**:
 - Previous logic counted socket connections, not unique users, causing inflated participant counts and inconsistent UI.
 
-**Actions:**
+**Actions**:
 - Updated `participantCountUtils.ts` to count unique userIds using socket data and Redis as fallback.
 - Verified `requestParticipantsHandler` and `getFullGameState` both deduplicate by userId before emitting lists.
 - Ensured all participant-related payloads use canonical shared types (`ParticipantData[]`).
 - Improved debug/info logging for all participant-related events.
 
-**Testing/Validation:**
+**Testing/Validation**:
 - Opened multiple tabs as the same user and as different users; participant count and list are now always correct.
 - Disconnect/reconnect flows only remove a participant when all sockets for that user disconnect.
 - Logs show correct unique userIds and counts at each step.
@@ -1101,3 +1101,17 @@
 ## 2025-06-22 - Started phase: Canonical Timer Rewrite for All Game Modes
 - Documented new phase and checklist in plan.md
 - Next: Update CanonicalTimerService to support all required timer modes (quiz, live, differed, practice)
+
+---
+
+[2025-06-22] Refactored gameAnswer.ts to use CanonicalTimerService for all modes (quiz, live, differed, practice). Removed legacy/per-user timer logic from answer handler. Fixed type errors for timeSpent. Next: refactor emission logic and other handlers, remove all legacy timer code, and test all modes.
+
+[2025-06-22] Refactored emitQuestionHandler.ts to use CanonicalTimerService for all modes and emit canonical timer state. Removed legacy per-user timer logic from emission. Next: remove all remaining legacy timer code and test all modes.
+
+[2025-06-22] Fixed import path for PlayMode in canonicalTimerService.ts. Updated timerActionHandler to always provide playMode and isDiffered to CanonicalTimerService methods. Next: remove all remaining legacy timer code and test all modes.
+
+[2025-06-22] Final cleanup: Removed unused TimingService import from gameAnswer.ts. Verified no legacy timer logic remains in answer handler. All timer logic is now canonical/global only.
+
+[2025-06-22] Archived legacy timingService.ts to backend/archive/legacy-timers/timingService.ts. Replaced original with stub. No references remain in active code. All timer logic is now canonical/global only.
+
+[2025-06-22] Implemented answer deduplication and score replacement in scoringService.ts. Now, only changed answers are rescored; same answers do not update score. Multiple choice answers are compared as unordered arrays. Documented in plan.md.
