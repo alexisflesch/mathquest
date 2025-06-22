@@ -43,11 +43,16 @@ const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const emitQuestionHandler_1 = require("../game/emitQuestionHandler");
+const canonicalTimerService_1 = require("@/services/canonicalTimerService");
+const redis_1 = require("@/config/redis");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('SetQuestionHandler');
 // Create game instance service
 const gameInstanceService = new gameInstanceService_1.GameInstanceService();
 function setQuestionHandler(io, socket) {
+    const emitQuestion = (0, emitQuestionHandler_1.emitQuestionHandler)(io, socket);
+    const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
     return async (payload, callback) => {
         // Runtime validation with Zod
         const parseResult = socketEvents_zod_1.setQuestionPayloadSchema.safeParse(payload);
@@ -325,7 +330,7 @@ function setQuestionHandler(io, socket) {
                     payload: gameQuestionPayload
                 }, '[DEBUG] Emitting game_question to live room');
                 // --- FORCE CONSOLE LOG FOR TEST VISIBILITY ---
-                console.log('[setQuestion] Emitting game_question:', {
+                logger.info('[setQuestion] Emitting game_question:', {
                     liveRoom,
                     liveRoomSocketIds,
                     payload: gameQuestionPayload

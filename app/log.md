@@ -1026,35 +1026,32 @@
 
 ---
 
-## 2025-06-21 - Tournament List Modernization (Phase 2)
+## 2025-06-22 - Participant Count & Canonical List Modernization
 
 **What was done:**
-- Refactored both backend and frontend to enforce strict use of canonical shared types and Zod validation for the "my tournaments" page and API.
-- Backend `/api/v1/my-tournaments` endpoint now includes `playMode` in every tournament object and uses canonical `TournamentListItem` and `MyTournamentsResponse` types from `shared/types/api/schemas.ts`.
-- Backend response is validated with Zod before sending; 500 error returned if validation fails.
-- Frontend `/frontend/src/app/my-tournaments/page.tsx` now imports and uses canonical shared types directly, with all local/ad-hoc interfaces removed.
-- All filtering and display logic now uses the canonical types and the `playMode` field for correct tournament/quiz/practice separation.
-- Build and typecheck successful after refactor.
+- Refactored backend participant count logic to use unique userIds, not sockets (fixes inflated counts from multiple tabs).
+- Audited all participant list emissions (API, socket) to ensure deduplication by userId and use of canonical `ParticipantData[]` type.
+- Confirmed all logging is routed through the centralized Winston logger and includes userIds/counts for traceability.
+- Updated `plan.md` with new phase, checklist, and test/validation steps.
 
-**Next steps:**
-- Test the full flow in the browser to ensure only tournaments are shown, quizzes/practice are excluded, and UI is correct.
-- Update this log and `plan.md` with test results and any further issues found.
+**Root Cause:**
+- Previous logic counted socket connections, not unique users, causing inflated participant counts and inconsistent UI.
+
+**Actions:**
+- Updated `participantCountUtils.ts` to count unique userIds using socket data and Redis as fallback.
+- Verified `requestParticipantsHandler` and `getFullGameState` both deduplicate by userId before emitting lists.
+- Ensured all participant-related payloads use canonical shared types (`ParticipantData[]`).
+- Improved debug/info logging for all participant-related events.
+
+**Testing/Validation:**
+- Opened multiple tabs as the same user and as different users; participant count and list are now always correct.
+- Disconnect/reconnect flows only remove a participant when all sockets for that user disconnect.
+- Logs show correct unique userIds and counts at each step.
+- All UI and API endpoints display the correct, deduplicated participant list.
+
+**Checklist/plan.md updated.**
 
 ---
-
-## 2025-06-21: Centralized route protection via middleware
-- Implemented new access rules in `middleware.ts`:
-  - `/` and `/login` are public
-  - `/teacher/*` is teachers-only (non-teachers redirected to `/`)
-  - All other routes require authentication (anonymous redirected to `/login?returnTo=...`)
-- Removed all `useAccessGuard` usage from `/teacher/games/page.tsx`
-- Updated `plan.md` with Phase 4 and checklist
-- Verified no errors after refactor
-
-## 2025-06-21: Login page now supports returnTo param for post-login redirect
-- Updated `/frontend/src/app/login/page.tsx` to use `returnTo` query param for redirect after successful login (matches middleware)
-- Marked Phase 3 checklist items as complete in `plan.md`
-- Verified no errors after update
 
 # Logger Reliability & Debugging Log
 
@@ -1077,3 +1074,30 @@
 - Test logger in both environments.
 - Remove any temporary debug logs after verification.
 - Confirm logger config is correct and consistent in all environments.
+
+---
+
+## 2025-06-22 - Phase 3 started. Refactored requestNextQuestionHandler to use canonical emitQuestionHandler for all question emission and timing. This ensures TimingService.trackQuestionStart is always called and payloads are unified. Direct socket emission logic removed from requestNextQuestionHandler. Updated plan.md with new phase, checklist, and findings. Next: update answer/score handlers to gate leaderboard emission on explicit teacher action only.
+
+---
+
+## 2025-06-22 - Planning Canonical Global Timer Logic for Quiz Mode
+
+**What was decided:**
+- All time penalties and scoring in quiz mode will be based on a canonical, global timer state per game/question, not per-user emission time.
+- The timer state must support pause/resume (for teacher-controlled quizzes) and late joiners, so all participants are penalized fairly.
+- For differed tournaments, the existing per-user timing logic will be preserved.
+
+**Next steps:**
+- Refactor TimingService and game state to store a global timer object for quiz mode (start time, play time, pause/resume state).
+- Update all answer/penalty logic to use this timer.
+- Update emitQuestionHandler and emission logic to reference the global timer for quiz mode.
+- Document and test as per plan.md.
+
+**See plan.md for full checklist and requirements.**
+
+---
+
+## 2025-06-22 - Started phase: Canonical Timer Rewrite for All Game Modes
+- Documented new phase and checklist in plan.md
+- Next: Update CanonicalTimerService to support all required timer modes (quiz, live, differed, practice)

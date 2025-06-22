@@ -7,6 +7,7 @@ exports.emitParticipantCount = emitParticipantCount;
 exports.getParticipantCount = getParticipantCount;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const redis_1 = require("@/config/redis");
 const logger = (0, logger_1.default)('ParticipantCountUtils');
 /**
  * Emits participant count to teacher dashboard when participant count changes
@@ -36,27 +37,37 @@ async function emitParticipantCount(io, accessCode) {
         const lobbyRoom = io.sockets.adapter.rooms.get(`lobby_${accessCode}`) || new Set();
         const gameRoom = io.sockets.adapter.rooms.get(`game_${accessCode}`) || new Set();
         // Combine all socket IDs (Set automatically handles duplicates)
-        const allParticipantSockets = new Set([
+        const allSocketIds = new Set([
             ...lobbyRoom,
             ...gameRoom
         ]);
-        const totalCount = allParticipantSockets.size;
+        // For each socket, get userId and count unique userIds
+        const userIdSet = new Set();
+        for (const socketId of allSocketIds) {
+            const userId = await getUserIdForSocket(io, socketId);
+            if (userId)
+                userIdSet.add(userId);
+        }
+        const uniqueUserCount = userIdSet.size;
         logger.info({
             accessCode,
             gameId,
             lobbyCount: lobbyRoom.size,
             gameCount: gameRoom.size,
-            totalCount
-        }, 'Emitting participant count to dashboard');
+            totalSocketCount: allSocketIds.size,
+            uniqueUserCount,
+            userIds: Array.from(userIdSet)
+        }, 'Emitting unique participant count to dashboard');
         // Emit to the dashboard room for this game
         const dashboardRoom = `dashboard_${gameId}`;
-        io.to(dashboardRoom).emit('quiz_connected_count', { count: totalCount });
+        io.to(dashboardRoom).emit('quiz_connected_count', { count: uniqueUserCount });
         logger.debug({
             dashboardRoom,
-            totalCount,
+            uniqueUserCount,
             lobbySocketIds: Array.from(lobbyRoom),
-            gameSocketIds: Array.from(gameRoom)
-        }, 'Participant count emitted');
+            gameSocketIds: Array.from(gameRoom),
+            userIds: Array.from(userIdSet)
+        }, 'Unique participant count emitted');
     }
     catch (error) {
         logger.error({
@@ -83,18 +94,27 @@ async function getParticipantCount(io, accessCode) {
         const lobbyRoom = io.sockets.adapter.rooms.get(`lobby_${accessCode}`) || new Set();
         const gameRoom = io.sockets.adapter.rooms.get(`game_${accessCode}`) || new Set();
         // Combine all socket IDs (Set automatically handles duplicates)
-        const allParticipantSockets = new Set([
+        const allSocketIds = new Set([
             ...lobbyRoom,
             ...gameRoom
         ]);
-        const totalCount = allParticipantSockets.size;
+        // For each socket, get userId and count unique userIds
+        const userIdSet = new Set();
+        for (const socketId of allSocketIds) {
+            const userId = await getUserIdForSocket(io, socketId);
+            if (userId)
+                userIdSet.add(userId);
+        }
+        const uniqueUserCount = userIdSet.size;
         logger.debug({
             accessCode,
             lobbyCount: lobbyRoom.size,
             gameCount: gameRoom.size,
-            totalCount
-        }, 'Retrieved participant count');
-        return totalCount;
+            totalSocketCount: allSocketIds.size,
+            uniqueUserCount,
+            userIds: Array.from(userIdSet)
+        }, 'Retrieved unique participant count');
+        return uniqueUserCount;
     }
     catch (error) {
         logger.error({
@@ -102,6 +122,24 @@ async function getParticipantCount(io, accessCode) {
             accessCode
         }, 'Error getting participant count');
         return 0;
+    }
+}
+/**
+ * Helper to get userId for a given socketId, using in-memory socket data or Redis as fallback
+ */
+async function getUserIdForSocket(io, socketId) {
+    const socket = io.sockets.sockets.get(socketId);
+    if (socket && socket.data && socket.data.userId) {
+        return socket.data.userId;
+    }
+    // Fallback to Redis
+    try {
+        const userId = await redis_1.redisClient.hget('mathquest:socketIdToUserId:', socketId);
+        return userId || null;
+    }
+    catch (err) {
+        logger.error({ socketId, err }, 'Failed to get userId from Redis');
+        return null;
     }
 }
 // TODO: Sweep the rest of the file and update all emits to use shared types or add TODOs for missing types.

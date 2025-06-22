@@ -95,43 +95,64 @@ class GameParticipantService {
             const participationType = gameInstance.status === 'completed' ? 'DEFERRED' : 'LIVE';
             let participant;
             if (participationType === 'LIVE') {
-                // For LIVE tournaments, always create a new participant record
-                // Create new user if they don't exist, or connect if they do.
-                await prisma_1.prisma.user.upsert({
-                    where: { id: userId },
-                    update: {
-                        username: username || `guest-${userId.substring(0, 8)}`,
-                        avatarEmoji: avatarEmoji || null,
-                    },
-                    create: {
-                        id: userId,
-                        username: username || `guest-${userId.substring(0, 8)}`,
-                        role: 'STUDENT',
-                        avatarEmoji: avatarEmoji || null,
-                        studentProfile: { create: { cookieId: `cookie-${userId}` } }
-                    }
-                });
-                // Create new participant for live play
-                const newParticipant = await prisma_1.prisma.gameParticipant.create({
-                    data: {
+                // Check for existing participant for this user/game
+                const existingLiveParticipant = await prisma_1.prisma.gameParticipant.findFirst({
+                    where: {
                         gameInstanceId: gameInstance.id,
                         userId: userId,
-                        joinedAt: new Date(),
-                        score: 0,
-                        participationType: 'LIVE',
-                        attemptCount: 1
-                    }
-                });
-                participant = await prisma_1.prisma.gameParticipant.findUnique({
-                    where: { id: newParticipant.id },
+                        participationType: 'LIVE'
+                    },
                     include: { user: true }
                 });
-                logger.info({
-                    userId,
-                    accessCode,
-                    participantId: participant?.id,
-                    participationType: 'LIVE'
-                }, 'Created new LIVE participant');
+                if (existingLiveParticipant) {
+                    logger.info({
+                        userId,
+                        accessCode,
+                        participantId: existingLiveParticipant.id,
+                        participationType: 'LIVE',
+                        reused: true
+                    }, 'Reusing existing LIVE participant, preventing duplicate');
+                    participant = existingLiveParticipant;
+                }
+                else {
+                    // Create new user if they don't exist, or connect if they do.
+                    await prisma_1.prisma.user.upsert({
+                        where: { id: userId },
+                        update: {
+                            username: username || `guest-${userId.substring(0, 8)}`,
+                            avatarEmoji: avatarEmoji || null,
+                        },
+                        create: {
+                            id: userId,
+                            username: username || `guest-${userId.substring(0, 8)}`,
+                            role: 'STUDENT',
+                            avatarEmoji: avatarEmoji || null,
+                            studentProfile: { create: { cookieId: `cookie-${userId}` } }
+                        }
+                    });
+                    // Create new participant for live play
+                    const newParticipant = await prisma_1.prisma.gameParticipant.create({
+                        data: {
+                            gameInstanceId: gameInstance.id,
+                            userId: userId,
+                            joinedAt: new Date(),
+                            score: 0,
+                            participationType: 'LIVE',
+                            attemptCount: 1
+                        }
+                    });
+                    participant = await prisma_1.prisma.gameParticipant.findUnique({
+                        where: { id: newParticipant.id },
+                        include: { user: true }
+                    });
+                    logger.info({
+                        userId,
+                        accessCode,
+                        participantId: participant?.id,
+                        participationType: 'LIVE',
+                        reused: false
+                    }, 'Created new LIVE participant');
+                }
             }
             else {
                 // For DEFERRED tournaments, handle existing records differently

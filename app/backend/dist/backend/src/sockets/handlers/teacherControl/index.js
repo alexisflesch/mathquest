@@ -24,7 +24,7 @@ const logger = (0, logger_1.default)('TeacherControlIndex');
  * @param socket The connected socket
  */
 function registerTeacherControlHandlers(io, socket) {
-    console.log('[DEBUG] registerTeacherControlHandlers called for socket:', socket.id);
+    logger.info('[DEBUG] registerTeacherControlHandlers called for socket:', socket.id);
     logger.info({ socketId: socket.id }, 'Registering teacher control handlers');
     // Teacher joining the dashboard for a game
     logger.info({ event: events_1.TEACHER_EVENTS.JOIN_DASHBOARD }, 'Registering join_dashboard handler');

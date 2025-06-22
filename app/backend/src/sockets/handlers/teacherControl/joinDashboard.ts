@@ -273,7 +273,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
 
             // Call the callback if provided
             if (callback) {
-                console.log('Calling callback with data:', {
+                logger.info('Calling callback with data:', {
                     success: true,
                     gameId: gameInstance.id,
                     accessCode: gameInstance.accessCode
@@ -291,7 +291,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                     logger.error({ err }, 'Error calling dashboard callback');
                 }
             } else {
-                console.log('No callback provided for join_dashboard event');
+                logger.info('No callback provided for join_dashboard event');
             }
         } catch (error) {
             logger.error({ gameId, userId: effectiveUserId, error }, 'Error handling join_dashboard event');

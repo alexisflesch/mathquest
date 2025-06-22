@@ -24,11 +24,11 @@ const logger = createLogger('ConnectionHandlers');
  */
 export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>): void {
     io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
-        console.log('[SOCKET DEBUG] New socket connection:', socket.id);
+        logger.info('[SOCKET DEBUG] New socket connection:', socket.id);
 
         // TOP-LEVEL: Log all events received by any socket for deep debugging
         socket.onAny((event, ...args) => {
-            console.log('[SOCKET DEBUG] onAny:', event, args, 'socket:', socket.id);
+            logger.info('[SOCKET DEBUG] onAny:', event, args, 'socket:', socket.id);
         });
 
         handleConnection(socket);

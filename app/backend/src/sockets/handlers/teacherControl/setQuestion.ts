@@ -12,6 +12,9 @@ import type {
     DashboardQuestionChangedPayload
 } from '@shared/types/socket/dashboardPayloads';
 import { setQuestionPayloadSchema } from '@shared/types/socketEvents.zod';
+import { emitQuestionHandler } from '../game/emitQuestionHandler';
+import { CanonicalTimerService } from '@/services/canonicalTimerService';
+import { redisClient } from '@/config/redis';
 
 // Create a handler-specific logger
 const logger = createLogger('SetQuestionHandler');
@@ -20,6 +23,8 @@ const logger = createLogger('SetQuestionHandler');
 const gameInstanceService = new GameInstanceService();
 
 export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
+    const emitQuestion = emitQuestionHandler(io, socket);
+    const canonicalTimerService = new CanonicalTimerService(redisClient);
     return async (payload: any, callback?: (data: any) => void) => {
         // Runtime validation with Zod
         const parseResult = setQuestionPayloadSchema.safeParse(payload);
@@ -328,7 +333,7 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                     payload: gameQuestionPayload
                 }, '[DEBUG] Emitting game_question to live room');
                 // --- FORCE CONSOLE LOG FOR TEST VISIBILITY ---
-                console.log('[setQuestion] Emitting game_question:', {
+                logger.info('[setQuestion] Emitting game_question:', {
                     liveRoom,
                     liveRoomSocketIds,
                     payload: gameQuestionPayload

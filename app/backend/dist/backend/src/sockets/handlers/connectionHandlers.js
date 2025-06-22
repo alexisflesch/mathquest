@@ -22,10 +22,10 @@ const logger = (0, logger_1.default)('ConnectionHandlers');
  */
 function registerConnectionHandlers(io) {
     io.on('connection', (socket) => {
-        console.log('[SOCKET DEBUG] New socket connection:', socket.id);
+        logger.info('[SOCKET DEBUG] New socket connection:', socket.id);
         // TOP-LEVEL: Log all events received by any socket for deep debugging
         socket.onAny((event, ...args) => {
-            console.log('[SOCKET DEBUG] onAny:', event, args, 'socket:', socket.id);
+            logger.info('[SOCKET DEBUG] onAny:', event, args, 'socket:', socket.id);
         });
         handleConnection(socket);
         // Create custom disconnect handler that includes practice session cleanup

@@ -46,6 +46,8 @@ const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const emitQuestionHandler_1 = require("../game/emitQuestionHandler");
+const canonicalTimerService_1 = require("@/services/canonicalTimerService");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('TimerActionHandler');
 // Redis key prefix for game state
@@ -119,6 +121,8 @@ function startGameTimer(io, gameId, accessCode, durationMs, questionUid) {
     activeTimers.set(gameId, timeout);
 }
 function timerActionHandler(io, socket) {
+    const emitQuestion = (0, emitQuestionHandler_1.emitQuestionHandler)(io, socket);
+    const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
     return async (payload) => {
         // Runtime validation with Zod
         const parseResult = socketEvents_zod_1.timerActionPayloadSchema.safeParse(payload);
@@ -475,6 +479,26 @@ function timerActionHandler(io, socket) {
                 code: 'TIMER_ERROR'
             };
             socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
+        }
+        // Canonical timer integration for quiz mode
+        if (gameInstance.playMode === 'quiz' && questionUid) {
+            try {
+                switch (action) {
+                    case 'start':
+                    case 'resume':
+                        await canonicalTimerService.startTimer(accessCode, questionUid);
+                        break;
+                    case 'pause':
+                        await canonicalTimerService.pauseTimer(accessCode, questionUid);
+                        break;
+                    case 'stop':
+                        await canonicalTimerService.resetTimer(accessCode, questionUid);
+                        break;
+                }
+            }
+            catch (err) {
+                logger.error({ accessCode, questionUid, action, err }, '[TIMER_ACTION] Canonical timer error');
+            }
         }
     };
 }

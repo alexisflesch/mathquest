@@ -1,11 +1,13 @@
 "use strict";
-// Shared score calculation logic for quiz and tournament modes
-// This module should be imported by both quiz and tournament handlers
+// DEPRECATED: All scoring logic has been unified in core/services/scoringService.ts
+// This file is no longer used and will be removed in a future cleanup.
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculateScore = calculateScore;
+// Shared score calculation logic for quiz and tournament modes
+// This module should be imported by both quiz and tournament handlers
 const logger_1 = __importDefault(require("@/utils/logger"));
 const logger = (0, logger_1.default)('ScoreUtils');
 /**

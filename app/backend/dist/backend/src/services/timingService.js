@@ -31,6 +31,9 @@ class TimingService {
             const result = await redis_1.redisClient.set(key, startTime.toString(), 'EX', this.DEFAULT_EXPIRY_SECONDS, 'NX' // Only set if key does not exist
             );
             const wasSet = result === 'OK';
+            logger.info({
+                accessCode, questionUid, userId, key, startTime, wasSet
+            }, 'DIAGNOSTIC: trackQuestionStart called');
             if (wasSet) {
                 logger.debug({
                     accessCode, questionUid, userId, startTime
@@ -61,6 +64,9 @@ class TimingService {
         try {
             const key = this.getTimingKey(accessCode, questionUid, userId);
             const startTimeStr = await redis_1.redisClient.get(key);
+            logger.info({
+                accessCode, questionUid, userId, key, startTimeStr
+            }, 'DIAGNOSTIC: calculateAndCleanupTimeSpent called');
             if (!startTimeStr) {
                 logger.warn({
                     accessCode, questionUid, userId
@@ -81,7 +87,7 @@ class TimingService {
         catch (error) {
             logger.error({
                 accessCode, questionUid, userId, error
-            }, 'Failed to calculate time spent');
+            }, 'Failed to cleanup question timing data');
             return 0;
         }
     }

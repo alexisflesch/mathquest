@@ -1,3 +1,6 @@
+// DEPRECATED: All scoring logic has been unified in core/services/scoringService.ts
+// This file is no longer used and will be removed in a future cleanup.
+
 // Shared score calculation logic for quiz and tournament modes
 // This module should be imported by both quiz and tournament handlers
 

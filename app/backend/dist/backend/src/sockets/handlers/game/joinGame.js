@@ -142,7 +142,7 @@ function joinGameHandler(io, socket) {
                 // --- DEBUG: Print room membership after join ---
                 const joinedRoomSockets = io.sockets.adapter.rooms.get(roomName);
                 const joinedRoomSocketIds = joinedRoomSockets ? Array.from(joinedRoomSockets) : [];
-                console.log('[joinGame] Player joined room:', { roomName, socketId: socket.id, joinedRoomSocketIds });
+                logger.info('[joinGame] Player joined room:', { roomName, socketId: socket.id, joinedRoomSocketIds });
                 logger.debug({ roomName, socketId: socket.id, rooms: Array.from(socket.rooms) }, '[DEBUG] Player joined room');
                 socket.data.currentGameRoom = roomName;
             }

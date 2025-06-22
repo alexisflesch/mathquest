@@ -251,6 +251,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     game_ended: (payload: { accessCode: string; correct?: number; total?: number; score?: number; totalQuestions?: number; /* any final stats */ }) => void;
     correct_answers: (payload: { questionUid: string; correctAnswers?: boolean[] }) => void; // Backend emits this event
     feedback: (payload: { questionUid: string; feedbackRemaining: number;[key: string]: any }) => void; // Backend emits this event
+    answer_feedback: (payload: { status: string; code: string; message: string }) => void; // Added for answer feedback
 
     game_error: (payload: ErrorPayload) => void;
     game_already_played: (payload: GameAlreadyPlayedPayload) => void; // Updated to use GameAlreadyPlayedPayload

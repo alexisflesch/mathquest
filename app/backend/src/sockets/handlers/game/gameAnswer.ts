@@ -17,11 +17,13 @@ import { z } from 'zod';
 import { gameAnswerPayloadSchema } from '@shared/types/socketEvents.zod';
 import { calculateLeaderboard, persistLeaderboardToGameInstance } from '../sharedLeaderboard';
 import { collectAnswers } from '../sharedAnswers';
-import { calculateScore } from '../sharedScore';
+import { ScoringService } from '@/core/services/scoringService';
 import { TimingService } from '@/services/timingService';
 import { GAME_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
 import { getAnswerStats } from '../teacherControl/helpers';
 import type { DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
+import { AnswerSubmissionPayloadSchema } from '@shared/types/core/answer';
+import { CanonicalTimerService } from '@/services/canonicalTimerService';
 
 const logger = createLogger('GameAnswerHandler');
 
@@ -36,32 +38,31 @@ export function gameAnswerHandler(
     // Define the handler function
     const handler = async (payload: any) => {
         // First log to ensure we're receiving the event
-        console.log('[GAME_ANSWER EVENT RECEIVED]', payload, 'Socket ID:', socket.id, 'Connected:', socket.connected);
+        logger.info('[GAME_ANSWER EVENT RECEIVED]', payload, 'Socket ID:', socket.id, 'Connected:', socket.connected);
         logger.info({ socketId: socket.id, event: 'game_answer', payload, connected: socket.connected }, 'TOP OF HANDLER: gameAnswerHandler invoked');
 
         // Variable to track answer correctness, defined at the top level so it's available to all code paths
         let isCorrect = false;
 
         // Zod validation for payload
-        const parseResult = gameAnswerPayloadSchema.safeParse(payload);
+        const parseResult = AnswerSubmissionPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
-            const errorDetails = parseResult.error.format();
             logger.warn({
                 socketId: socket.id,
-                error: 'Invalid payload',
-                details: errorDetails
-            }, 'Invalid game answer payload');
-
-            const errorPayload: ErrorPayload = {
-                message: 'Invalid game answer payload',
-                code: 'INVALID_PAYLOAD'
-            };
-
-            // Emit error response
-            socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
+                error: 'Invalid answer submission payload',
+                details: parseResult.error.format(),
+                payload
+            }, 'Zod validation failed for answer submission');
+            socket.emit('answer_feedback', {
+                status: 'error',
+                code: 'INVALID_PAYLOAD',
+                message: 'Invalid answer submission payload.'
+            });
             return;
         }
-        const { accessCode, userId, questionUid, answer, timeSpent } = parseResult.data;
+        const validPayload = parseResult.data;
+
+        const { accessCode, userId, questionUid, answer, timeSpent } = validPayload;
 
         try {
             logger.debug({ accessCode, userId, questionUid, answer, timeSpent }, 'Looking up gameInstance');
@@ -234,11 +235,23 @@ export function gameAnswerHandler(
             const participantService = new GameParticipantService();
             logger.debug({ userId, gameInstanceId: gameInstance.id, questionUid, answer, timeSpent }, 'Calling participantService.submitAnswer');
 
+            // Compute time penalty using canonical timer for quiz mode
+            let canonicalElapsedMs: number | undefined = undefined;
+            let timeSpentForSubmission: number | undefined = undefined;
+            if (gameInstance.playMode === 'quiz' && questionUid) {
+                const canonicalTimerService = new CanonicalTimerService(redisClient);
+                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid);
+                logger.info({ accessCode, userId, questionUid, canonicalElapsedMs }, '[TIMER] Canonical elapsed time for answer submission');
+                timeSpentForSubmission = canonicalElapsedMs;
+            } else {
+                // For all other modes, do not pass timeSpent (let scoringService use TimingService)
+                timeSpentForSubmission = undefined;
+            }
             // Submit answer using the new scoring service (handles duplicates and scoring)
             const submissionResult = await participantService.submitAnswer(gameInstance.id, userId, {
                 questionUid: questionUid, // Use questionUid to match AnswerSubmissionPayload
                 answer,
-                timeSpent: timeSpent, // Use timeSpent to match AnswerSubmissionPayload
+                ...(timeSpentForSubmission !== undefined ? { timeSpent: timeSpentForSubmission } : {}),
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
             });
@@ -373,7 +386,7 @@ export function gameAnswerHandler(
                 logger.info({ accessCode, userId, questionUid }, 'Waiting for client to request next question via request_next_question event');
 
                 // Count total answered questions to determine if this was the last one
-                console.log(`[GAME_ANSWER] Raw answers array:`, JSON.stringify(answersArr));
+                logger.info(`[GAME_ANSWER] Raw answers array:`, JSON.stringify(answersArr));
 
                 // More robust extraction of questionUid
                 const answeredQuestions = [];
@@ -385,14 +398,14 @@ export function gameAnswerHandler(
 
                 // Add the current question if it's missing from the answers array
                 if (questionUid && !answeredQuestions.includes(questionUid)) {
-                    console.log(`[GAME_ANSWER] Adding current questionUid ${questionUid} to answered questions`);
+                    logger.info(`[GAME_ANSWER] Adding current questionUid ${questionUid} to answered questions`);
                     answeredQuestions.push(questionUid);
                 }
 
                 const answeredSet = new Set(answeredQuestions);
                 const totalQuestions = allQuestions.length;
 
-                console.log(`[GAME_ANSWER] Found ${answeredSet.size}/${totalQuestions} answered questions:`, Array.from(answeredSet));
+                logger.info(`[GAME_ANSWER] Found ${answeredSet.size}/${totalQuestions} answered questions:`, Array.from(answeredSet));
                 logger.debug({
                     answeredQuestions,
                     totalQuestions,
@@ -401,7 +414,7 @@ export function gameAnswerHandler(
                 }, 'Checking if all questions are answered');
 
                 // Check if this was the last question, but don't automatically end the game
-                console.log(`[GAME_ANSWER] Checking if all questions are answered: answeredSet.size=${answeredSet.size}, totalQuestions=${totalQuestions}`);
+                logger.info(`[GAME_ANSWER] Checking if all questions are answered: answeredSet.size=${answeredSet.size}, totalQuestions=${totalQuestions}`);
                 logger.debug({
                     answeredSet: Array.from(answeredSet),
                     totalQuestions,
@@ -411,14 +424,14 @@ export function gameAnswerHandler(
                 if (answeredSet.size >= totalQuestions) {
                     // This is the last question - but we'll wait for the player to request the end of game
                     // after they've reviewed the feedback for the last question
-                    console.log(`[GAME_ANSWER] All questions answered! Waiting for player to request game end via request_next_question`);
+                    logger.info(`[GAME_ANSWER] All questions answered! Waiting for player to request game end via request_next_question`);
                     logger.info({ accessCode, userId, questionUid }, 'All questions answered, waiting for request_next_question to complete game');
 
                     // We've answered all questions, but we don't automatically send game_ended
                     // The client will call request_next_question after showing feedback, 
                     // and that handler will detect that there are no more questions and end the game
                 } else {
-                    console.log(`[GAME_ANSWER] Not all questions answered yet. Waiting for client to request next question.`);
+                    logger.info(`[GAME_ANSWER] Not all questions answered yet. Waiting for client to request next question.`);
                 }
             } else {
                 // Tournament and quiz mode: DO NOT send correctAnswers or feedback here
@@ -435,7 +448,7 @@ export function gameAnswerHandler(
                 logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode (without correct field)');
                 try {
                     socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });
-                    console.log(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
+                    logger.info(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
                 } catch (emitError) {
                     logger.error({ emitError, socketId: socket.id }, 'Error emitting answer_received');
                     console.error('[GAME_ANSWER] Error emitting answer_received:', emitError);
@@ -451,7 +464,7 @@ export function gameAnswerHandler(
                 // Also send back answer_received to unblock the client (without correct field)
                 if (questionUid && timeSpent !== undefined) {
                     socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });
-                    console.log(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
+                    logger.info(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
                 }
             } catch (emitError) {
                 logger.error({ emitError, socketId: socket.id }, 'Error sending error response');

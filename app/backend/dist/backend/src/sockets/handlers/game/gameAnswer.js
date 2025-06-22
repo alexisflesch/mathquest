@@ -6,41 +6,43 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.gameAnswerHandler = gameAnswerHandler;
 const gameParticipantService_1 = require("@/core/services/gameParticipantService");
 const prisma_1 = require("@/db/prisma");
+const redis_1 = require("@/config/redis");
 const gameStateService_1 = require("@/core/gameStateService");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
-const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const sharedLeaderboard_1 = require("../sharedLeaderboard");
 const events_2 = require("@shared/types/socket/events");
 const helpers_1 = require("../teacherControl/helpers");
+const answer_1 = require("@shared/types/core/answer");
+const canonicalTimerService_1 = require("@/services/canonicalTimerService");
 const logger = (0, logger_1.default)('GameAnswerHandler');
 function gameAnswerHandler(io, socket) {
     logger.info({ socketId: socket.id }, 'gameAnswerHandler registered');
     // Define the handler function
     const handler = async (payload) => {
         // First log to ensure we're receiving the event
-        console.log('[GAME_ANSWER EVENT RECEIVED]', payload, 'Socket ID:', socket.id, 'Connected:', socket.connected);
+        logger.info('[GAME_ANSWER EVENT RECEIVED]', payload, 'Socket ID:', socket.id, 'Connected:', socket.connected);
         logger.info({ socketId: socket.id, event: 'game_answer', payload, connected: socket.connected }, 'TOP OF HANDLER: gameAnswerHandler invoked');
         // Variable to track answer correctness, defined at the top level so it's available to all code paths
         let isCorrect = false;
         // Zod validation for payload
-        const parseResult = socketEvents_zod_1.gameAnswerPayloadSchema.safeParse(payload);
+        const parseResult = answer_1.AnswerSubmissionPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
-            const errorDetails = parseResult.error.format();
             logger.warn({
                 socketId: socket.id,
-                error: 'Invalid payload',
-                details: errorDetails
-            }, 'Invalid game answer payload');
-            const errorPayload = {
-                message: 'Invalid game answer payload',
-                code: 'INVALID_PAYLOAD'
-            };
-            // Emit error response
-            socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, errorPayload);
+                error: 'Invalid answer submission payload',
+                details: parseResult.error.format(),
+                payload
+            }, 'Zod validation failed for answer submission');
+            socket.emit('answer_feedback', {
+                status: 'error',
+                code: 'INVALID_PAYLOAD',
+                message: 'Invalid answer submission payload.'
+            });
             return;
         }
-        const { accessCode, userId, questionUid, answer, timeSpent } = parseResult.data;
+        const validPayload = parseResult.data;
+        const { accessCode, userId, questionUid, answer, timeSpent } = validPayload;
         try {
             logger.debug({ accessCode, userId, questionUid, answer, timeSpent }, 'Looking up gameInstance');
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
@@ -201,11 +203,18 @@ function gameAnswerHandler(io, socket) {
             }
             const participantService = new gameParticipantService_1.GameParticipantService();
             logger.debug({ userId, gameInstanceId: gameInstance.id, questionUid, answer, timeSpent }, 'Calling participantService.submitAnswer');
+            // Compute time penalty using canonical timer for quiz mode
+            let canonicalElapsedMs = undefined;
+            if (gameInstance.playMode === 'quiz' && questionUid) {
+                const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
+                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid);
+                logger.info({ accessCode, userId, questionUid, canonicalElapsedMs }, '[TIMER] Canonical elapsed time for answer submission');
+            }
             // Submit answer using the new scoring service (handles duplicates and scoring)
             const submissionResult = await participantService.submitAnswer(gameInstance.id, userId, {
                 questionUid: questionUid, // Use questionUid to match AnswerSubmissionPayload
                 answer,
-                timeSpent: timeSpent, // Use timeSpent to match AnswerSubmissionPayload
+                timeSpent: canonicalElapsedMs !== undefined ? canonicalElapsedMs : timeSpent, // Use canonical timer for quiz mode
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
             });
@@ -333,7 +342,7 @@ function gameAnswerHandler(io, socket) {
                 // Instead, the client will request the next question after showing feedback
                 logger.info({ accessCode, userId, questionUid }, 'Waiting for client to request next question via request_next_question event');
                 // Count total answered questions to determine if this was the last one
-                console.log(`[GAME_ANSWER] Raw answers array:`, JSON.stringify(answersArr));
+                logger.info(`[GAME_ANSWER] Raw answers array:`, JSON.stringify(answersArr));
                 // More robust extraction of questionUid
                 const answeredQuestions = [];
                 for (const a of answersArr) {
@@ -343,12 +352,12 @@ function gameAnswerHandler(io, socket) {
                 }
                 // Add the current question if it's missing from the answers array
                 if (questionUid && !answeredQuestions.includes(questionUid)) {
-                    console.log(`[GAME_ANSWER] Adding current questionUid ${questionUid} to answered questions`);
+                    logger.info(`[GAME_ANSWER] Adding current questionUid ${questionUid} to answered questions`);
                     answeredQuestions.push(questionUid);
                 }
                 const answeredSet = new Set(answeredQuestions);
                 const totalQuestions = allQuestions.length;
-                console.log(`[GAME_ANSWER] Found ${answeredSet.size}/${totalQuestions} answered questions:`, Array.from(answeredSet));
+                logger.info(`[GAME_ANSWER] Found ${answeredSet.size}/${totalQuestions} answered questions:`, Array.from(answeredSet));
                 logger.debug({
                     answeredQuestions,
                     totalQuestions,
@@ -356,7 +365,7 @@ function gameAnswerHandler(io, socket) {
                     allQuestionIds: allQuestions.map(q => q.questionUid)
                 }, 'Checking if all questions are answered');
                 // Check if this was the last question, but don't automatically end the game
-                console.log(`[GAME_ANSWER] Checking if all questions are answered: answeredSet.size=${answeredSet.size}, totalQuestions=${totalQuestions}`);
+                logger.info(`[GAME_ANSWER] Checking if all questions are answered: answeredSet.size=${answeredSet.size}, totalQuestions=${totalQuestions}`);
                 logger.debug({
                     answeredSet: Array.from(answeredSet),
                     totalQuestions,
@@ -365,14 +374,14 @@ function gameAnswerHandler(io, socket) {
                 if (answeredSet.size >= totalQuestions) {
                     // This is the last question - but we'll wait for the player to request the end of game
                     // after they've reviewed the feedback for the last question
-                    console.log(`[GAME_ANSWER] All questions answered! Waiting for player to request game end via request_next_question`);
+                    logger.info(`[GAME_ANSWER] All questions answered! Waiting for player to request game end via request_next_question`);
                     logger.info({ accessCode, userId, questionUid }, 'All questions answered, waiting for request_next_question to complete game');
                     // We've answered all questions, but we don't automatically send game_ended
                     // The client will call request_next_question after showing feedback, 
                     // and that handler will detect that there are no more questions and end the game
                 }
                 else {
-                    console.log(`[GAME_ANSWER] Not all questions answered yet. Waiting for client to request next question.`);
+                    logger.info(`[GAME_ANSWER] Not all questions answered yet. Waiting for client to request next question.`);
                 }
             }
             else {
@@ -391,7 +400,7 @@ function gameAnswerHandler(io, socket) {
                 logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode (without correct field)');
                 try {
                     socket.emit(events_1.SOCKET_EVENTS.GAME.ANSWER_RECEIVED, { questionUid, timeSpent });
-                    console.log(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
+                    logger.info(`[GAME_ANSWER] Successfully emitted answer_received for question ${questionUid} to socket ${socket.id}`);
                 }
                 catch (emitError) {
                     logger.error({ emitError, socketId: socket.id }, 'Error emitting answer_received');
@@ -407,7 +416,7 @@ function gameAnswerHandler(io, socket) {
                 // Also send back answer_received to unblock the client (without correct field)
                 if (questionUid && timeSpent !== undefined) {
                     socket.emit(events_1.SOCKET_EVENTS.GAME.ANSWER_RECEIVED, { questionUid, timeSpent });
-                    console.log(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
+                    logger.info(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
                 }
             }
             catch (emitError) {

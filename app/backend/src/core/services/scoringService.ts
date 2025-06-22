@@ -50,14 +50,15 @@ export function calculateAnswerScore(
 
     const finalScore = Math.max(baseScore - timePenalty, 0);
 
-    logger.debug({
+    logger.info({
+        questionType: question.questionType,
         baseScore,
         serverTimeSpent,
         serverTimeSpentSeconds,
         timePenalty,
         finalScore,
         isCorrect
-    }, 'Score calculation details');
+    }, 'Score calculation details (diagnostic)');
 
     return finalScore;
 }
@@ -71,16 +72,28 @@ export function calculateAnswerScore(
 export function checkAnswerCorrectness(question: any, answer: any): boolean {
     if (!question || !question.correctAnswers) return false;
 
+    // Multiple choice (multiple answers): answer is array of indices, correctAnswers is boolean array
+    if (Array.isArray(question.correctAnswers) && Array.isArray(answer)) {
+        // Check that all and only correct indices are selected
+        const correctIndices = question.correctAnswers
+            .map((v: boolean, i: number) => v ? i : -1)
+            .filter((i: number) => i !== -1);
+        // Sort both arrays for comparison
+        const submitted = [...answer].sort();
+        const correct = [...correctIndices].sort();
+        return (
+            submitted.length === correct.length &&
+            submitted.every((v, i) => v === correct[i])
+        );
+    }
+    // Multiple choice (single answer): answer is index, correctAnswers is boolean array
     if (Array.isArray(question.correctAnswers) && typeof answer === 'number') {
-        // Multiple choice: answer is index, correctAnswers is boolean array
-        if (answer >= 0 && answer < question.correctAnswers.length) {
-            return question.correctAnswers[answer] === true;
-        }
-    } else if (question.correctAnswers) {
-        // Direct comparison for other question types
+        return question.correctAnswers[answer] === true;
+    }
+    // Fallback: direct comparison for other types
+    if (question.correctAnswers) {
         return question.correctAnswers === answer;
     }
-
     return false;
 }
 
@@ -193,9 +206,9 @@ export async function submitAnswerWithScoring(
 
         // Calculate server-side timing
         const gameInstance = await prisma.gameInstance.findUnique({
-            where: { id: gameInstanceId }
+            where: { id: gameInstanceId },
+            select: { playMode: true, accessCode: true }
         });
-
         if (!gameInstance) {
             return {
                 scoreUpdated: false,
@@ -206,32 +219,81 @@ export async function submitAnswerWithScoring(
                 message: 'Game instance not found'
             };
         }
+        let serverTimeSpent: number;
+        if (gameInstance.playMode === 'quiz' && typeof answerData.timeSpent === 'number') {
+            // Use canonical timer value for quiz mode
+            serverTimeSpent = answerData.timeSpent;
+            logger.info({
+                questionUid: answerData.questionUid,
+                userId,
+                serverTimeSpent,
+                source: 'canonicalTimerService',
+                playMode: gameInstance.playMode
+            }, 'Using canonical timer for quiz mode');
+        } else {
+            // Use per-user timing for other modes
+            serverTimeSpent = await TimingService.calculateAndCleanupTimeSpent(
+                gameInstance.accessCode,
+                answerData.questionUid,
+                userId
+            );
+            logger.info({
+                questionUid: answerData.questionUid,
+                userId,
+                serverTimeSpent,
+                source: 'TimingService',
+                playMode: gameInstance.playMode
+            }, 'Using per-user timer for non-quiz mode');
+        }
 
-        const serverTimeSpent = await TimingService.calculateAndCleanupTimeSpent(
-            gameInstance.accessCode,
-            answerData.questionUid,
-            userId
-        );
+        logger.info({
+            questionUid: answerData.questionUid,
+            userId,
+            questionType: question.questionType,
+            serverTimeSpent,
+            answer: answerData.answer
+        }, 'DIAGNOSTIC: Time penalty and question type before score calculation');
 
         // Check answer correctness
+        logger.info({
+            questionUid: answerData.questionUid,
+            userId,
+            answer: answerData.answer,
+            questionCorrectAnswers: question.correctAnswers,
+            questionType: question.questionType
+        }, 'DEBUG: Checking answer correctness input');
         const isCorrect = checkAnswerCorrectness(question, answerData.answer);
+        logger.info({
+            questionUid: answerData.questionUid,
+            userId,
+            answer: answerData.answer,
+            questionCorrectAnswers: question.correctAnswers,
+            questionType: question.questionType,
+            isCorrect
+        }, 'DEBUG: Answer correctness result');
 
         // Calculate new score
         const newScore = calculateAnswerScore(isCorrect, serverTimeSpent, question);
+        logger.debug({
+            gameInstanceId,
+            userId,
+            questionUid: answerData.questionUid,
+            isCorrect,
+            serverTimeSpent,
+            newScore
+        }, 'DEBUG: Score calculation');
 
         // If this is a changed answer, we need to subtract the old score first
         let scoreToAdd = newScore;
-        if (existingAnswer) {
-            // For answer changes, we recalculate based on new timing but note it's a change
-            logger.info({
-                gameInstanceId,
-                userId,
-                questionUid: answerData.questionUid,
-                oldAnswer: existingAnswer?.answer,
-                newAnswer: answerData.answer,
-                newScore
-            }, 'Answer changed - recalculating score with time penalty');
-        }
+        logger.debug({
+            gameInstanceId,
+            userId,
+            questionUid: answerData.questionUid,
+            isCorrect,
+            newScore,
+            scoreToAdd,
+            participantScore: participant.score
+        }, 'DEBUG: Score to add and participant score before DB update');
 
         // Update the answers array
         const newAnswerEntry = {
@@ -291,6 +353,13 @@ export async function submitAnswerWithScoring(
             where: { id: participant.id },
             data: scoreUpdateData
         });
+        logger.debug({
+            gameInstanceId,
+            userId,
+            participantId: participant.id,
+            scoreUpdateData,
+            updatedScore: updatedParticipant.score
+        }, 'DEBUG: Participant DB score after update');
 
         // Update Redis for answer tracking
         if (gameInstance) {

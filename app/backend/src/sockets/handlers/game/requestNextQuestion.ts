@@ -7,6 +7,8 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 import { requestNextQuestionPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { LiveQuestionPayload } from '@shared/types/quiz/liveQuestion';
+import { TimingService } from '@/services/timingService';
+import { emitQuestionHandler } from './emitQuestionHandler';
 
 const logger = createLogger('RequestNextQuestionHandler');
 
@@ -14,7 +16,10 @@ export function requestNextQuestionHandler(
     io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
     socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 ) {
+    // Use the canonical emitQuestionHandler for all question emission
+    const emitQuestion = emitQuestionHandler(io, socket);
     return async (payload: any) => {
+        logger.info({ payload }, '[DEBUG] requestNextQuestionHandler called');
         // Runtime validation with Zod
         const parseResult = requestNextQuestionPayloadSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -38,6 +43,7 @@ export function requestNextQuestionHandler(
 
         const validPayload = parseResult.data;
         const { accessCode, userId, currentQuestionUid } = validPayload;
+        logger.info({ accessCode, userId, currentQuestionUid }, '[DEBUG] requestNextQuestionHandler params');
 
         try {
             logger.info({ socketId: socket.id, event: 'request_next_question', accessCode, userId, currentQuestionUid }, 'Player requested next question');
@@ -82,109 +88,38 @@ export function requestNextQuestionHandler(
             const allQuestions = await prisma.questionsInGameTemplate.findMany({
                 where: { gameTemplateId: gameInstance.gameTemplateId },
                 orderBy: { sequence: 'asc' },
-                include: {
-                    question: true
-                }
+                include: { question: true }
             });
 
-            // Since answers field was removed, we'll use a simple progression for now
-            // TODO: Implement Redis-based answer tracking if needed
-            const answersArr: any[] = [];
-            const answeredSet = new Set<string>();
-
-            // 5. Find next unanswered question - skip the current one
-            let nextQuestion = null;
+            // Find the next question after the current one
+            let nextQuestionUid = undefined;
             if (currentQuestionUid) {
-                // Find the current question's index
                 const currentIndex = allQuestions.findIndex(q => q.questionUid === currentQuestionUid);
                 if (currentIndex !== -1 && currentIndex < allQuestions.length - 1) {
-                    // Get the next question
-                    const nextQ = allQuestions[currentIndex + 1];
-                    nextQuestion = nextQ.question;
+                    nextQuestionUid = allQuestions[currentIndex + 1].questionUid;
                 }
+            } else if (allQuestions.length > 0) {
+                nextQuestionUid = allQuestions[0].questionUid;
             }
 
-            if (nextQuestion) {
-                // Send next question
-                logger.info({ accessCode, userId, nextQuestionUid: nextQuestion.uid }, 'Sending next question');
-
-                // Log what we're about to send for debugging
-                console.log('[REQUEST_NEXT_QUESTION] About to send question:', {
-                    uid: nextQuestion.uid,
-                    text: nextQuestion.text,
-                    index: allQuestions.findIndex(q => q.questionUid === nextQuestion.uid)
-                });
-
-                // Create a properly formatted question payload according to QuestionData type
-                const questionData = {
-                    uid: nextQuestion.uid,
-                    text: nextQuestion.text,
-                    answerOptions: nextQuestion.answerOptions || [],
-                    correctAnswers: nextQuestion.correctAnswers || [],
-                    questionType: nextQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
-                    timeLimit: nextQuestion.timeLimit || 30,
-                    themes: nextQuestion.themes || [],
-                    difficulty: nextQuestion.difficulty || 1,
-                    discipline: nextQuestion.discipline || 'math',
-                    title: nextQuestion.title || undefined
-                };
-
-                // Add current question index to the payload
-                const questionIndex = allQuestions.findIndex(q => q.questionUid === nextQuestion.uid);
-                const totalQuestions = allQuestions.length;
-
-                // Create the proper LiveQuestionPayload structure
-                const liveQuestionPayload = {
-                    question: {
-                        uid: nextQuestion.uid,
-                        text: nextQuestion.text,
-                        questionType: nextQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
-                        answerOptions: nextQuestion.answerOptions || []
-                    },
-                    timer: {
-                        status: 'play' as const,
-                        timeLeftMs: (nextQuestion.timeLimit || 30) * 1000,
-                        durationMs: (nextQuestion.timeLimit || 30) * 1000,
-                        questionUid: nextQuestion.uid,
-                        timestamp: Date.now(),
-                        localTimeLeftMs: (nextQuestion.timeLimit || 30) * 1000
-                    },
-                    questionIndex: questionIndex,
-                    totalQuestions: totalQuestions,
-                    questionState: 'active' as const
-                };
-
-                // Send the question data using the proper LiveQuestionPayload structure
-                socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, liveQuestionPayload);
+            if (nextQuestionUid) {
+                // Use canonical handler for emission and timing
+                await emitQuestion({ accessCode, userId, questionUid: nextQuestionUid });
             } else {
                 // All questions answered: compute and send final score
                 const total = allQuestions.length;
-                // Count correct answers for this participant
-                let correctCount = 0;
-                for (const a of answersArr) {
-                    if (a && typeof a === 'object' && 'questionUid' in a && typeof a.questionUid === 'string' && 'answer' in a) {
-                        const q = await prisma.question.findUnique({ where: { uid: a.questionUid } });
-                        if (q && Array.isArray(q.correctAnswers) && typeof a.answer === 'number') {
-                            if (q.correctAnswers[a.answer] === true) correctCount++;
-                        }
-                    }
-                }
-
-                // Send final score
-                logger.info({ accessCode, userId, correctCount, total }, 'Practice mode completed, sending final score');
+                // TODO: Use canonical scoring/answer tracking if available
+                // For now, just send GAME_ENDED event
+                logger.info({ accessCode, userId, total }, 'Practice mode completed, sending final score');
                 const gameEndedPayload: GameEndedPayload = {
                     accessCode,
-                    score: correctCount,
+                    score: total, // Placeholder: should be correct count
                     totalQuestions: total,
-                    correct: correctCount,
+                    correct: total,
                     total: total
                 };
                 socket.emit(SOCKET_EVENTS.GAME.GAME_ENDED as any, gameEndedPayload);
-
-                // Update participant as completed
-                // Remove completedAt update since field was removed
-                // Tournament completion is now tracked differently
-                logger.info({ participantId: participant.id }, 'Tournament completed (no database update needed)');
+                logger.info({ participantId: participant.id }, 'Practice completed (no database update needed)');
             }
         } catch (err) {
             logger.error({ err, socketId: socket.id }, 'Error handling request_next_question');

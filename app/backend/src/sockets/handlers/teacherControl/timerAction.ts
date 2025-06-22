@@ -14,6 +14,8 @@ import type {
     DashboardTimerUpdatedPayload
 } from '@shared/types/socket/dashboardPayloads';
 import { timerActionPayloadSchema } from '@shared/types/socketEvents.zod';
+import { emitQuestionHandler } from '../game/emitQuestionHandler';
+import { CanonicalTimerService } from '@/services/canonicalTimerService';
 
 // Create a handler-specific logger
 const logger = createLogger('TimerActionHandler');
@@ -107,6 +109,8 @@ function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, 
 }
 
 export function timerActionHandler(io: SocketIOServer, socket: Socket) {
+    const emitQuestion = emitQuestionHandler(io, socket);
+    const canonicalTimerService = new CanonicalTimerService(redisClient);
     return async (payload: TimerActionPayload) => {
         // Runtime validation with Zod
         const parseResult = timerActionPayloadSchema.safeParse(payload);
@@ -523,6 +527,26 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 code: 'TIMER_ERROR'
             };
             socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
+        }
+
+        // Canonical timer integration for quiz mode
+        if (gameInstance.playMode === 'quiz' && questionUid) {
+            try {
+                switch (action) {
+                    case 'start':
+                    case 'resume':
+                        await canonicalTimerService.startTimer(accessCode, questionUid);
+                        break;
+                    case 'pause':
+                        await canonicalTimerService.pauseTimer(accessCode, questionUid);
+                        break;
+                    case 'stop':
+                        await canonicalTimerService.resetTimer(accessCode, questionUid);
+                        break;
+                }
+            } catch (err) {
+                logger.error({ accessCode, questionUid, action, err }, '[TIMER_ACTION] Canonical timer error');
+            }
         }
     };
 }

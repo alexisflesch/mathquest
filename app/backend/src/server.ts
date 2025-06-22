@@ -83,7 +83,7 @@ if (process.env.NODE_ENV !== 'test') {
 } else {
     // For test environment, we'll manually control server start/stop
     // Tests will use the app instance directly with supertest
-    console.log(`Test environment detected, server not automatically started`);
+    logger.info(`Test environment detected, server not automatically started`);
 }
 
 // Helper function for tests to setup and start the server on a specific port

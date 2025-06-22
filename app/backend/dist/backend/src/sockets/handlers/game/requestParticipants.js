@@ -15,7 +15,15 @@ function requestParticipantsHandler(io, socket) {
             return;
         const { accessCode } = parseResult.data;
         const participantsHash = await redis_1.redisClient.hgetall(`${PARTICIPANTS_KEY_PREFIX}${accessCode}`);
-        const participants = Object.values(participantsHash).map((p) => JSON.parse(p));
+        const allParticipants = Object.values(participantsHash).map((p) => JSON.parse(p));
+        // Deduplicate by userId
+        const uniqueParticipantsMap = new Map();
+        for (const participant of allParticipants) {
+            if (!uniqueParticipantsMap.has(participant.userId)) {
+                uniqueParticipantsMap.set(participant.userId, participant);
+            }
+        }
+        const participants = Array.from(uniqueParticipantsMap.values());
         const gameParticipantsPayload = { participants };
         socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_PARTICIPANTS, gameParticipantsPayload);
     };

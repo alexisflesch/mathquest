@@ -257,3 +257,282 @@
 - [ ] Document root cause and solution in log.md
 - [ ] Remove any temporary debug logs after verification
 - [ ] Confirm logger config is correct and consistent in all environments
+
+---
+
+## Phase X: Logger Reliability & Debugging (CONTINUED)
+**Goal:** Ensure all backend logging uses the centralized Winston logger and all real-time score/leaderboard updates are correctly propagated to all relevant rooms, including projection.
+
+### Checklist:
+- [x] Investigate why projection page scores remain at 0 despite backend score updates
+- [x] Identify missing leaderboard_update emission to projection room
+- [ ] Update backend to emit leaderboard_update to projection room after every score update
+- [ ] Test and validate: projection page receives and displays correct scores in real time
+- [ ] Update documentation and log.md with findings and changes
+
+---
+
+# MathQuest Backend Modernization Plan
+
+## 🎯 Main Goal
+
+Modernize backend logging and real-time score/leaderboard propagation, ensuring the projection page displays correct scores only when the teacher requests it (e.g., by clicking the trophy icon). Fix root causes of incorrect/zero scores, duplicate participants, and leaderboard sync issues.
+
+---
+
+## 📋 Global Checklist
+
+- [ ] **Phase 1:** Audit and fix participant creation logic to prevent duplicates.
+- [ ] **Phase 2:** Audit and fix scoring logic to ensure scores are written to Redis and leaderboard ZSET is updated.
+- [ ] **Phase 3:** Audit and fix projection handler to fetch leaderboard from Redis, not DB.
+- [ ] **Phase 4:** Emit leaderboard updates to the projection room only when the teacher requests it (trophy icon).
+- [ ] **Phase 5:** Test and validate the full flow, including hard refreshes and teacher-triggered leaderboard display.
+- [ ] **Phase 6:** Update documentation (`plan.md`, `log.md`) with findings, root causes, and changes.
+
+---
+
+## 🗂️ Phase-Based Plan
+
+### **Phase 1: Prevent Duplicate Participants**
+- [ ] Audit participant creation logic in backend (likely in `src/sockets/handlers/game/gameAnswer.ts` and related services).
+- [ ] Ensure only one participant per user/game is created in Redis and DB.
+- [ ] Add/adjust logging to confirm no duplicates are created.
+- [ ] Mark phase complete when duplicate creation is impossible in all flows.
+
+### **Phase 2: Ensure Correct Score Calculation and Storage**
+- [ ] Audit scoring logic for correct score calculation and Redis ZSET update.
+- [ ] Ensure scores are always written to Redis (and DB if needed) after each answer.
+- [ ] Add/adjust logging to confirm correct score propagation.
+- [ ] Mark phase complete when scores are always correct in Redis after answers.
+
+### **Phase 3: Projection Handler Reads Leaderboard from Redis**
+- [ ] Audit `projectorHandler.ts` and related code.
+- [ ] Refactor to fetch leaderboard from Redis, not DB.
+- [ ] Add/adjust logging to confirm correct leaderboard data is sent to projection.
+- [ ] Mark phase complete when projection always gets the latest leaderboard from Redis.
+
+### **Phase 4: Emit Leaderboard to Projection Only on Teacher Request**
+- [ ] Ensure leaderboard is only emitted to the projection room when the teacher clicks the trophy icon.
+- [ ] Refactor event flow so projection does not receive updates after every answer or timer event.
+- [ ] Add/adjust logging for teacher-triggered leaderboard emission.
+- [ ] Mark phase complete when projection leaderboard only updates on explicit teacher action.
+
+### **Phase 5: Test and Validate End-to-End**
+- [ ] Test full flow: join as teacher, students answer, teacher clicks trophy, projection updates.
+- [ ] Test hard refreshes and late joiners.
+- [ ] Validate logs and DB/Redis state for correctness.
+- [ ] Mark phase complete when all scenarios work as expected.
+
+### **Phase 6: Documentation and Root Cause Analysis**
+- [ ] Update `plan.md` and `log.md` with:
+  - Checklist progress
+  - Root causes found and fixed
+  - Key code changes and new/removed events
+  - Testing steps and results
+- [ ] Mark phase complete when documentation is fully up to date.
+
+---
+
+## ✅ Exit Criteria
+
+- No duplicate participants per user/game.
+- Scores always correct in Redis and on projection after teacher action.
+- Projection leaderboard only updates on explicit teacher request.
+- All changes and findings are documented.
+- All tests pass and manual validation matches expected behavior.
+
+---
+
+## Phase 2: Canonical Participant List & Logging Modernization
+**Goal:** Ensure all UI, API, and socket endpoints use the canonical, deduplicated participant list (`ParticipantData[]`) and that all logging is consistent and centralized.
+
+### Checklist:
+- [x] Refactor participant count logic to use unique userIds (not sockets)
+- [x] Audit all participant list/count emissions (API, socket, UI)
+- [x] Ensure all emissions use deduplicated canonical list (`ParticipantData[]`)
+- [x] Confirm all logging uses centralized Winston logger and is consistent
+- [x] Update documentation (`plan.md`, `log.md`) with findings and changes
+- [ ] Test and validate: joining/leaving with multiple tabs and users, ensure participant count and list are always correct
+- [ ] Provide clear test/validation steps and expected vs. actual behavior
+
+#### Test/Validation Steps
+- Open multiple tabs as the same user and as different users; verify participant count and list are correct in dashboard/projection
+- Disconnect/reconnect; ensure participant is only removed when all sockets for that user disconnect
+- Confirm logs show correct unique userIds and counts
+- Validate that all UI and API endpoints display the correct, deduplicated participant list
+
+---
+
+# Scoring Logic Modernization (2024-06)
+
+## Problem Statement
+- Multiple choice questions are not being scored correctly (no score or incorrect score awarded).
+- For single choice questions, time penalties are not being applied (participants always receive full points, e.g., 1000).
+- Root cause suspected in `submitAnswerWithScoring` and related logic in `scoringService.ts`.
+- All changes must use shared types/Zod validation and be documented per modernization guidelines.
+
+## Phase 1: Multiple Choice Scoring Fix
+- [ ] Review and correct answer validation for multiple choice in `scoringService.ts`.
+- [ ] Ensure score calculation and DB update are triggered for multiple choice.
+- [ ] Add/verify Zod validation and shared type usage for answer payloads.
+- [ ] Document findings and changes in `plan.md`.
+- [ ] Add/update tests for multiple choice scoring.
+
+## Phase 2: Time Penalty for Single Choice
+- [x] Diagnose why time penalty is not being applied for single choice questions (score always 1000).
+- [ ] Fix time penalty logic so it is correctly triggered for all question types.
+- [ ] Add/update tests for time penalty logic and validate fixes.
+- [ ] Document all findings and changes in plan.md.
+
+### 2024-06-22: Investigation Log
+- Confirmed via logs and DB that single choice questions always award full points (1000), regardless of answer time.
+- Verified Zod schema and answer payload types are correct and unified.
+- Next: Review and debug time penalty logic in scoringService.ts, focusing on single choice flow.
+
+---
+
+## Phase 3: Scoring Logic Unification (In Progress)
+**Goal:** Eliminate all duplicate scoring logic and enforce a single canonical scoring service for all flows (API, socket, tournament, etc).
+
+### Checklist
+- [x] Identify all locations where scoring is calculated (API, socket handlers, etc).
+- [x] Remove `sharedScore.ts` and any other duplicate scoring modules.
+- [x] Refactor all socket/game handlers to use `core/services/scoringService.ts` exclusively.
+- [ ] Ensure all scoring logic uses shared types and Zod validation.
+- [ ] Add/verify tests for all scoring flows (single, multiple choice, time penalty, etc).
+- [ ] Document all changes and rationale in `plan.md`.
+
+### Technical Debt Log
+- 2025-06-22: Discovered duplicate scoring logic in `scoringService.ts` and `sharedScore.ts`. This violates DRY and modernization guidelines. Plan to unify all logic in a single canonical service and update all usages accordingly.
+- 2025-06-22: Refactored socket handlers to use canonical scoring service. Removed duplicate code from `sharedScore.ts`.
+
+---
+
+## Phase: Fix Time Penalty in Practice/Game Flow
+
+## Goal
+Ensure that time penalties are correctly applied in practice/game mode by tracking question start time for each user when a question is shown.
+
+## Tasks
+- [x] Analyze old tournament/timing logic in sharedScore.ts
+- [x] Confirm time penalty logic expects serverTimeSpent (ms) on answer
+- [x] Identify missing TimingService.trackQuestionStart call in game/practice flow
+- [x] Update requestNextQuestionHandler to call TimingService.trackQuestionStart for each user/question
+- [ ] Test and validate that time penalties are now applied in practice/game mode
+- [ ] Log all actions and update this plan
+- [ ] Document testing steps and expected/actual results
+
+## Notes
+- Tournament mode worked because it tracked question start time; practice/game did not.
+- All scoring logic is now unified in scoringService.ts, so timing must be tracked for all flows.
+
+---
+
+## Phase 2: Scoring Logic Unification & Time Penalty Fix
+**Goal:** Ensure all quiz and tournament modes use unified, modern scoring and timing logic, with Zod validation and canonical shared types.
+
+### Findings (as of current analysis):
+- **Quiz mode** answer submission and question emission are handled in `sharedLiveHandler.ts` (via `answerHandler` and `joinHandler`).
+- **Tournament and practice modes** use canonical handlers in `gameAnswer.ts` and `requestNextQuestion.ts`.
+- `registerGameHandlers` in `game/index.ts` registers `gameAnswerHandler` for `GAME_ANSWER` events, but `sharedLiveHandler.ts` does not register a handler for `GAME_ANSWER` (only for `TOURNAMENT_ANSWER`).
+- **Quiz mode clients are using the `TOURNAMENT_ANSWER` event**, which is handled by `sharedLiveHandler.ts`, bypassing the canonical timing and scoring logic in `scoringService.ts` and `TimingService.trackQuestionStart`.
+
+### Plan / Next Steps:
+1. **Unify answer submission and question emission for quiz mode** so both quiz and tournament modes use the canonical handlers (`gameAnswerHandler` and `requestNextQuestionHandler`).
+2. **Update event registration** so quiz mode uses `GAME_ANSWER` and `GAME_QUESTION` events, not `TOURNAMENT_ANSWER`.
+3. **Remove or refactor quiz-specific logic in `sharedLiveHandler.ts`** to delegate to canonical handlers.
+4. **Test and validate** that time penalties and scoring work for all modes.
+5. **Document all changes and findings** in `plan.md` and log actions in `log.md`.
+
+### Checklist:
+- [x] Diagnose why time penalties are not applied to quiz questions (root cause: quiz mode uses alternate handler).
+- [x] Confirm time penalty logic works for tournaments.
+- [x] Add/verify Zod validation for answer payloads.
+- [x] Add diagnostic logging to timing and scoring services.
+- [x] Document all findings and actions.
+- [x] Unify code paths for quiz and tournament answer/question handling.
+- [x] Update event registration for quiz mode to use canonical handlers.
+- [x] Remove/modernize quiz-specific logic in `sharedLiveHandler.ts`.
+- [ ] Test and validate unified logic (time penalties, scoring, etc).
+- [ ] Add/verify tests for all scoring flows.
+
+---
+
+## Phase 3: Unified Question Emission & Leaderboard Gating (2025-06-22)
+
+**Goal:**
+- Ensure all question emission (practice, quiz, tournament, teacher control) uses the canonical `emitQuestionHandler`.
+- Guarantee `TimingService.trackQuestionStart` is always called for every question.
+- Leaderboard updates are only broadcast on explicit teacher action (e.g., trophy icon), never automatically after answer submission.
+- Remove all legacy/duplicate question emission logic.
+
+### Checklist:
+- [ ] Refactor all question emission (including practice/progression) to use `emitQuestionHandler`.
+- [ ] Ensure `TimingService.trackQuestionStart` is always called for every question emission.
+- [ ] Update answer/score handlers to only emit leaderboard updates on explicit teacher action (e.g., trophy icon).
+- [ ] Remove any legacy or duplicate question emission logic.
+- [ ] Update `plan.md` and `log.md` with findings, actions, and test steps.
+- [ ] Validate with tests and log expected vs. actual behavior.
+
+#### Findings (2025-06-22):
+- Leaderboard is broadcast immediately after answer submission, not just on teacher action.
+- Time penalty logic is not triggered for quiz mode because question start time is never tracked.
+- Question emission for quiz mode is not using the unified handler, so timing and scoring logic are bypassed.
+
+#### Next:
+- Refactor `requestNextQuestionHandler` to use `emitQuestionHandler` for all question emission and timing.
+- Remove direct socket emission logic from `requestNextQuestionHandler`.
+- Proceed to update answer/score handlers after this step.
+
+---
+
+## Phase 2: Canonical Global Timer Logic for Quiz Mode
+**Goal:** Ensure all time penalties and scoring in quiz mode are based on a canonical, global timer state per game/question, supporting pause/resume and late joiners, while preserving per-user timing for differed tournaments.
+
+### Checklist:
+- [ ] Refactor TimingService to store a global timer object per game/question for quiz mode (start time, total play time, pause/resume state)
+- [ ] Update all answer/penalty logic to use this canonical timer
+- [ ] Ensure late joiners and reconnects see correct remaining time and receive correct penalty
+- [ ] Preserve per-user timing logic for differed tournaments
+- [ ] Update emitQuestionHandler and all emission logic to reference the global timer for quiz mode
+- [ ] Update or add Zod validation for new timer state if needed
+- [ ] Document new timer state and logic here and in log.md
+- [ ] Test: Validate correct penalty for late joiners, pause/resume, and differed tournaments
+- [ ] Mark all items as [x] when done
+
+---
+
+### Notes:
+- The timer state must include: questionUid, status (play/pause), startedAt, totalPlayTimeMs, and a history of pause/resume if needed.
+- All answer submissions must compute elapsed time using this canonical timer, not per-user emission time.
+- For differed tournaments, keep the current per-user timing logic.
+- Document all changes and findings in plan.md and log.md as per modernization guidelines.
+
+---
+
+# Phase: Canonical Timer Rewrite for All Game Modes
+
+## Goals
+- Unify timer logic for all game modes (quiz, live tournament, differed, practice).
+- Eliminate all legacy/per-user timer code.
+- Ensure all time penalties are based on canonical, global timers (except for differed, which uses per-session canonical timer).
+- Practice mode: no timer or penalty.
+- Use canonical/shared types and Zod validation throughout.
+- Document and log all actions.
+
+---
+
+## Checklist
+
+- [ ] 1. Update `plan.md` with this phase and checklist.
+- [ ] 2. Update `CanonicalTimerService`:
+  - [ ] Support global timer per question for live tournaments and quiz.
+  - [ ] Support per-user session timer for differed tournaments.
+  - [ ] No timer for practice mode.
+- [ ] 3. Refactor all answer/score handlers and emission logic to use new timer logic for all modes.
+- [ ] 4. Remove all legacy/per-user timer code.
+- [ ] 5. Enforce use of canonical/shared types and Zod validation.
+- [ ] 6. Update documentation and checklist in `plan.md` and log all actions in `log.md`.
+- [ ] 7. Validate with tests for all modes (quiz, live tournament, differed, practice).
+
+---

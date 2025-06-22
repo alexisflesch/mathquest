@@ -52,6 +52,10 @@ export class TimingService {
 
             const wasSet = result === 'OK';
 
+            logger.info({
+                accessCode, questionUid, userId, key, startTime, wasSet
+            }, 'DIAGNOSTIC: trackQuestionStart called');
+
             if (wasSet) {
                 logger.debug({
                     accessCode, questionUid, userId, startTime
@@ -87,6 +91,10 @@ export class TimingService {
             const key = this.getTimingKey(accessCode, questionUid, userId);
             const startTimeStr = await redis.get(key);
 
+            logger.info({
+                accessCode, questionUid, userId, key, startTimeStr
+            }, 'DIAGNOSTIC: calculateAndCleanupTimeSpent called');
+
             if (!startTimeStr) {
                 logger.warn({
                     accessCode, questionUid, userId
@@ -110,7 +118,7 @@ export class TimingService {
         } catch (error) {
             logger.error({
                 accessCode, questionUid, userId, error
-            }, 'Failed to calculate time spent');
+            }, 'Failed to cleanup question timing data');
             return 0;
         }
     }

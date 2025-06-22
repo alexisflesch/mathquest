@@ -151,7 +151,7 @@ const socketAuthMiddleware = (socket, next) => {
             socket.data.user = userData;
             socket.data.userId = finalUserId;
             // SIMPLE DEBUG LOG
-            console.log('SOCKET AUTH DEBUG:', {
+            logger.info('SOCKET AUTH DEBUG:', {
                 socketId: socket.id,
                 finalUserId,
                 setUserId: socket.data.userId,

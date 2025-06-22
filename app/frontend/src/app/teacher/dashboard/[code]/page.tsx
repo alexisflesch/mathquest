@@ -11,6 +11,7 @@
 import React, { useEffect, useState } from "react";
 import AccessErrorPage from '@/components/AccessErrorPage';
 import TeacherDashboardClient from '@/components/TeacherDashboardClient';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useParams } from "next/navigation";
 
 export default function TeacherDashboardPage() {
@@ -46,7 +47,7 @@ export default function TeacherDashboardPage() {
             .finally(() => setLoading(false));
     }, [code]);
 
-    if (loading) return <div>Chargement...</div>;
+    if (loading) return <LoadingScreen message="Chargement du dashboard..." />;
     if (!result || !result.valid) {
         let message = 'Accès refusé.';
         if (result?.reason === 'NOT_AUTHENTICATED') message = 'Vous devez être connecté pour accéder à ce dashboard.';
