@@ -173,6 +173,14 @@ async function runDeferredQuestionSequence(io, socket, session) {
                 questionIndex: i,
                 timer: timer
             }, 'Emitting game_question for deferred session');
+            // [DIAGNOSTIC] Logging timer state for deferred tournament (per-user/per-attempt)
+            logger.debug({
+                accessCode,
+                userId,
+                playerRoom,
+                questionIndex: i,
+                timer
+            }, '[DIAGNOSTIC] Deferred tournament timer state (should be per-user/per-attempt)');
             // Emit to individual player room
             io.to(playerRoom).emit('game_question', gameQuestionPayload);
             // Emit timer update
@@ -197,13 +205,9 @@ async function runDeferredQuestionSequence(io, socket, session) {
                 correctAnswers: question.correctAnswers || []
             };
             io.to(playerRoom).emit('correct_answers', correctAnswersPayload);
-            // Calculate score for this player's answer (if any)
-            try {
-                await gameStateService_1.default.calculateScores(accessCode, question.uid);
-            }
-            catch (error) {
-                logger.error({ accessCode, userId, questionUid: question.uid, error }, 'Error calculating scores for deferred session');
-            }
+            // [MODERNIZATION] Removed legacy call to gameStateService.calculateScores.
+            // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
+            // If batch scoring is needed, refactor to use canonical logic per participant/answer.
             // Handle feedback if available
             if (question.explanation) {
                 // Small delay before feedback

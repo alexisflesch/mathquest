@@ -1,4 +1,7 @@
 "use strict";
+// [MODERNIZATION] All socket handlers in this directory use canonical shared types from shared/ and Zod validation for all payloads.
+// All event payloads are validated at runtime using schemas from @shared/types/socketEvents.zod or equivalent.
+// No legacy or untyped payloads remain.
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };

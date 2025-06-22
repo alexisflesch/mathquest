@@ -6,6 +6,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculateScore = calculateScore;
+// [MODERNIZATION] This file is now deprecated. All logic has been migrated to scoringService.ts.
+// Any import or usage of this file should be removed. See plan.md for details.
 // Shared score calculation logic for quiz and tournament modes
 // This module should be imported by both quiz and tournament handlers
 const logger_1 = __importDefault(require("@/utils/logger"));

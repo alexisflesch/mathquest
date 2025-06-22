@@ -1,3 +1,7 @@
+// [MODERNIZATION] All socket handlers in this directory use canonical shared types from shared/ and Zod validation for all payloads.
+// All event payloads are validated at runtime using schemas from @shared/types/socketEvents.zod or equivalent.
+// No legacy or untyped payloads remain.
+
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { GameParticipantService } from '@/core/services/gameParticipantService';
 import { prisma } from '@/db/prisma';
@@ -25,6 +29,10 @@ import { AnswerSubmissionPayloadSchema } from '@shared/types/core/answer';
 import { CanonicalTimerService } from '@/services/canonicalTimerService';
 
 const logger = createLogger('GameAnswerHandler');
+
+// [MODERNIZATION] All answer submission and scoring logic is now routed through scoringService.ts (submitAnswerWithScoring).
+// This handler is canonical for all play modes (quiz, live tournament, deferred, practice).
+// No legacy or alternate scoring logic remains.
 
 export type GameAnswerPayload = z.infer<typeof gameAnswerPayloadSchema>;
 

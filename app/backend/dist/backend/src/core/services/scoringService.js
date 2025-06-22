@@ -192,6 +192,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
         }
         // Calculate server-side timing (factorized by mode)
         let serverTimeSpent = 0;
+        let timerDebugInfo = {};
         if (gameInstance.playMode === 'practice') {
             // Practice mode: no timer
             serverTimeSpent = 0;
@@ -199,11 +200,29 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData) {
         else if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !gameInstance.isDiffered)) {
             // Quiz and live tournament: timer attached to GameInstance
             serverTimeSpent = typeof answerData.timeSpent === 'number' ? answerData.timeSpent : 0;
+            timerDebugInfo = {
+                playMode: gameInstance.playMode,
+                isDiffered: gameInstance.isDiffered,
+                answerDataTimeSpent: answerData.timeSpent,
+                serverTimeSpent
+            };
         }
         else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
             // Differed tournament: timer attached to GameParticipant
             serverTimeSpent = typeof answerData.timeSpent === 'number' ? answerData.timeSpent : 0;
+            timerDebugInfo = {
+                playMode: gameInstance.playMode,
+                isDiffered: gameInstance.isDiffered,
+                answerDataTimeSpent: answerData.timeSpent,
+                serverTimeSpent
+            };
         }
+        logger.info({
+            gameInstanceId,
+            userId,
+            questionUid: answerData.questionUid,
+            timerDebugInfo
+        }, '[DIAGNOSE] Timer and mode info before scoring');
         const isCorrect = checkAnswerCorrectness(question, answerData.answer);
         const newScore = calculateAnswerScore(isCorrect, serverTimeSpent, question);
         // Replace previous score for this question (not increment)

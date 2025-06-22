@@ -150,11 +150,9 @@ router.post('/:accessCode/end-question', auth_1.teacherAuth, async (req, res) =>
             res.status(500).json({ error: 'Failed to end current question' });
             return;
         }
-        // Process and calculate scores
-        if (updatedGameState.timer?.questionUid) {
-            const questionUid = updatedGameState.timer.questionUid;
-            await gameStateService_1.default.calculateScores(accessCode, questionUid);
-        }
+        // [MODERNIZATION] Removed legacy call to gameStateService.calculateScores.
+        // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
+        // If batch scoring is needed, refactor to use canonical logic per participant/answer.
         // Get updated game state with leaderboard
         const fullGameState = await gameStateService_1.default.getFullGameState(accessCode);
         // Get Socket.IO instance to emit events

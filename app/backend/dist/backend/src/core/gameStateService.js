@@ -380,6 +380,9 @@ async function endCurrentQuestion(accessCode) {
     }
 }
 /**
+ * DEPRECATED: Legacy scoring logic. All scoring and answer submission must use scoringService.ts exclusively.
+ * This function is no longer used and will be removed in a future cleanup. See plan.md for details.
+ *
  * Calculate and update scores for all players for a question
  *
  * @param accessCode The game access code
@@ -597,7 +600,6 @@ exports.default = {
     setCurrentQuestion,
     getFullGameState,
     endCurrentQuestion,
-    calculateScores,
     updateGameState,
     getFormattedLeaderboard,
     getProjectionDisplayState,

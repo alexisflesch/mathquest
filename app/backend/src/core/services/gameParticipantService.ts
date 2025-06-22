@@ -507,6 +507,15 @@ export class GameParticipantService {
                 finalBestScore: bestScore,
                 attemptCount: participant.attemptCount
             }, 'Finalized deferred tournament attempt with best score');
+            // [DIAGNOSTIC] Logging best score logic for deferred tournaments
+            logger.debug({
+                gameInstanceId,
+                userId,
+                currentAttemptScore,
+                previousBestScore,
+                participantScore: participant.score,
+                bestScore
+            }, '[DIAGNOSTIC] finalizeDeferredAttempt: Best score logic for deferred tournament');
 
             return {
                 success: true,
@@ -523,3 +532,6 @@ export class GameParticipantService {
         }
     }
 }
+
+// [MODERNIZATION] All answer submission and scoring is now routed through scoringService.ts (submitAnswerWithScoring).
+// No legacy or alternate scoring logic remains in this service.

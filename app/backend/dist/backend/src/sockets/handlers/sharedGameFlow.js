@@ -180,14 +180,9 @@ async function runGameFlow(io, accessCode, questions, options) {
             io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
             logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: questions[i].correctAnswers }, '[TRACE] Emitted correct_answers');
             options.onQuestionEnd?.(i);
-            if (questions[i] && questions[i].uid) {
-                logger.info({ accessCode, questionUid: questions[i].uid }, '[SharedGameFlow] Calculating scores for question');
-                await gameStateService_1.default.calculateScores(accessCode, questions[i].uid);
-                logger.info({ accessCode, questionUid: questions[i].uid }, '[SharedGameFlow] Scores calculated');
-            }
-            else {
-                logger.warn({ accessCode, questionIndex: i }, '[SharedGameFlow] Question UID missing, cannot calculate scores.');
-            }
+            // [MODERNIZATION] Removed legacy call to gameStateService.calculateScores.
+            // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
+            // If batch scoring is needed, refactor to use canonical logic per participant/answer.
             // Two separate timing concerns:
             // 1. Delay between correct answers and feedback event (fixed 1.5s for tournaments)
             const correctAnswersToFeedbackDelay = options.playMode === 'tournament' ? 1.5 : 1;

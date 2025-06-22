@@ -1,6 +1,9 @@
 // DEPRECATED: All scoring logic has been unified in core/services/scoringService.ts
 // This file is no longer used and will be removed in a future cleanup.
 
+// [MODERNIZATION] This file is now deprecated. All logic has been migrated to scoringService.ts.
+// Any import or usage of this file should be removed. See plan.md for details.
+
 // Shared score calculation logic for quiz and tournament modes
 // This module should be imported by both quiz and tournament handlers
 

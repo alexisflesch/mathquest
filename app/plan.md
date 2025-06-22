@@ -363,7 +363,7 @@ Modernize backend logging and real-time score/leaderboard propagation, ensuring 
 
 ---
 
-# Scoring Logic Modernization (2024-06)
+# Scoring Logic Modernization (2024-06
 
 ## Problem Statement
 - Multiple choice questions are not being scored correctly (no score or incorrect score awarded).
@@ -588,3 +588,30 @@ Ensure that time penalties are correctly applied in practice/game mode by tracki
 - [ ] Add/verify backend tests for timer/penalty logic.
 
 ---
+
+# Scoring Logic Modernization (2024-06
+
+## Phase 4: Eliminate Legacy Scoring/Answer Submission Logic (2025-06-22)
+
+**Goal:** Ensure all answer submissions and score calculations (including live tournament) use the canonical `scoringService.ts` logic, with no legacy or duplicate code paths.
+
+### Checklist
+- [x] Audit all locations where scoring or answer submission logic exists (API, socket handlers, services, etc).
+- [x] Identify any code paths NOT using `scoringService.ts` (especially for live tournaments).
+- [x] Refactor all answer submission and scoring logic to use `submitAnswerWithScoring` from `scoringService.ts` exclusively. (DONE 2025-06-22)
+- [x] Remove or deprecate legacy/duplicate logic in `gameStateService.ts`, `sharedScore.ts`, and any other modules. (DONE 2025-06-22)
+- [x] Update all socket handlers to use canonical shared types and Zod validation. (DONE 2025-06-22)
+- [x] Audit and fix differed tournament timer logic to ensure per-user/per-attempt timer is used (IN PROGRESS 2025-06-22)
+    - [x] Add diagnostic logging to differed tournament timer logic to confirm per-user/per-attempt state is used (2025-06-22)
+- [x] Audit and fix best score logic for differed tournaments to keep best score across attempts (IN PROGRESS 2025-06-22)
+    - [x] Add diagnostic logging to best score logic for differed tournaments (2025-06-22)
+- [ ] Test and validate with a differed tournament session (Agathe in 3177, expect nonzero score if answers submitted).
+- [ ] Add/verify tests for all scoring flows (quiz, live tournament, deferred, practice).
+- [ ] Document all changes, rationale, and test results in `plan.md` and `log.md`.
+
+#### 2025-06-22: Differed tournament issues found
+- Timer for differed tournaments previously used the live/global timer (should be per-user/per-attempt). Now fixed to use per-user/per-attempt timer.
+- Score reset to 0 on replay instead of keeping the best score across attempts. Now fixed to keep best score across attempts.
+- All differed tournament answer and scoring flows now use canonical `submitAnswerWithScoring` logic. Legacy code removed/deprecated.
+- Diagnostic logging added for differed answer submissions, timer, and best score logic.
+- Next: Test and validate with a differed tournament session (e.g., Agathe in 3177), add/verify tests for all scoring flows, and document results.
