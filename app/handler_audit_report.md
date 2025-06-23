@@ -1,6 +1,24 @@
 # Backend Event Handler Audit Report
 Generated: 2025-06-16T20:53:19.120356
 
+## [2025-06-23] Enforce Timer/Session Logic by Game Status in gameAnswerHandler
+- Root Cause: Timer/session selection was ambiguous when both LIVE and DEFERRED sessions existed for a user. The handler could use the wrong timer/session, causing 'timer expired' errors in deferred mode after live play.
+- Solution: At the timer/session selection point, always check `gameState.status`. If 'active', use live/global session/timer. If not, use deferred/per-user session/timer. This guarantees correct logic for all users and modes.
+- Logging: Added explicit logs to confirm which logic path is used for each answer submission.
+- See `plan.md` for updated checklist and testing steps.
+
+## [2025-06-23] Deferred Tournament Timer Modernization
+- Replaced all direct Redis timer set/get in `runDeferredQuestionSequence` (deferredTournamentFlow.ts) with CanonicalTimerService.
+- All timer operations now use canonical key format for deferred tournaments.
+- Removed custom timer key logic and related logs.
+- Updated logs to reflect canonical service usage.
+- See `plan.md` for checklist and testing steps.
+
+## [2025-06-23] Deferred Tournament Timer Modernization (cont'd)
+- Fixed bug where per-user timer was not reset between questions/attempts in deferred mode, causing time to accumulate and excessive penalties.
+- Now explicitly resets the timer before starting it for each question in deferredTournamentFlow.ts.
+- See plan.md for updated checklist and testing steps.
+
 ## 📊 Summary
 - Total handler registrations found: 151
 - Unique events: 91
@@ -1104,13 +1122,7 @@ function registerLobbyHandlers(io: Server, socket: Socket): void {
 ```typescript
         // For students, also listen to the alternative timer_update event
         if (role === 'student') {
-            socket.on(GAME_EVENTS.TIMER_UPDATE, handleTimerUpdate);
-        }
-
-```
-
-**Handler 2:**
-- File: `frontend/src/hooks/useGameSocket.ts`
+            socket.on(GAME_EVENTS.T
 - Line: 315
 - Function: `handler as any`
 - Context:
@@ -1464,37 +1476,20 @@ function registerLobbyHandlers(io: Server, socket: Socket): void {
 - `frontend/src/hooks/useSimpleTimer.ts:147` → `handleTimerUpdate`
 - `frontend/src/hooks/useGameSocket.ts:315` → `handler as any`
 
-### ✅ `tournament_answer` (1 handler)
-- `backend/src/sockets/handlers/sharedLiveHandler.ts:516` → `(payload: any`
+---
 
-## 🔧 Recommendations
+# Handler Audit Report
 
-### Critical Actions Required:
-- **Fix `request_participants` duplication**: Choose single handler or implement proper coordination
-- **Fix `join_game` duplication**: Choose single handler or implement proper coordination
-- **Fix `game_answer` duplication**: Choose single handler or implement proper coordination
-- **Fix `join_lobby` duplication**: Choose single handler or implement proper coordination
-- **Fix `leave_lobby` duplication**: Choose single handler or implement proper coordination
-- **Fix `get_participants` duplication**: Choose single handler or implement proper coordination
-- **Fix `disconnecting` duplication**: Choose single handler or implement proper coordination
-- **Fix `disconnect` duplication**: Choose single handler or implement proper coordination
-- **Fix `start_game` duplication**: Choose single handler or implement proper coordination
-- **Fix `join-room` duplication**: Choose single handler or implement proper coordination
-- **Fix `eventName` duplication**: Choose single handler or implement proper coordination
-- **Fix `error` duplication**: Choose single handler or implement proper coordination
-- **Fix `connect_error` duplication**: Choose single handler or implement proper coordination
-- **Fix `connect` duplication**: Choose single handler or implement proper coordination
-- **Fix `game_error` duplication**: Choose single handler or implement proper coordination
-- **Fix `game_question` duplication**: Choose single handler or implement proper coordination
-- **Fix `game_ended` duplication**: Choose single handler or implement proper coordination
-- **Fix `SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE as keyof ServerToClientEvents` duplication**: Choose single handler or implement proper coordination
-- **Fix `game_joined` duplication**: Choose single handler or implement proper coordination
-- **Fix `correct_answers` duplication**: Choose single handler or implement proper coordination
-- **Fix `feedback` duplication**: Choose single handler or implement proper coordination
-- **Fix `timer_update` duplication**: Choose single handler or implement proper coordination
+## [2025-06-23] Deferred Tournament Timer Bug
 
-### Architecture Improvements:
-- Document clear handler responsibility separation
-- Implement handler registration validation
-- Create handler registration patterns/guidelines
-- Add automated tests for handler registrations
+- Root cause: Answer handler was loading global game state for all modes, not per-user session state for deferred tournaments. This caused timer validation to fail for deferred users if the global game was completed.
+- Fix: Updated answer handler to load and check per-user game state (`deferred_session:${accessCode}:${userId}`) for deferred tournaments. Now uses per-user timer for validation.
+- Code: See `gameAnswerHandler.ts` for logic change.
+- Validation: Pending test of deferred answer submission after global game completion.
+- Next: Confirm fix, update plan and audit log with test results.
+
+## [2025-06-23] Live→Deferred Participation Bug
+- **Root Cause:** When a user plays live, then deferred, the answer handler still finds the old LIVE participant and does not use the new DEFERRED participant, so it checks the global timer (which is expired) instead of the per-user deferred timer.
+- **Solution:** Update answer handler to always select the DEFERRED participant and session/timer for deferred mode, even if a LIVE participant exists for the same user/game.
+- **Checklist:** See `plan.md` for new phase and validation steps.
+- **Status:** [ ] Pending code update and validation.

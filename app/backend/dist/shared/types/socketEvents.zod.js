@@ -77,7 +77,7 @@ exports.questionDataSchema = zod_1.z.object({
     uid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }),
     title: zod_1.z.string().min(1).optional(),
     text: zod_1.z.string().min(1, { message: "Question text cannot be empty." }),
-    answerOptions: zod_1.z.array(zod_1.z.string().min(1)).min(1, { message: "A question must have at least one answer option." }),
+    answerOptions: zod_1.z.array(zod_1.z.string().min(1)).min(1, { message: "At least one answer option is required." }),
     correctAnswers: zod_1.z.array(zod_1.z.boolean()), // Now required everywhere
     questionType: zod_1.z.string().min(1, { message: "Question type cannot be empty." }),
     timeLimit: zod_1.z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }).optional(),
@@ -140,7 +140,7 @@ exports.interServerEventsSchema = zod_1.z.object({});
 exports.socketDataSchema = zod_1.z.object({
     userId: zod_1.z.string().min(1).optional(),
     username: zod_1.z.string().min(1).optional(),
-    role: zod_1.z.enum(['player', 'teacher', 'admin', 'projector']).optional(),
+    role: zod_1.z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     accessCode: zod_1.z.string().min(1).optional(),
     currentGameRoom: zod_1.z.string().min(1).optional(),
 });
@@ -402,7 +402,7 @@ exports.connectionEstablishedPayloadSchema = zod_1.z.object({
     user: zod_1.z.object({
         userId: zod_1.z.string().optional(),
         username: zod_1.z.string().optional(),
-        role: zod_1.z.enum(['player', 'teacher', 'admin', 'projector']).optional(),
+        role: zod_1.z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
         accessCode: zod_1.z.string().optional(),
         currentGameRoom: zod_1.z.string().optional(),
         practiceSessionId: zod_1.z.string().optional(),

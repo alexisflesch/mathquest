@@ -283,7 +283,7 @@ export interface InterServerEvents {
 export interface SocketData {
     userId?: string;    // Player ID or Teacher ID
     username?: string;
-    role?: 'player' | 'teacher' | 'admin' | 'projector';
+    role?: 'STUDENT' | 'TEACHER' | 'GUEST';
     accessCode?: string; // If the socket is associated with a specific game/lobby
     currentGameRoom?: string; // Room name for current game
     // Practice session data

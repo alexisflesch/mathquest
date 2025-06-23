@@ -87,7 +87,7 @@ export const questionDataSchema = z.object({
   uid: z.string().min(1, { message: "Question UID cannot be empty." }),
   title: z.string().min(1).optional(),
   text: z.string().min(1, { message: "Question text cannot be empty." }),
-  answerOptions: z.array(z.string().min(1)).min(1, { message: "A question must have at least one answer option." }),
+  answerOptions: z.array(z.string().min(1)).min(1, { message: "At least one answer option is required." }),
   correctAnswers: z.array(z.boolean()), // Now required everywhere
   questionType: z.string().min(1, { message: "Question type cannot be empty." }),
   timeLimit: z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }).optional(),
@@ -164,7 +164,7 @@ export const interServerEventsSchema = z.object({});
 export const socketDataSchema = z.object({
   userId: z.string().min(1).optional(),
   username: z.string().min(1).optional(),
-  role: z.enum(['player', 'teacher', 'admin', 'projector']).optional(),
+  role: z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
   accessCode: z.string().min(1).optional(),
   currentGameRoom: z.string().min(1).optional(),
 });
@@ -473,7 +473,7 @@ export const connectionEstablishedPayloadSchema = z.object({
   user: z.object({
     userId: z.string().optional(),
     username: z.string().optional(),
-    role: z.enum(['player', 'teacher', 'admin', 'projector']).optional(),
+    role: z.enum(['STUDENT', 'TEACHER', 'GUEST']).optional(),
     accessCode: z.string().optional(),
     currentGameRoom: z.string().optional(),
     practiceSessionId: z.string().optional(),

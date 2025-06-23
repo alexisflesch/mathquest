@@ -18,7 +18,7 @@ const ROOM_KEY_PREFIX = 'mathquest:room:';
  */
 export async function joinRoom(socket: Socket, roomName: string, userData?: Record<string, any>): Promise<void> {
     const { id: socketId } = socket;
-    const user = socket.data.user || { role: 'anonymous' };
+    const user = socket.data.user || { role: 'GUEST' };
 
     try {
         // Join the Socket.IO room
@@ -69,7 +69,7 @@ export async function joinRoom(socket: Socket, roomName: string, userData?: Reco
  */
 export async function leaveRoom(socket: Socket, roomName: string): Promise<void> {
     const { id: socketId } = socket;
-    const user = socket.data.user || { role: 'anonymous' };
+    const user = socket.data.user || { role: 'GUEST' };
 
     try {
         // Leave the Socket.IO room

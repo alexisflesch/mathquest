@@ -23,7 +23,7 @@ const ROOM_KEY_PREFIX = 'mathquest:room:';
  */
 async function joinRoom(socket, roomName, userData) {
     const { id: socketId } = socket;
-    const user = socket.data.user || { role: 'anonymous' };
+    const user = socket.data.user || { role: 'GUEST' };
     try {
         // Join the Socket.IO room
         await socket.join(roomName);
@@ -68,7 +68,7 @@ async function joinRoom(socket, roomName, userData) {
  */
 async function leaveRoom(socket, roomName) {
     const { id: socketId } = socket;
-    const user = socket.data.user || { role: 'anonymous' };
+    const user = socket.data.user || { role: 'GUEST' };
     try {
         // Leave the Socket.IO room
         await socket.leave(roomName);

@@ -84,7 +84,7 @@ function projectionHandler(io, socket) {
                     logger.info({ testUserId }, 'Using userId from auth directly for testing (projection)');
                     // Set the userId on socket.data for future usage
                     socket.data.userId = testUserId;
-                    socket.data.user = { userId: testUserId, role: 'teacher' };
+                    socket.data.user = { userId: testUserId, role: 'TEACHER' };
                     effectiveUserId = testUserId;
                 }
                 else {

@@ -12,6 +12,7 @@ import { ErrorPayload } from '@shared/types/socketEvents';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { errorPayloadSchema } from '@shared/types/socketEvents.zod';
 import { prisma } from '@/db/prisma';
+import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 
 const logger = createLogger('DeferredTournamentFlow');
 
@@ -162,11 +163,15 @@ async function runDeferredQuestionSequence(
         questionCount: questions.length
     }, 'Starting deferred question sequence');
 
+    // Instantiate canonical timer service
+    const canonicalTimerService = new CanonicalTimerService(redisClient);
+    const playMode = 'tournament';
+    const isDiffered = true;
+
     try {
         // Process each question sequentially
         for (let i = 0; i < questions.length; i++) {
             const question = questions[i];
-            // Only declare attemptCount once per loop iteration
             const attemptCount = await getDeferredAttemptCount(accessCode, userId);
             logger.info({ accessCode, userId, attemptCount, questionUid: question.uid, logPoint: 'DEFERRED_QUESTION_LOOP_ENTRY' }, '[DEBUG] Entered deferred tournament question loop');
 
@@ -181,7 +186,15 @@ async function runDeferredQuestionSequence(
                 timeLimit: timeLimitSec
             }, 'Starting deferred tournament question');
 
-            // Create fresh timer for this question
+            // --- UNIFIED TIMER LOGIC ---
+            // Always use CanonicalTimerService with correct key (userId for deferred)
+            await canonicalTimerService.resetTimer(accessCode, question.uid, playMode, isDiffered, userId);
+            await canonicalTimerService.startTimer(accessCode, question.uid, playMode, isDiffered, userId);
+            // --- END UNIFIED TIMER LOGIC ---
+
+            // Retrieve timer state from canonical service (optional, for emitting to client)
+            // const timer = await canonicalTimerService.getTimer(accessCode, question.uid, playMode, isDiffered, userId);
+            // For now, keep timer object as before for payload
             const timer: GameTimerState = {
                 status: 'play',
                 timeLeftMs: durationMs,
@@ -190,83 +203,6 @@ async function runDeferredQuestionSequence(
                 timestamp: Date.now(),
                 localTimeLeftMs: null
             };
-
-            // [MODERNIZATION] Ensure timer is per-user/per-attempt for DEFERRED mode
-            // Timer key: mathquest:deferred:timer:{accessCode}:{userId}:{attemptCount}:{questionUid}
-            const timerKey = `mathquest:deferred:timer:${accessCode}:${userId}:${attemptCount}:${question.uid}`;
-
-            // Always log timer key and context when creating timer
-            logger.info({
-                accessCode,
-                userId,
-                attemptCount,
-                questionUid: question.uid,
-                timerKey, // <--- LOG TIMER KEY
-                timer,
-                logPoint: 'TIMER_CREATION_DEFERRED',
-                serverTimestamp: Date.now(),
-                participantAttemptCount: attemptCount
-            }, '[TIMER_DEBUG] Creating new timer for deferred tournament question');
-
-            // Check if a timer already exists for this attempt/question (should not, unless retrying same question in same attempt)
-            const existingTimerRaw = await redisClient.get(timerKey);
-            if (existingTimerRaw) {
-                logger.warn({
-                    accessCode,
-                    userId,
-                    attemptCount,
-                    timerKey,
-                    existingTimer: JSON.parse(existingTimerRaw),
-                    logPoint: 'TIMER_EXISTS_DEFERRED'
-                }, '[DIAGNOSTIC] Timer already exists for this attempt/question (possible reuse or leakage)');
-            } else {
-                logger.info({
-                    accessCode,
-                    userId,
-                    attemptCount,
-                    timerKey,
-                    logPoint: 'TIMER_NOT_EXISTS_DEFERRED'
-                }, '[DIAGNOSTIC] No existing timer for this attempt/question, creating new timer');
-            }
-
-            await redisClient.set(timerKey, JSON.stringify(timer), 'EX', 300);
-            logger.info({
-                accessCode,
-                userId,
-                attemptCount,
-                questionUid: question.uid,
-                timerKey,
-                timer,
-                logPoint: 'TIMER_SET_DEFERRED',
-                serverTimestamp: Date.now(),
-                participantAttemptCount: attemptCount
-            }, '[TIMER_DEBUG] Timer set in Redis for deferred tournament question');
-
-            // [EXTRA LOGGING] Log all timers for this user/attempt for this game (debugging timer leakage)
-            try {
-                const pattern = `mathquest:deferred:timer:${accessCode}:${userId}:*:${question.uid}`;
-                const allTimerKeys = await redisClient.keys(pattern);
-                const allTimers = [];
-                for (const key of allTimerKeys) {
-                    const val = await redisClient.get(key);
-                    allTimers.push({ key, timer: val ? JSON.parse(val) : null });
-                }
-                logger.debug({
-                    accessCode,
-                    userId,
-                    attemptCount,
-                    questionUid: question.uid,
-                    allTimers
-                }, '[DIAGNOSTIC] All timers for this user/question across attempts');
-            } catch (timerDebugError) {
-                logger.error({
-                    accessCode,
-                    userId,
-                    attemptCount,
-                    questionUid: question.uid,
-                    timerDebugError
-                }, '[DIAGNOSTIC] Error while fetching all timers for debugging');
-            }
 
             // Update session state
             const sessionStateKey = `deferred_session:${accessCode}:${userId}`;
@@ -297,18 +233,7 @@ async function runDeferredQuestionSequence(
                 questionIndex: i,
                 timer: timer
             }, 'Emitting game_question for deferred session');
-            // [DIAGNOSTIC] Logging timer state for deferred tournament (per-user/per-attempt)
-            logger.debug({
-                accessCode,
-                userId,
-                playerRoom,
-                questionIndex: i,
-                attemptCount,
-                timerKey,
-                timer
-            }, '[DIAGNOSTIC] Deferred tournament timer state (should be per-user/per-attempt)');
 
-            // Emit to individual player room
             io.to(playerRoom).emit('game_question', gameQuestionPayload);
 
             // Emit timer update
@@ -336,28 +261,18 @@ async function runDeferredQuestionSequence(
             };
             io.to(playerRoom).emit('correct_answers', correctAnswersPayload);
 
-            // [MODERNIZATION] Removed legacy call to gameStateService.calculateScores.
-            // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
-            // If batch scoring is needed, refactor to use canonical logic per participant/answer.
-
             // Handle feedback if available
             if (question.explanation) {
-                // Small delay before feedback
                 await new Promise(resolve => setTimeout(resolve, 1500));
-
                 const feedbackDisplayDuration = (typeof question.feedbackWaitTime === 'number' && question.feedbackWaitTime > 0)
                     ? question.feedbackWaitTime
                     : 5;
-
                 const feedbackPayload = {
                     questionUid: question.uid,
                     feedbackRemaining: feedbackDisplayDuration,
                     explanation: question.explanation
                 };
-
                 io.to(playerRoom).emit('feedback', feedbackPayload);
-
-                // Wait for feedback duration
                 await new Promise(resolve => setTimeout(resolve, feedbackDisplayDuration * 1000));
             }
         }

@@ -54,7 +54,7 @@ function handleConnection(socket) {
     let user;
     try {
         // socket.data is now typed as SocketData
-        const rawUser = (socket.data && socket.data.user) ? socket.data.user : (socket.data || { role: 'anonymous' });
+        const rawUser = (socket.data && socket.data.user) ? socket.data.user : (socket.data || { role: 'GUEST' });
         // Validate the user data against our schema
         const validationResult = socketEvents_zod_1.socketDataSchema.partial().safeParse(rawUser);
         if (!validationResult.success) {
@@ -63,7 +63,7 @@ function handleConnection(socket) {
                 validationErrors: validationResult.error.errors,
                 rawUserData: rawUser
             }, 'Socket connection data validation failed, using defaults');
-            user = { role: 'anonymous' };
+            user = { role: 'GUEST' };
         }
         else {
             user = validationResult.data;
@@ -74,7 +74,7 @@ function handleConnection(socket) {
             socketId: id,
             error: error instanceof Error ? error.message : 'Unknown error'
         }, 'Error validating socket connection data');
-        user = { role: 'anonymous' };
+        user = { role: 'GUEST' };
     }
     logger.info({
         socketId: id,
@@ -83,8 +83,18 @@ function handleConnection(socket) {
     }, 'New socket connection established');
     // Build user object for event, using userId for all roles (players, teachers, admins)
     let userPayload = {};
+    // Map legacy/invalid roles to canonical roles
+    function toCanonicalRole(role) {
+        if (role === 'TEACHER' || role === 'teacher')
+            return 'TEACHER';
+        if (role === 'STUDENT' || role === 'player' || role === 'student')
+            return 'STUDENT';
+        if (role === 'GUEST' || role === 'guest' || role === 'anonymous')
+            return 'GUEST';
+        return 'GUEST';
+    }
     userPayload = {
-        role: user.role,
+        role: toCanonicalRole(user.role),
         userId: user.id || user.userId, // always use userId for all roles
         username: user.username
     };

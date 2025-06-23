@@ -127,10 +127,27 @@ function gameAnswerHandler(io, socket) {
             logger.debug({ accessCode, userId, questionUid }, 'Looking up participant');
             let participant;
             try {
-                participant = await prisma_1.prisma.gameParticipant.findFirst({
-                    where: { gameInstanceId: gameInstance.id, userId },
-                    include: { user: true }
-                });
+                // If game is in deferred mode, always try to find DEFERRED participant first
+                if (gameInstance.isDiffered) {
+                    participant = await prisma_1.prisma.gameParticipant.findFirst({
+                        where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' },
+                        include: { user: true }
+                    });
+                    // Fallback: if not found, try LIVE (legacy/edge case)
+                    if (!participant) {
+                        participant = await prisma_1.prisma.gameParticipant.findFirst({
+                            where: { gameInstanceId: gameInstance.id, userId, participationType: 'LIVE' },
+                            include: { user: true }
+                        });
+                    }
+                }
+                else {
+                    // For non-deferred games, use existing logic
+                    participant = await prisma_1.prisma.gameParticipant.findFirst({
+                        where: { gameInstanceId: gameInstance.id, userId },
+                        include: { user: true }
+                    });
+                }
             }
             catch (err) {
                 logger.error({ err, accessCode, userId, questionUid }, 'Error during participant lookup');
@@ -177,7 +194,40 @@ function gameAnswerHandler(io, socket) {
             // For deferred tournaments, we now allow unlimited replays
             // CRITICAL: Add timer validation before processing answer
             // Fetch current game state to check timer status
-            const fullGameState = await (0, gameStateService_1.getFullGameState)(accessCode);
+            let gameState;
+            try {
+                const gameStateResult = await (0, gameStateService_1.getFullGameState)(accessCode);
+                gameState = gameStateResult?.gameState;
+            }
+            catch (err) {
+                logger.error({ err, accessCode, userId, questionUid }, 'Error fetching game state');
+                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, { message: 'Error fetching game state.' });
+                return;
+            }
+            let fullGameState;
+            let useDeferredLogic = false;
+            if (gameState && gameState.status !== 'active') {
+                // Game is completed or not live: always use deferred/per-user session
+                useDeferredLogic = true;
+                const sessionStateKey = `deferred_session:${accessCode}:${userId}`;
+                fullGameState = await (0, gameStateService_1.getFullGameState)(sessionStateKey);
+                logger.info({
+                    accessCode,
+                    userId,
+                    sessionStateKey,
+                    fullGameStateStatus: fullGameState?.gameState?.status,
+                    logic: 'DEFERRED',
+                }, '[LOGIC] Using DEFERRED session/timer due to gameState.status !== "active"');
+            }
+            else {
+                // Game is live: use global session
+                fullGameState = await (0, gameStateService_1.getFullGameState)(accessCode);
+                logger.info({
+                    accessCode,
+                    userId,
+                    logic: 'LIVE',
+                }, '[LOGIC] Using LIVE session/timer due to gameState.status === "active"');
+            }
             if (!fullGameState) {
                 logger.warn({ socketId: socket.id, error: 'Game state not found', accessCode }, '[DIAGNOSTIC] EARLY RETURN: Game state not found');
                 const errorPayload = { message: 'Game state not found.' };
@@ -193,15 +243,15 @@ function gameAnswerHandler(io, socket) {
                 }, '[DIAGNOSTIC] EARLY RETURN: Game state not found in gameAnswerHandler');
                 return;
             }
-            const { gameState } = fullGameState;
+            const { gameState: selectedGameState } = fullGameState;
             // Check if game is active
-            if (gameState.status !== 'active') {
+            if (selectedGameState.status !== 'active') {
                 logger.warn({
                     socketId: socket.id,
                     accessCode,
                     userId,
                     questionUid,
-                    gameStatus: gameState.status,
+                    gameStatus: selectedGameState.status,
                     playMode: gameInstance.playMode
                 }, '[DIAGNOSTIC] EARLY RETURN: Answer submitted but game is not active');
                 const errorPayload = {
@@ -216,14 +266,14 @@ function gameAnswerHandler(io, socket) {
                     accessCode,
                     userId,
                     questionUid,
-                    gameStatus: gameState.status,
+                    gameStatus: selectedGameState.status,
                     playMode: gameInstance.playMode,
                     timestamp: new Date().toISOString()
                 }, '[DIAGNOSTIC] EARLY RETURN: Game not active in gameAnswerHandler');
                 return;
             }
             // Check if answers are locked
-            if (gameState.answersLocked) {
+            if (selectedGameState.answersLocked) {
                 logger.warn({ socketId: socket.id, accessCode, userId, questionUid }, '[DIAGNOSTIC] EARLY RETURN: Answers are locked');
                 const errorPayload = {
                     message: 'Answers are locked for this question.',
@@ -242,8 +292,8 @@ function gameAnswerHandler(io, socket) {
                 return;
             }
             // Check timer status and expiration
-            if (gameState.timer) {
-                const timerObj = gameState.timer;
+            if (selectedGameState.timer) {
+                const timerObj = selectedGameState.timer;
                 // Add detailed timer state logging
                 logger.info({
                     socketId: socket.id,
@@ -257,7 +307,7 @@ function gameAnswerHandler(io, socket) {
                         timestamp: timerObj.timestamp
                     },
                     playMode: gameInstance.playMode,
-                    gameStatus: gameState.status
+                    gameStatus: selectedGameState.status
                 }, 'TIMER VALIDATION: Checking timer state for answer submission');
                 // For all modes: check if timer is stopped (when timer exists)
                 if (timerObj.status === 'stop') {
