@@ -2,6 +2,7 @@ import type { Redis } from 'ioredis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import type { PlayMode } from '@shared/types/core/game';
+import { getTimerKey } from './timerKeyUtil';
 
 const logger = createLogger('CanonicalTimerService');
 
@@ -29,13 +30,17 @@ export class CanonicalTimerService {
     /**
      * Returns the Redis key for the timer, based on mode:
      * - Quiz & live tournament: timer:{accessCode}:{questionUid}
-     * - Differed tournament: timer:{accessCode}:{questionUid}:user:{userId}
+     * - Differed tournament: timer:{accessCode}:{questionUid}:user:{userId}:attempt:{attemptCount}
      */
-    private getKey(accessCode: string, questionUid: string, userId?: string, playMode?: PlayMode, isDiffered?: boolean) {
-        if (playMode === 'tournament' && isDiffered && userId) {
-            return `timer:${accessCode}:${questionUid}:user:${userId}`;
-        }
-        return `timer:${accessCode}:${questionUid}`;
+    private getKey(accessCode: string, questionUid: string, userId?: string, playMode?: PlayMode, isDiffered?: boolean, attemptCount?: number) {
+        // Use canonical timer key utility for all modes
+        return getTimerKey({
+            accessCode,
+            userId: userId || '',
+            questionUid,
+            attemptCount,
+            isDeferred: isDiffered
+        });
     }
 
     /**
@@ -44,9 +49,9 @@ export class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async startTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string) {
+    async startTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number) {
         if (playMode === 'practice') return null; // No timer in practice mode
-        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered);
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const now = Date.now();
         let timer: CanonicalTimerState | null = null;
         const raw = await this.redis.get(key);
@@ -57,6 +62,7 @@ export class CanonicalTimerService {
             playMode,
             isDiffered,
             userId,
+            attemptCount,
             timerExists: !!timer,
             timerState: timer
         }, '[TIMER_DEBUG] startTimer called');
@@ -84,9 +90,9 @@ export class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async pauseTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string) {
+    async pauseTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number) {
         if (playMode === 'practice') return null;
-        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered);
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const now = Date.now();
         const raw = await this.redis.get(key);
         if (!raw) return null;
@@ -107,9 +113,9 @@ export class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async getTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string): Promise<CanonicalTimerState | null> {
+    async getTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number): Promise<CanonicalTimerState | null> {
         if (playMode === 'practice') return null;
-        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered);
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const raw = await this.redis.get(key);
         if (!raw) return null;
         return JSON.parse(raw);
@@ -121,15 +127,16 @@ export class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: always returns 0
      */
-    async getElapsedTimeMs(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string): Promise<number> {
+    async getElapsedTimeMs(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number): Promise<number> {
         if (playMode === 'practice') return 0;
-        const timer = await this.getTimer(accessCode, questionUid, playMode, isDiffered, userId);
+        const timer = await this.getTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount);
         logger.info({
             accessCode,
             questionUid,
             playMode,
             isDiffered,
             userId,
+            attemptCount,
             timerState: timer
         }, '[TIMER_DEBUG] getElapsedTimeMs called');
         if (!timer) return 0;
@@ -146,10 +153,10 @@ export class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async resetTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string) {
+    async resetTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number) {
         if (playMode === 'practice') return;
-        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered);
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         await this.redis.del(key);
-        logger.info({ accessCode, questionUid }, '[TIMER] Reset');
+        logger.info({ accessCode, questionUid, attemptCount }, '[TIMER] Reset');
     }
 }

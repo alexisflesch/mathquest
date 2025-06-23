@@ -16,7 +16,126 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
 
     // Register direct handlers on socket instance using shared constants
     socket.on(GAME_EVENTS.JOIN_GAME, joinGameHandler(io, socket));
-    socket.on(GAME_EVENTS.GAME_ANSWER, gameAnswerHandler(io, socket));
+
+    // Modernized GAME_ANSWER handler: resolve canonical context and pass to DRY handler
+    socket.on(GAME_EVENTS.GAME_ANSWER, async (payload) => {
+        console.log('[DEBUG] GAME_ANSWER handler triggered', { payload });
+        // Extract accessCode, userId, questionUid from payload (validate with Zod if needed)
+        let accessCode, userId, questionUid;
+        try {
+            // Use the same schema as in the handler for validation
+            const { AnswerSubmissionPayloadSchema } = await import('@shared/types/core/answer');
+            const parseResult = AnswerSubmissionPayloadSchema.safeParse(payload);
+            if (!parseResult.success) {
+                console.log('[DEBUG] Early return: invalid answer submission payload', { payload, error: parseResult.error });
+                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Invalid answer submission payload.' });
+                return;
+            }
+            accessCode = parseResult.data.accessCode;
+            userId = parseResult.data.userId;
+            questionUid = parseResult.data.questionUid;
+        } catch (err) {
+            console.log('[DEBUG] Early return: malformed answer submission', { payload, err });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Malformed answer submission.' });
+            return;
+        }
+
+        // Canonical context resolution (no legacy/branching logic)
+        const { CanonicalTimerService } = await import('@/core/services/canonicalTimerService');
+        const { getFullGameState } = await import('@/core/services/gameStateService');
+        const { prisma } = await import('@/db/prisma');
+        const timerService = new CanonicalTimerService((await import('@/config/redis')).redisClient);
+
+        // Fetch gameInstance
+        const gameInstance = await prisma.gameInstance.findUnique({ where: { accessCode } });
+        if (!gameInstance) {
+            console.log('[DEBUG] Early return: gameInstance not found', { accessCode });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game instance not found.' });
+            return;
+        }
+        // Fetch participant (by gameInstanceId, userId, and participationType)
+        let participant;
+        if (gameInstance.playMode === 'tournament') {
+            // Determine participationType from session intent
+            // If the user is in a deferred session, use 'DEFERRED', else 'LIVE'
+            const isDeferred = !!(gameInstance.differedAvailableFrom && gameInstance.differedAvailableTo && gameInstance.status === 'completed' && payload && payload.deferred === true);
+            if (isDeferred || (typeof payload === 'object' && payload.deferred === true)) {
+                participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' } });
+            } else {
+                participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'LIVE' } });
+            }
+        } else {
+            participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId } });
+        }
+        if (!participant) {
+            // Defensive: Try to create participant row if missing
+            console.log('[DEBUG] Participant not found, attempting to create', { accessCode, userId });
+            const { joinGame: joinGameModular } = await import('@/core/services/gameParticipant/joinService');
+            let username = payload?.username || `guest-${userId?.substring(0, 8)}`;
+            let avatarEmoji = payload?.avatarEmoji || null;
+            const joinResult = await joinGameModular({ userId, accessCode, username, avatarEmoji });
+            if (!joinResult.success || !joinResult.participant) {
+                console.log('[DEBUG] Early return: participant creation failed', { accessCode, userId, error: joinResult.error });
+                socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Could not create participant.' });
+                return;
+            }
+            participant = joinResult.participant;
+        }
+        // Fetch game state (by correct session key)
+        // Canonical deferred detection: status === 'completed' and within deferred window
+        const now = Date.now();
+        const deferredWindowOpen = gameInstance.differedAvailableFrom && gameInstance.differedAvailableTo &&
+            now >= new Date(gameInstance.differedAvailableFrom).getTime() &&
+            now <= new Date(gameInstance.differedAvailableTo).getTime();
+        let isDeferred = false;
+        let contextGameInstance = gameInstance;
+        if (gameInstance.playMode === 'tournament' && gameInstance.status === 'completed' && deferredWindowOpen) {
+            contextGameInstance = { ...gameInstance, isDiffered: true };
+            isDeferred = true;
+        }
+        // Always use per-user session key and timer for deferred
+        let sessionKey;
+        let attemptCount = 1;
+        if (isDeferred || (gameInstance.playMode === 'tournament' && participant.participationType === 'DEFERRED')) {
+            // Use socket-stored attemptCount if present (set at session start), else fetch from DB
+            if (socket.data.deferredAttemptCount) {
+                attemptCount = socket.data.deferredAttemptCount;
+            } else {
+                const deferredParticipant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' }, select: { attemptCount: true } });
+                attemptCount = deferredParticipant?.attemptCount || 1;
+                // Store for this socket/session
+                socket.data.deferredAttemptCount = attemptCount;
+            }
+            sessionKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
+        } else {
+            sessionKey = accessCode;
+        }
+        const gameState = await getFullGameState(sessionKey);
+        // Diagnostic: Always log sessionKey and gameState after fetching, before any returns
+        console.log('[DEBUG] Loaded gameState for answer submission', { accessCode, userId, sessionKey, gameState, gameInstance });
+        if (!gameState) {
+            // Defensive: if in deferred mode and gameState is missing, clear socket-stored attemptCount to allow recovery on next attempt
+            if (isDeferred && socket.data.deferredAttemptCount) {
+                delete socket.data.deferredAttemptCount;
+            }
+            console.log('[DEBUG] Early return: gameState not found', { sessionKey });
+            socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game state not found.' });
+            return;
+        }
+        // Fetch timer (canonical: always resolve here, never in handler)
+        let timer = null;
+        if (gameInstance.playMode === 'practice') {
+            timer = null;
+        } else if (isDeferred || (gameInstance.playMode === 'tournament' && participant.participationType === 'DEFERRED')) {
+            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, true, userId, attemptCount);
+        } else {
+            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, false);
+        }
+        const context = { timer, gameState, participant, gameInstance: contextGameInstance };
+        // Call the DRY handler
+        return gameAnswerHandler(io, socket, context)(payload);
+    });
+
     socket.on(GAME_EVENTS.REQUEST_PARTICIPANTS, requestParticipantsHandler(io, socket));
     socket.on(GAME_EVENTS.REQUEST_NEXT_QUESTION, requestNextQuestionHandler(io, socket));
     socket.on('disconnect', disconnectHandler(io, socket));

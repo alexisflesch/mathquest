@@ -248,6 +248,20 @@ export async function runGameFlow(
                 }
             });
 
+            // --- MODERNIZATION: Ensure Redis game state is also marked as completed ---
+            const redisState = await gameStateService.getFullGameState(accessCode);
+            if (redisState && redisState.gameState) {
+                if (redisState.gameState.status !== 'completed') {
+                    logger.warn({ accessCode, redisStatus: redisState.gameState.status }, '[MODERNIZATION] Redis game state was not marked completed when DB was. Forcing sync.');
+                    const updatedRedisState = {
+                        ...redisState.gameState,
+                        status: 'completed' as const,
+                        endedAt: endedAt.getTime()
+                    };
+                    await gameStateService.updateGameState(accessCode, updatedRedisState);
+                }
+            }
+
             logger.info({
                 accessCode,
                 status: 'completed',

@@ -123,20 +123,29 @@ export function endGameHandler(io: SocketIOServer, socket: Socket) {
 
             const gameState = fullState.gameState;
 
-            // Update game status to completed
+            // Update game status to completed (canonical: 'completed' everywhere)
             gameState.status = 'completed';
 
             // Update game state in Redis
             await gameStateService.updateGameState(accessCode, gameState);
 
-            // Update game instance in database
+            // Update game instance in database (use 'completed' for consistency)
             await prisma.gameInstance.update({
                 where: { id: gameId },
                 data: {
-                    status: 'ended',
+                    status: 'completed',
                     endedAt: new Date()
                 }
             });
+
+            // Diagnostic: log both Redis and DB status after update
+            const updatedGameInstance = await prisma.gameInstance.findUnique({ where: { id: gameId } });
+            const updatedState = await gameStateService.getFullGameState(accessCode);
+            logger.info({
+                accessCode,
+                dbStatus: updatedGameInstance?.status,
+                redisStatus: updatedState?.gameState?.status
+            }, '[DIAGNOSTIC] Post-endGame status sync check');
 
             const endedAt = Date.now();
 

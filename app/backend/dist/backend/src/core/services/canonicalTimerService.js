@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CanonicalTimerService = void 0;
 const logger_1 = __importDefault(require("@/utils/logger"));
+const timerKeyUtil_1 = require("./timerKeyUtil");
 const logger = (0, logger_1.default)('CanonicalTimerService');
 /**
  * CanonicalTimerService: manages timer logic for all game modes.
@@ -20,13 +21,17 @@ class CanonicalTimerService {
     /**
      * Returns the Redis key for the timer, based on mode:
      * - Quiz & live tournament: timer:{accessCode}:{questionUid}
-     * - Differed tournament: timer:{accessCode}:{questionUid}:user:{userId}
+     * - Differed tournament: timer:{accessCode}:{questionUid}:user:{userId}:attempt:{attemptCount}
      */
-    getKey(accessCode, questionUid, userId, playMode, isDiffered) {
-        if (playMode === 'tournament' && isDiffered && userId) {
-            return `timer:${accessCode}:${questionUid}:user:${userId}`;
-        }
-        return `timer:${accessCode}:${questionUid}`;
+    getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount) {
+        // Use canonical timer key utility for all modes
+        return (0, timerKeyUtil_1.getTimerKey)({
+            accessCode,
+            userId: userId || '',
+            questionUid,
+            attemptCount,
+            isDeferred: isDiffered
+        });
     }
     /**
      * Start or resume the timer for a question, handling all modes.
@@ -34,10 +39,10 @@ class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async startTimer(accessCode, questionUid, playMode, isDiffered, userId) {
+    async startTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
         if (playMode === 'practice')
             return null; // No timer in practice mode
-        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered);
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const now = Date.now();
         let timer = null;
         const raw = await this.redis.get(key);
@@ -49,6 +54,7 @@ class CanonicalTimerService {
             playMode,
             isDiffered,
             userId,
+            attemptCount,
             timerExists: !!timer,
             timerState: timer
         }, '[TIMER_DEBUG] startTimer called');
@@ -76,10 +82,10 @@ class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async pauseTimer(accessCode, questionUid, playMode, isDiffered, userId) {
+    async pauseTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
         if (playMode === 'practice')
             return null;
-        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered);
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const now = Date.now();
         const raw = await this.redis.get(key);
         if (!raw)
@@ -100,10 +106,10 @@ class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async getTimer(accessCode, questionUid, playMode, isDiffered, userId) {
+    async getTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
         if (playMode === 'practice')
             return null;
-        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered);
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const raw = await this.redis.get(key);
         if (!raw)
             return null;
@@ -115,16 +121,17 @@ class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: always returns 0
      */
-    async getElapsedTimeMs(accessCode, questionUid, playMode, isDiffered, userId) {
+    async getElapsedTimeMs(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
         if (playMode === 'practice')
             return 0;
-        const timer = await this.getTimer(accessCode, questionUid, playMode, isDiffered, userId);
+        const timer = await this.getTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount);
         logger.info({
             accessCode,
             questionUid,
             playMode,
             isDiffered,
             userId,
+            attemptCount,
             timerState: timer
         }, '[TIMER_DEBUG] getElapsedTimeMs called');
         if (!timer)
@@ -142,12 +149,12 @@ class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async resetTimer(accessCode, questionUid, playMode, isDiffered, userId) {
+    async resetTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
         if (playMode === 'practice')
             return;
-        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered);
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         await this.redis.del(key);
-        logger.info({ accessCode, questionUid }, '[TIMER] Reset');
+        logger.info({ accessCode, questionUid, attemptCount }, '[TIMER] Reset');
     }
 }
 exports.CanonicalTimerService = CanonicalTimerService;

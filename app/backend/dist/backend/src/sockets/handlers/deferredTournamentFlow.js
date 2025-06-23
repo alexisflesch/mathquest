@@ -1,6 +1,39 @@
 "use strict";
 // Deferred tournament game flow logic
 // Handles individual player sessions for asynchronous tournament replay
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -88,9 +121,21 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
                 showLeaderboard: true
             }
         };
-        // Store individual session state with unique key
-        const sessionStateKey = `deferred_session:${accessCode}:${userId}`;
+        // Store individual session state with unique key (include attemptCount for full isolation)
+        const attemptCount = await getDeferredAttemptCount(accessCode, userId);
+        // Store attemptCount on socket for this session
+        socket.data.deferredAttemptCount = attemptCount;
+        const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
         await gameStateService_1.default.updateGameState(sessionStateKey, playerGameState);
+        // Always ensure participant exists for deferred mode at session start
+        const { joinGame } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/joinService')));
+        let username = `guest-${userId.substring(0, 8)}`;
+        let avatarEmoji = undefined;
+        const joinResult = await joinGame({ userId, accessCode, username, avatarEmoji });
+        if (!joinResult.success || !joinResult.participant) {
+            logger.error({ accessCode, userId, error: joinResult.error }, 'Failed to create/join participant at deferred session start');
+            return;
+        }
         // Start the question progression for this individual player
         await runDeferredQuestionSequence(io, socket, {
             userId,
@@ -98,7 +143,8 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
             questions,
             currentQuestionIndex: 0,
             playerRoom,
-            sessionStartTime: Date.now()
+            sessionStartTime: Date.now(),
+            attemptCount // Pass fixed attemptCount
         });
     }
     catch (error) {
@@ -123,7 +169,7 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
  * Run the question sequence for an individual deferred tournament session
  */
 async function runDeferredQuestionSequence(io, socket, session) {
-    const { userId, accessCode, questions, playerRoom } = session;
+    const { userId, accessCode, questions, playerRoom, attemptCount } = session;
     logger.info({
         accessCode,
         userId,
@@ -137,21 +183,16 @@ async function runDeferredQuestionSequence(io, socket, session) {
         // Process each question sequentially
         for (let i = 0; i < questions.length; i++) {
             const question = questions[i];
-            const attemptCount = await getDeferredAttemptCount(accessCode, userId);
+            // Use fixed attemptCount for all questions in this session
             logger.info({ accessCode, userId, attemptCount, questionUid: question.uid, logPoint: 'DEFERRED_QUESTION_LOOP_ENTRY' }, '[DEBUG] Entered deferred tournament question loop');
             const timeLimitSec = question.timeLimit || 30;
             const durationMs = timeLimitSec * 1000;
-            logger.info({
-                accessCode,
-                userId,
-                questionIndex: i,
-                questionUid: question.uid,
-                timeLimit: timeLimitSec
-            }, 'Starting deferred tournament question');
             // --- UNIFIED TIMER LOGIC ---
-            // Always use CanonicalTimerService with correct key (userId for deferred)
-            await canonicalTimerService.resetTimer(accessCode, question.uid, playMode, isDiffered, userId);
-            await canonicalTimerService.startTimer(accessCode, question.uid, playMode, isDiffered, userId);
+            // Always use CanonicalTimerService with correct key (userId and attemptCount for deferred)
+            // FIX: Use attemptCount + 1 to match answer submission
+            const timerAttemptCount = attemptCount + 1;
+            await canonicalTimerService.resetTimer(accessCode, question.uid, playMode, isDiffered, userId, timerAttemptCount);
+            await canonicalTimerService.startTimer(accessCode, question.uid, playMode, isDiffered, userId, timerAttemptCount);
             // --- END UNIFIED TIMER LOGIC ---
             // Retrieve timer state from canonical service (optional, for emitting to client)
             // const timer = await canonicalTimerService.getTimer(accessCode, question.uid, playMode, isDiffered, userId);
@@ -165,7 +206,7 @@ async function runDeferredQuestionSequence(io, socket, session) {
                 localTimeLeftMs: null
             };
             // Update session state
-            const sessionStateKey = `deferred_session:${accessCode}:${userId}`;
+            const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
             const currentState = await gameStateService_1.default.getFullGameState(sessionStateKey);
             if (currentState && currentState.gameState) {
                 const updatedState = {
@@ -216,17 +257,22 @@ async function runDeferredQuestionSequence(io, socket, session) {
             io.to(playerRoom).emit('correct_answers', correctAnswersPayload);
             // Handle feedback if available
             if (question.explanation) {
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                const feedbackDisplayDuration = (typeof question.feedbackWaitTime === 'number' && question.feedbackWaitTime > 0)
-                    ? question.feedbackWaitTime
-                    : 5;
-                const feedbackPayload = {
-                    questionUid: question.uid,
-                    feedbackRemaining: feedbackDisplayDuration,
-                    explanation: question.explanation
-                };
-                io.to(playerRoom).emit('feedback', feedbackPayload);
-                await new Promise(resolve => setTimeout(resolve, feedbackDisplayDuration * 1000));
+                // Check if explanation was already sent (e.g., via ANSWER_RECEIVED)
+                const explanationSentKey = `mathquest:explanation_sent:${accessCode}:${question.uid}:${userId}`;
+                const alreadySent = await redis_1.redisClient.get(explanationSentKey);
+                if (!alreadySent) {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    const feedbackDisplayDuration = (typeof question.feedbackWaitTime === 'number' && question.feedbackWaitTime > 0)
+                        ? question.feedbackWaitTime
+                        : 5;
+                    const feedbackPayload = {
+                        questionUid: question.uid,
+                        feedbackRemaining: feedbackDisplayDuration,
+                        explanation: question.explanation
+                    };
+                    io.to(playerRoom).emit('feedback', feedbackPayload);
+                    await new Promise(resolve => setTimeout(resolve, feedbackDisplayDuration * 1000));
+                }
             }
         }
         // Tournament completed for this player

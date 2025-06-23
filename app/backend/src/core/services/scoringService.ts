@@ -9,6 +9,8 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { redisClient } from '@/config/redis';
 import type { AnswerSubmissionPayload } from '@shared/types/core/answer';
+import { getTimerKey } from './timerKeyUtil';
+import { CanonicalTimerService } from './canonicalTimerService';
 
 const logger = createLogger('ScoringService');
 
@@ -112,9 +114,18 @@ export function checkAnswerCorrectness(question: any, answer: any): boolean {
 export async function submitAnswerWithScoring(
     gameInstanceId: string,
     userId: string,
-    answerData: AnswerSubmissionPayload
+    answerData: AnswerSubmissionPayload,
+    isDeferredOverride?: boolean
 ): Promise<ScoreResult> {
     try {
+        logger.info({
+            gameInstanceId,
+            userId,
+            answerData,
+            isDeferredOverride,
+            note: '[DIAGNOSTIC] submitAnswerWithScoring called with isDeferredOverride'
+        }, '[DIAGNOSTIC] Top-level entry to submitAnswerWithScoring');
+
         logger.info({
             gameInstanceId,
             userId,
@@ -158,14 +169,17 @@ export async function submitAnswerWithScoring(
         let gameInstance: any = null;
         gameInstance = await prisma.gameInstance.findUnique({
             where: { id: gameInstanceId },
-            select: { playMode: true, accessCode: true, isDiffered: true }
+            select: { playMode: true, accessCode: true, status: true, differedAvailableFrom: true, differedAvailableTo: true }
         });
-        logger.info({ gameInstanceId, userId, playMode: gameInstance?.playMode, isDiffered: gameInstance?.isDiffered }, '[LOG] GameInstance fetch result');
-        // Determine answer key (namespace by attempt for DEFERRED)
-        let answerKey: string;
+        // --- PATCH: Use status for deferred mode detection ---
+        const isDeferred = gameInstance?.playMode === 'tournament' && gameInstance?.status === 'completed';
+        logger.info({ gameInstanceId, userId, playMode: gameInstance?.playMode, status: gameInstance?.status, isDeferred }, '[LOG] GameInstance fetch result (using status for deferred mode)');
+        // Remove duplicate declarations of isDeferred and attemptCount
+        // Only declare once, after fetching gameInstance and participant
         const attemptCount = participant.attemptCount;
         // FIX: Always use attempt-namespaced key for DEFERRED participants
-        if (participant.participationType === 'DEFERRED') {
+        let answerKey: string;
+        if (isDeferred) {
             answerKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}:${attemptCount}`;
             logger.info({
                 gameInstanceId,
@@ -174,9 +188,9 @@ export async function submitAnswerWithScoring(
                 attemptCount,
                 answerKey,
                 playMode: gameInstance?.playMode,
-                isDiffered: gameInstance?.isDiffered,
+                status: gameInstance?.status,
                 participationType: participant.participationType,
-                note: 'USING NAMESPACED ANSWER KEY for DEFERRED participant (forced)'
+                note: 'USING NAMESPACED ANSWER KEY for DEFERRED participant (status-based)'
             }, '[FIXED-2] Using attempt-based answer key for DEFERRED participant');
         } else {
             answerKey = `mathquest:game:answers:${gameInstance.accessCode}:${answerData.questionUid}`;
@@ -188,7 +202,7 @@ export async function submitAnswerWithScoring(
             answerKey,
             attemptCount,
             playMode: gameInstance?.playMode,
-            isDiffered: gameInstance?.isDiffered,
+            status: gameInstance?.status,
             participationType: participant.participationType
         }, '[DIAGNOSTIC] Using answer key for duplicate check and storage');
         logger.info({ gameInstanceId, userId, answerKey }, '[LOG] About to read previous answer from Redis');
@@ -209,7 +223,7 @@ export async function submitAnswerWithScoring(
                 previousAnswer,
                 previousScore,
                 previousIsCorrect,
-                mode: gameInstance?.isDiffered ? 'DEFERRED' : 'LIVE/QUIZ',
+                mode: gameInstance?.playMode,
                 note: 'Previous answer found for duplicate/score logic.'
             }, '[DIAGNOSTIC] Previous answer state for duplicate/score logic');
         } else {
@@ -250,7 +264,7 @@ export async function submitAnswerWithScoring(
                 previousAnswer,
                 attemptCount,
                 answerKey,
-                mode: gameInstance?.isDiffered ? 'DEFERRED' : 'LIVE/QUIZ',
+                mode: gameInstance?.playMode,
                 note: 'Duplicate answer detected, no score update.'
             }, '[DIAGNOSTIC] Duplicate answer detected for DEFERRED/LIVE/QUIZ');
             return {
@@ -278,119 +292,35 @@ export async function submitAnswerWithScoring(
                 message: 'Question not found'
             };
         }
-        // Calculate server-side timing (factorized by mode)
+        // Calculate server-side timing (SECURITY FIX: always use CanonicalTimerService)
         let serverTimeSpent: number = 0;
         let timerDebugInfo: any = {};
-        if (gameInstance.playMode === 'practice') {
-            // Practice mode: no timer
-            serverTimeSpent = 0;
-        } else if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !gameInstance.isDiffered)) {
-            // Quiz and live tournament: timer attached to GameInstance
-            serverTimeSpent = typeof answerData.timeSpent === 'number' ? answerData.timeSpent : 0;
-            timerDebugInfo = {
-                playMode: gameInstance.playMode,
-                isDiffered: gameInstance.isDiffered,
-                answerDataTimeSpent: answerData.timeSpent,
-                serverTimeSpent
-            };
-        } else if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
-            // DEFERRED tournament: timer must be per-user/per-attempt
-            serverTimeSpent = typeof answerData.timeSpent === 'number' ? answerData.timeSpent : 0;
-            // Defensive: If timer is missing/null, force timeSpent = 0 to avoid incorrect penalty
-            const timerKey = `mathquest:deferred:timer:${gameInstance.accessCode}:${userId}:${attemptCount}:${answerData.questionUid}`;
-            let timerValue = null;
-            logger.info({
-                gameInstanceId,
+        const canonicalTimerService = new CanonicalTimerService(redisClient);
+        const playMode = gameInstance.playMode;
+        const accessCode = gameInstance.accessCode;
+        const questionUid = answerData.questionUid;
+        if (playMode !== 'practice') {
+            serverTimeSpent = await canonicalTimerService.getElapsedTimeMs(
+                accessCode,
+                questionUid,
+                playMode,
+                isDeferred,
                 userId,
-                accessCode: gameInstance.accessCode,
-                questionUid: answerData.questionUid,
-                attemptCount,
-                timerKey,
-                serverTimestamp: Date.now(),
-                logPoint: 'TIMER_LOOKUP_DEFERRED_ENTRY'
-            }, '[TIMER_DEBUG] Entering timer lookup for DEFERRED answer submission');
-            try {
-                timerValue = await redisClient.get(timerKey);
-                logger.info({
-                    gameInstanceId,
-                    userId,
-                    timerKey,
-                    timerValueRaw: timerValue,
-                    logPoint: 'TIMER_GET_DEFERRED',
-                    serverTimestamp: Date.now(),
-                    attemptCount,
-                    accessCode: gameInstance.accessCode,
-                    questionUid: answerData.questionUid
-                }, '[TIMER_DEBUG] Timer value fetched from Redis for DEFERRED');
-                let timerObj = null;
-                if (timerValue) {
-                    try {
-                        timerObj = JSON.parse(timerValue);
-                    } catch (parseErr) {
-                        logger.error({ gameInstanceId, userId, timerKey, timerValue, parseErr, logPoint: 'TIMER_PARSE_ERROR_DEFERRED' }, '[TIMER_DEBUG] Error parsing timer value from Redis');
-                    }
-                }
-                logger.info({
-                    gameInstanceId,
-                    userId,
-                    timerKey,
-                    timerObj,
-                    logPoint: 'TIMER_OBJECT_DEFERRED',
-                    serverTimestamp: Date.now(),
-                    attemptCount,
-                    accessCode: gameInstance.accessCode,
-                    questionUid: answerData.questionUid
-                }, '[TIMER_DEBUG] Timer object at lookup for DEFERRED');
-                // Log all time math for expiry calculation
-                if (timerObj && timerObj.timestamp && timerObj.durationMs) {
-                    const now = Date.now();
-                    const elapsed = now - timerObj.timestamp;
-                    const timeLeft = timerObj.durationMs - elapsed;
-                    logger.info({
-                        gameInstanceId,
-                        userId,
-                        timerKey,
-                        timerTimestamp: timerObj.timestamp,
-                        timerDurationMs: timerObj.durationMs,
-                        now,
-                        elapsed,
-                        timeLeft,
-                        logPoint: 'TIMER_EXPIRE_CALC_DEFERRED',
-                        attemptCount,
-                        accessCode: gameInstance.accessCode,
-                        questionUid: answerData.questionUid
-                    }, '[TIMER_DEBUG] Timer expiry calculation for DEFERRED');
-                }
-            } catch (timerFetchError) {
-                logger.error({ gameInstanceId, userId, timerKey, timerFetchError, logPoint: 'TIMER_FETCH_ERROR_DEFERRED', serverTimestamp: Date.now(), attemptCount, accessCode: gameInstance.accessCode, questionUid: answerData.questionUid }, '[TIMER_DEBUG] Error fetching timer value from Redis');
-            }
-            if (timerValue === null || timerValue === undefined) {
-                logger.warn({ gameInstanceId, userId, timerKey, note: 'Timer missing/null for DEFERRED mode, forcing serverTimeSpent = 0' }, '[TIMER_DEBUG] Defensive: Forcing serverTimeSpent = 0 for DEFERRED');
-                serverTimeSpent = 0;
-            }
+                attemptCount
+            );
             timerDebugInfo = {
-                playMode: gameInstance.playMode,
-                isDiffered: gameInstance.isDiffered,
-                answerDataTimeSpent: answerData.timeSpent,
+                playMode,
+                isDeferred,
+                accessCode,
+                questionUid,
+                userId,
+                attemptCount,
                 serverTimeSpent,
-                canonical: true,
-                timerKey,
-                timerValue,
-                attemptCount, // Log attemptCount used for lookup
-                userId,
-                questionUid: answerData.questionUid,
-                logPoint: 'TIMER_LOOKUP_DEFERRED'
+                note: '[SECURITY] CanonicalTimerService.getElapsedTimeMs used for penalty'
             };
-            logger.info({
-                gameInstanceId,
-                userId,
-                questionUid: answerData.questionUid,
-                attemptCount,
-                timerKey,
-                timerValue,
-                timerDebugInfo,
-                note: 'Timer/penalty logic for DEFERRED answer submission.'
-            }, '[TIMER_DEBUG] Timer/penalty logic for DEFERRED answer submission');
+        } else {
+            serverTimeSpent = 0;
+            timerDebugInfo = { playMode, note: 'Practice mode: no timer' };
         }
         logger.info({
             gameInstanceId,
@@ -404,21 +334,16 @@ export async function submitAnswerWithScoring(
         logger.info({ gameInstanceId, userId, questionUid: answerData.questionUid, newScore, timePenalty }, '[LOG] Calculated new score and time penalty');
         // Replace previous score for this question (not increment)
         let scoreDelta = newScore - previousScore;
-        // For differed tournaments, always replace the score (not increment)
+        // For all modes, always increment the score by scoreDelta
         let scoreUpdateData: any = { score: { increment: scoreDelta } };
-        if (gameInstance.playMode === 'tournament' && gameInstance.isDiffered) {
-            scoreUpdateData = { score: newScore };
-            logger.info({
-                gameInstanceId,
-                userId,
-                questionUid: answerData.questionUid,
-                previousScore,
-                newScore,
-                scoreDelta,
-                attemptCount,
-                timePenalty,
-                note: 'DEFERRED mode: replacing score for this attempt.'
-            }, '[DIAGNOSTIC] DEFERRED mode score replacement logic');
+        // If in deferred mode, keep the max between previous attempt and new attempt
+        if (isDeferred) {
+            // Fetch the current DB score again to ensure up-to-date
+            const currentDbParticipant = await prisma.gameParticipant.findUnique({ where: { id: participant.id } });
+            const currentDbScore = currentDbParticipant?.score || 0;
+            const newTotal = currentDbScore + scoreDelta;
+            // Set score to max of previous best and new total
+            scoreUpdateData = { score: Math.max(currentDbScore, newTotal) };
         }
         logger.info({ gameInstanceId, userId, scoreUpdateData }, '[LOG] About to update participant score in DB');
         // Update participant score in DB
@@ -427,16 +352,14 @@ export async function submitAnswerWithScoring(
             data: scoreUpdateData
         });
         logger.info({ gameInstanceId, userId, updatedScore: updatedParticipant.score }, '[LOG] Updated participant score in DB');
-        // Update Redis with new answer
+        // Update Redis with new answer (remove answerData.timeSpent, store serverTimeSpent only)
         if (gameInstance) {
-            logger.info({ gameInstanceId, userId, answerKey }, '[LOG] About to store answer in Redis');
             await redisClient.hset(
                 answerKey,
                 userId,
                 JSON.stringify({
                     userId,
                     answer: answerData.answer,
-                    timeSpent: answerData.timeSpent,
                     serverTimeSpent,
                     submittedAt: Date.now(),
                     isCorrect,
@@ -450,7 +373,7 @@ export async function submitAnswerWithScoring(
                 answerKey,
                 attemptCount,
                 playMode: gameInstance?.playMode,
-                isDiffered: gameInstance?.isDiffered
+                status: gameInstance?.status
             }, '[DIAGNOSTIC] Stored answer in Redis with attempt-based key');
             // Update Redis participant data to sync with database
             const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;

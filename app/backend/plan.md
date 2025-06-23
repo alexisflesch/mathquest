@@ -42,6 +42,9 @@ Unify timer reset/start logic for quiz, live tournament, and differed tournament
     - [x] Review code to confirm presence of pre-timer-creation logs with full context (userId, accessCode, questionUid, attemptCount, etc.)
     - [ ] If missing or insufficient, add catch-all log statement just before timer creation call
     - [x] Document findings and update checklist
+- [x] Refactor CanonicalTimerService to use canonical getTimerKey utility for all timer key construction
+    - [x] All timer key construction is now DRY and unified
+    - [x] No legacy timer key logic remains in CanonicalTimerService
 - [ ] Refactor for DRY question/timer/scoring logic across live and deferred tournaments
     - [ ] Extract shared logic into a single service or utility if not already
     - [ ] Refactor join handler for deferred tournaments to call `startDeferredTournamentSession` (from `deferredTournamentFlow.ts`) instead of `runGameFlow`
@@ -123,3 +126,39 @@ Unify timer reset/start logic for quiz, live tournament, and differed tournament
 - [ ] Validate that timer's start time and duration are correct and consistent for Marc
 - [ ] If a race condition is confirmed, refactor to ensure timer is always set before answer submission is processed (e.g., by awaiting timer set or blocking answer handler until timer is confirmed)
 - [ ] Update checklist and findings after new logs are added and analyzed for Marc
+
+# Phase: GameParticipant Table Invariant & Deferred Mode Modernization
+
+## Goal
+Enforce invariant: For each user/game, there must be at most one "LIVE" and one "DIFFERED" GameParticipant row. Prevent database pollution by updating the existing "DIFFERED" row for new attempts, never inserting duplicates.
+
+## Checklist
+
+- [x] Audit current participant creation logic for both LIVE and DEFERRED modes
+- [x] Document intended invariant: max one LIVE and one DIFFERED row per user/game
+- [ ] Refactor join/creation logic to always update existing DEFERRED row (increment attemptCount, reset answers) instead of inserting new row
+- [ ] Ensure all answer/session/timer logic uses the single DEFERRED row for the user/game
+- [ ] Add/verify tests: only one LIVE and one DIFFERED row can exist per user/game
+- [ ] Update documentation and log all changes
+- [ ] Validate with test cases and logs that invariant is enforced
+
+## Exit Criteria
+- No duplicate DEFERRED rows per user/game
+- All logic (join, answer, timer, scoring) uses the single DEFERRED row
+- Tests and logs confirm invariant is enforced
+- Documentation is up to date
+
+## Findings (2025-06-23)
+- Current logic sometimes creates a new DEFERRED row for each attempt, polluting the table.
+- Intended: On new deferred attempt, update existing DEFERRED row (increment attemptCount, reset answers), never insert a new row if one exists.
+- LIVE mode already enforces single row per user/game.
+- All answer/session/timer logic must use the correct DEFERRED row (by userId, gameInstanceId, participationType: 'DEFERRED').
+- Next: Refactor code, add tests, and validate with logs.
+- [x] Audit and fix propagation of isDiffered/isDeferred flag so deferred mode is correctly detected at scoring time
+    - [x] Trace how isDiffered is set in handler context but not persisted to DB
+    - [x] Confirm root cause: scoringService fetches gameInstance from DB, which lacks isDiffered=true for deferred window
+    - [x] Decide on solution: pass isDeferred override from handler context to scoring logic
+    - [ ] Refactor submitAnswerWithScoring and call chain to accept isDeferred override
+    - [ ] Update diagnostic logging to confirm fix
+    - [ ] Validate with test session and logs
+    - [ ] Document findings and update checklist

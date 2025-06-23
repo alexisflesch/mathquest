@@ -55,10 +55,7 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
         // Upsert user
         await prisma.user.upsert({
             where: { id: userId },
-            update: {
-                username: username || `guest-${userId.substring(0, 8)}`,
-                avatarEmoji: avatarEmoji || null,
-            },
+            update: {},
             create: {
                 id: userId,
                 username: username || `guest-${userId.substring(0, 8)}`,

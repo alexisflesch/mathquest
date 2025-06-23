@@ -248,6 +248,19 @@ async function runGameFlow(io, accessCode, questions, options) {
                     differedAvailableTo: differedAvailableTo
                 }
             });
+            // --- MODERNIZATION: Ensure Redis game state is also marked as completed ---
+            const redisState = await gameStateService_1.default.getFullGameState(accessCode);
+            if (redisState && redisState.gameState) {
+                if (redisState.gameState.status !== 'completed') {
+                    logger.warn({ accessCode, redisStatus: redisState.gameState.status }, '[MODERNIZATION] Redis game state was not marked completed when DB was. Forcing sync.');
+                    const updatedRedisState = {
+                        ...redisState.gameState,
+                        status: 'completed',
+                        endedAt: endedAt.getTime()
+                    };
+                    await gameStateService_1.default.updateGameState(accessCode, updatedRedisState);
+                }
+            }
             logger.info({
                 accessCode,
                 status: 'completed',

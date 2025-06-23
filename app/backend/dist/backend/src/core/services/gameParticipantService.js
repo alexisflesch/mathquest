@@ -201,7 +201,8 @@ class GameParticipantService {
                     accessCode,
                     gameInstanceId: gameInstance.id
                 }, 'BUG INVESTIGATION: Looking for existing DEFERRED participant');
-                const existingDeferredParticipant = await prisma_1.prisma.gameParticipant.findFirst({
+                let participant;
+                let existingDeferredParticipant = await prisma_1.prisma.gameParticipant.findFirst({
                     where: {
                         gameInstanceId: gameInstance.id,
                         userId: userId,
@@ -209,14 +210,6 @@ class GameParticipantService {
                     },
                     include: { user: true }
                 });
-                logger.info({
-                    userId,
-                    accessCode,
-                    existingParticipantFound: !!existingDeferredParticipant,
-                    existingParticipantId: existingDeferredParticipant?.id,
-                    existingScore: existingDeferredParticipant?.score,
-                    existingAttemptCount: existingDeferredParticipant?.attemptCount
-                }, 'BUG INVESTIGATION: DEFERRED participant search result');
                 // Create new user if they don't exist, or connect if they do.
                 await prisma_1.prisma.user.upsert({
                     where: { id: userId },
@@ -233,19 +226,9 @@ class GameParticipantService {
                     }
                 });
                 if (existingDeferredParticipant) {
-                    // [MODERNIZATION] On new DEFERRED attempt, do NOT reset score in DB; keep best score in DB.
-                    // Instead, track current attempt's score separately (e.g., in Redis), and clear/namespace answers for this attempt.
-                    logger.info({
-                        userId,
-                        accessCode,
-                        participantId: existingDeferredParticipant.id,
-                        currentScore: existingDeferredParticipant.score,
-                        currentAttemptCount: existingDeferredParticipant.attemptCount
-                    }, '[DEFERRED] Starting new attempt: preserving best score, isolating answers');
-                    // Only increment attemptCount if this is a true new attempt (not a reconnect or duplicate join)
-                    // [MODERNIZATION] Add diagnostic log for attemptCount increment
+                    // Always update the existing DEFERRED row: increment attemptCount, reset answers
                     const prevAttemptCount = existingDeferredParticipant.attemptCount;
-                    const participant = await prisma_1.prisma.gameParticipant.update({
+                    participant = await prisma_1.prisma.gameParticipant.update({
                         where: { id: existingDeferredParticipant.id },
                         data: {
                             joinedAt: new Date(),
@@ -253,29 +236,27 @@ class GameParticipantService {
                         },
                         include: { user: true }
                     });
+                    if (!participant || !participant.user) {
+                        logger.error({ userId, accessCode, participantId: existingDeferredParticipant.id, participant }, '[DEFERRED] Could not update participant or user relation is missing');
+                        return {
+                            success: false,
+                            error: 'Failed to update DEFERRED participant or user relation missing'
+                        };
+                    }
                     logger.info({
                         userId,
                         accessCode,
                         participantId: participant.id,
                         prevAttemptCount,
                         newAttemptCount: participant.attemptCount
-                    }, '[DIAGNOSTIC] Incremented attemptCount for DEFERRED participant');
-                    // Clear answers for previous attempt (isolation)
+                    }, '[DEFERRED] Updated existing DEFERRED participant for new attempt');
                     await clearDeferredAnswers(gameInstance.id, userId, participant.attemptCount);
-                    // Clear ALL answers for previous attempts (isolation)
-                    await clearAllDeferredAnswers(gameInstance.id, userId);
-                    logger.info({
-                        userId,
-                        accessCode,
-                        participantId: participant.id,
-                        participationType: participant.participationType,
-                        attemptCount: participant.attemptCount,
-                        preservedScore: participant.score
-                    }, '[DEFERRED] Updated existing DEFERRED participant for new attempt (score preserved)');
+                    // Optionally clear ALL answers for previous attempts (if required by business logic)
+                    // await clearAllDeferredAnswers(gameInstance.id, userId);
                 }
                 else {
-                    // Create new deferred participant
-                    const newParticipant = await prisma_1.prisma.gameParticipant.create({
+                    // Create new deferred participant ONLY if none exists
+                    participant = await prisma_1.prisma.gameParticipant.create({
                         data: {
                             gameInstanceId: gameInstance.id,
                             userId: userId,
@@ -283,16 +264,20 @@ class GameParticipantService {
                             score: 0,
                             participationType: 'DEFERRED',
                             attemptCount: 1
-                        }
-                    });
-                    participant = await prisma_1.prisma.gameParticipant.findUnique({
-                        where: { id: newParticipant.id },
+                        },
                         include: { user: true }
                     });
+                    if (!participant) {
+                        logger.error({ userId, accessCode, gameInstanceId: gameInstance.id }, 'Failed to create new DEFERRED participant: participant is null');
+                        return {
+                            success: false,
+                            error: 'Failed to create new DEFERRED participant'
+                        };
+                    }
                     logger.info({
                         userId,
                         accessCode,
-                        participantId: participant?.id,
+                        participantId: participant.id,
                         participationType: 'DEFERRED'
                     }, 'Created new DEFERRED participant');
                 }
@@ -304,11 +289,24 @@ class GameParticipantService {
             };
         }
         catch (error) {
-            logger.error({ error, userId, accessCode }, 'Error joining game');
-            return {
-                success: false,
-                error: 'An error occurred while joining the game'
-            };
+            logger.error({
+                error: error instanceof Error ? error.stack || error.message : error,
+                userId,
+                accessCode,
+                errorType: typeof error,
+                errorString: String(error),
+                errorJson: (() => { try {
+                    return JSON.stringify(error);
+                }
+                catch {
+                    return undefined;
+                } })()
+            }, 'Error joining game - detailed');
+            throw error; // Rethrow to surface error in stack traces and higher-level logs
+            // return {
+            //     success: false,
+            //     error: 'An error occurred while joining the game'
+            // };
         }
     }
     /**
@@ -365,10 +363,11 @@ class GameParticipantService {
      * @param data The answer data
      * @returns The scoring result with details
      */
-    async submitAnswer(gameInstanceId, userId, data) {
+    async submitAnswer(gameInstanceId, userId, data, isDeferredOverride) {
         try {
             // Use the new scoring service for all answer submissions
-            const scoreResult = await scoringService_1.ScoringService.submitAnswerWithScoring(gameInstanceId, userId, data);
+            const scoreResult = await scoringService_1.ScoringService.submitAnswerWithScoring(gameInstanceId, userId, data, isDeferredOverride // PATCH: propagate override
+            );
             if (!scoreResult.scoreUpdated && scoreResult.message === 'Participant not found') {
                 return {
                     success: false,

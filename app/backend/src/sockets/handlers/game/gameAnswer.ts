@@ -36,417 +36,133 @@ const logger = createLogger('GameAnswerHandler');
 
 export type GameAnswerPayload = z.infer<typeof gameAnswerPayloadSchema>;
 
+// New type for the timer/session context
+export interface GameAnswerContext {
+    timer: any; // Canonical timer object (already resolved)
+    gameState: any; // Canonical game/session state (already resolved)
+    participant: any; // Canonical participant (already resolved)
+    gameInstance: any; // Canonical gameInstance (already resolved)
+}
+
+// Refactored handler: accepts timer/session context as argument
 export function gameAnswerHandler(
     io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
-    socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
+    socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
+    context: GameAnswerContext
 ) {
     logger.info({ socketId: socket.id }, 'gameAnswerHandler registered');
 
     // Define the handler function
     const handler = async (payload: any) => {
-        // === ENTRY LOGGING ===
-        logger.info({
-            socketId: socket.id,
-            event: 'game_answer',
-            entry: true,
-            payload,
-            connected: socket.connected,
-            timestamp: new Date().toISOString()
-        }, '[DIAGNOSTIC] ENTRY: gameAnswerHandler invoked');
-        // Log every received payload, even if invalid
-        logger.info({
-            socketId: socket.id,
-            event: 'game_answer',
-            receivedPayload: payload,
-            timestamp: new Date().toISOString()
-        }, '[DIAGNOSTIC] PAYLOAD RECEIVED in gameAnswerHandler');
-
+        // Always declare these for use in error/final logging
+        let accessCode: string | undefined = undefined;
+        let userId: string | undefined = undefined;
+        let questionUid: string | undefined = undefined;
+        let timeSpent: number | undefined = undefined;
+        let answer: any = undefined;
+        let scoringMode: string | undefined = undefined;
+        let scoringPerformed: boolean | undefined = undefined;
+        let scoringResult: any = undefined;
         // Variable to track answer correctness, defined at the top level so it's available to all code paths
         let isCorrect = false;
-        let scoringPerformed = false;
-        let scoringMode = 'unknown';
-        let scoringResult: any = null;
-
-        // Zod validation for payload
-        const parseResult = AnswerSubmissionPayloadSchema.safeParse(payload);
-        if (!parseResult.success) {
-            logger.warn({
-                socketId: socket.id,
-                error: 'Invalid answer submission payload',
-                details: parseResult.error.format(),
-                payload
-            }, '[DIAGNOSTIC] EARLY RETURN: Zod validation failed for answer submission');
-            socket.emit('answer_feedback', {
-                status: 'error',
-                code: 'INVALID_PAYLOAD',
-                message: 'Invalid answer submission payload.'
-            });
-            // Log unconditional early return for invalid payload
-            logger.info({
-                socketId: socket.id,
-                event: 'game_answer',
-                reason: 'invalid_payload',
-                payload,
-                timestamp: new Date().toISOString()
-            }, '[DIAGNOSTIC] EARLY RETURN: Invalid payload in gameAnswerHandler');
-            return;
-        }
-        const validPayload = parseResult.data;
-
-        const { accessCode, userId, questionUid, answer, timeSpent } = validPayload;
-
+        const participantService = new GameParticipantService();
         try {
-            logger.debug({ accessCode, userId, questionUid, answer, timeSpent }, 'Looking up gameInstance');
-            const gameInstance = await prisma.gameInstance.findUnique({
-                where: { accessCode },
-                select: {
-                    id: true,
-                    isDiffered: true,
-                    differedAvailableFrom: true,
-                    differedAvailableTo: true,
-                    initiatorUserId: true,
-                    playMode: true
-                }
-            });
-            logger.debug({ gameInstance }, 'Result of gameInstance lookup');
-            if (!gameInstance) {
-                logger.warn({ socketId: socket.id, error: 'Game not found', accessCode }, '[DIAGNOSTIC] EARLY RETURN: Game instance not found');
-                const errorPayload: ErrorPayload = { message: 'Game not found.' };
-                logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: game not found');
-                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
-                logger.info({
-                    socketId: socket.id,
-                    event: 'game_answer',
-                    reason: 'game_not_found',
-                    accessCode,
-                    userId,
-                    questionUid,
-                    timestamp: new Date().toISOString()
-                }, '[DIAGNOSTIC] EARLY RETURN: Game instance not found in gameAnswerHandler');
-                return;
-            }
-            if (gameInstance.isDiffered) {
-                const now = new Date();
-                const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
-                const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
-                const inDifferedWindow = (!from || now >= from) && (!to || now <= to);
-                logger.debug({ inDifferedWindow, from, to, now }, 'Checking differed window');
-                if (!inDifferedWindow) {
-                    logger.warn({ socketId: socket.id, error: 'Differed mode not available', accessCode }, '[DIAGNOSTIC] EARLY RETURN: Differed window not available');
-                    const errorPayload: ErrorPayload = { message: 'Differed mode not available at this time.' };
-                    logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: differed window not available');
-                    socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
-                    logger.info({
-                        socketId: socket.id,
-                        event: 'game_answer',
-                        reason: 'differed_window_not_available',
-                        accessCode,
-                        userId,
-                        questionUid,
-                        timestamp: new Date().toISOString()
-                    }, '[DIAGNOSTIC] EARLY RETURN: Differed window not available in gameAnswerHandler');
-                    return;
-                }
-            }
-            // Extra logging before participant lookup
-            logger.debug({ accessCode, userId, questionUid }, 'Looking up participant');
-            let participant;
-            try {
-                // If game is in deferred mode, always try to find DEFERRED participant first
-                if (gameInstance.isDiffered) {
-                    participant = await prisma.gameParticipant.findFirst({
-                        where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' },
-                        include: { user: true }
-                    });
-                    // Fallback: if not found, try LIVE (legacy/edge case)
-                    if (!participant) {
-                        participant = await prisma.gameParticipant.findFirst({
-                            where: { gameInstanceId: gameInstance.id, userId, participationType: 'LIVE' },
-                            include: { user: true }
-                        });
-                    }
-                } else {
-                    // For non-deferred games, use existing logic
-                    participant = await prisma.gameParticipant.findFirst({
-                        where: { gameInstanceId: gameInstance.id, userId },
-                        include: { user: true }
-                    });
-                }
-            } catch (err) {
-                logger.error({ err, accessCode, userId, questionUid }, 'Error during participant lookup');
-                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, { message: 'Error looking up participant.' });
-                return;
-            }
-            logger.debug({ participant }, 'Result of participant lookup');
-            if (!participant) {
-                logger.warn({ socketId: socket.id, error: 'Participant not found', userId, gameInstanceId: gameInstance.id }, '[DIAGNOSTIC] EARLY RETURN: Participant not found');
-                const errorPayload: ErrorPayload = { message: 'Participant not found.' };
-                logger.warn({ errorPayload, accessCode, userId, questionUid }, 'Emitting game_error: participant not found');
-                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
-                logger.info({
-                    socketId: socket.id,
-                    event: 'game_answer',
-                    reason: 'participant_not_found',
-                    accessCode,
-                    userId,
-                    questionUid,
-                    timestamp: new Date().toISOString()
-                }, '[DIAGNOSTIC] EARLY RETURN: Participant not found in gameAnswerHandler');
-                return;
-            }
-            // After participant lookup, determine DEFERRED mode per participant
-            let isDifferedForLogic = false;
-            if (participant && participant.participationType === 'DEFERRED') {
-                isDifferedForLogic = true;
-            }
-            logger.info({
-                accessCode,
-                userId,
-                questionUid,
-                participationType: participant?.participationType,
-                attemptCount: participant?.attemptCount,
-                isDifferedForLogic,
-                gameInstanceIsDiffered: gameInstance.isDiffered,
-                // Log all answer keys for this user/question in Redis for debugging
-                answerKeys: [
-                    `mathquest:game:answers:${accessCode}:${questionUid}`,
-                    `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
-                ]
-            }, '[DIAGNOSTIC] DEFERRED mode determination and answer key debug for answer logic');
-
-            // Remove completedAt check since field was removed
-            // For deferred tournaments, we now allow unlimited replays
-
-            // CRITICAL: Add timer validation before processing answer
-            // Fetch current game state to check timer status
-            let gameState;
-            try {
-                const gameStateResult = await getFullGameState(accessCode);
-                gameState = gameStateResult?.gameState;
-            } catch (err) {
-                logger.error({ err, accessCode, userId, questionUid }, 'Error fetching game state');
-                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, { message: 'Error fetching game state.' });
-                return;
-            }
-            let fullGameState;
-            let useDeferredLogic = false;
-            if (gameState && gameState.status !== 'active') {
-                // Game is completed or not live: always use deferred/per-user session
-                useDeferredLogic = true;
-                const sessionStateKey = `deferred_session:${accessCode}:${userId}`;
-                fullGameState = await getFullGameState(sessionStateKey);
-                logger.info({
-                    accessCode,
-                    userId,
-                    sessionStateKey,
-                    fullGameStateStatus: fullGameState?.gameState?.status,
-                    logic: 'DEFERRED',
-                }, '[LOGIC] Using DEFERRED session/timer due to gameState.status !== "active"');
-            } else {
-                // Game is live: use global session
-                fullGameState = await getFullGameState(accessCode);
-                logger.info({
-                    accessCode,
-                    userId,
-                    logic: 'LIVE',
-                }, '[LOGIC] Using LIVE session/timer due to gameState.status === "active"');
-            }
-            if (!fullGameState) {
-                logger.warn({ socketId: socket.id, error: 'Game state not found', accessCode }, '[DIAGNOSTIC] EARLY RETURN: Game state not found');
-                const errorPayload: ErrorPayload = { message: 'Game state not found.' };
-                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
-                logger.info({
-                    socketId: socket.id,
-                    event: 'game_answer',
-                    reason: 'game_state_not_found',
-                    accessCode,
-                    userId,
-                    questionUid,
-                    timestamp: new Date().toISOString()
-                }, '[DIAGNOSTIC] EARLY RETURN: Game state not found in gameAnswerHandler');
-                return;
-            }
-            const { gameState: selectedGameState } = fullGameState;
-
-            // Check if game is active
-            if (selectedGameState.status !== 'active') {
+            // Zod validation for payload
+            const parseResult = AnswerSubmissionPayloadSchema.safeParse(payload);
+            if (!parseResult.success) {
                 logger.warn({
                     socketId: socket.id,
-                    accessCode,
-                    userId,
-                    questionUid,
-                    gameStatus: selectedGameState.status,
-                    playMode: gameInstance.playMode
-                }, '[DIAGNOSTIC] EARLY RETURN: Answer submitted but game is not active');
-                const errorPayload: ErrorPayload = {
-                    message: 'Game is not active. Answers cannot be submitted.',
-                    code: 'GAME_NOT_ACTIVE'
-                };
-                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
+                    error: 'Invalid answer submission payload',
+                    details: parseResult.error.format(),
+                    payload
+                }, '[DIAGNOSTIC] EARLY RETURN: Zod validation failed for answer submission');
+                socket.emit('answer_feedback', {
+                    status: 'error',
+                    code: 'INVALID_PAYLOAD',
+                    message: 'Invalid answer submission payload.'
+                });
                 logger.info({
                     socketId: socket.id,
                     event: 'game_answer',
-                    reason: 'game_not_active',
-                    accessCode,
-                    userId,
-                    questionUid,
-                    gameStatus: selectedGameState.status,
-                    playMode: gameInstance.playMode,
+                    reason: 'invalid_payload',
+                    payload,
                     timestamp: new Date().toISOString()
-                }, '[DIAGNOSTIC] EARLY RETURN: Game not active in gameAnswerHandler');
+                }, '[DIAGNOSTIC] EARLY RETURN: Invalid payload in gameAnswerHandler');
                 return;
             }
+            const validPayload = parseResult.data;
+            accessCode = validPayload.accessCode;
+            userId = validPayload.userId;
+            questionUid = validPayload.questionUid;
+            timeSpent = validPayload.timeSpent;
+            answer = validPayload.answer;
+            // Use the provided context (timer, gameState, participant, gameInstance)
+            const { timer, gameState, participant, gameInstance } = context;
 
-            // Check if answers are locked
-            if (selectedGameState.answersLocked) {
-                logger.warn({ socketId: socket.id, accessCode, userId, questionUid }, '[DIAGNOSTIC] EARLY RETURN: Answers are locked');
-                const errorPayload: ErrorPayload = {
+            // IMPORTANT: The loaded gameState object is nested (gameState.gameState.status), not flat.
+            // See diagnostic logs and loader structure. All property accesses must use gameState.gameState.<field>.
+
+            // Validate game state
+            // Modernized: Allow answer submission in deferred mode if status is 'active' or 'completed' and within deferred window
+            const isDeferred = gameInstance && gameInstance.isDiffered;
+            console.log(isDeferred, 'isDeferred value in gameAnswerHandler');
+            const now = Date.now();
+            const withinDeferredWindow = isDeferred && gameInstance.differedAvailableTo && now < new Date(gameInstance.differedAvailableTo).getTime();
+            const statusOk = isDeferred
+                ? (gameState.gameState.status === 'active' || gameState.gameState.status === 'completed')
+                : gameState.gameState.status === 'active';
+            if (!gameState ||
+                (!isDeferred && gameState.gameState.status !== 'active') ||
+                (isDeferred && (!statusOk || !withinDeferredWindow))
+            ) {
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, {
+                    message: isDeferred ? 'Deferred play not available (expired or not completed).' : 'Game is not active. Answers cannot be submitted.',
+                    code: isDeferred ? 'DEFERRED_NOT_AVAILABLE' : 'GAME_NOT_ACTIVE'
+                });
+                return;
+            }
+            // Validate answers locked
+            if (gameState.gameState.answersLocked) {
+                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, {
                     message: 'Answers are locked for this question.',
                     code: 'ANSWERS_LOCKED'
-                };
-                socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
-                logger.info({
-                    socketId: socket.id,
-                    event: 'game_answer',
-                    reason: 'answers_locked',
-                    accessCode,
-                    userId,
-                    questionUid,
-                    timestamp: new Date().toISOString()
-                }, '[DIAGNOSTIC] EARLY RETURN: Answers locked in gameAnswerHandler');
+                });
                 return;
             }
-
-            // Check timer status and expiration
-            if (selectedGameState.timer) {
-                const timerObj = selectedGameState.timer as any;
-
-                // Add detailed timer state logging
-                logger.info({
-                    socketId: socket.id,
-                    accessCode,
-                    userId,
-                    questionUid,
-                    timerState: {
-                        status: timerObj.status,
-                        timeLeftMs: timerObj.timeLeftMs,
-                        durationMs: timerObj.durationMs,
-                        timestamp: timerObj.timestamp
-                    },
-                    playMode: gameInstance.playMode,
-                    gameStatus: selectedGameState.status
-                }, 'TIMER VALIDATION: Checking timer state for answer submission');
-
-                // For all modes: check if timer is stopped (when timer exists)
-                if (timerObj.status === 'stop') {
-                    logger.warn({
-                        socketId: socket.id,
-                        accessCode,
-                        userId,
-                        questionUid,
-                        timerStatus: timerObj.status,
-                        playMode: gameInstance.playMode
-                    }, '[DIAGNOSTIC] EARLY RETURN: Answer submitted but timer is stopped');
-                    const errorPayload: ErrorPayload = {
+            // Validate timer
+            // Use the timer provided in context (already resolved for the correct mode/session)
+            // No timer selection logic remains here; all selection is done at the call site.
+            if (timer) {
+                if (timer.status === 'stop') {
+                    socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, {
                         message: 'Trop tard ! Le temps est écoulé.',
                         code: 'TIMER_STOPPED'
-                    };
-                    logger.info({ errorPayload, socketId: socket.id }, 'Emitting game_error: timer stopped');
-                    socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
-                    logger.info({
-                        socketId: socket.id,
-                        event: 'game_answer',
-                        reason: 'timer_stopped',
-                        accessCode,
-                        userId,
-                        questionUid,
-                        timerStatus: timerObj.status,
-                        playMode: gameInstance.playMode,
-                        timestamp: new Date().toISOString()
-                    }, '[DIAGNOSTIC] EARLY RETURN: Timer stopped in gameAnswerHandler');
+                    });
                     return;
                 }
-
-                // For all modes: check if timer has expired
-                if (timerObj.durationMs && timerObj.durationMs > 0) {
-                    let timeLeftMs = timerObj.timeLeftMs || 0;
-
-                    // Calculate actual remaining time if timer is running
-                    if (timerObj.status === 'play' && timerObj.timestamp) {
-                        const elapsed = Date.now() - timerObj.timestamp;
-                        timeLeftMs = Math.max(0, timerObj.timeLeftMs - elapsed);
+                if (timer.totalPlayTimeMs !== undefined && timer.lastStateChange !== undefined) {
+                    let timeLeftMs = timer.totalPlayTimeMs;
+                    if (timer.status === 'play') {
+                        timeLeftMs += Date.now() - timer.lastStateChange;
                     }
-
-                    if (timeLeftMs <= 0) {
-                        logger.warn({
-                            socketId: socket.id,
-                            accessCode,
-                            userId,
-                            questionUid,
-                            timeLeftMs,
-                            playMode: gameInstance.playMode
-                        }, '[DIAGNOSTIC] EARLY RETURN: Answer submitted after timer expired');
-                        const errorPayload: ErrorPayload = {
-                            message: 'Time has expired for this question.',
-                            code: 'TIME_EXPIRED'
-                        };
-                        socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
-                        logger.info({
-                            socketId: socket.id,
-                            event: 'game_answer',
-                            reason: 'timer_expired',
-                            accessCode,
-                            userId,
-                            questionUid,
-                            timeLeftMs,
-                            playMode: gameInstance.playMode,
-                            timestamp: new Date().toISOString()
-                        }, '[DIAGNOSTIC] EARLY RETURN: Timer expired in gameAnswerHandler');
-                        return;
-                    }
+                    // If you want to enforce a max duration, do it here (not in handler)
                 }
             }
-
-            const participantService = new GameParticipantService();
-            logger.debug({ userId, gameInstanceId: gameInstance.id, questionUid, answer, timeSpent }, 'Calling participantService.submitAnswer');
 
             // Compute time penalty using canonical timer for all modes
             let canonicalElapsedMs: number | undefined = undefined;
             let timeSpentForSubmission: number = 0;
-            const canonicalTimerService = new CanonicalTimerService(redisClient);
-            logger.info({
-                accessCode,
-                userId,
-                questionUid,
-                playMode: gameInstance.playMode,
-                isDiffered: isDifferedForLogic
-            }, '[TIMER_DEBUG] About to calculate elapsed time in gameAnswerHandler');
-            if (gameInstance.playMode === 'quiz' || (gameInstance.playMode === 'tournament' && !isDifferedForLogic)) {
-                // Global timer for quiz and live tournament
-                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, false);
-                logger.info({
-                    accessCode,
-                    userId,
-                    questionUid,
-                    playMode: gameInstance.playMode,
-                    isDiffered: false,
-                    canonicalElapsedMs
-                }, '[TIMER_DEBUG] Canonical elapsed time for answer submission (quiz/live)');
-                timeSpentForSubmission = canonicalElapsedMs ?? 0;
-            } else if (gameInstance.playMode === 'tournament' && isDifferedForLogic) {
-                // Per-user session timer for differed tournaments
-                canonicalElapsedMs = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, gameInstance.playMode, true, userId);
-                logger.info({
-                    accessCode,
-                    userId,
-                    questionUid,
-                    playMode: gameInstance.playMode,
-                    isDiffered: true,
-                    canonicalElapsedMs
-                }, '[TIMER_DEBUG] Canonical elapsed time for answer submission (differed)');
-                timeSpentForSubmission = canonicalElapsedMs ?? 0;
-            } else if (gameInstance.playMode === 'practice') {
-                // No timer for practice mode
+            if (timer) {
+                if (timer.totalPlayTimeMs !== undefined && timer.lastStateChange !== undefined) {
+                    if (timer.status === 'play') {
+                        canonicalElapsedMs = timer.totalPlayTimeMs + (Date.now() - timer.lastStateChange);
+                    } else {
+                        canonicalElapsedMs = timer.totalPlayTimeMs;
+                    }
+                    timeSpentForSubmission = canonicalElapsedMs ?? 0;
+                }
+            }
+            if (gameInstance.playMode === 'practice') {
                 timeSpentForSubmission = 0;
             }
             // Submit answer using the new scoring service (handles duplicates and scoring)
@@ -456,10 +172,10 @@ export function gameAnswerHandler(
                 timeSpent: timeSpentForSubmission,
                 accessCode: payload.accessCode, // Include required accessCode field
                 userId: userId // Include required userId field
-                // Do NOT pass isDiffered here; DEFERRED logic is determined by participationType in handler and scoring service
-            });
+            }, isDeferred // PATCH: propagate deferred mode)
+            );
             scoringPerformed = true;
-            scoringMode = isDifferedForLogic ? 'DEFERRED' : gameInstance.playMode;
+            scoringMode = participant.participationType === 'DEFERRED' ? 'DEFERRED' : gameInstance.playMode;
             scoringResult = submissionResult;
             logger.info({
                 accessCode,
@@ -469,7 +185,7 @@ export function gameAnswerHandler(
                 scoringPerformed,
                 submissionResult,
                 attemptCount: participant?.attemptCount,
-                answerKeyUsed: isDifferedForLogic
+                answerKeyUsed: participant.participationType === 'DEFERRED'
                     ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
                     : `mathquest:game:answers:${accessCode}:${questionUid}`
             }, '[DIAGNOSTIC] Scoring service called in gameAnswerHandler (with answer key and attempt)');
@@ -504,7 +220,7 @@ export function gameAnswerHandler(
                     answerChanged: scoreResult.answerChanged,
                     message: scoreResult.message,
                     attemptCount: participant?.attemptCount,
-                    answerKeyUsed: isDifferedForLogic
+                    answerKeyUsed: participant.participationType === 'DEFERRED'
                         ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
                         : `mathquest:game:answers:${accessCode}:${questionUid}`
                 }, '[DIAGNOSTIC] Answer processed with scoring result and answer key');
@@ -588,87 +304,28 @@ export function gameAnswerHandler(
             const leaderboard = await calculateLeaderboard(accessCode);
             logger.debug({ leaderboard }, 'Leaderboard data');
             if (gameInstance.isDiffered) {
-                // Practice mode: send correctAnswers and feedback immediately
-                const question = await prisma.question.findUnique({ where: { uid: questionUid } });
-                socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, {
-                    questionUid,
-                    timeSpent,
-                    correct: isCorrect,
-                    correctAnswers: question && Array.isArray(question.correctAnswers) ? question.correctAnswers : undefined,
-                    explanation: question?.explanation || undefined
-                });
-                // 3. Get GameInstance to find gameTemplateId
-                const gameInst = await prisma.gameInstance.findUnique({ where: { id: participant.gameInstanceId } });
-                if (!gameInst) {
-                    socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, { message: 'Game instance not found for participant.' });
-                    return;
-                }
-                const allQuestions = await prisma.questionsInGameTemplate.findMany({
-                    where: { gameTemplateId: gameInst.gameTemplateId },
-                    orderBy: { sequence: 'asc' }
-                });
-                // 4. Use participant.answers (array) to determine which questions are answered
-                // Since answers field was removed, we'll track progress differently
-                // For now, we'll use Redis or another method to track answered questions
-                const answersArr: any[] = [];
-
-                // TODO: Implement Redis-based answer tracking if needed
-
-                // For practice mode, we don't automatically send the next question
-                // Instead, the client will request the next question after showing feedback
-                logger.info({ accessCode, userId, questionUid }, 'Waiting for client to request next question via request_next_question event');
-
-                // Count total answered questions to determine if this was the last one
-                logger.info(`[GAME_ANSWER] Raw answers array:`, JSON.stringify(answersArr));
-
-                // More robust extraction of questionUid
-                const answeredQuestions = [];
-                for (const a of answersArr) {
-                    if (a && typeof a === 'object' && 'questionUid' in a && typeof a.questionUid === 'string') {
-                        answeredQuestions.push(a.questionUid);
-                    }
-                }
-
-                // Add the current question if it's missing from the answers array
-                if (questionUid && !answeredQuestions.includes(questionUid)) {
-                    logger.info(`[GAME_ANSWER] Adding current questionUid ${questionUid} to answered questions`);
-                    answeredQuestions.push(questionUid);
-                }
-
-                const answeredSet = new Set(answeredQuestions);
-                const totalQuestions = allQuestions.length;
-
-                logger.info(`[GAME_ANSWER] Found ${answeredSet.size}/${totalQuestions} answered questions:`, Array.from(answeredSet));
-                logger.debug({
-                    answeredQuestions,
-                    totalQuestions,
-                    answeredSetSize: answeredSet.size,
-                    allQuestionIds: allQuestions.map(q => q.questionUid)
-                }, 'Checking if all questions are answered');
-
-                // Check if this was the last question, but don't automatically end the game
-                logger.info(`[GAME_ANSWER] Checking if all questions are answered: answeredSet.size=${answeredSet.size}, totalQuestions=${totalQuestions}`);
-                logger.debug({
-                    answeredSet: Array.from(answeredSet),
-                    totalQuestions,
-                    answersArr: JSON.stringify(answersArr)
-                }, 'Detailed answer checking');
-
-                if (answeredSet.size >= totalQuestions) {
-                    // This is the last question - but we'll wait for the player to request the end of game
-                    // after they've reviewed the feedback for the last question
-                    logger.info(`[GAME_ANSWER] All questions answered! Waiting for player to request game end via request_next_question`);
-                    logger.info({ accessCode, userId, questionUid }, 'All questions answered, waiting for request_next_question to complete game');
-
-                    // We've answered all questions, but we don't automatically send game_ended
-                    // The client will call request_next_question after showing feedback, 
-                    // and that handler will detect that there are no more questions and end the game
-                } else {
-                    logger.info(`[GAME_ANSWER] Not all questions answered yet. Waiting for client to request next question.`);
+                // --- Practice and Deferred Mode Feedback Logic ---
+                if (gameInstance.playMode === 'practice') {
+                    // Practice mode: send correctAnswers and feedback immediately
+                    const question = await prisma.question.findUnique({ where: { uid: questionUid } });
+                    socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, {
+                        questionUid,
+                        timeSpent,
+                        correct: isCorrect,
+                        correctAnswers: question && Array.isArray(question.correctAnswers) ? question.correctAnswers : undefined,
+                        explanation: question?.explanation || undefined
+                    });
+                    // For practice mode, we don't automatically send the next question
+                    // Instead, the client will request the next question after showing feedback
+                    logger.info({ accessCode, userId, questionUid }, 'Waiting for client to request next question via request_next_question event');
+                } else if (gameInstance.isDiffered || gameInstance.playMode === 'tournament') {
+                    // Tournament (live or deferred): DO NOT send explanation/correctAnswers here
+                    // Feedback/explanation is sent at the end of the timer in the tournament flow
+                    logger.info({ accessCode, userId, questionUid }, 'Tournament mode: answer_received emitted without explanation/correctAnswers');
+                    socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });
                 }
             } else {
-                // Tournament and quiz mode: DO NOT send correctAnswers or feedback here
-                // Only emit answer_received (without correctAnswers/explanation)
+                // Quiz mode or other: minimal answer_received
                 let roomName = accessCode;
                 if (gameInstance.playMode === 'quiz' && gameInstance.initiatorUserId) {
                     roomName = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
@@ -677,7 +334,6 @@ export function gameAnswerHandler(
                 }
                 logger.info({ leaderboard, roomName }, 'Emitting leaderboard_update to room');
                 io.to(roomName).emit(SOCKET_EVENTS.GAME.LEADERBOARD_UPDATE as any, { leaderboard });
-                // Only emit answer_received with minimal info (NO correct field for tournament/quiz)
                 logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode (without correct field)');
                 try {
                     socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });
@@ -700,12 +356,8 @@ export function gameAnswerHandler(
                 error: err,
                 timestamp: new Date().toISOString()
             }, '[DIAGNOSTIC] EXIT: gameAnswerHandler (error path)');
-
             try {
-                // Try to send error response
                 socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, { message: 'Unexpected error during answer submission.' });
-
-                // Also send back answer_received to unblock the client (without correct field)
                 if (questionUid && timeSpent !== undefined) {
                     socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });
                     logger.info(`[GAME_ANSWER] Sent fallback answer_received after error for question ${questionUid}`);
@@ -714,8 +366,6 @@ export function gameAnswerHandler(
                 logger.error({ emitError, socketId: socket.id }, 'Error sending error response');
             }
         }
-
-        // At the end of the try block, before returning or exiting:
         logger.info({
             accessCode,
             userId,
@@ -727,9 +377,8 @@ export function gameAnswerHandler(
             timestamp: new Date().toISOString()
         }, '[DIAGNOSTIC] EXIT: gameAnswerHandler (success path)');
     };
-
-    // NOTE: Handler registration is done in game/index.ts to prevent duplicate registrations
-    // Do NOT register the handler here: socket.on('game_answer', handler) - REMOVED
-
     return handler;
-}
+};
+
+// NOTE: Handler registration is done in game/index.ts to prevent duplicate registrations
+// Do NOT register the handler here: socket.on('game_answer', handler) - REMOVED

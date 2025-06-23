@@ -1,6 +1,13 @@
 # Backend Event Handler Audit Report
 Generated: 2025-06-16T20:53:19.120356
 
+## [2025-06-23] DRY Refactor: Answer Handler Receives Timer/Session Context
+- Architectural improvement: The answer handler (`gameAnswerHandler`) no longer contains any logic to select between live/global or deferred/per-user timers.
+- The handler now receives the timer, game state, participant, and gameInstance as arguments (context object).
+- All timer/session selection logic is performed at the call site (socket event registration or wrapper), ensuring single-responsibility and DRY code.
+- This eliminates all mode/status-based branching from the answer handler, enforcing canonical timer usage and modern best practices.
+- See `plan.md` for updated checklist and testing steps.
+
 ## [2025-06-23] Enforce Timer/Session Logic by Game Status in gameAnswerHandler
 - Root Cause: Timer/session selection was ambiguous when both LIVE and DEFERRED sessions existed for a user. The handler could use the wrong timer/session, causing 'timer expired' errors in deferred mode after live play.
 - Solution: At the timer/session selection point, always check `gameState.status`. If 'active', use live/global session/timer. If not, use deferred/per-user session/timer. This guarantees correct logic for all users and modes.
@@ -18,6 +25,12 @@ Generated: 2025-06-16T20:53:19.120356
 - Fixed bug where per-user timer was not reset between questions/attempts in deferred mode, causing time to accumulate and excessive penalties.
 - Now explicitly resets the timer before starting it for each question in deferredTournamentFlow.ts.
 - See plan.md for updated checklist and testing steps.
+
+## [2025-06-23] Defensive Participant Row Creation in Answer Submission
+- Problem: Submitting an answer via live/[code] or deferred mode could fail if the participant row was not created (e.g., user never joined via join endpoint).
+- Solution: In the GAME_ANSWER handler, if the participant row is missing, the system now calls the modular join service to create it before proceeding. This guarantees that a participant row always exists for answer submissions in all modes.
+- Impact: No more 'Participant not found' errors on answer submission. All join and answer flows are robust and DRY.
+- See `plan.md` for updated checklist and testing steps.
 
 ## 📊 Summary
 - Total handler registrations found: 151
@@ -1493,3 +1506,16 @@ function registerLobbyHandlers(io: Server, socket: Socket): void {
 - **Solution:** Update answer handler to always select the DEFERRED participant and session/timer for deferred mode, even if a LIVE participant exists for the same user/game.
 - **Checklist:** See `plan.md` for new phase and validation steps.
 - **Status:** [ ] Pending code update and validation.
+
+## [2025-06-23] Unified Call Sites: Canonical Timer/Session Context Passed to DRY Handler
+- All socket event registrations for answer submission (GAME_ANSWER) now resolve the canonical timer/session context (timer, gameState, participant, gameInstance) before invoking the answer handler.
+- No legacy or mode-specific logic remains at the handler or call site; all modes (live, deferred, quiz, practice) use the same DRY handler and context resolution.
+- Deferred tournament flow relies on the main handler registration, which is now fully modernized.
+- Checklist in `plan.md` marked complete. All requirements for timer/session unification and DRY handler are satisfied.
+- Next: Validate in all modes and fill in test results in `plan.md` after QA.
+
+## [2025-06-24] Bugfix: Nested gameState Property Access in Answer Handler
+- Root Cause: The answer handler was checking `gameState.status`, but the loaded object is nested (`gameState.gameState.status`). This caused the handler to reject valid answer submissions with 'Game is not active' errors, even when the user's session was active.
+- Fix: Updated the answer handler to check `gameState.gameState.status` and `gameState.gameState.answersLocked`.
+- Documentation: Added a clarifying comment in the handler code about the nested structure of the loaded game state.
+- Checklist: See `plan.md` for updated checklist and testing steps.
