@@ -218,7 +218,7 @@ export function startTimerHandler(io: SocketIOServer, socket: Socket) {
             // Broadcast to dashboard room
             io.to(dashboardRoom).emit('dashboard_timer_updated', { timer });
             // Broadcast to projection room (include questionUid for proper frontend handling)
-            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer, questionUid: gameState.currentQuestionUid });
+            io.to(projectionRoom).emit('dashboard_timer_updated', { timer, questionUid: gameState.currentQuestionUid });
             // Call the callback if provided with success
             if (callback) {
                 callback({

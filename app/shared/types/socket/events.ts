@@ -20,6 +20,8 @@ export const TEACHER_EVENTS = {
     TIMER_ACTION: 'quiz_timer_action',
     START_TIMER: 'start_timer',
     PAUSE_TIMER: 'pause_timer',
+    /** Set timer duration for a question (does not affect play/pause/stop) */
+    TIMER_SET_DURATION: 'timer_set_duration',
 
     // Game control
     LOCK_ANSWERS: 'lock_answers',
@@ -38,7 +40,7 @@ export const TEACHER_EVENTS = {
 
     // Dashboard-specific events
     DASHBOARD_QUESTION_CHANGED: 'dashboard_question_changed',
-    DASHBOARD_TIMER_UPDATED: 'dashboard_timer_updated',
+    DASHBOARD_TIMER_UPDATED: 'dashboard_timer_updated', // Canonical event for all dashboard/projection timer updates
     DASHBOARD_ANSWERS_LOCK_CHANGED: 'dashboard_answers_lock_changed',
     DASHBOARD_GAME_STATUS_CHANGED: 'dashboard_game_status_changed',
     DASHBOARD_ANSWER_STATS_UPDATE: 'dashboard_answer_stats_update',
@@ -117,7 +119,7 @@ export const PROJECTOR_EVENTS = {
     PROJECTION_LEFT: 'projection_left',
     PROJECTION_ERROR: 'projection_error',
     PROJECTION_QUESTION_CHANGED: 'projection_question_changed',
-    PROJECTION_TIMER_UPDATED: 'projection_timer_updated',
+    // PROJECTION_TIMER_UPDATED: 'projection_timer_updated', // DEPRECATED: use DASHBOARD_TIMER_UPDATED
     PROJECTION_CONNECTED_COUNT: 'projection_connected_count',
     PROJECTION_STATE: 'projection_state',
     PROJECTION_LEADERBOARD_UPDATE: 'projection_leaderboard_update', // For real-time leaderboard updates on projection display

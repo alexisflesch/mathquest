@@ -242,7 +242,8 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         startTimer,
         pauseTimer,
         resumeTimer,
-        stopTimer
+        stopTimer,
+        editTimer // Include editTimer here
     } = useSimpleTimer({
         role: 'teacher',
         accessCode: typeof code === 'string' ? code : '',
@@ -298,13 +299,14 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const handlePause = useCallback(() => { pauseTimer(); }, [pauseTimer]);
     const handleStop = useCallback(() => { stopTimer(); }, [stopTimer]);
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
-        setQuestions(prev => prev.map(q =>
-            q.uid === uid ? { ...q, timeLimit: newTime } : q
-        ));
-        if (timerQuestionUid === uid && timerStatus === 'pause') {
-            startTimer(uid, newTime * 1000);
-        }
-    }, [timerQuestionUid, timerStatus, startTimer]);
+        // Remove local state update: timer is backend-driven only
+        // setQuestions(prev => prev.map(q => q.uid === uid ? { ...q, timeLimit: newTime } : q));
+        // Always emit timer edit to backend, regardless of timer status
+        logger.info(`[DASHBOARD] handleEditTimer called`, { uid, newTime });
+        editTimer(uid, newTime * 1000); // editTimer expects ms
+        logger.info(`[DASHBOARD] Timer duration edit emitted for question ${uid}: ${newTime}s`);
+        // Do NOT trigger play/resume here. Timer should remain paused or stopped unless user explicitly acts.
+    }, [editTimer]);
     const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionUid: string, timeLeftMs: number }) => {
         switch (action.status) {
             case 'play':

@@ -302,3 +302,171 @@
 - Trophy button emits correct event/payload.
 - No per-question stats/trophy controls remain.
 - All changes logged and documented.
+
+---
+
+## Phase: Integrate TimerField in QuestionDisplay
+
+### Goals
+- [x] Replace timer display with TimerField from TimerDisplayAndEdit
+- [x] Import TimerField in QuestionDisplay
+- [x] Use TimerField to show time in mm:ss format (read-only)
+- [ ] Document this change in plan.md
+
+### Actions
+- [x] Updated QuestionDisplay to use TimerField for timer display
+- [x] Confirmed TimerField shows time in mm:ss format correctly
+- [ ] Documented change in plan.md
+
+### Validation
+- [ ] Verify timer display in projection page shows correctly using TimerField
+- [ ] Ensure TimerField integration does not affect other functionalities
+
+### How to test
+- Load the projection page
+- Check the timer display for the current question
+- Expected: TimerField shows the correct time in mm:ss format
+- Actual: (fill after test)
+
+---
+
+## [PHASE] Timer Display Modernization
+
+### Goal
+Replace legacy timer display in QuestionDisplay with the canonical TimerField from TimerDisplayAndEdit for consistency and modernization.
+
+### Tasks
+- [x] Import TimerField in QuestionDisplay
+- [x] Replace timer display with TimerField (read-only mode)
+- [ ] TimerField needs more padding and vertical centering in non-edit mode
+- [x] Use padding and inline-flex/alignItems/justifyContent for both modes
+- [ ] Visually validate in QuestionDisplay
+- [ ] Update documentation if any new timer-related props or behaviors are introduced
+
+### Exit Criteria
+- Timer is always displayed using TimerField in mm:ss format
+- No legacy timer formatting code remains in QuestionDisplay
+- All timer-related UI is visually consistent and functional
+
+---
+
+**Log:**
+- 2025-06-24: TimerField from TimerDisplayAndEdit integrated into QuestionDisplay for timer rendering (read-only mode).
+
+---
+
+## [2025-06-25] Fix: Timer Click Propagation in Question Card
+
+### Root Cause
+- Clicking the timer in the question card was toggling the entire card (open/close), which is not the desired behavior.
+
+### Solution
+- [x] Add stopPropagation to TimerField click handlers to prevent parent toggle
+- [ ] Validate: clicking timer does not open/close card
+
+### How to test
+- Load the projection page
+- Click on the timer in the question card
+- Expected: The timer click does not toggle the question card open/close
+- Actual: (fill after test)
+
+---
+
+## [2025-06-25] Fix: TimerField Cropping in Edit Mode
+
+### Root Cause
+- TimerField input crops text in edit mode due to fixed height and incorrect font size/line height.
+
+### Solution
+- [x] Remove fixed height for input, set minWidth, ensure font size/line height match
+- [ ] Validate: all timer text visible in edit mode, no font jump
+
+### How to test
+- Edit a question with TimerField in projection page
+- Check the timer text visibility and font consistency in edit mode
+- Expected: Timer text is fully visible, no cropping or font jumps
+- Actual: (fill after test)
+
+---
+
+## [2025-06-25] Fix: TimerField Font Zoom/Change in Edit Mode
+
+### Root Cause
+- TimerField input font zooms or changes on edit due to inherited styles and lack of explicit font settings.
+
+### Solution
+- [x] Explicitly set fontFamily, fontSize, fontWeight, fontStyle, letterSpacing for input to match display
+- [ ] Validate: no font zoom or change when toggling edit mode
+
+### How to test
+- Edit a question with TimerField in projection page
+- Check the timer text visibility and font consistency in edit mode
+- Expected: Timer text is fully visible, no cropping or font jumps, and no zoom/change on edit
+- Actual: (fill after test)
+
+---
+
+## Phase: TimerField CSS Class Migration
+
+### Goals
+- [x] Switch TimerField styling from inline styles to a CSS class for consistency and maintainability.
+- [x] Update TimerField to use .timer-field class from globals.css
+- [ ] Validate: timer looks identical in display and edit mode, no global input style interference
+
+### Actions
+- [x] Add .timer-field class to globals.css and use it in TimerField
+- [ ] Test: Verify timer display in all modes (edit, display) looks correct and consistent
+- [ ] Document any new CSS class usages or changes in plan.md
+
+### Exit Criteria
+- TimerField uses CSS class for styling instead of inline styles
+- All timer-related UI is visually consistent and functional
+
+---
+
+## Phase: TimerField Scroll Prevention
+- Added onWheel handler to TimerField input in edit mode to prevent scroll events from bubbling to the page.
+- This ensures the timer can be edited with the scroll wheel without affecting page scroll.
+
+---
+
+## Phase: Debug and Validate Timer Edit Socket Emission
+- [x] Add logger.info before and after editTimer emit in handleEditTimer for timer edits (TeacherDashboardClient.tsx)
+- [x] Add logger.info before and after socket.emit in editTimer to log event emission and socket state (useSimpleTimer.ts)
+- [ ] Test timer edit and check browser logs for emission and socket state
+- [ ] If emission is logged but backend does not receive, check event name/payload and socket connection
+- [ ] Document findings and update plan
+
+---
+
+## Phase: Unify Timer Edit UI in Dashboard
+- [x] Audit SortableQuestion and DraggableQuestionsList for timer edit logic
+- [x] Replace custom timer edit input in SortableQuestion with canonical TimerField from TimerDisplayAndEdit
+- [x] Add local formatTime helper for mm:ss formatting
+- [ ] Test timer edit in dashboard: confirm TimerField UI and correct propagation
+- [ ] Remove any remaining legacy timer edit UI
+- [ ] Document all changes and update modernization checklist
+
+---
+
+## Phase: Timer Edit UX Unification & Test Button
+
+### Goal
+Modernize and robustly unify the timer edit/display UX in the teacher dashboard by using a single TimerField component, ensuring timer edits are explicit, reliable, and do not affect timer status (play/pause/stop). Timer edits must trigger the correct backend update (not a local state change or a play action), and all changes must be documented per strict modernization guidelines. The timer edit flow should match the play/pause flow in terms of event propagation and backend update.
+
+### Checklist
+- [x] Refactor TimerField for robust edit/validate/cancel logic, add logging, remove blur-based validation, and ensure only explicit icon actions commit/cancel.
+- [x] Add editTimer to SimpleTimerActions and useSimpleTimer, emitting TEACHER_EVENTS.TIMER_ACTION with action: 'set_duration' and correct payload.
+- [x] Integrate editTimer into handleEditTimer in TeacherDashboardClient, remove local state update, ensure all timer edits emit the correct socket event, and add logging.
+- [x] Replace custom timer edit input in SortableQuestion with TimerField, add a local formatTime helper, and ensure TimerField's onChange calls onEditTimer and closes edit mode. Add a "Set 44s" test button to trigger onEditTimer(44).
+- [x] Confirm timer edit event is correctly wired up the component tree (TimerField → SortableQuestion → DraggableQuestionsList → TeacherDashboardClient → useSimpleTimer → backend).
+- [x] Remove the "Set 44s" button from SortableQuestion.
+- [x] Add the "Set 44s" button to QuestionDisplay, ensuring it calls the correct onEditTimer prop and is only visible in the teacher dashboard context.
+- [ ] Test the button in the UI to confirm that timer edits now propagate and trigger backend updates/logs as expected.
+- [ ] Update plan.md and documentation to reflect these changes and confirm modernization compliance.
+- [ ] Remove any remaining legacy timer edit UI if found.
+
+### Log
+- 2025-06-24: Unified timer edit UX, moved Set 44s test button to QuestionDisplay, and ensured backend propagation and logging.
+
+---

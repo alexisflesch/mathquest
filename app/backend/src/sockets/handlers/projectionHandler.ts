@@ -237,7 +237,7 @@ export function projectionHandler(io: Server, socket: Socket) {
                     };
 
                     // Emit timer update immediately after the initial state (works for both play and pause status)
-                    socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, timerUpdatePayload);
+                    socket.emit('dashboard_timer_updated', timerUpdatePayload);
                 }
 
                 // Send current projection display state if it exists

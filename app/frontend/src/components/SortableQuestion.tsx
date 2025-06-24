@@ -10,6 +10,7 @@ import { formatTime } from "@/utils";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import QuestionDisplay from "@/components/QuestionDisplay"; // Import du nouveau composant
+import { TimerField } from './TimerDisplayAndEdit';
 
 const logger = createLogger('SortableQuestion');
 
@@ -303,9 +304,17 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         return result;
     }
 
+    // Helper to format seconds as mm:ss
+    function formatTime(ms: number) {
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        const mm = Math.floor(totalSeconds / 60);
+        const ss = totalSeconds % 60;
+        return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+    }
+
     // JSX pour l'input d'édition (rendu conditionnellement)
     const timerEditInput = editingTimer ? (
-        <div className="relative"> {/* Make this container relative for absolute overlay */}
+        <div className="relative">
             <QuestionDisplay
                 className="question-dashboard opacity-40 pointer-events-none select-none"
                 question={toLegacyQuestionShape(q)}
@@ -318,47 +327,20 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 onStop={onStop}
                 isActive={isActive}
                 disabled={true}
-                onEditTimerRequest={() => { }}
-            // REMOVE: onShowResults={onShowResults}
-            // REMOVE: onRevealLeaderboard={onRevealLeaderboard}
-            // REMOVE: showResultsDisabled={showResultsDisabled}
-            // REMOVE: onStatsToggle={onStatsToggle}
-            // stats={stats}
             />
             <div className="absolute left-0 top-0 w-full h-full flex items-center justify-center z-20">
-                <span ref={inputWrapperRef} className="flex items-center gap-1 bg-background p-2 rounded shadow-lg border border-gray-200">
-                    <input
-                        ref={timerInputRef}
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        className="w-20 px-1 py-0.5 rounded border border-gray-300 text-lg font-mono text-center bg-input text-foreground"
-                        value={formatTime((parseInt(editTimerValue, 10) || 0) * 1000)}
-                        onChange={e => {
-                            const val = e.target.value.replace(/[^0-9:]/g, '');
-                            if (val.includes(':')) {
-                                const [mm, ss] = val.split(':');
-                                const total = (parseInt(mm, 10) || 0) * 60 + (parseInt(ss, 10) || 0);
-                                setEditTimerValue(String(total));
-                            } else {
-                                setEditTimerValue(val.replace(/[^0-9]/g, ''));
-                            }
-                        }}
-                        onClick={e => e.stopPropagation()}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter') validateEditHandler(e as React.KeyboardEvent<HTMLInputElement>);
-                            if (e.key === 'Escape') cancelEditHandler(e as React.KeyboardEvent<HTMLInputElement>);
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const val = parseInt(editTimerValue, 10) || 0;
-                                if (e.key === 'ArrowUp') setEditTimerValue(String(val + 1));
-                                if (e.key === 'ArrowDown') setEditTimerValue(String(Math.max(0, val - 1)));
-                            }
-                        }}
-                    />
-                    <button onClick={validateEditHandler} className="p-1 text-foreground hover:text-primary" title="Valider"><Check size={18} /></button>
-                    <button onClick={cancelEditHandler} className="p-1 text-foreground hover:text-destructive" title="Annuler"><X size={18} /></button>
-                </span>
+                <TimerField
+                    value={formatTime((parseInt(editTimerValue, 10) || 0) * 1000)}
+                    onChange={(formatted) => {
+                        // formatted is mm:ss, convert to seconds
+                        const [mm, ss] = formatted.split(":");
+                        const newTime = parseInt(mm, 10) * 60 + parseInt(ss, 10);
+                        if (!isNaN(newTime) && newTime >= 0) {
+                            onEditTimer(newTime); // propagate up, triggers backend
+                            setEditingTimer(false); // close edit mode, just like play/pause
+                        }
+                    }}
+                />
             </div>
         </div>
     ) : null;
@@ -415,12 +397,8 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         onStop={onStop}
                         isActive={isActive}
                         disabled={disabled}
-                        onEditTimerRequest={editTimerRequestHandler}
-                        // REMOVE: onShowResults={onShowResults}
-                        // REMOVE: onRevealLeaderboard={onRevealLeaderboard}
-                        // REMOVE: showResultsDisabled={showResultsDisabled}
-                        // REMOVE: onStatsToggle={onStatsToggle}
-                        // stats={stats}
+                        onEditTimer={onEditTimer} // Pass down for test button
+                        showSet44sButton={true} // Only set true in teacher dashboard context
                         stats={stats}
                     />
                 )}

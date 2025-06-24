@@ -58,6 +58,8 @@ export interface SimpleTimerActions {
     resumeTimer: () => void;
     /** Stop current timer (teacher only) */
     stopTimer: () => void;
+    /** Edit timer duration for a question (teacher only, does not affect play/pause/stop) */
+    editTimer: (questionUid: string, durationMs: number) => void;
 }
 
 export interface SimpleTimerHook extends SimpleTimerState, SimpleTimerActions {
@@ -162,9 +164,9 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
 
         // Listen to appropriate event based on role
         const eventName = role === 'teacher'
-            ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED
+            ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED // Canonical dashboard event for all timer updates
             : role === 'projection'
-                ? SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED  // Use shared constant
+                ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED // Projection also listens to dashboard event for timer updates
                 : GAME_EVENTS.GAME_TIMER_UPDATED;       // Backend sends this for students
 
         socket.on(eventName, handleTimerUpdate);
@@ -301,6 +303,26 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
         socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
     }, [role, socket, accessCode, timerState.questionUid]);
 
+    /**
+     * Edit timer duration for a question (teacher only, does not affect play/pause/stop)
+     * Emits a timer_action event with action: 'set_duration'.
+     */
+    const editTimer = useCallback((questionUid: string, durationMs: number) => {
+        if (role !== 'teacher' || !socket) {
+            logger.warn('editTimer called but user is not teacher or socket not available');
+            return;
+        }
+        logger.info('[SimpleTimer] editTimer called', { questionUid, durationMs, socketConnected: socket.connected, accessCode });
+        const payload: TimerActionPayload = {
+            accessCode,
+            questionUid,
+            action: 'set_duration',
+            duration: durationMs
+        };
+        logger.info('[SimpleTimer] Emitting TIMER_ACTION for set_duration', { event: TEACHER_EVENTS.TIMER_ACTION, payload });
+        socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
+    }, [role, socket, accessCode]);
+
     // Return the hook interface
     return {
         // State (use local countdown for smooth UI, fallback to backend state)
@@ -320,6 +342,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
         pauseTimer,
         resumeTimer,
         stopTimer,
+        editTimer,
 
         // Connection state
         isConnected

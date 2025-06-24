@@ -247,7 +247,7 @@ function projectionHandler(io, socket) {
                         questionUid: enhancedGameState.timer.questionUid
                     };
                     // Emit timer update immediately after the initial state (works for both play and pause status)
-                    socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, timerUpdatePayload);
+                    socket.emit('dashboard_timer_updated', timerUpdatePayload);
                 }
                 // Send current projection display state if it exists
                 const displayState = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);

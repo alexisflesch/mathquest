@@ -3,6 +3,7 @@ import { Play, Pause, Square, Check, X, Pencil, Trophy, ChartBarBig } from "luci
 import { formatTime } from "@/utils"; // Assure-toi que ce chemin est correct
 import MathJaxWrapper from '@/components/MathJaxWrapper'; // Assure-toi que ce chemin est correct
 import { createLogger } from '@/clientLogger';
+import { TimerField } from './TimerDisplayAndEdit';
 
 // Create a logger for this component
 const logger = createLogger('QuestionDisplay');
@@ -36,8 +37,9 @@ export interface QuestionDisplayProps {
     // Props pour l'apparence/état
     isActive?: boolean; // Pour le style 'question-selected'
     disabled?: boolean;
-    // Props pour l'édition (simplifié pour l'instant)
-    onEditTimerRequest?: () => void; // Callback pour demander l'édition
+    // Props pour l'édition (modern only, legacy edit UI is fully removed)
+    onEditTimer?: (newTime: number) => void; // Canonical direct timer edit handler (used for test button and explicit timer edits)
+    showSet44sButton?: boolean; // Show test button for teacher dashboard
     showControls?: boolean; // hide timer/play/stop if false
     className?: string; // allow passing custom className
     showMeta?: boolean; // show metadata if true
@@ -65,7 +67,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onStop,
     isActive = false,
     disabled = false,
-    onEditTimerRequest, // Ajouté
+    onEditTimer, // Canonical
+    showSet44sButton = false, // Canonical
     showControls = true,
     className = "",
     showMeta = false,
@@ -146,27 +149,28 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
     // Affichage du timer (non éditable dans ce composant)
     const roundedTimeLeft = typeof timeLeftMs === 'number' ? Math.floor(timeLeftMs) : 0;
+    // Convert ms to mm:ss for TimerField
+    const msToMMSS = (ms: number) => {
+        const totalSeconds = Math.floor(ms / 1000);
+        const mm = Math.floor(totalSeconds / 60);
+        const ss = totalSeconds % 60;
+        return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+    };
+    const mmssValue = msToMMSS(roundedTimeLeft);
     const timerDisplay = (
         <span className="flex items-center gap-1">
-            <span
-                className="font-mono text-lg pl-2 pr-0 py-1 rounded bg-muted text-muted-foreground min-w-[60px] text-center select-none"
-                title="Temps de la question"
-            >
-                {formatTime(roundedTimeLeft)}
-            </span>
-            {/* Bouton pour demander l'édition (si callback fourni) */}
-            {onEditTimerRequest && (
-                <button
-                    className="ml-1 pl-0 pr-3 icon-control-hover"
-                    title="Modifier le timer"
-                    onClick={(e) => { e.stopPropagation(); onEditTimerRequest(); }}
-                    tabIndex={-1}
-                    type="button"
-                    disabled={disabled}
-                >
-                    <Pencil size={16} />
-                </button>
-            )}
+            <TimerField
+                value={mmssValue}
+                onChange={(formatted) => {
+                    if (!onEditTimer) return; // Only allow edit if onEditTimer is provided
+                    const [mm, ss] = formatted.split(":");
+                    const newTime = parseInt(mm, 10) * 60 + parseInt(ss, 10);
+                    if (!isNaN(newTime) && newTime >= 0) {
+                        onEditTimer(newTime);
+                    }
+                }}
+                // readOnly prop removed: TimerField does not support it, editability is controlled by parent context
+            />
         </span>
     );
 
@@ -298,6 +302,17 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     <ChartBarBig size={20} />
                                 </button> */}
                                 {timerDisplay}
+                                {/* TEST BUTTON: Only show if showSet44sButton and onEditTimer are provided */}
+                                {showSet44sButton && onEditTimer && (
+                                    <button
+                                        className="ml-2 btn btn-xs btn-accent"
+                                        onClick={e => { e.stopPropagation(); onEditTimer(44); }}
+                                        title="Set timer to 44s (test)"
+                                        type="button"
+                                    >
+                                        Set 44s
+                                    </button>
+                                )}
                             </div>
                         ) : showMeta && metaString ? (
                             <span

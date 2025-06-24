@@ -1337,3 +1337,31 @@ html[data-theme="dark"] .question-list-simple .question-display .card:hover {
 .tab-bar-bg {
   background-color: var(--tab-bar-bg) !important;
 }
+
+/* TimerField consistent style for both span and input */
+.timer-field {
+  width: 6ch !important;
+  min-width: 6ch !important;
+  max-width: 8ch !important;
+  text-align: center !important;
+  font-variant-numeric: tabular-nums !important;
+  font-family: monospace !important;
+  font-size: 1.25rem !important;
+  line-height: 1.6 !important;
+  padding: 4px 10px !important;
+  border: none !important;
+  background: none !important;
+  box-sizing: content-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  font-weight: inherit !important;
+  font-style: inherit !important;
+  letter-spacing: inherit !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  overflow: visible !important;
+}
