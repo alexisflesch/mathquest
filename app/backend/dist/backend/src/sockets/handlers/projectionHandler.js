@@ -157,21 +157,24 @@ function projectionHandler(io, socket) {
                 });
                 if (fullState.gameState && gameInstanceWithQuestions?.gameTemplate?.questions) {
                     const questionsArr = gameInstanceWithQuestions.gameTemplate.questions;
-                    let questionUid = fullState.gameState.timer?.questionUid;
-                    let questionIndex = -1;
+                    // --- MODERNIZATION: Always use currentQuestionIndex as canonical source of truth ---
+                    let questionIndex = typeof fullState.gameState.currentQuestionIndex === 'number' && fullState.gameState.currentQuestionIndex >= 0 && fullState.gameState.currentQuestionIndex < questionsArr.length
+                        ? fullState.gameState.currentQuestionIndex
+                        : -1;
                     let currentQuestion = null;
-                    // If timer.questionUid is missing but currentQuestionIndex is valid, set timer.questionUid
-                    if (!questionUid && typeof fullState.gameState.currentQuestionIndex === 'number' && fullState.gameState.currentQuestionIndex >= 0 && fullState.gameState.currentQuestionIndex < questionsArr.length) {
-                        questionIndex = fullState.gameState.currentQuestionIndex;
-                        questionUid = questionsArr[questionIndex]?.question?.uid;
+                    let questionUid = null;
+                    if (questionIndex !== -1) {
+                        currentQuestion = questionsArr[questionIndex]?.question;
+                        questionUid = currentQuestion?.uid;
                         // Patch timer.questionUid in memory (does not persist, but ensures projection gets correct question)
                         fullState.gameState.timer = {
                             ...fullState.gameState.timer,
                             questionUid
                         };
                     }
-                    // Now, always use questionUid as canonical
-                    if (questionUid) {
+                    else if (fullState.gameState.timer?.questionUid) {
+                        // Fallback: try to find by timer.questionUid if index is invalid
+                        questionUid = fullState.gameState.timer.questionUid;
                         const found = questionsArr.findIndex((q) => q.question.uid === questionUid);
                         if (found !== -1) {
                             currentQuestion = questionsArr[found].question;
