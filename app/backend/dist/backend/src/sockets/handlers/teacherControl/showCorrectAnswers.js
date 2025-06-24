@@ -18,15 +18,7 @@ function showCorrectAnswersHandler(io, socket) {
     return async (payload) => {
         try {
             logger.info({ socketId: socket.id, payload }, 'Teacher requesting to show correct answers');
-            const { gameId, accessCode, questionUid, teacherId } = payload;
-            // Validate required fields
-            if (!questionUid) {
-                logger.error({ socketId: socket.id, payload }, 'Missing questionUid in show correct answers request');
-                socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
-                    error: 'Missing question ID'
-                });
-                return;
-            }
+            const { gameId, accessCode, teacherId } = payload;
             // Use accessCode or gameId to find the game
             let gameInstance;
             if (accessCode) {
@@ -66,12 +58,27 @@ function showCorrectAnswersHandler(io, socket) {
                 });
                 return;
             }
-            // Find the specific question
-            const questionWrapper = gameInstance.gameTemplate.questions.find(q => q.question.uid === questionUid);
-            if (!questionWrapper) {
-                logger.error({ socketId: socket.id, questionUid }, 'Question not found in game template');
+            // Fetch current question UID from game state (memory/redis)
+            const fullState = await (0, gameStateService_1.getFullGameState)(gameInstance.accessCode);
+            const gameState = fullState?.gameState;
+            const currentQuestionUid = gameState && gameState.currentQuestionIndex >= 0 &&
+                gameState.questionUids &&
+                gameState.questionUids[gameState.currentQuestionIndex]
+                ? gameState.questionUids[gameState.currentQuestionIndex]
+                : null;
+            if (!currentQuestionUid) {
+                logger.error({ socketId: socket.id, accessCode: gameInstance.accessCode }, 'No current question set in game state');
                 socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
-                    error: 'Question not found'
+                    error: 'No current question set in game state'
+                });
+                return;
+            }
+            // Find the current question in the template
+            const questionWrapper = gameInstance.gameTemplate.questions.find(q => q.question.uid === currentQuestionUid);
+            if (!questionWrapper) {
+                logger.error({ socketId: socket.id, currentQuestionUid }, 'Current question not found in game template');
+                socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
+                    error: 'Current question not found'
                 });
                 return;
             }
@@ -94,7 +101,7 @@ function showCorrectAnswersHandler(io, socket) {
             io.to(gameRoom).emit(events_1.SOCKET_EVENTS.GAME.CORRECT_ANSWERS, correctAnswersPayload);
             logger.info({
                 gameRoom,
-                questionUid,
+                questionUid: question.uid,
                 correctAnswers: question.correctAnswers
             }, 'Emitted correct answers to students');
             // Emit to projection room for display
@@ -107,14 +114,14 @@ function showCorrectAnswersHandler(io, socket) {
             });
             logger.info({
                 projectionRoom,
-                questionUid,
+                questionUid: question.uid,
                 statePersisted: true
             }, 'Emitted correct answers to projection room and persisted state');
             // TODO: Mark question as "closed" in game state if needed
             // This could involve updating Redis game state to track question status
             logger.info({
                 socketId: socket.id,
-                questionUid,
+                questionUid: question.uid,
                 gameId: gameInstance.id,
                 accessCode: gameInstance.accessCode
             }, 'Successfully processed show correct answers request');

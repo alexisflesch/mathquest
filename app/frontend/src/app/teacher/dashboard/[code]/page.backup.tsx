@@ -684,8 +684,6 @@ export default function TeacherDashboardPage({ params }: { params: Promise<{ cod
                                 }
                                 return undefined;
                             }}
-                            onShowResults={handleShowResults}
-                            onStatsToggle={handleStatsToggle}
                         />
                     </section>
                 )}

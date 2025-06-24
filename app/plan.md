@@ -280,3 +280,25 @@
 ### Validation
 - [x] Confirmed no impact on current functionality
 - [x] All projection events are handled correctly by the remaining projectionHandler.ts
+
+---
+
+## Phase: Globalize Stats and Trophy Controls in Teacher Dashboard
+
+- [x] Identify root cause: per-question stats/trophy buttons are redundant and not modern.
+- [x] Plan new UI: move both buttons to the top of the questions section.
+- [x] Refactor stats button to be a global toggle, emitting only show/hide (no questionUid).
+- [x] Refactor trophy button to emit global reveal events (no questionUid).
+- [x] Remove per-question usages from DraggableQuestionsList and child components if present.
+- [x] Update shared type ShowCorrectAnswersPayload to remove questionUid entirely.
+- [x] Update backend showCorrectAnswersHandler to always use current question from backend state, not payload.
+- [x] Update all event payloads and backend handlers to support global-only logic.
+- [x] Test: verify UI, event emission, and backend/FE logs for both buttons (pending user validation).
+- [x] Document all changes and rationale in audit and plan files.
+
+**Exit criteria:**
+- Only one stats and one trophy button, both global, next to the Questions title.
+- Stats button toggles global state and emits correct event/payload.
+- Trophy button emits correct event/payload.
+- No per-question stats/trophy controls remain.
+- All changes logged and documented.

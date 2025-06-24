@@ -7,8 +7,6 @@ exports.toggleProjectionStatsHandler = toggleProjectionStatsHandler;
 const prisma_1 = require("@/db/prisma");
 const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const helpers_1 = require("./helpers");
-const gameStateService_1 = require("@/core/services/gameStateService");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('ToggleProjectionStatsHandler');
 /**
@@ -19,12 +17,12 @@ function toggleProjectionStatsHandler(io, socket) {
     return async (payload) => {
         try {
             logger.info({ socketId: socket.id, payload }, 'Teacher requesting to toggle projection stats');
-            const { gameId, accessCode, questionUid, show, teacherId } = payload;
+            const { gameId, accessCode, show, teacherId } = payload;
             // Validate required fields
-            if (!questionUid || typeof show !== 'boolean') {
+            if (typeof show !== 'boolean') {
                 logger.error({ socketId: socket.id, payload }, 'Missing or invalid fields in toggle projection stats request');
                 socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
-                    error: 'Missing question ID or show parameter'
+                    error: 'Missing show parameter'
                 });
                 return;
             }
@@ -47,65 +45,20 @@ function toggleProjectionStatsHandler(io, socket) {
                 });
                 return;
             }
-            // Get current answer statistics for the question
-            let answerStats = {};
-            if (show) {
-                // Get real answer statistics from Redis using the same function as dashboard
-                try {
-                    answerStats = await (0, helpers_1.getAnswerStats)(gameInstance.accessCode, questionUid);
-                    logger.info({
-                        questionUid,
-                        answerStats,
-                        accessCode: gameInstance.accessCode
-                    }, 'Retrieved real answer stats for projection');
-                }
-                catch (error) {
-                    logger.error({
-                        questionUid,
-                        error,
-                        accessCode: gameInstance.accessCode
-                    }, 'Error retrieving answer stats for projection, using empty stats');
-                    answerStats = {};
-                }
-            }
-            // Prepare projection stats payload
+            // Prepare projection stats payload (no questionUid)
             const projectionStatsPayload = {
-                questionUid,
                 show,
-                stats: show ? answerStats : {},
+                stats: show ? {} : {}, // No stats for global toggle, backend/projection can decide what to show
                 timestamp: Date.now()
             };
-            // Update persistent projection display state
-            await (0, gameStateService_1.updateProjectionDisplayState)(gameInstance.accessCode, {
-                showStats: show,
-                currentStats: show ? answerStats : {},
-                statsQuestionUid: show ? questionUid : null
-            });
             // Emit to projection room
-            const projectionRoom = `projection_${gameInstance.id}`;
-            const eventType = show
-                ? events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS
-                : events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_HIDE_STATS;
-            io.to(projectionRoom).emit(eventType, projectionStatsPayload);
-            logger.info({
-                projectionRoom,
-                questionUid,
-                show,
-                eventType,
-                statsPersisted: true
-            }, 'Emitted stats toggle to projection room and persisted state');
-            logger.info({
-                socketId: socket.id,
-                questionUid,
-                show,
-                gameId: gameInstance.id,
-                accessCode: gameInstance.accessCode
-            }, 'Successfully processed toggle projection stats request');
+            io.to(`projection_${gameInstance.id}`).emit(events_1.PROJECTOR_EVENTS.PROJECTION_SHOW_STATS, projectionStatsPayload);
+            logger.info({ projectionStatsPayload }, 'Emitted global projection stats toggle');
         }
         catch (error) {
             logger.error({ socketId: socket.id, payload, error }, 'Error in toggle projection stats handler');
             socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
-                error: 'Failed to toggle projection stats'
+                error: 'Internal server error in toggle projection stats handler'
             });
         }
     };

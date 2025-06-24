@@ -3,7 +3,7 @@ import { prisma } from '@/db/prisma';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { ShowCorrectAnswersPayload } from '@shared/types/socket/payloads';
 import createLogger from '@/utils/logger';
-import { updateProjectionDisplayState } from '@/core/services/gameStateService';
+import { updateProjectionDisplayState, getFullGameState } from '@/core/services/gameStateService';
 
 // Create a handler-specific logger
 const logger = createLogger('ShowCorrectAnswersHandler');
@@ -17,16 +17,7 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
         try {
             logger.info({ socketId: socket.id, payload }, 'Teacher requesting to show correct answers');
 
-            const { gameId, accessCode, questionUid, teacherId } = payload;
-
-            // Validate required fields
-            if (!questionUid) {
-                logger.error({ socketId: socket.id, payload }, 'Missing questionUid in show correct answers request');
-                socket.emit(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
-                    error: 'Missing question ID'
-                });
-                return;
-            }
+            const { gameId, accessCode, teacherId } = payload;
 
             // Use accessCode or gameId to find the game
             let gameInstance;
@@ -68,15 +59,32 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
                 return;
             }
 
-            // Find the specific question
+            // Fetch current question UID from game state (memory/redis)
+            const fullState = await getFullGameState(gameInstance.accessCode);
+            const gameState = fullState?.gameState;
+            const currentQuestionUid = gameState && gameState.currentQuestionIndex >= 0 &&
+                gameState.questionUids &&
+                gameState.questionUids[gameState.currentQuestionIndex]
+                ? gameState.questionUids[gameState.currentQuestionIndex]
+                : null;
+
+            if (!currentQuestionUid) {
+                logger.error({ socketId: socket.id, accessCode: gameInstance.accessCode }, 'No current question set in game state');
+                socket.emit(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
+                    error: 'No current question set in game state'
+                });
+                return;
+            }
+
+            // Find the current question in the template
             const questionWrapper = gameInstance.gameTemplate.questions.find(
-                q => q.question.uid === questionUid
+                q => q.question.uid === currentQuestionUid
             );
 
             if (!questionWrapper) {
-                logger.error({ socketId: socket.id, questionUid }, 'Question not found in game template');
+                logger.error({ socketId: socket.id, currentQuestionUid }, 'Current question not found in game template');
                 socket.emit(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
-                    error: 'Question not found'
+                    error: 'Current question not found'
                 });
                 return;
             }
@@ -104,7 +112,7 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
 
             logger.info({
                 gameRoom,
-                questionUid,
+                questionUid: question.uid,
                 correctAnswers: question.correctAnswers
             }, 'Emitted correct answers to students');
 
@@ -120,7 +128,7 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
 
             logger.info({
                 projectionRoom,
-                questionUid,
+                questionUid: question.uid,
                 statePersisted: true
             }, 'Emitted correct answers to projection room and persisted state');
 
@@ -129,7 +137,7 @@ export function showCorrectAnswersHandler(io: SocketIOServer, socket: Socket) {
 
             logger.info({
                 socketId: socket.id,
-                questionUid,
+                questionUid: question.uid,
                 gameId: gameInstance.id,
                 accessCode: gameInstance.accessCode
             }, 'Successfully processed show correct answers request');

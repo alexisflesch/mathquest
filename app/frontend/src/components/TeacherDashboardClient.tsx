@@ -59,11 +59,28 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null);
     const [expandedUids, setExpandedUids] = useState<Set<string>>(new Set());
     const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+    const [showStats, setShowStats] = useState<boolean>(false); // NEW: global stats toggle
 
     // Confirmation dialogs
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingPlayIdx, setPendingPlayIdx] = useState<number | null>(null);
     const [showEndQuizConfirm, setShowEndQuizConfirm] = useState(false);
+
+    // Restore missing handlers for end quiz (move above return)
+    function handleEndQuiz() { setShowEndQuizConfirm(true); }
+    function confirmEndQuiz() {
+        setShowEndQuizConfirm(false);
+        if (quizSocket && code) {
+            const payload: EndGamePayload = { accessCode: code };
+            try {
+                endGamePayloadSchema.parse(payload);
+                quizSocket.emit(SOCKET_EVENTS.TEACHER.END_GAME, payload);
+            } catch (error) {
+                logger.error('Invalid end_game payload:', error);
+            }
+        }
+    }
+    function cancelEndQuiz() { setShowEndQuizConfirm(false); }
 
     // Socket and quiz state
     const [quizSocket, setQuizSocket] = useState<Socket | null>(null);
@@ -331,52 +348,33 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             setSnackbarMessage(`Affichage des bonnes réponses pour la question ${questionUid}`);
         }, 0);
     }, [quizSocket, code, gameId, userProfile?.userId]);
-    const handleStatsToggle = useCallback((questionUid: string, show: boolean) => {
+    // Remove handleStatsToggle, replace with global version
+    const handleStatsToggleGlobal = useCallback(() => {
         if (!quizSocket) return;
+        const newShow = !showStats;
+        setShowStats(newShow);
         const payload = {
             accessCode: code,
             gameId,
-            questionUid,
-            show,
+            show: newShow,
             teacherId: userProfile?.userId
         };
         quizSocket.emit(SOCKET_EVENTS.TEACHER.TOGGLE_PROJECTION_STATS, payload);
         setTimeout(() => {
-            const action = show ? 'affichage' : 'masquage';
-            setSnackbarMessage(`${action} des statistiques pour la question ${questionUid}`);
+            const action = newShow ? 'affichage' : 'masquage';
+            setSnackbarMessage(`${action} global des statistiques`);
         }, 0);
-    }, [quizSocket, code, gameId, userProfile?.userId]);
-    const handleEndQuiz = () => { setShowEndQuizConfirm(true); };
-    const confirmEndQuiz = () => {
-        setShowEndQuizConfirm(false);
-        if (quizSocket && code) {
-            const payload: EndGamePayload = { accessCode: code };
-            try {
-                endGamePayloadSchema.parse(payload);
-                quizSocket.emit(SOCKET_EVENTS.TEACHER.END_GAME, payload);
-            } catch (error) {
-                logger.error('Invalid end_game payload:', error);
-            }
-        }
-    };
-    const cancelEndQuiz = () => { setShowEndQuizConfirm(false); };
+    }, [quizSocket, code, gameId, userProfile?.userId, showStats]);
 
-    // Handler for trophy button: show correct answers AND reveal leaderboard
-    const handleTrophyClick = useCallback((questionUid: string) => {
+    // Trophy button logic (no questionUid)
+    const handleTrophyGlobal = useCallback(() => {
         if (!quizSocket) return;
-        // 1. Show correct answers (existing behavior)
-        const showAnswersPayload = {
-            accessCode: code,
-            gameId,
-            questionUid,
-            teacherId: userProfile?.userId
-        };
-        quizSocket.emit(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, showAnswersPayload);
-        // 2. Reveal leaderboard (new canonical event)
+        // Reveal leaderboard and show correct answers globally
         const revealLeaderboardPayload = { accessCode: code };
         quizSocket.emit(SOCKET_EVENTS.TEACHER.REVEAL_LEADERBOARD, revealLeaderboardPayload);
+        quizSocket.emit(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, { accessCode: code, gameId, teacherId: userProfile?.userId });
         setTimeout(() => {
-            setSnackbarMessage(`Affichage des bonnes réponses et du classement final pour la question ${questionUid}`);
+            setSnackbarMessage('Affichage des bonnes réponses et du classement final (global)');
         }, 0);
     }, [quizSocket, code, gameId, userProfile?.userId]);
 
@@ -470,6 +468,24 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                     <section>
                         <div className="flex items-center gap-2 mb-6">
                             <h2 className="text-xl font-semibold">Questions</h2>
+                            {/* NEW: Global Stats and Trophy Buttons */}
+                            <button
+                                className={`btn btn-outline flex items-center gap-1 ${showStats ? 'bg-blue-100 text-blue-700' : ''}`}
+                                onClick={handleStatsToggleGlobal}
+                                disabled={isDisabled}
+                                aria-pressed={showStats}
+                                title="Afficher/Masquer les statistiques globales"
+                            >
+                                <span role="img" aria-label="Bar Chart">📊</span> Stats
+                            </button>
+                            <button
+                                className="btn btn-outline flex items-center gap-1"
+                                onClick={handleTrophyGlobal}
+                                disabled={isDisabled}
+                                title="Afficher le classement final et les bonnes réponses"
+                            >
+                                <span role="img" aria-label="Trophy">🏆</span> Trophy
+                            </button>
                             {loading && <InfinitySpin size={32} />}
                         </div>
                         <DraggableQuestionsList
@@ -492,8 +508,6 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             timeLeftMs={timeLeftMs}
                             onTimerAction={handleTimerAction}
                             disabled={isDisabled}
-                            onShowResults={handleTrophyClick}
-                            onRevealLeaderboard={handleTrophyClick}
                             expandedUids={expandedUids}
                             onToggleExpand={handleToggleExpand}
                             getStatsForQuestion={(uid: string) => {

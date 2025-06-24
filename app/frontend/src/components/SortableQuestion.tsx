@@ -4,6 +4,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Check, X } from 'lucide-react';
 import type { Question } from "@/types/api";
+import type { AnswerStats } from '@shared/types/core/answer';
 import { createLogger } from '@/clientLogger';
 import { formatTime } from "@/utils";
 import MathJaxWrapper from '@/components/MathJaxWrapper';
@@ -17,26 +18,18 @@ export interface SortableQuestionProps {
     q: Question;
     quizId: string;
     currentTournamentCode: string;
-    // idx: number;
     isActive?: boolean;
-    // isRunning?: boolean; // Gardé pour la logique interne si besoin
-    // quizState removed - timer state managed externally
     open: boolean;
     setOpen: () => void;
     onPlay: (uid: string, timeMs: number) => void; // timeMs in milliseconds per documentation
     onPause: () => void;
     onStop?: () => void;
-    // onSelect: () => void; // Gardé pour la sélection via clic/touche
     onEditTimer: (newTime: number) => void; // Callback parent pour la validation de l'édition
     liveTimeLeft?: number;
     liveStatus?: 'play' | 'pause' | 'stop';
     onImmediateUpdateActiveTimer?: (newTime: number) => void; // Gardé pour la synchro active
     disabled?: boolean;
-    onShowResults?: () => void;
-    showResultsDisabled?: boolean;
-    onStatsToggle?: (show: boolean) => void;
-    stats?: number[]; // Pass answer stats to QuestionDisplay
-    onRevealLeaderboard?: () => void;
+    stats?: number[]; // Accepts number[] for per-question stats bar
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -72,7 +65,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled, onStatsToggle, stats, onRevealLeaderboard }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats }: SortableQuestionProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(q.uid)
     });
@@ -326,11 +319,11 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 isActive={isActive}
                 disabled={true}
                 onEditTimerRequest={() => { }}
-                onShowResults={onShowResults}
-                onRevealLeaderboard={onRevealLeaderboard}
-                showResultsDisabled={showResultsDisabled}
-                onStatsToggle={onStatsToggle}
-                stats={stats}
+            // REMOVE: onShowResults={onShowResults}
+            // REMOVE: onRevealLeaderboard={onRevealLeaderboard}
+            // REMOVE: showResultsDisabled={showResultsDisabled}
+            // REMOVE: onStatsToggle={onStatsToggle}
+            // stats={stats}
             />
             <div className="absolute left-0 top-0 w-full h-full flex items-center justify-center z-20">
                 <span ref={inputWrapperRef} className="flex items-center gap-1 bg-background p-2 rounded shadow-lg border border-gray-200">
@@ -423,10 +416,11 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         isActive={isActive}
                         disabled={disabled}
                         onEditTimerRequest={editTimerRequestHandler}
-                        onShowResults={onShowResults}
-                        onRevealLeaderboard={onRevealLeaderboard}
-                        showResultsDisabled={showResultsDisabled}
-                        onStatsToggle={onStatsToggle}
+                        // REMOVE: onShowResults={onShowResults}
+                        // REMOVE: onRevealLeaderboard={onRevealLeaderboard}
+                        // REMOVE: showResultsDisabled={showResultsDisabled}
+                        // REMOVE: onStatsToggle={onStatsToggle}
+                        // stats={stats}
                         stats={stats}
                     />
                 )}

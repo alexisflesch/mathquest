@@ -135,7 +135,6 @@ export interface ConnectedCountPayload {
 export interface ShowCorrectAnswersPayload {
     gameId?: string;
     accessCode?: string;
-    questionUid: string;
     teacherId?: string;
 }
 
@@ -146,7 +145,6 @@ export interface ShowCorrectAnswersPayload {
 export interface ToggleProjectionStatsPayload {
     gameId?: string;
     accessCode?: string;
-    questionUid: string;
     show: boolean; // true to show stats, false to hide
     teacherId?: string;
 }

@@ -51,13 +51,9 @@ interface DraggableQuestionsListProps {
     onTimerAction?: (info: { status: 'play' | 'pause' | 'stop'; questionUid: string; timeLeftMs: number }) => void;
     onImmediateUpdateActiveTimer?: (newTime: number) => void;
     disabled?: boolean;
-    onShowResults?: (uid: string) => void;
-    showResultsDisabled?: (uid: string) => boolean;
-    onStatsToggle?: (uid: string, show: boolean) => void; // NEW: stats toggle handler
     getStatsForQuestion?: (uid: string) => number[] | undefined; // Provide stats for each question
     expandedUids: Set<string>; // NEW: expanded question UIDs
     onToggleExpand: (uid: string) => void; // NEW: toggle handler
-    onRevealLeaderboard?: (uid: string) => void; // NEW: leaderboard reveal handler
 }
 
 export default function DraggableQuestionsList({
@@ -81,13 +77,9 @@ export default function DraggableQuestionsList({
     onTimerAction,
     onImmediateUpdateActiveTimer,
     disabled,
-    onShowResults,
-    showResultsDisabled,
-    onStatsToggle,
     getStatsForQuestion,
     expandedUids,
     onToggleExpand,
-    onRevealLeaderboard,
 }: DraggableQuestionsListProps) {
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
@@ -198,13 +190,9 @@ export default function DraggableQuestionsList({
                             liveStatus={isActive ? timerStatus : undefined}
                             onImmediateUpdateActiveTimer={handleImmediateUpdate}
                             disabled={disabled}
-                            onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
-                            onRevealLeaderboard={onRevealLeaderboard ? () => onRevealLeaderboard(q.uid) : undefined}
-                            showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
-                            onStatsToggle={onStatsToggle ? (show) => onStatsToggle(q.uid, show) : undefined}
-                            stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
                             quizId={quizId}
                             currentTournamentCode={currentTournamentCode}
+                            stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
                         />
                     );
                 })}
