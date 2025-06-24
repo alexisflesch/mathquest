@@ -398,7 +398,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         isActive={isActive}
                         disabled={disabled}
                         onEditTimer={onEditTimer} // Pass down for test button
-                        showSet44sButton={true} // Only set true in teacher dashboard context
+                        showSet44sButton={false} // Only set true in teacher dashboard context
                         stats={stats}
                     />
                 )}

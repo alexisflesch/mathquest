@@ -59,7 +59,7 @@ export interface SimpleTimerActions {
     /** Stop current timer (teacher only) */
     stopTimer: () => void;
     /** Edit timer duration for a question (teacher only, does not affect play/pause/stop) */
-    editTimer: (questionUid: string, durationMs: number) => void;
+    editTimer: (questionUid: string, durationMs: number, timeLeftMs?: number) => void;
 }
 
 export interface SimpleTimerHook extends SimpleTimerState, SimpleTimerActions {
@@ -307,17 +307,19 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
      * Edit timer duration for a question (teacher only, does not affect play/pause/stop)
      * Emits a timer_action event with action: 'set_duration'.
      */
-    const editTimer = useCallback((questionUid: string, durationMs: number) => {
+    const editTimer = useCallback((questionUid: string, durationMs: number, timeLeftMs?: number) => {
         if (role !== 'teacher' || !socket) {
             logger.warn('editTimer called but user is not teacher or socket not available');
             return;
         }
-        logger.info('[SimpleTimer] editTimer called', { questionUid, durationMs, socketConnected: socket.connected, accessCode });
+        logger.info('[SimpleTimer] editTimer called', { questionUid, durationMs, timeLeftMs, socketConnected: socket.connected, accessCode });
         const payload: TimerActionPayload = {
             accessCode,
             questionUid,
             action: 'set_duration',
-            duration: durationMs
+            duration: durationMs,
+            // Always include both fields for backend clarity
+            ...(typeof timeLeftMs === 'number' ? { timeLeftMs } : { timeLeftMs: durationMs })
         };
         logger.info('[SimpleTimer] Emitting TIMER_ACTION for set_duration', { event: TEACHER_EVENTS.TIMER_ACTION, payload });
         socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
