@@ -14,6 +14,7 @@ import ZoomControls from '@/components/ZoomControls';
 import type { TournamentQuestion, QuizQuestion } from '@shared/types';
 import type { QuestionData } from '@shared/types/socketEvents';
 import { QUESTION_TYPES } from '@shared/types';
+import type { Question } from '@shared/types';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const logger = createLogger('ProjectionPage');
@@ -47,8 +48,12 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         showStats,
         currentStats,
         correctAnswersData,
-        currentQuestion // <-- MODERN: canonical current question from socket event
+        currentQuestion: rawCurrentQuestion // <-- MODERN: canonical current question from socket event
     } = useProjectionQuizSocket(code, gameId);
+    // Fix typing: currentQuestion is Question | null
+    const currentQuestion = (rawCurrentQuestion && typeof rawCurrentQuestion === 'object')
+        ? ({ ...(rawCurrentQuestion as any), timeLimit: (rawCurrentQuestion as any).timeLimit ?? undefined } as Question)
+        : null;
 
     // Responsive layout state
     const [layout, setLayout] = useState<Layout[]>([
@@ -81,7 +86,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         }
         return null;
     };
-    const currentQuestion = getCurrentQuestion();
+    const currentQuestion =
     const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
         ? { question: currentQuestion }
         : null;
@@ -91,7 +96,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
 
     // MODERN: Use canonical currentQuestion (FilteredQuestion) from the socket hook
     const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
-        ? { question: currentQuestion } // Pass only the canonical FilteredQuestion
+        ? { question: currentQuestion as any } // Pass only the canonical FilteredQuestion, force type for now
         : null;
     const currentQuestionUid = currentQuestion?.uid;
     const tournamentUrl = code ? `${baseUrl}/live/${code}` : '';
@@ -139,7 +144,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                 margin={[0, 0]}
                 isResizable={true}
                 isDraggable={true}
-                isDroppable={true}
+                isDroppable={true }
                 allowOverlap={true}
                 preventCollision={false}
                 compactType={null}
