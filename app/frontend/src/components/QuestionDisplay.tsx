@@ -186,18 +186,18 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         return stats[idx]; // Already a percentage
     };
 
-    // Handler for ChartBarBig click
-    const handleStatsToggle = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setIsStatsDisplayed((prev) => {
-            const newState = !prev;
-            // Use setTimeout to avoid setState-during-render warning
-            setTimeout(() => {
-                if (onStatsToggle) onStatsToggle(newState);
-            }, 0);
-            return newState;
-        });
-    };
+    // // Handler for ChartBarBig click
+    // const handleStatsToggle = (e: React.MouseEvent) => {
+    //     e.stopPropagation();
+    //     setIsStatsDisplayed((prev) => {
+    //         const newState = !prev;
+    //         // Use setTimeout to avoid setState-during-render warning
+    //         setTimeout(() => {
+    //             if (onStatsToggle) onStatsToggle(newState);
+    //         }, 0);
+    //         return newState;
+    //     });
+    // };
 
     return (
         <div
@@ -251,7 +251,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                         {/* Only one of these will render, always right-aligned */}
                         {showControls ? (
                             <div className="flex items-center gap-0 ml-2">
-                                {timerDisplay}
                                 <button
                                     data-play-pause-btn
                                     className={`p-1 icon-control-hover rounded-full transition-colors duration-150 ${isActive ? '' : 'text-muted-foreground'}`}
@@ -272,7 +271,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                 >
                                     <Square size={20} />
                                 </button>
-                                {/* Trophy button for closing and showing results */}
+                                {/* Trophy button for closing and showing results
                                 <button
                                     type="button"
                                     className="p-1 icon-control-hover rounded-full transition-colors duration-150 ml-1"
@@ -286,9 +285,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     disabled={disabled || showResultsDisabled}
                                 >
                                     <Trophy size={20} />
-                                </button>
+                                </button> */}
                                 {/* ChartBarBig button for statistics */}
-                                <button
+                                {/* <button
                                     type="button"
                                     className={`p-1 icon-control-hover rounded-full transition-colors duration-150 ml-1 ${isStatsDisplayed ? 'text-primary' : ''}`}
                                     title={isStatsDisplayed ? "Masquer les statistiques" : "Afficher les statistiques"}
@@ -297,7 +296,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     disabled={disabled}
                                 >
                                     <ChartBarBig size={20} />
-                                </button>
+                                </button> */}
+                                {timerDisplay}
                             </div>
                         ) : showMeta && metaString ? (
                             <span
