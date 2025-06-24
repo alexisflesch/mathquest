@@ -158,10 +158,7 @@ class GameParticipantService {
                     // Create new user if they don't exist, or connect if they do.
                     await prisma_1.prisma.user.upsert({
                         where: { id: userId },
-                        update: {
-                            username: username || `guest-${userId.substring(0, 8)}`,
-                            avatarEmoji: avatarEmoji || null,
-                        },
+                        update: {},
                         create: {
                             id: userId,
                             username: username || `guest-${userId.substring(0, 8)}`,
@@ -213,10 +210,7 @@ class GameParticipantService {
                 // Create new user if they don't exist, or connect if they do.
                 await prisma_1.prisma.user.upsert({
                     where: { id: userId },
-                    update: {
-                        username: username || `guest-${userId.substring(0, 8)}`,
-                        avatarEmoji: avatarEmoji || null,
-                    },
+                    update: {},
                     create: {
                         id: userId,
                         username: username || `guest-${userId.substring(0, 8)}`,

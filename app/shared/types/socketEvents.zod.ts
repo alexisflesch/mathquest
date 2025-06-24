@@ -487,3 +487,7 @@ export const timerUpdatePayloadSchema = z.object({
   running: z.boolean(),
   durationMs: z.number().int().positive().optional(),
 });
+
+export const revealLeaderboardPayloadSchema = z.object({
+  accessCode: z.string().min(1, { message: "Access code cannot be empty." })
+});

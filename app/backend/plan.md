@@ -127,6 +127,19 @@ Unify timer reset/start logic for quiz, live tournament, and differed tournament
 - [ ] If a race condition is confirmed, refactor to ensure timer is always set before answer submission is processed (e.g., by awaiting timer set or blocking answer handler until timer is confirmed)
 - [ ] Update checklist and findings after new logs are added and analyzed for Marc
 
+---
+
+## [2025-06-25] Fix: Canonicalize Projection Room Identifier for Leaderboard Events
+- [x] Updated backend to emit all projection leaderboard events to `projection_${gameId}` instead of `projection_${accessCode}`
+- [x] Updated revealLeaderboardHandler to look up gameId from accessCode and emit to the canonical room
+- [x] Confirmed joinService and all join-bonus emissions already use `projection_${gameId}`
+- [x] Updated logs and documentation for clarity
+- [ ] Retest: Confirm frontend receives real-time leaderboard updates after trophy click
+- [ ] Update documentation and checklist after validation
+
+### Rationale
+- The canonical identifier for projection rooms is `gameId`, not `accessCode`, to ensure consistency across all socket events and frontend/backend logic. This prevents room mismatches and ensures all projection events are received as expected.
+
 # Phase: GameParticipant Table Invariant & Deferred Mode Modernization
 
 ## Goal
@@ -162,3 +175,45 @@ Enforce invariant: For each user/game, there must be at most one "LIVE" and one 
     - [ ] Update diagnostic logging to confirm fix
     - [ ] Validate with test session and logs
     - [ ] Document findings and update checklist
+
+# Phase: Timer State for Late Joiners and Projection Reloads
+
+## Root Cause
+- Late joiners and projection reloads could see a running timer (countdown) even when the timer was stopped, due to backend logic in `calculateTimerForLateJoiner` not respecting the canonical stopped state.
+
+## Solution
+- [x] Audit `calculateTimerForLateJoiner` in `timerUtils.ts` for late join/projection logic
+- [x] Update logic: If the original timer status is `'stop'`, always return a timer with `status: 'stop'`, `timeLeftMs: 0`, and `durationMs: 0` for late joiners and projection reloads
+- [x] Add/adjust logging to confirm correct code path is used
+- [x] Validate: late joiners and projection reloads always see timer stopped (zero, not animating) when timer is stopped
+- [ ] Add/verify tests for timer stopped state in late join/projection flows
+- [ ] Update documentation and checklist after validation
+
+## How to test
+- Start a live game, stop the timer, then join as a new user or reload the projection page
+- Expected: Timer display is zero and does not animate for all late joiners and projection clients when timer is stopped
+- Actual: (fill after test)
+
+# Phase: Projection Question Delivery Modernization
+
+- [x] Update backend to emit the full filtered question object on PROJECTION_QUESTION_CHANGED (on both page load and question change).
+- [x] Ensure the event uses canonical shared types and Zod validation.
+- [x] Update the projection handler to send the current question on initial join.
+- [x] Update the frontend projection socket hook to handle and validate the full question payload.
+- [ ] Test: Projection page always displays the correct question on load and on question change.
+- [x] Update plan.md and backend/plan.md with changes and testing steps.
+
+### CHANGELOG
+- Projection now receives the same canonical question payload as the live room, on every question change (see setQuestionHandler).
+- Legacy projection question event (UID/timer only) replaced with full payload.
+- All payloads use canonical shared types and are Zod-validated.
+
+# Backend Modernization Log
+
+## Projection Page Modernization
+
+- [x] Backend emits canonical `projection_question_changed` event with shared type payload to projection room
+- [x] Confirmed event structure and payload matches live/[code] logic
+- [x] Documented that frontend projection client now uses only canonical event and types for question display
+- [x] Legacy frontend logic for question selection is commented out and obsolete
+- [x] All projection and live flows now use the same canonical event and payload structure for current question

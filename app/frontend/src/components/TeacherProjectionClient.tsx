@@ -46,7 +46,8 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         leaderboard: hookLeaderboard,
         showStats,
         currentStats,
-        correctAnswersData
+        correctAnswersData,
+        currentQuestion // <-- MODERN: canonical current question from socket event
     } = useProjectionQuizSocket(code, gameId);
 
     // Responsive layout state
@@ -70,7 +71,9 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
             setBaseUrl(`${protocol}//${host}`);
         }
     }, []);
-    // Get current question from game state
+
+    // --- LEGACY: Old logic for deriving current question (now obsolete, kept for reference) ---
+    /*
     const getCurrentQuestion = (): QuestionData | null => {
         if (!gameState || !timerQuestionUid) return null;
         if (gameState.questionData && gameState.questionData.uid === timerQuestionUid) {
@@ -81,6 +84,14 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
     const currentQuestion = getCurrentQuestion();
     const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
         ? { question: currentQuestion }
+        : null;
+    const currentQuestionUid = currentQuestion?.uid;
+    */
+    // --- END LEGACY ---
+
+    // MODERN: Use canonical currentQuestion (FilteredQuestion) from the socket hook
+    const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
+        ? { question: currentQuestion } // Pass only the canonical FilteredQuestion
         : null;
     const currentQuestionUid = currentQuestion?.uid;
     const tournamentUrl = code ? `${baseUrl}/live/${code}` : '';

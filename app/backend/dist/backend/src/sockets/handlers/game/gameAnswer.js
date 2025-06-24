@@ -96,21 +96,39 @@ function gameAnswerHandler(io, socket, context) {
             // Validate timer
             // Use the timer provided in context (already resolved for the correct mode/session)
             // No timer selection logic remains here; all selection is done at the call site.
-            if (timer) {
-                if (timer.status === 'stop') {
-                    socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, {
-                        message: 'Trop tard ! Le temps est écoulé.',
-                        code: 'TIMER_STOPPED'
-                    });
-                    return;
+            if (!timer) {
+                logger.warn({
+                    accessCode,
+                    userId,
+                    questionUid,
+                    message: 'No timer context provided to answer handler. Rejecting answer.'
+                }, '[TIMER] Missing timer context in answer handler, rejecting answer.');
+                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, {
+                    message: 'Trop tard ! Le temps est écoulé.',
+                    code: 'TIMER_STOPPED'
+                });
+                return;
+            }
+            if (timer.status === 'stop') {
+                logger.info({
+                    accessCode,
+                    userId,
+                    questionUid,
+                    timerStatus: timer.status,
+                    message: 'Timer is stopped. Rejecting answer.'
+                }, '[TIMER] Timer stopped, rejecting answer.');
+                socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, {
+                    message: 'Trop tard ! Le temps est écoulé.',
+                    code: 'TIMER_STOPPED'
+                });
+                return;
+            }
+            if (timer.totalPlayTimeMs !== undefined && timer.lastStateChange !== undefined) {
+                let timeLeftMs = timer.totalPlayTimeMs;
+                if (timer.status === 'play') {
+                    timeLeftMs += Date.now() - timer.lastStateChange;
                 }
-                if (timer.totalPlayTimeMs !== undefined && timer.lastStateChange !== undefined) {
-                    let timeLeftMs = timer.totalPlayTimeMs;
-                    if (timer.status === 'play') {
-                        timeLeftMs += Date.now() - timer.lastStateChange;
-                    }
-                    // If you want to enforce a max duration, do it here (not in handler)
-                }
+                // If you want to enforce a max duration, do it here (not in handler)
             }
             // Compute time penalty using canonical timer for all modes
             let canonicalElapsedMs = undefined;

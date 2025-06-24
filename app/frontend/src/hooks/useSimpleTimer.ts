@@ -304,10 +304,15 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     // Return the hook interface
     return {
         // State (use local countdown for smooth UI, fallback to backend state)
-        timeLeftMs: timerState.status === 'play' ? localTimeLeft : timerState.timeLeftMs,
+        timeLeftMs:
+            timerState.status === 'play'
+                ? localTimeLeft
+                : timerState.status === 'stop'
+                    ? 0
+                    : timerState.timeLeftMs,
         status: timerState.status,
         questionUid: timerState.questionUid,
-        durationMs: timerState.durationMs,
+        durationMs: timerState.status === 'stop' ? 0 : timerState.durationMs,
         isActive: timerState.isActive,
 
         // Actions (only work for teachers)

@@ -96,7 +96,7 @@ function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, 
             io.to(liveRoom).emit('game_timer_updated', { timer: expiredTimer });
             logger.info({ gameId, liveRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to liveRoom');
 
-            // To projection room (include questionUid for proper frontend handling)
+            // To projection room (teacher display)
             io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer: expiredTimer, questionUid: expiredTimer.questionUid });
             logger.info({ gameId, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to projectionRoom');
 
@@ -446,23 +446,22 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                             where: { uid: targetQuestionUid }
                         });
 
+                        // Declare liveRoom and projectionRoom before use
+                        const liveRoom = `game_${gameInstance.accessCode}`;
+                        const projectionRoom = `projection_${gameId}`;
+
                         if (question) {
-                            // Send question to live room
-                            const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
-                            const filteredQuestion = filterQuestionForClient(question);
-
+                            // Prepare canonical gameQuestionPayload using shared types and Zod validation
                             const gameQuestionPayload = {
-                                question: filteredQuestion,
-                                timer: timer,
-                                questionIndex: targetQuestionIndex,
-                                totalQuestions: gameState.questionUids.length
+                                question: question, // Use canonical Question type from shared/types
+                                questionState: 'active' as const,
+                                questionUid: targetQuestionUid,
+                                // Add any other required canonical fields from shared/types/socket/events
                             };
-
-                            // Send the question to the live room
-                            const liveRoom = `game_${gameInstance.accessCode}`;
-                            io.to(liveRoom).emit('game_question', gameQuestionPayload);
-                            logger.info({ gameId, targetQuestionUid, liveRoom },
-                                '[TIMER_ACTION] Sent new question to live room');
+                            // Send question to both live and projection rooms using canonical event name
+                            io.to([liveRoom, projectionRoom]).emit('game_question', gameQuestionPayload);
+                            logger.info({ gameId, targetQuestionUid, liveRoom, projectionRoom, message: '[TIMER_ACTION] Sent new question to live and projection rooms' },
+                                '[TIMER_ACTION] Sent new question to live and projection rooms');
                         }
 
                         // Broadcast question change to dashboard

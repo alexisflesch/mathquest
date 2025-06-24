@@ -43,6 +43,7 @@ export interface QuestionDisplayProps {
     showMeta?: boolean; // show metadata if true
     zoomFactor?: number; // Add zoomFactor prop
     onShowResults?: () => void; // Ajouté pour le bouton Trophy
+    onRevealLeaderboard?: () => void; // Canonical leaderboard reveal
     showResultsDisabled?: boolean; // Désactive le bouton Trophy
     correctAnswers?: number[]; // NEW: indices des réponses correctes à afficher (ex: [1,2])
     onStatsToggle?: (isDisplayed: boolean) => void; // NEW: callback for stats toggle
@@ -77,6 +78,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     showCheckbox = false, // NEW: destructure showCheckbox
     checked = false, // NEW: destructure checked
     onCheckboxChange, // NEW: destructure onCheckboxChange
+    onRevealLeaderboard, // Canonical leaderboard reveal
 }) => {
     // // Debug: Log the question data received
     // logger.info('[DEBUG QuestionDisplay] Received question:', question);
@@ -276,7 +278,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                                     className="p-1 icon-control-hover rounded-full transition-colors duration-150 ml-1"
                                     title="Clôturer la question et afficher les résultats"
                                     aria-label="Clôturer la question et afficher les résultats"
-                                    onClick={e => { e.stopPropagation(); if (onShowResults) onShowResults(); }}
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        if (onShowResults) onShowResults();
+                                        if (onRevealLeaderboard) onRevealLeaderboard();
+                                    }}
                                     disabled={disabled || showResultsDisabled}
                                 >
                                     <Trophy size={20} />

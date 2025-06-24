@@ -2,8 +2,16 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { redisClient } from '@/config/redis';
 import { ScoringService } from '../scoringService';
+import { assignJoinOrderBonus } from '@/utils/joinOrderBonus';
+import { addUserToSnapshot } from './leaderboardSnapshotService';
+import { getIO } from '@/sockets';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { ProjectionLeaderboardUpdatePayloadSchema } from '@shared/types/socket/projectionLeaderboardUpdatePayload';
+import type { ServerToClientEvents } from '@shared/types/socketEvents';
 // Use relative import for types to avoid tsconfig path issues
 import type { GameInstance, GameParticipantRecord } from '@shared/types/core/game';
+import type { LeaderboardEntry } from '@shared/types/core/participant';
+import { ParticipationType } from '@shared/types/core/participant';
 
 const logger = createLogger('GameParticipantJoinService');
 
@@ -64,6 +72,41 @@ export async function joinGame({ userId, accessCode, username, avatarEmoji }: {
                 studentProfile: { create: { cookieId: `cookie-${userId}` } }
             }
         });
+        // --- JOIN BONUS SNAPSHOT LOGIC ---
+        // Only apply join bonus if this is a new participant (not reconnection)
+        const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
+        if (joinOrderBonus > 0) {
+            const leaderboardUser: Omit<LeaderboardEntry, 'rank'> = {
+                userId,
+                username: username || `guest-${userId.substring(0, 8)}`,
+                avatarEmoji: avatarEmoji || undefined,
+                score: joinOrderBonus,
+                participationType: participationType as ParticipationType,
+                attemptCount: 1,
+                participationId: undefined
+            };
+            // Add to snapshot and emit to projection page via socket
+            const updatedSnapshot = await addUserToSnapshot(accessCode, leaderboardUser, joinOrderBonus);
+            // Emit to projection room if snapshot was updated
+            if (updatedSnapshot) {
+                const io = getIO();
+                if (io) {
+                    const projectionRoom = `projection_${gameInstance.id}`;
+                    const payload = { leaderboard: updatedSnapshot };
+                    // Validate payload with Zod before emitting
+                    const parseResult = ProjectionLeaderboardUpdatePayloadSchema.safeParse(payload);
+                    if (parseResult.success) {
+                        io.to(projectionRoom)
+                            .emit('projection_leaderboard_update', payload);
+                        logger.info({ accessCode, projectionRoom, leaderboardCount: updatedSnapshot.length }, '[LEADERBOARD] Emitted updated snapshot to projection room');
+                    } else {
+                        logger.error({ accessCode, issues: parseResult.error.issues }, '[LEADERBOARD] Invalid leaderboard snapshot payload, not emitted');
+                    }
+                } else {
+                    logger.warn({ accessCode }, '[LEADERBOARD] Socket.IO instance not available, cannot emit leaderboard snapshot');
+                }
+            }
+        }
         if (participationType === 'LIVE') {
             // Check for existing participant
             const existingLive = await prisma.gameParticipant.findFirst({

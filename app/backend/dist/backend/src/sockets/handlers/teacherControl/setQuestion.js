@@ -335,16 +335,16 @@ function setQuestionHandler(io, socket) {
                     liveRoomSocketIds,
                     payload: gameQuestionPayload
                 });
-                io.to(liveRoom).emit('game_question', gameQuestionPayload);
+                io.to(liveRoom).emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
+                // Also emit the same payload to the projection room for canonical question delivery
+                const projectionRoom = `projection_${gameId}`;
+                logger.info({
+                    projectionRoom,
+                    gameId,
+                    payload: gameQuestionPayload
+                }, '[setQuestion] Emitting GAME_QUESTION to projectionRoom');
+                io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
             }
-            // Broadcast to projection room if needed
-            const projectionRoom = `projection_${gameId}`;
-            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, {
-                questionUid: questionUid,
-                questionIndex: foundQuestionIndex,
-                totalQuestions: gameState.questionUids.length,
-                timer: gameState.timer
-            });
             logger.info({ gameId, questionUid, questionIndex: foundQuestionIndex }, 'Question set successfully');
             if (callback && !callbackCalled) {
                 callback({ success: true, gameId, questionUid });

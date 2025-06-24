@@ -146,12 +146,13 @@ function endGameHandler(io, socket) {
                 accessCode,
                 endedAt
             });
-            // To projection room
-            io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, {
-                gameId,
+            // To projection room (teacher display)
+            // Use canonical event name 'game_ended' for both live and projection rooms
+            io.to(projectionRoom).emit('game_ended', {
                 accessCode,
                 endedAt
             });
+            logger.info({ gameId, accessCode }, 'Emitted game_ended to projection room');
             logger.info({ gameId, accessCode }, 'Game ended successfully');
             // Call the callback if provided with success
             if (callback) {

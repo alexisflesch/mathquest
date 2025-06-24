@@ -57,6 +57,7 @@ interface DraggableQuestionsListProps {
     getStatsForQuestion?: (uid: string) => number[] | undefined; // Provide stats for each question
     expandedUids: Set<string>; // NEW: expanded question UIDs
     onToggleExpand: (uid: string) => void; // NEW: toggle handler
+    onRevealLeaderboard?: (uid: string) => void; // NEW: leaderboard reveal handler
 }
 
 export default function DraggableQuestionsList({
@@ -86,6 +87,7 @@ export default function DraggableQuestionsList({
     getStatsForQuestion,
     expandedUids,
     onToggleExpand,
+    onRevealLeaderboard,
 }: DraggableQuestionsListProps) {
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
@@ -197,6 +199,7 @@ export default function DraggableQuestionsList({
                             onImmediateUpdateActiveTimer={handleImmediateUpdate}
                             disabled={disabled}
                             onShowResults={onShowResults ? () => onShowResults(q.uid) : undefined}
+                            onRevealLeaderboard={onRevealLeaderboard ? () => onRevealLeaderboard(q.uid) : undefined}
                             showResultsDisabled={showResultsDisabled ? showResultsDisabled(q.uid) : false}
                             onStatsToggle={onStatsToggle ? (show) => onStatsToggle(q.uid, show) : undefined}
                             stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}

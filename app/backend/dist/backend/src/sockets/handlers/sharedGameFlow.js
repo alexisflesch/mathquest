@@ -126,6 +126,12 @@ async function runGameFlow(io, accessCode, questions, options) {
                 }
             }
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
+            // Emit to both live and projection rooms using the canonical event and payload
+            const liveRoom = `game_${accessCode}`;
+            const projectionRoom = `projection_${currentState?.gameState?.gameId || ''}`;
+            console.log(projectionRoom, 'Projection room for game flow');
+            io.to([liveRoom, projectionRoom]).emit('game_question', gameQuestionPayload);
+            logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_question', questionUid: questions[i].uid, payload: gameQuestionPayload }, '[TRACE] Emitted game_question to live and projection rooms');
             // Track question start time for all users currently in the room for server-side timing
             try {
                 const roomName = `game_${accessCode}`;
@@ -169,6 +175,9 @@ async function runGameFlow(io, accessCode, questions, options) {
             logger.info({ room: `game_${accessCode}`, event: 'game_timer_updated', payload: gameTimerUpdatePayload }, '[DEBUG] Emitting game_timer_updated');
             io.to(`game_${accessCode}`).emit('game_timer_updated', gameTimerUpdatePayload);
             logger.info({ accessCode, event: 'game_timer_updated', questionUid: questions[i].uid }, '[TRACE] Emitted game_timer_updated');
+            // Emit to both live and projection rooms using the canonical event and payload
+            io.to([liveRoom, projectionRoom]).emit('game_timer_updated', gameTimerUpdatePayload);
+            logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_timer_updated', questionUid: questions[i].uid, payload: gameTimerUpdatePayload }, '[TRACE] Emitted game_timer_updated to live and projection rooms');
             options.onQuestionStart?.(i);
             await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
             logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionUid: questions[i].uid }, '[DEBUG] Emitting correct_answers');
@@ -273,13 +282,15 @@ async function runGameFlow(io, accessCode, questions, options) {
             logger.error({ accessCode, error }, '[SharedGameFlow] Error updating tournament database fields');
         }
         // Game completed, emit game_ended with stats for navigation
+        const latestState = await gameStateService_1.default.getFullGameState(accessCode);
+        const projectionRoom = `projection_${latestState?.gameState?.gameId || ''}`;
+        const liveRoom = `game_${accessCode}`;
         const gameEndedPayload = {
             accessCode,
             totalQuestions: questions.length
         };
-        logger.info({ room: `game_${accessCode}`, event: 'game_ended', payload: gameEndedPayload }, '[DEBUG] Emitting game_ended for navigation');
-        io.to(`game_${accessCode}`).emit('game_ended', gameEndedPayload);
-        logger.info({ accessCode, event: 'game_ended' }, '[TRACE] Emitted game_ended');
+        io.to([liveRoom, projectionRoom]).emit('game_ended', gameEndedPayload);
+        logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_ended', payload: gameEndedPayload }, '[TRACE] Emitted game_ended to live and projection rooms');
         options.onGameEnd?.();
     }
     catch (error) {

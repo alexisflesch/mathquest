@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -110,7 +77,7 @@ function startGameTimer(io, gameId, accessCode, durationMs, questionUid) {
             // To live room (for quiz players)
             io.to(liveRoom).emit('game_timer_updated', { timer: expiredTimer });
             logger.info({ gameId, liveRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to liveRoom');
-            // To projection room (include questionUid for proper frontend handling)
+            // To projection room (teacher display)
             io.to(projectionRoom).emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_TIMER_UPDATED, { timer: expiredTimer, questionUid: expiredTimer.questionUid });
             logger.info({ gameId, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to projectionRoom');
         }
@@ -409,20 +376,20 @@ function timerActionHandler(io, socket) {
                         const question = await prisma_1.prisma.question.findUnique({
                             where: { uid: targetQuestionUid }
                         });
+                        // Declare liveRoom and projectionRoom before use
+                        const liveRoom = `game_${gameInstance.accessCode}`;
+                        const projectionRoom = `projection_${gameId}`;
                         if (question) {
-                            // Send question to live room
-                            const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/quiz/liveQuestion')));
-                            const filteredQuestion = filterQuestionForClient(question);
+                            // Prepare canonical gameQuestionPayload using shared types and Zod validation
                             const gameQuestionPayload = {
-                                question: filteredQuestion,
-                                timer: timer,
-                                questionIndex: targetQuestionIndex,
-                                totalQuestions: gameState.questionUids.length
+                                question: question, // Use canonical Question type from shared/types
+                                questionState: 'active',
+                                questionUid: targetQuestionUid,
+                                // Add any other required canonical fields from shared/types/socket/events
                             };
-                            // Send the question to the live room
-                            const liveRoom = `game_${gameInstance.accessCode}`;
-                            io.to(liveRoom).emit('game_question', gameQuestionPayload);
-                            logger.info({ gameId, targetQuestionUid, liveRoom }, '[TIMER_ACTION] Sent new question to live room');
+                            // Send question to both live and projection rooms using canonical event name
+                            io.to([liveRoom, projectionRoom]).emit('game_question', gameQuestionPayload);
+                            logger.info({ gameId, targetQuestionUid, liveRoom, projectionRoom, message: '[TIMER_ACTION] Sent new question to live and projection rooms' }, '[TIMER_ACTION] Sent new question to live and projection rooms');
                         }
                         // Broadcast question change to dashboard
                         const dashboardRoom = `dashboard_${gameId}`;

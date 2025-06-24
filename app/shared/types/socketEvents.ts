@@ -6,12 +6,14 @@
 import {
     feedbackPayloadSchema,
     answerFeedbackPayloadSchema,
-    gameStateUpdatePayloadSchema
+    gameStateUpdatePayloadSchema,
+    revealLeaderboardPayloadSchema
 } from './socketEvents.zod';
 import type { z } from 'zod';
 
 // Derive types from Zod schemas
 export type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
+export type RevealLeaderboardPayload = z.infer<typeof revealLeaderboardPayloadSchema>;
 
 // Import consolidated core types
 import type {
@@ -269,6 +271,8 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     quiz_connected_count: (payload: { count: number }) => void;
     projector_state: (payload: any) => void;
 
+    projection_leaderboard_update: (payload: import('./socket/projectionLeaderboardUpdatePayload').ProjectionLeaderboardUpdatePayload) => void;
+
     // Add other server-to-client events here
 }
 
@@ -307,4 +311,15 @@ export interface AnswerReceivedPayload {
     correct?: boolean;
     correctAnswers?: boolean[];
     explanation?: string;
+}
+
+/**
+ * Teacher to Server Events
+ */
+export interface TeacherToServerEvents {
+    /**
+     * Teacher requests to reveal the full leaderboard (trophy button)
+     */
+    reveal_leaderboard: (payload: RevealLeaderboardPayload) => void;
+    // ...existing events
 }

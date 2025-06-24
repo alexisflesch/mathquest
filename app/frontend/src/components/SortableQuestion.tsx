@@ -36,6 +36,7 @@ export interface SortableQuestionProps {
     showResultsDisabled?: boolean;
     onStatsToggle?: (show: boolean) => void;
     stats?: number[]; // Pass answer stats to QuestionDisplay
+    onRevealLeaderboard?: () => void;
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -71,7 +72,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled, onStatsToggle, stats }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, /* idx, */ isActive, /* isRunning, */ open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, onShowResults, showResultsDisabled, onStatsToggle, stats, onRevealLeaderboard }: SortableQuestionProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(q.uid)
     });
@@ -326,6 +327,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 disabled={true}
                 onEditTimerRequest={() => { }}
                 onShowResults={onShowResults}
+                onRevealLeaderboard={onRevealLeaderboard}
                 showResultsDisabled={showResultsDisabled}
                 onStatsToggle={onStatsToggle}
                 stats={stats}
@@ -422,6 +424,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                         disabled={disabled}
                         onEditTimerRequest={editTimerRequestHandler}
                         onShowResults={onShowResults}
+                        onRevealLeaderboard={onRevealLeaderboard}
                         showResultsDisabled={showResultsDisabled}
                         onStatsToggle={onStatsToggle}
                         stats={stats}

@@ -6,6 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.joinGame = joinGame;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
+const joinOrderBonus_1 = require("@/utils/joinOrderBonus");
+const leaderboardSnapshotService_1 = require("./leaderboardSnapshotService");
+const sockets_1 = require("@/sockets");
+const projectionLeaderboardUpdatePayload_1 = require("@shared/types/socket/projectionLeaderboardUpdatePayload");
 const logger = (0, logger_1.default)('GameParticipantJoinService');
 /**
  * Join a game using access code (refactored from GameParticipantService)
@@ -52,10 +56,7 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
         // Upsert user
         await prisma_1.prisma.user.upsert({
             where: { id: userId },
-            update: {
-                username: username || `guest-${userId.substring(0, 8)}`,
-                avatarEmoji: avatarEmoji || null,
-            },
+            update: {},
             create: {
                 id: userId,
                 username: username || `guest-${userId.substring(0, 8)}`,
@@ -64,6 +65,43 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
                 studentProfile: { create: { cookieId: `cookie-${userId}` } }
             }
         });
+        // --- JOIN BONUS SNAPSHOT LOGIC ---
+        // Only apply join bonus if this is a new participant (not reconnection)
+        const joinOrderBonus = await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, userId);
+        if (joinOrderBonus > 0) {
+            const leaderboardUser = {
+                userId,
+                username: username || `guest-${userId.substring(0, 8)}`,
+                avatarEmoji: avatarEmoji || undefined,
+                score: joinOrderBonus,
+                participationType: participationType,
+                attemptCount: 1,
+                participationId: undefined
+            };
+            // Add to snapshot and emit to projection page via socket
+            const updatedSnapshot = await (0, leaderboardSnapshotService_1.addUserToSnapshot)(accessCode, leaderboardUser, joinOrderBonus);
+            // Emit to projection room if snapshot was updated
+            if (updatedSnapshot) {
+                const io = (0, sockets_1.getIO)();
+                if (io) {
+                    const projectionRoom = `projection_${gameInstance.id}`;
+                    const payload = { leaderboard: updatedSnapshot };
+                    // Validate payload with Zod before emitting
+                    const parseResult = projectionLeaderboardUpdatePayload_1.ProjectionLeaderboardUpdatePayloadSchema.safeParse(payload);
+                    if (parseResult.success) {
+                        io.to(projectionRoom)
+                            .emit('projection_leaderboard_update', payload);
+                        logger.info({ accessCode, projectionRoom, leaderboardCount: updatedSnapshot.length }, '[LEADERBOARD] Emitted updated snapshot to projection room');
+                    }
+                    else {
+                        logger.error({ accessCode, issues: parseResult.error.issues }, '[LEADERBOARD] Invalid leaderboard snapshot payload, not emitted');
+                    }
+                }
+                else {
+                    logger.warn({ accessCode }, '[LEADERBOARD] Socket.IO instance not available, cannot emit leaderboard snapshot');
+                }
+            }
+        }
         if (participationType === 'LIVE') {
             // Check for existing participant
             const existingLive = await prisma_1.prisma.gameParticipant.findFirst({

@@ -115,8 +115,10 @@ router.post('/:accessCode/question', teacherAuth, validateRequestBody(SetQuestio
         const io = getIO();
 
         if (io) {
-            // Emit the question to all players in the game using the proper LiveQuestionPayload structure
-            io.to(`game_${accessCode}`).emit('game_question', {
+            // Emit the question to all players in the game and projection using the proper LiveQuestionPayload structure
+            const liveRoom = `game_${accessCode}`;
+            const projectionRoom = `projection_${gameInstance.id}`;
+            const payload = {
                 question: {
                     uid: updatedGameState.questionData.uid,
                     text: updatedGameState.questionData.text,
@@ -126,14 +128,15 @@ router.post('/:accessCode/question', teacherAuth, validateRequestBody(SetQuestio
                 timer: updatedGameState.timer, // Send full timer state
                 questionIndex: questionIndex,
                 totalQuestions: updatedGameState.questionUids.length,
-                questionState: 'active'
-            });
-
-            // Emit to teacher control room as well
-            io.to(`teacher_control_${updatedGameState.gameId}`).emit('game_control_question_set', {
-                questionIndex,
-                timer: updatedGameState.timer
-            });
+                questionState: 'active' as const // Fix: use string literal type
+            };
+            io.to([liveRoom, projectionRoom]).emit('game_question', payload);
+            console.log(projectionRoom)
+            // Remove or comment out legacy/teacher control emission to avoid TS error and legacy code
+            // io.to(`teacher_control_${updatedGameState.gameId}`).emit('game_control_question_set', {
+            //     questionIndex,
+            //     timer: updatedGameState.timer
+            // });
         }
 
         res.status(200).json({
@@ -196,15 +199,18 @@ router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: 
         const io = getIO();
 
         if (io && fullGameState) {
-            // Tell all players that question time is up
-            io.to(`game_${accessCode}`).emit('question_ended', {
+            // Tell all players and projection that question time is up
+            const liveRoom = `game_${accessCode}`;
+            const projectionRoom = `projection_${gameInstance.id}`;
+            const payload = {
                 questionIndex: updatedGameState.currentQuestionIndex,
                 questionUid: updatedGameState.timer?.questionUid || undefined
-            });
+            };
+            io.to([liveRoom, projectionRoom]).emit('question_ended', payload);
 
-            // Send leaderboard update
+            // Send leaderboard update to both live and projection
             if (fullGameState.leaderboard.length > 0) {
-                io.to(`game_${accessCode}`).emit('leaderboard_update', {
+                io.to([liveRoom, projectionRoom]).emit('leaderboard_update', {
                     leaderboard: fullGameState.leaderboard.slice(0, 10) // Top 10
                 });
             }
@@ -270,8 +276,10 @@ router.post('/:accessCode/end-game', teacherAuth, async (req: Request, res: Resp
         const io = getIO();
 
         if (io) {
-            // Tell all players the game has ended
-            io.to(`game_${accessCode}`).emit('game_ended', {
+            // Tell all players and projection the game has ended
+            const liveRoom = `game_${accessCode}`;
+            const projectionRoom = `projection_${gameInstance.id}`;
+            io.to([liveRoom, projectionRoom]).emit('game_ended', {
                 accessCode
             });
         }

@@ -26,6 +26,7 @@ exports.TEACHER_EVENTS = {
     // NEW: Teacher-triggered question actions
     SHOW_CORRECT_ANSWERS: 'show_correct_answers', // Trophy button: Close question and show answers
     TOGGLE_PROJECTION_STATS: 'toggle_projection_stats', // Bar graph button: Toggle stats on projection
+    REVEAL_LEADERBOARD: 'reveal_leaderboard', // Trophy button: Reveal leaderboard
     // Broadcast events (from server to client)
     GAME_CONTROL_STATE: 'game_control_state',
     DASHBOARD_JOINED: 'dashboard_joined',

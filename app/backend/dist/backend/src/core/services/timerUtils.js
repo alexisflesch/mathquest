@@ -17,6 +17,20 @@ function calculateTimerForLateJoiner(originalTimer) {
     if (!originalTimer || !originalTimer.timestamp || !originalTimer.durationMs) {
         return originalTimer || null;
     }
+    // If the timer is stopped, always return stopped state with zero time left
+    if (originalTimer.status === 'stop') {
+        logger_1.logger.info({
+            originalTimer,
+            reason: 'Timer is stopped, returning canonical stopped state for late joiner'
+        }, '[TIMER_UTILS] Timer is stopped, returning stopped state for late joiner');
+        return {
+            ...originalTimer,
+            status: 'stop',
+            timeLeftMs: 0,
+            durationMs: 0,
+            timestamp: Date.now(),
+        };
+    }
     const elapsed = Date.now() - originalTimer.timestamp;
     let timeLeftMs;
     let status;

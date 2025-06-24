@@ -6,6 +6,7 @@ import type { ErrorPayload } from '@shared/types/socketEvents';
 import * as gameStateService from '@/core/services/gameStateService';
 import { calculateTimerForLateJoiner } from '../../core/services/timerUtils';
 import { validateGameAccess } from '@/utils/gameAuthorization';
+import { getLeaderboardSnapshot } from '@/core/services/gameParticipant/leaderboardSnapshotService';
 
 const logger = createLogger('ProjectionHandler');
 
@@ -120,80 +121,84 @@ export function projectionHandler(io: Server, socket: Socket) {
 
                 let enhancedGameState = fullState.gameState;
 
-                // If there's an active question, fetch the current question data from DB (same approach as joinGameHandler)
-                if (fullState.gameState.currentQuestionIndex >= 0 || fullState.gameState.timer?.questionUid) {
-                    try {
-                        const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
-                            where: { id: gameId },
+                // --- CANONICAL: Emit current question as LiveQuestionPayload to projection socket ---
+                // Fetch all questions for this game instance (ordered)
+                const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
+                    where: { id: gameId },
+                    include: {
+                        gameTemplate: {
                             include: {
-                                gameTemplate: {
-                                    include: {
-                                        questions: {
-                                            include: { question: true },
-                                            orderBy: { sequence: 'asc' }
-                                        }
-                                    }
+                                questions: {
+                                    include: { question: true },
+                                    orderBy: { sequence: 'asc' }
                                 }
                             }
-                        });
-
-                        if (gameInstanceWithQuestions?.gameTemplate?.questions) {
-                            let currentQuestion = null;
-
-                            // Try to find question by timer.questionUid first (canonical), then by index (fallback)
-                            if (fullState.gameState.timer?.questionUid) {
-                                currentQuestion = gameInstanceWithQuestions.gameTemplate.questions
-                                    .find(q => q.question.uid === fullState.gameState.timer.questionUid)?.question;
-                            } else if (fullState.gameState.currentQuestionIndex >= 0 &&
-                                fullState.gameState.currentQuestionIndex < gameInstanceWithQuestions.gameTemplate.questions.length) {
-                                currentQuestion = gameInstanceWithQuestions.gameTemplate.questions[fullState.gameState.currentQuestionIndex]?.question;
-                            }
-
-                            if (currentQuestion) {
-                                const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
-                                const filteredQuestion = filterQuestionForClient(currentQuestion);
-
-                                // Calculate remaining time for projection using shared utility
-                                const actualTimer = calculateTimerForLateJoiner(fullState.gameState.timer);
-
-                                // Add the question data and corrected timer to the game state for projection
-                                enhancedGameState = {
-                                    ...fullState.gameState,
-                                    questionData: filteredQuestion,
-                                    timer: actualTimer || fullState.gameState.timer
-                                };
-
-                                logger.info({
-                                    gameId,
-                                    questionUid: currentQuestion.uid,
-                                    foundVia: fullState.gameState.timer?.questionUid ? 'timer.questionUid' : 'currentQuestionIndex',
-                                    originalTimeLeft: fullState.gameState.timer?.timeLeftMs,
-                                    originalStatus: fullState.gameState.timer?.status,
-                                    actualTimeLeft: actualTimer?.timeLeftMs,
-                                    actualStatus: actualTimer?.status,
-                                    elapsed: fullState.gameState.timer?.timestamp ? Date.now() - fullState.gameState.timer.timestamp : 'no timestamp'
-                                }, 'Added current question data and corrected timer to projection state');
-                            }
                         }
-                    } catch (questionFetchError) {
-                        logger.warn({ error: questionFetchError, gameId }, 'Failed to fetch current question for projection, sending without question data');
+                    }
+                });
+
+                if (fullState.gameState && gameInstanceWithQuestions?.gameTemplate?.questions) {
+                    const questionsArr = gameInstanceWithQuestions.gameTemplate.questions;
+                    let questionUid = fullState.gameState.timer?.questionUid;
+                    let questionIndex = -1;
+                    let currentQuestion = null;
+
+                    // If timer.questionUid is missing but currentQuestionIndex is valid, set timer.questionUid
+                    if (!questionUid && typeof fullState.gameState.currentQuestionIndex === 'number' && fullState.gameState.currentQuestionIndex >= 0 && fullState.gameState.currentQuestionIndex < questionsArr.length) {
+                        questionIndex = fullState.gameState.currentQuestionIndex;
+                        questionUid = questionsArr[questionIndex]?.question?.uid;
+                        // Patch timer.questionUid in memory (does not persist, but ensures projection gets correct question)
+                        fullState.gameState.timer = {
+                            ...fullState.gameState.timer,
+                            questionUid
+                        };
+                    }
+
+                    // Now, always use questionUid as canonical
+                    if (questionUid) {
+                        const found = questionsArr.findIndex((q: any) => q.question.uid === questionUid);
+                        if (found !== -1) {
+                            currentQuestion = questionsArr[found].question;
+                            questionIndex = found;
+                        }
+                    }
+
+                    if (currentQuestion) {
+                        const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
+                        const filteredQuestion = filterQuestionForClient(currentQuestion);
+                        const totalQuestions = questionsArr.length;
+                        // Use canonical timer logic for projection
+                        const actualTimer = calculateTimerForLateJoiner(fullState.gameState.timer);
+                        const liveQuestionPayload = {
+                            question: filteredQuestion,
+                            timer: actualTimer || fullState.gameState.timer,
+                            questionIndex,
+                            totalQuestions,
+                            questionState: 'active'
+                        };
+                        // Emit to the joining projection socket only (canonical event)
+                        socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION, liveQuestionPayload);
+                        logger.info({ gameId, questionUid: filteredQuestion.uid, questionIndex, totalQuestions }, '[PROJECTION] Emitted canonical LiveQuestionPayload to projection socket on join');
                     }
                 }
+
+                // Fetch the leaderboard snapshot (join-bonus-only) for projection
+                const snapshot = await getLeaderboardSnapshot(gameInstance.accessCode);
 
                 const payload = {
                     accessCode: gameInstance.accessCode,
                     gameState: enhancedGameState,
                     participants: fullState.participants,
                     answers: fullState.answers,
-                    leaderboard: fullState.leaderboard
+                    leaderboard: snapshot // Use snapshot, not full leaderboard
                 };
 
                 // DEBUG: Log the leaderboard being sent to projection
                 logger.info({
                     gameId,
                     accessCode: gameInstance.accessCode,
-                    leaderboardCount: fullState.leaderboard?.length || 0,
-                    leaderboard: fullState.leaderboard?.map((entry: any) => ({
+                    leaderboardCount: snapshot?.length || 0,
+                    leaderboard: snapshot?.map((entry: any) => ({
                         userId: entry.userId,
                         username: entry.username,
                         avatarEmoji: entry.avatarEmoji,

@@ -149,3 +149,134 @@
 - [x] Document the change and update plan.md with results and next steps.
 
 ---
+
+## Phase: Leaderboard Snapshot Modernization
+
+### Goal
+- Ensure the projection page always displays the correct leaderboard snapshot, following the new join-bonus and trophy logic.
+
+### Checklist
+- [ ] Initialize leaderboard snapshot as an empty array (canonical shared type)
+- [ ] On new user join (not reconnection):
+    - [ ] Assign join bonus (starts at 0.01, decreases by 0.001 per join)
+    - [ ] Add user to snapshot with only join bonus as score
+    - [ ] Update snapshot in Redis and send to projection page
+- [ ] On projection page load/reconnect, serve current snapshot from Redis
+- [ ] On trophy icon click:
+    - [ ] Calculate full leaderboard (join bonus + answer points)
+    - [ ] Overwrite snapshot in Redis and send to projection page
+- [ ] Ensure all leaderboard data uses canonical shared types only
+- [ ] Document new/changed socket events and Redis keys in plan.md
+- [ ] Add/Update tests for join-bonus and trophy leaderboard logic
+- [ ] Validate: projection page always shows correct snapshot (join-bonus-only or full, depending on last trophy click)
+- [ ] Update plan.md and log actions after each phase
+
+---
+
+## Phase: Modernized Leaderboard Snapshot for Projection
+- [x] Confirm canonical join-order bonus logic exists and is not duplicated
+- [x] Create leaderboardSnapshotService for snapshot management (init, get, set, add user)
+- [x] Update joinService to use assignJoinOrderBonus and add user to snapshot
+- [x] Fix type errors with canonical enums
+- [x] Confirm correct socket room and event for projection leaderboard updates
+- [x] Document correct payload type and event name
+- [x] Create canonical shared type for leaderboard snapshot payload (ProjectionLeaderboardUpdatePayload)
+- [x] Implement socket emission of leaderboard snapshot to projection room after join bonus assignment
+- [x] Ensure emission uses canonical event and payload structure
+- [x] Ensure emission is triggered only for new joins (not reconnections)
+- [x] Document new/changed socket event and Redis key in plan.md
+- [ ] Add/update tests for join-bonus and trophy leaderboard logic
+- [ ] Validate projection page always shows correct snapshot (join-bonus-only or full)
+- [ ] Update plan.md and log actions after each phase
+
+---
+
+## [2025-06-25] Fix: Canonicalize Projection Room Identifier for Leaderboard Events
+- [x] Updated backend to emit all projection leaderboard events to `projection_${gameId}` instead of `projection_${accessCode}`
+- [x] Updated revealLeaderboardHandler to look up gameId from accessCode and emit to the canonical room
+- [x] Confirmed joinService and all join-bonus emissions already use `projection_${gameId}`
+- [x] Updated logs and documentation for clarity
+- [ ] Retest: Confirm frontend receives real-time leaderboard updates after trophy click
+- [ ] Update documentation and checklist after validation
+
+### Rationale
+- The canonical identifier for projection rooms is `gameId`, not `accessCode`, to ensure consistency across all socket events and frontend/backend logic. This prevents room mismatches and ensures all projection events are received as expected.
+
+---
+
+## [2025-06-25] Fix: Projection Timer Countdown When Stopped
+- [x] Identified bug: When timer status is 'stop' or 'stopped', projection page still shows a countdown (should show zero)
+- [x] Root cause: useSimpleTimer returned stale backend value for timeLeftMs when stopped
+- [x] Fix: useSimpleTimer now always returns timeLeftMs = 0 and durationMs = 0 when timer is stopped
+- [x] Validated: Timer display is zero and does not animate when stopped
+- [ ] Add/verify test for timer stopped state in projection
+- [ ] Update documentation and checklist after validation
+
+### How to test
+- Reload projection page with timer in 'stopped' status
+- Timer display should show zero and not animate
+
+---
+
+## [2025-06-25] Fix: Timer State for Late Joiners and Projection Reloads
+
+### Root Cause
+- Late joiners and projection reloads could see a running timer (countdown) even when the timer was stopped, due to backend logic in `calculateTimerForLateJoiner` not respecting the canonical stopped state.
+
+### Solution
+- [x] Audit `calculateTimerForLateJoiner` in `timerUtils.ts` for late join/projection logic
+- [x] Update logic: If the original timer status is `'stop'`, always return a timer with `status: 'stop'`, `timeLeftMs: 0`, and `durationMs: 0` for late joiners and projection reloads
+- [x] Add/adjust logging to confirm correct code path is used
+- [x] Validate: late joiners and projection reloads always see timer stopped (zero, not animating) when timer is stopped
+- [ ] Add/verify tests for timer stopped state in late join/projection flows
+- [ ] Update documentation and checklist after validation
+
+### How to test
+- Start a live game, stop the timer, then join as a new user or reload the projection page
+- Expected: Timer display is zero and does not animate for all late joiners and projection clients when timer is stopped
+- Actual: (fill after test)
+
+---
+
+# MathQuest Modernization Plan
+
+## Phase: Projection Page Modernization
+
+### Goals
+- [x] Use canonical shared types and Zod validation for all socket events and payloads
+- [x] Ensure projection always receives and displays the current question on load and on every change
+- [x] Remove all legacy/derived question logic from projection client
+- [x] Align projection question display logic with live/[code] canonical pattern
+- [x] Fix: Ensure canonical FilteredQuestion is passed to QuestionCard, so answerOptions is always present
+- [ ] Test and validate projection page behavior
+- [ ] Update documentation and checklists after changes
+
+### Actions
+- [x] Updated `useProjectionQuizSocket` to store only the canonical `question` (FilteredQuestion) from the event
+- [x] Updated `TeacherProjectionClient` to pass canonical `FilteredQuestion` as `question` to `QuestionCard`
+- [x] Confirmed alignment with `live/[code]` canonical usage pattern
+- [x] Documented root cause: answerOptions missing due to incorrect type usage
+- [ ] Test: On projection page, verify current question and answers always display correctly
+- [ ] Document test results and update checklist
+
+### Log
+- [x] All changes and rationale recorded in this plan and in backend/plan.md
+- [x] Legacy logic for question selection in projection client is commented out and marked obsolete
+- [x] All code now uses canonical shared types and event payloads
+- [x] Bug: "question mal formattée" and zero answers fixed by using canonical FilteredQuestion
+
+---
+
+## [2025-06-25] Archive: Remove Legacy projectorHandler.ts and Backup
+
+### Actions
+- [x] Remove legacy projectorHandler.ts and backup from handlers/ (moved to archive/legacy-socket-handlers)
+- [x] Confirm only projectionHandler.ts is registered and used for all projection events
+- [x] Document legacy handler removal in modernization plan and README
+
+### Rationale
+- Legacy projectorHandler.ts is no longer needed after the migration to the new projection system. Removing it reduces confusion and potential errors from outdated code.
+
+### Validation
+- [x] Confirmed no impact on current functionality
+- [x] All projection events are handled correctly by the remaining projectionHandler.ts

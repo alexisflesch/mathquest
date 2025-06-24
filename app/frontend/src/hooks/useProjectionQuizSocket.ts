@@ -19,6 +19,7 @@ import { useGameSocket } from './useGameSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { Question, TimerStatus } from '@shared/types';
 import type { GameState } from '@shared/types/core/game';
+import { ProjectionLeaderboardUpdatePayload, ProjectionLeaderboardUpdatePayloadSchema } from '@shared/types/socket/projectionLeaderboardUpdatePayload';
 
 const logger = createLogger('useProjectionQuizSocket');
 
@@ -53,6 +54,9 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
     // Error state that page can handle
     const [socketError, setSocketError] = useState<any>(null);
+
+    // --- Canonical: store the current question from projection_question_changed event ---
+    const [currentQuestionPayload, setCurrentQuestionPayload] = useState<import('@shared/types/quiz/liveQuestion').FilteredQuestion | null>(null);
 
     // Use modern timer with projection role
     const timer = useSimpleTimer({
@@ -157,8 +161,9 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         if (!socket.socket) return;
 
         // Handle question changes from teacher dashboard (timer updates will come through timer system)
-        const handleQuestionChanged = (payload: { question: Question; questionUid: string }) => {
+        const handleQuestionChanged = (payload: { question: import('@shared/types/quiz/liveQuestion').FilteredQuestion; questionUid: string }) => {
             logger.info('📋 Projection question changed:', payload);
+            setCurrentQuestionPayload(payload.question); // Store only the canonical question
             // Timer updates will be handled by useSimpleTimer automatically
             // Game state will be updated via PROJECTION_STATE events
         };
@@ -170,46 +175,32 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
 
         // Handle leaderboard updates when students join (UX enhancement for teacher projection)
-        const handleLeaderboardUpdate = (payload: { leaderboard: Array<any>; accessCode?: string; timestamp?: number }) => {
+        const handleLeaderboardUpdate = (payload: ProjectionLeaderboardUpdatePayload) => {
+            // DEBUG: Log raw leaderboard update event
+            console.log('🟡 [PROJECTION] Received PROJECTION_LEADERBOARD_UPDATE event:', payload);
+            logger.info('🟡 [PROJECTION] Received PROJECTION_LEADERBOARD_UPDATE event:', payload);
+            // Validate with Zod
+            const parseResult = ProjectionLeaderboardUpdatePayloadSchema.safeParse(payload);
+            if (!parseResult.success) {
+                logger.warn('⚠️ [PROJECTION-FRONTEND] Invalid leaderboard payload received:', parseResult.error.issues);
+                return;
+            }
             logger.info('🏆 [PROJECTION-FRONTEND] Leaderboard update received:', {
                 hasLeaderboard: !!payload.leaderboard,
                 leaderboardLength: payload.leaderboard?.length || 0,
-                accessCode: payload.accessCode,
-                timestamp: payload.timestamp,
-                topPlayers: payload.leaderboard?.slice(0, 3).map((p: any) => ({ username: p.username, score: p.score })) || []
+                topPlayers: payload.leaderboard?.slice(0, 3).map((p) => ({ username: p.username, score: p.score })) || []
             });
-
-            if (payload.leaderboard && Array.isArray(payload.leaderboard)) {
-                // Add detailed logging to debug username issues
-                payload.leaderboard.forEach((entry: any, index: number) => {
-                    logger.debug({
-                        index,
-                        entry,
-                        username: entry.username,
-                        usernameType: typeof entry.username,
-                        usernameLength: entry.username?.length,
-                        isTruthy: !!entry.username,
-                        fallbackWillTrigger: !entry.username
-                    }, '🔍 [FRONTEND-DEBUG] Processing leaderboard entry for username');
-                });
-
-                const processedLeaderboard = payload.leaderboard.map((entry: any) => ({
-                    userId: entry.userId,
-                    username: entry.username || 'Unknown Player',
-                    avatarEmoji: entry.avatarEmoji,
-                    score: entry.score || 0
-                }));
-
-                setLeaderboard(processedLeaderboard);
-
-                logger.info({
-                    accessCode: payload.accessCode,
-                    leaderboardCount: processedLeaderboard.length,
-                    topScores: processedLeaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
-                }, '✅ [PROJECTION-FRONTEND] Updated projection leaderboard state');
-            } else {
-                logger.warn('⚠️ [PROJECTION-FRONTEND] Invalid leaderboard payload received:', payload);
-            }
+            const processedLeaderboard = payload.leaderboard.map((entry) => ({
+                userId: entry.userId,
+                username: entry.username || 'Unknown Player',
+                avatarEmoji: entry.avatarEmoji,
+                score: entry.score || 0
+            }));
+            setLeaderboard(processedLeaderboard);
+            logger.info({
+                leaderboardCount: processedLeaderboard.length,
+                topScores: processedLeaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
+            }, '✅ [PROJECTION-FRONTEND] Updated projection leaderboard state');
         };        // Handle game state updates (including initial state from getFullGameState)
         const handleGameStateUpdate = (payload: any) => {
             logger.info('🎮 Game state update received:', payload);
@@ -320,9 +311,9 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
 
         // Listen to projection events using shared constants (with type casting until types are updated)
-        logger.debug('🎧 [PROJECTION-FRONTEND] Setting up projection event listeners:', {
+        logger.debug('\ud83c\udfa7 [PROJECTION-FRONTEND] Setting up projection event listeners:', {
             events: [
-                SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED,
+                SOCKET_EVENTS.GAME.GAME_QUESTION,
                 SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT,
                 SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE,
                 SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE,
@@ -332,7 +323,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             ]
         });
 
-        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, handleQuestionChanged);
+        (socket.socket as any).on(SOCKET_EVENTS.GAME.GAME_QUESTION, handleQuestionChanged);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT, handleConnectedCount);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, handleLeaderboardUpdate);
@@ -345,28 +336,32 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         // DEBUG: Add a catch-all listener to see what events are being received
         const handleAnyEvent = (eventName: string, ...args: any[]) => {
             if (eventName.includes('projection') || eventName.includes('stats')) {
-                console.log('🔍🔍🔍 [DEBUG-PROJECTION] Event received:', { eventName, args });
-                logger.info('🔍 [DEBUG-PROJECTION] Event received:', { eventName, args });
+                console.log('\ud83d\udd0d\ud83d\udd0d\ud83d\udd0d [DEBUG-PROJECTION] Event received:', { eventName, args });
+                logger.info('\ud83d\udd0d [DEBUG-PROJECTION] Event received:', { eventName, args });
             }
         };
 
         // Listen for all events for debugging
         (socket.socket as any).onAny?.(handleAnyEvent);
 
-        // DEBUG: Add generic listeners to catch all projection events
-        (socket.socket as any).on('projection_show_stats', (payload: any) => {
-            console.log('🔍 [DEBUG-PROJECTION] Raw projection_show_stats event received:', payload);
-            logger.info('🔍 [DEBUG-PROJECTION] Raw projection_show_stats event received:', payload);
-            handleProjectionShowStats(payload);
-        });
-        (socket.socket as any).on('projection_hide_stats', (payload: any) => {
-            console.log('🔍 [DEBUG-PROJECTION] Raw projection_hide_stats event received:', payload);
-            logger.info('🔍 [DEBUG-PROJECTION] Raw projection_hide_stats event received:', payload);
-            handleProjectionHideStats(payload);
-        });
+        // DEBUG: Add global event listener to log all received events and their payloads
+        const handleAllSocketEvents = (...args: any[]) => {
+            const eventName = args[0];
+            const payload = args.slice(1);
+            // Only log if eventName is a string (Socket.IO v4+ passes event name as first arg)
+            if (typeof eventName === 'string') {
+                console.log('\ud83d\udfe2 [SOCKET-ALL] Event received:', eventName, ...payload);
+                logger.info('\ud83d\udfe2 [SOCKET-ALL] Event received:', { eventName, payload });
+            } else {
+                // Fallback for older Socket.IO versions
+                console.log('\ud83d\udfe2 [SOCKET-ALL] Event received (no eventName):', ...args);
+                logger.info('\ud83d\udfe2 [SOCKET-ALL] Event received (no eventName):', { args });
+            }
+        };
+        (socket.socket as any).onAny?.(handleAllSocketEvents);
 
         return () => {
-            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_QUESTION_CHANGED, handleQuestionChanged);
+            (socket.socket as any)?.off(SOCKET_EVENTS.GAME.GAME_QUESTION, handleQuestionChanged);
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_CONNECTED_COUNT, handleConnectedCount);
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
             (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, handleLeaderboardUpdate);
@@ -379,6 +374,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             (socket.socket as any)?.offAny?.(handleAnyEvent);
             (socket.socket as any)?.off('projection_show_stats');
             (socket.socket as any)?.off('projection_hide_stats');
+            (socket.socket as any)?.offAny?.(handleAllSocketEvents);
         };
     }, [socket.socket]);
 
@@ -389,7 +385,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
         // Game state using canonical types
         gameState,
-        currentQuestion: null, // Questions need to be fetched separately based on questionUids
+        currentQuestion: currentQuestionPayload, // NEW: Expose current question payload
         currentQuestionUid: timerQuestionUid, // Use timer's questionUid instead of index
         connectedCount,
         gameStatus: gameState?.status ?? 'pending',

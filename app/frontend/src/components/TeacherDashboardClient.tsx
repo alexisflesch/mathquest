@@ -361,6 +361,25 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     };
     const cancelEndQuiz = () => { setShowEndQuizConfirm(false); };
 
+    // Handler for trophy button: show correct answers AND reveal leaderboard
+    const handleTrophyClick = useCallback((questionUid: string) => {
+        if (!quizSocket) return;
+        // 1. Show correct answers (existing behavior)
+        const showAnswersPayload = {
+            accessCode: code,
+            gameId,
+            questionUid,
+            teacherId: userProfile?.userId
+        };
+        quizSocket.emit(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, showAnswersPayload);
+        // 2. Reveal leaderboard (new canonical event)
+        const revealLeaderboardPayload = { accessCode: code };
+        quizSocket.emit(SOCKET_EVENTS.TEACHER.REVEAL_LEADERBOARD, revealLeaderboardPayload);
+        setTimeout(() => {
+            setSnackbarMessage(`Affichage des bonnes réponses et du classement final pour la question ${questionUid}`);
+        }, 0);
+    }, [quizSocket, code, gameId, userProfile?.userId]);
+
     // Fetch quiz/activity name from API for reliability
     useEffect(() => {
         async function fetchQuizName() {
@@ -454,25 +473,27 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             {loading && <InfinitySpin size={32} />}
                         </div>
                         <DraggableQuestionsList
+                            quizId={code}
+                            currentTournamentCode={gameId}
                             quizSocket={quizSocket}
                             questions={mappedQuestions}
                             currentQuestionIdx={quizState?.currentQuestionidx}
                             isChronoRunning={quizState?.chrono?.running}
                             isQuizEnded={quizState?.ended}
                             questionActiveUid={questionActiveUid}
-                            timerStatus={timerStatus}
-                            timerQuestionUid={timerQuestionUid}
-                            timeLeftMs={timeLeftMs}
                             onSelect={handleSelect}
                             onPlay={handlePlay}
                             onPause={handlePause}
                             onStop={handleStop}
                             onEditTimer={handleEditTimer}
                             onReorder={handleReorder}
-                            quizId={gameId || ''}
-                            currentTournamentCode={code || ''}
+                            timerStatus={timerStatus}
+                            timerQuestionUid={timerQuestionUid}
+                            timeLeftMs={timeLeftMs}
                             onTimerAction={handleTimerAction}
                             disabled={isDisabled}
+                            onShowResults={handleTrophyClick}
+                            onRevealLeaderboard={handleTrophyClick}
                             expandedUids={expandedUids}
                             onToggleExpand={handleToggleExpand}
                             getStatsForQuestion={(uid: string) => {
@@ -491,8 +512,6 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                 }
                                 return undefined;
                             }}
-                            onShowResults={handleShowResults}
-                            onStatsToggle={handleStatsToggle}
                         />
                     </section>
                 )}
