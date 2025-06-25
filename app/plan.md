@@ -470,3 +470,56 @@ Modernize and robustly unify the timer edit/display UX in the teacher dashboard 
 - 2025-06-24: Unified timer edit UX, moved Set 44s test button to QuestionDisplay, and ensured backend propagation and logging.
 
 ---
+
+## Phase: Canonical Timer Edit Modernization & Bugfix (2024-06-24)
+
+### Root Cause
+- Timer edit events sent the wrong `timeLeftMs` to the backend during play (sending the current value, not the new intended value).
+- Local timer state in `useSimpleTimer.ts` did not always reset to the backend's updated `timeLeftMs` and `durationMs` after an edit, especially during play.
+- Timer display logic in `SortableQuestion.tsx` sometimes fell back to the original `q.timeLimit` instead of always using the backend-driven timer state.
+
+### Canonical Flow
+- All timer edits emit a canonical socket event with the new intended value as both `durationMs` and `timeLeftMs`.
+- The backend emits the updated timer state to all clients.
+- The frontend always resets its local timer state and countdown to the backend's `timeLeftMs` and `durationMs` on any timer update, including during play.
+- The timer display always reflects the backend-driven timer state, regardless of play/pause/stop.
+
+### Checklist
+- [x] Update timer edit logic to send the new intended value as both `durationMs` and `timeLeftMs` to the backend.
+- [x] Ensure `useSimpleTimer.ts` always resets local timer state and countdown to backend's timer state on any update.
+- [x] Modernize timer display logic in `SortableQuestion.tsx` to always use backend-driven timer state for display.
+- [x] Add/clarify comments and logging for canonical timer edit and update flow.
+- [x] Document all findings and changes in `plan.md`.
+
+### Test/Validation Steps
+1. Edit a timer in the teacher dashboard while stopped: timer should update to the new value and display it immediately.
+2. Edit a timer while playing: timer should reset and count down from the new value, not the previous value.
+3. Edit a timer while paused: timer should update to the new value and remain paused at the new value.
+4. Confirm that all timer edits are logged and backend emits the correct update event.
+5. Confirm that the timer display always matches the backend state, regardless of play/pause/stop.
+6. Regression: play, pause, stop, and edit actions should all work as expected and remain in sync across clients.
+
+### Log
+- 2024-06-24: Fixed canonical timer edit bug, ensured local state reset and backend-driven display, updated documentation and checklist.
+
+---
+
+## Phase: Canonical Timer Edit UX (2025-06-25)
+
+### Rationale
+- When timer is stopped/paused, editing sets both `durationMs` and `timeLeftMs` to the new value (canonical duration for the question).
+- When timer is running, editing sets only `timeLeftMs` (live adjustment), but `durationMs` remains the canonical value for the question.
+- This matches user expectations and ensures backend/UX consistency.
+- All payloads use canonical shared types; `durationMs` is always present, but only updated when appropriate.
+
+### Checklist
+- [x] Update `handleEditTimer` and `handleTimerAction` to send only new `timeLeftMs` (and keep `durationMs` unchanged) when editing during play.
+- [x] When stopped/paused, send both as the new value.
+- [x] Log all actions for clarity and audit.
+- [x] Document canonical UX and checklist in plan.md.
+- [ ] Validate in UI: editing during play only changes countdown, not canonical duration; editing while stopped/paused changes both.
+
+### Test/Validation Steps
+- Edit timer while running: countdown updates, canonical duration remains unchanged.
+- Edit timer while stopped/paused: both countdown and canonical duration update.
+- All timer edit actions are logged and backend receives correct payload.

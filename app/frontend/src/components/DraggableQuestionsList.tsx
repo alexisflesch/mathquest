@@ -175,10 +175,16 @@ export default function DraggableQuestionsList({
                 {questions.length === 0 && <li key="no-questions">Aucune question pour ce quiz.</li>}
                 {questions.map((q, idx) => {
                     const isActive = q.uid === questionActiveUid;
+                    // Compute canonical durationMs: if this is the active question, use timeLeftMs when stopped, otherwise use q.timeLimit
+                    let canonicalDurationMs = q.timeLimit;
+                    if (isActive && timerStatus === 'stop' && typeof timeLeftMs === 'number' && timeLeftMs > 0) {
+                        canonicalDurationMs = timeLeftMs;
+                    }
                     return (
                         <SortableQuestion
                             key={q.uid}
                             q={q}
+                            durationMs={canonicalDurationMs ?? 0}
                             isActive={isActive}
                             open={expandedUids.has(q.uid)}
                             setOpen={() => onToggleExpand(q.uid)}

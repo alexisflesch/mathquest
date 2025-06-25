@@ -148,7 +148,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const baseMetaFontSize = '0.75rem'; // Assuming text-xs for metadata
 
     // Affichage du timer (non éditable dans ce composant)
-    const roundedTimeLeft = typeof timeLeftMs === 'number' ? Math.floor(timeLeftMs) : 0;
+    // Use Math.ceil to match live page: always show full value for first second
+    const roundedTimeLeft = typeof timeLeftMs === 'number' ? Math.ceil(timeLeftMs / 1000) * 1000 : 0;
     // Convert ms to mm:ss for TimerField
     const msToMMSS = (ms: number) => {
         const totalSeconds = Math.floor(ms / 1000);
@@ -169,7 +170,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                         onEditTimer(newTime);
                     }
                 }}
-                // readOnly prop removed: TimerField does not support it, editability is controlled by parent context
+            // readOnly prop removed: TimerField does not support it, editability is controlled by parent context
             />
         </span>
     );

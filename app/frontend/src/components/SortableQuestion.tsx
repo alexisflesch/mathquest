@@ -31,6 +31,7 @@ export interface SortableQuestionProps {
     onImmediateUpdateActiveTimer?: (newTime: number) => void; // Gardé pour la synchro active
     disabled?: boolean;
     stats?: number[]; // Accepts number[] for per-question stats bar
+    durationMs: number; // Canonical duration from parent
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -66,7 +67,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs }: SortableQuestionProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(q.uid)
     });
@@ -128,22 +129,22 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
         }
     }, [isActive, liveStatus, liveTimeLeft, q.timeLimit, q.uid]);
 
-    // Optimize displayedTimeLeft logic - use useMemo to prevent recalculation
+    // Optimize displayedTimeLeft logic - always use backend-driven timer state
     const displayedTimeLeft = React.useMemo(() => {
         if (isActive) {
-            if (liveStatus === 'stop') {
-                // When stopped, always show the original question time (already in ms from backend)
+            if (liveStatus === 'play' || liveStatus === 'pause') {
+                // Show liveTimeLeft (countdown) during play/pause
+                if (typeof liveTimeLeft === 'number') return liveTimeLeft;
                 return q.timeLimit ?? 0;
-            } else if (liveStatus === 'pause' || liveStatus === 'play') {
-                // For pause/play, use liveTimeLeft from backend, fallback to original time
-                return liveTimeLeft ?? (q.timeLimit ?? 0);
-            } else {
+            } else if (liveStatus === 'stop') {
+                // Show canonical durationMs from backend when stopped
+                if (typeof durationMs === 'number') return durationMs;
                 return q.timeLimit ?? 0;
             }
-        } else {
-            return q.timeLimit ?? 0;
         }
-    }, [isActive, liveStatus, liveTimeLeft, q.timeLimit]);
+        // For inactive questions, show canonical timeLimit
+        return q.timeLimit ?? 0;
+    }, [isActive, liveStatus, liveTimeLeft, durationMs, q.timeLimit]);
 
     // Clear pendingTimeValue when backend confirms the update - moved to useEffect
     useEffect(() => {

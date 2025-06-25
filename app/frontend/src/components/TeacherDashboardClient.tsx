@@ -300,11 +300,18 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const handleStop = useCallback(() => { stopTimer(); }, [stopTimer]);
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
         logger.info(`[DASHBOARD] handleEditTimer called`, { uid, newTime });
-        // Always send both durationMs and timeLeftMs for explicit timer edits
-        editTimer(uid, newTime * 1000, newTime * 1000);
-        logger.info(`[DASHBOARD] Timer duration edit emitted for question ${uid}: ${newTime}s`);
-    }, [editTimer]);
-    const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop', questionUid: string, timeLeftMs: number }) => {
+        // Canonical: if timer is running, only update timeLeftMs; if stopped/paused, update both
+        if (timerStatus === 'play') {
+            logger.info(`[DASHBOARD] Timer is running: editing only timeLeftMs, keeping durationMs canonical`, { uid, newTime, durationMs: timeLeftMs });
+            // Use canonical durationMs from timer state (not newTime)
+            editTimer(uid, timeLeftMs, newTime * 1000);
+        } else {
+            logger.info(`[DASHBOARD] Timer is stopped/paused: editing both durationMs and timeLeftMs`, { uid, newTime });
+            editTimer(uid, newTime * 1000, newTime * 1000);
+        }
+        logger.info(`[DASHBOARD] Timer edit emitted for question ${uid}: ${newTime}s`);
+    }, [editTimer, timerStatus, timeLeftMs]);
+    const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop' | 'edit', questionUid: string, timeLeftMs: number, newTime?: number }) => {
         switch (action.status) {
             case 'play':
                 startTimer(action.questionUid, action.timeLeftMs);
@@ -315,8 +322,21 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             case 'stop':
                 stopTimer();
                 break;
+            case 'edit': {
+                logger.info(`[DASHBOARD] handleEditTimer (via handleTimerAction) called`, { uid: action.questionUid, newTime: action.newTime });
+                const editSeconds = typeof action.newTime === 'number' ? action.newTime : Math.round(action.timeLeftMs / 1000);
+                if (timerStatus === 'play') {
+                    logger.info(`[DASHBOARD] Timer is running: editing only timeLeftMs, keeping durationMs canonical`, { uid: action.questionUid, editSeconds, durationMs: timeLeftMs });
+                    editTimer(action.questionUid, timeLeftMs, editSeconds * 1000);
+                } else {
+                    logger.info(`[DASHBOARD] Timer is stopped/paused: editing both durationMs and timeLeftMs`, { uid: action.questionUid, editSeconds });
+                    editTimer(action.questionUid, editSeconds * 1000, editSeconds * 1000);
+                }
+                logger.info(`[DASHBOARD] Timer edit emitted for question ${action.questionUid}: ${editSeconds}s`);
+                break;
+            }
         }
-    }, [startTimer, pauseTimer, stopTimer]);
+    }, [startTimer, pauseTimer, stopTimer, editTimer, timerStatus, timeLeftMs]);
     const handleReorder = useCallback((newQuestions: Question[]) => {
         setQuestions(newQuestions);
     }, []);
