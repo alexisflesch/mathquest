@@ -43,6 +43,7 @@ const prisma_1 = require("@/db/prisma");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = __importStar(require("@/core/services/gameStateService"));
+const questionServiceInstance_1 = require("@/core/services/questionServiceInstance");
 const socketEvents_zod_dashboard_1 = require("@shared/types/socketEvents.zod.dashboard");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('TeacherControlHelpers');
@@ -107,39 +108,17 @@ async function getGameControlState(gameId, userId, isTestEnvironment) {
             return { controlState: null, errorDetails: 'Game state not found in Redis' };
         }
         const gameState = fullState.gameState;
-        // Transform questions for the dashboard using canonical Zod type
+        // Transform questions for the dashboard using canonical normalization
         const questions = gameTemplate.questions.map((q) => {
             const question = q.question;
-            // Canonicalize questionType (map legacy to canonical if needed)
-            let canonicalType = question.questionType;
-            if (typeof canonicalType === 'string') {
-                if (canonicalType.toUpperCase() === 'SINGLE_CORRECT' || canonicalType.toUpperCase() === 'SINGLE_CHOICE') {
-                    canonicalType = 'SINGLE_CHOICE';
-                } // Add more mappings as needed
-            }
-            else {
-                canonicalType = 'SINGLE_CHOICE';
-            }
-            // Only emit canonical fields, never legacy (e.g., no timeLimit)
-            return {
+            // Use canonical normalization for all questions
+            const normalized = questionServiceInstance_1.questionService["normalizeQuestion"](question);
+            logger.info({
                 uid: question.uid,
-                text: question.text ?? '',
-                questionType: canonicalType,
-                discipline: question.discipline ?? '',
-                themes: Array.isArray(question.themes) ? question.themes : [],
-                difficulty: typeof question.difficulty === 'number' ? question.difficulty : 1,
-                gradeLevel: question.gradeLevel ?? '',
-                explanation: question.explanation ?? undefined,
-                tags: Array.isArray(question.tags) ? question.tags : [],
-                isHidden: !!question.isHidden,
-                createdAt: question.createdAt,
-                updatedAt: question.updatedAt,
-                answerOptions: Array.isArray(question.answerOptions) ? question.answerOptions : [],
-                correctAnswers: Array.isArray(question.correctAnswers) ? question.correctAnswers : [],
-                feedbackWaitTime: typeof question.feedbackWaitTime === 'number' ? question.feedbackWaitTime : 3,
-                // durationMs is only allowed in question definitions, not in timer state/actions
-                durationMs: typeof question.durationMs === 'number' ? question.durationMs : 30000
-            };
+                input: question,
+                normalized
+            }, '[DASHBOARD_NORMALIZE] Dashboard question normalization');
+            return normalized;
         });
         // Get participant count
         const participantCount = await redis_1.redisClient.hlen(`mathquest:game:participants:${gameInstance.accessCode}`);

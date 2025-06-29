@@ -16,6 +16,32 @@ const logger = (0, logger_1.default)('CanonicalTimerService');
  * - Practice: no timer (all timer methods are no-ops)
  */
 class CanonicalTimerService {
+    /**
+     * Stop the timer for a question, setting status to 'stop' and clearing time left.
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: no timer
+     */
+    async stopTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
+        if (playMode === 'practice')
+            return null;
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
+        const now = Date.now();
+        // Overwrite timer state to canonical STOP
+        const timer = {
+            questionUid,
+            status: 'stop',
+            startedAt: now,
+            totalPlayTimeMs: 0,
+            lastStateChange: now,
+            durationMs: 0,
+            timeLeftMs: 0,
+            timerEndDateMs: 0
+        };
+        await this.redis.set(key, JSON.stringify(timer));
+        logger.info({ accessCode, questionUid, timer }, '[TIMER][stopTimer] Stopped and updated');
+        return timer;
+    }
     constructor(redisClient) {
         this.redis = redisClient;
     }

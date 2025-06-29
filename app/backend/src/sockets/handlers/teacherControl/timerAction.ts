@@ -128,12 +128,18 @@ function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, 
 
 // Helper: fetch canonical durationMs for a question (ms, from timeLimit)
 async function getCanonicalDurationMs(questionUid: string): Promise<number> {
-    if (!questionUid) return 30000; // fallback
+    if (!questionUid) {
+        logger.warn({ questionUid }, '[getCanonicalDurationMs] No questionUid provided, using fallback 30000ms');
+        return 30000; // fallback
+    }
     const question = await prisma.question.findUnique({ where: { uid: questionUid } });
+    logger.warn({ questionUid, question, timeLimit: question?.timeLimit }, '[getCanonicalDurationMs] Fetched question for canonical duration');
     // Canonical: durationMs is always ms, but DB only has timeLimit (seconds)
     if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
+        logger.warn({ questionUid, timeLimit: question.timeLimit, durationMs: question.timeLimit * 1000 }, '[getCanonicalDurationMs] Using question.timeLimit for canonical durationMs');
         return question.timeLimit * 1000;
     }
+    logger.warn({ questionUid, question }, '[getCanonicalDurationMs] No valid timeLimit, using fallback 30000ms');
     return 30000; // fallback default
 }
 
@@ -422,7 +428,8 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     );
                     break;
                 case 'stop':
-                    await canonicalTimerService.pauseTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred);
+                    // Set timer to STOP state in Redis and emit canonical STOP timer
+                    await canonicalTimerService.stopTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred);
                     canonicalTimer = await getCanonicalTimer(
                         accessCode,
                         String(canonicalQuestionUid),
@@ -430,6 +437,10 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                         isDeferred,
                         canonicalDurationMs
                     );
+                    // Force canonicalTimer fields for STOP
+                    canonicalTimer.status = 'stop';
+                    canonicalTimer.timeLeftMs = 0;
+                    canonicalTimer.timerEndDateMs = 0;
                     break;
                 // Remove unsupported 'edit_timer' and 'set' cases from the switch statement
             }

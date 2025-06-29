@@ -359,12 +359,18 @@ export class QuestionService {
      */
     private normalizeQuestion(question: any): any {
         // Canonical: always provide durationMs in ms, never legacy timeLimit
-        const durationMs = typeof question.timeLimit === 'number' ? question.timeLimit * 1000 : 30000;
+        // DEBUG: Log question object and timeLimit before serialization
+        logger.info({
+            uid: question.uid,
+            timeLimit: question.timeLimit,
+            question: { ...question }
+        }, '[DEBUG] normalizeQuestion input');
+        const durationMs = question.timeLimit * 1000;
         const {
             timeLimit, // remove legacy
             ...rest
         } = question;
-        return {
+        const result = {
             ...rest,
             title: question.title ?? undefined,
             author: question.author ?? undefined,
@@ -373,5 +379,11 @@ export class QuestionService {
             // Add more fields here if needed
             durationMs // canonical
         };
+        logger.info({
+            uid: question.uid,
+            durationMs,
+            result
+        }, '[DEBUG] normalizeQuestion output');
+        return result;
     }
 }

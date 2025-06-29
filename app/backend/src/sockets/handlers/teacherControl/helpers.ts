@@ -3,6 +3,7 @@ import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
 import { GameControlStatePayload, QuestionForDashboard } from './types';
+import { questionService } from '@/core/services/questionServiceInstance';
 import type { GameTimerState } from '@shared/types/core/timer';
 import { gameControlStatePayloadSchema } from '@shared/types/socketEvents.zod.dashboard';
 
@@ -85,38 +86,17 @@ export async function getGameControlState(
 
         const gameState = fullState.gameState;
 
-        // Transform questions for the dashboard using canonical Zod type
+        // Transform questions for the dashboard using canonical normalization
         const questions = gameTemplate.questions.map((q: any) => {
             const question = q.question;
-            // Canonicalize questionType (map legacy to canonical if needed)
-            let canonicalType = question.questionType;
-            if (typeof canonicalType === 'string') {
-                if (canonicalType.toUpperCase() === 'SINGLE_CORRECT' || canonicalType.toUpperCase() === 'SINGLE_CHOICE') {
-                    canonicalType = 'SINGLE_CHOICE';
-                } // Add more mappings as needed
-            } else {
-                canonicalType = 'SINGLE_CHOICE';
-            }
-            // Only emit canonical fields, never legacy (e.g., no timeLimit)
-            return {
+            // Use canonical normalization for all questions
+            const normalized = questionService["normalizeQuestion"](question);
+            logger.info({
                 uid: question.uid,
-                text: question.text ?? '',
-                questionType: canonicalType,
-                discipline: question.discipline ?? '',
-                themes: Array.isArray(question.themes) ? question.themes : [],
-                difficulty: typeof question.difficulty === 'number' ? question.difficulty : 1,
-                gradeLevel: question.gradeLevel ?? '',
-                explanation: question.explanation ?? undefined,
-                tags: Array.isArray(question.tags) ? question.tags : [],
-                isHidden: !!question.isHidden,
-                createdAt: question.createdAt,
-                updatedAt: question.updatedAt,
-                answerOptions: Array.isArray(question.answerOptions) ? question.answerOptions : [],
-                correctAnswers: Array.isArray(question.correctAnswers) ? question.correctAnswers : [],
-                feedbackWaitTime: typeof question.feedbackWaitTime === 'number' ? question.feedbackWaitTime : 3,
-                // durationMs is only allowed in question definitions, not in timer state/actions
-                durationMs: typeof question.durationMs === 'number' ? question.durationMs : 30000
-            };
+                input: question,
+                normalized
+            }, '[DASHBOARD_NORMALIZE] Dashboard question normalization');
+            return normalized;
         });
 
         // Get participant count

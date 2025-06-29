@@ -1,3 +1,8 @@
+[x] Patch TeacherControlHelpers to use canonical question normalization for all dashboard questions
+[x] Add debug logging for dashboard question normalization (input and output)
+[x] Validate build (no errors)
+[ ] Validate backend logs for correct durationMs in dashboard controlState and timer payloads
+[ ] Confirm frontend receives and displays correct canonical duration for each question
 
 [x] Phase: Fix timer display for stopped questions in teacher dashboard
     - [x] Analyze logs and confirm backend/frontend timer state is correct
