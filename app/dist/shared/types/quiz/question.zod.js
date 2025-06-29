@@ -20,9 +20,8 @@ exports.questionSchema = baseQuestionSchema.extend({
     author: zod_1.z.string().optional(),
     explanation: zod_1.z.string().optional(),
     tags: zod_1.z.array(zod_1.z.string()).optional(),
-    timeLimit: zod_1.z.number().optional(),
     isHidden: zod_1.z.boolean().optional(), // Renamed from 'hidden'
-    // Removed 'correct' as it's replaced by correctAnswers
+    durationMs: zod_1.z.number({ required_error: "durationMs is required" }) // Canonical timer field
 });
 // Schema for creating a question, essentially the same as questionSchema but without uid if it's auto-generated
 exports.questionCreationSchema = exports.questionSchema.omit({ uid: true });

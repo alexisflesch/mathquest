@@ -1,11 +1,10 @@
 import { Socket } from 'socket.io';
 import type {
-    TimerActionPayload as CoreTimerActionPayload,
     GameTimerState,
     TimerStatus
 } from '@shared/types/core/timer';
 
-// Import consolidated dashboard payload types
+// Import all dashboard payloads except GameControlStatePayload
 import type {
     JoinDashboardPayload,
     PauseTimerPayload,
@@ -19,9 +18,10 @@ import type {
     DashboardGameStatusChangedPayload,
     DashboardParticipantUpdatePayload,
     DashboardAnswerStatsUpdatePayload,
-    QuestionForDashboard,
-    GameControlStatePayload
+    QuestionForDashboard
 } from '@shared/types/socket/dashboardPayloads';
+// Import only the canonical GameControlStatePayload from zod.dashboard
+import type { GameControlStatePayload } from '@shared/types/socketEvents.zod.dashboard';
 
 // Re-export for local use
 export type {
@@ -38,12 +38,8 @@ export type {
     DashboardParticipantUpdatePayload,
     DashboardAnswerStatsUpdatePayload,
     QuestionForDashboard,
+    // Only export canonical GameControlStatePayload from zod.dashboard
     GameControlStatePayload
-};
-
-// Use consolidated timer action payload
-export type TimerActionPayload = CoreTimerActionPayload & {
-    gameId: string;      // Database ID of the game instance (required for teacher control)
 };
 
 // Use core timer state instead of local definition

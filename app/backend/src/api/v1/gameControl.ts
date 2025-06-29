@@ -2,9 +2,10 @@ import express, { Request, Response } from 'express';
 import { teacherAuth } from '@/middleware/auth';
 import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
-import gameStateService from '@/core/services/gameStateService';
+import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
 import { getIO } from '@/sockets';
 import { prisma } from '@/db/prisma';
+import { gameTimerStateSchema, gameTimerUpdatePayloadSchema } from '@shared/types/socketEvents.zod';
 import type {
     GameControlStateResponse,
     QuestionSetResponse,
@@ -115,24 +116,39 @@ router.post('/:accessCode/question', teacherAuth, validateRequestBody(SetQuestio
         const io = getIO();
 
         if (io) {
-            // Emit the question to all players in the game and projection using the proper LiveQuestionPayload structure
-            const liveRoom = `game_${accessCode}`;
-            const projectionRoom = `projection_${gameInstance.id}`;
-            const payload = {
-                question: {
-                    uid: updatedGameState.questionData.uid,
-                    text: updatedGameState.questionData.text,
-                    questionType: updatedGameState.questionData.questionType,
-                    answerOptions: updatedGameState.questionData.answerOptions
-                },
-                timer: updatedGameState.timer, // Send full timer state
-                questionIndex: questionIndex,
-                totalQuestions: updatedGameState.questionUids.length,
-                questionState: 'active' as const // Fix: use string literal type
-            };
-            io.to([liveRoom, projectionRoom]).emit('game_question', payload);
-            console.log(projectionRoom)
-            // Remove or comment out legacy/teacher control emission to avoid TS error and legacy code
+            // --- MODERNIZATION: Use canonical timer system ---
+            // Fetch canonical timer for the current question
+            // Always use canonical durationMs from the question object (no fallback allowed)
+            const question = await prisma.question.findUnique({ where: { uid: updatedGameState.questionUids[questionIndex] } });
+            const durationMs = question && typeof question.timeLimit === 'number' && question.timeLimit > 0 ? question.timeLimit * 1000 : 0;
+            if (durationMs <= 0) {
+                logger.error({ question, durationMs }, '[API_GAME_CONTROL] Failed to get canonical durationMs');
+                // handle error or return
+            }
+            const canonicalTimer = await getCanonicalTimer(accessCode, updatedGameState.questionUids[questionIndex], updatedGameState.gameMode, updatedGameState.status === 'completed', durationMs);
+            // Validate canonical timer
+            const timerValidation = gameTimerStateSchema.safeParse(canonicalTimer);
+            if (!timerValidation.success) {
+                logger.error({ error: timerValidation.error.format(), canonicalTimer }, '[TIMER] Invalid canonical timer payload, not emitting');
+            } else {
+                // Emit the question to all players in the game and projection using canonical timer
+                const liveRoom = `game_${accessCode}`;
+                const projectionRoom = `projection_${gameInstance.id}`;
+                const payload = {
+                    question: {
+                        uid: updatedGameState.questionData.uid,
+                        text: updatedGameState.questionData.text,
+                        questionType: updatedGameState.questionData.questionType,
+                        answerOptions: updatedGameState.questionData.answerOptions
+                    },
+                    timer: canonicalTimer, // [MODERNIZATION] Canonical timer state
+                    questionIndex: questionIndex,
+                    totalQuestions: updatedGameState.questionUids.length,
+                    questionState: 'active' as const
+                };
+                io.to([liveRoom, projectionRoom]).emit('game_question', payload);
+            }
+            // [LEGACY-TIMER-MIGRATION] The following legacy emission is deprecated and commented out:
             // io.to(`teacher_control_${updatedGameState.gameId}`).emit('game_control_question_set', {
             //     questionIndex,
             //     timer: updatedGameState.timer
@@ -143,7 +159,8 @@ router.post('/:accessCode/question', teacherAuth, validateRequestBody(SetQuestio
             success: true,
             questionIndex,
             questionUid: updatedGameState.questionUids[questionIndex],
-            timer: updatedGameState.timer
+            // [LEGACY-TIMER-MIGRATION] timer: updatedGameState.timer,
+            timer: undefined // [MODERNIZATION] timer field is deprecated, use canonical timer system only
         });
     } catch (error) {
         logger.error({ error }, 'Error setting current question');
@@ -199,27 +216,42 @@ router.post('/:accessCode/end-question', teacherAuth, async (req: Request, res: 
         const io = getIO();
 
         if (io && fullGameState) {
-            // Tell all players and projection that question time is up
+            // --- MODERNIZATION: Use canonical timer system ---
+            // Fetch canonical timer for the current question
+            const question = await prisma.question.findUnique({ where: { uid: updatedGameState.questionUids[updatedGameState.currentQuestionIndex] } });
+            const durationMs = question && typeof question.timeLimit === 'number' && question.timeLimit > 0 ? question.timeLimit * 1000 : 0;
+            if (durationMs <= 0) {
+                logger.error({ question, durationMs }, '[API_GAME_CONTROL] Failed to get canonical durationMs (endCurrentQuestion)');
+                // handle error or return
+            }
+            const canonicalTimer = await getCanonicalTimer(accessCode, updatedGameState.questionUids[updatedGameState.currentQuestionIndex], updatedGameState.gameMode, updatedGameState.status === 'completed', durationMs);
+            // Validate canonical timer
+            const timerValidation = gameTimerStateSchema.safeParse(canonicalTimer);
             const liveRoom = `game_${accessCode}`;
             const projectionRoom = `projection_${gameInstance.id}`;
-            const payload = {
-                questionIndex: updatedGameState.currentQuestionIndex,
-                questionUid: updatedGameState.timer?.questionUid || undefined
-            };
-            io.to([liveRoom, projectionRoom]).emit('question_ended', payload);
-
+            if (!timerValidation.success) {
+                logger.error({ error: timerValidation.error.format(), canonicalTimer }, '[TIMER] Invalid canonical timer payload, not emitting');
+            } else {
+                // Tell all players and projection that question time is up, using canonical timer
+                const payload = {
+                    questionIndex: updatedGameState.currentQuestionIndex,
+                    questionUid: canonicalTimer?.questionUid || undefined,
+                    timer: canonicalTimer // [MODERNIZATION] Canonical timer state
+                };
+                io.to([liveRoom, projectionRoom]).emit('question_ended', payload);
+            }
             // Send leaderboard update to both live and projection
             if (fullGameState.leaderboard.length > 0) {
                 io.to([liveRoom, projectionRoom]).emit('leaderboard_update', {
                     leaderboard: fullGameState.leaderboard.slice(0, 10) // Top 10
                 });
             }
-
-            // Update teacher control panel
+            // Update teacher control panel (modernized, but legacy field commented)
             io.to(`teacher_control_${updatedGameState.gameId}`).emit('game_control_question_ended', {
                 questionIndex: updatedGameState.currentQuestionIndex,
                 answers: fullGameState.answers,
                 leaderboard: fullGameState.leaderboard
+                // timer: canonicalTimer // [LEGACY-TIMER-MIGRATION] Deprecated, not allowed by canonical type
             });
         }
 

@@ -45,10 +45,13 @@ router.post('/', auth_1.teacherAuth, (0, validation_1.validateRequestBody)(schem
             return;
         }
         // Ensure `themes` defaults to an empty array if undefined
+        // Ensure canonical durationMs is present (fallback to 30s if not provided)
         const questionData = {
             ...parseResult.data,
-            themes: parseResult.data.themes || []
+            themes: parseResult.data.themes || [],
+            durationMs: typeof parseResult.data.durationMs === 'number' ? parseResult.data.durationMs : 30000
         };
+        // Pass canonical object (with durationMs) to service
         const question = await getQuestionService().createQuestion(req.user.userId, questionData);
         res.status(201).json({ question });
     }

@@ -1,21 +1,31 @@
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import type { Server as SocketIOServer, Socket } from 'socket.io';
+import type { ZodError } from 'zod';
+// Canonical timer event payload type matching Zod schema and projection handler
+interface CanonicalTimerUpdatePayload {
+    timer: any; // GameTimerState, but allow any for now to avoid circular import issues
+    questionUid: string;
+    questionIndex: number;
+    totalQuestions: number;
+    answersLocked: boolean;
+    gameId?: string;
+}
 import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
-import gameStateService, { GameState } from '@/core/services/gameStateService';
+import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
+import { GameState } from '@shared/types/core';
+import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { GameInstanceService } from '@/core/services/gameInstanceService';
 import createLogger from '@/utils/logger';
-import { TimerActionPayload } from './types';
-import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
-import type { GameTimerState } from '@shared/types/core/timer';
-import type { ErrorPayload } from '@shared/types/socketEvents';
-import type {
-    DashboardGameStatusChangedPayload,
-    DashboardQuestionChangedPayload,
-    DashboardTimerUpdatedPayload
-} from '@shared/types/socket/dashboardPayloads';
+import { z } from 'zod';
 import { timerActionPayloadSchema } from '@shared/types/socketEvents.zod';
-import { emitQuestionHandler } from '../game/emitQuestionHandler';
-import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
+type TimerActionPayload = z.infer<typeof timerActionPayloadSchema>;
+import { SOCKET_EVENTS, TEACHER_EVENTS } from '@shared/types/socket/events';
+// (already imported above)
+import type { ErrorPayload } from '@shared/types/socketEvents';
+import { dashboardTimerUpdatedPayloadSchema } from '@shared/types/socketEvents.zod';
+
+import type { GameTimerState } from '@shared/types/core/timer';
+import type { DashboardQuestionChangedPayload } from '@shared/types/socket/dashboardPayloads';
 
 // Create a handler-specific logger
 const logger = createLogger('TimerActionHandler');
@@ -25,6 +35,9 @@ const GAME_KEY_PREFIX = 'mathquest:game:';
 
 // Create GameInstanceService instance
 const gameInstanceService = new GameInstanceService();
+
+// CanonicalTimerService instance
+const canonicalTimerService = new CanonicalTimerService(redisClient);
 
 // Timer management for automatic expiry
 const activeTimers = new Map<string, NodeJS.Timeout>();
@@ -44,11 +57,18 @@ function clearGameTimer(gameId: string): void {
 /**
  * Start automatic timer expiry for a game
  */
-function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, durationMs: number, questionUid: string | null): void {
+function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, timerEndDateMs: number, questionUid: string | null): void {
     // Clear any existing timer first
     clearGameTimer(gameId);
 
-    logger.info({ gameId, accessCode, durationMs, questionUid }, '[TIMER_EXPIRY] Starting automatic timer expiry');
+    const now = Date.now();
+    const msUntilEnd = timerEndDateMs - now;
+    if (msUntilEnd <= 0) {
+        logger.warn({ gameId, accessCode, timerEndDateMs, now }, '[TIMER_EXPIRY] timerEndDateMs is in the past or now, skipping timer scheduling');
+        return;
+    }
+
+    logger.info({ gameId, accessCode, timerEndDateMs, msUntilEnd, questionUid }, '[TIMER_EXPIRY] Starting automatic timer expiry');
 
     const timeout = setTimeout(async () => {
         try {
@@ -66,51 +86,131 @@ function startGameTimer(io: SocketIOServer, gameId: string, accessCode: string, 
 
             const gameState: GameState = JSON.parse(gameStateRaw);
 
-            // Update timer to stopped state
-            const now = Date.now();
+            // Update timer to stopped state (canonical)
             const expiredTimer: GameTimerState = {
                 status: 'stop',
-                timeLeftMs: 0,
-                durationMs: gameState.timer?.durationMs || durationMs,
-                questionUid: questionUid || gameState.timer?.questionUid || null,
-                timestamp: now,
-                localTimeLeftMs: null
+                timerEndDateMs: timerEndDateMs,
+                questionUid: questionUid || 'unknown',
             };
 
-            // Update game state
-            gameState.timer = expiredTimer;
+            // Update game state (if needed)
             await gameStateService.updateGameState(accessCode, gameState);
 
-            // Broadcast timer expiry to all rooms using same structure as manual actions
+            // Broadcast timer expiry to all rooms using canonical emission helper
             const dashboardRoom = `dashboard_${gameId}`;
             const liveRoom = `game_${accessCode}`;
             const projectionRoom = `projection_${gameId}`;
 
             logger.info({ gameId, accessCode, dashboardRoom, liveRoom, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Broadcasting timer expiry to all rooms');
 
-            // To dashboard (include questionUid to match frontend validation)
-            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer: expiredTimer, questionUid: expiredTimer.questionUid });
-            logger.info({ gameId, dashboardRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to dashboardRoom');
-
-            // To live room (for quiz players)
-            io.to(liveRoom).emit('game_timer_updated', { timer: expiredTimer });
-            logger.info({ gameId, liveRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to liveRoom');
-
-            // To projection room (teacher display)
-            io.to(projectionRoom).emit('dashboard_timer_updated', { timer: expiredTimer, questionUid: expiredTimer.questionUid });
-            logger.info({ gameId, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to projectionRoom');
+            const questionIndex = typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : -1;
+            const totalQuestions = Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0;
+            const answersLocked = typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false;
+            emitCanonicalTimerEvents(io, [
+                { room: dashboardRoom, event: TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, extra: { questionUid: expiredTimer.questionUid ?? undefined } },
+                { room: liveRoom, event: 'game_timer_updated', extra: {} },
+                { room: projectionRoom, event: TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, extra: { questionUid: expiredTimer.questionUid ?? undefined } }
+            ], {
+                timer: expiredTimer,
+                questionUid: expiredTimer.questionUid ?? undefined,
+                questionIndex,
+                totalQuestions,
+                answersLocked
+            });
 
         } catch (error) {
             logger.error({ gameId, accessCode, error }, '[TIMER_EXPIRY] Error handling timer expiry');
         }
-    }, durationMs);
+    }, msUntilEnd);
 
     activeTimers.set(gameId, timeout);
 }
 
+// Helper: fetch canonical durationMs for a question (ms, from timeLimit)
+async function getCanonicalDurationMs(questionUid: string): Promise<number> {
+    if (!questionUid) return 30000; // fallback
+    const question = await prisma.question.findUnique({ where: { uid: questionUid } });
+    // Canonical: durationMs is always ms, but DB only has timeLimit (seconds)
+    if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
+        return question.timeLimit * 1000;
+    }
+    return 30000; // fallback default
+}
+
+// --- CANONICAL TIMER EVENT EMISSION LOGIC ---
+// Use the shared canonicalizer from core/services/toCanonicalTimer
+import { toCanonicalTimer as sharedToCanonicalTimer } from '@/core/services/toCanonicalTimer';
+
+// Helper to canonicalize timer for emission (always enforces timeLeftMs and durationMs)
+function toCanonicalTimer(timer: any, durationMs?: number): GameTimerState {
+    // Use the shared canonicalizer, which now only emits canonical fields
+    return sharedToCanonicalTimer(timer, durationMs ?? 0);
+}
+interface CanonicalTimerRoom {
+    room: string;
+    event: string;
+    extra?: Record<string, unknown>;
+}
+// (already imported above)
+type CanonicalDashboardTimerUpdatedPayload = CanonicalTimerUpdatePayload;
+function emitCanonicalTimerEvents(
+    io: SocketIOServer,
+    rooms: CanonicalTimerRoom[],
+    payloadBase: CanonicalDashboardTimerUpdatedPayload
+) {
+    const canonicalQuestionUid = typeof payloadBase.questionUid === 'string' && payloadBase.questionUid.length > 0
+        ? payloadBase.questionUid
+        : (payloadBase.timer && typeof payloadBase.timer.questionUid === 'string' && payloadBase.timer.questionUid.length > 0
+            ? payloadBase.timer.questionUid
+            : 'unknown');
+    const canonicalPayload: CanonicalDashboardTimerUpdatedPayload = {
+        timer: toCanonicalTimer(payloadBase.timer),
+        questionUid: canonicalQuestionUid,
+        questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : -1,
+        totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 0,
+        answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
+        gameId: payloadBase.gameId,
+    };
+    const validation = dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
+    if (!validation.success) {
+        logger.error({ error: validation.error.format(), payload: canonicalPayload }, '[TIMER] Invalid canonical timer payload, not emitting');
+        return;
+    }
+    for (const { room, event, extra } of rooms) {
+        // --- ENHANCED DEBUG LOGGING FOR TEST INVESTIGATION ---
+        logger.warn({
+            marker: '[SOCKET-EMIT-DEBUG]',
+            room,
+            event,
+            canonicalPayload,
+            extra,
+            socketIdsInRoom: Array.from(io.sockets.adapter.rooms.get(room) || []),
+            allRooms: Array.from(io.sockets.adapter.rooms.keys()),
+            emitStack: new Error().stack
+        }, '[TIMER][EMIT_DEBUG] Emitting event to room (ENHANCED)');
+        io.to(room).emit(event, { ...canonicalPayload, ...extra });
+
+        // --- NEW: LOG ALL CONNECTED SOCKETS AND THEIR ROOMS AFTER EMIT ---
+        const sockets = Array.from(io.sockets.sockets.values());
+        const socketRoomMap = sockets.map(s => ({
+            id: s.id,
+            rooms: Array.from(s.rooms)
+        }));
+        logger.warn({
+            marker: '[SOCKET-ROOMS-POST-EMIT]',
+            allSocketRoomMemberships: socketRoomMap
+        }, '[TIMER][EMIT_DEBUG] All connected sockets and their rooms after timer event emission');
+    }
+}
+// --- END CANONICAL TIMER EVENT EMISSION LOGIC ---
+
+// --- MODERNIZATION: Canonical Timer System ---
+// All timer logic below uses CanonicalTimerService only. All legacy gameState.timer logic is commented out above.
+// Only import getCanonicalTimer and CanonicalTimerService once at the top of the file
+// import { getCanonicalTimer } from '@/core/services/gameStateService';
+// import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
+
 export function timerActionHandler(io: SocketIOServer, socket: Socket) {
-    const emitQuestion = emitQuestionHandler(io, socket);
-    const canonicalTimerService = new CanonicalTimerService(redisClient);
     return async (payload: TimerActionPayload) => {
         // Runtime validation with Zod
         const parseResult = timerActionPayloadSchema.safeParse(payload);
@@ -129,6 +229,12 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 details: errorDetails
             };
 
+            logger.warn({
+                socketId: socket.id,
+                errorPayload,
+                branch: 'early return: invalid payload',
+                location: 'timerActionHandler:parseResult.fail'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to invalid payload');
             socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
             return;
         }
@@ -147,35 +253,41 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
         logger.info({ payload: validPayload }, 'Received quiz_timer_action event');
 
         // Look up game instance by access code
-        const { accessCode, action, duration, questionUid } = validPayload;
+        const { accessCode, action, timerEndDateMs, questionUid } = validPayload;
         const gameInstance = await prisma.gameInstance.findUnique({
             where: { accessCode }
         });
 
         if (!gameInstance) {
             logger.warn({ accessCode }, 'Game instance not found');
-            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
+            const errorPayload = {
                 code: 'GAME_NOT_FOUND',
                 message: 'Game not found',
-            } as ErrorPayload);
+            } as ErrorPayload;
+            logger.warn({
+                accessCode,
+                errorPayload,
+                branch: 'early return: gameInstance not found',
+                location: 'timerActionHandler:gameInstance.null'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to missing gameInstance');
+            socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
             return;
         }
 
         const gameId = gameInstance.id;
-        const durationMs = duration; // Use duration from schema
         const userId = socket.data?.userId || socket.data?.user?.userId;
 
         logger.warn('🔥 CRITICAL DEBUG: Destructured backend values', {
             gameId,
             action,
-            durationMs,
+            timerEndDateMs,
             questionUid,
             'questionUid type': typeof questionUid,
             'questionUid length': questionUid ? questionUid.length : 'null/undefined',
             userId
         });
 
-        logger.info({ gameId, userId, action, durationMs, questionUid }, 'Timer action handler entered');
+        logger.info({ gameId, userId, action, timerEndDateMs, questionUid }, 'Timer action handler entered');
 
         if (!gameId) {
             logger.warn({ action }, 'No gameId provided in payload, aborting timer action');
@@ -183,6 +295,12 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 message: 'gameId is required to control the timer',
                 code: 'GAME_ID_REQUIRED'
             };
+            logger.warn({
+                action,
+                errorPayload,
+                branch: 'early return: no gameId',
+                location: 'timerActionHandler:gameId.null'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to missing gameId');
             socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
             return;
         }
@@ -193,11 +311,18 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                 message: 'Authentication required to control the timer',
                 code: 'AUTHENTICATION_REQUIRED'
             };
+            logger.warn({
+                gameId,
+                action,
+                errorPayload,
+                branch: 'early return: no userId',
+                location: 'timerActionHandler:userId.null'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to missing userId');
             socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
             return;
         }
 
-        logger.info({ gameId, userId, action, durationMs }, 'Timer action requested');
+        logger.info({ gameId, userId, action, timerEndDateMs }, 'Timer action requested');
 
         try {
             // Verify authorization - user must be either the game initiator or the template creator
@@ -220,6 +345,14 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     message: 'Not authorized to control this game',
                     code: 'NOT_AUTHORIZED'
                 };
+                logger.warn({
+                    gameId,
+                    userId,
+                    action,
+                    errorPayload,
+                    branch: 'early return: not authorized',
+                    location: 'timerActionHandler:not.authorized'
+                }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to not authorized');
                 socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
                 return;
             }
@@ -232,171 +365,78 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     message: 'Could not retrieve game state',
                     code: 'STATE_ERROR'
                 };
+                logger.warn({
+                    gameId,
+                    userId,
+                    action,
+                    errorPayload,
+                    branch: 'early return: no game state',
+                    location: 'timerActionHandler:gameState.null'
+                }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to missing game state');
                 socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
                 return;
             }
 
             const gameState = fullState.gameState;
-            // Initialize timer with safe defaults using shared type structure
-            let timer: GameTimerState = gameState.timer ? { ...gameState.timer } : {
-                status: 'stop',
-                timeLeftMs: 30000,
-                durationMs: 30000,
-                questionUid: null,
-                timestamp: Date.now(),
-                localTimeLeftMs: null
-            };
-            const now = Date.now();
+            // Determine canonical timer context
+            const playMode = gameState.gameMode;
+            const isDeferred = gameState.status === 'completed'; // Business rule: treat completed as deferred
+            const attemptCount = undefined; // TODO: wire up if needed for deferred mode
 
-            // Validate duration if provided (durationMs is already in milliseconds)
-            const validDurationMs = durationMs && durationMs > 0 ? durationMs : undefined;
-
-            // Update timer based on the action
-            switch (action) {
-                case 'start':
-                    logger.info({ gameId, action, now, validDurationMs, timer }, '[TIMER_ACTION] Processing start action');
-                    const startDuration = validDurationMs || (timer.durationMs || 30000);
-                    timer = {
-                        status: 'play',
-                        timeLeftMs: startDuration,
-                        durationMs: startDuration,
-                        questionUid: timer.questionUid,
-                        timestamp: now,
-                        localTimeLeftMs: null
-                    };
-                    logger.info({ gameId, action, timer }, '[TIMER_ACTION] Timer object after start processing');
-
-                    // Update game status to 'active' when starting a timer (game has started)
-                    if (gameInstance.status === 'pending') {
-                        logger.info({ gameId, action }, 'Setting game status to active as timer is being started');
-                        await gameInstanceService.updateGameStatus(gameId, { status: 'active' });
-
-                        // CRITICAL: Also update the Redis game state status to match
-                        gameState.status = 'active';
-
-                        // Emit game status change to dashboard
-                        const dashboardRoom = `dashboard_${gameId}`;
-                        const statusPayload: DashboardGameStatusChangedPayload = {
-                            status: 'active',
-                            ended: false
-                        };
-                        io.to(dashboardRoom).emit('dashboard_game_status_changed', statusPayload);
-                    }
-
-                    // Start the automatic timer expiry mechanism
-                    if (startDuration > 0) {
-                        startGameTimer(io, gameId, gameInstance.accessCode, startDuration, questionUid || null);
-                    }
-                    break;
-
-                case 'pause':
-                    // Clear any running timer when pausing
-                    clearGameTimer(gameId);
-
-                    if (timer.status !== 'pause') {
-                        // Use the frontend-provided duration (remaining time) if available,
-                        // otherwise fall back to stored timeLeftMs
-                        const timeRemaining = validDurationMs !== undefined
-                            ? Math.max(0, validDurationMs)
-                            : Math.max(0, timer.timeLeftMs);
-
-                        // 🔥 PAUSE DEBUG: Log the pause calculation
-                        logger.warn('🔥 PAUSE DEBUG: Backend pause calculation', {
-                            now,
-                            'validDurationMs (from frontend)': validDurationMs,
-                            'timer.timeLeftMs (stored)': timer.timeLeftMs,
-                            'timer.durationMs': timer.durationMs,
-                            timeRemaining,
-                            'timeRemaining === 0': timeRemaining === 0,
-                            'using frontend duration': validDurationMs !== undefined
-                        });
-
-                        timer = {
-                            ...timer,
-                            status: 'pause',
-                            timeLeftMs: timeRemaining,
-                            timestamp: now
-                        };
-                    }
-                    break;
-
-                case 'resume':
-                    // Handle resume even if timeRemaining is not defined
-                    if (timer.status === 'pause') {
-                        const remainingTime = timer.timeLeftMs || timer.durationMs || 30000;
-
-                        // 🔥 RESUME DEBUG: Log the resume calculation
-                        logger.warn('🔥 RESUME DEBUG: Backend resume calculation', {
-                            now,
-                            'timer.timeLeftMs (before)': timer.timeLeftMs,
-                            'timer.durationMs (before)': timer.durationMs,
-                            remainingTime,
-                            'remainingTime in seconds': remainingTime / 1000
-                        });
-
-                        timer = {
-                            ...timer,
-                            status: 'play',
-                            timeLeftMs: remainingTime,
-                            timestamp: now
-                        };
-
-                        logger.warn('🔥 RESUME DEBUG: Backend resume result', {
-                            'timer.status (after)': timer.status,
-                            'timer.durationMs (after)': timer.durationMs,
-                            'timer.timeLeftMs (after)': timer.timeLeftMs,
-                            'timer.timestamp (after)': timer.timestamp
-                        });
-
-                        // Restart automatic timer expiry when resuming
-                        if (remainingTime > 0) {
-                            startGameTimer(io, gameId, gameInstance.accessCode, remainingTime, questionUid || null);
-                        }
-                    }
-                    break;
-
-                case 'stop':
-                    // Clear any running timer when stopping
-                    clearGameTimer(gameId);
-
-                    timer = {
-                        ...timer,
-                        status: 'stop',
-                        timeLeftMs: 0,
-                        timestamp: now
-                    };
-                    break;
-
-                case 'set_duration':
-                    if (validDurationMs) {
-                        const wasPlaying = timer.status === 'play';
-
-                        timer = {
-                            ...timer,
-                            durationMs: validDurationMs, // durationMs is already in milliseconds
-                            // If timer is stopped/paused, update timeLeftMs to match new duration
-                            timeLeftMs: timer.status !== 'play' ? validDurationMs : timer.timeLeftMs,
-                            timestamp: now
-                        };
-
-                        // If timer was playing and duration changed, restart the timer
-                        if (wasPlaying) {
-                            clearGameTimer(gameId);
-                            const newTimeLeft = timer.timeLeftMs;
-                            if (newTimeLeft > 0) {
-                                startGameTimer(io, gameId, gameInstance.accessCode, newTimeLeft, questionUid || null);
-                            }
-                        }
-                    }
-                    break;
+            let canonicalTimer: any = null;
+            const canonicalQuestionUid = (questionUid && typeof questionUid === 'string' ? questionUid : (gameState.questionUids && gameState.currentQuestionIndex >= 0 ? gameState.questionUids[gameState.currentQuestionIndex] : null));
+            if (!canonicalQuestionUid) {
+                logger.error({ accessCode, questionUid, gameState }, '[TIMER_ACTION] No valid questionUid for canonical timer');
+                // handle error or return
             }
 
-            logger.info({ gameId, action, timer }, 'Timer state after action');
+            // Use canonical durationMs for timer actions (from question definition)
+            let canonicalDurationMs = 0;
+            if (canonicalQuestionUid) {
+                canonicalDurationMs = await getCanonicalDurationMs(String(canonicalQuestionUid));
+            }
+            if (canonicalDurationMs <= 0) {
+                logger.error({ canonicalQuestionUid, canonicalDurationMs }, '[TIMER_ACTION] Failed to get canonical durationMs');
+                // handle error or return
+            }
 
-            // Update game state with new timer
-            gameState.timer = timer;
-            await gameStateService.updateGameState(gameInstance.accessCode, gameState);
+            switch (action) {
+                case 'run':
+                    await canonicalTimerService.startTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred, userId, canonicalDurationMs);
+                    canonicalTimer = await getCanonicalTimer(
+                        accessCode,
+                        String(canonicalQuestionUid),
+                        playMode,
+                        isDeferred,
+                        canonicalDurationMs
+                    );
+                    break;
+                case 'pause':
+                    await canonicalTimerService.pauseTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred);
+                    canonicalTimer = await getCanonicalTimer(
+                        accessCode,
+                        String(canonicalQuestionUid),
+                        playMode,
+                        isDeferred,
+                        canonicalDurationMs
+                    );
+                    break;
+                case 'stop':
+                    await canonicalTimerService.pauseTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred);
+                    canonicalTimer = await getCanonicalTimer(
+                        accessCode,
+                        String(canonicalQuestionUid),
+                        playMode,
+                        isDeferred,
+                        canonicalDurationMs
+                    );
+                    break;
+                // Remove unsupported 'edit_timer' and 'set' cases from the switch statement
+            }
 
+            logger.info({ gameId, action, canonicalTimer }, 'Timer state after action');
+
+            // Use canonicalTimer for all event payloads below
             // Get the current question UID for timer updates
             // If questionUid is provided in the payload, use it; otherwise use current question
             let targetQuestionUid = questionUid;
@@ -469,9 +509,10 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                         const questionChangedPayload: DashboardQuestionChangedPayload = {
                             questionUid: targetQuestionUid,
                             oldQuestionUid: currentQuestionUid,
-                            timer: timer
+                            timer: canonicalTimer // MODERNIZATION: use canonicalTimer only
                         };
-                        io.to(dashboardRoom).emit('dashboard_question_changed', questionChangedPayload);
+                        // Use canonical event constant for dashboard_question_changed
+                        io.to(dashboardRoom).emit(TEACHER_EVENTS.DASHBOARD_QUESTION_CHANGED, questionChangedPayload);
 
                         logger.info({ gameId, targetQuestionUid, targetQuestionIndex },
                             '[TIMER_ACTION] Question switched and dashboard notified');
@@ -492,81 +533,61 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
             }
 
             // Update timer object with resolved questionUid before broadcasting
-            if (targetQuestionUid) {
-                timer = {
-                    ...timer,
-                    questionUid: targetQuestionUid
-                };
-            }
-
-            // Broadcast timer update to all relevant rooms
+            canonicalTimer.questionUid = targetQuestionUid || null;
+            // Canonicalize timer for emission
+            const timer = toCanonicalTimer(canonicalTimer);
+            // Broadcast updated timer to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;
-            const liveRoom = `game_${gameInstance.accessCode}`; // Ensure gameInstance.accessCode is correct
+            const liveRoom = `game_${accessCode}`;
             const projectionRoom = `projection_${gameId}`;
 
-            logger.info({ gameId, action, dashboardRoom, liveRoom, projectionRoom, timer, targetQuestionUid }, '[TIMER_ACTION] Emitting timer updates to rooms');
+            // --- MODERNIZATION: Only emit to dashboard for STOP on different question ---
+            let emitRooms: CanonicalTimerRoom[] = [
+                { room: dashboardRoom, event: TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, extra: { questionUid: timer.questionUid ?? undefined } }
+            ];
+            // Determine if this is a STOP action on a different question
+            const isStopOnDifferentQuestion = (
+                action === 'stop' &&
+                typeof questionUid === 'string' &&
+                questionUid.length > 0 &&
+                gameState.questionUids?.[gameState.currentQuestionIndex] !== questionUid
+            );
+            if (!isStopOnDifferentQuestion) {
+                emitRooms.push(
+                    { room: liveRoom, event: 'game_timer_updated', extra: {} },
+                    { room: projectionRoom, event: TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, extra: { questionUid: timer.questionUid ?? undefined } }
+                );
+            }
+            emitCanonicalTimerEvents(io, emitRooms, {
+                timer: canonicalTimer,
+                questionUid: timer.questionUid ?? undefined,
+                questionIndex: typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : -1,
+                totalQuestions: Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0,
+                answersLocked: typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false,
+                gameId
+            });
+            logger.info({
+                action,
+                gameId,
+                timerStateAfterEmit: JSON.stringify(timer),
+                gameStateAfterEmit: JSON.stringify(gameState)
+            }, '[DEBUG] After emitting canonical timer events (EXTRA DEBUG)');
 
-            // To dashboard (include questionUid to match frontend validation)
-            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer, questionUid: targetQuestionUid });
-            logger.info({ gameId, action, dashboardRoom, timer, targetQuestionUid }, '[TIMER_ACTION] Emitted to dashboardRoom');
-
-            // To live room (for quiz players)
-            io.to(liveRoom).emit('game_timer_updated', { timer });
-            logger.info({ gameId, action, liveRoom, timer }, '[TIMER_ACTION] Emitted to liveRoom');
-
-            // To projection room (include questionUid for proper frontend handling)
-            io.to(projectionRoom).emit('dashboard_timer_updated', { timer, questionUid: targetQuestionUid });
-            logger.info({ gameId, action, projectionRoom, timer, targetQuestionUid }, '[TIMER_ACTION] Emitted to projectionRoom');
-
-            logger.info({ gameId, action }, 'Timer updated successfully');
         } catch (error) {
-            logger.error({ gameId, action, error }, 'Error updating timer');
+            logger.error({ gameId, action, error }, '[TIMER_ACTION] Unhandled error in timerActionHandler');
             const errorPayload: ErrorPayload = {
-                message: 'Failed to update timer',
-                code: 'TIMER_ERROR'
+                message: 'Unhandled error in timer action handler',
+                code: 'TIMER_ACTION_ERROR',
+                details: { message: error instanceof Error ? error.message : String(error) }
             };
+            logger.error({
+                gameId,
+                action,
+                errorPayload,
+                branch: 'catch: unhandled error',
+                location: 'timerActionHandler:catch'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to unhandled error');
             socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD as any, errorPayload);
         }
-
-        // Canonical timer integration for all modes
-        if (questionUid) {
-            try {
-                const playMode = gameInstance.playMode;
-                const isDiffered = !!gameInstance.isDiffered;
-                switch (action) {
-                    case 'start':
-                    case 'resume':
-                        await canonicalTimerService.startTimer(accessCode, questionUid, playMode, isDiffered);
-                        break;
-                    case 'pause':
-                        await canonicalTimerService.pauseTimer(accessCode, questionUid, playMode, isDiffered);
-                        break;
-                    case 'stop':
-                        await canonicalTimerService.resetTimer(accessCode, questionUid, playMode, isDiffered);
-                        break;
-                }
-            } catch (err) {
-                logger.error({ accessCode, questionUid, action, err }, '[TIMER_ACTION] Canonical timer error');
-            }
-        }
-    };
-}
-
-/**
- * Clean up all timers (for cleanup when server shuts down or games end)
- */
-export function clearAllTimers(): void {
-    logger.info({ activeTimersCount: activeTimers.size }, '[TIMER_EXPIRY] Clearing all active timers');
-    for (const [gameId, timeout] of activeTimers.entries()) {
-        clearTimeout(timeout);
-        logger.debug({ gameId }, '[TIMER_EXPIRY] Cleared timer for game');
-    }
-    activeTimers.clear();
-}
-
-/**
- * Clear timer for a specific game (useful when game ends)
- */
-export function clearTimerForGame(gameId: string): void {
-    clearGameTimer(gameId);
-}
+    }; // close returned async function
+} // close timerActionHandler

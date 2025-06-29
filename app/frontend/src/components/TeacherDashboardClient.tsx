@@ -8,21 +8,21 @@ import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { UsersRound } from "lucide-react";
-import { type Question } from '@/types/api';
+import type { Question } from '@shared/types/core/question';
 import InfinitySpin from '@/components/InfinitySpin';
 import LoadingScreen from '@/components/LoadingScreen';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
-import { connectedCountPayloadSchema, joinDashboardPayloadSchema, endGamePayloadSchema } from '@shared/types/socketEvents.zod';
-import { z } from 'zod';
+import { gameControlStatePayloadSchema, type GameControlStatePayload } from '@shared/types/socketEvents.zod.dashboard';
+import type { ConnectedCountPayload, JoinDashboardPayload, EndGamePayload, DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_CONFIG } from '@/config';
-import type { DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
+import { computeTimeLeftMs } from '../utils/computeTimeLeftMs';
 
 // Derive type from Zod schema for type safety
-type ConnectedCountPayload = z.infer<typeof connectedCountPayloadSchema>;
-type JoinDashboardPayload = z.infer<typeof joinDashboardPayloadSchema>;
-type EndGamePayload = z.infer<typeof endGamePayloadSchema>;
+// type ConnectedCountPayload = z.infer<typeof connectedCountPayloadSchema>;
+// type JoinDashboardPayload = z.infer<typeof joinDashboardPayloadSchema>;
+// type EndGamePayload = z.infer<typeof endGamePayloadSchema>;
 
 const logger = createLogger('TeacherDashboard');
 
@@ -30,7 +30,8 @@ function mapToCanonicalQuestion(q: any): Question {
     const questionData = q.question || q;
     const answerOptions = questionData.answerOptions || [];
     const correctAnswers = questionData.correctAnswers || [];
-    const timeLimit = questionData.timeLimit ?? q.timeLimit ?? 60;
+    // Canonical: always use durationMs in ms, never timeLimit
+    const durationMs = questionData.durationMs ?? q.durationMs;
 
     return {
         ...q,
@@ -38,10 +39,11 @@ function mapToCanonicalQuestion(q: any): Question {
         uid: questionData.uid || q.uid,
         answerOptions,
         correctAnswers,
-        timeLimit,
+        durationMs, // canonical ms
         defaultMode: q.questionType || questionData.questionType || QUESTION_TYPES.SINGLE_CHOICE,
         feedbackWaitTime: questionData.feedbackWaitTime ?? q.feedbackWaitTime ?? 3000
-    };
+        // No timeLimit, no legacy fields
+    } as Question;
 }
 
 export default function TeacherDashboardClient({ code, gameId }: { code: string, gameId: string }) {
@@ -73,7 +75,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         if (quizSocket && code) {
             const payload: EndGamePayload = { accessCode: code };
             try {
-                endGamePayloadSchema.parse(payload);
+                // endGamePayloadSchema.parse(payload);
                 quizSocket.emit(SOCKET_EVENTS.TEACHER.END_GAME, payload);
             } catch (error) {
                 logger.error('Invalid end_game payload:', error);
@@ -126,7 +128,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             logger.info('Joining dashboard with accessCode:', code);
             const payload: JoinDashboardPayload = { accessCode: code };
             try {
-                joinDashboardPayloadSchema.parse(payload);
+                // joinDashboardPayloadSchema.parse(payload);
                 socket.emit(SOCKET_EVENTS.TEACHER.JOIN_DASHBOARD, payload);
             } catch (error) {
                 logger.error('Invalid join_dashboard payload:', error);
@@ -139,48 +141,62 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             }
         });
         socket.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, (state: any) => {
-            logger.info('Dashboard state received:', state);
-            if (state.gameId) {
-                logger.info(`📍 Dashboard should be listening for stats in room: dashboard_${state.gameId}`);
+            // Validate and strongly type the payload
+            const parsed = gameControlStatePayloadSchema.safeParse(state);
+            if (!parsed.success) {
+                logger.error('Invalid GAME_CONTROL_STATE payload', parsed.error);
+                return;
+            }
+            const canonicalState: GameControlStatePayload = parsed.data;
+
+            logger.info('Dashboard state received:', canonicalState);
+            if (canonicalState.gameId) {
+                logger.info(`📍 Dashboard should be listening for stats in room: dashboard_${canonicalState.gameId}`);
                 logger.info(`📍 Alternative room format (if quiz mode): teacher_<userId>_${code}`);
                 logger.info(`📍 Current accessCode: ${code}`);
             }
             // Prefer templateName for activity name
-            if (state.templateName) {
-                setQuizName(state.templateName);
-            } else if (state.quizName) {
-                setQuizName(state.quizName);
+            if (canonicalState.templateName) {
+                setQuizName(canonicalState.templateName);
             }
-            if (state.questions) {
-                const processedQuestions = state.questions.map(mapToCanonicalQuestion);
+            if (canonicalState.questions) {
+                const processedQuestions = canonicalState.questions.map(mapToCanonicalQuestion);
                 setQuestions(processedQuestions);
                 logger.info('Questions loaded:', processedQuestions.length);
             }
-            if (state.currentQuestionUid) {
-                setQuestionActiveUid(state.currentQuestionUid);
-                logger.info('Setting current question from initial state:', state.currentQuestionUid);
+            if (canonicalState.currentQuestionUid) {
+                setQuestionActiveUid(canonicalState.currentQuestionUid);
+                logger.info('Setting current question from initial state:', canonicalState.currentQuestionUid);
             }
-            if (state.answerStats && state.currentQuestionUid) {
+            if (
+                canonicalState.currentQuestionUid &&
+                canonicalState.answerStats &&
+                typeof canonicalState.answerStats === "object"
+            ) {
                 setAnswerStats(prev => ({
                     ...prev,
-                    [state.currentQuestionUid]: state.answerStats
+                    [String(canonicalState.currentQuestionUid)]: canonicalState.answerStats as Record<string, number>
                 }));
-                logger.info('✅ Loaded initial answer stats for question:', state.currentQuestionUid, state.answerStats);
+                logger.info('✅ Loaded initial answer stats for question:', canonicalState.currentQuestionUid, canonicalState.answerStats);
             }
-            if (state.timer) {
-                logger.info('📡 Received initial timer state from backend:', state.timer);
+            let computedTimeLeftMs: number | undefined = undefined;
+            if (canonicalState.timer) {
+                logger.info('📡 Received initial timer state from backend:', canonicalState.timer);
                 logger.info('📡 Backend should emit dashboard_timer_updated event separately');
+                if (typeof canonicalState.timer.timerEndDateMs === 'number') {
+                    computedTimeLeftMs = computeTimeLeftMs(canonicalState.timer.timerEndDateMs);
+                }
             }
-            setQuizState(state);
+            setQuizState({ ...canonicalState, computedTimeLeftMs });
             setLoading(false);
         });
         socket.on('quiz_connected_count', (data: ConnectedCountPayload) => {
-            const validation = connectedCountPayloadSchema.safeParse(data);
-            if (!validation.success) {
-                logger.error('quiz_connected_count validation failed:', validation.error);
-                return;
-            }
-            setConnectedCount(validation.data.count);
+            // const validation = connectedCountPayloadSchema.safeParse(data);
+            // if (!validation.success) {
+            //     logger.error('quiz_connected_count validation failed:', validation.error);
+            //     return;
+            // }
+            setConnectedCount(data.count);
         });
         socket.on(SOCKET_EVENTS.TEACHER.DASHBOARD_ANSWER_STATS_UPDATE, (payload: DashboardAnswerStatsUpdatePayload) => {
             logger.info('🎯 RECEIVED answer stats update:', payload);
@@ -224,7 +240,13 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         });
         socket.on(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, (error: any) => {
             logger.error('Dashboard error:', error);
-            setError(`Dashboard error: ${error.message || 'Unknown error'}`);
+            // Show verbose error details if present
+            if (error.details) {
+                logger.error('Dashboard error details:', error.details);
+                setError(`Dashboard error: ${error.message || 'Unknown error'}\nDetails: ${JSON.stringify(error.details, null, 2)}`);
+            } else {
+                setError(`Dashboard error: ${error.message || 'Unknown error'}`);
+            }
             setLoading(false);
         });
         setQuizSocket(socket);
@@ -238,17 +260,28 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const {
         status: timerStatus,
         questionUid: timerQuestionUid,
-        timeLeftMs,
+        timeLeftMs: rawTimeLeftMs,
         startTimer,
         pauseTimer,
-        resumeTimer,
         stopTimer,
-        editTimer // Include editTimer here
+        editTimer
     } = useSimpleTimer({
         role: 'teacher',
         accessCode: typeof code === 'string' ? code : '',
         socket: quizSocket
     });
+
+    // Use computedTimeLeftMs only if it is a positive number, else fallback to rawTimeLeftMs from timer hook
+    const timeLeftMs = (typeof quizState?.computedTimeLeftMs === 'number' && quizState.computedTimeLeftMs > 0)
+        ? quizState.computedTimeLeftMs
+        : rawTimeLeftMs;
+    logger.info('[TIMER DEBUG][PATCHED] rawTimeLeftMs:', rawTimeLeftMs, 'quizState?.computedTimeLeftMs:', quizState?.computedTimeLeftMs, 'final timeLeftMs:', timeLeftMs);
+
+    // Always use the durationMs of the currently active question for timerDurationMs
+    const activeQuestionUid = quizState?.timer?.questionUid || timerQuestionUid;
+    const activeQuestion = questions.find(q => q.uid === activeQuestionUid);
+    // Use canonical durationMs from the question object; fallback to 0 if not found
+    const timerDurationMs = activeQuestion?.durationMs ?? 0;
 
     const timerStateRef = useRef({
         status: timerStatus,
@@ -285,7 +318,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         const currentTimerState = timerStateRef.current;
         const currentTimerStatus = currentTimerState.status;
         const currentTimerQuestionUid = currentTimerState.questionUid;
-        if ((currentTimerStatus === 'play' || currentTimerStatus === 'pause') && currentTimerQuestionUid !== uid) {
+        if ((currentTimerStatus === 'run' || currentTimerStatus === 'pause') && currentTimerQuestionUid !== uid) {
             const playIdx = questions.findIndex(q => q.uid === uid);
             if (playIdx !== -1) {
                 setPendingPlayIdx(playIdx);
@@ -300,10 +333,15 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const handleStop = useCallback(() => { stopTimer(); }, [stopTimer]);
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
         logger.info(`[DASHBOARD] handleEditTimer called`, { uid, newTime });
-        // Canonical: if timer is running, only update timeLeftMs; if stopped/paused, update both
-        if (timerStatus === 'play') {
+        setQuestions(prevQs => {
+            const updated = prevQs.map(q =>
+                q.uid === uid ? { ...q, durationMs: newTime } : q
+            );
+            logger.info('[DEBUG] handleEditTimer: questions after edit', updated.map(q => ({ uid: (q as any).uid, durationMs: (q as any).durationMs })));
+            return updated;
+        });
+        if (timerStatus === 'run') {
             logger.info(`[DASHBOARD] Timer is running: editing only timeLeftMs, keeping durationMs canonical`, { uid, newTime, durationMs: timeLeftMs });
-            // Use canonical durationMs from timer state (not newTime)
             editTimer(uid, timeLeftMs, newTime * 1000);
         } else {
             logger.info(`[DASHBOARD] Timer is stopped/paused: editing both durationMs and timeLeftMs`, { uid, newTime });
@@ -311,9 +349,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         }
         logger.info(`[DASHBOARD] Timer edit emitted for question ${uid}: ${newTime}s`);
     }, [editTimer, timerStatus, timeLeftMs]);
-    const handleTimerAction = useCallback((action: { status: 'play' | 'pause' | 'stop' | 'edit', questionUid: string, timeLeftMs: number, newTime?: number }) => {
+    const handleTimerAction = useCallback((action: { status: 'run' | 'pause' | 'stop' | 'edit', questionUid: string, timeLeftMs: number, newTime?: number }) => {
         switch (action.status) {
-            case 'play':
+            case 'run':
                 startTimer(action.questionUid, action.timeLeftMs);
                 break;
             case 'pause':
@@ -325,7 +363,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             case 'edit': {
                 logger.info(`[DASHBOARD] handleEditTimer (via handleTimerAction) called`, { uid: action.questionUid, newTime: action.newTime });
                 const editSeconds = typeof action.newTime === 'number' ? action.newTime : Math.round(action.timeLeftMs / 1000);
-                if (timerStatus === 'play') {
+                if (timerStatus === 'run') {
                     logger.info(`[DASHBOARD] Timer is running: editing only timeLeftMs, keeping durationMs canonical`, { uid: action.questionUid, editSeconds, durationMs: timeLeftMs });
                     editTimer(action.questionUid, timeLeftMs, editSeconds * 1000);
                 } else {
@@ -346,7 +384,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             const question = questions[pendingPlayIdx];
             handleSelect(question.uid);
             stopTimer();
-            startTimer(question.uid, question.timeLimit || 60000);
+            startTimer(question.uid, question.durationMs);
         }
         setPendingPlayIdx(null);
     }, [pendingPlayIdx, questions, handleSelect, stopTimer, startTimer]);
@@ -525,6 +563,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             timerStatus={timerStatus}
                             timerQuestionUid={timerQuestionUid}
                             timeLeftMs={timeLeftMs}
+                            timerDurationMs={timerDurationMs} // Always use canonical durationMs for stopped value
                             onTimerAction={handleTimerAction}
                             disabled={isDisabled}
                             expandedUids={expandedUids}

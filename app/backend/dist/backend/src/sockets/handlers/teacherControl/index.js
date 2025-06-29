@@ -9,7 +9,6 @@ const setQuestion_1 = require("./setQuestion");
 const timerAction_1 = require("./timerAction");
 const lockAnswers_1 = require("./lockAnswers");
 const endGame_1 = require("./endGame");
-const startTimer_1 = require("./startTimer");
 const pauseTimer_1 = require("./pauseTimer");
 const disconnect_1 = require("./disconnect");
 const showCorrectAnswers_1 = require("./showCorrectAnswers");
@@ -33,8 +32,8 @@ function registerTeacherControlHandlers(io, socket) {
     // Set a specific question
     logger.info({ event: events_1.TEACHER_EVENTS.SET_QUESTION }, 'Registering set_question handler');
     socket.on(events_1.TEACHER_EVENTS.SET_QUESTION, (0, setQuestion_1.setQuestionHandler)(io, socket));
-    // Timer actions (start, pause, resume, stop, set_duration)
-    logger.info({ event: events_1.TEACHER_EVENTS.TIMER_ACTION }, 'Registering timer_action handler');
+    // Timer actions (canonical)
+    logger.info({ event: events_1.TEACHER_EVENTS.TIMER_ACTION }, 'Registering quiz_timer_action handler');
     socket.on(events_1.TEACHER_EVENTS.TIMER_ACTION, (0, timerAction_1.timerActionHandler)(io, socket));
     // Lock or unlock answers
     logger.info({ event: events_1.TEACHER_EVENTS.LOCK_ANSWERS }, 'Registering lock_answers handler');
@@ -42,9 +41,6 @@ function registerTeacherControlHandlers(io, socket) {
     // End the game
     logger.info({ event: events_1.TEACHER_EVENTS.END_GAME }, 'Registering end_game handler');
     socket.on(events_1.TEACHER_EVENTS.END_GAME, (0, endGame_1.endGameHandler)(io, socket));
-    // Handle start_timer event
-    logger.info({ event: events_1.TEACHER_EVENTS.START_TIMER }, 'Registering start_timer handler');
-    socket.on(events_1.TEACHER_EVENTS.START_TIMER, (0, startTimer_1.startTimerHandler)(io, socket));
     // Handle pause_timer event
     logger.info({ event: events_1.TEACHER_EVENTS.PAUSE_TIMER }, 'Registering pause_timer handler');
     socket.on(events_1.TEACHER_EVENTS.PAUSE_TIMER, (0, pauseTimer_1.pauseTimerHandler)(io, socket));

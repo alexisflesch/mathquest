@@ -77,7 +77,7 @@ export interface GameSocketHook {
     onGameJoined?: (handler: (payload: Parameters<ServerToClientEvents['game_joined']>[0]) => void) => () => void;
 
     // Timer-specific events
-    emitTimerAction: (action: 'start' | 'pause' | 'resume' | 'stop', accessCode: string, questionUid?: string, duration?: number) => void;
+    emitTimerAction: (action: 'run' | 'pause' | 'stop', accessCode: string, questionUid: string, durationMs?: number) => void;
     onTimerUpdate: (handler: (timerState: Partial<GameTimerState>) => void) => () => void;
 }
 
@@ -326,10 +326,10 @@ export function useGameSocket(
 
     // --- Timer-Specific Methods ---
     const emitTimerAction = useCallback((
-        action: 'start' | 'pause' | 'resume' | 'stop',
+        action: 'run' | 'pause' | 'stop',
         accessCode: string,
-        questionUid?: string,
-        duration?: number
+        questionUid: string,
+        durationMs?: number
     ) => {
         if (!socket?.connected) {
             logger.warn(`[${role.toUpperCase()}] Cannot emit timer action: socket not connected`);
@@ -338,19 +338,11 @@ export function useGameSocket(
         if (role === 'teacher') {
             const payload = {
                 accessCode,
-                action,
-                duration,
-                questionUid
+                action, // Only canonical actions allowed
+                durationMs,
+                questionUid // now required
             };
-
-            // Validate payload before emitting
-            try {
-                const validatedPayload = timerActionPayloadSchema.parse(payload);
-                // TODO: Use SOCKET_EVENTS.TEACHER.TIMER_ACTION when TypeScript types allow constants
-                socket.emit('quiz_timer_action', validatedPayload);
-            } catch (error) {
-                logger.error(`[${role.toUpperCase()}] Invalid quiz_timer_action payload:`, error);
-            }
+            socket.emit('quiz_timer_action', payload);
         }
         // Add other roles as needed
     }, [socket, role]);

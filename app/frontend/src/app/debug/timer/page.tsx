@@ -50,27 +50,27 @@ export default function TimerDebugPage() {
     const handleStartTimer = () => {
         addLog('BUTTON: Starting timer for 30 seconds');
         emitTimerAction({
-            status: 'play',
+            action: 'run', // canonical
             questionUid: 'debug-question-1',
-            timeLeftMs: 30000
+            durationMs: 30000
         });
     };
 
     const handlePauseTimer = () => {
         addLog('BUTTON: Pausing timer');
         emitTimerAction({
-            status: 'pause',
+            action: 'pause',
             questionUid: timerQuestionUid || 'debug-question-1',
-            timeLeftMs: timeLeftMs || 0
+            durationMs: timeLeftMs || 0
         });
     };
 
     const handleStopTimer = () => {
         addLog('BUTTON: Stopping timer');
         emitTimerAction({
-            status: 'stop',
+            action: 'stop',
             questionUid: timerQuestionUid || 'debug-question-1',
-            timeLeftMs: 0
+            durationMs: 0
         });
     };
 
@@ -126,8 +126,8 @@ export default function TimerDebugPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div>
                         <div className="text-sm font-medium">Status</div>
-                        <div className={`text-2xl font-bold ${timerStatus === 'play' ? 'text-green-600' :
-                                timerStatus === 'pause' ? 'text-yellow-600' : 'text-red-600'
+                        <div className={`text-2xl font-bold ${timerStatus === 'run' ? 'text-green-600' :
+                            timerStatus === 'pause' ? 'text-yellow-600' : 'text-red-600'
                             }`}>
                             {timerStatus}
                         </div>
@@ -174,7 +174,7 @@ export default function TimerDebugPage() {
                     <button
                         onClick={handlePauseTimer}
                         className="p-3 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-                        disabled={!quizSocket?.connected || timerStatus !== 'play'}
+                        disabled={!quizSocket?.connected || timerStatus !== 'run'}
                     >
                         Pause Timer
                     </button>

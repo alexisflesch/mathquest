@@ -41,7 +41,6 @@ const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
 const gameStateService = __importStar(require("@/core/services/gameStateService"));
-const timerUtils_1 = require("../../core/services/timerUtils");
 const gameAuthorization_1 = require("@/utils/gameAuthorization");
 const leaderboardSnapshotService_1 = require("@/core/services/gameParticipant/leaderboardSnapshotService");
 const logger = (0, logger_1.default)('ProjectionHandler');
@@ -133,70 +132,71 @@ function projectionHandler(io, socket) {
                 room: projectionRoom
             });
             // Send initial game state to the projection
-            try {
-                const fullState = await gameStateService.getFullGameState(gameInstance.accessCode);
-                if (!fullState) {
-                    logger.warn({ gameId }, 'No game state found for projection');
-                    return;
-                }
-                let enhancedGameState = fullState.gameState;
-                // --- CANONICAL: Emit current question as LiveQuestionPayload to projection socket ---
-                // Fetch all questions for this game instance (ordered)
-                const gameInstanceWithQuestions = await prisma_1.prisma.gameInstance.findUnique({
-                    where: { id: gameId },
-                    include: {
-                        gameTemplate: {
-                            include: {
-                                questions: {
-                                    include: { question: true },
-                                    orderBy: { sequence: 'asc' }
-                                }
+            const fullState = await gameStateService.getFullGameState(gameInstance.accessCode);
+            if (!fullState) {
+                logger.warn({ gameId }, 'No game state found for projection');
+                return;
+            }
+            let enhancedGameState = fullState.gameState;
+            // --- CANONICAL: Emit current question as LiveQuestionPayload to projection socket ---
+            // Fetch all questions for this game instance (ordered)
+            const gameInstanceWithQuestions = await prisma_1.prisma.gameInstance.findUnique({
+                where: { id: gameId },
+                include: {
+                    gameTemplate: {
+                        include: {
+                            questions: {
+                                include: { question: true },
+                                orderBy: { sequence: 'asc' }
                             }
                         }
                     }
-                });
-                if (fullState.gameState && gameInstanceWithQuestions?.gameTemplate?.questions) {
-                    const questionsArr = gameInstanceWithQuestions.gameTemplate.questions;
-                    // --- MODERNIZATION: Always use currentQuestionIndex as canonical source of truth ---
-                    let questionIndex = typeof fullState.gameState.currentQuestionIndex === 'number' && fullState.gameState.currentQuestionIndex >= 0 && fullState.gameState.currentQuestionIndex < questionsArr.length
-                        ? fullState.gameState.currentQuestionIndex
-                        : -1;
-                    let currentQuestion = null;
-                    let questionUid = null;
-                    if (questionIndex !== -1) {
-                        currentQuestion = questionsArr[questionIndex]?.question;
-                        questionUid = currentQuestion?.uid;
-                        // Patch timer.questionUid in memory (does not persist, but ensures projection gets correct question)
-                        fullState.gameState.timer = {
-                            ...fullState.gameState.timer,
-                            questionUid
-                        };
-                    }
-                    else if (fullState.gameState.timer?.questionUid) {
-                        // Fallback: try to find by timer.questionUid if index is invalid
-                        questionUid = fullState.gameState.timer.questionUid;
-                        const found = questionsArr.findIndex((q) => q.question.uid === questionUid);
-                        if (found !== -1) {
-                            currentQuestion = questionsArr[found].question;
-                            questionIndex = found;
-                        }
-                    }
-                    if (currentQuestion) {
-                        const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@shared/types/quiz/liveQuestion')));
-                        const filteredQuestion = filterQuestionForClient(currentQuestion);
-                        const totalQuestions = questionsArr.length;
-                        // Use canonical timer logic for projection
-                        const actualTimer = (0, timerUtils_1.calculateTimerForLateJoiner)(fullState.gameState.timer);
-                        const liveQuestionPayload = {
-                            question: filteredQuestion,
-                            timer: actualTimer || fullState.gameState.timer,
+                }
+            });
+            if (fullState.gameState && gameInstanceWithQuestions?.gameTemplate?.questions) {
+                const questionsArr = gameInstanceWithQuestions.gameTemplate.questions;
+                // --- MODERNIZATION: Always use currentQuestionIndex as canonical source of truth ---
+                let questionIndex = typeof fullState.gameState.currentQuestionIndex === 'number' && fullState.gameState.currentQuestionIndex >= 0 && fullState.gameState.currentQuestionIndex < questionsArr.length
+                    ? fullState.gameState.currentQuestionIndex
+                    : -1;
+                let currentQuestion = null;
+                let questionUid = null;
+                if (questionIndex !== -1) {
+                    currentQuestion = questionsArr[questionIndex]?.question;
+                    questionUid = currentQuestion?.uid;
+                }
+                if (currentQuestion && questionUid) {
+                    const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@shared/types/quiz/liveQuestion')));
+                    const filteredQuestion = filterQuestionForClient(currentQuestion);
+                    const totalQuestions = questionsArr.length;
+                    // MODERNIZATION: Use canonical timer system for projection
+                    // Always use canonical timerEndDateMs from the timer object (no fallback allowed)
+                    const canonicalTimer = await gameStateService.getCanonicalTimer(gameInstance.accessCode, questionUid, fullState.gameState.gameMode, fullState.gameState.status === 'completed', typeof currentQuestion.timeLimit === 'number' ? currentQuestion.timeLimit * 1000 : 0, undefined);
+                    const liveQuestionPayload = {
+                        question: filteredQuestion,
+                        timer: canonicalTimer, // Only canonical timer
+                        questionIndex,
+                        totalQuestions,
+                        questionState: 'active'
+                    };
+                    socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, liveQuestionPayload);
+                    logger.info({ gameId, questionUid: filteredQuestion.uid, questionIndex, totalQuestions }, '[PROJECTION] Emitted canonical LiveQuestionPayload to projection socket on join');
+                    // If there's an active timer (running or paused), emit a timer update to trigger proper state in useSimpleTimer
+                    if (canonicalTimer && (canonicalTimer.status === 'run' || canonicalTimer.status === 'pause') && typeof canonicalTimer.timerEndDateMs === 'number' && canonicalTimer.timerEndDateMs > Date.now()) {
+                        logger.info({
+                            gameId,
+                            timer: canonicalTimer,
+                            status: canonicalTimer.status
+                        }, 'Emitting timer update for active timer in projection');
+                        // Canonical timer update payload must include all required fields
+                        const timerUpdatePayload = {
+                            timer: canonicalTimer,
+                            questionUid: canonicalTimer.questionUid,
                             questionIndex,
                             totalQuestions,
-                            questionState: 'active'
+                            answersLocked: enhancedGameState?.answersLocked ?? false
                         };
-                        // Emit to the joining projection socket only (canonical event)
-                        socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, liveQuestionPayload);
-                        logger.info({ gameId, questionUid: filteredQuestion.uid, questionIndex, totalQuestions }, '[PROJECTION] Emitted canonical LiveQuestionPayload to projection socket on join');
+                        socket.emit('dashboard_timer_updated', timerUpdatePayload);
                     }
                 }
                 // Fetch the leaderboard snapshot (join-bonus-only) for projection
@@ -226,7 +226,6 @@ function projectionHandler(io, socket) {
                     accessCode: gameInstance.accessCode,
                     payloadKeys: Object.keys(payload),
                     gameStateKeys: enhancedGameState ? Object.keys(enhancedGameState) : null,
-                    timerState: enhancedGameState?.timer,
                     questionData: enhancedGameState?.questionData ? 'present' : 'missing',
                     questionDataUid: enhancedGameState?.questionData?.uid,
                     participantsCount: fullState?.participants?.length || 0,
@@ -235,20 +234,6 @@ function projectionHandler(io, socket) {
                 }, 'Initial projection state payload details');
                 socket.emit(events_1.SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, payload);
                 logger.info({ gameId, accessCode: gameInstance.accessCode }, 'Initial projection state sent');
-                // If there's an active timer (playing or paused), emit a timer update to trigger proper state in useSimpleTimer
-                if (enhancedGameState?.timer && (enhancedGameState.timer.status === 'play' || enhancedGameState.timer.status === 'pause') && enhancedGameState.timer.timeLeftMs > 0) {
-                    logger.info({
-                        gameId,
-                        timer: enhancedGameState.timer,
-                        status: enhancedGameState.timer.status
-                    }, 'Emitting timer update for active timer in projection');
-                    const timerUpdatePayload = {
-                        timer: enhancedGameState.timer,
-                        questionUid: enhancedGameState.timer.questionUid
-                    };
-                    // Emit timer update immediately after the initial state (works for both play and pause status)
-                    socket.emit('dashboard_timer_updated', timerUpdatePayload);
-                }
                 // Send current projection display state if it exists
                 const displayState = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);
                 if (displayState) {
@@ -276,10 +261,7 @@ function projectionHandler(io, socket) {
                         logger.info({ gameId }, 'Sent initial correct answers state');
                     }
                 }
-            }
-            catch (stateError) {
-                logger.error({ error: stateError, gameId }, 'Failed to send initial projection state');
-            }
+            } // <-- Add this closing brace to close the main handler logic
         }
         catch (error) {
             logger.error({ error, payload }, 'Error joining projection room');

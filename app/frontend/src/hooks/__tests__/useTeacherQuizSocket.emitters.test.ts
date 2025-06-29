@@ -104,28 +104,25 @@ describe('useTeacherQuizSocket Emitters', () => {
     it('should emit "quiz_timer_action" with "pause" when emitPauseQuiz is called', () => {
         const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
         act(() => {
-            result.current.emitPauseQuiz();
+            result.current.emitPauseQuiz('test-question-uid');
         });
-        // The hook should call the gameManager actions, not emit directly
         expect(result.current.quizSocket).toBeDefined();
     });
 
-    it('should emit "quiz_timer_action" with "resume" when emitResumeQuiz is called', () => {
+    it('should emit "quiz_timer_action" with "run" when emitResumeQuiz is called', () => {
         const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
         act(() => {
-            result.current.emitResumeQuiz();
+            result.current.emitResumeQuiz('test-question-uid');
         });
-        // The hook should call the gameManager actions, not emit directly
         expect(result.current.quizSocket).toBeDefined();
     });
 
-    it('should emit "quiz_timer_action" with "stop" when emitTimerAction is called with stop status', () => {
+    it('should emit "quiz_timer_action" with "stop" when emitTimerAction is called with stop action', () => {
         const { result } = renderHook(() => useTeacherQuizSocket(null, mockToken, mockQuizId));
-        const payload = { status: 'stop' as const, questionUid: "q_stop_test", timeLeftMs: 0 };
+        const payload = { action: 'stop' as const, questionUid: "q_stop_test", durationMs: 0 };
         act(() => {
             result.current.emitTimerAction(payload);
         });
-        // The hook should call the gameManager actions, not emit directly
         expect(result.current.quizSocket).toBeDefined();
     });
 });

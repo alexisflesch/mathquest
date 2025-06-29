@@ -14,10 +14,20 @@ export const joinDashboardPayloadSchema = z.object({
 
 export const timerActionPayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
-  action: z.enum(['start', 'pause', 'resume', 'stop', 'set_duration'], {
-    errorMap: () => ({ message: "Action must be one of: start, pause, resume, stop, set_duration" }),
+  action: z.enum(['run', 'pause', 'stop'], {
+    errorMap: () => ({ message: "Action must be one of: run, pause, stop" }),
   }),
-  duration: z.number().int().nonnegative({ message: "Duration must be a non-negative integer." }).optional(),
+  /**
+   * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+   * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+   * May be updated if the timer is changed during a quiz.
+   */
+  timerEndDateMs: z.number().int().nonnegative({ message: "timerEndDateMs must be a non-negative integer (ms since epoch, UTC)." }).optional(),
+  /**
+   * Target time in milliseconds (duration or remaining time, NOT a date).
+   * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
+   */
+  targetTimeMs: z.number().int().nonnegative({ message: "targetTimeMs must be a non-negative integer." }).optional(),
   questionUid: z.string().min(1, { message: "Question UID cannot be empty." }).optional(),
 });
 
@@ -126,19 +136,7 @@ export const clientToServerEventsSchema = z.object({
     .returns(z.void()),
   teacher_timer_action: z
     .function()
-    .args(
-      z.object({
-        accessCode: z.string().min(1),
-        action: z.enum([
-          'start',
-          'pause',
-          'resume',
-          'stop',
-          'set_duration',
-        ]),
-        duration: z.number().int().positive().optional(),
-      }),
-    )
+    .args(timerActionPayloadSchema)
     .returns(z.void()),
   teacher_lock_answers: z
     .function()
@@ -366,7 +364,7 @@ export const serverToClientEventsSchema = z.object({
 export const startTimerPayloadSchema = z.object({
   gameId: z.string().min(1, { message: "Game ID cannot be empty." }).optional(),
   accessCode: z.string().min(1, { message: "Access code cannot be empty." }).optional(),
-  duration: z.number().int().positive({ message: "Duration must be a positive integer." }),
+  durationMs: z.number().int().positive({ message: "durationMs must be a positive integer (ms)." }),
 }).refine(data => data.gameId || data.accessCode, {
   message: "Either gameId or accessCode must be provided.",
 });
@@ -490,4 +488,29 @@ export const timerUpdatePayloadSchema = z.object({
 
 export const revealLeaderboardPayloadSchema = z.object({
   accessCode: z.string().min(1, { message: "Access code cannot be empty." })
+});
+
+// Canonical Zod schema for GameTimerState (MODERNIZED: only canonical fields)
+export const gameTimerStateSchema = z.object({
+  status: z.enum(['run', 'pause', 'stop']),
+  timerEndDateMs: z.number(),
+  questionUid: z.string(),
+});
+
+// DashboardTimerUpdatedPayload (MODERNIZED)
+export const dashboardTimerUpdatedPayloadSchema = z.object({
+  timer: gameTimerStateSchema,
+  questionUid: z.string(),
+  questionIndex: z.number(),
+  totalQuestions: z.number(),
+  answersLocked: z.boolean()
+});
+
+// GameTimerUpdatePayload (MODERNIZED)
+export const gameTimerUpdatePayloadSchema = z.object({
+  timer: gameTimerStateSchema,
+  questionUid: z.string(),
+  questionIndex: z.number(),
+  totalQuestions: z.number(),
+  answersLocked: z.boolean()
 });

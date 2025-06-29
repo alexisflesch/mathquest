@@ -63,8 +63,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         role: 'projection'
     });
 
-    // Override timer questionUid from game state when available
-    const timerQuestionUid = gameState?.timer?.questionUid || timer.questionUid;
+    // Use canonical timer questionUid only
+    const timerQuestionUid = timer.questionUid;
 
     // Join projection room when socket connects
     useEffect(() => {
@@ -382,7 +382,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         // Game state using canonical types
         gameState,
         currentQuestion: null, // Questions need to be fetched separately based on questionUids
-        currentQuestionUid: timerQuestionUid, // Use timer's questionUid instead of index
+        currentQuestionUid: timerQuestionUid, // Use timer's questionUid only
         connectedCount,
         gameStatus: gameState?.status ?? 'pending',
         isAnswersLocked: gameState?.answersLocked ?? false,
@@ -397,8 +397,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         correctAnswersData,
 
         // Modern timer interface - use live timer values from useSimpleTimer for countdown
-        timerStatus: timer.status || gameState?.timer?.status,
-        timerQuestionUid: timerQuestionUid, // Use the overridden value
+        timerStatus: timer.status,
+        timerQuestionUid: timerQuestionUid, // Use canonical timer value
         timeLeftMs: timer.timeLeftMs, // Always use live countdown from useSimpleTimer
 
         // Socket error for auth handling (DRY principle)
@@ -430,10 +430,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         hasCorrectAnswersData: !!returnValue.correctAnswersData,
         hasCurrentStats: Object.keys(returnValue.currentStats).length > 0,
         timerValues: {
-            gameStateTimeLeft: gameState?.timer?.timeLeftMs,
             simpleTimerTimeLeft: timer.timeLeftMs,
             finalTimeLeft: returnValue.timeLeftMs,
-            gameStateStatus: gameState?.timer?.status,
             simpleTimerStatus: timer.status,
             finalStatus: returnValue.timerStatus
         }

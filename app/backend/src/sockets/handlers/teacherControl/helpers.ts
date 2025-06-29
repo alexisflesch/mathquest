@@ -1,9 +1,10 @@
 import { prisma } from '@/db/prisma';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
-import gameStateService from '@/core/services/gameStateService';
+import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
 import { GameControlStatePayload, QuestionForDashboard } from './types';
 import type { GameTimerState } from '@shared/types/core/timer';
+import { gameControlStatePayloadSchema } from '@shared/types/socketEvents.zod.dashboard';
 
 // Create a handler-specific logger
 const logger = createLogger('TeacherControlHelpers');
@@ -12,56 +13,20 @@ const logger = createLogger('TeacherControlHelpers');
 export const DASHBOARD_PREFIX = 'mathquest:dashboard:';
 export const ANSWERS_KEY_PREFIX = 'mathquest:game:answers:';
 
-/**
- * Maps backend timer structure to core GameTimerState
- */
-function mapBackendTimerToCore(backendTimer: any): GameTimerState {
-    if (!backendTimer) {
-        return {
-            status: 'stop',
-            timeLeftMs: 0,
-            durationMs: 30000, // 30 seconds in milliseconds
-            questionUid: undefined,
-            timestamp: null,
-            localTimeLeftMs: 0
-        };
-    }
-
-    // Calculate current time left if timer is running
-    // Keep all timer values in milliseconds internally
-    let timeLeft = 0;
-    let status: 'play' | 'pause' | 'stop' = 'stop';
-
-    if (backendTimer.isPaused) {
-        status = 'pause';
-        timeLeft = backendTimer.timeRemainingMs || 0; // Keep in milliseconds
-    } else if (backendTimer.startedAt && backendTimer.startedAt > 0) {
-        status = 'play';
-        const elapsed = Date.now() - backendTimer.startedAt;
-        const remaining = Math.max(0, backendTimer.durationMs - elapsed);
-        timeLeft = remaining; // Keep in milliseconds
-    } else {
-        status = 'stop';
-        timeLeft = backendTimer.durationMs || 30000; // Default 30 seconds = 30000ms
-    }
-
-    return {
-        status,
-        timeLeftMs: timeLeft,
-        durationMs: backendTimer.durationMs || 30000, // Keep in milliseconds
-        questionUid: undefined, // Backend timer doesn't store question ID
-        timestamp: Date.now(),
-        localTimeLeftMs: timeLeft
-    };
-}
+// Legacy timer mapping removed. All timer state must use canonical contract only.
+// If a mapping is needed, use the canonical helper from timerHelpers.
 
 /**
- * Helper function to fetch and prepare the comprehensive dashboard state
+ * Returns canonical dashboard game control state, or error details if Zod validation fails
  */
-export async function getGameControlState(gameId: string | undefined, userId: string, isTestEnvironment = false): Promise<GameControlStatePayload | null> {
+export async function getGameControlState(
+    gameId: string,
+    userId: string,
+    isTestEnvironment: boolean
+): Promise<{ controlState: GameControlStatePayload | null, errorDetails?: any }> {
     if (!gameId) {
         logger.warn({ userId }, 'Game ID is undefined');
-        return null;
+        return { controlState: null, errorDetails: 'Game ID is undefined' };
     }
     try {
         logger.info({ gameId, userId, isTestEnvironment }, 'Fetching game control state');
@@ -84,7 +49,7 @@ export async function getGameControlState(gameId: string | undefined, userId: st
 
         if (!gameInstance) {
             logger.warn({ gameId, userId }, 'Game instance not found or not authorized');
-            return null;
+            return { controlState: null, errorDetails: 'Game instance not found or not authorized' };
         }
 
         logger.info({ gameId, gameInstanceId: gameInstance.id, accessCode: gameInstance.accessCode }, 'Found game instance');
@@ -106,7 +71,7 @@ export async function getGameControlState(gameId: string | undefined, userId: st
 
         if (!gameTemplate) {
             logger.warn({ gameId, userId }, 'Quiz template not found');
-            return null;
+            return { controlState: null, errorDetails: 'Quiz template not found' };
         }
 
         logger.info({ gameId, templateId: gameTemplate.id, questionCount: gameTemplate.questions.length }, 'Found game template');
@@ -115,26 +80,42 @@ export async function getGameControlState(gameId: string | undefined, userId: st
         const fullState = await gameStateService.getFullGameState(gameInstance.accessCode);
         if (!fullState || !fullState.gameState) {
             logger.warn({ gameId, accessCode: gameInstance.accessCode }, 'Game state not found in Redis');
-            return null;
+            return { controlState: null, errorDetails: 'Game state not found in Redis' };
         }
 
         const gameState = fullState.gameState;
 
-        // Transform questions for the dashboard
-        const questions: QuestionForDashboard[] = gameTemplate.questions.map((q: any) => {
+        // Transform questions for the dashboard using canonical Zod type
+        const questions = gameTemplate.questions.map((q: any) => {
             const question = q.question;
-
+            // Canonicalize questionType (map legacy to canonical if needed)
+            let canonicalType = question.questionType;
+            if (typeof canonicalType === 'string') {
+                if (canonicalType.toUpperCase() === 'SINGLE_CORRECT' || canonicalType.toUpperCase() === 'SINGLE_CHOICE') {
+                    canonicalType = 'SINGLE_CHOICE';
+                } // Add more mappings as needed
+            } else {
+                canonicalType = 'SINGLE_CHOICE';
+            }
+            // Only emit canonical fields, never legacy (e.g., no timeLimit)
             return {
                 uid: question.uid,
-                title: question.title,
-                text: question.text,
-                questionType: question.questionType,
-                timeLimit: question.timeLimit ? question.timeLimit * 1000 : 30000, // Convert seconds to milliseconds (database storage → internal processing)
-                difficulty: question.difficulty,
-                discipline: question.discipline,
+                text: question.text ?? '',
+                questionType: canonicalType,
+                discipline: question.discipline ?? '',
                 themes: Array.isArray(question.themes) ? question.themes : [],
-                answerOptions: question.answerOptions || [], // Already using answerOptions, remove comment about responses
-                correctAnswers: question.correctAnswers || [] // Add `correctAnswers`
+                difficulty: typeof question.difficulty === 'number' ? question.difficulty : 1,
+                gradeLevel: question.gradeLevel ?? '',
+                explanation: question.explanation ?? undefined,
+                tags: Array.isArray(question.tags) ? question.tags : [],
+                isHidden: !!question.isHidden,
+                createdAt: question.createdAt,
+                updatedAt: question.updatedAt,
+                answerOptions: Array.isArray(question.answerOptions) ? question.answerOptions : [],
+                correctAnswers: Array.isArray(question.correctAnswers) ? question.correctAnswers : [],
+                feedbackWaitTime: typeof question.feedbackWaitTime === 'number' ? question.feedbackWaitTime : 3,
+                // durationMs is only allowed in question definitions, not in timer state/actions
+                durationMs: typeof question.durationMs === 'number' ? question.durationMs : 30000
             };
         });
 
@@ -154,7 +135,47 @@ export async function getGameControlState(gameId: string | undefined, userId: st
             answerStats = await getAnswerStats(gameInstance.accessCode, currentQuestionUid);
         }
 
-        // Construct and return the full game control state
+        // --- MODERNIZATION: Use canonical timer system for controlState.timer ---
+        // If no current question is selected, use the first question in the list for timer/uid
+        let canonicalTimer = undefined;
+        let effectiveQuestionUid = currentQuestionUid;
+        if (!effectiveQuestionUid && questions.length > 0) {
+            effectiveQuestionUid = questions[0].uid;
+        }
+        if (effectiveQuestionUid) {
+            // Always use canonical timerEndDateMs from the timer object (no fallback allowed)
+            const q = questions.find((q: any) => q.uid === effectiveQuestionUid);
+            const rawTimer = await getCanonicalTimer(
+                gameInstance.accessCode,
+                effectiveQuestionUid,
+                gameState.gameMode,
+                gameState.status === 'completed',
+                q && typeof q.durationMs === 'number' ? q.durationMs : 0,
+                undefined,
+                undefined
+            );
+            // Canonical mapping: enforce all required fields and status
+            let status: 'run' | 'pause' | 'stop' = 'stop';
+            if (rawTimer && typeof rawTimer.status === 'string') {
+                if (rawTimer.status === 'play') status = 'run';
+                else if (rawTimer.status === 'run' || rawTimer.status === 'pause' || rawTimer.status === 'stop') status = rawTimer.status;
+            }
+            // timerEndDateMs is always required and must be a number (never null)
+            const timerEndDateMs = typeof rawTimer?.timerEndDateMs === 'number' ? rawTimer.timerEndDateMs : Date.now();
+            canonicalTimer = {
+                status,
+                timerEndDateMs,
+                questionUid: typeof rawTimer?.questionUid === 'string' ? rawTimer.questionUid : (effectiveQuestionUid ?? null)
+            } as GameTimerState;
+        } else {
+            // No timer: provide canonical default
+            canonicalTimer = {
+                status: 'stop',
+                timerEndDateMs: Date.now(),
+                questionUid: effectiveQuestionUid ?? null
+            } as GameTimerState;
+        }
+
         const controlState = {
             gameId: gameInstance.id,
             accessCode: gameInstance.accessCode,
@@ -162,16 +183,25 @@ export async function getGameControlState(gameId: string | undefined, userId: st
             status: gameState.status,
             currentQuestionUid,
             questions,
-            timer: mapBackendTimerToCore(gameState.timer),
+            timer: canonicalTimer, // Always a valid object
             answersLocked: gameState.answersLocked,
             participantCount,
             answerStats
         };
 
-        return controlState;
+        // Log the constructed controlState for debugging
+        logger.info({ controlState }, 'Constructed controlState before Zod validation');
+        // Validate with Zod (throws if invalid)
+        try {
+            gameControlStatePayloadSchema.parse(controlState);
+            return { controlState };
+        } catch (zodError) {
+            logger.error({ gameId, userId, zodError }, 'Zod validation failed for game control state');
+            return { controlState: null, errorDetails: zodError instanceof Error ? zodError.message : zodError };
+        }
     } catch (error) {
         logger.error({ gameId, userId, error }, 'Error preparing game control state');
-        return null;
+        return { controlState: null, errorDetails: error instanceof Error ? error.message : error };
     }
 }
 

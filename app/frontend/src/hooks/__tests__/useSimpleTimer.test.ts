@@ -94,4 +94,44 @@ describe('useSimpleTimer', () => {
 
         expect(mockSocket.emit).not.toHaveBeenCalled();
     });
+
+    it('should set timeLeftMs to 0 and expose canonical durationMs when receiving a stopped timer update', () => {
+        const { result } = renderHook(() =>
+            useSimpleTimer({
+                gameId: 'test-game',
+                accessCode: 'TEST123',
+                socket: mockSocket as any,
+                role: 'student'
+            })
+        );
+
+        // Simulate receiving a stopped timer update from backend
+        const stoppedPayload = {
+            timer: {
+                status: 'stop',
+                timeLeftMs: 0,
+                durationMs: 42000,
+                questionUid: 'q-123',
+                timestamp: Date.now(),
+                localTimeLeftMs: null
+            },
+            questionUid: 'q-123'
+        };
+
+        // Find the handler registered for GAME_TIMER_UPDATED
+        const handler = (mockSocket.on as jest.Mock).mock.calls.find(
+            ([event]) => event === 'game_timer_updated'
+        )?.[1];
+        expect(handler).toBeDefined();
+        if (handler) {
+            act(() => {
+                handler(stoppedPayload);
+            });
+        }
+
+        expect(result.current.status).toBe('stop');
+        expect(result.current.timeLeftMs).toBe(0);
+        expect(result.current.durationMs).toBe(42000);
+        expect(result.current.questionUid).toBe('q-123');
+    });
 });

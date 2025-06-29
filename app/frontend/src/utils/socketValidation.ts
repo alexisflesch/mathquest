@@ -144,7 +144,7 @@ export const SocketSchemas = {
         running: z.boolean(),
         durationMs: z.number().optional(),
         questionUid: z.string().optional(),
-        status: z.enum(['play', 'pause', 'stop']).optional()
+        status: z.enum(['run', 'pause', 'stop']).optional()
     }),
     timerAction: timerActionPayloadSchema,
 

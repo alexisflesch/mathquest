@@ -5,6 +5,7 @@
  */
 // Using type imports to avoid runtime dependencies
 import type { Server, Socket } from 'socket.io';
+import type { TimerActionPayload } from '../core/timer';
 
 /**
  * Tournament events payloads
@@ -56,15 +57,8 @@ export interface UpdateTournamentCodePayload {
     newCode: string;
 }
 
-export interface QuizTimerActionPayload {
-    /** Game access code (legacy, optional for new backend) */
-    accessCode?: string;
-    /** Game ID for new backend (optional, for migration) */
-    gameId?: string;
-    action: 'start' | 'pause' | 'resume' | 'stop' | 'set_duration';
-    duration?: number;
-    teacherId?: string;
-}
+// Canonical alias: use only TimerActionPayload everywhere
+export type QuizTimerActionPayload = TimerActionPayload;
 
 export interface LockUnlockPayload {
     /** Game access code (legacy, optional for new backend) */

@@ -622,3 +622,5 @@ export function isFeedbackPayload(data: unknown): data is FeedbackPayload {
         typeof f.feedbackRemaining === 'number'
     );
 }
+
+// No timer status string literals to update in this file; all type guards use canonical types from shared

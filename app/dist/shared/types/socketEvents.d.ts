@@ -1,6 +1,7 @@
-import { feedbackPayloadSchema } from './socketEvents.zod';
+import { feedbackPayloadSchema, revealLeaderboardPayloadSchema } from './socketEvents.zod';
 import type { z } from 'zod';
 export type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
+export type RevealLeaderboardPayload = z.infer<typeof revealLeaderboardPayloadSchema>;
 import type { ParticipantData, TimerUpdatePayload, GameTimerUpdatePayload, TimerActionPayload, AnswerSubmissionPayload as GameAnswerPayload, LeaderboardEntry } from './core';
 import type { LiveQuestionPayload } from './quiz/liveQuestion';
 import type { SetQuestionPayload, DashboardAnswerStatsUpdatePayload, JoinDashboardPayload } from './socket/dashboardPayloads';
@@ -264,13 +265,14 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
         count: number;
     }) => void;
     projector_state: (payload: any) => void;
+    projection_leaderboard_update: (payload: import('./socket/projectionLeaderboardUpdatePayload').ProjectionLeaderboardUpdatePayload) => void;
 }
 export interface InterServerEvents {
 }
 export interface SocketData {
     userId?: string;
     username?: string;
-    role?: 'player' | 'teacher' | 'admin' | 'projector';
+    role?: 'STUDENT' | 'TEACHER' | 'GUEST';
     accessCode?: string;
     currentGameRoom?: string;
     practiceSessionId?: string;
@@ -286,4 +288,13 @@ export interface AnswerReceivedPayload {
     correct?: boolean;
     correctAnswers?: boolean[];
     explanation?: string;
+}
+/**
+ * Teacher to Server Events
+ */
+export interface TeacherToServerEvents {
+    /**
+     * Teacher requests to reveal the full leaderboard (trophy button)
+     */
+    reveal_leaderboard: (payload: RevealLeaderboardPayload) => void;
 }

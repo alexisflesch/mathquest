@@ -133,7 +133,7 @@ describe('useTeacherQuizSocket State Updates', () => {
         const initialState: QuizState = {
             currentQuestionIdx: 0,
             questions: [{ uid: 'q1', text: 'Q1', questionType: QUESTION_TYPES.MULTIPLE_CHOICE_EN, answerOptions: [], correctAnswers: [], timeLimit: 20 }] as QuestionData[],
-            chrono: { timeLeftMs: 20, running: true, status: 'play' },
+            chrono: { timeLeftMs: 20, running: true, status: 'run' },
             locked: false,
             ended: false,
             stats: {},
@@ -143,7 +143,7 @@ describe('useTeacherQuizSocket State Updates', () => {
             if (gameControlCallback) gameControlCallback(initialState);
         });
         // Now send quiz_timer_update
-        const mockTimerUpdate = { questionUid: 'q1', timeLeftMs: 10000, status: 'pause' as 'play' | 'pause' | 'stop', running: false }; // ms, not s
+        const mockTimerUpdate = { questionUid: 'q1', timeLeftMs: 10000, status: 'pause' as 'run' | 'pause' | 'stop', running: false }; // ms, not s
         act(() => {
             const callback = mockSocket.on.mock.calls.find(call => call[0] === 'quiz_timer_update')?.[1];
             if (callback) callback(mockTimerUpdate);

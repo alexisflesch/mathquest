@@ -22,6 +22,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logger = void 0;
+exports.flushLogger = flushLogger;
 const winston_1 = __importDefault(require("winston"));
 const path_1 = __importDefault(require("path"));
 // Winston log levels and their priorities
@@ -128,5 +129,12 @@ exports.logger.info('Winston logger initialized successfully', {
     logDir: LOG_DIR,
     nodeEnv: process.env.NODE_ENV
 });
+// Add a flush method for test and script environments
+function flushLogger() {
+    return new Promise((resolve) => {
+        baseLogger.on('finish', resolve);
+        baseLogger.end();
+    });
+}
 // Export for CommonJS environments (e.g., Node.js)
 exports.default = createLogger;

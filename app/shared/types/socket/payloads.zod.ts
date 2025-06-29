@@ -10,12 +10,10 @@ export const setQuestionPayloadSchema = z.object({
 });
 
 export const timerActionPayloadSchema = z.object({
-  status: z.union([z.literal("play"), z.literal("pause"), z.literal("stop")]),
-  questionUid: z.string(),
-  timeLeftMs: z.number().optional(),
-  quizId: z.string(),
-  teacherId: z.string().optional(),
-  tournamentCode: z.string().optional(),
+  action: z.union([z.literal("run"), z.literal("pause"), z.literal("stop")]),
+  accessCode: z.string(),
+  durationMs: z.number().optional(),
+  questionUid: z.string(), // REQUIRED, canonical
 });
 
 export const setTimerPayloadSchema = z.object({
@@ -92,18 +90,8 @@ export const updateAvatarPayloadSchema = z.object({
   newAvatar: z.string(),
 });
 
-export const quizTimerActionPayloadSchema = z.object({
-  gameId: z.string(),
-  action: z.union([
-    z.literal("start"),
-    z.literal("pause"),
-    z.literal("resume"),
-    z.literal("stop"),
-    z.literal("set_duration"),
-  ]),
-  questionUid: z.string().optional(),
-  durationMs: z.number().optional(),
-});
+// Canonical alias: use only timerActionPayloadSchema everywhere
+export const quizTimerActionPayloadSchema = timerActionPayloadSchema;
 
 export const gameTimerUpdatePayloadSchema = z.object({
   questionUid: z.string().optional(),

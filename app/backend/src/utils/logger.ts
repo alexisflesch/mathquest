@@ -165,5 +165,13 @@ logger.info('Winston logger initialized successfully', {
     nodeEnv: process.env.NODE_ENV
 });
 
+// Add a flush method for test and script environments
+export function flushLogger(): Promise<void> {
+    return new Promise((resolve) => {
+        baseLogger.on('finish', resolve);
+        baseLogger.end();
+    });
+}
+
 // Export for CommonJS environments (e.g., Node.js)
 export default createLogger;

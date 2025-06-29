@@ -4,7 +4,6 @@ import { setQuestionHandler } from './setQuestion';
 import { timerActionHandler } from './timerAction';
 import { lockAnswersHandler } from './lockAnswers';
 import { endGameHandler } from './endGame';
-import { startTimerHandler } from './startTimer';
 import { pauseTimerHandler } from './pauseTimer';
 import { disconnectHandler } from './disconnect';
 import { showCorrectAnswersHandler } from './showCorrectAnswers';
@@ -33,8 +32,8 @@ export function registerTeacherControlHandlers(io: SocketIOServer, socket: Socke
     logger.info({ event: TEACHER_EVENTS.SET_QUESTION }, 'Registering set_question handler');
     socket.on(TEACHER_EVENTS.SET_QUESTION, setQuestionHandler(io, socket));
 
-    // Timer actions (start, pause, resume, stop, set_duration)
-    logger.info({ event: TEACHER_EVENTS.TIMER_ACTION }, 'Registering timer_action handler');
+    // Timer actions (canonical)
+    logger.info({ event: TEACHER_EVENTS.TIMER_ACTION }, 'Registering quiz_timer_action handler');
     socket.on(TEACHER_EVENTS.TIMER_ACTION, timerActionHandler(io, socket));
 
     // Lock or unlock answers
@@ -44,10 +43,6 @@ export function registerTeacherControlHandlers(io: SocketIOServer, socket: Socke
     // End the game
     logger.info({ event: TEACHER_EVENTS.END_GAME }, 'Registering end_game handler');
     socket.on(TEACHER_EVENTS.END_GAME, endGameHandler(io, socket));
-
-    // Handle start_timer event
-    logger.info({ event: TEACHER_EVENTS.START_TIMER }, 'Registering start_timer handler');
-    socket.on(TEACHER_EVENTS.START_TIMER, startTimerHandler(io, socket));
 
     // Handle pause_timer event
     logger.info({ event: TEACHER_EVENTS.PAUSE_TIMER }, 'Registering pause_timer handler');

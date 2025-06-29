@@ -11,12 +11,10 @@ exports.setQuestionPayloadSchema = zod_1.z.object({
     tournamentCode: zod_1.z.string().optional(),
 });
 exports.timerActionPayloadSchema = zod_1.z.object({
-    status: zod_1.z.union([zod_1.z.literal("play"), zod_1.z.literal("pause"), zod_1.z.literal("stop")]),
-    questionUid: zod_1.z.string(),
-    timeLeftMs: zod_1.z.number().optional(),
-    quizId: zod_1.z.string(),
-    teacherId: zod_1.z.string().optional(),
-    tournamentCode: zod_1.z.string().optional(),
+    action: zod_1.z.union([zod_1.z.literal("run"), zod_1.z.literal("pause"), zod_1.z.literal("stop")]),
+    accessCode: zod_1.z.string(),
+    durationMs: zod_1.z.number().optional(),
+    questionUid: zod_1.z.string(), // REQUIRED, canonical
 });
 exports.setTimerPayloadSchema = zod_1.z.object({
     gameId: zod_1.z.string(),
@@ -81,18 +79,8 @@ exports.updateAvatarPayloadSchema = zod_1.z.object({
     tournamentCode: zod_1.z.string(),
     newAvatar: zod_1.z.string(),
 });
-exports.quizTimerActionPayloadSchema = zod_1.z.object({
-    gameId: zod_1.z.string(),
-    action: zod_1.z.union([
-        zod_1.z.literal("start"),
-        zod_1.z.literal("pause"),
-        zod_1.z.literal("resume"),
-        zod_1.z.literal("stop"),
-        zod_1.z.literal("set_duration"),
-    ]),
-    questionUid: zod_1.z.string().optional(),
-    durationMs: zod_1.z.number().optional(),
-});
+// Canonical alias: use only timerActionPayloadSchema everywhere
+exports.quizTimerActionPayloadSchema = exports.timerActionPayloadSchema;
 exports.gameTimerUpdatePayloadSchema = zod_1.z.object({
     questionUid: zod_1.z.string().optional(),
     timer: zod_1.z

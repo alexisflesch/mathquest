@@ -32,7 +32,8 @@ class QuestionService {
                     author: data.author || userId, // Default to userId if not specified
                     explanation: data.explanation,
                     tags: data.tags || [],
-                    timeLimit: data.timeLimit,
+                    // Canonical: use only durationMs, remove timeLimit
+                    // durationMs: data.durationMs, // DO NOT persist to DB (not in Prisma schema)
                     isHidden: data.isHidden
                 }
             });
@@ -297,11 +298,18 @@ class QuestionService {
      * Converts null values to undefined for optional fields
      */
     normalizeQuestion(question) {
+        // Canonical: always provide durationMs in ms, never legacy timeLimit
+        const durationMs = typeof question.timeLimit === 'number' ? question.timeLimit * 1000 : 30000;
+        const { timeLimit, // remove legacy
+        ...rest } = question;
         return {
-            ...question,
+            ...rest,
             title: question.title ?? undefined,
             author: question.author ?? undefined,
-            explanation: question.explanation ?? undefined
+            explanation: question.explanation ?? undefined,
+            // Defensive: ensure all optional string fields are never null
+            // Add more fields here if needed
+            durationMs // canonical
         };
     }
 }

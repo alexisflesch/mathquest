@@ -22,7 +22,7 @@
 import React, { useState, useCallback, useRef } from "react";
 import { Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
-import type { Question } from "@/types/api";
+import type { Question } from '@shared/types/core/question';
 import { SortableQuestion } from './SortableQuestion';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
@@ -45,10 +45,11 @@ interface DraggableQuestionsListProps {
     onStop: () => void;
     onEditTimer: (uid: string, newTime: number) => void;
     onReorder?: (newQuestions: Question[]) => void;
-    timerStatus?: 'play' | 'pause' | 'stop';
+    timerStatus?: 'run' | 'pause' | 'stop';
     timerQuestionUid?: string | null;
     timeLeftMs?: number;
-    onTimerAction?: (info: { status: 'play' | 'pause' | 'stop'; questionUid: string; timeLeftMs: number }) => void;
+    timerDurationMs?: number; // Add timer state's durationMs (stopped value)
+    onTimerAction?: (info: { status: 'run' | 'pause' | 'stop'; questionUid: string; timeLeftMs: number }) => void;
     onImmediateUpdateActiveTimer?: (newTime: number) => void;
     disabled?: boolean;
     getStatsForQuestion?: (uid: string) => number[] | undefined; // Provide stats for each question
@@ -74,6 +75,7 @@ export default function DraggableQuestionsList({
     timerStatus,
     timerQuestionUid,
     timeLeftMs,
+    timerDurationMs, // Add to props
     onTimerAction,
     onImmediateUpdateActiveTimer,
     disabled,
@@ -117,12 +119,10 @@ export default function DraggableQuestionsList({
     }, []);
 
     const handlePlay = useCallback((questionUid: string, startTime: number) => {
-        logger.info(`handlePlay called for questionUid: ${questionUid}, startTime: ${startTime}`);
-
-        // Simply forward all play clicks to the dashboard without any filtering
-        // The dashboard has the authoritative timer state and will handle all logic
-        // IMPORTANT: Don't call onSelect here - let the dashboard handle selection after confirmation
-        logger.info(`Forwarding to dashboard handlePlay: ${questionUid}, timeLeftMs: ${startTime}`);
+        logger.info(`[DEBUG][DraggableQuestionsList] handlePlay called for questionUid: ${questionUid}, startTime (ms): ${startTime}`);
+        if (typeof startTime !== 'number' || isNaN(startTime)) {
+            logger.error(`[DEBUG][DraggableQuestionsList] handlePlay received invalid startTime:`, startTime);
+        }
         if (onPlay) onPlay(questionUid, startTime);
     }, [onPlay]);
 
@@ -152,7 +152,7 @@ export default function DraggableQuestionsList({
 
     // *** ADDED: Define the handler to immediately update the parent's localTimeLeftMs ***
     const handleImmediateUpdate = useCallback((newTime: number) => {
-        logger.debug(`DraggableQuestionsList: Immediately setting localTimeLeftMs to ${newTime}`);
+        logger.debug(`[DEBUG][DraggableQuestionsList] Immediately setting localTimeLeftMs to ${newTime}ms`);
         // Suppression de l'ancien état local du timer
         // setLocalTimeLeft(newTime);
     }, []);
@@ -169,40 +169,51 @@ export default function DraggableQuestionsList({
         };
     }, []);
 
+    // Log canonicalDurationMs for each question after edit/stop
+    questions.forEach(q => {
+        if (typeof q.durationMs === 'number') {
+            logger.info(`[DEBUG][DraggableQuestionsList] question ${q.uid} durationMs:`, q.durationMs);
+        }
+    });
+
+    // Pass canonical timerStatus and liveStatus to SortableQuestion
     return (
-        <>
-            <ul className="space-y-4">
-                {questions.length === 0 && <li key="no-questions">Aucune question pour ce quiz.</li>}
-                {questions.map((q, idx) => {
-                    const isActive = q.uid === questionActiveUid;
-                    // Compute canonical durationMs: if this is the active question, use timeLeftMs when stopped, otherwise use q.timeLimit
-                    let canonicalDurationMs = q.timeLimit;
-                    if (isActive && timerStatus === 'stop' && typeof timeLeftMs === 'number' && timeLeftMs > 0) {
-                        canonicalDurationMs = timeLeftMs;
-                    }
-                    return (
-                        <SortableQuestion
-                            key={q.uid}
-                            q={q}
-                            durationMs={canonicalDurationMs ?? 0}
-                            isActive={isActive}
-                            open={expandedUids.has(q.uid)}
-                            setOpen={() => onToggleExpand(q.uid)}
-                            onPlay={(uid, timerValue) => handlePlay(uid, timerValue)}
-                            onEditTimer={(newTime) => onEditTimer(q.uid, newTime)}
-                            onPause={handlePause}
-                            onStop={handleStop}
-                            liveTimeLeft={isActive ? effectiveTimeLeft : undefined}
-                            liveStatus={isActive ? timerStatus : undefined}
-                            onImmediateUpdateActiveTimer={handleImmediateUpdate}
-                            disabled={disabled}
-                            quizId={quizId}
-                            currentTournamentCode={currentTournamentCode}
-                            stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
-                        />
-                    );
-                })}
-            </ul>
-        </>
+        <ul className="draggable-questions-list">
+            {questions.map((q, idx) => {
+                const isActive = q.uid === questionActiveUid;
+                let canonicalDurationMs = q.durationMs;
+                if (isActive && timerStatus === 'stop' && typeof timerDurationMs === 'number' && timerDurationMs > 0) {
+                    canonicalDurationMs = timerDurationMs;
+                }
+                logger.info(`[TIMER DEBUG][DraggableQuestionsList] q.uid: ${q.uid}, isActive: ${isActive}, effectiveTimeLeft: ${effectiveTimeLeft}, canonicalDurationMs: ${canonicalDurationMs}, timerStatus: ${timerStatus}`);
+                return (
+                    <SortableQuestion
+                        key={q.uid}
+                        q={q}
+                        durationMs={canonicalDurationMs ?? 0}
+                        isActive={isActive}
+                        open={expandedUids.has(q.uid)}
+                        setOpen={() => onToggleExpand(q.uid)}
+                        onPlay={(uid, timerValue) => {
+                            logger.info(`[DEBUG][DraggableQuestionsList] onPlay for ${uid} with timerValue (ms): ${timerValue}`);
+                            handlePlay(uid, timerValue);
+                        }}
+                        onEditTimer={(newTimeMs) => {
+                            logger.info(`[DEBUG][DraggableQuestionsList] onEditTimer for ${q.uid} with newTimeMs: ${newTimeMs}`);
+                            onEditTimer(q.uid, newTimeMs);
+                        }}
+                        onPause={handlePause}
+                        onStop={handleStop}
+                        liveTimeLeft={isActive ? effectiveTimeLeft : undefined}
+                        liveStatus={isActive ? timerStatus : undefined}
+                        onImmediateUpdateActiveTimer={handleImmediateUpdate}
+                        disabled={disabled}
+                        quizId={quizId}
+                        currentTournamentCode={currentTournamentCode}
+                        stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
+                    />
+                );
+            })}
+        </ul>
     );
 }

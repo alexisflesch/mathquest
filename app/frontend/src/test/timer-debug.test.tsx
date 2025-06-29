@@ -29,14 +29,14 @@ jest.mock('@/utils/timerDebugLogger', () => ({
     logTimerError: jest.fn()
 }));
 
-// Mock the unified game manager
+// Mock the unified game manager (modernized: only canonical ms-based timer fields)
 const mockTimerState = {
     status: 'stop' as TimerStatus,
     timeLeftMs: 0,
     durationMs: 30000,
     questionUid: undefined as string | null | undefined,
     timestamp: null as number | null,
-    localTimeLeftMs: null as number | null
+    localTimeLeftMs: 0 as number | null // always ms-based
 };
 
 const mockGameManager = {
@@ -103,7 +103,7 @@ function TimerTestComponent({ accessCode, token, gameId }: { accessCode: string 
             <div data-testid="connected-count">{connectedCount}</div>
             <button
                 data-testid="start-timer"
-                onClick={() => emitTimerAction({ status: 'play', questionUid: 'test-q1', timeLeftMs: 30000 })}
+                onClick={() => emitTimerAction({ action: 'run', questionUid: 'test-q1', durationMs: 30000 })}
             >
                 Start Timer
             </button>
@@ -146,7 +146,7 @@ describe('Timer Debug Test', () => {
 
         // Simulate backend timer update
         mockGameManager.gameState.timer = {
-            status: 'play',
+            status: 'run',
             timeLeftMs: 25000, // 25 seconds in milliseconds
             durationMs: 30000,
             questionUid: 'test-q1',
@@ -164,7 +164,7 @@ describe('Timer Debug Test', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByTestId('timer-status')).toHaveTextContent('play');
+            expect(screen.getByTestId('timer-status')).toHaveTextContent('run');
             expect(screen.getByTestId('timer-question-id')).toHaveTextContent('test-q1');
             expect(Number(screen.getByTestId('time-left').textContent)).toBeCloseTo(25000, -2);
             // Accept 0 for localTimeLeftMs if not updated by unified system
@@ -281,10 +281,7 @@ describe('Timer Value Consistency Test', () => {
             });
         }
 
-        // Remove legacy value consistency check; unified system may not update timer in this way
-        // for (let i = 1; i < timerValues.length; i++) {
-        //     expect(timerValues[i]).toBeLessThanOrEqual(timerValues[i - 1] + 1000); // allow 1s margin
-        // }
+        // Value consistency check removed: unified system is ms-based and may update timer differently
     });
 });
 
@@ -307,7 +304,7 @@ describe('Backend Event Simulation Test', () => {
 
         // Simulate dashboard_timer_updated event response
         mockGameManager.gameState.timer = {
-            status: 'play',
+            status: 'run',
             timeLeftMs: 15000,
             durationMs: 30000,
             questionUid: 'test-q1',
@@ -320,7 +317,7 @@ describe('Backend Event Simulation Test', () => {
 
         await waitFor(() => {
             const statuses = screen.getAllByTestId('status').map(el => el.textContent);
-            expect(statuses).toContain('play');
+            expect(statuses).toContain('run');
             // Accept 0 for time if unified system does not update it
             const times = screen.getAllByTestId('time').map(el => Number(el.textContent));
             expect(times.some(t => t === 0 || t === 15000)).toBe(true);

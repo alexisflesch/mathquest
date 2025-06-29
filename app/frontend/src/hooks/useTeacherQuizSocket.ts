@@ -24,12 +24,10 @@ import { z } from 'zod';
 // Derive types from Zod schemas
 type SetQuestionPayload = z.infer<typeof setQuestionPayloadSchema>;
 type EndGamePayload = z.infer<typeof endGamePayloadSchema>;
-type TimerActionPayload = z.infer<typeof timerActionPayloadSchema>;
-type SetTimerPayload = z.infer<typeof setTimerPayloadSchema>;
-type UpdateTournamentCodePayload = z.infer<typeof updateTournamentCodePayloadSchema>;
 
 // Import core types
-import type { Question, TimerStatus } from '@shared/types/core';
+import type { TimerStatus, TimerActionPayload } from '@shared/types/core/timer';
+import type { SetTimerPayload, UpdateTournamentCodePayload } from '@shared/types/socket/payloads';
 import type { QuestionData, ServerToClientEvents } from '@shared/types/socketEvents';
 import type { ExtendedQuizState as QuizState } from '@shared/types/quiz/state';
 import type { DashboardAnswerStatsUpdatePayload } from '@shared/types/socket/dashboardPayloads';
@@ -177,54 +175,40 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         }
     }, [socket.socket, quizId, accessCode]);
 
-    const emitPauseQuiz = useCallback(() => {
+    const emitPauseQuiz = useCallback((questionUid: string) => {
         logger.info('emitPauseQuiz called');
 
         if (socket.socket && accessCode) {
-            // Validate payload with Zod schema
             const payload: TimerActionPayload = {
-                accessCode,
-                action: 'pause'
-                // questionUid is optional for pause action
+                accessCode: accessCode,
+                action: 'pause',
+                questionUid: questionUid
             };
-
-            try {
-                const validatedPayload = timerActionPayloadSchema.parse(payload);
-                socket.socket.emit('quiz_timer_action', validatedPayload);
-            } catch (error) {
-                logger.error('Invalid quiz_timer_action payload:', error);
-            }
+            socket.socket.emit('quiz_timer_action', payload);
         }
     }, [socket.socket, accessCode]);
 
-    const emitResumeQuiz = useCallback(() => {
+    const emitResumeQuiz = useCallback((questionUid: string) => {
         logger.info('emitResumeQuiz called');
 
         if (socket.socket && accessCode) {
-            // Validate payload with Zod schema
             const payload: TimerActionPayload = {
-                accessCode,
-                action: 'resume'
-                // questionUid is optional for resume action
+                accessCode: accessCode,
+                action: 'run',
+                questionUid: questionUid
             };
-
-            try {
-                const validatedPayload = timerActionPayloadSchema.parse(payload);
-                socket.socket.emit('quiz_timer_action', validatedPayload);
-            } catch (error) {
-                logger.error('Invalid quiz_timer_action payload:', error);
-            }
+            socket.socket.emit('quiz_timer_action', payload);
         }
     }, [socket.socket, accessCode]);
 
-    const emitSetTimer = useCallback((newTime: number, questionUid?: string) => {
+    const emitSetTimer = useCallback((newTime: number, questionUid: string) => {
         logger.info('emitSetTimer called', { newTime, questionUid });
 
         if (socket.socket && quizId) {
             const payload: SetTimerPayload = {
                 gameId: quizId,
                 time: newTime,
-                questionUid
+                questionUid // now required
             };
 
             try {
@@ -236,46 +220,20 @@ export function useTeacherQuizSocket(accessCode: string | null, token: string | 
         }
     }, [socket.socket, quizId]);
 
-    const emitTimerAction = useCallback((payload: { status: string; questionUid?: string; timeLeftMs?: number }) => {
+    // Canonical timer action emitter: only 'run', 'pause', 'stop' allowed
+    const emitTimerAction = useCallback((payload: { action: 'run' | 'pause' | 'stop'; questionUid: string; durationMs?: number }) => {
         logger.info('emitTimerAction called', payload);
 
-        const { status, questionUid, timeLeftMs } = payload;
+        const { action, questionUid, durationMs } = payload;
 
         if (socket.socket && accessCode) {
-            let backendAction: 'start' | 'pause' | 'resume' | 'stop';
-            switch (status) {
-                case 'play':
-                    backendAction = (timeLeftMs !== undefined) ? 'start' : 'resume';
-                    break;
-                case 'pause':
-                    backendAction = 'pause';
-                    break;
-                case 'stop':
-                    backendAction = 'stop';
-                    break;
-                default:
-                    backendAction = 'stop';
-            }
-
             const socketPayload: TimerActionPayload = {
                 accessCode: accessCode,
-                action: backendAction,
+                action,
                 questionUid,
-                duration: timeLeftMs
+                ...(durationMs !== undefined ? { durationMs } : {})
             };
-
-            try {
-                timerActionPayloadSchema.parse(socketPayload);
-                logger.debug('Emitting timer action', {
-                    action: backendAction,
-                    questionUid: questionUid,
-                    duration: timeLeftMs
-                });
-
-                socket.socket.emit(SOCKET_EVENTS.TEACHER.TIMER_ACTION as any, socketPayload);
-            } catch (error) {
-                logger.error('Invalid quiz_timer_action payload:', error);
-            }
+            socket.socket.emit('quiz_timer_action', socketPayload);
         }
     }, [socket.socket, accessCode]);
 

@@ -3,6 +3,7 @@ import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 import { GameState, LeaderboardEntry, ParticipationType } from '@shared/types/core';
+import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 
 // Re-export GameState for backward compatibility
 export { GameState } from '@shared/types/core';
@@ -133,14 +134,6 @@ export async function initializeGameState(gameInstanceId: string): Promise<GameS
             answersLocked: false, // Default to unlocked
             gameMode: gameInstance.playMode, // Use the playMode from the game instance
             linkedQuizId: gameInstance.gameTemplateId, // Link to the template
-            timer: {
-                status: 'stop',
-                timeLeftMs: 0,
-                durationMs: 0,
-                questionUid: null,
-                timestamp: Date.now(),
-                localTimeLeftMs: null
-            },
             settings: {
                 timeMultiplier: typeof gameInstance.settings === 'object' && gameInstance.settings !== null
                     ? (gameInstance.settings as any).timeMultiplier || 1.0
@@ -149,6 +142,7 @@ export async function initializeGameState(gameInstanceId: string): Promise<GameS
                     ? (gameInstance.settings as any).showLeaderboard || true
                     : true
             }
+            // [MODERNIZATION] Legacy timer field fully removed. All timer logic is handled by CanonicalTimerService.
         };
 
         // Store in Redis with expiration (24 hours)
@@ -208,7 +202,8 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
             return null;
         }
 
-        // Modify game state - set both currentQuestionIndex and timer.questionUid
+        // Move isDeferred assignment BEFORE status change to avoid type error
+        const isDeferred = gameState.status === 'completed'; // Business rule: treat completed as deferred
         gameState.status = 'active';
         gameState.currentQuestionIndex = questionIndex;
 
@@ -233,16 +228,8 @@ export async function setCurrentQuestion(accessCode: string, questionIndex: numb
 
         gameState.questionData = questionData;
 
-        // Reset and start the timer - ENSURE questionUid is properly set
-        const durationMs = (question.timeLimit || 30) * 1000 * (gameState.settings.timeMultiplier || 1);
-        gameState.timer = {
-            status: 'play',
-            timeLeftMs: durationMs,
-            durationMs: durationMs,
-            questionUid: questionUid, // This is the key fix - ensure this is set correctly
-            timestamp: Date.now(),
-            localTimeLeftMs: null
-        };
+        // Canonical timer system:
+        await canonicalTimerService.startTimer(accessCode, questionUid, gameState.gameMode as any, isDeferred);
 
         // Initialize answer collection for this question
         await redisClient.del(`${GAME_ANSWERS_PREFIX}${accessCode}:${questionUid}`);
@@ -385,11 +372,21 @@ export async function getFullGameState(accessCode: string): Promise<{
         }
 
         // Debug logging to see what game state is being returned
+        // LEGACY-TIMER-MIGRATION: timerStatus and timerQuestionUid are deprecated. Use CanonicalTimerService for timer state.
+        // logger.debug({
+        //     accessCode,
+        //     gameStateStatus: gameState.status,
+        //     timerStatus: gameState.timer?.status,
+        //     timerQuestionUid: gameState.timer?.questionUid,
+        //     questionData: gameState.questionData ? 'present' : 'missing',
+        //     questionDataUid: gameState.questionData?.uid,
+        //     participantsCount: participants.length,
+        //     answersKeys: Object.keys(answers),
+        //     leaderboardCount: leaderboard.length
+        // }, 'Full game state prepared for projection');
         logger.debug({
             accessCode,
             gameStateStatus: gameState.status,
-            timerStatus: gameState.timer?.status,
-            timerQuestionUid: gameState.timer?.questionUid,
             questionData: gameState.questionData ? 'present' : 'missing',
             questionDataUid: gameState.questionData?.uid,
             participantsCount: participants.length,
@@ -427,9 +424,11 @@ export async function endCurrentQuestion(accessCode: string): Promise<GameState 
         const gameState: GameState = JSON.parse(gameStateRaw);
 
         // Pause the timer
-        gameState.timer.status = 'pause';
-        gameState.timer.timestamp = Date.now();
-        // Keep timeLeftMs as is when pausing
+        // gameState.timer.status = 'pause';
+        // gameState.timer.timestamp = Date.now();
+        // Canonical timer system:
+        const isDeferredEnd = gameState.status === 'completed'; // Business rule: treat completed as deferred
+        await canonicalTimerService.pauseTimer(accessCode, gameState.questionUids[gameState.currentQuestionIndex], gameState.gameMode as any, isDeferredEnd);
 
         // Update game state in Redis
         await redisClient.set(
@@ -513,6 +512,9 @@ export async function calculateScores(accessCode: string, questionUid: string): 
 
         for (const userId of Object.keys(participantsHash)) {
             let participant;
+            // Declare variables for scoring
+            let actualTimeSpent = 0;
+            let points = 0;
             try {
                 const participantJson = participantsHash[userId];
                 if (!participantJson) {
@@ -534,6 +536,8 @@ export async function calculateScores(accessCode: string, questionUid: string): 
                 }
 
                 let isCorrect = false;
+                // let actualTimeSpent = 0;
+                // let points = 0;
                 const submittedAnswer = answerData.answer; // This is typically the index for single_correct
 
                 if (question.questionType === 'multiple_choice_multiple_answers') {
@@ -550,26 +554,19 @@ export async function calculateScores(accessCode: string, questionUid: string): 
                         isCorrect = correctAnswerValues.includes(submittedOptionValue);
                     } else if (typeof submittedAnswer === 'string') {
                         // Accept string answers matching the correct value
-                        isCorrect = correctAnswerValues.includes(submittedAnswer);
-                    }
-                }
-
-                let points = 0;
-                if (isCorrect) {
-                    // Fix timeSpent calculation - if it's a large timestamp, treat it as such
-                    let actualTimeSpent;
-                    if (answerData.timeSpent > 1000000000000) { // If it's a timestamp (> year 2001 in ms)
-                        // This is likely a timestamp, we need the actual time spent
                         // For now, we'll use a default reasonable time or try to calculate from timestamp
                         actualTimeSpent = question.timeLimit || 30; // Default to question time limit
-                        logger.warn({ accessCode, userId, questionUid, originalTimeSpent: answerData.timeSpent },
-                            'Received timestamp instead of time spent, using question time limit');
                     } else {
                         // Convert to seconds if it was in milliseconds
                         actualTimeSpent = answerData.timeSpent > 1000 ? answerData.timeSpent / 1000 : answerData.timeSpent;
                     }
 
                     // Calculate points: base score 1000, minus time penalty, minimum 100 points
+                    if (answerData.timeSpent !== undefined) {
+                        actualTimeSpent = answerData.timeSpent > 1000 ? answerData.timeSpent / 1000 : answerData.timeSpent;
+                    } else {
+                        actualTimeSpent = question.timeLimit || 30;
+                    }
                     const timePenalty = Math.floor(actualTimeSpent * 10);
                     points = Math.max(100, 1000 - timePenalty);
 
@@ -710,6 +707,48 @@ export async function updateProjectionDisplayState(accessCode: string, state: {
     }
 }
 
+/**
+ * Get the canonical timer for a given game and questionUid
+ * @param accessCode The game access code
+ * @param questionUid The question UID
+ * @param playMode The play mode (from game state)
+ * @param isDeferred Whether the game is deferred (from game state)
+ * @param userId Optional userId (for deferred mode)
+ * @param attemptCount Optional attemptCount (for deferred mode)
+ * @returns The canonical timer object or null if not found
+ */
+
+/**
+ * Get the canonical timer for a given game and questionUid, REQUIRING canonical durationMs from the question.
+ * @param accessCode The game access code
+ * @param questionUid The question UID
+ * @param playMode The play mode (from game state)
+ * @param isDeferred Whether the game is deferred (from game state)
+ * @param durationMs The canonical duration in ms (REQUIRED, from question)
+ * @param userId Optional userId (for deferred mode)
+ * @param attemptCount Optional attemptCount (for deferred mode)
+ * @returns The canonical timer object or null if not found
+ */
+export async function getCanonicalTimer(
+    accessCode: string,
+    questionUid: string,
+    playMode: string,
+    isDeferred: boolean,
+    durationMs: number,
+    userId?: string,
+    attemptCount?: number
+): Promise<any | null> {
+    try {
+        return await canonicalTimerService.getTimer(accessCode, questionUid, playMode as any, isDeferred, userId, attemptCount, durationMs);
+    } catch (err) {
+        logger.error({ accessCode, questionUid, err }, '[getCanonicalTimer] Failed to get canonical timer');
+        return null;
+    }
+}
+
+// CanonicalTimerService instance (ensure redisClient is passed)
+const canonicalTimerService = new CanonicalTimerService(redisClient);
+
 export default {
     initializeGameState,
     setCurrentQuestion,
@@ -718,5 +757,5 @@ export default {
     updateGameState,
     getFormattedLeaderboard,
     getProjectionDisplayState,
-    updateProjectionDisplayState // Add new functions to default export
+    updateProjectionDisplayState // Do NOT include getCanonicalTimer in default export
 };

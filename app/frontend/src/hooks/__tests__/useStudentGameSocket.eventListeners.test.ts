@@ -7,7 +7,7 @@ import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 // Helper function to create proper timer state
-const createTimerState = (durationMs: number, questionUid: string, status: 'play' | 'pause' | 'stop' = 'play'): GameTimerState => ({
+const createTimerState = (durationMs: number, questionUid: string, status: 'run' | 'pause' | 'stop' = 'run'): GameTimerState => ({
     status,
     timeLeftMs: durationMs,
     durationMs,
@@ -121,7 +121,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
             eventHandlers['timer_update']?.({
                 timeLeftMs: 30000,
                 running: true,
-                status: 'play'
+                status: 'run'
             });
         });
 
@@ -207,7 +207,7 @@ describe('useStudentGameSocket - Event Listeners', () => {
             eventHandlers['timer_update']?.({
                 timeLeftMs: 20000,
                 running: true,
-                status: 'play'
+                status: 'run'
             });
         });
 

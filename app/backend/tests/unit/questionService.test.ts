@@ -56,7 +56,8 @@ describe('QuestionService', () => {
                 questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
                 themes: ['arithmetic', 'addition'],
-                difficulty: 1
+                difficulty: 1,
+                durationMs: 30000 // Added canonical timer field
             };
             const mockCreatedQuestion = {
                 uid: 'question-123',
@@ -94,7 +95,8 @@ describe('QuestionService', () => {
                 correctAnswers: [true, false],
                 questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
                 discipline: 'math',
-                themes: ['arithmetic']
+                themes: ['arithmetic'],
+                durationMs: 30000 // Added canonical timer field
             };
             const mockError = new Error('Database error');
             (prisma.question.create as any).mockRejectedValue(mockError);

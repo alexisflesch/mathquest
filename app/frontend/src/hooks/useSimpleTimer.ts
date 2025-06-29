@@ -12,16 +12,48 @@
  * - Uses existing backend events and shared types
  */
 
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
-import { TEACHER_EVENTS, GAME_EVENTS, SOCKET_EVENTS } from '@shared/types/socket/events';
+import { TEACHER_EVENTS, GAME_EVENTS } from '@shared/types/socket/events';
 import type {
     GameTimerState,
     TimerStatus,
     TimerActionPayload,
     GameTimerUpdatePayload
-} from '@shared/types';
+} from '@shared/types/core/timer';
+
+// Canonical helper: compute time left in ms given timerEndDateMs, now, and optional backend timeLeftMs
+/**
+ * Computes the canonical time left in ms for the timer, given the backend payload.
+ * - If timerEndDateMs is a positive number and status is 'run', compute from now.
+ * - If status is 'pause' and backend timeLeftMs is provided, use it directly.
+ * - If timerEndDateMs is 0 or negative, return 0.
+ *
+ * @param timerEndDateMs Absolute end date (ms since epoch, UTC)
+ * @param now Current time (ms since epoch, UTC)
+ * @param status Timer status ('run', 'pause', 'stop')
+ * @param backendTimeLeftMs Optional backend-provided timeLeftMs (for pause)
+ */
+function computeTimeLeftMs(
+    timerEndDateMs: number,
+    now: number,
+    status?: 'run' | 'pause' | 'stop',
+    backendTimeLeftMs?: number | null
+): number {
+    if (status === 'pause') {
+        if (typeof backendTimeLeftMs === 'number' && backendTimeLeftMs > 0) {
+            return backendTimeLeftMs;
+        }
+        // If paused but backendTimeLeftMs is missing or not positive, return 1 to avoid UI showing 0
+        return 1;
+    }
+    if (typeof timerEndDateMs === 'number' && timerEndDateMs > 0) {
+        return Math.max(0, timerEndDateMs - now);
+    }
+    return 0;
+}
 
 const logger = createLogger('SimpleTimer');
 
@@ -43,8 +75,6 @@ export interface SimpleTimerState {
     status: TimerStatus;
     /** Associated question UID */
     questionUid: string | null;
-    /** Total duration in milliseconds */
-    durationMs: number;
     /** Whether this timer is for the current user's role */
     isActive: boolean;
 }
@@ -98,7 +128,6 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
         timeLeftMs: 0,
         status: 'stop',
         questionUid: null,
-        durationMs: 0,
         isActive: false
     });
 
@@ -106,6 +135,8 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     const [localTimeLeft, setLocalTimeLeft] = useState<number>(0);
     const localTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastUpdateRef = useRef<number>(0);
+    // Track last timerEndDateMs to detect timer restarts
+    const lastTimerEndDateMsRef = useRef<number>(0);
 
     // Socket connection state
     const isConnected = socket?.connected ?? false;
@@ -126,57 +157,72 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
 
         const handleTimerUpdate = (payload: GameTimerUpdatePayload) => {
             logger.info('[SimpleTimer][handleTimerUpdate] Timer update received', { payload });
-            const { timer, questionUid } = payload;
+            const { timer } = payload;
             logger.info('[SimpleTimer][handleTimerUpdate] Current timerState before update', { timerState });
+            // Canonical: use backend timeLeftMs for pause, compute from timerEndDateMs for run
+            const now = Date.now();
+            let computedTimeLeftMs = 0;
+            // Use canonical helper to compute time left, supporting pause/resume
+            // timer.timeLeftMs is not part of GameTimerState, but may be present in payload.timer (backend emits it)
+            const backendTimeLeftMs = (timer as any).timeLeftMs;
+            computedTimeLeftMs = computeTimeLeftMs(
+                timer.timerEndDateMs,
+                now,
+                timer.status,
+                backendTimeLeftMs
+            );
+            if (timer.status === 'run') {
+                logger.info('[SimpleTimer][handleTimerUpdate] RUN: computedTimeLeftMs from timerEndDateMs', { computedTimeLeftMs, timerEndDateMs: timer.timerEndDateMs });
+            } else if (timer.status === 'pause') {
+                logger.info('[SimpleTimer][handleTimerUpdate] PAUSE: using backend timeLeftMs', { computedTimeLeftMs, backendTimeLeftMs });
+            } else if (timer.status === 'stop') {
+                logger.info('[SimpleTimer][handleTimerUpdate] STOP: timer stopped', { computedTimeLeftMs });
+            }
             logger.info('[SimpleTimer][handleTimerUpdate] Setting timerState to', {
-                timeLeftMs: timer.timeLeftMs || 0,
+                timeLeftMs: computedTimeLeftMs,
                 status: timer.status || 'stop',
-                questionUid: questionUid || null,
-                durationMs: timer.durationMs || 0,
-                isActive: (timer.status === 'play' || timer.status === 'pause') && (timer.timeLeftMs || 0) > 0
+                questionUid: timer.questionUid,
+                isActive: (timer.status === 'run' || timer.status === 'pause') && computedTimeLeftMs > 0
             });
 
-            // Always reset local timer state to backend payload (canonical)
-            const now = Date.now();
             const newState: SimpleTimerState = {
-                timeLeftMs: timer.timeLeftMs || 0,
+                timeLeftMs: computedTimeLeftMs,
                 status: timer.status || 'stop',
-                questionUid: questionUid || null,
-                durationMs: timer.durationMs || 0,
-                isActive: (timer.status === 'play' || timer.status === 'pause') && (timer.timeLeftMs || 0) > 0
+                questionUid: timer.questionUid,
+                isActive: (timer.status === 'run' || timer.status === 'pause') && computedTimeLeftMs > 0
             };
 
             setTimerState(newState);
-            setLocalTimeLeft(newState.timeLeftMs); // Always reset local countdown
+            // Always reset local countdown to the correct value
+            setLocalTimeLeft(computedTimeLeftMs);
             lastUpdateRef.current = now;
 
             // Start or stop local countdown based on backend status
-            if (newState.status === 'play' && newState.timeLeftMs > 0) {
+            if (newState.status === 'run' && newState.timeLeftMs > 0) {
                 logger.info('[SimpleTimer] Starting local countdown:', {
                     timeLeftMs: newState.timeLeftMs,
                     status: newState.status
                 });
-                startLocalCountdown(newState.timeLeftMs, now);
-            } else {
+                startLocalCountdown(timer.timerEndDateMs);
+            } else if (newState.status === 'pause') {
+                // Stop local countdown when paused
+                stopLocalCountdown();
+            } else if (newState.status === 'stop') {
                 stopLocalCountdown();
             }
         };
 
         // Listen to appropriate event based on role
         const eventName = role === 'teacher'
-            ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED // Canonical dashboard event for all timer updates
+            ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED
             : role === 'projection'
-                ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED // Projection also listens to dashboard event for timer updates
-                : GAME_EVENTS.GAME_TIMER_UPDATED;       // Backend sends this for students
+                ? TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED
+                : GAME_EVENTS.GAME_TIMER_UPDATED;
 
         socket.on(eventName, handleTimerUpdate);
-
-        // For students, also listen to the alternative timer_update event
         if (role === 'student') {
             socket.on(GAME_EVENTS.TIMER_UPDATE, handleTimerUpdate);
         }
-
-        // Cleanup
         return () => {
             socket.off(eventName, handleTimerUpdate);
             if (role === 'student') {
@@ -187,20 +233,19 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     }, [socket, role]);
 
     // Local countdown management
-    const startLocalCountdown = useCallback((initialTime: number, startTimestamp: number) => {
+    // Canonical: local countdown always ticks down from timerEndDateMs
+    const startLocalCountdown = useCallback((timerEndDateMs: number) => {
         stopLocalCountdown(); // Clear any existing countdown
 
-        logger.info('[SimpleTimer] Starting countdown interval:', {
-            initialTime,
+        logger.info('[SimpleTimer] Starting countdown interval (canonical):', {
+            timerEndDateMs,
             currentTime: Date.now()
         });
 
         localTimerRef.current = setInterval(() => {
             const now = Date.now();
-            const elapsed = now - startTimestamp;
-            const remaining = Math.max(0, initialTime - elapsed);
-
-            setLocalTimeLeft(remaining);
+            const remaining = computeTimeLeftMs(timerEndDateMs, now);
+            setLocalTimeLeft(remaining); // This triggers a re-render
 
             // Stop countdown when it reaches zero
             if (remaining <= 0) {
@@ -214,7 +259,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
                     const payload: TimerActionPayload = {
                         accessCode,
                         action: 'stop',
-                        duration: 0,
+                        targetTimeMs: 0,
                         questionUid: timerState.questionUid
                     };
 
@@ -232,21 +277,22 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     }, []);
 
     // Teacher actions (only available for teacher role)
+    // Canonical: Only use canonical action names and fields
     const startTimer = useCallback((questionUid: string, durationMs: number) => {
         if (role !== 'teacher' || !socket) {
             logger.warn('startTimer called but user is not teacher or socket not available');
             return;
         }
-
         logger.info('Starting timer:', { questionUid, durationMs });
-
+        const now = Date.now();
+        const timerEndDateMs = now + durationMs;
         const payload: TimerActionPayload = {
             accessCode,
-            action: 'start',
-            duration: durationMs,
+            action: 'run',
+            timerEndDateMs,
+            targetTimeMs: durationMs,
             questionUid
         };
-
         socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
     }, [role, socket, accessCode]);
 
@@ -255,33 +301,26 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             logger.warn('pauseTimer called but conditions not met');
             return;
         }
-
         logger.info('Pausing timer:', { questionUid: timerState.questionUid });
-
         const payload: TimerActionPayload = {
             accessCode,
             action: 'pause',
-            duration: localTimeLeft, // Send current remaining time
             questionUid: timerState.questionUid
         };
-
         socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
-    }, [role, socket, accessCode, timerState.questionUid, localTimeLeft]);
+    }, [role, socket, accessCode, timerState.questionUid]);
 
     const resumeTimer = useCallback(() => {
         if (role !== 'teacher' || !socket || !timerState.questionUid) {
             logger.warn('resumeTimer called but conditions not met');
             return;
         }
-
         logger.info('Resuming timer:', { questionUid: timerState.questionUid });
-
         const payload: TimerActionPayload = {
             accessCode,
-            action: 'resume',
+            action: 'run',
             questionUid: timerState.questionUid
         };
-
         socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
     }, [role, socket, accessCode, timerState.questionUid]);
 
@@ -290,53 +329,40 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             logger.warn('stopTimer called but conditions not met');
             return;
         }
-
         logger.info('Stopping timer:', { questionUid: timerState.questionUid });
-
         const payload: TimerActionPayload = {
             accessCode,
             action: 'stop',
-            duration: 0,
             questionUid: timerState.questionUid
         };
-
         socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
     }, [role, socket, accessCode, timerState.questionUid]);
 
     /**
      * Edit timer duration for a question (teacher only, does not affect play/pause/stop)
      * Emits a timer_action event with action: 'set_duration'.
+     * Canonical: Only use canonical fields.
      */
+    // No canonical editTimer action; provide a stub for interface compatibility
     const editTimer = useCallback((questionUid: string, durationMs: number, timeLeftMs?: number) => {
-        logger.info('[SimpleTimer][editTimer] called', { questionUid, durationMs, timeLeftMs, socketConnected: socket?.connected, accessCode });
-        if (role !== 'teacher' || !socket) {
-            logger.warn('[SimpleTimer][editTimer] called but user is not teacher or socket not available', { role, socketAvailable: !!socket });
-            return;
-        }
-        const payload: TimerActionPayload = {
-            accessCode,
-            questionUid,
-            action: 'set_duration',
-            duration: durationMs,
-            ...(typeof timeLeftMs === 'number' ? { timeLeftMs } : { timeLeftMs: durationMs })
-        };
-        logger.info('[SimpleTimer][editTimer] Emitting TIMER_ACTION for set_duration', { event: TEACHER_EVENTS.TIMER_ACTION, payload });
-        socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
-    }, [role, socket, accessCode]);
+        logger.warn('[SimpleTimer][editTimer] called, but no canonical edit action exists. Ignoring.', { questionUid, durationMs, timeLeftMs });
+    }, []);
 
     // Return the hook interface
+    // Always use backend's timeLeftMs for pause, never show 0 unless time is actually up
+    let displayTimeLeftMs = timerState.timeLeftMs;
+    if (timerState.status === 'run') {
+        displayTimeLeftMs = localTimeLeft;
+    } else if (timerState.status === 'pause') {
+        // If backend timeLeftMs is 0 or undefined, show 1ms to avoid UI showing 0 unless truly expired
+        if (typeof timerState.timeLeftMs !== 'number' || timerState.timeLeftMs <= 0) {
+            displayTimeLeftMs = 1;
+        }
+    }
     return {
-        // State (use local countdown for smooth UI, fallback to backend state)
-        timeLeftMs:
-            timerState.status === 'play'
-                ? localTimeLeft
-                : timerState.status === 'stop'
-                    ? 0
-                    : timerState.timeLeftMs,
+        timeLeftMs: displayTimeLeftMs,
         status: timerState.status,
         questionUid: timerState.questionUid,
-        // Always expose canonical durationMs from backend, even when stopped
-        durationMs: timerState.durationMs,
         isActive: timerState.isActive,
 
         // Actions (only work for teachers)

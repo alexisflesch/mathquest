@@ -13,10 +13,13 @@ export declare const TEACHER_EVENTS: {
     TIMER_ACTION: string;
     START_TIMER: string;
     PAUSE_TIMER: string;
+    /** Set timer duration for a question (does not affect play/pause/stop) */
+    TIMER_SET_DURATION: string;
     LOCK_ANSWERS: string;
     END_GAME: string;
     SHOW_CORRECT_ANSWERS: string;
     TOGGLE_PROJECTION_STATS: string;
+    REVEAL_LEADERBOARD: string;
     GAME_CONTROL_STATE: string;
     DASHBOARD_JOINED: string;
     TIMER_UPDATE: string;
@@ -76,7 +79,6 @@ export declare const PROJECTOR_EVENTS: {
     PROJECTION_LEFT: string;
     PROJECTION_ERROR: string;
     PROJECTION_QUESTION_CHANGED: string;
-    PROJECTION_TIMER_UPDATED: string;
     PROJECTION_CONNECTED_COUNT: string;
     PROJECTION_STATE: string;
     PROJECTION_LEADERBOARD_UPDATE: string;
@@ -128,10 +130,13 @@ export declare const SOCKET_EVENTS: {
         TIMER_ACTION: string;
         START_TIMER: string;
         PAUSE_TIMER: string;
+        /** Set timer duration for a question (does not affect play/pause/stop) */
+        TIMER_SET_DURATION: string;
         LOCK_ANSWERS: string;
         END_GAME: string;
         SHOW_CORRECT_ANSWERS: string;
         TOGGLE_PROJECTION_STATS: string;
+        REVEAL_LEADERBOARD: string;
         GAME_CONTROL_STATE: string;
         DASHBOARD_JOINED: string;
         TIMER_UPDATE: string;
@@ -227,7 +232,6 @@ export declare const SOCKET_EVENTS: {
         PROJECTION_LEFT: string;
         PROJECTION_ERROR: string;
         PROJECTION_QUESTION_CHANGED: string;
-        PROJECTION_TIMER_UPDATED: string;
         PROJECTION_CONNECTED_COUNT: string;
         PROJECTION_STATE: string;
         PROJECTION_LEADERBOARD_UPDATE: string;

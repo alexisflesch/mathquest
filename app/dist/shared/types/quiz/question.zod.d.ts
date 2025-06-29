@@ -14,14 +14,15 @@ export declare const questionSchema: z.ZodObject<{
     author: z.ZodOptional<z.ZodString>;
     explanation: z.ZodOptional<z.ZodString>;
     tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    timeLimit: z.ZodOptional<z.ZodNumber>;
     isHidden: z.ZodOptional<z.ZodBoolean>;
+    durationMs: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     text: string;
     answerOptions: string[];
     correctAnswers: boolean[];
     questionType: string;
     discipline: string;
+    durationMs: number;
     uid?: string | undefined;
     title?: string | undefined;
     themes?: string[] | undefined;
@@ -30,7 +31,6 @@ export declare const questionSchema: z.ZodObject<{
     author?: string | undefined;
     explanation?: string | undefined;
     tags?: string[] | undefined;
-    timeLimit?: number | undefined;
     isHidden?: boolean | undefined;
 }, {
     text: string;
@@ -38,6 +38,7 @@ export declare const questionSchema: z.ZodObject<{
     correctAnswers: boolean[];
     questionType: string;
     discipline: string;
+    durationMs: number;
     uid?: string | undefined;
     title?: string | undefined;
     themes?: string[] | undefined;
@@ -46,7 +47,6 @@ export declare const questionSchema: z.ZodObject<{
     author?: string | undefined;
     explanation?: string | undefined;
     tags?: string[] | undefined;
-    timeLimit?: number | undefined;
     isHidden?: boolean | undefined;
 }>;
 export type Question = z.infer<typeof questionSchema>;
@@ -65,14 +65,15 @@ export declare const questionCreationSchema: z.ZodObject<Omit<{
     author: z.ZodOptional<z.ZodString>;
     explanation: z.ZodOptional<z.ZodString>;
     tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    timeLimit: z.ZodOptional<z.ZodNumber>;
     isHidden: z.ZodOptional<z.ZodBoolean>;
+    durationMs: z.ZodNumber;
 }, "uid">, "strip", z.ZodTypeAny, {
     text: string;
     answerOptions: string[];
     correctAnswers: boolean[];
     questionType: string;
     discipline: string;
+    durationMs: number;
     title?: string | undefined;
     themes?: string[] | undefined;
     difficulty?: number | undefined;
@@ -80,7 +81,6 @@ export declare const questionCreationSchema: z.ZodObject<Omit<{
     author?: string | undefined;
     explanation?: string | undefined;
     tags?: string[] | undefined;
-    timeLimit?: number | undefined;
     isHidden?: boolean | undefined;
 }, {
     text: string;
@@ -88,6 +88,7 @@ export declare const questionCreationSchema: z.ZodObject<Omit<{
     correctAnswers: boolean[];
     questionType: string;
     discipline: string;
+    durationMs: number;
     title?: string | undefined;
     themes?: string[] | undefined;
     difficulty?: number | undefined;
@@ -95,7 +96,6 @@ export declare const questionCreationSchema: z.ZodObject<Omit<{
     author?: string | undefined;
     explanation?: string | undefined;
     tags?: string[] | undefined;
-    timeLimit?: number | undefined;
     isHidden?: boolean | undefined;
 }>;
 export type QuestionCreationData = z.infer<typeof questionCreationSchema>;

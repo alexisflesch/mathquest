@@ -154,7 +154,7 @@ export default function ProjectionPage() {
                 gameId: gameState.gameId,
                 status: gameState.status,
                 questionUids: gameState.questionUids,
-                timerQuestionUid: gameState.timer?.questionUid
+                // timerQuestionUid: gameState.timer?.questionUid // Removed: use canonical timer only
             } : null,
             gameStatus,
             connectedCount,

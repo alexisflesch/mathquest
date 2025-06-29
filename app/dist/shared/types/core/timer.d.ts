@@ -8,7 +8,7 @@
  * Timer status enumeration
  * Represents the current state of any timer
  */
-export type TimerStatus = 'play' | 'pause' | 'stop';
+export type TimerStatus = 'run' | 'pause' | 'stop';
 /**
  * Timer role enumeration
  * Defines different contexts where timers are used
@@ -131,12 +131,12 @@ export interface GameTimerUpdatePayload {
 export interface TimerActionPayload {
     /** Game access code (required for backend validation) */
     accessCode: string;
-    /** Action to perform on timer */
-    action: 'start' | 'pause' | 'resume' | 'stop' | 'set_duration';
-    /** Duration in milliseconds (matches backend implementation and documentation requirement) */
-    duration?: number;
-    /** Question UID for question-specific timer operations */
-    questionUid?: string;
+    /** Action to perform on timer (canonical: 'run', 'pause', 'stop') */
+    action: 'run' | 'pause' | 'stop';
+    /** Duration in milliseconds (canonical) */
+    durationMs?: number;
+    /** Question UID for question-specific timer operations (REQUIRED, canonical) */
+    questionUid: string;
 }
 /**
  * Legacy timer interfaces for backward compatibility

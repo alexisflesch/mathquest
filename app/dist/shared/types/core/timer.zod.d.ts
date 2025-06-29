@@ -1,0 +1,40 @@
+import { z } from "zod";
+export declare const gameTimerStateSchema: z.ZodObject<{
+    status: z.ZodUnion<[z.ZodLiteral<"run">, z.ZodLiteral<"pause">, z.ZodLiteral<"stop">]>;
+    timeLeftMs: z.ZodNumber;
+    durationMs: z.ZodNumber;
+    questionUid: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    timestamp: z.ZodNullable<z.ZodNumber>;
+    localTimeLeftMs: z.ZodNullable<z.ZodNumber>;
+    isRunning: z.ZodOptional<z.ZodBoolean>;
+    displayFormat: z.ZodOptional<z.ZodEnum<["mm:ss", "ss", "ms"]>>;
+    showMilliseconds: z.ZodOptional<z.ZodBoolean>;
+    startedAt: z.ZodOptional<z.ZodNumber>;
+    pausedAt: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    status: "run" | "pause" | "stop";
+    durationMs: number;
+    timeLeftMs: number;
+    timestamp: number | null;
+    localTimeLeftMs: number | null;
+    questionUid?: string | null | undefined;
+    startedAt?: number | undefined;
+    isRunning?: boolean | undefined;
+    displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
+    showMilliseconds?: boolean | undefined;
+    pausedAt?: number | undefined;
+}, {
+    status: "run" | "pause" | "stop";
+    durationMs: number;
+    timeLeftMs: number;
+    timestamp: number | null;
+    localTimeLeftMs: number | null;
+    questionUid?: string | null | undefined;
+    startedAt?: number | undefined;
+    isRunning?: boolean | undefined;
+    displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
+    showMilliseconds?: boolean | undefined;
+    pausedAt?: number | undefined;
+}>;
+export type GameTimerStateSchema = typeof gameTimerStateSchema;
+export type GameTimerStateZ = z.infer<typeof gameTimerStateSchema>;

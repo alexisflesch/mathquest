@@ -46,6 +46,7 @@ const gameStateService_1 = __importDefault(require("@/core/services/gameStateSer
 const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
 const prisma_1 = require("@/db/prisma");
 const emitQuestionHandler_1 = require("./game/emitQuestionHandler");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const logger = (0, logger_1.default)('SharedGameFlow');
 // Track running game flows to prevent duplicates
 const runningGameFlows = new Set();
@@ -72,13 +73,11 @@ async function runGameFlow(io, accessCode, questions, options) {
             // Set and persist timer in game state before emitting question
             const timeLimitSec = questions[i].timeLimit || 30;
             const durationMs = timeLimitSec * 1000;
+            const timerEndDateMs = Date.now() + durationMs;
             const timer = {
-                status: 'play',
-                timeLeftMs: durationMs,
-                durationMs: durationMs,
-                questionUid: questions[i].uid,
-                timestamp: Date.now(),
-                localTimeLeftMs: null
+                status: 'run',
+                timerEndDateMs,
+                questionUid: typeof questions[i].uid === 'string' && questions[i].uid ? questions[i].uid : 'unknown',
             };
             // Fetch and update game state
             const currentState = await gameStateService_1.default.getFullGameState(accessCode);
@@ -161,23 +160,19 @@ async function runGameFlow(io, accessCode, questions, options) {
                 }, 'Failed to track question start times for users');
             }
             // Emit timer update to start frontend countdown
-            const gameTimerUpdatePayload = {
-                questionUid: questions[i].uid,
-                timer: {
-                    status: 'play',
-                    timeLeftMs: timeLimitSec * 1000,
-                    durationMs: timeLimitSec * 1000,
-                    questionUid: questions[i].uid,
-                    timestamp: timer.timestamp,
-                    localTimeLeftMs: null
-                }
-            };
-            logger.info({ room: `game_${accessCode}`, event: 'game_timer_updated', payload: gameTimerUpdatePayload }, '[DEBUG] Emitting game_timer_updated');
-            io.to(`game_${accessCode}`).emit('game_timer_updated', gameTimerUpdatePayload);
-            logger.info({ accessCode, event: 'game_timer_updated', questionUid: questions[i].uid }, '[TRACE] Emitted game_timer_updated');
-            // Emit to both live and projection rooms using the canonical event and payload
-            io.to([liveRoom, projectionRoom]).emit('game_timer_updated', gameTimerUpdatePayload);
-            logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_timer_updated', questionUid: questions[i].uid, payload: gameTimerUpdatePayload }, '[TRACE] Emitted game_timer_updated to live and projection rooms');
+            const canonicalTimer = toCanonicalTimer({ ...timer, questionUid: typeof questions[i].uid === 'string' && questions[i].uid.length > 0 ? questions[i].uid : '' });
+            emitCanonicalTimerEvents(io, [
+                { room: `game_${accessCode}`, event: 'game_timer_updated', extra: {} },
+                { room: liveRoom, event: 'game_timer_updated', extra: {} },
+                { room: projectionRoom, event: 'game_timer_updated', extra: {} }
+            ], {
+                accessCode,
+                timer: canonicalTimer,
+                questionUid: canonicalTimer.questionUid,
+                questionIndex: i,
+                totalQuestions: questions.length,
+                answersLocked: currentState?.gameState?.answersLocked
+            });
             options.onQuestionStart?.(i);
             await new Promise((resolve) => setTimeout(resolve, questions[i].timeLimit * 1000));
             logger.info({ room: `game_${accessCode}`, event: 'correct_answers', questionUid: questions[i].uid }, '[DEBUG] Emitting correct_answers');
@@ -300,5 +295,34 @@ async function runGameFlow(io, accessCode, questions, options) {
         // Clean up running game flow tracking
         runningGameFlows.delete(accessCode);
         logger.info({ accessCode }, '[SharedGameFlow] Game flow completed and cleaned up');
+    }
+}
+function toCanonicalTimer(timer) {
+    const status = timer && typeof timer.status === 'string' && ['run', 'pause', 'stop'].includes(timer.status) ? timer.status : 'run';
+    const canonical = {
+        ...timer,
+        status,
+        questionUid: typeof timer?.questionUid === 'string' && timer.questionUid.length > 0 ? timer.questionUid : 'unknown',
+    };
+    logger.warn('[CANONICALIZER DEBUG] toCanonicalTimer input:', timer);
+    logger.warn('[CANONICALIZER DEBUG] toCanonicalTimer output:', canonical);
+    return canonical;
+}
+function emitCanonicalTimerEvents(io, rooms, payloadBase) {
+    const canonicalPayload = {
+        ...payloadBase,
+        timer: toCanonicalTimer(payloadBase.timer),
+        questionUid: typeof payloadBase.questionUid === 'string' && payloadBase.questionUid ? payloadBase.questionUid : 'unknown',
+        questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : 0,
+        totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 1,
+        answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false
+    };
+    const validation = socketEvents_zod_1.dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
+    if (!validation.success) {
+        logger.error({ error: validation.error.format(), payload: canonicalPayload }, '[TIMER] Invalid canonical timer payload, not emitting');
+        return;
+    }
+    for (const { room, event, extra } of rooms) {
+        io.to(room).emit(event, { ...canonicalPayload, ...extra });
     }
 }

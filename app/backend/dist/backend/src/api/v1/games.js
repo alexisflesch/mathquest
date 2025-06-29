@@ -400,12 +400,12 @@ router.get('/:code/state', async (req, res) => {
                 const gameStateRaw = await (0, gameStateService_1.getFullGameState)(code);
                 if (gameStateRaw && gameStateRaw.gameState) {
                     redisGameState = gameStateRaw.gameState;
-                    const { currentQuestionIndex, questionUids, questionData, timer, status } = redisGameState;
+                    const { currentQuestionIndex, questionUids, questionData, status } = redisGameState; // [MODERNIZATION] timer removed
                     gameStateData = {
                         currentQuestionIndex,
                         questionUids: questionUids && questionUids[currentQuestionIndex] ? questionUids[currentQuestionIndex] : null,
                         questionData,
-                        timer,
+                        // timer, // [MODERNIZATION] timer removed, use canonical timer system if needed
                         redisStatus: status
                     };
                 }

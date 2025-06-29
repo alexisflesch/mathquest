@@ -42,7 +42,6 @@ interface FilterQuestionRequest {
 // Cart question interface extending the canonical shared Question type
 interface CartQuestion extends Question {
     cartId: string;
-    customTimeLimit?: number;
 }
 
 // Interface for the activity metadata
@@ -135,8 +134,8 @@ function SortableCartQuestion({
                             type="number"
                             min="10"
                             max="300"
-                            value={question.customTimeLimit || question.timeLimit || 30}
-                            onChange={(e) => onUpdateTime(question.cartId, parseInt(e.target.value) || (question.timeLimit || 30))}
+                            value={typeof question.durationMs === 'number' ? Math.round(question.durationMs / 1000) : 30}
+                            onChange={(e) => onUpdateTime(question.cartId, parseInt(e.target.value) || 30)}
                             className="input input-xs input-bordered w-20 text-xs"
                         />
                         <span className="text-xs text-base-content/60">sec</span>
@@ -248,8 +247,7 @@ export default function EditActivityPage() {
                 .sort((a: any, b: any) => a.sequence - b.sequence)
                 .map((item: any, index: number) => ({
                     ...item.question,
-                    cartId: `existing-${index}`,
-                    customTimeLimit: item.question.timeLimit
+                    cartId: `existing-${index}`
                 }));
             setSelectedQuestions(existingQuestions);
 
@@ -308,8 +306,7 @@ export default function EditActivityPage() {
     const handleAddQuestion = (question: Question) => {
         const cartQuestion: CartQuestion = {
             ...question,
-            cartId: `cart-${Date.now()}-${Math.random()}`,
-            customTimeLimit: question.timeLimit || undefined
+            cartId: `cart-${Date.now()}-${Math.random()}`
         };
         setSelectedQuestions(prev => [...prev, cartQuestion]);
     };
@@ -322,7 +319,7 @@ export default function EditActivityPage() {
         setSelectedQuestions(prev =>
             prev.map(q =>
                 q.cartId === cartId
-                    ? { ...q, customTimeLimit: newTime }
+                    ? { ...q, durationMs: newTime * 1000 } // Always store as ms
                     : q
             )
         );
@@ -370,7 +367,7 @@ export default function EditActivityPage() {
                     questions: selectedQuestions.map((question, index) => ({
                         questionUid: question.uid,
                         sequence: index + 1,
-                        customTimeLimit: question.customTimeLimit
+                        durationMs: typeof question.durationMs === 'number' ? question.durationMs : 30000 // fallback to 30s if missing
                     }))
                 })
             });
@@ -528,7 +525,7 @@ export default function EditActivityPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Clock size={14} className="text-base-content/60" />
-                                                <span className="text-xs text-base-content/60">{question.timeLimit || 30}s</span>
+                                                <span className="text-xs text-base-content/60">{typeof question.durationMs === 'number' ? Math.round(question.durationMs / 1000) : 30}s</span>
                                                 <span className="badge badge-outline badge-sm">{question.gradeLevel}</span>
                                                 <span className="badge badge-outline badge-sm">{question.discipline}</span>
                                             </div>
@@ -744,7 +741,7 @@ export default function EditActivityPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-2">
                                             <Clock size={14} className="text-base-content/60" />
-                                            <span className="text-xs text-base-content/60">{question.timeLimit || 30}s</span>
+                                            <span className="text-xs text-base-content/60">{typeof question.durationMs === 'number' ? Math.round(question.durationMs / 1000) : 30}s</span>
                                             <span className="badge badge-outline badge-sm">{question.gradeLevel}</span>
                                         </div>
                                         <p className="font-medium text-sm mb-2 line-clamp-2">{question.text}</p>

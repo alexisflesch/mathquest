@@ -46,6 +46,7 @@ const requestNextQuestion_1 = require("./requestNextQuestion");
 const events_1 = require("@shared/types/socket/events");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const toCanonicalTimer_1 = require("@/core/services/toCanonicalTimer");
 const logger = (0, logger_1.default)('GameHandlers');
 function registerGameHandlers(io, socket) {
     logger.info({ socketId: socket.id }, 'Registering game handlers');
@@ -159,18 +160,52 @@ function registerGameHandlers(io, socket) {
             socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Game state not found.' });
             return;
         }
+        // Always canonicalize timer before passing to answer handler
+        // durationMs: get from question (if available), else fallback to 30s
+        let durationMs = 0;
+        if (gameState && gameState.gameState && Array.isArray(gameState.gameState.questionUids)) {
+            const idx = gameState.gameState.questionUids.findIndex((uid) => uid === questionUid);
+            if (idx !== -1 && Array.isArray(gameState.gameState.questionUids)) {
+                // Try to get timeLimit from DB for this questionUid
+                const questionUidToFetch = gameState.gameState.questionUids[idx];
+                try {
+                    const question = await prisma.question.findUnique({ where: { uid: questionUidToFetch } });
+                    if (question && typeof question.timeLimit === 'number')
+                        durationMs = question.timeLimit * 1000;
+                }
+                catch (err) {
+                    // fallback below
+                }
+            }
+        }
+        if (!durationMs)
+            durationMs = 0; // no fallback allowed
+        // Debug: log timer fetch context
+        console.log('[DEBUG][TIMER_FETCH] Fetching timer for answer', {
+            accessCode,
+            questionUid,
+            playMode: gameInstance.playMode,
+            isDeferred,
+            userId,
+            attemptCount
+        });
         // Fetch timer (canonical: always resolve here, never in handler)
         let timer = null;
+        let canonicalTimer = null;
         if (gameInstance.playMode === 'practice') {
             timer = null;
+            canonicalTimer = null;
         }
         else if (isDeferred || (gameInstance.playMode === 'tournament' && participant.participationType === 'DEFERRED')) {
-            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, true, userId, attemptCount);
+            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, true, userId, attemptCount, durationMs);
         }
         else {
-            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, false);
+            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, false, undefined, undefined, durationMs);
         }
-        const context = { timer, gameState, participant, gameInstance: contextGameInstance };
+        console.log('[DEBUG][TIMER_FETCH] Raw timer loaded:', timer);
+        canonicalTimer = (0, toCanonicalTimer_1.toCanonicalTimer)(timer, durationMs);
+        console.log('[DEBUG][TIMER_FETCH] Canonical timer:', canonicalTimer);
+        const context = { timer: canonicalTimer, gameState, participant, gameInstance: contextGameInstance };
         // Call the DRY handler
         return (0, gameAnswer_1.gameAnswerHandler)(io, socket, context)(payload);
     });

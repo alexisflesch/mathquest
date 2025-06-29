@@ -8,6 +8,7 @@ import { GAME_EVENTS } from '@shared/types/socket/events';
 import createLogger from '@/utils/logger';
 import type { ErrorPayload } from '@shared/types/socketEvents';
 import { startGamePayloadSchema } from '@shared/types/socketEvents.zod';
+import { toCanonicalTimer } from '@/core/services/toCanonicalTimer';
 
 const logger = createLogger('GameHandlers');
 
@@ -122,16 +123,47 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
             socket.emit(GAME_EVENTS.GAME_ERROR, { message: 'Game state not found.' });
             return;
         }
+        // Always canonicalize timer before passing to answer handler
+        // durationMs: get from question (if available), else fallback to 30s
+        let durationMs = 0;
+        if (gameState && gameState.gameState && Array.isArray(gameState.gameState.questionUids)) {
+            const idx = gameState.gameState.questionUids.findIndex((uid: string) => uid === questionUid);
+            if (idx !== -1 && Array.isArray(gameState.gameState.questionUids)) {
+                // Try to get timeLimit from DB for this questionUid
+                const questionUidToFetch = gameState.gameState.questionUids[idx];
+                try {
+                    const question = await prisma.question.findUnique({ where: { uid: questionUidToFetch } });
+                    if (question && typeof question.timeLimit === 'number') durationMs = question.timeLimit * 1000;
+                } catch (err) {
+                    // fallback below
+                }
+            }
+        }
+        if (!durationMs) durationMs = 0; // no fallback allowed
+        // Debug: log timer fetch context
+        console.log('[DEBUG][TIMER_FETCH] Fetching timer for answer', {
+            accessCode,
+            questionUid,
+            playMode: gameInstance.playMode,
+            isDeferred,
+            userId,
+            attemptCount
+        });
         // Fetch timer (canonical: always resolve here, never in handler)
         let timer = null;
+        let canonicalTimer = null;
         if (gameInstance.playMode === 'practice') {
             timer = null;
+            canonicalTimer = null;
         } else if (isDeferred || (gameInstance.playMode === 'tournament' && participant.participationType === 'DEFERRED')) {
-            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, true, userId, attemptCount);
+            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, true, userId, attemptCount, durationMs);
         } else {
-            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, false);
+            timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, false, undefined, undefined, durationMs);
         }
-        const context = { timer, gameState, participant, gameInstance: contextGameInstance };
+        console.log('[DEBUG][TIMER_FETCH] Raw timer loaded:', timer);
+        canonicalTimer = toCanonicalTimer(timer, durationMs);
+        console.log('[DEBUG][TIMER_FETCH] Canonical timer:', canonicalTimer);
+        const context = { timer: canonicalTimer, gameState, participant, gameInstance: contextGameInstance };
         // Call the DRY handler
         return gameAnswerHandler(io, socket, context)(payload);
     });

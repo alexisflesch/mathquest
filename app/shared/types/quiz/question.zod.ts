@@ -19,9 +19,8 @@ export const questionSchema = baseQuestionSchema.extend({
   author: z.string().optional(),
   explanation: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  timeLimit: z.number().optional(),
   isHidden: z.boolean().optional(), // Renamed from 'hidden'
-  // Removed 'correct' as it's replaced by correctAnswers
+  durationMs: z.number({ required_error: "durationMs is required" }) // Canonical timer field
 });
 
 export type Question = z.infer<typeof questionSchema>;

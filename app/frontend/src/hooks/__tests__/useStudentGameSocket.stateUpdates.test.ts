@@ -71,7 +71,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 // explanation and correctAnswers removed for security
             },
             timer: {
-                status: 'play' as const,
+                status: 'run' as const,
                 timeLeftMs: 45000,
                 durationMs: 45000,
                 questionUid: 'q1',
@@ -91,7 +91,7 @@ describe('useStudentGameSocket - State Updates', () => {
         act(() => {
             eventHandlers['timer_update']?.({
                 timeLeftMs: 45,
-                status: 'play',
+                status: 'run',
                 running: true
             });
         });
@@ -134,7 +134,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 // explanation and correctAnswers removed for security
             },
             timer: {
-                status: 'play' as const,
+                status: 'run' as const,
                 timeLeftMs: 30000,
                 durationMs: 30000,
                 questionUid: 'q2',
@@ -148,7 +148,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
-            eventHandlers['timer_update']?.({ timeLeftMs: 30, status: 'play', running: true });
+            eventHandlers['timer_update']?.({ timeLeftMs: 30, status: 'run', running: true });
         });
 
         await waitFor(() => {
@@ -195,7 +195,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 // explanation and correctAnswers removed for security
             },
             timer: {
-                status: 'play' as const,
+                status: 'run' as const,
                 timeLeftMs: 30000,
                 durationMs: 30000,
                 questionUid: 'q1',
@@ -209,7 +209,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(questionPayload);
-            eventHandlers['timer_update']?.({ timeLeftMs: 30, status: 'play', running: true });
+            eventHandlers['timer_update']?.({ timeLeftMs: 30, status: 'run', running: true });
         });
 
         await waitFor(() => {
@@ -237,7 +237,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 answerOptions: ['2', '3', '4', '5', '6', '7']
             },
             timer: {
-                status: 'play' as const,
+                status: 'run' as const,
                 timeLeftMs: 60000,
                 durationMs: 60000,
                 questionUid: 'q3',
@@ -251,7 +251,7 @@ describe('useStudentGameSocket - State Updates', () => {
 
         act(() => {
             eventHandlers['game_question']?.(multipleChoicePayload);
-            eventHandlers['timer_update']?.({ timeLeftMs: 60, status: 'play', running: true });
+            eventHandlers['timer_update']?.({ timeLeftMs: 60, status: 'run', running: true });
         });
 
         await waitFor(() => {
@@ -328,7 +328,7 @@ describe('useStudentGameSocket - State Updates', () => {
         act(() => {
             eventHandlers['timer_update']?.({
                 timeLeftMs: 30,
-                status: 'play',
+                status: 'run',
                 running: true
             });
         });
@@ -384,7 +384,7 @@ describe('useStudentGameSocket - State Updates', () => {
                 answerOptions: ['A', 'B', 'C', 'D']
             },
             timer: {
-                status: 'play' as const,
+                status: 'run' as const,
                 timeLeftMs: 40000,
                 durationMs: 40000,
                 questionUid: 'q5',
@@ -437,7 +437,7 @@ describe('useStudentGameSocket - State Updates', () => {
         act(() => {
             eventHandlers['timer_update']?.({
                 timeLeftMs: 30,
-                status: 'play'
+                status: 'run'
             });
         });
 

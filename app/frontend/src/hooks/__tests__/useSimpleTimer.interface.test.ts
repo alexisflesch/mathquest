@@ -16,8 +16,8 @@ jest.mock('../useSimpleTimer', () => ({
         isActive: false,
         startTimer: jest.fn(),
         pauseTimer: jest.fn(),
-        resumeTimer: jest.fn(),
         stopTimer: jest.fn(),
+        editTimer: jest.fn(),
         isConnected: true
     }))
 }));
@@ -50,8 +50,8 @@ describe('useSimpleTimer Interface', () => {
         // Test action methods
         expect(result.current).toHaveProperty('startTimer');
         expect(result.current).toHaveProperty('pauseTimer');
-        expect(result.current).toHaveProperty('resumeTimer');
         expect(result.current).toHaveProperty('stopTimer');
+        expect(result.current).toHaveProperty('editTimer');
 
         // Test connection state
         expect(result.current).toHaveProperty('isConnected');
@@ -85,8 +85,8 @@ describe('useSimpleTimer Interface', () => {
 
         expect(typeof result.current.startTimer).toBe('function');
         expect(typeof result.current.pauseTimer).toBe('function');
-        expect(typeof result.current.resumeTimer).toBe('function');
         expect(typeof result.current.stopTimer).toBe('function');
+        expect(typeof result.current.editTimer).toBe('function');
     });
 
     it('should accept correct config format', () => {

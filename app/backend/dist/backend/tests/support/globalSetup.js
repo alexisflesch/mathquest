@@ -20,7 +20,8 @@ exports.default = async () => {
     // Set environment variables needed for tests (override any previous values)
     process.env.NODE_ENV = 'test';
     process.env.JWT_SECRET = 'test-secret-key-for-tests';
-    process.env.DATABASE_URL = 'postgresql://postgre:Phuf0pohooFee8auohFahk7vChae4Iv0wiem5voT@localhost:5432/mathquest_test';
+    // DO NOT hardcode DATABASE_URL here; use the value from .env.test loaded above
+    // process.env.DATABASE_URL = 'postgresql://postgre:Phuf0pohooFee8auohFahk7vChae4Iv0wiem5voT@localhost:5432/mathquest_test';
     // Assign a random port between 4000-9000 for tests to avoid conflicts
     process.env.PORT = (Math.floor(Math.random() * 5000) + 4000).toString();
     console.log(`Test setup complete, using port ${process.env.PORT}`);
@@ -110,6 +111,7 @@ exports.default = async () => {
             });
         }
         // Create a game instance for this template
+        // Create both QUIZCODE1 and CODE1 game instances for integration tests
         await prisma.gameInstance.upsert({
             where: { accessCode: 'QUIZCODE1' },
             update: {},
@@ -123,7 +125,22 @@ exports.default = async () => {
                 initiatorUserId: teacher.id,
             },
         });
-        console.log('Seeded integration teacher, template, questions, and game instance.');
+        const code1GameInstance = await prisma.gameInstance.upsert({
+            where: { accessCode: 'CODE1' },
+            update: {},
+            create: {
+                accessCode: 'CODE1',
+                name: 'Teacher Quiz Instance (CODE1)',
+                status: 'pending',
+                playMode: 'quiz',
+                settings: {},
+                gameTemplateId: template.id,
+                initiatorUserId: 'teacher-1', // Match the test socket userId
+            },
+        });
+        console.log('Seeded integration teacher, template, questions, and game instances (QUIZCODE1, CODE1).');
+        // No direct Redis seeding: game state will be initialized by integration tests via canonical socket events (e.g., teacher dashboard actions)
+        // This ensures all state is created through real backend flows, not by test setup scripts.
     }
     catch (error) {
         console.error('Error cleaning database:', error);

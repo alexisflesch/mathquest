@@ -4,7 +4,7 @@ import createLogger from '@/utils/logger';
 import { redisClient } from '@/config/redis';
 import { z } from 'zod';
 import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
-import gameStateService from '@/core/services/gameStateService';
+import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 // Import shared types
 import {
@@ -289,16 +289,33 @@ export function joinGameHandler(
                                 const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
                                 const filteredQuestion = filterQuestionForClient(currentQuestion);
 
-                                // Calculate remaining time for late joiner using shared utility
-                                const actualTimer = calculateTimerForLateJoiner(gameState.timer);
+                                // --- MODERNIZATION: Use canonical timer system for late joiners ---
+                                // LEGACY: The following line is legacy and should be removed after migration:
+                                // const actualTimer = calculateTimerForLateJoiner(gameState.timer);
+                                // TODO: Remove all legacy timer usage after full migration.
+                                // MIGRATION NOTE: Use canonical timer system only.
+                                // Always use canonical durationMs from the question object (no fallback allowed)
+                                const durationMs = typeof currentQuestion.timeLimit === 'number' && currentQuestion.timeLimit > 0 ? currentQuestion.timeLimit * 1000 : 0;
+                                if (durationMs <= 0) {
+                                    logger.error({ currentQuestion, durationMs }, '[JOIN_GAME] Failed to get canonical durationMs');
+                                    // handle error or return
+                                }
+                                const canonicalTimer = await getCanonicalTimer(
+                                    accessCode,
+                                    currentQuestion.uid,
+                                    gameState.gameMode,
+                                    gameState.status === 'completed',
+                                    durationMs,
+                                    undefined
+                                );
 
-                                // Send current question with actual remaining time
+                                // Send current question with canonical timer
                                 const lateJoinerQuestionPayload = {
                                     question: filteredQuestion,
                                     questionIndex: gameState.currentQuestionIndex, // Use shared type field name
                                     totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length, // Add total questions count
                                     feedbackWaitTime: currentQuestion.feedbackWaitTime || (gameInstance.playMode === 'tournament' ? 1.5 : 1),
-                                    timer: actualTimer || gameState.timer
+                                    timer: canonicalTimer // Only canonical timer
                                 };
 
                                 logger.info({
@@ -306,21 +323,19 @@ export function joinGameHandler(
                                     userId,
                                     playMode: gameInstance.playMode,
                                     questionIndex: gameState.currentQuestionIndex,
-                                    originalTimeLeft: gameState.timer?.timeLeftMs,
-                                    originalStatus: gameState.timer?.status,
-                                    actualTimeLeft: actualTimer?.timeLeftMs,
-                                    actualStatus: actualTimer?.status,
-                                    elapsed: gameState.timer?.timestamp ? Date.now() - gameState.timer.timestamp : 'no timestamp',
+                                    // originalTimeLeft: gameState.timer?.timeLeftMs, // LEGACY: Remove after migration
+                                    // originalStatus: gameState.timer?.status, // LEGACY: Remove after migration
+                                    canonicalTimer,
                                     payload: lateJoinerQuestionPayload
-                                }, 'Sending current question to late joiner');
+                                }, '[MODERNIZATION] Sending current question to late joiner with canonical timer');
 
                                 socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, lateJoinerQuestionPayload);
 
-                                // Also send timer update
-                                if (actualTimer) {
+                                // Also send timer update (canonical)
+                                if (canonicalTimer) {
                                     const timerUpdatePayload: GameTimerUpdatePayload = {
-                                        timer: actualTimer,
-                                        questionUid: actualTimer.questionUid ?? undefined
+                                        timer: canonicalTimer,
+                                        questionUid: canonicalTimer.questionUid
                                     };
                                     socket.emit(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED as any, timerUpdatePayload);
                                 }
@@ -439,7 +454,22 @@ export function joinGameHandler(
             };
             logger.debug({ socketDetails }, 'Current socket details');
         } catch (err) {
-            logger.error({ err, accessCode, userId, stack: err instanceof Error ? err.stack : undefined }, 'Error in joinGameHandler');
+            // Log to both logger and console for guaranteed visibility
+            logger.error({
+                err: err instanceof Error ? err.message : err,
+                stack: err instanceof Error ? err.stack : undefined,
+                accessCode,
+                userId,
+                payload,
+                context: 'joinGameHandler catch block',
+            }, 'Error in joinGameHandler (full error and stack)');
+            // --- CONSOLE LOG FOR TEST DEBUGGING ---
+            console.error('[joinGameHandler CATCH] ERROR:', err);
+            if (err instanceof Error && err.stack) {
+                console.error('[joinGameHandler CATCH] STACK:', err.stack);
+            }
+            console.error('[joinGameHandler CATCH] accessCode:', accessCode, 'userId:', userId, 'payload:', payload);
+            // --------------------------------------
             const errorPayload: ErrorPayload = { message: 'Internal error joining game.' };
             socket.emit(SOCKET_EVENTS.GAME.GAME_ERROR as any, errorPayload);
         }

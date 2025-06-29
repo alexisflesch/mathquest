@@ -29,7 +29,7 @@ export interface QuestionDisplayProps {
     // Props pour le contrôle externe
     isOpen?: boolean;
     onToggleOpen?: () => void;
-    timerStatus?: "play" | "pause" | "stop";
+    timerStatus?: "run" | "pause" | "stop";
     timeLeftMs?: number;
     onPlay?: () => void;
     onPause?: () => void;
@@ -61,7 +61,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     isOpen = false,
     onToggleOpen,
     timerStatus = "stop",
-    timeLeftMs = (question.timeLimit ?? 0), // Backend already sends timeLimit in milliseconds
+    timeLeftMs = (question.durationMs ?? 0), // Use canonical durationMs in milliseconds
     onPlay,
     onPause,
     onStop,
@@ -92,7 +92,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     // logger.info('[DEBUG QuestionDisplay] Question text:', question.text);
 
     // Détermine l'état effectif des boutons play/pause
-    const effectiveIsRunning = timerStatus === 'play';
+    const effectiveIsRunning = timerStatus === 'run';
     const effectiveIsPaused = timerStatus === 'pause';
 
     // Helper: is this answer correct (from prop)?
@@ -147,30 +147,16 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const baseJustificationFontSize = '0.875rem'; // Assuming text-sm for justification
     const baseMetaFontSize = '0.75rem'; // Assuming text-xs for metadata
 
-    // Affichage du timer (non éditable dans ce composant)
-    // Use Math.ceil to match live page: always show full value for first second
-    const roundedTimeLeft = typeof timeLeftMs === 'number' ? Math.ceil(timeLeftMs / 1000) * 1000 : 0;
-    // Convert ms to mm:ss for TimerField
-    const msToMMSS = (ms: number) => {
-        const totalSeconds = Math.floor(ms / 1000);
-        const mm = Math.floor(totalSeconds / 60);
-        const ss = totalSeconds % 60;
-        return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
-    };
-    const mmssValue = msToMMSS(roundedTimeLeft);
+    // Timer display (read-only in this component)
+    // Pass milliseconds (ms) directly to TimerField (canonical, no conversion, no legacy support)
     const timerDisplay = (
         <span className="flex items-center gap-1">
             <TimerField
-                value={mmssValue}
-                onChange={(formatted) => {
-                    if (!onEditTimer) return; // Only allow edit if onEditTimer is provided
-                    const [mm, ss] = formatted.split(":");
-                    const newTime = parseInt(mm, 10) * 60 + parseInt(ss, 10);
-                    if (!isNaN(newTime) && newTime >= 0) {
-                        onEditTimer(newTime);
-                    }
+                valueMs={typeof timeLeftMs === 'number' ? timeLeftMs : 0}
+                onChange={(newValueMs) => {
+                    if (!onEditTimer) return;
+                    onEditTimer(newValueMs);
                 }}
-            // readOnly prop removed: TimerField does not support it, editability is controlled by parent context
             />
         </span>
     );
@@ -486,7 +472,7 @@ export default React.memo(QuestionDisplay, (prevProps, nextProps) => {
     // Compare question object - only key fields that affect display
     if (prevProps.question.uid !== nextProps.question.uid) return false;
     if (prevProps.question.text !== nextProps.question.text) return false;
-    if (prevProps.question.timeLimit !== nextProps.question.timeLimit) return false;
+    if (prevProps.question.durationMs !== nextProps.question.durationMs) return false;
 
     // Compare answers array length and content
     if (prevProps.question.answerOptions?.length !== nextProps.question.answerOptions?.length) return false;

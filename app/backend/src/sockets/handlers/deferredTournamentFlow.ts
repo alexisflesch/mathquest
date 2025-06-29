@@ -7,6 +7,7 @@ import gameStateService from '@/core/services/gameStateService';
 import { redisClient } from '@/config/redis';
 import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
 import { GameTimerState } from '@shared/types/core/timer';
+import { computeTimerTimes } from '@/core/services/timerHelpers';
 import { GameState } from '@shared/types/core/game';
 import { ErrorPayload } from '@shared/types/socketEvents';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
@@ -99,14 +100,7 @@ export async function startDeferredTournamentSession(
             questionUids: questions.map(q => q.uid),
             answersLocked: false,
             gameMode: 'tournament',
-            timer: {
-                status: 'pause', // Start paused, will be activated with first question
-                timeLeftMs: 0,
-                durationMs: 0,
-                questionUid: null,
-                timestamp: Date.now(),
-                localTimeLeftMs: null
-            },
+            // [MODERNIZATION] timer field removed. All timer state is managed by CanonicalTimerService.
             settings: {
                 timeMultiplier: 1.0,
                 showLeaderboard: true
@@ -204,13 +198,11 @@ async function runDeferredQuestionSequence(
             // Retrieve timer state from canonical service (optional, for emitting to client)
             // const timer = await canonicalTimerService.getTimer(accessCode, question.uid, playMode, isDiffered, userId);
             // For now, keep timer object as before for payload
+            const timerEndDateMs = Date.now() + durationMs;
             const timer: GameTimerState = {
-                status: 'play',
-                timeLeftMs: durationMs,
-                durationMs: durationMs,
-                questionUid: question.uid,
-                timestamp: Date.now(),
-                localTimeLeftMs: null
+                status: 'run',
+                timerEndDateMs,
+                questionUid: question.uid
             };
 
             // Update session state

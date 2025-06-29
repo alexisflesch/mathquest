@@ -19,8 +19,8 @@ export interface BaseQuestion {
     text: string;
     /** Question type classification */
     questionType: string;
-    /** Time limit in seconds (for user input/database storage) */
-    timeLimit?: number | null;
+    /** Canonical timer duration in milliseconds (required) */
+    durationMs: number;
     /** Feedback wait time in milliseconds */
     feedbackWaitTime?: number | null;
 }
@@ -92,7 +92,8 @@ export interface QuestionCreationPayload {
     difficulty?: number;
     explanation?: string;
     tags?: string[];
-    timeLimit?: number;
+    /** Canonical timer duration in milliseconds (required) */
+    durationMs: number;
     author?: string;
     isHidden?: boolean;
 }

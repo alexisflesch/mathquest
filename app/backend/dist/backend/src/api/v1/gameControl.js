@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -7,9 +40,10 @@ const express_1 = __importDefault(require("express"));
 const auth_1 = require("@/middleware/auth");
 const validation_1 = require("@/middleware/validation");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
+const gameStateService_1 = __importStar(require("@/core/services/gameStateService"));
 const sockets_1 = require("@/sockets");
 const prisma_1 = require("@/db/prisma");
+const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
 const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
 const logger = (0, logger_1.default)('GameControlAPI');
@@ -89,24 +123,40 @@ router.post('/:accessCode/question', auth_1.teacherAuth, (0, validation_1.valida
         // Get Socket.IO instance to emit events
         const io = (0, sockets_1.getIO)();
         if (io) {
-            // Emit the question to all players in the game and projection using the proper LiveQuestionPayload structure
-            const liveRoom = `game_${accessCode}`;
-            const projectionRoom = `projection_${gameInstance.id}`;
-            const payload = {
-                question: {
-                    uid: updatedGameState.questionData.uid,
-                    text: updatedGameState.questionData.text,
-                    questionType: updatedGameState.questionData.questionType,
-                    answerOptions: updatedGameState.questionData.answerOptions
-                },
-                timer: updatedGameState.timer, // Send full timer state
-                questionIndex: questionIndex,
-                totalQuestions: updatedGameState.questionUids.length,
-                questionState: 'active' // Fix: use string literal type
-            };
-            io.to([liveRoom, projectionRoom]).emit('game_question', payload);
-            console.log(projectionRoom);
-            // Remove or comment out legacy/teacher control emission to avoid TS error and legacy code
+            // --- MODERNIZATION: Use canonical timer system ---
+            // Fetch canonical timer for the current question
+            // Always use canonical durationMs from the question object (no fallback allowed)
+            const question = await prisma_1.prisma.question.findUnique({ where: { uid: updatedGameState.questionUids[questionIndex] } });
+            const durationMs = question && typeof question.timeLimit === 'number' && question.timeLimit > 0 ? question.timeLimit * 1000 : 0;
+            if (durationMs <= 0) {
+                logger.error({ question, durationMs }, '[API_GAME_CONTROL] Failed to get canonical durationMs');
+                // handle error or return
+            }
+            const canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, updatedGameState.questionUids[questionIndex], updatedGameState.gameMode, updatedGameState.status === 'completed', durationMs);
+            // Validate canonical timer
+            const timerValidation = socketEvents_zod_1.gameTimerStateSchema.safeParse(canonicalTimer);
+            if (!timerValidation.success) {
+                logger.error({ error: timerValidation.error.format(), canonicalTimer }, '[TIMER] Invalid canonical timer payload, not emitting');
+            }
+            else {
+                // Emit the question to all players in the game and projection using canonical timer
+                const liveRoom = `game_${accessCode}`;
+                const projectionRoom = `projection_${gameInstance.id}`;
+                const payload = {
+                    question: {
+                        uid: updatedGameState.questionData.uid,
+                        text: updatedGameState.questionData.text,
+                        questionType: updatedGameState.questionData.questionType,
+                        answerOptions: updatedGameState.questionData.answerOptions
+                    },
+                    timer: canonicalTimer, // [MODERNIZATION] Canonical timer state
+                    questionIndex: questionIndex,
+                    totalQuestions: updatedGameState.questionUids.length,
+                    questionState: 'active'
+                };
+                io.to([liveRoom, projectionRoom]).emit('game_question', payload);
+            }
+            // [LEGACY-TIMER-MIGRATION] The following legacy emission is deprecated and commented out:
             // io.to(`teacher_control_${updatedGameState.gameId}`).emit('game_control_question_set', {
             //     questionIndex,
             //     timer: updatedGameState.timer
@@ -116,7 +166,8 @@ router.post('/:accessCode/question', auth_1.teacherAuth, (0, validation_1.valida
             success: true,
             questionIndex,
             questionUid: updatedGameState.questionUids[questionIndex],
-            timer: updatedGameState.timer
+            // [LEGACY-TIMER-MIGRATION] timer: updatedGameState.timer,
+            timer: undefined // [MODERNIZATION] timer field is deprecated, use canonical timer system only
         });
     }
     catch (error) {
@@ -162,25 +213,43 @@ router.post('/:accessCode/end-question', auth_1.teacherAuth, async (req, res) =>
         // Get Socket.IO instance to emit events
         const io = (0, sockets_1.getIO)();
         if (io && fullGameState) {
-            // Tell all players and projection that question time is up
+            // --- MODERNIZATION: Use canonical timer system ---
+            // Fetch canonical timer for the current question
+            const question = await prisma_1.prisma.question.findUnique({ where: { uid: updatedGameState.questionUids[updatedGameState.currentQuestionIndex] } });
+            const durationMs = question && typeof question.timeLimit === 'number' && question.timeLimit > 0 ? question.timeLimit * 1000 : 0;
+            if (durationMs <= 0) {
+                logger.error({ question, durationMs }, '[API_GAME_CONTROL] Failed to get canonical durationMs (endCurrentQuestion)');
+                // handle error or return
+            }
+            const canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, updatedGameState.questionUids[updatedGameState.currentQuestionIndex], updatedGameState.gameMode, updatedGameState.status === 'completed', durationMs);
+            // Validate canonical timer
+            const timerValidation = socketEvents_zod_1.gameTimerStateSchema.safeParse(canonicalTimer);
             const liveRoom = `game_${accessCode}`;
             const projectionRoom = `projection_${gameInstance.id}`;
-            const payload = {
-                questionIndex: updatedGameState.currentQuestionIndex,
-                questionUid: updatedGameState.timer?.questionUid || undefined
-            };
-            io.to([liveRoom, projectionRoom]).emit('question_ended', payload);
+            if (!timerValidation.success) {
+                logger.error({ error: timerValidation.error.format(), canonicalTimer }, '[TIMER] Invalid canonical timer payload, not emitting');
+            }
+            else {
+                // Tell all players and projection that question time is up, using canonical timer
+                const payload = {
+                    questionIndex: updatedGameState.currentQuestionIndex,
+                    questionUid: canonicalTimer?.questionUid || undefined,
+                    timer: canonicalTimer // [MODERNIZATION] Canonical timer state
+                };
+                io.to([liveRoom, projectionRoom]).emit('question_ended', payload);
+            }
             // Send leaderboard update to both live and projection
             if (fullGameState.leaderboard.length > 0) {
                 io.to([liveRoom, projectionRoom]).emit('leaderboard_update', {
                     leaderboard: fullGameState.leaderboard.slice(0, 10) // Top 10
                 });
             }
-            // Update teacher control panel
+            // Update teacher control panel (modernized, but legacy field commented)
             io.to(`teacher_control_${updatedGameState.gameId}`).emit('game_control_question_ended', {
                 questionIndex: updatedGameState.currentQuestionIndex,
                 answers: fullGameState.answers,
                 leaderboard: fullGameState.leaderboard
+                // timer: canonicalTimer // [LEGACY-TIMER-MIGRATION] Deprecated, not allowed by canonical type
             });
         }
         res.status(200).json({

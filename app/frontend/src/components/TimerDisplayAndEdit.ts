@@ -2,19 +2,23 @@ import * as React from "react";
 import { Pencil, X, Check } from "lucide-react";
 
 type TimerFieldProps = {
-    value: string; // Format: "mm:ss"
-    onChange: (newValue: string) => void;
+    valueMs: number; // always ms
+    onChange: (newValueMs: number) => void;
 };
 
-export function TimerField({ value, onChange }: TimerFieldProps) {
+export function TimerField({ valueMs, onChange }: TimerFieldProps) {
+    // Debug: Log initial valueMs prop
+    React.useEffect(() => {
+        console.debug('[TimerField] valueMs prop:', valueMs);
+    }, [valueMs]);
     const [editing, setEditing] = React.useState(false);
-    const [text, setText] = React.useState(value);
+    const [text, setText] = React.useState(formatTime(valueMs));
     const inputRef = React.useRef<HTMLInputElement>(null);
     const textRef = React.useRef(text);
 
     React.useEffect(() => {
-        if (!editing) setText(value);
-    }, [value, editing]);
+        if (!editing) setText(formatTime(valueMs));
+    }, [valueMs, editing]);
 
     React.useEffect(() => {
         textRef.current = text;
@@ -26,11 +30,16 @@ export function TimerField({ value, onChange }: TimerFieldProps) {
         }
     }, [editing]);
 
-    const clamp = (val: number, min: number, max: number) =>
-        Math.max(min, Math.min(max, val));
+    function clamp(val: number, min: number, max: number) {
+        return Math.max(min, Math.min(max, val));
+    }
 
-    const formatTime = (min: number, sec: number) =>
-        `${min.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+    function formatTime(ms: number) {
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        const mm = Math.floor(totalSeconds / 60);
+        const ss = totalSeconds % 60;
+        return `${mm.toString().padStart(2, "0")}:${ss.toString().padStart(2, "0")}`;
+    }
 
     React.useEffect(() => {
         const input = inputRef.current;
@@ -64,7 +73,7 @@ export function TimerField({ value, onChange }: TimerFieldProps) {
                 } else {
                     mm = clamp(mm + delta, 0, 59);
                 }
-                const newText = formatTime(mm, ss);
+                const newText = formatTime((mm * 60 + ss) * 1000);
                 setText(newText);
             };
             input.addEventListener("wheel", wheelHandler, { passive: false });
@@ -74,51 +83,43 @@ export function TimerField({ value, onChange }: TimerFieldProps) {
     }, [editing]);
 
     const confirmEdit = () => {
-        console.log('[TimerField] confirmEdit called', { text });
         const isValid = /^\d{1,2}:\d{2}$/.test(text);
         const [mmStr, ssStr] = text.split(":");
         const mm = parseInt(mmStr, 10);
         const ss = parseInt(ssStr, 10);
         if (isValid && !isNaN(mm) && !isNaN(ss) && mm <= 59 && ss <= 59) {
-            const formatted = formatTime(mm, ss);
-            console.log('[TimerField] confirmEdit: valid, committing', { formatted });
-            onChange(formatted);
-            setText(formatted);
+            const ms = (mm * 60 + ss) * 1000;
+            console.debug('[TimerField] confirmEdit: mm:ss', mm, ss, '-> ms', ms);
+            onChange(ms);
+            setText(formatTime(ms));
         } else {
-            console.log('[TimerField] confirmEdit: invalid, reverting', { value });
-            setText(value); // revert
+            setText(formatTime(valueMs)); // revert
         }
         setEditing(false);
     };
 
     const cancelEdit = () => {
-        console.log('[TimerField] cancelEdit called, reverting to', { value });
-        setText(value);
+        setText(formatTime(valueMs));
         setEditing(false);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        console.log('[TimerField] handleKeyDown', { key: e.key });
-        // Only allow Escape to cancel
         if (e.key === "Escape") {
             cancelEdit();
         }
     };
 
     const handleEditClick = (e: React.MouseEvent) => {
-        console.log('[TimerField] handleEditClick');
         e.stopPropagation();
         setEditing(true);
     };
 
     const handleCancel = (e: React.MouseEvent) => {
-        console.log('[TimerField] handleCancel');
         e.stopPropagation();
         cancelEdit();
     };
 
     const handleValidate = (e: React.MouseEvent) => {
-        console.log('[TimerField] handleValidate');
         e.stopPropagation();
         confirmEdit();
     };
@@ -134,6 +135,8 @@ export function TimerField({ value, onChange }: TimerFieldProps) {
         },
         editing
             ? [
+                // Debug: Log displayed text and ms value
+                (() => { console.debug('[TimerField] editing display:', text, '(', (parseInt(text.split(':')[0] || '0', 10) * 60 + parseInt(text.split(':')[1] || '0', 10)) * 1000, 'ms )'); return null; })(),
                 React.createElement("input", {
                     key: "input",
                     ref: inputRef,
@@ -194,10 +197,12 @@ export function TimerField({ value, onChange }: TimerFieldProps) {
                 ),
             ]
             : [
+                // Debug: Log displayed value in readOnly mode
+                (() => { console.debug('[TimerField] readOnly display:', formatTime(valueMs), '(', valueMs, 'ms )'); return null; })(),
                 React.createElement("input", {
                     key: "input",
                     ref: inputRef,
-                    value: value,
+                    value: formatTime(valueMs),
                     readOnly: true,
                     className: "timer-field",
                     style: { marginRight: 4 },

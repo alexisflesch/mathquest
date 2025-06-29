@@ -1,26 +1,59 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.timerActionHandler = timerActionHandler;
-exports.clearAllTimers = clearAllTimers;
-exports.clearTimerForGame = clearTimerForGame;
 const prisma_1 = require("@/db/prisma");
 const redis_1 = require("@/config/redis");
-const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
+const gameStateService_1 = __importStar(require("@/core/services/gameStateService"));
+const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const gameInstanceService_1 = require("@/core/services/gameInstanceService");
 const logger_1 = __importDefault(require("@/utils/logger"));
-const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
-const emitQuestionHandler_1 = require("../game/emitQuestionHandler");
-const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
+const events_1 = require("@shared/types/socket/events");
+const socketEvents_zod_2 = require("@shared/types/socketEvents.zod");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('TimerActionHandler');
 // Redis key prefix for game state
 const GAME_KEY_PREFIX = 'mathquest:game:';
 // Create GameInstanceService instance
 const gameInstanceService = new gameInstanceService_1.GameInstanceService();
+// CanonicalTimerService instance
+const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
 // Timer management for automatic expiry
 const activeTimers = new Map();
 /**
@@ -37,10 +70,16 @@ function clearGameTimer(gameId) {
 /**
  * Start automatic timer expiry for a game
  */
-function startGameTimer(io, gameId, accessCode, durationMs, questionUid) {
+function startGameTimer(io, gameId, accessCode, timerEndDateMs, questionUid) {
     // Clear any existing timer first
     clearGameTimer(gameId);
-    logger.info({ gameId, accessCode, durationMs, questionUid }, '[TIMER_EXPIRY] Starting automatic timer expiry');
+    const now = Date.now();
+    const msUntilEnd = timerEndDateMs - now;
+    if (msUntilEnd <= 0) {
+        logger.warn({ gameId, accessCode, timerEndDateMs, now }, '[TIMER_EXPIRY] timerEndDateMs is in the past or now, skipping timer scheduling');
+        return;
+    }
+    logger.info({ gameId, accessCode, timerEndDateMs, msUntilEnd, questionUid }, '[TIMER_EXPIRY] Starting automatic timer expiry');
     const timeout = setTimeout(async () => {
         try {
             logger.info({ gameId, accessCode, questionUid }, '[TIMER_EXPIRY] Timer expired, auto-stopping');
@@ -53,43 +92,110 @@ function startGameTimer(io, gameId, accessCode, durationMs, questionUid) {
                 return;
             }
             const gameState = JSON.parse(gameStateRaw);
-            // Update timer to stopped state
-            const now = Date.now();
+            // Update timer to stopped state (canonical)
             const expiredTimer = {
                 status: 'stop',
-                timeLeftMs: 0,
-                durationMs: gameState.timer?.durationMs || durationMs,
-                questionUid: questionUid || gameState.timer?.questionUid || null,
-                timestamp: now,
-                localTimeLeftMs: null
+                timerEndDateMs: timerEndDateMs,
+                questionUid: questionUid || 'unknown',
             };
-            // Update game state
-            gameState.timer = expiredTimer;
+            // Update game state (if needed)
             await gameStateService_1.default.updateGameState(accessCode, gameState);
-            // Broadcast timer expiry to all rooms using same structure as manual actions
+            // Broadcast timer expiry to all rooms using canonical emission helper
             const dashboardRoom = `dashboard_${gameId}`;
             const liveRoom = `game_${accessCode}`;
             const projectionRoom = `projection_${gameId}`;
             logger.info({ gameId, accessCode, dashboardRoom, liveRoom, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Broadcasting timer expiry to all rooms');
-            // To dashboard (include questionUid to match frontend validation)
-            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer: expiredTimer, questionUid: expiredTimer.questionUid });
-            logger.info({ gameId, dashboardRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to dashboardRoom');
-            // To live room (for quiz players)
-            io.to(liveRoom).emit('game_timer_updated', { timer: expiredTimer });
-            logger.info({ gameId, liveRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to liveRoom');
-            // To projection room (teacher display)
-            io.to(projectionRoom).emit('dashboard_timer_updated', { timer: expiredTimer, questionUid: expiredTimer.questionUid });
-            logger.info({ gameId, projectionRoom, timer: expiredTimer }, '[TIMER_EXPIRY] Emitted expiry to projectionRoom');
+            const questionIndex = typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : -1;
+            const totalQuestions = Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0;
+            const answersLocked = typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false;
+            emitCanonicalTimerEvents(io, [
+                { room: dashboardRoom, event: events_1.TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, extra: { questionUid: expiredTimer.questionUid ?? undefined } },
+                { room: liveRoom, event: 'game_timer_updated', extra: {} },
+                { room: projectionRoom, event: events_1.TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, extra: { questionUid: expiredTimer.questionUid ?? undefined } }
+            ], {
+                timer: expiredTimer,
+                questionUid: expiredTimer.questionUid ?? undefined,
+                questionIndex,
+                totalQuestions,
+                answersLocked
+            });
         }
         catch (error) {
             logger.error({ gameId, accessCode, error }, '[TIMER_EXPIRY] Error handling timer expiry');
         }
-    }, durationMs);
+    }, msUntilEnd);
     activeTimers.set(gameId, timeout);
 }
+// Helper: fetch canonical durationMs for a question (ms, from timeLimit)
+async function getCanonicalDurationMs(questionUid) {
+    if (!questionUid)
+        return 30000; // fallback
+    const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
+    // Canonical: durationMs is always ms, but DB only has timeLimit (seconds)
+    if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
+        return question.timeLimit * 1000;
+    }
+    return 30000; // fallback default
+}
+// --- CANONICAL TIMER EVENT EMISSION LOGIC ---
+// Use the shared canonicalizer from core/services/toCanonicalTimer
+const toCanonicalTimer_1 = require("@/core/services/toCanonicalTimer");
+// Helper to canonicalize timer for emission (always enforces timeLeftMs and durationMs)
+function toCanonicalTimer(timer, durationMs) {
+    // Use the shared canonicalizer, which now only emits canonical fields
+    return (0, toCanonicalTimer_1.toCanonicalTimer)(timer, durationMs ?? 0);
+}
+function emitCanonicalTimerEvents(io, rooms, payloadBase) {
+    const canonicalQuestionUid = typeof payloadBase.questionUid === 'string' && payloadBase.questionUid.length > 0
+        ? payloadBase.questionUid
+        : (payloadBase.timer && typeof payloadBase.timer.questionUid === 'string' && payloadBase.timer.questionUid.length > 0
+            ? payloadBase.timer.questionUid
+            : 'unknown');
+    const canonicalPayload = {
+        timer: toCanonicalTimer(payloadBase.timer),
+        questionUid: canonicalQuestionUid,
+        questionIndex: typeof payloadBase.questionIndex === 'number' ? payloadBase.questionIndex : -1,
+        totalQuestions: typeof payloadBase.totalQuestions === 'number' ? payloadBase.totalQuestions : 0,
+        answersLocked: typeof payloadBase.answersLocked === 'boolean' ? payloadBase.answersLocked : false,
+        gameId: payloadBase.gameId,
+    };
+    const validation = socketEvents_zod_2.dashboardTimerUpdatedPayloadSchema.safeParse(canonicalPayload);
+    if (!validation.success) {
+        logger.error({ error: validation.error.format(), payload: canonicalPayload }, '[TIMER] Invalid canonical timer payload, not emitting');
+        return;
+    }
+    for (const { room, event, extra } of rooms) {
+        // --- ENHANCED DEBUG LOGGING FOR TEST INVESTIGATION ---
+        logger.warn({
+            marker: '[SOCKET-EMIT-DEBUG]',
+            room,
+            event,
+            canonicalPayload,
+            extra,
+            socketIdsInRoom: Array.from(io.sockets.adapter.rooms.get(room) || []),
+            allRooms: Array.from(io.sockets.adapter.rooms.keys()),
+            emitStack: new Error().stack
+        }, '[TIMER][EMIT_DEBUG] Emitting event to room (ENHANCED)');
+        io.to(room).emit(event, { ...canonicalPayload, ...extra });
+        // --- NEW: LOG ALL CONNECTED SOCKETS AND THEIR ROOMS AFTER EMIT ---
+        const sockets = Array.from(io.sockets.sockets.values());
+        const socketRoomMap = sockets.map(s => ({
+            id: s.id,
+            rooms: Array.from(s.rooms)
+        }));
+        logger.warn({
+            marker: '[SOCKET-ROOMS-POST-EMIT]',
+            allSocketRoomMemberships: socketRoomMap
+        }, '[TIMER][EMIT_DEBUG] All connected sockets and their rooms after timer event emission');
+    }
+}
+// --- END CANONICAL TIMER EVENT EMISSION LOGIC ---
+// --- MODERNIZATION: Canonical Timer System ---
+// All timer logic below uses CanonicalTimerService only. All legacy gameState.timer logic is commented out above.
+// Only import getCanonicalTimer and CanonicalTimerService once at the top of the file
+// import { getCanonicalTimer } from '@/core/services/gameStateService';
+// import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 function timerActionHandler(io, socket) {
-    const emitQuestion = (0, emitQuestionHandler_1.emitQuestionHandler)(io, socket);
-    const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
     return async (payload) => {
         // Runtime validation with Zod
         const parseResult = socketEvents_zod_1.timerActionPayloadSchema.safeParse(payload);
@@ -106,6 +212,12 @@ function timerActionHandler(io, socket) {
                 code: 'VALIDATION_ERROR',
                 details: errorDetails
             };
+            logger.warn({
+                socketId: socket.id,
+                errorPayload,
+                branch: 'early return: invalid payload',
+                location: 'timerActionHandler:parseResult.fail'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to invalid payload');
             socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
             return;
         }
@@ -121,37 +233,49 @@ function timerActionHandler(io, socket) {
         });
         logger.info({ payload: validPayload }, 'Received quiz_timer_action event');
         // Look up game instance by access code
-        const { accessCode, action, duration, questionUid } = validPayload;
+        const { accessCode, action, timerEndDateMs, questionUid } = validPayload;
         const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
             where: { accessCode }
         });
         if (!gameInstance) {
             logger.warn({ accessCode }, 'Game instance not found');
-            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, {
+            const errorPayload = {
                 code: 'GAME_NOT_FOUND',
                 message: 'Game not found',
-            });
+            };
+            logger.warn({
+                accessCode,
+                errorPayload,
+                branch: 'early return: gameInstance not found',
+                location: 'timerActionHandler:gameInstance.null'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to missing gameInstance');
+            socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
             return;
         }
         const gameId = gameInstance.id;
-        const durationMs = duration; // Use duration from schema
         const userId = socket.data?.userId || socket.data?.user?.userId;
         logger.warn('🔥 CRITICAL DEBUG: Destructured backend values', {
             gameId,
             action,
-            durationMs,
+            timerEndDateMs,
             questionUid,
             'questionUid type': typeof questionUid,
             'questionUid length': questionUid ? questionUid.length : 'null/undefined',
             userId
         });
-        logger.info({ gameId, userId, action, durationMs, questionUid }, 'Timer action handler entered');
+        logger.info({ gameId, userId, action, timerEndDateMs, questionUid }, 'Timer action handler entered');
         if (!gameId) {
             logger.warn({ action }, 'No gameId provided in payload, aborting timer action');
             const errorPayload = {
                 message: 'gameId is required to control the timer',
                 code: 'GAME_ID_REQUIRED'
             };
+            logger.warn({
+                action,
+                errorPayload,
+                branch: 'early return: no gameId',
+                location: 'timerActionHandler:gameId.null'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to missing gameId');
             socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
             return;
         }
@@ -161,10 +285,17 @@ function timerActionHandler(io, socket) {
                 message: 'Authentication required to control the timer',
                 code: 'AUTHENTICATION_REQUIRED'
             };
+            logger.warn({
+                gameId,
+                action,
+                errorPayload,
+                branch: 'early return: no userId',
+                location: 'timerActionHandler:userId.null'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to missing userId');
             socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
             return;
         }
-        logger.info({ gameId, userId, action, durationMs }, 'Timer action requested');
+        logger.info({ gameId, userId, action, timerEndDateMs }, 'Timer action requested');
         try {
             // Verify authorization - user must be either the game initiator or the template creator
             const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
@@ -185,6 +316,14 @@ function timerActionHandler(io, socket) {
                     message: 'Not authorized to control this game',
                     code: 'NOT_AUTHORIZED'
                 };
+                logger.warn({
+                    gameId,
+                    userId,
+                    action,
+                    errorPayload,
+                    branch: 'early return: not authorized',
+                    location: 'timerActionHandler:not.authorized'
+                }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to not authorized');
                 socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
                 return;
             }
@@ -196,147 +335,54 @@ function timerActionHandler(io, socket) {
                     message: 'Could not retrieve game state',
                     code: 'STATE_ERROR'
                 };
+                logger.warn({
+                    gameId,
+                    userId,
+                    action,
+                    errorPayload,
+                    branch: 'early return: no game state',
+                    location: 'timerActionHandler:gameState.null'
+                }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to missing game state');
                 socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
                 return;
             }
             const gameState = fullState.gameState;
-            // Initialize timer with safe defaults using shared type structure
-            let timer = gameState.timer ? { ...gameState.timer } : {
-                status: 'stop',
-                timeLeftMs: 30000,
-                durationMs: 30000,
-                questionUid: null,
-                timestamp: Date.now(),
-                localTimeLeftMs: null
-            };
-            const now = Date.now();
-            // Validate duration if provided (durationMs is already in milliseconds)
-            const validDurationMs = durationMs && durationMs > 0 ? durationMs : undefined;
-            // Update timer based on the action
+            // Determine canonical timer context
+            const playMode = gameState.gameMode;
+            const isDeferred = gameState.status === 'completed'; // Business rule: treat completed as deferred
+            const attemptCount = undefined; // TODO: wire up if needed for deferred mode
+            let canonicalTimer = null;
+            const canonicalQuestionUid = (questionUid && typeof questionUid === 'string' ? questionUid : (gameState.questionUids && gameState.currentQuestionIndex >= 0 ? gameState.questionUids[gameState.currentQuestionIndex] : null));
+            if (!canonicalQuestionUid) {
+                logger.error({ accessCode, questionUid, gameState }, '[TIMER_ACTION] No valid questionUid for canonical timer');
+                // handle error or return
+            }
+            // Use canonical durationMs for timer actions (from question definition)
+            let canonicalDurationMs = 0;
+            if (canonicalQuestionUid) {
+                canonicalDurationMs = await getCanonicalDurationMs(String(canonicalQuestionUid));
+            }
+            if (canonicalDurationMs <= 0) {
+                logger.error({ canonicalQuestionUid, canonicalDurationMs }, '[TIMER_ACTION] Failed to get canonical durationMs');
+                // handle error or return
+            }
             switch (action) {
-                case 'start':
-                    logger.info({ gameId, action, now, validDurationMs, timer }, '[TIMER_ACTION] Processing start action');
-                    const startDuration = validDurationMs || (timer.durationMs || 30000);
-                    timer = {
-                        status: 'play',
-                        timeLeftMs: startDuration,
-                        durationMs: startDuration,
-                        questionUid: timer.questionUid,
-                        timestamp: now,
-                        localTimeLeftMs: null
-                    };
-                    logger.info({ gameId, action, timer }, '[TIMER_ACTION] Timer object after start processing');
-                    // Update game status to 'active' when starting a timer (game has started)
-                    if (gameInstance.status === 'pending') {
-                        logger.info({ gameId, action }, 'Setting game status to active as timer is being started');
-                        await gameInstanceService.updateGameStatus(gameId, { status: 'active' });
-                        // CRITICAL: Also update the Redis game state status to match
-                        gameState.status = 'active';
-                        // Emit game status change to dashboard
-                        const dashboardRoom = `dashboard_${gameId}`;
-                        const statusPayload = {
-                            status: 'active',
-                            ended: false
-                        };
-                        io.to(dashboardRoom).emit('dashboard_game_status_changed', statusPayload);
-                    }
-                    // Start the automatic timer expiry mechanism
-                    if (startDuration > 0) {
-                        startGameTimer(io, gameId, gameInstance.accessCode, startDuration, questionUid || null);
-                    }
+                case 'run':
+                    await canonicalTimerService.startTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred, userId, canonicalDurationMs);
+                    canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, String(canonicalQuestionUid), playMode, isDeferred, canonicalDurationMs);
                     break;
                 case 'pause':
-                    // Clear any running timer when pausing
-                    clearGameTimer(gameId);
-                    if (timer.status !== 'pause') {
-                        // Use the frontend-provided duration (remaining time) if available,
-                        // otherwise fall back to stored timeLeftMs
-                        const timeRemaining = validDurationMs !== undefined
-                            ? Math.max(0, validDurationMs)
-                            : Math.max(0, timer.timeLeftMs);
-                        // 🔥 PAUSE DEBUG: Log the pause calculation
-                        logger.warn('🔥 PAUSE DEBUG: Backend pause calculation', {
-                            now,
-                            'validDurationMs (from frontend)': validDurationMs,
-                            'timer.timeLeftMs (stored)': timer.timeLeftMs,
-                            'timer.durationMs': timer.durationMs,
-                            timeRemaining,
-                            'timeRemaining === 0': timeRemaining === 0,
-                            'using frontend duration': validDurationMs !== undefined
-                        });
-                        timer = {
-                            ...timer,
-                            status: 'pause',
-                            timeLeftMs: timeRemaining,
-                            timestamp: now
-                        };
-                    }
-                    break;
-                case 'resume':
-                    // Handle resume even if timeRemaining is not defined
-                    if (timer.status === 'pause') {
-                        const remainingTime = timer.timeLeftMs || timer.durationMs || 30000;
-                        // 🔥 RESUME DEBUG: Log the resume calculation
-                        logger.warn('🔥 RESUME DEBUG: Backend resume calculation', {
-                            now,
-                            'timer.timeLeftMs (before)': timer.timeLeftMs,
-                            'timer.durationMs (before)': timer.durationMs,
-                            remainingTime,
-                            'remainingTime in seconds': remainingTime / 1000
-                        });
-                        timer = {
-                            ...timer,
-                            status: 'play',
-                            timeLeftMs: remainingTime,
-                            timestamp: now
-                        };
-                        logger.warn('🔥 RESUME DEBUG: Backend resume result', {
-                            'timer.status (after)': timer.status,
-                            'timer.durationMs (after)': timer.durationMs,
-                            'timer.timeLeftMs (after)': timer.timeLeftMs,
-                            'timer.timestamp (after)': timer.timestamp
-                        });
-                        // Restart automatic timer expiry when resuming
-                        if (remainingTime > 0) {
-                            startGameTimer(io, gameId, gameInstance.accessCode, remainingTime, questionUid || null);
-                        }
-                    }
+                    await canonicalTimerService.pauseTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred);
+                    canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, String(canonicalQuestionUid), playMode, isDeferred, canonicalDurationMs);
                     break;
                 case 'stop':
-                    // Clear any running timer when stopping
-                    clearGameTimer(gameId);
-                    timer = {
-                        ...timer,
-                        status: 'stop',
-                        timeLeftMs: 0,
-                        timestamp: now
-                    };
+                    await canonicalTimerService.pauseTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred);
+                    canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, String(canonicalQuestionUid), playMode, isDeferred, canonicalDurationMs);
                     break;
-                case 'set_duration':
-                    if (validDurationMs) {
-                        const wasPlaying = timer.status === 'play';
-                        timer = {
-                            ...timer,
-                            durationMs: validDurationMs, // durationMs is already in milliseconds
-                            // If timer is stopped/paused, update timeLeftMs to match new duration
-                            timeLeftMs: timer.status !== 'play' ? validDurationMs : timer.timeLeftMs,
-                            timestamp: now
-                        };
-                        // If timer was playing and duration changed, restart the timer
-                        if (wasPlaying) {
-                            clearGameTimer(gameId);
-                            const newTimeLeft = timer.timeLeftMs;
-                            if (newTimeLeft > 0) {
-                                startGameTimer(io, gameId, gameInstance.accessCode, newTimeLeft, questionUid || null);
-                            }
-                        }
-                    }
-                    break;
+                // Remove unsupported 'edit_timer' and 'set' cases from the switch statement
             }
-            logger.info({ gameId, action, timer }, 'Timer state after action');
-            // Update game state with new timer
-            gameState.timer = timer;
-            await gameStateService_1.default.updateGameState(gameInstance.accessCode, gameState);
+            logger.info({ gameId, action, canonicalTimer }, 'Timer state after action');
+            // Use canonicalTimer for all event payloads below
             // Get the current question UID for timer updates
             // If questionUid is provided in the payload, use it; otherwise use current question
             let targetQuestionUid = questionUid;
@@ -396,9 +442,10 @@ function timerActionHandler(io, socket) {
                         const questionChangedPayload = {
                             questionUid: targetQuestionUid,
                             oldQuestionUid: currentQuestionUid,
-                            timer: timer
+                            timer: canonicalTimer // MODERNIZATION: use canonicalTimer only
                         };
-                        io.to(dashboardRoom).emit('dashboard_question_changed', questionChangedPayload);
+                        // Use canonical event constant for dashboard_question_changed
+                        io.to(dashboardRoom).emit(events_1.TEACHER_EVENTS.DASHBOARD_QUESTION_CHANGED, questionChangedPayload);
                         logger.info({ gameId, targetQuestionUid, targetQuestionIndex }, '[TIMER_ACTION] Question switched and dashboard notified');
                     }
                     else {
@@ -417,74 +464,55 @@ function timerActionHandler(io, socket) {
                 targetQuestionUid = currentQuestionFromState || undefined;
             }
             // Update timer object with resolved questionUid before broadcasting
-            if (targetQuestionUid) {
-                timer = {
-                    ...timer,
-                    questionUid: targetQuestionUid
-                };
-            }
-            // Broadcast timer update to all relevant rooms
+            canonicalTimer.questionUid = targetQuestionUid || null;
+            // Canonicalize timer for emission
+            const timer = toCanonicalTimer(canonicalTimer);
+            // Broadcast updated timer to all relevant rooms
             const dashboardRoom = `dashboard_${gameId}`;
-            const liveRoom = `game_${gameInstance.accessCode}`; // Ensure gameInstance.accessCode is correct
+            const liveRoom = `game_${accessCode}`;
             const projectionRoom = `projection_${gameId}`;
-            logger.info({ gameId, action, dashboardRoom, liveRoom, projectionRoom, timer, targetQuestionUid }, '[TIMER_ACTION] Emitting timer updates to rooms');
-            // To dashboard (include questionUid to match frontend validation)
-            io.to(dashboardRoom).emit('dashboard_timer_updated', { timer, questionUid: targetQuestionUid });
-            logger.info({ gameId, action, dashboardRoom, timer, targetQuestionUid }, '[TIMER_ACTION] Emitted to dashboardRoom');
-            // To live room (for quiz players)
-            io.to(liveRoom).emit('game_timer_updated', { timer });
-            logger.info({ gameId, action, liveRoom, timer }, '[TIMER_ACTION] Emitted to liveRoom');
-            // To projection room (include questionUid for proper frontend handling)
-            io.to(projectionRoom).emit('dashboard_timer_updated', { timer, questionUid: targetQuestionUid });
-            logger.info({ gameId, action, projectionRoom, timer, targetQuestionUid }, '[TIMER_ACTION] Emitted to projectionRoom');
-            logger.info({ gameId, action }, 'Timer updated successfully');
+            // --- MODERNIZATION: Only emit to dashboard for STOP on different question ---
+            let emitRooms = [
+                { room: dashboardRoom, event: events_1.TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, extra: { questionUid: timer.questionUid ?? undefined } }
+            ];
+            // Determine if this is a STOP action on a different question
+            const isStopOnDifferentQuestion = (action === 'stop' &&
+                typeof questionUid === 'string' &&
+                questionUid.length > 0 &&
+                gameState.questionUids?.[gameState.currentQuestionIndex] !== questionUid);
+            if (!isStopOnDifferentQuestion) {
+                emitRooms.push({ room: liveRoom, event: 'game_timer_updated', extra: {} }, { room: projectionRoom, event: events_1.TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, extra: { questionUid: timer.questionUid ?? undefined } });
+            }
+            emitCanonicalTimerEvents(io, emitRooms, {
+                timer: canonicalTimer,
+                questionUid: timer.questionUid ?? undefined,
+                questionIndex: typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : -1,
+                totalQuestions: Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 0,
+                answersLocked: typeof gameState.answersLocked === 'boolean' ? gameState.answersLocked : false,
+                gameId
+            });
+            logger.info({
+                action,
+                gameId,
+                timerStateAfterEmit: JSON.stringify(timer),
+                gameStateAfterEmit: JSON.stringify(gameState)
+            }, '[DEBUG] After emitting canonical timer events (EXTRA DEBUG)');
         }
         catch (error) {
-            logger.error({ gameId, action, error }, 'Error updating timer');
+            logger.error({ gameId, action, error }, '[TIMER_ACTION] Unhandled error in timerActionHandler');
             const errorPayload = {
-                message: 'Failed to update timer',
-                code: 'TIMER_ERROR'
+                message: 'Unhandled error in timer action handler',
+                code: 'TIMER_ACTION_ERROR',
+                details: { message: error instanceof Error ? error.message : String(error) }
             };
+            logger.error({
+                gameId,
+                action,
+                errorPayload,
+                branch: 'catch: unhandled error',
+                location: 'timerActionHandler:catch'
+            }, '[DEBUG] Emitting TEACHER_EVENTS.ERROR_DASHBOARD due to unhandled error');
             socket.emit(events_1.TEACHER_EVENTS.ERROR_DASHBOARD, errorPayload);
         }
-        // Canonical timer integration for all modes
-        if (questionUid) {
-            try {
-                const playMode = gameInstance.playMode;
-                const isDiffered = !!gameInstance.isDiffered;
-                switch (action) {
-                    case 'start':
-                    case 'resume':
-                        await canonicalTimerService.startTimer(accessCode, questionUid, playMode, isDiffered);
-                        break;
-                    case 'pause':
-                        await canonicalTimerService.pauseTimer(accessCode, questionUid, playMode, isDiffered);
-                        break;
-                    case 'stop':
-                        await canonicalTimerService.resetTimer(accessCode, questionUid, playMode, isDiffered);
-                        break;
-                }
-            }
-            catch (err) {
-                logger.error({ accessCode, questionUid, action, err }, '[TIMER_ACTION] Canonical timer error');
-            }
-        }
-    };
-}
-/**
- * Clean up all timers (for cleanup when server shuts down or games end)
- */
-function clearAllTimers() {
-    logger.info({ activeTimersCount: activeTimers.size }, '[TIMER_EXPIRY] Clearing all active timers');
-    for (const [gameId, timeout] of activeTimers.entries()) {
-        clearTimeout(timeout);
-        logger.debug({ gameId }, '[TIMER_EXPIRY] Cleared timer for game');
-    }
-    activeTimers.clear();
-}
-/**
- * Clear timer for a specific game (useful when game ends)
- */
-function clearTimerForGame(gameId) {
-    clearGameTimer(gameId);
-}
+    }; // close returned async function
+} // close timerActionHandler

@@ -103,7 +103,8 @@ export default function CreateQuizPage() {
                     discipline: q.discipline || q.category || q.subject,
                     themes: q.themes,
                     explanation: q.explanation || q.justification,
-                    timeLimit: q.timeLimit || q.timeLimitSeconds || q.temps,
+                    // Modernization: Only use canonical durationMs, remove all legacy timer fields
+                    durationMs: (typeof q.durationMs === 'number' ? q.durationMs : 30000),
                     tags: q.tags,
                     difficulty: q.difficulty || q.difficulte,
                     author: q.author || q.auteur,

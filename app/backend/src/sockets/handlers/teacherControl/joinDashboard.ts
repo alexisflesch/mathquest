@@ -199,7 +199,7 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             );
 
             // Get and send comprehensive game state for dashboard
-            const controlState = await getGameControlState(gameInstance.id, effectiveUserId, isTestEnvironment);
+            const { controlState, errorDetails } = await getGameControlState(gameInstance.id, effectiveUserId, isTestEnvironment);
 
             if (!controlState) {
                 logger.warn({ gameId, userId: effectiveUserId }, 'Could not retrieve game control state');
@@ -209,19 +209,19 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                     logger.info({ gameId }, 'Test environment: Returning successful response despite missing game state');
 
                     if (callback) {
+                        // Use canonical timer object (null if unavailable)
                         callback({
                             success: true,
                             gameId: gameInstance.id,
                             accessCode: gameInstance.accessCode,
-                            // Include a minimal state object for test assertion
+                            // Minimal canonical state for test assertion
                             gameState: {
                                 gameId: gameInstance.id,
                                 accessCode: gameInstance.accessCode,
                                 status: gameInstance.status,
                                 currentQuestionUid: null,
                                 currentQuestionIndex: -1,
-                                timerState: 'stopped',
-                                timerRemainingMs: 0,
+                                timer: null,
                                 areAnswersLocked: false,
                                 participantCount: 0
                             }
@@ -231,12 +231,14 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                     socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
                         code: 'STATE_ERROR',
                         message: 'Could not retrieve game state',
+                        details: errorDetails
                     });
 
                     if (callback) {
                         callback({
                             success: false,
-                            error: 'Could not retrieve game state'
+                            error: 'Could not retrieve game state',
+                            details: errorDetails
                         });
                     }
                 }
@@ -248,19 +250,26 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             // Send initial timer state to the dashboard timer hook
             // Get current game state to access the up-to-date timer state (like live page does)
             const currentGameState = await gameStateService.getFullGameState(gameInstance.accessCode);
-            if (currentGameState?.gameState?.timer) {
-                // Calculate actual remaining time for late joiners (like live page does)
-                const actualTimer = calculateTimerForLateJoiner(currentGameState.gameState.timer);
-                const timerToSend = actualTimer || currentGameState.gameState.timer;
-
-                logger.info('Sending initial timer state to dashboard:', {
-                    original: currentGameState.gameState.timer,
-                    calculated: actualTimer,
-                    sending: timerToSend
+            if (currentGameState?.gameState && controlState.currentQuestionUid) {
+                // --- MODERNIZATION: Use canonical timer system ---
+                // Always use canonical durationMs from the question object
+                const questions = controlState.questions || [];
+                const q = questions.find((q: any) => q.uid === controlState.currentQuestionUid);
+                const durationMs = q && typeof q.durationMs === 'number' ? q.durationMs : 30000;
+                let canonicalTimer = await gameStateService.getCanonicalTimer(
+                    gameInstance.accessCode,
+                    controlState.currentQuestionUid,
+                    currentGameState.gameState.gameMode,
+                    currentGameState.gameState.status === 'completed',
+                    durationMs,
+                    undefined,
+                    undefined
+                );
+                logger.info('Sending initial timer state to dashboard (canonical):', {
+                    canonicalTimer
                 });
-
                 socket.emit(TEACHER_EVENTS.DASHBOARD_TIMER_UPDATED, {
-                    timer: timerToSend,
+                    timer: canonicalTimer,
                     questionUid: controlState.currentQuestionUid
                 });
             }
@@ -270,6 +279,22 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             socket.emit(TEACHER_EVENTS.CONNECTED_COUNT as any, { count: participantCount });
 
             logger.info({ gameId, userId: effectiveUserId, socketId: socket.id }, 'User joined dashboard successfully');
+
+            // Emit canonical dashboard_joined event for client/test confirmation
+            logger.info({
+                event: 'DASHBOARD_JOINED',
+                socketId: socket.id,
+                payload: {
+                    gameId: gameInstance.id,
+                    accessCode: gameInstance.accessCode,
+                    userId: effectiveUserId
+                }
+            }, 'Emitting dashboard_joined event');
+            socket.emit(TEACHER_EVENTS.DASHBOARD_JOINED, {
+                gameId: gameInstance.id,
+                accessCode: gameInstance.accessCode,
+                userId: effectiveUserId
+            });
 
             // Call the callback if provided
             if (callback) {

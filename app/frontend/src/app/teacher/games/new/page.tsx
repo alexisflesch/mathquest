@@ -83,7 +83,7 @@ function SortableCartQuestion({ question, onRemove }: {
                     {/* Timer display (read-only) */}
                     <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)]">
                         <Clock size={12} />
-                        {question.customTime || question.timeLimit || 30}s
+                        {(question.customTime ?? (typeof question.durationMs === 'number' ? Math.round(question.durationMs / 1000) : 30))}s
                     </div>
 
                     <button
@@ -263,7 +263,8 @@ export default function CreateActivityPage() {
                         discipline: q.discipline || q.category || q.subject,
                         themes: q.themes,
                         explanation: q.explanation || q.justification,
-                        timeLimit: q.timeLimit || q.timeLimit || q.temps,
+                        // Modernization: Only use canonical durationMs, no legacy fallback
+                        durationMs: typeof q.durationMs === 'number' ? q.durationMs : 30000,
                         tags: q.tags,
                         difficulty: q.difficulty || q.difficulte,
                         author: q.author || q.auteur,

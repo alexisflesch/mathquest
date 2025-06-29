@@ -163,9 +163,9 @@ describe('Timer Integration Test', () => {
 
         act(() => {
             result.current.emitTimerAction({
-                status: 'pause',
+                action: 'pause',
                 questionUid: 'question-1',
-                timeLeftMs: 30000
+                durationMs: 30000
             });
         });
 
@@ -219,9 +219,9 @@ describe('Timer Integration Test', () => {
 
         act(() => {
             result.current.emitTimerAction({
-                status: 'play',
+                action: 'run',
                 questionUid: 'question-1',
-                timeLeftMs: 30000
+                durationMs: 30000
             });
         });
 
@@ -299,7 +299,7 @@ describe('Timer Integration Test', () => {
 
         act(() => {
             result.current.emitTimerAction({
-                status: 'stop',
+                action: 'stop',
                 questionUid: 'question-2'
             });
         });
@@ -419,9 +419,9 @@ describe('Timer Integration Test', () => {
         // Simulate timer action with proper authorization
         act(() => {
             result.current.emitTimerAction({
-                status: 'play',
+                action: 'run',
                 questionUid: 'q1',
-                timeLeftMs: 60000
+                durationMs: 60000
             });
         });
 
@@ -434,7 +434,7 @@ describe('Timer Integration Test', () => {
             const lastCall = timerCalls[timerCalls.length - 1];
             expect(lastCall[1]).toEqual(expect.objectContaining({
                 gameId: mockQuizId,
-                action: 'start'  // Backend expects 'action', not 'status'
+                action: 'run'  // Canonical action
             }));
         });
 

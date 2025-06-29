@@ -105,13 +105,18 @@ export function SimpleTimerTest({ gameId, accessCode, role }: SimpleTimerTestPro
                         <div className="flex gap-2">
                             <button
                                 onClick={timer.pauseTimer}
-                                disabled={!timer.isConnected || timer.status !== 'play'}
+                                disabled={!timer.isConnected || timer.status !== 'run'}
                                 className="px-3 py-1 bg-yellow-500 text-white rounded disabled:opacity-50"
                             >
                                 Pause
                             </button>
                             <button
-                                onClick={timer.resumeTimer}
+                                onClick={() => {
+                                    // Canonical resume: re-run timer with current question and time left
+                                    if (timer.status === 'pause' && timer.questionUid) {
+                                        timer.startTimer(timer.questionUid, timer.timeLeftMs);
+                                    }
+                                }}
                                 disabled={!timer.isConnected || timer.status !== 'pause'}
                                 className="px-3 py-1 bg-green-500 text-white rounded disabled:opacity-50"
                             >

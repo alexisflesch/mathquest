@@ -67,30 +67,34 @@ export function createSocketConfig(baseConfig: SocketConfig): SocketConfig {
     };
 }
 /**
- * Explicit Timer Unit Conversion Utilities
- * These functions make unit conversions explicit and prevent confusion
+// --- CANONICAL TIMER UTILITIES ---
+// All timer utilities must use canonical shared types from shared/types/core/timer.ts
+import type { GameTimerState, TimerStatus } from '@shared/types/core/timer';
+
+/**
+ * Canonical timer conversion utilities (all ms, no legacy/seconds)
+ * Use only canonical timer fields and types.
  */
-export const timerConversions = {
+export const timerUtils = {
     /** Convert milliseconds to seconds for display (rounds up) */
     msToSecondsDisplay: (ms: number | null): number => {
-        if (ms === null) return 0;
+        if (ms == null) return 0;
         return Math.ceil(ms / 1000);
     },
 
-    /** Convert seconds to milliseconds for internal use */
-    secondsToMsInternal: (seconds: number): number => {
+    /** Convert seconds to milliseconds for internal use (canonical: always ms) */
+    secondsToMs: (seconds: number): number => {
         return seconds * 1000;
     },
 
-    /** Format milliseconds as MM:SS or SS display string */
-    formatMsAsSeconds: (ms: number | null): string => {
-        if (ms === null) return '-';
-        const seconds = Math.ceil(ms / 1000);
-        if (seconds >= 60) {
-            const m = Math.floor(seconds / 60);
-            const s = seconds % 60;
-            return `${m}:${s.toString().padStart(2, '0')}`;
-        }
-        return seconds.toString();
+    /** Format milliseconds as MM:SS (canonical display) */
+    formatMsAsMMSS: (ms: number | null): string => {
+        if (ms == null) return '-';
+        const totalSeconds = Math.ceil(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 };
+
+// --- END CANONICAL TIMER UTILITIES ---

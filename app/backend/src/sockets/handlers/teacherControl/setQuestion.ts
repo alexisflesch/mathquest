@@ -15,6 +15,8 @@ import { setQuestionPayloadSchema } from '@shared/types/socketEvents.zod';
 import { emitQuestionHandler } from '../game/emitQuestionHandler';
 import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { redisClient } from '@/config/redis';
+import { getCanonicalTimer } from '@/core/services/gameStateService';
+import { dashboardTimerUpdatedPayloadSchema } from '@shared/types/socketEvents.zod';
 
 // Create a handler-specific logger
 const logger = createLogger('SetQuestionHandler');
@@ -156,30 +158,35 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
             }
 
             // Get current game state
-            const fullState = await gameStateService.getFullGameState(gameInstance.accessCode);
-            if ((!fullState || !fullState.gameState) && isTestEnvironment) {
-                if (callback && !callbackCalled) {
-                    callback({ success: true, gameId, questionUid });
-                    callbackCalled = true;
+            let fullState = await gameStateService.getFullGameState(gameInstance.accessCode);
+            let gameState = fullState && fullState.gameState;
+            if (!gameState) {
+                // If missing, initialize canonical game state in Redis
+                logger.warn({ accessCode: gameInstance.accessCode }, '[MODERNIZATION] Game state not found in Redis, initializing via initializeGameState');
+                gameState = await gameStateService.initializeGameState(gameInstance.id);
+                if (!gameState) {
+                    logger.error({ accessCode: gameInstance.accessCode }, '[MODERNIZATION] Failed to initialize canonical game state');
+                    socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
+                        code: 'STATE_ERROR',
+                        message: 'Could not retrieve or initialize game state',
+                    } as ErrorPayload);
+                    if (callback && !callbackCalled) {
+                        callback({
+                            success: false,
+                            error: 'Could not retrieve or initialize game state'
+                        });
+                        callbackCalled = true;
+                    }
+                    return;
                 }
-                return;
+                // Re-fetch full state for downstream logic, with all required properties
+                fullState = {
+                    gameState,
+                    participants: [],
+                    answers: {},
+                    leaderboard: []
+                };
             }
-            if (!fullState || !fullState.gameState) {
-                socket.emit(TEACHER_EVENTS.ERROR_DASHBOARD, {
-                    code: 'STATE_ERROR',
-                    message: 'Could not retrieve game state',
-                } as ErrorPayload);
-                if (callback && !callbackCalled) {
-                    callback({
-                        success: false,
-                        error: 'Could not retrieve game state'
-                    });
-                    callbackCalled = true;
-                }
-                return;
-            }
-
-            const gameState = fullState.gameState;
 
             // Only use questionUid for question lookup; ignore questionIndex
             if (typeof questionIndex !== 'undefined') {
@@ -216,69 +223,74 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 gameState.status = 'active';
             }
 
-            // Reset timer based on the question's time limit
-            const question = await prisma.question.findUnique({
-                where: { uid: questionUid }
-            });
-
-            if (question) {
-                const timeMultiplier = gameState.settings?.timeMultiplier || 1.0;
-                const duration = (question.timeLimit || 30) * 1000 * timeMultiplier; // Convert to milliseconds
-
-                // CRITICAL FIX: Preserve timer state if currently running
-                const currentTimer = gameState.timer;
-                const isCurrentlyRunning = currentTimer && currentTimer.status === 'play';
-
-                if (isCurrentlyRunning) {
-                    // Keep timer running but preserve actual remaining time for existing question
-                    // or reset to full duration only if it's truly a new question
-                    let actualTimeLeft = duration; // Default to full duration for new questions
-
-                    // If timer is running and has timing info, calculate actual remaining time
-                    if (currentTimer.startedAt) {
-                        const elapsed = Date.now() - currentTimer.startedAt;
-                        actualTimeLeft = Math.max(0, currentTimer.durationMs - elapsed);
-                        logger.info({
-                            gameId,
-                            questionUid,
-                            elapsed,
-                            originalDuration: currentTimer.durationMs,
-                            actualTimeLeft
-                        }, 'Preserving actual remaining time for running timer');
-                    }
-
-                    const newTimer: GameTimerState = {
-                        status: 'play',
-                        timeLeftMs: actualTimeLeft, // Use actual remaining time, not full duration
-                        durationMs: duration, // Update duration for new question
-                        questionUid: questionUid,
-                        timestamp: Date.now(),
-                        localTimeLeftMs: null,
-                        startedAt: currentTimer.startedAt || Date.now() // Preserve or set start time
-                    };
-                    gameState.timer = newTimer;
-                    logger.info({ gameId, questionUid, actualTimeLeft, duration }, 'Timer running: preserved actual remaining time');
-                } else {
-                    // Default: start paused so teacher can control when to begin
-                    const pausedTimer: GameTimerState = {
-                        status: 'pause',
-                        timeLeftMs: duration,
-                        durationMs: duration,
-                        questionUid: questionUid,
-                        timestamp: Date.now(),
-                        localTimeLeftMs: null
-                    };
-                    gameState.timer = pausedTimer;
-                    logger.info({ gameId, questionUid, duration }, 'Timer was paused, keeping it paused for new question');
-                }
-
-                // Reset answersLocked to false for the new question
-                gameState.answersLocked = false;
+            // --- MODERNIZATION: Canonical Timer System ---
+            // --- MODERNIZATION: Canonical Timer System ---
+            // Always reset timer state for the new question to canonical initial state
+            const playMode = gameState.gameMode;
+            const isDeferred = gameState.status === 'completed';
+            const attemptCount = undefined; // TODO: wire up if needed for deferred mode
+            // Always use canonical durationMs from the question object
+            let durationMs = 30000;
+            let foundQuestion = null;
+            let questionsArrayLocal = [];
+            if (gameInstance.gameTemplate && Array.isArray((gameInstance.gameTemplate as any).questions)) {
+                questionsArrayLocal = (gameInstance.gameTemplate as any).questions;
             }
-
-            // Update the game state in Redis
+            const qEntryLocal = questionsArrayLocal.find((q: any) => q.question && q.question.uid === questionUid);
+            if (qEntryLocal && qEntryLocal.question && typeof qEntryLocal.question.timeLimit === 'number' && qEntryLocal.question.timeLimit > 0) {
+                durationMs = qEntryLocal.question.timeLimit * 1000;
+                foundQuestion = qEntryLocal.question;
+            }
+            if (typeof durationMs !== 'number' || durationMs <= 0) {
+                logger.error({ questionUid, durationMs }, '[SET_QUESTION] Failed to get canonical durationMs');
+                // handle error or return
+            }
+            // --- CRITICAL: Reset timer state in Redis for this question ---
+            await canonicalTimerService.resetTimer(
+                gameInstance.accessCode,
+                String(questionUid),
+                playMode,
+                isDeferred,
+                effectiveuserId,
+                attemptCount
+            );
+            // Always pause timer for new question (teacher must start it)
+            await canonicalTimerService.pauseTimer(
+                gameInstance.accessCode,
+                String(questionUid),
+                playMode,
+                isDeferred,
+                effectiveuserId,
+                attemptCount
+            );
+            // Fetch canonical timer state for event payloads
+            const canonicalTimer = await getCanonicalTimer(
+                gameInstance.accessCode,
+                String(questionUid),
+                playMode,
+                isDeferred,
+                durationMs,
+                effectiveuserId,
+                attemptCount
+            );
+            logger.info({
+                accessCode: gameInstance.accessCode,
+                questionUid,
+                playMode,
+                isDeferred,
+                durationMs,
+                effectiveuserId,
+                attemptCount,
+                canonicalTimer
+            }, '[DEBUG][setQuestion] Canonical timer state after getCanonicalTimer');
+            // Reset answersLocked to false for the new question
+            gameState.answersLocked = false;
+            // Update the game state in Redis (without timer field)
             await gameStateService.updateGameState(gameInstance.accessCode, gameState);
-
+            logger.info({
+                accessCode: gameInstance.accessCode,
+                gameState
+            }, '[DEBUG][setQuestion] Game state after updateGameState');
             // Update game status to 'active' when setting the first question (game has started)
             if (gameInstance.status === 'pending') {
                 logger.info({ gameId, questionUid }, 'Setting game status to active as first question is being set');
@@ -299,26 +311,37 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 }
             }
 
-            // Notify dashboard about question change
+            // Notify dashboard about question change (canonical payload)
             const dashboardRoom = `dashboard_${gameId}`;
             io.to(dashboardRoom).emit('dashboard_question_changed', {
                 questionUid: questionUid,
                 oldQuestionUid,
-                timer: gameState.timer
+                timer: canonicalTimer // MODERNIZATION: use canonicalTimer only
             } as DashboardQuestionChangedPayload);
 
             // Also broadcast to the live room (for players)
             const liveRoom = `game_${gameInstance.accessCode}`;
+
+            // Store questions array and gameTemplate from the loaded gameInstance (before second query overwrites it)
+            const questionsArray = gameInstance.gameTemplate && Array.isArray((gameInstance.gameTemplate as any).questions)
+                ? (gameInstance.gameTemplate as any).questions
+                : [];
+
+            // Use questionsArray for question lookup
+            let question = null;
+            const qEntry = questionsArray.find((q: any) => q.question && q.question.uid === questionUid);
+            if (qEntry && qEntry.question) {
+                question = qEntry.question;
+            }
 
             // Get the question data to send to players (without correct answers)
             if (question) {
                 // ⚠️ SECURITY: Use standard filtering function to remove sensitive data
                 const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
                 const filteredQuestion = filterQuestionForClient(question);
-
                 const gameQuestionPayload = {
                     question: filteredQuestion,
-                    timer: gameState.timer,
+                    timer: canonicalTimer, // MODERNIZATION: use canonicalTimer only
                     questionIndex: foundQuestionIndex,
                     totalQuestions: gameState.questionUids.length
                 };
@@ -341,11 +364,6 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 io.to(liveRoom).emit(SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
                 // Also emit the same payload to the projection room for canonical question delivery
                 const projectionRoom = `projection_${gameId}`;
-                logger.info({
-                    projectionRoom,
-                    gameId,
-                    payload: gameQuestionPayload
-                }, '[setQuestion] Emitting GAME_QUESTION to projectionRoom');
                 io.to(projectionRoom).emit(SOCKET_EVENTS.GAME.GAME_QUESTION, gameQuestionPayload);
             }
 
@@ -370,3 +388,5 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
         }
     };
 }
+
+// --- MODERNIZATION: All timer logic now uses CanonicalTimerService. All legacy timer usage is commented above. ---

@@ -124,14 +124,7 @@ function tournamentHandler(io, socket) {
                 questionUids: actualQuestions.map(q => q.uid),
                 answersLocked: false, // Default to unlocked
                 gameMode: 'tournament', // Tournament mode
-                timer: {
-                    status: 'pause', // Paused during countdown
-                    timeLeftMs: 0,
-                    durationMs: 0,
-                    questionUid: null,
-                    timestamp: Date.now(),
-                    localTimeLeftMs: null
-                },
+                // [MODERNIZATION] timer field removed. All timer state is managed by CanonicalTimerService.
                 settings: {
                     timeMultiplier: 1.0,
                     showLeaderboard: true
@@ -186,15 +179,8 @@ function tournamentHandler(io, socket) {
         await gameStateService_1.default.updateGameState(accessCode, {
             ...currentStateData.gameState, // Spread existing gameState
             currentQuestionIndex: 0,
-            status: 'active', // Ensure status is still active
-            timer: {
-                status: 'pause', // Will be started by game flow
-                timeLeftMs: 0,
-                durationMs: 0,
-                questionUid: null,
-                timestamp: Date.now(),
-                localTimeLeftMs: null
-            }
+            status: 'active' // Ensure status is still active
+            // [MODERNIZATION] timer field removed. All timer state is managed by CanonicalTimerService.
         });
         await gameInstanceService.updateGameStatus(gameInstance.id, {
             status: 'active', // Required by GameStatusUpdateData
