@@ -500,7 +500,8 @@ export default function PracticeSessionWithAccessCodePage() {
                                             requestFeedback(practiceState.currentQuestion.uid);
                                         }
                                     }}
-                                    title="Voir l'explication"
+                                    title={practiceState.lastFeedback?.explanation ? "Explication" : "Pas d'explication disponible"}
+                                    disabled={!practiceState.lastFeedback?.explanation}
                                 >
                                     <MessageCircle size={16} />
                                 </button>

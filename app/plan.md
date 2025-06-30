@@ -1,4 +1,10 @@
+## Phase: Practice Mode – Disable Feedback Button When No Feedback Available
 
+- [x] Analyze: Locate the feedback button in practice mode UI and determine the canonical condition for feedback availability.
+- [x] Update: Modify the feedback button to be disabled when no feedback (explanation) is available, using canonical shared types and Zod-validated state.
+- [x] Test: Validate that the button is only enabled when feedback is available after answering a question, and that the tooltip shows "Explication" if feedback is available, or "Pas d'explication disponible" if not.
+- [x] Document: Log this change in plan.md and reference the canonical type/field used (`lastFeedback?.explanation`).
+- [ ] Exit Criteria: Feedback button is never enabled unless feedback is available; no legacy or compatibility logic remains.
 
 [x] Phase: Frontend Unification – Projection and Live/Student Timer/Question Display
     - [x] Analyze: Confirm both TeacherProjectionClient and TeacherDashboardClient use canonical timer/question state and shared components.
