@@ -79,7 +79,8 @@ export const CreateGameRequestSchema = z.object({
     discipline: z.string().optional(),
     themes: z.array(z.string()).optional(),
     nbOfQuestions: z.number().int().positive().optional(),
-    initiatorStudentId: z.string().uuid().optional()
+    initiatorStudentId: z.string().uuid().optional(),
+    status: z.enum(['pending', 'completed']).optional()
 });
 
 export const GameJoinRequestSchema = z.object({

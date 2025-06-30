@@ -10,6 +10,7 @@ const joinOrderBonus_1 = require("@/utils/joinOrderBonus");
 const leaderboardSnapshotService_1 = require("./leaderboardSnapshotService");
 const sockets_1 = require("@/sockets");
 const projectionLeaderboardUpdatePayload_1 = require("@shared/types/socket/projectionLeaderboardUpdatePayload");
+const deferredTimerUtils_1 = require("./deferredTimerUtils");
 const logger = (0, logger_1.default)('GameParticipantJoinService');
 /**
  * Join a game using access code (refactored from GameParticipantService)
@@ -17,6 +18,7 @@ const logger = (0, logger_1.default)('GameParticipantJoinService');
  */
 async function joinGame({ userId, accessCode, username, avatarEmoji }) {
     try {
+        logger.info({ userId, accessCode, username, avatarEmoji, logPoint: 'JOIN_GAME_ENTRY' }, '[LOG] joinGame called');
         // Find the game instance
         const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
             where: { accessCode },
@@ -109,7 +111,7 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
                 include: { user: true }
             });
             if (existingLive) {
-                logger.info({ userId, accessCode, participantId: existingLive.id, participationType: 'LIVE', reused: true }, 'Reusing existing LIVE participant');
+                logger.info({ userId, accessCode, participantId: existingLive.id, participationType: 'LIVE', reused: true, logPoint: 'JOIN_GAME_LIVE_EXISTING' }, 'Reusing existing LIVE participant');
                 participant = existingLive;
             }
             else {
@@ -124,7 +126,7 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
                     }
                 });
                 participant = await prisma_1.prisma.gameParticipant.findUnique({ where: { id: newParticipant.id }, include: { user: true } });
-                logger.info({ userId, accessCode, participantId: participant?.id, participationType: 'LIVE', reused: false }, 'Created new LIVE participant');
+                logger.info({ userId, accessCode, participantId: participant?.id, participationType: 'LIVE', reused: false, logPoint: 'JOIN_GAME_LIVE_NEW' }, 'Created new LIVE participant');
             }
         }
         else {
@@ -134,22 +136,85 @@ async function joinGame({ userId, accessCode, username, avatarEmoji }) {
                 include: { user: true }
             });
             if (existingDeferred) {
-                participant = await prisma_1.prisma.gameParticipant.update({
-                    where: { id: existingDeferred.id },
-                    data: { joinedAt: new Date(), score: 0, attemptCount: { increment: 1 } },
-                    include: { user: true }
+                // Get all question UIDs for this game via gameTemplate
+                // gameTemplate is an object with at least a name, but we need the id
+                // Use gameInstance.id as fallback if gameTemplateId is not available
+                const hasOngoing = await (0, deferredTimerUtils_1.hasOngoingDeferredSession)({
+                    accessCode,
+                    userId,
+                    attemptCount: existingDeferred.attemptCount
                 });
                 logger.info({
                     userId,
                     accessCode,
-                    participantId: participant.id,
-                    participationType: participant.participationType,
-                    attemptCount: participant.attemptCount,
-                    resetScore: participant.score,
-                    logPoint: 'DEFERRED_PARTICIPANT_EXISTING_UPDATED'
-                }, 'Updated existing DEFERRED participant for new attempt');
+                    participantId: existingDeferred.id,
+                    attemptCount: existingDeferred.attemptCount,
+                    hasOngoing,
+                    logPoint: 'JOIN_GAME_DEFERRED_ONGOING_CHECK',
+                }, '[DEBUG] Ongoing session check for DEFERRED participant');
+                logger.info({
+                    userId,
+                    accessCode,
+                    participantId: existingDeferred.id,
+                    attemptCount: existingDeferred.attemptCount,
+                    hasOngoing,
+                    logPoint: 'JOIN_GAME_DEFERRED_EXISTING_BEFORE_UPDATE'
+                }, '[LOG] Existing DEFERRED participant before update');
+                if (hasOngoing) {
+                    // Do NOT increment attemptCount or reset progress
+                    participant = existingDeferred;
+                    logger.info({
+                        userId,
+                        accessCode,
+                        participantId: participant.id,
+                        attemptCount: participant.attemptCount,
+                        hasOngoing,
+                        logPoint: 'JOIN_GAME_DEFERRED_RECONNECT_PATH',
+                    }, '[DEBUG] DEFERRED join: reconnect path (should NOT increment attemptCount)');
+                    logger.info({
+                        userId,
+                        accessCode,
+                        participantId: participant.id,
+                        participationType: participant.participationType,
+                        attemptCount: participant.attemptCount,
+                        logPoint: 'JOIN_GAME_DEFERRED_EXISTING_RECONNECT'
+                    }, '[LOG] Reconnected to ongoing DEFERRED session (no increment)');
+                }
+                else {
+                    // No ongoing session: increment attemptCount and reset progress
+                    // PATCH: Only increment attemptCount if there is no ongoing session (new playthrough)
+                    logger.info({
+                        userId,
+                        accessCode,
+                        participantId: existingDeferred.id,
+                        prevAttemptCount: existingDeferred.attemptCount,
+                        hasOngoing,
+                        logPoint: 'JOIN_GAME_DEFERRED_NEW_ATTEMPT_PATH',
+                    }, '[DEBUG] DEFERRED join: new attempt path (should increment attemptCount)');
+                    const prevAttemptCount = existingDeferred.attemptCount;
+                    participant = await prisma_1.prisma.gameParticipant.update({
+                        where: { id: existingDeferred.id },
+                        data: { joinedAt: new Date(), score: 0, attemptCount: prevAttemptCount + 1 },
+                        include: { user: true }
+                    });
+                    logger.info({
+                        userId,
+                        accessCode,
+                        participantId: participant.id,
+                        participationType: participant.participationType,
+                        prevAttemptCount,
+                        newAttemptCount: participant.attemptCount,
+                        resetScore: participant.score,
+                        logPoint: 'JOIN_GAME_DEFERRED_EXISTING_UPDATED'
+                    }, '[LOG] Updated existing DEFERRED participant for new attempt (incremented only on new playthrough)');
+                }
             }
             else {
+                logger.info({
+                    userId,
+                    accessCode,
+                    logPoint: 'JOIN_GAME_DEFERRED_NEW_CREATE'
+                }, '[LOG] Creating new DEFERRED participant');
                 const newParticipant = await prisma_1.prisma.gameParticipant.create({
                     data: {
                         gameInstanceId: gameInstance.id,

@@ -68,12 +68,13 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
         accessCode,
         userId,
         questionCount: questions.length,
-        socketId: socket.id
-    }, '🔥 DEFERRED FLOW DEBUG: startDeferredTournamentSession called');
+        socketId: socket.id,
+        stack: new Error().stack
+    }, '🔥 DEFERRED FLOW DEBUG: startDeferredTournamentSession called (with stack trace for call origin)');
     const sessionKey = `${accessCode}_${userId}`;
     // Prevent duplicate sessions for the same user
     if (runningDeferredSessions.has(userId)) {
-        logger.warn({ accessCode, userId }, 'Deferred tournament session already running for this user');
+        logger.warn({ accessCode, userId, stack: new Error().stack }, 'Deferred tournament session already running for this user (with stack trace)');
         return;
     }
     // Create unique room for this player's session
@@ -120,11 +121,29 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
         socket.data.deferredAttemptCount = attemptCount;
         const sessionStateKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
         await gameStateService_1.default.updateGameState(sessionStateKey, playerGameState);
+        // Set session as active in Redis
+        const { setDeferredSessionActive } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/deferredTimerUtils')));
+        await setDeferredSessionActive({ accessCode, userId, attemptCount });
         // Always ensure participant exists for deferred mode at session start
         const { joinGame } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/joinService')));
         let username = `guest-${userId.substring(0, 8)}`;
         let avatarEmoji = undefined;
+        logger.info({
+            accessCode,
+            userId,
+            username,
+            avatarEmoji,
+            logPoint: 'PRE_JOIN_GAME_CALL',
+            stack: new Error().stack
+        }, '[DEBUG] Calling joinGame from startDeferredTournamentSession');
         const joinResult = await joinGame({ userId, accessCode, username, avatarEmoji });
+        logger.info({
+            accessCode,
+            userId,
+            joinResult,
+            logPoint: 'POST_JOIN_GAME_CALL',
+            stack: new Error().stack
+        }, '[DEBUG] joinGame returned in startDeferredTournamentSession');
         if (!joinResult.success || !joinResult.participant) {
             logger.error({ accessCode, userId, error: joinResult.error }, 'Failed to create/join participant at deferred session start');
             return;
@@ -297,11 +316,14 @@ async function runDeferredQuestionSequence(io, socket, session) {
             totalQuestions: questions.length
         };
         io.to(playerRoom).emit('game_ended', gameEndedPayload);
+        // Mark session as over in Redis
+        const { setDeferredSessionOver } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameParticipant/deferredTimerUtils')));
+        await setDeferredSessionOver({ accessCode, userId, attemptCount });
         logger.info({
             accessCode,
             userId,
             totalQuestions: questions.length
-        }, 'Deferred tournament session completed');
+        }, 'Deferred tournament session completed and session marked over');
     }
     catch (error) {
         logger.error({ accessCode, userId, error }, 'Error in deferred question sequence');

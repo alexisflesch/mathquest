@@ -425,12 +425,16 @@ export default function TeacherGamesPage() {
             }
 
             // Create a game instance from the template
-            const gameData = {
+            // Modernization: Always set status to 'completed' for tournaments created from teacher flow
+            const gameData: any = {
                 name: template.name, // Include the required name field
                 gameTemplateId: templateId,
                 playMode: playMode,
                 settings: {}
             };
+            if (playMode === 'tournament') {
+                gameData.status = 'completed';
+            }
 
             const response = await makeApiRequest<{ gameInstance: { id: string, accessCode?: string } }>('/api/games', {
                 method: 'POST',

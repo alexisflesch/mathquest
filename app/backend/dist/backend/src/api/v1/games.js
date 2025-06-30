@@ -122,12 +122,18 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
             });
             return;
         }
+        // Modernization: Always set status to 'pending' for student-created tournaments (no gameTemplateId)
+        let status = undefined;
+        if (playMode === 'tournament' && !gameTemplateId) {
+            status = 'pending';
+        }
         const gameInstance = await getGameInstanceService().createGameInstanceUnified({
             name,
             gameTemplateId: finalgameTemplateId,
             playMode: playMode, // Type assertion for now
             settings: settings,
-            initiatorUserId: userId
+            initiatorUserId: userId,
+            ...(status ? { status } : {})
         });
         logger.info('GamesAPI created gameInstance debug', { gameInstanceSettings: gameInstance.settings });
         // Initialize game state in Redis immediately after game instance creation

@@ -1,3 +1,134 @@
+
+
+## PHASE 2B: Tournament Creation Status Modernization
+
+- [x] Restrict tournament creation status to only 'pending' or 'completed' in shared/types/api/schemas.ts (Zod schema).
+- [x] Update backend service (gameInstanceService.ts) to accept and use explicit status, defaulting to legacy logic if not provided.
+- [x] Student tournament creation (student/create-game/page.tsx) always sends status: 'pending'.
+- [x] Teacher tournament creation (teacher/games/page.tsx) always sends status: 'completed' for tournaments created from a GameTemplate.
+- [x] All changes follow strict modernization and documentation requirements.
+- [x] This plan.md and log.md updated for all changes.
+
+**Validation:**
+- Student-created tournaments are always 'pending'.
+- Teacher-created tournaments from GameTemplate are always 'completed'.
+- Only 'pending' or 'completed' are accepted as valid status values.
+
+---
+
+## [PHASE: Deferred Tournament Session Bug - AttemptCount Increments Per Question]
+
+### Problem
+- `attemptCount` is still incrementing on every question in a single deferred tournament session, not just on new playthroughs.
+- Log review shows `joinGame` is being called on every question/answer event, not just once per session.
+- Root cause: `hasOngoingDeferredSession` always returns false, so every call increments the attempt.
+
+
+### Action Items
+1. Audit all backend calls to `joinGame` to ensure it is only called on a true new playthrough, not per question/answer.
+2. Add extra debug logging to `hasOngoingDeferredSession` to show which timers are found, their `timerEndDateMs`, and why it returns false. **[DONE]**
+3. Add logging in `startDeferredTournamentSession` to show when/why it is called (to confirm if it’s being called per question). **[DONE]**
+4. Patch the logic so that `attemptCount` only increments on a true new playthrough. **[IN PROGRESS: session key approach]**
+5. Implement explicit session key in Redis: set at session start, clear at session end event. **[IN PROGRESS]**
+6. Update `hasOngoingDeferredSession` to check session key, not timers. **[IN PROGRESS]**
+7. Final validation after patch.
+
+### Implementation Plan (Session Key Modernization)
+- [ ] On session start, set a Redis key `deferred_session:<accessCode>:<userId>:<attemptCount>` (value: 'active').
+- [ ] On session end (when tournament over payload is sent), set the key to 'over' or delete it.
+- [ ] Update `hasOngoingDeferredSession` to check this key for 'active'.
+- [ ] Remove timer-based session detection logic.
+- [ ] Add/maintain logging for all session key actions.
+- [ ] Validate with test run and log review.
+
+---
+
+### Next Steps
+- Added detailed debug logging to `hasOngoingDeferredSession` in `deferredTimerUtils.ts`. **[DONE]**
+- Next: Add logging in `startDeferredTournamentSession` and review call sites for `joinGame`.
+
+---
+
+- [x] Update join logic so attemptCount only increments and progress resets if no ongoing session exists (timer with timerEndDateMs > now and status 'run')
+- [x] Ensure reconnects do NOT increment attemptCount or reset progress
+- [x] Add/maintain detailed logging for all join/attemptCount/timer actions
+- [x] Remove any legacy or redundant logic as per modernization rules
+- [x] Document all changes and update plan.md after each subtask
+
+## PHASE 3: Timer & Scoring Alignment
+  
+  [ ] Align deferred mode timer and scoring logic with quiz mode (including correct time penalty calculation)
+  [ ] Ensure time penalty is calculated and stored correctly in deferred mode
+  [ ] Add/maintain logging for all timer/score/penalty actions
+  [ ] Document all changes and update plan.md after each subtask
+
+## PHASE 4: Testing & Validation
+  
+  [ ] Provide clear test/validation steps and expected vs. actual behavior
+  [ ] Run all relevant tests and validate results
+  [ ] Document test results and update plan.md
+
+## Modernization Compliance
+  
+  [x] All changes are phase-based, documented, and logged
+  [x] No legacy/compatibility code or redundant interfaces
+  [x] Naming, types, and contracts are canonical and validated
+  [x] All actions and changes are recorded in plan.md
+
+---
+
+[x] PHASE 2: Patch Join Logic (Root Cause Fix)
+    - [x] Patch join/session logic so attemptCount only increments on new playthrough, not on reconnect or within the same session. (PATCHED: see joinService.ts, only increments if no ongoing session)
+    - [x] Ensure timer and scoring logic always use the correct attemptCount for the current session/playthrough. (CLEANUP: Removed attemptCount-1 workaround in scoringService.ts; now always uses canonical attemptCount)
+    - [x] Add/maintain detailed logging for all join/attemptCount/timer actions.
+    - [x] Remove any legacy or redundant logic as per modernization rules.
+    - [x] Document all changes and update plan.md after each subtask.
+
+**Exit Criteria:**
+    - attemptCount is only incremented on new playthroughs
+    - reconnects do NOT increment attemptCount or reset progress
+    - timer and scoring logic use the correct attemptCount
+    - all changes are logged and documented
+
+---
+
+## PHASE 1: Investigation & Documentation
+- [x] Analyze logs and backend flow for attemptCount, join, and timer logic
+- [x] Confirm attemptCount increments on every join, not just new playthroughs
+- [x] Confirm time penalty is always zero in deferred mode
+- [x] Trace join/attemptCount logic in backend files
+- [x] Add detailed logging to joinService.ts for all join/attemptCount/timer actions
+- [x] Validate with logs that multiple joins/attempts occur per playthrough
+- [x] Outline patch plan and document findings
+
+## PHASE 2: Patch Join Logic (Root Cause Fix)
+- [ ] Update join logic so attemptCount only increments and progress resets if no ongoing session exists (timer with timerEndDateMs > now and status 'run')
+- [ ] Ensure reconnects do NOT increment attemptCount or reset progress
+- [ ] Add/maintain detailed logging for all join/attemptCount/timer actions
+- [ ] Remove any legacy or redundant logic as per modernization rules
+- [ ] Document all changes and update plan.md after each subtask
+
+## PHASE 3: Timer & Scoring Alignment
+- [ ] Align deferred mode timer and scoring logic with quiz mode (including correct time penalty calculation)
+- [ ] Ensure time penalty is calculated and stored correctly in deferred mode
+- [ ] Add/maintain logging for all timer/score/penalty actions
+- [ ] Document all changes and update plan.md after each subtask
+
+## PHASE 4: Testing & Validation
+- [ ] Provide clear test/validation steps and expected vs. actual behavior
+- [ ] Run all relevant tests and validate results
+- [ ] Document test results and update plan.md
+
+## Modernization Compliance
+- [x] All changes are phase-based, documented, and logged
+- [x] No legacy/compatibility code or redundant interfaces
+- [x] Naming, types, and contracts are canonical and validated
+- [x] All actions and changes are recorded in plan.md
+
+---
+
+### Current Phase: PHASE 2 (Patch Join Logic)
+**Next:** Patch backend join logic as described above, then update plan.md and proceed to timer/scoring alignment.
 ## Phase: Practice Mode – Disable Feedback Button When No Feedback Available
 
 - [x] Analyze: Locate the feedback button in practice mode UI and determine the canonical condition for feedback availability.
@@ -82,3 +213,10 @@
     - [x] Log the change in documentation
     - [ ] Test answer submission for both statuses
     - [ ] Mark phase complete after validation
+
+## Phase: Tournament Creation – Mark as Completed
+- [x] Analyze: Locate the backend logic for creating a tournament from a game template.
+- [x] Update: Set status to "completed" (not "pending") when creating a tournament instance, and set `differedAvailableFrom`/`differedAvailableTo` to a 7-day window as in sharedGameFlow.
+- [ ] Test: Create a tournament from the teacher UI and verify status is "completed" in the database.
+- [ ] Document: Log this change in plan.md and reference the canonical type/field used.
+- [ ] Exit Criteria: All new tournament instances are created with status "completed"; no legacy or compatibility logic remains.

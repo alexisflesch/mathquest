@@ -212,7 +212,6 @@ export class GameParticipantService {
                     gameInstanceId: gameInstance.id
                 }, 'BUG INVESTIGATION: Looking for existing DEFERRED participant');
 
-                let participant;
                 let existingDeferredParticipant = await prisma.gameParticipant.findFirst({
                     where: {
                         gameInstanceId: gameInstance.id,
@@ -246,21 +245,18 @@ export class GameParticipantService {
                         },
                         include: { user: true }
                     });
-                    if (!participant || !participant.user) {
-                        logger.error({ userId, accessCode, participantId: existingDeferredParticipant.id, participant }, '[DEFERRED] Could not update participant or user relation is missing');
-                        return {
-                            success: false,
-                            error: 'Failed to update DEFERRED participant or user relation missing'
-                        };
-                    }
                     logger.info({
                         userId,
                         accessCode,
-                        participantId: participant.id,
+                        participantId: participant?.id,
                         prevAttemptCount,
-                        newAttemptCount: participant.attemptCount
-                    }, '[DEFERRED] Updated existing DEFERRED participant for new attempt');
-                    await clearDeferredAnswers(gameInstance.id, userId, participant.attemptCount);
+                        newAttemptCount: participant?.attemptCount,
+                        participant,
+                        participantKeys: participant ? Object.keys(participant) : null,
+                        participantUser: participant?.user,
+                        participantUserKeys: participant?.user ? Object.keys(participant.user) : null
+                    }, '[DEFERRED] Updated existing DEFERRED participant for new attempt (with extra debug)');
+                    await clearDeferredAnswers(gameInstance.id, userId, participant?.attemptCount);
                     // Optionally clear ALL answers for previous attempts (if required by business logic)
                     // await clearAllDeferredAnswers(gameInstance.id, userId);
                 } else {
@@ -276,22 +272,27 @@ export class GameParticipantService {
                         },
                         include: { user: true }
                     });
-                    if (!participant) {
-                        logger.error({ userId, accessCode, gameInstanceId: gameInstance.id }, 'Failed to create new DEFERRED participant: participant is null');
-                        return {
-                            success: false,
-                            error: 'Failed to create new DEFERRED participant'
-                        };
-                    }
                     logger.info({
                         userId,
                         accessCode,
-                        participantId: participant.id,
-                        participationType: 'DEFERRED'
-                    }, 'Created new DEFERRED participant');
+                        participantId: participant?.id,
+                        participationType: 'DEFERRED',
+                        participant,
+                        participantKeys: participant ? Object.keys(participant) : null,
+                        participantUser: participant?.user,
+                        participantUserKeys: participant?.user ? Object.keys(participant.user) : null
+                    }, 'Created new DEFERRED participant (with extra debug)');
                 }
             }
 
+            logger.info({
+                userId,
+                accessCode,
+                participantBeforeMapping: participant,
+                participantKeys: participant ? Object.keys(participant) : null,
+                participantUser: participant?.user,
+                participantUserKeys: participant?.user ? Object.keys(participant.user) : null
+            }, '[DEFERRED] Participant object immediately before mapping');
             return {
                 success: true,
                 gameInstance,

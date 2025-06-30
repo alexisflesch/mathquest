@@ -20,6 +20,7 @@ export interface GameInstanceUnifiedCreationData {
     playMode: PlayMode;
     settings?: Record<string, any>;
     initiatorUserId?: string; // Unified field for user ID (teacher or student)
+    status?: 'pending' | 'completed';
 }
 
 /**
@@ -72,8 +73,19 @@ export class GameInstanceService {
         try {
             const accessCode = await this.generateUniqueAccessCode();
 
-            // Set status based on playMode - practice sessions are immediately active
-            const status = data.playMode === 'practice' ? 'active' : 'pending';
+            // Set status: allow override from payload, otherwise use legacy logic
+            let status: 'pending' | 'completed';
+            let differedAvailableFrom: Date | undefined = undefined;
+            let differedAvailableTo: Date | undefined = undefined;
+            if (typeof data.status === 'string' && (data.status === 'pending' || data.status === 'completed')) {
+                status = data.status;
+            } else if (data.playMode === 'tournament') {
+                status = 'completed';
+                differedAvailableFrom = new Date();
+                differedAvailableTo = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days window
+            } else {
+                status = 'pending';
+            }
 
             const createData: any = {
                 name: data.name,
@@ -85,6 +97,8 @@ export class GameInstanceService {
                 currentQuestionIndex: null,
             };
             if (data.initiatorUserId) createData.initiatorUserId = data.initiatorUserId;
+            if (differedAvailableFrom) createData.differedAvailableFrom = differedAvailableFrom;
+            if (differedAvailableTo) createData.differedAvailableTo = differedAvailableTo;
             const gameInstance = await prisma.gameInstance.create({
                 data: createData,
                 include: {

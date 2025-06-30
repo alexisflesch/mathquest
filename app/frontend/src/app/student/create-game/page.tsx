@@ -265,6 +265,7 @@ function StudentCreateTournamentPageInner() {
                 discipline: safeDiscipline,
                 themes: safeThemes,
                 nbOfQuestions: numQuestions,
+                status: 'pending',
                 settings: {
                     type: 'direct', // for compatibility
                     defaultMode: 'direct',

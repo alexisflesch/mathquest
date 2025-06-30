@@ -159,12 +159,18 @@ router.post('/', optionalAuth, validateRequestBody(CreateGameRequestSchema), asy
             return;
         }
 
+        // Modernization: Always set status to 'pending' for student-created tournaments (no gameTemplateId)
+        let status: 'pending' | 'completed' | undefined = undefined;
+        if (playMode === 'tournament' && !gameTemplateId) {
+            status = 'pending';
+        }
         const gameInstance = await getGameInstanceService().createGameInstanceUnified({
             name,
             gameTemplateId: finalgameTemplateId,
             playMode: playMode as any, // Type assertion for now
             settings: settings,
-            initiatorUserId: userId
+            initiatorUserId: userId,
+            ...(status ? { status } : {})
         });
 
         logger.info('GamesAPI created gameInstance debug', { gameInstanceSettings: gameInstance.settings });

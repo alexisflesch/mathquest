@@ -68,7 +68,8 @@ exports.CreateGameRequestSchema = zod_1.z.object({
     discipline: zod_1.z.string().optional(),
     themes: zod_1.z.array(zod_1.z.string()).optional(),
     nbOfQuestions: zod_1.z.number().int().positive().optional(),
-    initiatorStudentId: zod_1.z.string().uuid().optional()
+    initiatorStudentId: zod_1.z.string().uuid().optional(),
+    status: zod_1.z.enum(['pending', 'completed']).optional()
 });
 exports.GameJoinRequestSchema = zod_1.z.object({
     userId: zod_1.z.string().uuid('Invalid user ID'),

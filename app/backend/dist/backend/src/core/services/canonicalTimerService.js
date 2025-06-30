@@ -22,13 +22,16 @@ class CanonicalTimerService {
     async getRawTimerFromRedis(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
         const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const raw = await this.redis.get(key);
+        logger.info({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, key, raw }, '[TIMER_DEBUG][getRawTimerFromRedis] Raw timer fetch');
         if (!raw)
             return null;
         try {
-            return JSON.parse(raw);
+            const parsed = JSON.parse(raw);
+            logger.info({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, parsed }, '[TIMER_DEBUG][getRawTimerFromRedis] Parsed timer');
+            return parsed;
         }
         catch (err) {
-            logger.error({ accessCode, questionUid, err }, '[CANONICAL_TIMER_SERVICE] Failed to parse timer from Redis');
+            logger.error({ accessCode, questionUid, err, raw }, '[CANONICAL_TIMER_SERVICE] Failed to parse timer from Redis');
             return null;
         }
     }
@@ -87,7 +90,6 @@ class CanonicalTimerService {
             return null; // No timer in practice mode
         const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const now = Date.now();
-        // Fetch the canonical duration from the question in the DB (timeLimit in seconds * 1000)
         let durationMs = 0;
         try {
             const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
@@ -101,13 +103,12 @@ class CanonicalTimerService {
         catch (err) {
             durationMs = 30000;
         }
-        // Check if a paused timer exists and resume from it
         const raw = await this.redis.get(key);
+        logger.info({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, key, raw, durationMs }, '[TIMER_DEBUG][startTimer] Raw timer before start/resume');
         let timer;
         if (raw) {
             const prev = JSON.parse(raw);
             if (prev.status === 'pause' && typeof prev.totalPlayTimeMs === 'number') {
-                // Resume from paused state, always recalculate totalPlayTimeMs from durationMs and timeLeftMs
                 const prevDurationMs = (typeof prev.durationMs === 'number' && prev.durationMs > 0) ? prev.durationMs : durationMs;
                 let newTotalPlayTimeMs = prev.totalPlayTimeMs;
                 if (typeof prev.timeLeftMs === 'number' && prev.timeLeftMs >= 0) {
@@ -122,9 +123,9 @@ class CanonicalTimerService {
                 };
                 delete timer.timeLeftMs;
                 delete timer.timerEndDateMs;
+                logger.info({ accessCode, questionUid, prev, timer, now }, '[TIMER_DEBUG][startTimer] Resuming from paused state');
             }
             else {
-                // Not paused, start fresh
                 timer = {
                     questionUid,
                     status: 'play',
@@ -133,10 +134,10 @@ class CanonicalTimerService {
                     lastStateChange: now,
                     durationMs
                 };
+                logger.info({ accessCode, questionUid, timer, now }, '[TIMER_DEBUG][startTimer] Not paused, starting fresh');
             }
         }
         else {
-            // No previous timer, start fresh
             timer = {
                 questionUid,
                 status: 'play',
@@ -145,9 +146,10 @@ class CanonicalTimerService {
                 lastStateChange: now,
                 durationMs
             };
+            logger.info({ accessCode, questionUid, timer, now }, '[TIMER_DEBUG][startTimer] No previous timer, starting fresh');
         }
         await this.redis.set(key, JSON.stringify(timer));
-        logger.info({ accessCode, questionUid, timer }, '[TIMER] Started/resumed');
+        logger.info({ accessCode, questionUid, timer, now }, '[TIMER_DEBUG][startTimer] Timer persisted after start/resume');
         return timer;
     }
     /**
@@ -309,7 +311,6 @@ class CanonicalTimerService {
     async getElapsedTimeMs(accessCode, questionUid, playMode, isDiffered, userId, attemptCount) {
         if (playMode === 'practice')
             return 0;
-        // Always use canonical timer state and canonical duration/timeLeftMs
         let durationMs = 0;
         try {
             const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
@@ -331,14 +332,28 @@ class CanonicalTimerService {
             isDiffered,
             userId,
             attemptCount,
-            timerState: timer
-        }, '[TIMER_DEBUG] getElapsedTimeMs called');
-        if (!timer)
+            timerState: timer,
+            durationMs
+        }, '[TIMER_DEBUG][getElapsedTimeMs] Called with timer state');
+        if (!timer) {
+            logger.warn({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount }, '[TIMER_DEBUG][getElapsedTimeMs] No timer found, returning 0');
             return 0;
-        // Canonical: elapsed = durationMs - timeLeftMs (always)
+        }
         const canonicalDuration = typeof timer.durationMs === 'number' ? timer.durationMs : durationMs;
         const canonicalTimeLeft = typeof timer.timeLeftMs === 'number' ? timer.timeLeftMs : canonicalDuration;
         const elapsed = Math.max(0, canonicalDuration - canonicalTimeLeft);
+        logger.info({
+            accessCode,
+            questionUid,
+            playMode,
+            isDiffered,
+            userId,
+            attemptCount,
+            canonicalDuration,
+            canonicalTimeLeft,
+            elapsed,
+            timerState: timer
+        }, '[TIMER_DEBUG][getElapsedTimeMs] Final elapsed calculation');
         return elapsed;
     }
     /**

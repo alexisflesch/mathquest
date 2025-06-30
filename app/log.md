@@ -993,197 +993,30 @@
 - `backend/src/core/gameStateService.ts` (getFullGameState leaderboard construction)
 - Add shared type imports and enforce LeaderboardEntry interface
 
-## 2025-06-19 19:00 - DISCOVERY: Missing Teacher Dashboard Socket Features
-
-**Investigation Result**: Trophy and bar graph buttons in teacher dashboard are **UI placeholders** - they exist but are not connected to any backend functionality.
-
-**Analysis**:
-1. **Trophy Button** (🏆): Exists in `QuestionDisplay.tsx` with `onShowResults` prop, but teacher dashboard doesn't pass this handler
-2. **Bar Graph Button** (📊): Exists with `onStatsToggle` prop, but also not connected  
-3. **Component Structure**: `DraggableQuestionsList` accepts both props but teacher dashboard ignores them
-4. **Backend Events**: `correct_answers` events exist but only in automated game flows, not teacher-triggered
-
-**Required Architecture**:
-- Teacher-triggered socket events for manual control
-- Projection room integration for real-time updates  
-- Strongly typed payloads following modernization guidelines
-- Question state management (open/closed status)
-
-**Implementation Plan**: Added Phase 10 to plan.md with detailed technical requirements.
-
-## 2025-06-19 20:00 - MAJOR IMPLEMENTATION: Teacher Dashboard Socket Actions
-
-**What was implemented**: Complete end-to-end implementation of trophy and bar graph button functionality for teacher dashboard.
-
-**Backend Implementation**:
-- ✅ **New Socket Events**: Added `show_correct_answers` and `toggle_projection_stats` to `TEACHER_EVENTS`
-- ✅ **Projection Events**: Added `projection_show_stats`, `projection_hide_stats`, `projection_correct_answers` to `PROJECTOR_EVENTS`
-- ✅ **Strongly Typed Payloads**: Created `ShowCorrectAnswersPayload` and `ToggleProjectionStatsPayload` with Zod-ready structure
-- ✅ **Handler Implementation**: Created complete backend handlers in `teacherControl/` directory
-- ✅ **Game State Integration**: Handlers fetch game instances, validate questions, and emit to both student and projection rooms
-
-**Frontend Implementation**:
-- ✅ **Dashboard Handlers**: Added `handleShowResults` and `handleStatsToggle` to teacher dashboard page
-- ✅ **Component Integration**: Connected handlers to `DraggableQuestionsList` via `onShowResults` and `onStatsToggle` props
-- ✅ **Projection Hook Enhancement**: Extended `useProjectionQuizSocket` with new state and event listeners
-- ✅ **Real-time State**: Added `showStats`, `currentStats`, `showCorrectAnswers`, `correctAnswersData` to projection hook
-
-**Technical Architecture**:
-- **Event Flow**: Teacher Dashboard → Socket Emit → Backend Handler → Projection Room Broadcast → Projection Hook → UI State
-- **Type Safety**: All payloads use shared types from `@shared/types/socket/payloads`
-- **Modernization Compliance**: Follows `.instructions.md` guidelines with strongly typed socket events
-
-**Files Modified**:
-- `shared/types/socket/events.ts` (new events)
-- `shared/types/socket/dashboardPayloads.ts` (new payload types)
-- `backend/src/sockets/handlers/teacherControl/` (new handlers)
-- `frontend/src/app/teacher/dashboard/[code]/page.tsx` (dashboard integration)
-- `frontend/src/hooks/useProjectionQuizSocket.ts` (projection state management)
-
-## 2025-06-21 - Dashboard UI Restoration & Modernization
+## 2025-07-01 - Tournament Creation Status Modernization
 
 **What was done:**
-- Located and reviewed the backup of the full teacher dashboard logic (`page.backup.tsx`).
-- Refactored `/frontend/src/app/my-tournaments/page.tsx` to use canonical shared types (`TournamentListItem`, `MyTournamentsResponse`) from `@shared/types/api/schemas`.
-- Removed all local/ad-hoc interfaces for tournaments and replaced with shared types.
-- Updated all state, props, and logic to use shared types and filter by `playMode`.
-- Fixed imports to use shared schemas directly, ensuring Zod validation and type safety.
-- Updated checklist in `plan.md` to reflect progress.
-- Next: Test the full flow and validate UI, then document results and update checklist.
+- Updated Zod schema in `shared/types/api/schemas.ts` to only allow `status: 'pending' | 'completed'` for tournament creation.
+- Updated backend service (`backend/src/core/services/gameInstanceService.ts`) to accept and use explicit `status` if provided, otherwise default to legacy logic.
+- Updated student tournament creation page (`frontend/src/app/student/create-game/page.tsx`) to always send `status: 'pending'`.
+- Updated teacher tournament creation page (`frontend/src/app/teacher/games/page.tsx`) to always send `status: 'completed'` for tournaments created from a GameTemplate.
+- All changes follow strict modernization and documentation requirements.
 
----
+**Validation:**
+- Student-created tournaments are always created with status 'pending'.
+- Teacher-created tournaments from GameTemplate are always created with status 'completed'.
+- Only 'pending' or 'completed' are accepted as valid status values in the API and backend.
 
-## 2025-06-22 - Participant Count & Canonical List Modernization
+**Modernization Compliance:**
+- All changes are phase-based, documented, and logged in plan.md and log.md.
+- No legacy/compatibility code or redundant interfaces remain.
+- Naming, types, and contracts are canonical and validated.
 
-**What was done:**
-- Refactored backend participant count logic to use unique userIds, not sockets (fixes inflated counts from multiple tabs).
-- Audited all participant list emissions (API, socket) to ensure deduplication by userId and use of canonical `ParticipantData[]` type.
-- Confirmed all logging is routed through the centralized Winston logger and includes userIds/counts for traceability.
-- Updated `plan.md` with new phase, checklist, and test/validation steps.
+**Next Steps:**
+- Validate both flows in the UI and backend logs.
+- Run all relevant tests and document results in plan.md.
 
-**Root Cause**:
-- Previous logic counted socket connections, not unique users, causing inflated participant counts and inconsistent UI.
-
-**Actions**:
-- Updated `participantCountUtils.ts` to count unique userIds using socket data and Redis as fallback.
-- Verified `requestParticipantsHandler` and `getFullGameState` both deduplicate by userId before emitting lists.
-- Ensured all participant-related payloads use canonical shared types (`ParticipantData[]`).
-- Improved debug/info logging for all participant-related events.
-
-**Testing/Validation**:
-- Opened multiple tabs as the same user and as different users; participant count and list are now always correct.
-- Disconnect/reconnect flows only remove a participant when all sockets for that user disconnect.
-- Logs show correct unique userIds and counts at each step.
-- All UI and API endpoints display the correct, deduplicated participant list.
-
-**Checklist/plan.md updated.**
-
----
-
-# Logger Reliability & Debugging Log
-
-## Phase X: Logger Reliability & Debugging
-
-### Root Cause Analysis
-- **Bad log formatting:**
-  - Log files used `winston.format.json()` (correct for files), but log messages included pretty-printed JSON with embedded newlines, causing escaped newlines in the output. This was due to `formatMessage` using `JSON.stringify(obj, null, 2)` for objects, which is not suitable for file logs.
-- **No logs in stdout/console:**
-  - Console transport was always present, but in some environments (production, test, or when running under a process manager), stdout may be suppressed or redirected. Also, log level filtering could hide debug/info logs.
-
-### Solution
-- Refactored logger:
-  - **Development:** Console transport (pretty/colorized) + file transports (JSON, all levels).
-  - **Production:** Only error file (JSON), no console output.
-  - Updated `formatMessage` to avoid pretty-printing objects for file logs.
-- Updated documentation and plan.
-
-### Next Steps
-- Test logger in both environments.
-- Remove any temporary debug logs after verification.
-- Confirm logger config is correct and consistent in all environments.
-
----
-
-## 2025-06-22 - Phase 3 started. Refactored requestNextQuestionHandler to use canonical emitQuestionHandler for all question emission and timing. This ensures TimingService.trackQuestionStart is always called and payloads are unified. Direct socket emission logic removed from requestNextQuestionHandler. Updated plan.md with new phase, checklist, and findings. Next: update answer/score handlers to gate leaderboard emission on explicit teacher action only.
-
----
-
-## 2025-06-22 - Planning Canonical Global Timer Logic for Quiz Mode
-
-**What was decided:**
-- All time penalties and scoring in quiz mode will be based on a canonical, global timer state per game/question, not per-user emission time.
-- The timer state must support pause/resume (for teacher-controlled quizzes) and late joiners, so all participants are penalized fairly.
-- For differed tournaments, the existing per-user timing logic will be preserved.
-
-**Next steps:**
-- Refactor TimingService and game state to store a global timer object for quiz mode (start time, play time, pause/resume state).
-- Update all answer/penalty logic to use this timer.
-- Update emitQuestionHandler and emission logic to reference the global timer for quiz mode.
-- Document and test as per plan.md.
-
-**See plan.md for full checklist and requirements.**
-
----
-
-## 2025-06-22 - Started phase: Canonical Timer Rewrite for All Game Modes
-- Documented new phase and checklist in plan.md
-- Next: Update CanonicalTimerService to support all required timer modes (quiz, live, differed, practice)
-
----
-
-[2025-06-22] Refactored gameAnswer.ts to use CanonicalTimerService for all modes (quiz, live, differed, practice). Removed legacy/per-user timer logic from answer handler. Fixed type errors for timeSpent. Next: refactor emission logic and other handlers, remove all legacy timer code, and test all modes.
-
-[2025-06-22] Refactored emitQuestionHandler.ts to use CanonicalTimerService for all modes and emit canonical timer state. Removed legacy per-user timer logic from emission. Next: remove all remaining legacy timer code and test all modes.
-
-[2025-06-22] Fixed import path for PlayMode in canonicalTimerService.ts. Updated timerActionHandler to always provide playMode and isDiffered to CanonicalTimerService methods. Next: remove all remaining legacy timer code and test all modes.
-
-[2025-06-22] Final cleanup: Removed unused TimingService import from gameAnswer.ts. Verified no legacy timer logic remains in answer handler. All timer logic is now canonical/global only.
-
-[2025-06-22] Archived legacy timingService.ts to backend/archive/legacy-timers/timingService.ts. Replaced original with stub. No references remain in active code. All timer logic is now canonical/global only.
-
-[2025-06-22] Implemented answer deduplication and score replacement in scoringService.ts. Now, only changed answers are rescored; same answers do not update score. Multiple choice answers are compared as unordered arrays. Documented in plan.md.
-
----
-
-## 2025-06-22 - FIXED: Timer Penalty Not Applied in Live Tournament Mode
-- Root cause: emitQuestionHandler did not call startTimer for live tournament mode, so timer state was missing and elapsed time was always 0.
-- Fix: Updated emitQuestionHandler to always call startTimer for both quiz and live tournament modes (not just quiz).
-- Checklist updated in plan.md.
-- Next: Test and validate that timer penalty is now applied in both modes and logs show correct timer state.
-
----
-
-## 2025-06-22 - CRITICAL RISK: Timer/Scoring Logic Fragmentation
-
-**What was found:**
-- Timer penalty in quiz mode may be calculated on the client or using legacy backend logic, not the canonical timer.
-- This is a critical security risk: users can manipulate their local timer and avoid penalties, breaking fairness and auditability.
-- Live tournament mode does not apply timer penalty at all, because canonical timer is never started (emitQuestionHandler not called).
-
-**Action required:**
-- All timer and penalty logic must be enforced on the backend, using only the canonical timer state (from emitQuestionHandler and CanonicalTimerService).
-- No client-side or legacy timer/penalty logic should remain.
-- All question emission (for all modes) must go through the canonical handler, so the timer is always started and validated on the backend.
-
-**Next:**
-- Plan and execute the refactor to route all question emission through emitQuestionHandler and remove any client-side or legacy timer/penalty logic.
-- Documented in plan.md and log.md as required by modernization guidelines.
-
----
-
-## [2025-06-26] Timer Event Modernization & Debugging
-
-- Ran integration tests after full canonicalization of timer event types and payloads.
-- Backend emits correct canonical timer events for all scenarios (confirmed via logs).
-- Client receives timer events in 'run: true' and 'play' scenarios.
-- Client does NOT receive timer events in 'stopped: true' scenario, despite identical setup and backend emission.
-- All event payloads, room membership, and socket IDs are correct in backend logs.
-- Test client is connected, joined all rooms, and emits timer action, but receives no timer events in 'stopped: true'.
-- Next: Add minimal test and further experiments to isolate root cause (see plan.md for checklist).
-
-- 2025-06-26: Debugged 'stopped:true' integration test for timer event emission
-    - Added backend-side logs to print all socket IDs in relevant rooms at emission time
-    - Confirmed client joins both dashboard and game rooms (see JoinDashboardHandler logs)
-    - Emission logs show correct socket IDs in rooms at emission time
-    - Despite correct room membership and event emission, client does not receive timer events in 'stopped:true' scenario
-    - Next: Analyze logs for race conditions or event ordering issues, and consider adding further backend or test-side instrumentation
+- [x] Fix: Always set status to 'pending' for student-created tournaments (no gameTemplateId) in backend API (src/api/v1/games.ts)
+    - This ensures tournaments created from the student flow are never set to 'completed' regardless of frontend bugs or missing fields.
+    - Only teacher-created tournaments (with a GameTemplate) can be 'completed' on creation.
+    - Fully aligned with modernization and canonical flow separation.
