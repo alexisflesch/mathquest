@@ -358,5 +358,60 @@ class CanonicalTimerService {
         logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER] Canonical duration set');
         return timer;
     }
+    /**
+     * Edit the timer duration for a question (canonical: updates durationMs, recalculates time left if running/paused)
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: no timer
+     */
+    async editTimer(accessCode, questionUid, playMode, isDiffered, durationMs, userId, attemptCount) {
+        if (playMode === 'practice')
+            return null;
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
+        const now = Date.now();
+        const raw = await this.redis.get(key);
+        let timer;
+        if (raw) {
+            timer = JSON.parse(raw);
+            timer.durationMs = durationMs;
+            // If running, recalculate timerEndDateMs and totalPlayTimeMs
+            if (timer.status === 'play') {
+                // Compute elapsed so far
+                const elapsed = now - timer.lastStateChange + (timer.totalPlayTimeMs || 0);
+                timer.totalPlayTimeMs = elapsed;
+                // Set new end date
+                timer.timerEndDateMs = now + Math.max(0, durationMs - elapsed);
+            }
+            else if (timer.status === 'pause') {
+                // If paused, update timeLeftMs to min(timeLeftMs, durationMs)
+                if (typeof timer.timeLeftMs === 'number') {
+                    timer.timeLeftMs = Math.min(timer.timeLeftMs, durationMs);
+                }
+                else {
+                    timer.timeLeftMs = durationMs;
+                }
+            }
+            else if (timer.status === 'stop') {
+                // If stopped, just update durationMs
+                timer.timeLeftMs = durationMs;
+            }
+        }
+        else {
+            // No previous timer, create a new stopped timer with duration
+            timer = {
+                questionUid,
+                status: 'stop',
+                startedAt: now,
+                totalPlayTimeMs: 0,
+                lastStateChange: now,
+                durationMs,
+                timeLeftMs: durationMs,
+                timerEndDateMs: 0
+            };
+        }
+        await this.redis.set(key, JSON.stringify(timer));
+        logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Canonical duration edited');
+        return timer;
+    }
 }
 exports.CanonicalTimerService = CanonicalTimerService;

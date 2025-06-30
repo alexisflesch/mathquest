@@ -35,6 +35,12 @@ export interface Chrono extends BaseTimer {
     durationMs?: number;
     /** Question UID associated with this timer */
     questionUid?: string;
+    /**
+     * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+     * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+     * May be updated if the timer is changed during a quiz.
+     */
+    timerEndDateMs?: number;
 }
 /**
  * Question timer interface
@@ -51,6 +57,12 @@ export interface QuestionTimer {
     timestamp: number | null;
     /** Question UID this timer is associated with */
     questionUid?: string;
+    /**
+     * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+     * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+     * May be updated if the timer is changed during a quiz.
+     */
+    timerEndDateMs?: number;
 }
 /**
  * Game timer state interface
@@ -59,26 +71,10 @@ export interface QuestionTimer {
 export interface GameTimerState {
     /** Timer status */
     status: TimerStatus;
-    /** Time remaining in milliseconds */
-    timeLeftMs: number;
-    /** Total timer duration in milliseconds */
-    durationMs: number;
+    /** Canonical absolute end date (ms since epoch, UTC) */
+    timerEndDateMs: number;
     /** Question UID associated with timer */
-    questionUid: string | null | undefined;
-    /** Server timestamp for synchronization */
-    timestamp: number | null;
-    /** Local countdown time for smooth UI updates in milliseconds */
-    localTimeLeftMs: number | null;
-    /** Whether timer is currently running/active */
-    isRunning?: boolean;
-    /** Display format preference for UI */
-    displayFormat?: 'mm:ss' | 'ss' | 'ms';
-    /** Whether to show milliseconds in UI */
-    showMilliseconds?: boolean;
-    /** Timestamp when timer was started */
-    startedAt?: number;
-    /** Timestamp when timer was paused */
-    pausedAt?: number;
+    questionUid: string;
 }
 /**
  * Timer configuration interface
@@ -131,12 +127,25 @@ export interface GameTimerUpdatePayload {
 export interface TimerActionPayload {
     /** Game access code (required for backend validation) */
     accessCode: string;
-    /** Action to perform on timer (canonical: 'run', 'pause', 'stop') */
-    action: 'run' | 'pause' | 'stop';
-    /** Duration in milliseconds (canonical) */
-    durationMs?: number;
+    /** Action to perform on timer (canonical: 'run', 'pause', 'stop', 'edit') */
+    action: 'run' | 'pause' | 'stop' | 'edit';
+    /**
+     * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+     * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+     * May be updated if the timer is changed during a quiz.
+     */
+    timerEndDateMs?: number;
+    /**
+     * Target time in milliseconds (duration or remaining time, NOT a date).
+     * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
+     */
+    targetTimeMs?: number;
     /** Question UID for question-specific timer operations (REQUIRED, canonical) */
     questionUid: string;
+    /**
+     * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+     */
+    durationMs?: number;
 }
 /**
  * Legacy timer interfaces for backward compatibility

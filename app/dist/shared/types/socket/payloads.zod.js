@@ -11,10 +11,13 @@ exports.setQuestionPayloadSchema = zod_1.z.object({
     tournamentCode: zod_1.z.string().optional(),
 });
 exports.timerActionPayloadSchema = zod_1.z.object({
-    action: zod_1.z.union([zod_1.z.literal("run"), zod_1.z.literal("pause"), zod_1.z.literal("stop")]),
+    action: zod_1.z.union([zod_1.z.literal("run"), zod_1.z.literal("pause"), zod_1.z.literal("stop"), zod_1.z.literal("edit")]),
     accessCode: zod_1.z.string(),
-    durationMs: zod_1.z.number().optional(),
     questionUid: zod_1.z.string(), // REQUIRED, canonical
+    /**
+     * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+     */
+    durationMs: zod_1.z.number().int().nonnegative({ message: "durationMs must be a non-negative integer (ms)." }).optional(),
 });
 exports.setTimerPayloadSchema = zod_1.z.object({
     gameId: zod_1.z.string(),

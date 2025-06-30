@@ -71,6 +71,8 @@ export interface SimpleTimerConfig {
 export interface SimpleTimerState {
     /** Current time remaining in milliseconds */
     timeLeftMs: number;
+    /** Canonical timer duration in milliseconds */
+    durationMs: number;
     /** Timer status */
     status: TimerStatus;
     /** Associated question UID */
@@ -88,8 +90,8 @@ export interface SimpleTimerActions {
     resumeTimer: () => void;
     /** Stop current timer (teacher only) */
     stopTimer: () => void;
-    /** Edit timer duration for a question (teacher only, does not affect play/pause/stop) */
-    editTimer: (questionUid: string, durationMs: number, timeLeftMs?: number) => void;
+    /** Edit timer duration for a question (teacher only, canonical: emits 'edit' action, no optimistic update) */
+    editTimer: (questionUid: string, durationMs: number) => void;
 }
 
 export interface SimpleTimerHook extends SimpleTimerState, SimpleTimerActions {
@@ -126,6 +128,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     // Core timer state - start with default values
     const [timerState, setTimerState] = useState<SimpleTimerState>({
         timeLeftMs: 0,
+        durationMs: 0,
         status: 'stop',
         questionUid: null,
         isActive: false
@@ -165,6 +168,10 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             // Use canonical helper to compute time left, supporting pause/resume
             // timer.timeLeftMs is not part of GameTimerState, but may be present in payload.timer (backend emits it)
             const backendTimeLeftMs = (timer as any).timeLeftMs;
+            // Canonical: durationMs may be present in payload.timer or payload
+            const canonicalDurationMs = typeof (timer as any).durationMs === 'number'
+                ? (timer as any).durationMs
+                : (typeof (payload as any).durationMs === 'number' ? (payload as any).durationMs : 0);
             computedTimeLeftMs = computeTimeLeftMs(
                 timer.timerEndDateMs,
                 now,
@@ -180,6 +187,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             }
             logger.info('[SimpleTimer][handleTimerUpdate] Setting timerState to', {
                 timeLeftMs: computedTimeLeftMs,
+                durationMs: canonicalDurationMs,
                 status: timer.status || 'stop',
                 questionUid: timer.questionUid,
                 isActive: (timer.status === 'run' || timer.status === 'pause') && computedTimeLeftMs > 0
@@ -187,6 +195,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
 
             const newState: SimpleTimerState = {
                 timeLeftMs: computedTimeLeftMs,
+                durationMs: canonicalDurationMs,
                 status: timer.status || 'stop',
                 questionUid: timer.questionUid,
                 isActive: (timer.status === 'run' || timer.status === 'pause') && computedTimeLeftMs > 0
@@ -339,14 +348,25 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     }, [role, socket, accessCode, timerState.questionUid]);
 
     /**
-     * Edit timer duration for a question (teacher only, does not affect play/pause/stop)
-     * Emits a timer_action event with action: 'set_duration'.
-     * Canonical: Only use canonical fields.
+     * Canonical editTimer: emits 'edit' action with required questionUid and durationMs.
+     * No optimistic update; UI updates only on backend response.
      */
-    // No canonical editTimer action; provide a stub for interface compatibility
-    const editTimer = useCallback((questionUid: string, durationMs: number, timeLeftMs?: number) => {
-        logger.warn('[SimpleTimer][editTimer] called, but no canonical edit action exists. Ignoring.', { questionUid, durationMs, timeLeftMs });
-    }, []);
+    const editTimer = useCallback((questionUid: string, durationMs: number) => {
+        if (role !== 'teacher' || !socket) {
+            logger.warn('[SimpleTimer][editTimer] called but user is not teacher or socket not available');
+            return;
+        }
+        logger.info('[SimpleTimer][editTimer] Emitting canonical edit action', { questionUid, durationMs });
+        // Debug: log full payload before emit
+        const payload: TimerActionPayload = {
+            accessCode,
+            action: 'edit',
+            questionUid,
+            durationMs
+        };
+        logger.debug('[SimpleTimer][editTimer] Payload to emit:', payload);
+        socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
+    }, [role, socket, accessCode]);
 
     // Return the hook interface
     // Always use backend's timeLeftMs for pause, never show 0 unless time is actually up
@@ -361,6 +381,7 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
     }
     return {
         timeLeftMs: displayTimeLeftMs,
+        durationMs: timerState.durationMs,
         status: timerState.status,
         questionUid: timerState.questionUid,
         isActive: timerState.isActive,

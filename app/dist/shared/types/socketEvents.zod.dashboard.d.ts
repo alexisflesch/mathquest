@@ -25,11 +25,11 @@ export declare const questionForDashboardSchema: z.ZodObject<{
     discipline: string;
     uid?: string | undefined;
     title?: string | undefined;
+    explanation?: string | undefined;
     themes?: string[] | undefined;
     difficulty?: number | undefined;
     gradeLevel?: string | undefined;
     author?: string | undefined;
-    explanation?: string | undefined;
     tags?: string[] | undefined;
     isHidden?: boolean | undefined;
 }, {
@@ -41,11 +41,11 @@ export declare const questionForDashboardSchema: z.ZodObject<{
     discipline: string;
     uid?: string | undefined;
     title?: string | undefined;
+    explanation?: string | undefined;
     themes?: string[] | undefined;
     difficulty?: number | undefined;
     gradeLevel?: string | undefined;
     author?: string | undefined;
-    explanation?: string | undefined;
     tags?: string[] | undefined;
     isHidden?: boolean | undefined;
 }>;
@@ -81,11 +81,11 @@ export declare const gameControlStatePayloadSchema: z.ZodObject<{
         discipline: string;
         uid?: string | undefined;
         title?: string | undefined;
+        explanation?: string | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
         author?: string | undefined;
-        explanation?: string | undefined;
         tags?: string[] | undefined;
         isHidden?: boolean | undefined;
     }, {
@@ -97,73 +97,42 @@ export declare const gameControlStatePayloadSchema: z.ZodObject<{
         discipline: string;
         uid?: string | undefined;
         title?: string | undefined;
+        explanation?: string | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
         author?: string | undefined;
-        explanation?: string | undefined;
         tags?: string[] | undefined;
         isHidden?: boolean | undefined;
     }>, "many">;
     timer: z.ZodObject<{
         status: z.ZodUnion<[z.ZodLiteral<"run">, z.ZodLiteral<"pause">, z.ZodLiteral<"stop">]>;
-        timeLeftMs: z.ZodNumber;
-        durationMs: z.ZodNumber;
-        questionUid: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-        timestamp: z.ZodNullable<z.ZodNumber>;
-        localTimeLeftMs: z.ZodNullable<z.ZodNumber>;
-        isRunning: z.ZodOptional<z.ZodBoolean>;
-        displayFormat: z.ZodOptional<z.ZodEnum<["mm:ss", "ss", "ms"]>>;
-        showMilliseconds: z.ZodOptional<z.ZodBoolean>;
-        startedAt: z.ZodOptional<z.ZodNumber>;
-        pausedAt: z.ZodOptional<z.ZodNumber>;
+        timerEndDateMs: z.ZodNumber;
+        questionUid: z.ZodString;
     }, "strip", z.ZodTypeAny, {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timeLeftMs: number;
-        timestamp: number | null;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
-        pausedAt?: number | undefined;
+        timerEndDateMs: number;
     }, {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timeLeftMs: number;
-        timestamp: number | null;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
-        pausedAt?: number | undefined;
+        timerEndDateMs: number;
     }>;
     answersLocked: z.ZodBoolean;
     participantCount: z.ZodNumber;
     answerStats: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
-    status: "pending" | "active" | "paused" | "completed";
     accessCode: string;
-    gameId: string;
-    timer: {
-        status: "run" | "pause" | "stop";
-        durationMs: number;
-        timeLeftMs: number;
-        timestamp: number | null;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
-        pausedAt?: number | undefined;
-    };
-    templateName: string;
+    status: "pending" | "active" | "paused" | "completed";
     currentQuestionUid: string | null;
+    timer: {
+        questionUid: string;
+        status: "run" | "pause" | "stop";
+        timerEndDateMs: number;
+    };
+    gameId: string;
+    answersLocked: boolean;
+    templateName: string;
     questions: {
         durationMs: number;
         text: string;
@@ -173,36 +142,28 @@ export declare const gameControlStatePayloadSchema: z.ZodObject<{
         discipline: string;
         uid?: string | undefined;
         title?: string | undefined;
+        explanation?: string | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
         author?: string | undefined;
-        explanation?: string | undefined;
         tags?: string[] | undefined;
         isHidden?: boolean | undefined;
     }[];
-    answersLocked: boolean;
     participantCount: number;
     answerStats?: Record<string, number> | undefined;
 }, {
-    status: "pending" | "active" | "paused" | "completed";
     accessCode: string;
-    gameId: string;
-    timer: {
-        status: "run" | "pause" | "stop";
-        durationMs: number;
-        timeLeftMs: number;
-        timestamp: number | null;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
-        pausedAt?: number | undefined;
-    };
-    templateName: string;
+    status: "pending" | "active" | "paused" | "completed";
     currentQuestionUid: string | null;
+    timer: {
+        questionUid: string;
+        status: "run" | "pause" | "stop";
+        timerEndDateMs: number;
+    };
+    gameId: string;
+    answersLocked: boolean;
+    templateName: string;
     questions: {
         durationMs: number;
         text: string;
@@ -212,15 +173,14 @@ export declare const gameControlStatePayloadSchema: z.ZodObject<{
         discipline: string;
         uid?: string | undefined;
         title?: string | undefined;
+        explanation?: string | undefined;
         themes?: string[] | undefined;
         difficulty?: number | undefined;
         gradeLevel?: string | undefined;
         author?: string | undefined;
-        explanation?: string | undefined;
         tags?: string[] | undefined;
         isHidden?: boolean | undefined;
     }[];
-    answersLocked: boolean;
     participantCount: number;
     answerStats?: Record<string, number> | undefined;
 }>;

@@ -10,8 +10,8 @@ export const gameTimerStateSchema = z.object({
 // Canonical timer action payload schema (for actions from frontend)
 export const timerActionPayloadSchema = z.object({
     accessCode: z.string().min(1, { message: "Access code cannot be empty." }),
-    action: z.enum(['run', 'pause', 'stop'], {
-        errorMap: () => ({ message: "Action must be one of: run, pause, stop" }),
+    action: z.enum(['run', 'pause', 'stop', 'edit'], {
+        errorMap: () => ({ message: "Action must be one of: run, pause, stop, edit" }),
     }),
     /**
      * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
@@ -24,7 +24,14 @@ export const timerActionPayloadSchema = z.object({
      * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
      */
     targetTimeMs: z.number().int().nonnegative({ message: "targetTimeMs must be a non-negative integer." }).optional(),
-    questionUid: z.string().min(1, { message: "Question UID cannot be empty." }).optional(),
+    /**
+     * Question UID for question-specific timer operations (REQUIRED, canonical)
+     */
+    questionUid: z.string().min(1, { message: "Question UID cannot be empty." }),
+    /**
+     * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+     */
+    durationMs: z.number().int().nonnegative({ message: "durationMs must be a non-negative integer (ms)." }).optional(),
 });
 export type GameTimerStateSchema = typeof gameTimerStateSchema;
 export type GameTimerStateZ = z.infer<typeof gameTimerStateSchema>;

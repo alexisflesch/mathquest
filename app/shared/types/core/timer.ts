@@ -137,8 +137,8 @@ export interface GameTimerUpdatePayload {
 export interface TimerActionPayload {
     /** Game access code (required for backend validation) */
     accessCode: string;
-    /** Action to perform on timer (canonical: 'run', 'pause', 'stop') */
-    action: 'run' | 'pause' | 'stop';
+    /** Action to perform on timer (canonical: 'run', 'pause', 'stop', 'edit') */
+    action: 'run' | 'pause' | 'stop' | 'edit';
     /**
      * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
      * This is the canonical end date for the timer, used for backend/logic and precise signaling.
@@ -152,6 +152,10 @@ export interface TimerActionPayload {
     targetTimeMs?: number;
     /** Question UID for question-specific timer operations (REQUIRED, canonical) */
     questionUid: string;
+    /**
+     * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+     */
+    durationMs?: number;
 }
 
 /**

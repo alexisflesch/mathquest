@@ -10,10 +10,13 @@ export const setQuestionPayloadSchema = z.object({
 });
 
 export const timerActionPayloadSchema = z.object({
-  action: z.union([z.literal("run"), z.literal("pause"), z.literal("stop")]),
+  action: z.union([z.literal("run"), z.literal("pause"), z.literal("stop"), z.literal("edit")]),
   accessCode: z.string(),
-  durationMs: z.number().optional(),
   questionUid: z.string(), // REQUIRED, canonical
+  /**
+   * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+   */
+  durationMs: z.number().int().nonnegative({ message: "durationMs must be a non-negative integer (ms)." }).optional(),
 });
 
 export const setTimerPayloadSchema = z.object({

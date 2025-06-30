@@ -1,40 +1,53 @@
 import { z } from "zod";
 export declare const gameTimerStateSchema: z.ZodObject<{
     status: z.ZodUnion<[z.ZodLiteral<"run">, z.ZodLiteral<"pause">, z.ZodLiteral<"stop">]>;
-    timeLeftMs: z.ZodNumber;
-    durationMs: z.ZodNumber;
-    questionUid: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    timestamp: z.ZodNullable<z.ZodNumber>;
-    localTimeLeftMs: z.ZodNullable<z.ZodNumber>;
-    isRunning: z.ZodOptional<z.ZodBoolean>;
-    displayFormat: z.ZodOptional<z.ZodEnum<["mm:ss", "ss", "ms"]>>;
-    showMilliseconds: z.ZodOptional<z.ZodBoolean>;
-    startedAt: z.ZodOptional<z.ZodNumber>;
-    pausedAt: z.ZodOptional<z.ZodNumber>;
+    timerEndDateMs: z.ZodNumber;
+    questionUid: z.ZodString;
 }, "strip", z.ZodTypeAny, {
+    questionUid: string;
     status: "run" | "pause" | "stop";
-    durationMs: number;
-    timeLeftMs: number;
-    timestamp: number | null;
-    localTimeLeftMs: number | null;
-    questionUid?: string | null | undefined;
-    startedAt?: number | undefined;
-    isRunning?: boolean | undefined;
-    displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-    showMilliseconds?: boolean | undefined;
-    pausedAt?: number | undefined;
+    timerEndDateMs: number;
 }, {
+    questionUid: string;
     status: "run" | "pause" | "stop";
-    durationMs: number;
-    timeLeftMs: number;
-    timestamp: number | null;
-    localTimeLeftMs: number | null;
-    questionUid?: string | null | undefined;
-    startedAt?: number | undefined;
-    isRunning?: boolean | undefined;
-    displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-    showMilliseconds?: boolean | undefined;
-    pausedAt?: number | undefined;
+    timerEndDateMs: number;
+}>;
+export declare const timerActionPayloadSchema: z.ZodObject<{
+    accessCode: z.ZodString;
+    action: z.ZodEnum<["run", "pause", "stop", "edit"]>;
+    /**
+     * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+     * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+     * May be updated if the timer is changed during a quiz.
+     */
+    timerEndDateMs: z.ZodOptional<z.ZodNumber>;
+    /**
+     * Target time in milliseconds (duration or remaining time, NOT a date).
+     * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
+     */
+    targetTimeMs: z.ZodOptional<z.ZodNumber>;
+    /**
+     * Question UID for question-specific timer operations (REQUIRED, canonical)
+     */
+    questionUid: z.ZodString;
+    /**
+     * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+     */
+    durationMs: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    accessCode: string;
+    questionUid: string;
+    action: "run" | "pause" | "stop" | "edit";
+    timerEndDateMs?: number | undefined;
+    targetTimeMs?: number | undefined;
+    durationMs?: number | undefined;
+}, {
+    accessCode: string;
+    questionUid: string;
+    action: "run" | "pause" | "stop" | "edit";
+    timerEndDateMs?: number | undefined;
+    targetTimeMs?: number | undefined;
+    durationMs?: number | undefined;
 }>;
 export type GameTimerStateSchema = typeof gameTimerStateSchema;
 export type GameTimerStateZ = z.infer<typeof gameTimerStateSchema>;

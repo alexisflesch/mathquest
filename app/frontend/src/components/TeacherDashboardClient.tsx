@@ -340,13 +340,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             logger.info('[DEBUG] handleEditTimer: questions after edit', updated.map(q => ({ uid: (q as any).uid, durationMs: (q as any).durationMs })));
             return updated;
         });
-        if (timerStatus === 'run') {
-            logger.info(`[DASHBOARD] Timer is running: editing only timeLeftMs, keeping durationMs canonical`, { uid, newTime, durationMs: timeLeftMs });
-            editTimer(uid, timeLeftMs, newTime * 1000);
-        } else {
-            logger.info(`[DASHBOARD] Timer is stopped/paused: editing both durationMs and timeLeftMs`, { uid, newTime });
-            editTimer(uid, newTime * 1000, newTime * 1000);
-        }
+        // Canonical: editTimer only takes (questionUid, durationMs)
+        logger.info(`[DASHBOARD] Timer edit: canonical editTimer(uid, durationMs)`, { uid, newTime });
+        editTimer(uid, newTime * 1000);
         logger.info(`[DASHBOARD] Timer edit emitted for question ${uid}: ${newTime}s`);
     }, [editTimer, timerStatus, timeLeftMs]);
     const handleTimerAction = useCallback((action: { status: 'run' | 'pause' | 'stop' | 'edit', questionUid: string, timeLeftMs: number, newTime?: number }) => {
@@ -363,13 +359,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             case 'edit': {
                 logger.info(`[DASHBOARD] handleEditTimer (via handleTimerAction) called`, { uid: action.questionUid, newTime: action.newTime });
                 const editSeconds = typeof action.newTime === 'number' ? action.newTime : Math.round(action.timeLeftMs / 1000);
-                if (timerStatus === 'run') {
-                    logger.info(`[DASHBOARD] Timer is running: editing only timeLeftMs, keeping durationMs canonical`, { uid: action.questionUid, editSeconds, durationMs: timeLeftMs });
-                    editTimer(action.questionUid, timeLeftMs, editSeconds * 1000);
-                } else {
-                    logger.info(`[DASHBOARD] Timer is stopped/paused: editing both durationMs and timeLeftMs`, { uid: action.questionUid, editSeconds });
-                    editTimer(action.questionUid, editSeconds * 1000, editSeconds * 1000);
-                }
+                // Canonical: editTimer only takes (questionUid, durationMs)
+                logger.info(`[DASHBOARD] Timer edit: canonical editTimer(uid, durationMs)`, { uid: action.questionUid, editSeconds });
+                editTimer(action.questionUid, editSeconds * 1000);
                 logger.info(`[DASHBOARD] Timer edit emitted for question ${action.questionUid}: ${editSeconds}s`);
                 break;
             }

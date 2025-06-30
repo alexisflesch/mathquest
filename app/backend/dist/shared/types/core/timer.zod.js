@@ -10,8 +10,8 @@ exports.gameTimerStateSchema = zod_1.z.object({
 // Canonical timer action payload schema (for actions from frontend)
 exports.timerActionPayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." }),
-    action: zod_1.z.enum(['run', 'pause', 'stop'], {
-        errorMap: () => ({ message: "Action must be one of: run, pause, stop" }),
+    action: zod_1.z.enum(['run', 'pause', 'stop', 'edit'], {
+        errorMap: () => ({ message: "Action must be one of: run, pause, stop, edit" }),
     }),
     /**
      * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
@@ -24,5 +24,12 @@ exports.timerActionPayloadSchema = zod_1.z.object({
      * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
      */
     targetTimeMs: zod_1.z.number().int().nonnegative({ message: "targetTimeMs must be a non-negative integer." }).optional(),
-    questionUid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }).optional(),
+    /**
+     * Question UID for question-specific timer operations (REQUIRED, canonical)
+     */
+    questionUid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }),
+    /**
+     * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+     */
+    durationMs: zod_1.z.number().int().nonnegative({ message: "durationMs must be a non-negative integer (ms)." }).optional(),
 });

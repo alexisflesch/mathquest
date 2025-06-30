@@ -386,7 +386,7 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
             const gameState = fullState.gameState;
             // Determine canonical timer context
             const playMode = gameState.gameMode;
-            const isDeferred = gameState.status === 'completed'; // Business rule: treat completed as deferred
+            const isDiffered = gameState.status === 'completed'; // Business rule: treat completed as differed
             const attemptCount = undefined; // TODO: wire up if needed for deferred mode
 
             let canonicalTimer: any = null;
@@ -408,33 +408,33 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
 
             switch (action) {
                 case 'run':
-                    await canonicalTimerService.startTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred, userId, canonicalDurationMs);
+                    await canonicalTimerService.startTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, userId, canonicalDurationMs);
                     canonicalTimer = await getCanonicalTimer(
                         accessCode,
                         String(canonicalQuestionUid),
                         playMode,
-                        isDeferred,
+                        isDiffered,
                         canonicalDurationMs
                     );
                     break;
                 case 'pause':
-                    await canonicalTimerService.pauseTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred);
+                    await canonicalTimerService.pauseTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered);
                     canonicalTimer = await getCanonicalTimer(
                         accessCode,
                         String(canonicalQuestionUid),
                         playMode,
-                        isDeferred,
+                        isDiffered,
                         canonicalDurationMs
                     );
                     break;
                 case 'stop':
                     // Set timer to STOP state in Redis and emit canonical STOP timer
-                    await canonicalTimerService.stopTimer(accessCode, String(canonicalQuestionUid), playMode, isDeferred);
+                    await canonicalTimerService.stopTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered);
                     canonicalTimer = await getCanonicalTimer(
                         accessCode,
                         String(canonicalQuestionUid),
                         playMode,
-                        isDeferred,
+                        isDiffered,
                         canonicalDurationMs
                     );
                     // Force canonicalTimer fields for STOP
@@ -442,7 +442,55 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     canonicalTimer.timeLeftMs = 0;
                     canonicalTimer.timerEndDateMs = 0;
                     break;
-                // Remove unsupported 'edit_timer' and 'set' cases from the switch statement
+                case 'edit': {
+                    // Canonical timer edit action
+                    logger.info({ accessCode, questionUid: canonicalQuestionUid, durationMs: validPayload.durationMs, action }, '[TIMER_ACTION][EDIT] Received canonical edit action');
+                    logger.debug({ payload: validPayload }, '[TIMER_ACTION][EDIT] Full payload received');
+                    const editDurationMs = validPayload.durationMs;
+                    if (!editDurationMs || !canonicalQuestionUid) {
+                        logger.error({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Missing required durationMs or questionUid');
+                        logger.debug({ payload: validPayload }, '[TIMER_ACTION][EDIT] Invalid edit payload');
+                        break;
+                    }
+                    // Determine if editing current question
+                    const isCurrent = (gameState.questionUids && gameState.currentQuestionIndex >= 0 && gameState.questionUids[gameState.currentQuestionIndex] === canonicalQuestionUid);
+                    const timerState = await getCanonicalTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, editDurationMs);
+                    logger.debug({ isCurrent, timerState, gameState }, '[TIMER_ACTION][EDIT] Edit context and timer state');
+                    // Update timer duration in backend (service must support this)
+                    await canonicalTimerService.editTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, editDurationMs, userId);
+                    // Re-fetch canonical timer after edit
+                    canonicalTimer = await getCanonicalTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, editDurationMs);
+                    logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Canonical timer after edit');
+                    // Determine timer status
+                    const status = canonicalTimer.status;
+                    // Emit logic per requirements
+                    if (isCurrent) {
+                        if (status === 'run') {
+                            // Update duration and time left, emit to all rooms, update timer expiry
+                            logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Editing running timer, emitting to all rooms and updating expiry');
+                            logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Emitting to all rooms and updating expiry');
+                            // Restart timer expiry
+                            startGameTimer(io, gameId, accessCode, canonicalTimer.timerEndDateMs, canonicalQuestionUid);
+                            // Emission handled below (all rooms)
+                        } else if (status === 'pause') {
+                            // Update duration and time left, emit to all rooms
+                            logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Editing paused timer, emitting to all rooms');
+                            logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Emitting to all rooms (paused)');
+                            // Emission handled below (all rooms)
+                        } else if (status === 'stop') {
+                            // Update duration, emit only to dashboard
+                            logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Editing stopped timer, emitting only to dashboard');
+                            logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Emitting only to dashboard (stopped)');
+                            // Emission handled below (dashboard only)
+                        }
+                    } else {
+                        // Editing a non-current question: update duration, emit only to dashboard
+                        logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Editing non-current question, emitting only to dashboard');
+                        logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Emitting only to dashboard (non-current)');
+                        // Emission handled below (dashboard only)
+                    }
+                    break;
+                }
             }
 
             logger.info({ gameId, action, canonicalTimer }, 'Timer state after action');
@@ -540,7 +588,7 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     gameState.questionUids[gameState.currentQuestionIndex]
                     ? gameState.questionUids[gameState.currentQuestionIndex]
                     : null;
-                targetQuestionUid = currentQuestionFromState || undefined;
+                targetQuestionUid = currentQuestionFromState || '';
             }
 
             // Update timer object with resolved questionUid before broadcasting

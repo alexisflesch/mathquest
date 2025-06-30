@@ -1,3 +1,32 @@
+## Phase: Canonical Timer Edit Action (JUN-30-2025)
+
+- [x] Update shared types and Zod schemas to add canonical `edit` action for `quiz_timer_action`.
+    - Added 'edit' to allowed actions in all canonical timer action types and Zod schemas.
+    - Both `questionUid` and `durationMs` are now required for the 'edit' action (no optionality for these fields in the context of 'edit').
+    - All relevant shared types and Zod schemas updated. See `shared/types/core/timer.ts`, `core/timer.zod.ts`, and `socket/payloads.zod.ts`.
+    - [2025-06-30] CHANGE LOGGED: Canonical timer edit action is now enforced in all shared types and schemas.
+    - [x] Update frontend (`useSimpleTimer.ts`) to emit canonical `quiz_timer_action` with action: `edit` and the new duration (no optimistic update; only update UI on backend response).
+        - Implemented canonical editTimer: emits 'edit' action with required questionUid and durationMs, no optimistic update. UI updates only on backend response. [2025-06-30]
+    - [x] Update backend (`timerActionHandler`) to handle `edit` action:
+        - Implemented canonical edit logic: updates duration for current or non-current question, emits to correct rooms, and updates timer expiry if running. All updates use canonical shared types and Zod validation. Debug logs added for all edit actions. [2025-06-30]
+    - [ ] If editing the timer for the current question:
+        - [ ] If timer is running, update duration and time left, emit to all rooms, and update timer expiry.
+        - [ ] If timer is paused, update duration and time left, emit to all rooms.
+        - [ ] If timer is stopped, update duration, emit only to dashboard.
+    - [ ] If editing a non-current question:
+        - [ ] Update duration, emit only to dashboard.
+    - [ ] All updates must use canonical shared types and Zod validation.
+- [ ] Add debug logs for all edit actions in both frontend and backend.
+- [ ] Validate end-to-end: editing the timer updates the duration everywhere and emits the correct canonical payload.
+- [ ] Mark each item as `[x]` after completion and update `plan.md`.
+
+**Exit Criteria:**
+- Editing a timer updates the canonical duration in the backend and emits the correct canonical timer state to the appropriate rooms.
+- The frontend only updates timer values when receiving the backend's canonical timer state (no optimistic update).
+- All event names, types, and payloads are canonical and validated with Zod.
+- All changes and findings are documented in `plan.md`.
+
+
 [x] Patch TeacherControlHelpers to use canonical question normalization for all dashboard questions
 [x] Add debug logging for dashboard question normalization (input and output)
 [x] Validate build (no errors)

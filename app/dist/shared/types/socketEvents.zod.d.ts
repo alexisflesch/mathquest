@@ -21,18 +21,36 @@ export declare const joinDashboardPayloadSchema: z.ZodObject<{
 }>;
 export declare const timerActionPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
-    action: z.ZodEnum<["run", "pause", "stop"]>;
+    action: z.ZodEnum<["run", "pause", "stop", "edit"]>;
+    /**
+     * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+     * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+     * May be updated if the timer is changed during a quiz.
+     */
+    timerEndDateMs: z.ZodOptional<z.ZodNumber>;
+    /**
+     * Target time in milliseconds (duration or remaining time, NOT a date).
+     * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
+     */
+    targetTimeMs: z.ZodOptional<z.ZodNumber>;
+    questionUid: z.ZodString;
+    /**
+     * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+     */
     durationMs: z.ZodOptional<z.ZodNumber>;
-    questionUid: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     accessCode: string;
-    action: "run" | "pause" | "stop";
-    questionUid?: string | undefined;
+    questionUid: string;
+    action: "run" | "pause" | "stop" | "edit";
+    timerEndDateMs?: number | undefined;
+    targetTimeMs?: number | undefined;
     durationMs?: number | undefined;
 }, {
     accessCode: string;
-    action: "run" | "pause" | "stop";
-    questionUid?: string | undefined;
+    questionUid: string;
+    action: "run" | "pause" | "stop" | "edit";
+    timerEndDateMs?: number | undefined;
+    targetTimeMs?: number | undefined;
     durationMs?: number | undefined;
 }>;
 export declare const lockAnswersPayloadSchema: z.ZodObject<{
@@ -327,18 +345,36 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
     }>], z.ZodUnknown>, z.ZodVoid>;
     teacher_timer_action: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         accessCode: z.ZodString;
-        action: z.ZodEnum<["start", "pause", "resume", "stop", "set_duration"]>;
+        action: z.ZodEnum<["run", "pause", "stop", "edit"]>;
+        /**
+         * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+         * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+         * May be updated if the timer is changed during a quiz.
+         */
+        timerEndDateMs: z.ZodOptional<z.ZodNumber>;
+        /**
+         * Target time in milliseconds (duration or remaining time, NOT a date).
+         * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
+         */
+        targetTimeMs: z.ZodOptional<z.ZodNumber>;
+        questionUid: z.ZodString;
+        /**
+         * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+         */
         durationMs: z.ZodOptional<z.ZodNumber>;
-        questionUid: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         accessCode: string;
-        action: "pause" | "stop" | "start" | "resume" | "set_duration";
-        questionUid?: string | undefined;
+        questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
+        timerEndDateMs?: number | undefined;
+        targetTimeMs?: number | undefined;
         durationMs?: number | undefined;
     }, {
         accessCode: string;
-        action: "pause" | "stop" | "start" | "resume" | "set_duration";
-        questionUid?: string | undefined;
+        questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
+        timerEndDateMs?: number | undefined;
+        targetTimeMs?: number | undefined;
         durationMs?: number | undefined;
     }>], z.ZodUnknown>, z.ZodVoid>;
     teacher_lock_answers: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
@@ -383,8 +419,10 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     teacher_timer_action: (args_0: {
         accessCode: string;
-        action: "pause" | "stop" | "start" | "resume" | "set_duration";
-        questionUid?: string | undefined;
+        questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
+        timerEndDateMs?: number | undefined;
+        targetTimeMs?: number | undefined;
         durationMs?: number | undefined;
     }, ...args: unknown[]) => void;
     teacher_lock_answers: (args_0: {
@@ -419,8 +457,10 @@ export declare const clientToServerEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     teacher_timer_action: (args_0: {
         accessCode: string;
-        action: "pause" | "stop" | "start" | "resume" | "set_duration";
-        questionUid?: string | undefined;
+        questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
+        timerEndDateMs?: number | undefined;
+        targetTimeMs?: number | undefined;
         durationMs?: number | undefined;
     }, ...args: unknown[]) => void;
     teacher_lock_answers: (args_0: {
@@ -1571,18 +1611,36 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }>], z.ZodUnknown>, z.ZodVoid>;
     timer_action: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
         accessCode: z.ZodString;
-        action: z.ZodEnum<["run", "pause", "stop"]>;
+        action: z.ZodEnum<["run", "pause", "stop", "edit"]>;
+        /**
+         * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+         * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+         * May be updated if the timer is changed during a quiz.
+         */
+        timerEndDateMs: z.ZodOptional<z.ZodNumber>;
+        /**
+         * Target time in milliseconds (duration or remaining time, NOT a date).
+         * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
+         */
+        targetTimeMs: z.ZodOptional<z.ZodNumber>;
+        questionUid: z.ZodString;
+        /**
+         * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+         */
         durationMs: z.ZodOptional<z.ZodNumber>;
-        questionUid: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         accessCode: string;
-        action: "run" | "pause" | "stop";
-        questionUid?: string | undefined;
+        questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
+        timerEndDateMs?: number | undefined;
+        targetTimeMs?: number | undefined;
         durationMs?: number | undefined;
     }, {
         accessCode: string;
-        action: "run" | "pause" | "stop";
-        questionUid?: string | undefined;
+        questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
+        timerEndDateMs?: number | undefined;
+        targetTimeMs?: number | undefined;
         durationMs?: number | undefined;
     }>], z.ZodUnknown>, z.ZodVoid>;
     lock_answers: z.ZodFunction<z.ZodTuple<[z.ZodObject<{
@@ -1848,8 +1906,10 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     timer_action: (args_0: {
         accessCode: string;
-        action: "run" | "pause" | "stop";
-        questionUid?: string | undefined;
+        questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
+        timerEndDateMs?: number | undefined;
+        targetTimeMs?: number | undefined;
         durationMs?: number | undefined;
     }, ...args: unknown[]) => void;
     lock_answers: (args_0: {
@@ -2093,8 +2153,10 @@ export declare const serverToClientEventsSchema: z.ZodObject<{
     }, ...args: unknown[]) => void;
     timer_action: (args_0: {
         accessCode: string;
-        action: "run" | "pause" | "stop";
-        questionUid?: string | undefined;
+        questionUid: string;
+        action: "run" | "pause" | "stop" | "edit";
+        timerEndDateMs?: number | undefined;
+        targetTimeMs?: number | undefined;
         durationMs?: number | undefined;
     }, ...args: unknown[]) => void;
     lock_answers: (args_0: {
@@ -2232,13 +2294,13 @@ export declare const sharedJoinPayloadSchema: z.ZodObject<{
     userId: string;
     username: string;
     avatarEmoji?: string | undefined;
-    playMode?: "tournament" | "quiz" | "practice" | undefined;
+    playMode?: "quiz" | "tournament" | "practice" | undefined;
 }, {
     accessCode: string;
     userId: string;
     username: string;
     avatarEmoji?: string | undefined;
-    playMode?: "tournament" | "quiz" | "practice" | undefined;
+    playMode?: "quiz" | "tournament" | "practice" | undefined;
 }>;
 export declare const sharedAnswerPayloadSchema: z.ZodObject<{
     accessCode: z.ZodString;
@@ -2253,14 +2315,14 @@ export declare const sharedAnswerPayloadSchema: z.ZodObject<{
     userId: string;
     answer: string | number | string[] | number[];
     timeSpent: number;
-    playMode?: "tournament" | "quiz" | "practice" | undefined;
+    playMode?: "quiz" | "tournament" | "practice" | undefined;
 }, {
     accessCode: string;
     questionUid: string;
     userId: string;
     answer: string | number | string[] | number[];
     timeSpent: number;
-    playMode?: "tournament" | "quiz" | "practice" | undefined;
+    playMode?: "quiz" | "tournament" | "practice" | undefined;
 }>;
 export declare const connectedCountPayloadSchema: z.ZodObject<{
     count: z.ZodNumber;
@@ -2374,181 +2436,92 @@ export declare const revealLeaderboardPayloadSchema: z.ZodObject<{
 }>;
 export declare const gameTimerStateSchema: z.ZodObject<{
     status: z.ZodEnum<["run", "pause", "stop"]>;
-    timeLeftMs: z.ZodNumber;
-    durationMs: z.ZodNumber;
-    questionUid: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    timestamp: z.ZodNullable<z.ZodNumber>;
-    localTimeLeftMs: z.ZodNullable<z.ZodNumber>;
-    isRunning: z.ZodOptional<z.ZodBoolean>;
-    displayFormat: z.ZodOptional<z.ZodEnum<["mm:ss", "ss", "ms"]>>;
-    showMilliseconds: z.ZodOptional<z.ZodBoolean>;
-    startedAt: z.ZodOptional<z.ZodNumber>;
-    pausedAt: z.ZodOptional<z.ZodNumber>;
+    timerEndDateMs: z.ZodNumber;
+    questionUid: z.ZodString;
 }, "strip", z.ZodTypeAny, {
+    questionUid: string;
     status: "run" | "pause" | "stop";
-    durationMs: number;
-    timestamp: number | null;
-    timeLeftMs: number;
-    localTimeLeftMs: number | null;
-    questionUid?: string | null | undefined;
-    startedAt?: number | undefined;
-    pausedAt?: number | undefined;
-    isRunning?: boolean | undefined;
-    displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-    showMilliseconds?: boolean | undefined;
+    timerEndDateMs: number;
 }, {
+    questionUid: string;
     status: "run" | "pause" | "stop";
-    durationMs: number;
-    timestamp: number | null;
-    timeLeftMs: number;
-    localTimeLeftMs: number | null;
-    questionUid?: string | null | undefined;
-    startedAt?: number | undefined;
-    pausedAt?: number | undefined;
-    isRunning?: boolean | undefined;
-    displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-    showMilliseconds?: boolean | undefined;
+    timerEndDateMs: number;
 }>;
 export declare const dashboardTimerUpdatedPayloadSchema: z.ZodObject<{
     timer: z.ZodObject<{
         status: z.ZodEnum<["run", "pause", "stop"]>;
-        timeLeftMs: z.ZodNumber;
-        durationMs: z.ZodNumber;
-        questionUid: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-        timestamp: z.ZodNullable<z.ZodNumber>;
-        localTimeLeftMs: z.ZodNullable<z.ZodNumber>;
-        isRunning: z.ZodOptional<z.ZodBoolean>;
-        displayFormat: z.ZodOptional<z.ZodEnum<["mm:ss", "ss", "ms"]>>;
-        showMilliseconds: z.ZodOptional<z.ZodBoolean>;
-        startedAt: z.ZodOptional<z.ZodNumber>;
-        pausedAt: z.ZodOptional<z.ZodNumber>;
+        timerEndDateMs: z.ZodNumber;
+        questionUid: z.ZodString;
     }, "strip", z.ZodTypeAny, {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timestamp: number | null;
-        timeLeftMs: number;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        pausedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
+        timerEndDateMs: number;
     }, {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timestamp: number | null;
-        timeLeftMs: number;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        pausedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
+        timerEndDateMs: number;
     }>;
-    questionUid: z.ZodOptional<z.ZodString>;
-    gameId: z.ZodOptional<z.ZodString>;
+    questionUid: z.ZodString;
+    questionIndex: z.ZodNumber;
+    totalQuestions: z.ZodNumber;
+    answersLocked: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
+    questionUid: string;
+    questionIndex: number;
+    totalQuestions: number;
     timer: {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timestamp: number | null;
-        timeLeftMs: number;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        pausedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
+        timerEndDateMs: number;
     };
-    questionUid?: string | undefined;
-    gameId?: string | undefined;
+    answersLocked: boolean;
 }, {
+    questionUid: string;
+    questionIndex: number;
+    totalQuestions: number;
     timer: {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timestamp: number | null;
-        timeLeftMs: number;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        pausedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
+        timerEndDateMs: number;
     };
-    questionUid?: string | undefined;
-    gameId?: string | undefined;
+    answersLocked: boolean;
 }>;
 export declare const gameTimerUpdatePayloadSchema: z.ZodObject<{
     timer: z.ZodObject<{
         status: z.ZodEnum<["run", "pause", "stop"]>;
-        timeLeftMs: z.ZodNumber;
-        durationMs: z.ZodNumber;
-        questionUid: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-        timestamp: z.ZodNullable<z.ZodNumber>;
-        localTimeLeftMs: z.ZodNullable<z.ZodNumber>;
-        isRunning: z.ZodOptional<z.ZodBoolean>;
-        displayFormat: z.ZodOptional<z.ZodEnum<["mm:ss", "ss", "ms"]>>;
-        showMilliseconds: z.ZodOptional<z.ZodBoolean>;
-        startedAt: z.ZodOptional<z.ZodNumber>;
-        pausedAt: z.ZodOptional<z.ZodNumber>;
+        timerEndDateMs: z.ZodNumber;
+        questionUid: z.ZodString;
     }, "strip", z.ZodTypeAny, {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timestamp: number | null;
-        timeLeftMs: number;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        pausedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
+        timerEndDateMs: number;
     }, {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timestamp: number | null;
-        timeLeftMs: number;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        pausedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
+        timerEndDateMs: number;
     }>;
-    questionUid: z.ZodOptional<z.ZodString>;
+    questionUid: z.ZodString;
+    questionIndex: z.ZodNumber;
+    totalQuestions: z.ZodNumber;
+    answersLocked: z.ZodBoolean;
 }, "strip", z.ZodTypeAny, {
+    questionUid: string;
+    questionIndex: number;
+    totalQuestions: number;
     timer: {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timestamp: number | null;
-        timeLeftMs: number;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        pausedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
+        timerEndDateMs: number;
     };
-    questionUid?: string | undefined;
+    answersLocked: boolean;
 }, {
+    questionUid: string;
+    questionIndex: number;
+    totalQuestions: number;
     timer: {
+        questionUid: string;
         status: "run" | "pause" | "stop";
-        durationMs: number;
-        timestamp: number | null;
-        timeLeftMs: number;
-        localTimeLeftMs: number | null;
-        questionUid?: string | null | undefined;
-        startedAt?: number | undefined;
-        pausedAt?: number | undefined;
-        isRunning?: boolean | undefined;
-        displayFormat?: "mm:ss" | "ss" | "ms" | undefined;
-        showMilliseconds?: boolean | undefined;
+        timerEndDateMs: number;
     };
-    questionUid?: string | undefined;
+    answersLocked: boolean;
 }>;

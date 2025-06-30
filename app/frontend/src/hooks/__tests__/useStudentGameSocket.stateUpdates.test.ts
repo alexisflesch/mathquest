@@ -72,11 +72,8 @@ describe('useStudentGameSocket - State Updates', () => {
             },
             timer: {
                 status: 'run' as const,
-                timeLeftMs: 45000,
-                durationMs: 45000,
                 questionUid: 'q1',
-                timestamp: Date.now(),
-                localTimeLeftMs: 45000
+                timerEndDateMs: Date.now() + 45000,
             },
             questionIndex: 2,
             totalQuestions: 10,
@@ -135,11 +132,8 @@ describe('useStudentGameSocket - State Updates', () => {
             },
             timer: {
                 status: 'run' as const,
-                timeLeftMs: 30000,
-                durationMs: 30000,
                 questionUid: 'q2',
-                timestamp: Date.now(),
-                localTimeLeftMs: 30000
+                timerEndDateMs: Date.now() + 30000,
             },
             questionIndex: 1,
             totalQuestions: 5,
@@ -196,11 +190,8 @@ describe('useStudentGameSocket - State Updates', () => {
             },
             timer: {
                 status: 'run' as const,
-                timeLeftMs: 30000,
-                durationMs: 30000,
                 questionUid: 'q1',
-                timestamp: Date.now(),
-                localTimeLeftMs: 30000
+                timerEndDateMs: Date.now() + 30000,
             },
             questionIndex: 0,
             totalQuestions: 1,
@@ -238,11 +229,8 @@ describe('useStudentGameSocket - State Updates', () => {
             },
             timer: {
                 status: 'run' as const,
-                timeLeftMs: 60000,
-                durationMs: 60000,
                 questionUid: 'q3',
-                timestamp: Date.now(),
-                localTimeLeftMs: 60000
+                timerEndDateMs: Date.now() + 60000,
             },
             questionIndex: 3,
             totalQuestions: 8,
@@ -385,11 +373,8 @@ describe('useStudentGameSocket - State Updates', () => {
             },
             timer: {
                 status: 'run' as const,
-                timeLeftMs: 40000,
-                durationMs: 40000,
                 questionUid: 'q5',
-                timestamp: Date.now(),
-                localTimeLeftMs: 40000
+                timerEndDateMs: Date.now() + 40000,
             },
             questionIndex: 4,
             totalQuestions: 6,
@@ -464,11 +449,8 @@ describe('useStudentGameSocket - State Updates', () => {
             },
             timer: {
                 status: 'stop' as const,
-                timeLeftMs: 0,
-                durationMs: 0,
                 questionUid: 'q1',
-                timestamp: Date.now(),
-                localTimeLeftMs: 0
+                timerEndDateMs: 0,
             },
             questionIndex: 0,
             totalQuestions: 1,

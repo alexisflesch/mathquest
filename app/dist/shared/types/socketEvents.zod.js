@@ -14,11 +14,25 @@ exports.joinDashboardPayloadSchema = zod_1.z.object({
 });
 exports.timerActionPayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." }),
-    action: zod_1.z.enum(['run', 'pause', 'stop'], {
-        errorMap: () => ({ message: "Action must be one of: run, pause, stop" }),
+    action: zod_1.z.enum(['run', 'pause', 'stop', 'edit'], {
+        errorMap: () => ({ message: "Action must be one of: run, pause, stop, edit" }),
     }),
-    durationMs: zod_1.z.number().int().nonnegative({ message: "durationMs must be a non-negative integer." }).optional(),
-    questionUid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }).optional(),
+    /**
+     * Absolute timestamp (ms since epoch, UTC) when the timer is scheduled to end.
+     * This is the canonical end date for the timer, used for backend/logic and precise signaling.
+     * May be updated if the timer is changed during a quiz.
+     */
+    timerEndDateMs: zod_1.z.number().int().nonnegative({ message: "timerEndDateMs must be a non-negative integer (ms since epoch, UTC)." }).optional(),
+    /**
+     * Target time in milliseconds (duration or remaining time, NOT a date).
+     * Used for UI, duration, or other timer logic. Distinct from timerEndDateMs.
+     */
+    targetTimeMs: zod_1.z.number().int().nonnegative({ message: "targetTimeMs must be a non-negative integer." }).optional(),
+    questionUid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }),
+    /**
+     * For 'edit' action: the new duration in milliseconds (REQUIRED for 'edit')
+     */
+    durationMs: zod_1.z.number().int().nonnegative({ message: "durationMs must be a non-negative integer (ms)." }).optional(),
 });
 exports.lockAnswersPayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." }),
@@ -110,18 +124,7 @@ exports.clientToServerEventsSchema = zod_1.z.object({
         .returns(zod_1.z.void()),
     teacher_timer_action: zod_1.z
         .function()
-        .args(zod_1.z.object({
-        accessCode: zod_1.z.string().min(1),
-        action: zod_1.z.enum([
-            'start',
-            'pause',
-            'resume',
-            'stop',
-            'set_duration',
-        ]),
-        durationMs: zod_1.z.number().int().nonnegative().optional(),
-        questionUid: zod_1.z.string().min(1).optional(),
-    }))
+        .args(exports.timerActionPayloadSchema)
         .returns(zod_1.z.void()),
     teacher_lock_answers: zod_1.z
         .function()
@@ -419,28 +422,25 @@ exports.timerUpdatePayloadSchema = zod_1.z.object({
 exports.revealLeaderboardPayloadSchema = zod_1.z.object({
     accessCode: zod_1.z.string().min(1, { message: "Access code cannot be empty." })
 });
-// Canonical Zod schema for GameTimerState
+// Canonical Zod schema for GameTimerState (MODERNIZED: only canonical fields)
 exports.gameTimerStateSchema = zod_1.z.object({
     status: zod_1.z.enum(['run', 'pause', 'stop']),
-    timeLeftMs: zod_1.z.number(),
-    durationMs: zod_1.z.number(),
-    questionUid: zod_1.z.string().nullable().optional(),
-    timestamp: zod_1.z.number().nullable(),
-    localTimeLeftMs: zod_1.z.number().nullable(),
-    isRunning: zod_1.z.boolean().optional(),
-    displayFormat: zod_1.z.enum(['mm:ss', 'ss', 'ms']).optional(),
-    showMilliseconds: zod_1.z.boolean().optional(),
-    startedAt: zod_1.z.number().optional(),
-    pausedAt: zod_1.z.number().optional()
+    timerEndDateMs: zod_1.z.number(),
+    questionUid: zod_1.z.string(),
 });
-// DashboardTimerUpdatedPayload
+// DashboardTimerUpdatedPayload (MODERNIZED)
 exports.dashboardTimerUpdatedPayloadSchema = zod_1.z.object({
     timer: exports.gameTimerStateSchema,
-    questionUid: zod_1.z.string().optional(),
-    gameId: zod_1.z.string().optional()
+    questionUid: zod_1.z.string(),
+    questionIndex: zod_1.z.number(),
+    totalQuestions: zod_1.z.number(),
+    answersLocked: zod_1.z.boolean()
 });
-// GameTimerUpdatePayload
+// GameTimerUpdatePayload (MODERNIZED)
 exports.gameTimerUpdatePayloadSchema = zod_1.z.object({
     timer: exports.gameTimerStateSchema,
-    questionUid: zod_1.z.string().optional()
+    questionUid: zod_1.z.string(),
+    questionIndex: zod_1.z.number(),
+    totalQuestions: zod_1.z.number(),
+    answersLocked: zod_1.z.boolean()
 });

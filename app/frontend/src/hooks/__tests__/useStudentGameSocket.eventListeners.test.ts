@@ -9,11 +9,8 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 // Helper function to create proper timer state
 const createTimerState = (durationMs: number, questionUid: string, status: 'run' | 'pause' | 'stop' = 'run'): GameTimerState => ({
     status,
-    timeLeftMs: durationMs,
-    durationMs,
     questionUid,
-    timestamp: Date.now(),
-    localTimeLeftMs: durationMs
+    timerEndDateMs: Date.now() + durationMs,
 });
 
 // Mock socket.io-client

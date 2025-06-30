@@ -358,9 +358,9 @@ export function useGameSocket(
                 const validatedPayload = timerUpdatePayloadSchema.parse(payload);
                 // Convert to GameTimerState format
                 const timerState: Partial<GameTimerState> = {
-                    timeLeftMs: validatedPayload.timeLeftMs ?? 0,
-                    isRunning: validatedPayload.running,
-                    durationMs: validatedPayload.durationMs,
+                    // timeLeftMs: validatedPayload.timeLeftMs ?? 0, // Removed: not part of canonical GameTimerState
+                    // isRunning: validatedPayload.running, // Removed: not part of canonical GameTimerState
+                    // durationMs: validatedPayload.durationMs, // Removed: not part of canonical GameTimerState
                 };
                 handler(timerState);
             } catch (error) {
