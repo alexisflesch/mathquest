@@ -25,6 +25,22 @@
 - **Strategy change:** Integration test will now assert that backend emits correct timer events (canonical payloads, correct rooms) based on backend logs or spies, not on test socket reception.
 
 **Checklist/plan.md updated.**
+# 2025-06-30 - Add Game Name Input to Start Modal (Teacher) & Display in Session List
+
+**What was done:**
+- Added an input field for the game name in the StartActivityModal (teacher games page)
+- Name is required; defaults to template name if left blank
+- Name is sent to backend API and stored in DB
+- Updated modal, ActivityCard, and API logic to support custom name
+- Session list now displays: icon Quiz/Entraînement/Tournoi - name (GameInstance.name)
+- Updated plan.md with new phase and checklist
+
+**Testing:**
+- Start a game from /teacher/games, set a custom name in the modal, and verify it appears in the DB and UI
+- If left blank, template name is used
+- Session list for each activity displays: icon Quiz/Entraînement/Tournoi - name
+- All changes logged and documented per modernization rules
+
 # Project Modernization Log
 
 ## 2025-06-21 - Projection Page Error Handling Modernization

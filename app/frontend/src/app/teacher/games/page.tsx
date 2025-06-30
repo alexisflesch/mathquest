@@ -46,6 +46,8 @@ interface GameInstance {
     startedAt: string | null;
     endedAt: string | null;
     playerCount?: number;
+    differedAvailableFrom?: string | null;
+    differedAvailableTo?: string | null;
 }
 
 // ActivityCard Component
@@ -53,11 +55,11 @@ interface ActivityCardProps {
     template: GameTemplate;
     expanded: boolean;
     onToggle: () => void;
-    onStartActivity: (templateId: string, mode: 'quiz' | 'tournament' | 'practice') => Promise<{ gameId: string; gameCode?: string; mode: 'quiz' | 'tournament' | 'practice' }>;
+    onStartActivity: (templateId: string, mode: 'quiz' | 'tournament' | 'practice', name: string) => Promise<{ gameId: string; gameCode?: string; mode: 'quiz' | 'tournament' | 'practice' }>;
     onDuplicate: (templateId: string) => void;
     onDelete: (templateId: string) => void;
     onDeleteInstance: (instanceId: string, instanceName: string) => void;
-    formatDate: (dateString: string) => string;
+    formatDate: (dateString: string, opts?: { dateOnly?: boolean }) => string;
     gameInstances: GameInstance[];
     onFetchGameInstances: (templateId: string) => Promise<void>;
 }
@@ -83,8 +85,8 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
         }
     }, [expanded, template.id, gameInstances.length, onFetchGameInstances]);
 
-    const handleStartActivity = async (mode: 'quiz' | 'tournament' | 'practice') => {
-        const result = await onStartActivity(template.id, mode);
+    const handleStartActivity = async (mode: 'quiz' | 'tournament' | 'practice', name: string) => {
+        const result = await onStartActivity(template.id, mode, name);
         // Don't close modal here - let the modal handle the transition
         return result;
     };
@@ -104,6 +106,16 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
             case 'tournament': return 'bg-[color:var(--muted)] text-[color:var(--accent)] border-[color:var(--border)]';
             case 'practice': return 'bg-[color:var(--muted)] text-[color:var(--success)] border-[color:var(--border)]';
             default: return 'bg-[color:var(--muted)] text-[color:var(--muted-foreground)] border-[color:var(--border)]';
+        }
+    };
+
+    // For icon backgrounds: returns only the CSS variable value
+    const getModeBgColor = (mode: string) => {
+        switch (mode) {
+            case 'quiz': return 'var(--primary)';
+            case 'tournament': return 'var(--secondary)';
+            case 'practice': return 'var(--success)';
+            default: return 'var(--muted)';
         }
     };
 
@@ -140,7 +152,8 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                 <div className="flex items-center gap-4 flex-wrap">
                                     <span className="flex items-center gap-1">
                                         <Clock size={14} />
-                                        {formatDate(template.createdAt)}
+                                        <span className="hidden sm:inline">{formatDate(template.createdAt)}</span>
+                                        <span className="inline sm:hidden">{formatDate(template.createdAt, { dateOnly: true })}</span>
                                     </span>
                                     {template.questions && (
                                         <span className="flex items-center gap-1">
@@ -152,41 +165,39 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-1 ml-4">
                             <button
                                 onClick={openStartModal}
-                                className="p-2 text-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:bg-opacity-10 rounded transition-colors"
+                                className="p-2 text-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:bg-opacity-10 rounded transition-colors group"
                                 title="Lancer l'activité"
                             >
-                                <Rocket size={16} />
+                                <Rocket size={16} className="transition-colors group-hover:stroke-white" />
                             </button>
-                            <Link
-                                href={`/teacher/games/${template.id}/edit`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="p-2 text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded transition-colors"
-                                title="Éditer l'activité"
-                            >
-                                <Edit2 size={16} />
-                            </Link>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDuplicate(template.id);
-                                }}
-                                className="p-2 text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded transition-colors"
-                                title="Dupliquer l'activité"
-                            >
-                                <Copy size={16} />
-                            </button>
+                            <span title="🛠️ En chantier !">
+                                <button
+                                    disabled
+                                    className="p-2 text-[color:var(--muted-foreground)] rounded transition-colors opacity-60 cursor-not-allowed"
+                                >
+                                    <Edit2 size={16} />
+                                </button>
+                            </span>
+                            <span title="🛠️ En chantier !">
+                                <button
+                                    disabled
+                                    className="p-2 text-[color:var(--muted-foreground)] rounded transition-colors opacity-60 cursor-not-allowed"
+                                >
+                                    <Copy size={16} />
+                                </button>
+                            </span>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onDelete(template.id);
                                 }}
-                                className="p-2 text-[color:var(--alert)] hover:bg-[color:var(--alert)] hover:bg-opacity-10 rounded transition-colors"
+                                className="p-2 text-[color:var(--alert)] hover:bg-[color:var(--alert)] hover:bg-opacity-10 rounded transition-colors group"
                                 title="Supprimer l'activité"
                             >
-                                <Trash2 size={16} />
+                                <Trash2 size={16} className="transition-colors group-hover:stroke-white" />
                             </button>
                             <button
                                 className="p-2 text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors"
@@ -219,7 +230,7 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                 {/* Game Instances Section */}
                                 <div className="mb-4">
                                     <h4 className="text-sm font-medium text-[color:var(--foreground)] mb-2">
-                                        Sessions actives
+                                        {`Session${gameInstances.length === 1 ? '' : 's'}`}
                                         {!loadingInstances && (
                                             <span className="ml-2 text-xs text-[color:var(--muted-foreground)] font-normal">
                                                 ({gameInstances.length})
@@ -233,65 +244,114 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                         </div>
                                     ) : gameInstances.length > 0 ? (
                                         <div className="space-y-2">
-                                            {gameInstances.map((instance) => (
-                                                <div
-                                                    key={instance.id}
-                                                    className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg p-3"
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`p-1 rounded ${getModeColor(instance.playMode)}`}>
-                                                                {getModeIcon(instance.playMode)}
-                                                            </div>
-                                                            <div>
-                                                                <div className="text-sm font-medium text-[color:var(--foreground)]">
-                                                                    {instance.playMode === 'quiz' ? 'Quiz' :
-                                                                        instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'}
-                                                                </div>
-                                                                <div className="text-xs text-[color:var(--muted-foreground)]">
-                                                                    {formatDate(instance.createdAt)}
-                                                                    {instance.accessCode && (
-                                                                        <span className="ml-2">• Code: {instance.accessCode}</span>
+                                            {gameInstances.map((instance) => {
+                                                // Tournament: show "Terminé" only if differedAvailableTo is in the past, else "disponible" and show date range
+                                                let statusLabel = '';
+                                                let subtext = '';
+                                                const now = new Date();
+                                                const differedFrom = instance.differedAvailableFrom ? new Date(instance.differedAvailableFrom) : null;
+                                                const differedTo = instance.differedAvailableTo ? new Date(instance.differedAvailableTo) : null;
+
+                                                if (instance.playMode === 'practice') {
+                                                    statusLabel = 'Disponible';
+                                                    subtext = instance.accessCode ? `Code: ${instance.accessCode}` : '';
+                                                } else if (instance.playMode === 'tournament') {
+                                                    if (differedTo && differedTo < now) {
+                                                        statusLabel = 'Terminé';
+                                                        subtext = instance.accessCode ? `Code: ${instance.accessCode}` : '';
+                                                    } else {
+                                                        statusLabel = 'Disponible';
+                                                        if (differedFrom && differedTo) {
+                                                            const format = (d: Date) => d.toLocaleDateString('fr-FR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+                                                            subtext = `${instance.accessCode ? `Code: ${instance.accessCode} • ` : ''}${format(differedFrom)} → ${format(differedTo)}`;
+                                                        } else {
+                                                            subtext = instance.accessCode ? `Code: ${instance.accessCode}` : '';
+                                                        }
+                                                    }
+                                                } else {
+                                                    // Quiz
+                                                    statusLabel = instance.status === 'pending' ? 'En attente' :
+                                                        instance.status === 'active' ? 'Active' :
+                                                            instance.status === 'completed' ? 'Terminée' : 'Annulée';
+                                                    subtext = instance.accessCode ? `Code: ${instance.accessCode}` : '';
+                                                    if (subtext && instance.createdAt) {
+                                                        subtext += ` • ${formatDate(instance.createdAt)}`;
+                                                    } else if (instance.createdAt) {
+                                                        subtext = formatDate(instance.createdAt);
+                                                    }
+                                                }
+
+                                                return (
+                                                    <div
+                                                        key={instance.id}
+                                                        className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg p-3"
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <span
+                                                                    className="p-1 rounded inline-flex items-center justify-center"
+                                                                    style={{ background: getModeBgColor(instance.playMode) }}
+                                                                >
+                                                                    {instance.playMode === 'quiz' && (
+                                                                        <Target size={16} stroke="currentColor" style={{ color: 'white' }} />
                                                                     )}
+                                                                    {instance.playMode === 'tournament' && (
+                                                                        <Users size={16} stroke="currentColor" style={{ color: 'white' }} />
+                                                                    )}
+                                                                    {instance.playMode === 'practice' && (
+                                                                        <Dumbbell size={16} stroke="currentColor" style={{ color: 'white' }} />
+                                                                    )}
+                                                                </span>
+                                                                <div>
+                                                                    <div className="text-sm font-medium text-[color:var(--foreground)]">
+                                                                        {instance.playMode === 'quiz' ? 'Quiz' :
+                                                                            instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'}
+                                                                        {instance.name ? ` - ${instance.name}` : ''}
+                                                                    </div>
+                                                                    <div className="text-xs text-[color:var(--muted-foreground)]">
+                                                                        {subtext}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`px-2 py-1 text-xs rounded-full ${instance.status === 'pending' ? 'bg-[color:var(--muted)] text-[color:var(--muted-foreground)]' :
-                                                                instance.status === 'active' ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
-                                                                    instance.status === 'completed' ? 'bg-[color:var(--primary)] text-[color:var(--card)]' :
-                                                                        'bg-[color:var(--alert)] text-[color:var(--card)]'
-                                                                }`}>
-                                                                {instance.status === 'pending' ? 'En attente' :
-                                                                    instance.status === 'active' ? 'Active' :
-                                                                        instance.status === 'completed' ? 'Terminée' : 'Annulée'}
-                                                            </span>
-                                                            {instance.playMode === 'quiz' && (
+                                                            <div className="flex items-center gap-2">
+                                                                <span
+                                                                    className={`px-2 py-1 text-xs ${(instance.playMode === 'practice' || (instance.playMode === 'tournament' && statusLabel === 'Disponible')) ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
+                                                                        statusLabel === 'Terminé' ? 'bg-[color:var(--primary)] text-[color:var(--card)]' :
+                                                                            statusLabel === 'En attente' ? 'bg-[color:var(--muted)] text-[color:var(--muted-foreground)]' :
+                                                                                statusLabel === 'Active' ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
+                                                                                    'bg-[color:var(--alert)] text-[color:var(--card)]'
+                                                                        }`}
+                                                                    style={{ borderRadius: 'var(--radius)' }}
+                                                                >
+                                                                    {statusLabel}
+                                                                </span>
+                                                                {instance.playMode === 'quiz' && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            window.open(`/teacher/dashboard/${instance.accessCode}`, '_blank');
+                                                                        }}
+                                                                        className="text-xs px-2 py-1 bg-[color:var(--success)] text-[color:var(--success-foreground)] rounded hover:bg-opacity-90 transition-colors"
+                                                                    >
+                                                                        {instance.status === 'active' || instance.status === 'pending' ? 'Piloter' :
+                                                                            instance.status === 'completed' ? 'Voir résultats' : 'Voir détails'}
+                                                                    </button>
+                                                                )}
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        window.open(`/teacher/dashboard/${instance.accessCode}`, '_blank');
+                                                                        onDeleteInstance(instance.id, `${instance.playMode === 'quiz' ? 'Quiz' : instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'} - ${formatDate(instance.createdAt)}`);
                                                                     }}
-                                                                    className="text-xs px-2 py-1 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] rounded hover:bg-opacity-90 transition-colors"
+                                                                    className="p-1 text-[color:var(--alert)] hover:bg-[color:var(--alert)] hover:bg-opacity-10 rounded transition-colors group"
+                                                                    title="Supprimer cette session"
                                                                 >
-                                                                    {instance.status === 'active' || instance.status === 'pending' ? 'Piloter' :
-                                                                        instance.status === 'completed' ? 'Voir résultats' : 'Voir détails'}
+                                                                    <Trash2 size={14} className="transition-colors group-hover:stroke-white" />
                                                                 </button>
-                                                            )}
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    onDeleteInstance(instance.id, `${instance.playMode === 'quiz' ? 'Quiz' : instance.playMode === 'tournament' ? 'Tournoi' : 'Entraînement'} - ${formatDate(instance.createdAt)}`);
-                                                                }}
-                                                                className="p-1 text-[color:var(--alert)] hover:bg-[color:var(--alert)] hover:bg-opacity-10 rounded transition-colors"
-                                                                title="Supprimer cette session"
-                                                            >
-                                                                <Trash2 size={14} />
-                                                            </button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     ) : (
                                         <p className="text-sm text-[color:var(--muted-foreground)]">
@@ -388,8 +448,16 @@ export default function TeacherGamesPage() {
         });
     }, []);
 
-    const formatDate = useCallback((dateString: string) => {
-        return new Date(dateString).toLocaleDateString('fr-FR', {
+    const formatDate = useCallback((dateString: string, opts?: { dateOnly?: boolean }) => {
+        const date = new Date(dateString);
+        if (opts && opts.dateOnly) {
+            return date.toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+        return date.toLocaleDateString('fr-FR', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -416,7 +484,7 @@ export default function TeacherGamesPage() {
         }
     }, []);
 
-    const startActivity = useCallback(async (templateId: string, playMode: 'quiz' | 'tournament' | 'practice') => {
+    const startActivity = useCallback(async (templateId: string, playMode: 'quiz' | 'tournament' | 'practice', name: string) => {
         try {
             // Find the template to get its name
             const template = games.find(g => g.id === templateId);
@@ -424,10 +492,13 @@ export default function TeacherGamesPage() {
                 throw new Error('Template not found');
             }
 
+            // Use provided name, fallback to template name if blank
+            const finalName = name && name.trim() ? name.trim() : template.name;
+
             // Create a game instance from the template
             // Modernization: Always set status to 'completed' for tournaments created from teacher flow
             const gameData: any = {
-                name: template.name, // Include the required name field
+                name: finalName, // Use the required name field
                 gameTemplateId: templateId,
                 playMode: playMode,
                 settings: {}

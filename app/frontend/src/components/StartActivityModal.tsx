@@ -5,12 +5,14 @@ import InfinitySpin from '@/components/InfinitySpin';
 import InfoModal from '@/components/SharedModal';
 import Snackbar from '@/components/Snackbar';
 
+
 interface StartActivityModalProps {
     isOpen: boolean;
     templateName: string;
     onClose: () => void;
-    onStart: (mode: 'quiz' | 'tournament' | 'practice') => Promise<{ gameId: string; gameCode?: string; mode: 'quiz' | 'tournament' | 'practice' }>;
+    onStart: (mode: 'quiz' | 'tournament' | 'practice', name: string) => Promise<{ gameId: string; gameCode?: string; mode: 'quiz' | 'tournament' | 'practice' }>;
 }
+
 
 const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templateName, onClose, onStart }) => {
     const [currentStep, setCurrentStep] = useState<'selection' | 'success'>('selection');
@@ -21,11 +23,22 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
     } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [name, setName] = useState<string>('Ma session');
+    const [nameTouched, setNameTouched] = useState(false);
+
+    React.useEffect(() => {
+        if (isOpen) {
+            setName('Ma session');
+            setNameTouched(false);
+        }
+    }, [isOpen]);
 
     const handleStart = async (mode: 'quiz' | 'tournament' | 'practice') => {
+        setNameTouched(true);
+        if (!name.trim()) return;
         setIsLoading(true);
         try {
-            const result = await onStart(mode);
+            const result = await onStart(mode, name.trim());
             setGameInfo(result);
             setCurrentStep('success');
         } catch (error) {
@@ -66,21 +79,42 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
             id: 'quiz' as const,
             name: 'Quiz',
             description: 'Pour une utilisation en classe',
-            icon: <Target size={22} className="text-primary" />,
+            icon: (
+                <span
+                    style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                    className="inline-flex items-center justify-center rounded-full w-9 h-9"
+                >
+                    <Target size={22} stroke="currentColor" />
+                </span>
+            ),
             action: () => handleStart('quiz')
         },
         {
             id: 'tournament' as const,
             name: 'Tournoi',
             description: 'Compétition en direct ou en différé',
-            icon: <Users size={22} className="text-secondary" />,
+            icon: (
+                <span
+                    style={{ background: 'var(--secondary)', color: 'var(--secondary-foreground)' }}
+                    className="inline-flex items-center justify-center rounded-full w-9 h-9"
+                >
+                    <Users size={22} stroke="currentColor" />
+                </span>
+            ),
             action: () => handleStart('tournament')
         },
         {
             id: 'practice' as const,
             name: 'Entraînement',
             description: 'Pratique libre sans contrainte de temps',
-            icon: <Dumbbell size={22} className="text-success" />,
+            icon: (
+                <span
+                    style={{ background: 'var(--success)', color: 'var(--success-foreground)' }}
+                    className="inline-flex items-center justify-center rounded-full w-9 h-9"
+                >
+                    <Dumbbell size={22} stroke="currentColor" />
+                </span>
+            ),
             action: () => handleStart('practice')
         }
     ];
@@ -118,6 +152,7 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header */}
+
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg text-[color:var(--foreground)]">
                                     <span className="font-semibold">Démarrer l'activité </span>
@@ -132,7 +167,28 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
                                 </button>
                             </div>
 
-                            <p className="text-[color:var(--muted-foreground)] mb-6 text-sm">
+                            {/* Game Name Input */}
+                            <div className="mb-4">
+                                <label htmlFor="game-name-input" className="block text-sm font-medium text-[color:var(--foreground)] mb-2">
+                                    Nom de la session
+                                </label>
+                                <input
+                                    id="game-name-input"
+                                    type="text"
+                                    className="w-full border border-[color:var(--border)] rounded px-3 py-2 bg-[color:var(--input)] text-[color:var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[color:var(--primary)]"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                    onBlur={() => setNameTouched(true)}
+                                    placeholder="Nom de la session"
+                                    maxLength={64}
+                                    autoFocus
+                                />
+                                {nameTouched && !name.trim() && (
+                                    <div className="text-xs text-red-500 mt-1">Le nom est requis.</div>
+                                )}
+                            </div>
+
+                            <p className="text-sm font-medium text-[color:var(--foreground)] mb-4 mt-2">
                                 Choisissez un mode de jeu.
                             </p>
 
@@ -141,7 +197,7 @@ const StartActivityModal: React.FC<StartActivityModalProps> = ({ isOpen, templat
                                     <button
                                         key={mode.id}
                                         onClick={mode.action}
-                                        disabled={isLoading}
+                                        disabled={isLoading || !name.trim()}
                                         className="w-full p-4 text-left border border-[color:var(--border)] rounded-lg hover:bg-[color:var(--muted)] transition-colors disabled:opacity-50"
                                     >
                                         <div className="flex items-center gap-3">

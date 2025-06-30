@@ -1,5 +1,17 @@
+## PHASE: Game Name Input on Game Start Modal (Teacher)
 
+- [x] Add input field for game name in StartActivityModal (under title)
+- [x] Make game name required, default to template name if not set
+- [x] Pass game name to onStart and API call
+- [x] Update ActivityCard and TeacherGamesPage logic to support name
+- [x] Update session list UI to display GameInstance name after mode ("Quiz - name")
+- [x] Update tests and docs if needed
+- [x] Log all changes in log.md
 
+**Validation:**
+- When starting a game, teacher can set a custom name in the modal
+- Name is sent to backend and visible in DB/instances
+- Session list displays: icon Quiz/Entraînement/Tournoi - name
 ## PHASE 2B: Tournament Creation Status Modernization
 
 - [x] Restrict tournament creation status to only 'pending' or 'completed' in shared/types/api/schemas.ts (Zod schema).
