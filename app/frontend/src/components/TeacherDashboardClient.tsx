@@ -47,6 +47,10 @@ function mapToCanonicalQuestion(q: any): Question {
 }
 
 export default function TeacherDashboardClient({ code, gameId }: { code: string, gameId: string }) {
+    // --- Canonical timer sync: update per-question durationMs after every timer update ---
+    const lastTimerQuestionUidRef = useRef<string | null>(null);
+    const lastTimerDurationMsRef = useRef<number | null>(null);
+
     // Authentication and access control (following established pattern)
     const { isTeacher, isAuthenticated, isLoading: authLoading, userState, userProfile } = useAuthState();
     useAccessGuard({ requireMinimum: 'teacher', redirectTo: '/login' });
@@ -257,32 +261,38 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         };
     }, [isAuthenticated, isTeacher, code]);
 
+    // --- Canonical timer state: use per-question timer state from useSimpleTimer ---
     const {
-        status: timerStatus,
-        questionUid: timerQuestionUid,
-        timeLeftMs: rawTimeLeftMs,
+        getTimerState,
+        timerStates,
+        activeQuestionUid: timerActiveQuestionUid,
         startTimer,
         pauseTimer,
         stopTimer,
-        editTimer
+        editTimer,
+        isConnected
     } = useSimpleTimer({
         role: 'teacher',
         accessCode: typeof code === 'string' ? code : '',
         socket: quizSocket
     });
 
-    // Use computedTimeLeftMs only if it is a positive number, else fallback to rawTimeLeftMs from timer hook
-    const timeLeftMs = (typeof quizState?.computedTimeLeftMs === 'number' && quizState.computedTimeLeftMs > 0)
-        ? quizState.computedTimeLeftMs
-        : rawTimeLeftMs;
-    logger.info('[TIMER DEBUG][PATCHED] rawTimeLeftMs:', rawTimeLeftMs, 'quizState?.computedTimeLeftMs:', quizState?.computedTimeLeftMs, 'final timeLeftMs:', timeLeftMs);
+    // Helper: get canonical timer state for a question
+    const getCanonicalTimerForQuestion = (questionUid: string) => getTimerState(questionUid) || {
+        timeLeftMs: 0,
+        durationMs: questions.find(q => q.uid === questionUid)?.durationMs ?? 0,
+        status: 'stop',
+        questionUid,
+        isActive: false
+    };
 
-    // Always use the durationMs of the currently active question for timerDurationMs
-    const activeQuestionUid = quizState?.timer?.questionUid || timerQuestionUid;
-    const activeQuestion = questions.find(q => q.uid === activeQuestionUid);
-    // Use canonical durationMs from the question object; fallback to 0 if not found
-    const timerDurationMs = activeQuestion?.durationMs ?? 0;
+    // Canonical: always use timer state from useSimpleTimer for timer display/actions
+    const timerStatus = timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).status : 'stop';
+    const timerQuestionUid = timerActiveQuestionUid;
+    const timeLeftMs = timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).timeLeftMs : 0;
+    const timerDurationMs = timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).durationMs : 0;
 
+    // Ref for timer state (for play/confirm logic)
     const timerStateRef = useRef({
         status: timerStatus,
         questionUid: timerQuestionUid,
@@ -314,7 +324,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             return newSet;
         });
     }, []);
-    const handlePlay = useCallback((uid: string, timeLeftMs: number) => {
+    const handlePlay = useCallback((uid: string, _timeLeftMs: number) => {
         const currentTimerState = timerStateRef.current;
         const currentTimerStatus = currentTimerState.status;
         const currentTimerQuestionUid = currentTimerState.questionUid;
@@ -327,12 +337,15 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             }
         }
         handleSelect(uid);
-        startTimer(uid, timeLeftMs);
+        // Always use the teacher's intended durationMs from the UI/question object
+        const intendedDurationMs = questions.find(q => q.uid === uid)?.durationMs ?? 0;
+        logger.info('[DASHBOARD][PLAY] Emitting startTimer with teacher-intended durationMs', { uid, intendedDurationMs });
+        startTimer(uid, intendedDurationMs);
     }, [questions, startTimer, handleSelect]);
     const handlePause = useCallback(() => { pauseTimer(); }, [pauseTimer]);
     const handleStop = useCallback(() => { stopTimer(); }, [stopTimer]);
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
-        logger.info(`[DASHBOARD] handleEditTimer called`, { uid, newTime });
+        logger.info(`[DASHBOARD] handleEditTimer called`, { uid, newTime, unit: 'ms' });
         setQuestions(prevQs => {
             const updated = prevQs.map(q =>
                 q.uid === uid ? { ...q, durationMs: newTime } : q
@@ -341,9 +354,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             return updated;
         });
         // Canonical: editTimer only takes (questionUid, durationMs)
-        logger.info(`[DASHBOARD] Timer edit: canonical editTimer(uid, durationMs)`, { uid, newTime });
-        editTimer(uid, newTime * 1000);
-        logger.info(`[DASHBOARD] Timer edit emitted for question ${uid}: ${newTime}s`);
+        logger.info(`[DASHBOARD] Timer edit: canonical editTimer(uid, durationMs)`, { uid, durationMs: newTime });
+        editTimer(uid, newTime);
+        logger.info(`[DASHBOARD] Timer edit emitted for question ${uid}: ${newTime}ms`);
     }, [editTimer, timerStatus, timeLeftMs]);
     const handleTimerAction = useCallback((action: { status: 'run' | 'pause' | 'stop' | 'edit', questionUid: string, timeLeftMs: number, newTime?: number }) => {
         switch (action.status) {
@@ -357,12 +370,12 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                 stopTimer();
                 break;
             case 'edit': {
-                logger.info(`[DASHBOARD] handleEditTimer (via handleTimerAction) called`, { uid: action.questionUid, newTime: action.newTime });
-                const editSeconds = typeof action.newTime === 'number' ? action.newTime : Math.round(action.timeLeftMs / 1000);
+                logger.info(`[DASHBOARD] handleEditTimer (via handleTimerAction) called`, { uid: action.questionUid, newTime: action.newTime, unit: 'ms' });
+                const editMs = typeof action.newTime === 'number' ? action.newTime : action.timeLeftMs;
                 // Canonical: editTimer only takes (questionUid, durationMs)
-                logger.info(`[DASHBOARD] Timer edit: canonical editTimer(uid, durationMs)`, { uid: action.questionUid, editSeconds });
-                editTimer(action.questionUid, editSeconds * 1000);
-                logger.info(`[DASHBOARD] Timer edit emitted for question ${action.questionUid}: ${editSeconds}s`);
+                logger.info(`[DASHBOARD] Timer edit: canonical editTimer(uid, durationMs)`, { uid: action.questionUid, durationMs: editMs });
+                editTimer(action.questionUid, editMs);
+                logger.info(`[DASHBOARD] Timer edit emitted for question ${action.questionUid}: ${editMs}ms`);
                 break;
             }
         }
@@ -376,6 +389,8 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             const question = questions[pendingPlayIdx];
             handleSelect(question.uid);
             stopTimer();
+            // Always use the teacher's intended durationMs from the UI/question object
+            logger.info('[DASHBOARD][CONFIRM PLAY] Emitting startTimer with teacher-intended durationMs', { uid: question.uid, intendedDurationMs: question.durationMs });
             startTimer(question.uid, question.durationMs);
         }
         setPendingPlayIdx(null);
@@ -555,7 +570,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             timerStatus={timerStatus}
                             timerQuestionUid={timerQuestionUid}
                             timeLeftMs={timeLeftMs}
-                            timerDurationMs={timerDurationMs} // Always use canonical durationMs for stopped value
+                            timerDurationMs={timerDurationMs}
                             onTimerAction={handleTimerAction}
                             disabled={isDisabled}
                             expandedUids={expandedUids}
@@ -576,6 +591,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                 }
                                 return undefined;
                             }}
+                            getTimerState={getCanonicalTimerForQuestion}
                         />
                     </section>
                 )}

@@ -30,7 +30,7 @@ function formatTimer(val: number | null) {
 }
 function formatTimerMs(timeLeftMs: number | null) {
     if (timeLeftMs === null || timeLeftMs === undefined) return '-';
-    const seconds = Math.ceil(timeLeftMs / 1000);
+    const seconds = Math.floor(timeLeftMs / 1000);
     return formatTimer(seconds);
 }
 
@@ -100,8 +100,9 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         : null;
     const currentQuestionUid = currentQuestion?.uid;
     const tournamentUrl = code ? `${baseUrl}/live/${code}` : '';
+    // Canonical: Only show QR code if there is no current question (like live/student page)
     const shouldShowQRCode = {
-        timer: timeLeftMs == null || isNaN(timeLeftMs),
+        timer: false, // Always show timer if timer state is present (unified with live page)
         question: !currentTournamentQuestion,
         classement: !hookLeaderboard || hookLeaderboard.length === 0,
     };
@@ -144,7 +145,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                 margin={[0, 0]}
                 isResizable={true}
                 isDraggable={true}
-                isDroppable={true }
+                isDroppable={true}
                 allowOverlap={true}
                 preventCollision={false}
                 compactType={null}
@@ -165,7 +166,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                     bringToFront(newItem.i);
                 }}
             >
-                {/* Live-timer */}
+                {/* Live-timer (unified with live/student page: always show timer if timer state is present) */}
                 <div
                     key="live-timer"
                     className="rounded-full shadow-lg border border-primary flex items-center justify-center overflow-hidden relative"
@@ -176,19 +177,12 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                     }}
                     onClick={() => bringToFront("live-timer")}
                 >
-                    {shouldShowQRCode.timer ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-2">
-                            <QRCode value={tournamentUrl} size={128} style={{ width: '100%', height: '100%' }} />
-                            <div className="font-mono text-center mt-2 break-all text-xs">{code}</div>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2 w-full h-full justify-center">
-                            <Timer className="w-8 h-8 block flex-shrink-0" style={{ color: 'var(--light-foreground)' }} />
-                            <span className="font-bold text-3xl" style={{ color: 'var(--light-foreground)', lineHeight: '1' }}>
-                                {formatTimerMs(timeLeftMs)}
-                            </span>
-                        </div>
-                    )}
+                    <div className="flex items-center gap-2 w-full h-full justify-center">
+                        <Timer className="w-8 h-8 block flex-shrink-0" style={{ color: 'var(--light-foreground)' }} />
+                        <span className="font-bold text-3xl" style={{ color: 'var(--light-foreground)', lineHeight: '1' }}>
+                            {formatTimerMs(timeLeftMs ?? null)}
+                        </span>
+                    </div>
                 </div>
                 {/* Question display */}
                 <div
@@ -203,7 +197,8 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                         onZoomOut={() => handleZoom("question", 'out')}
                     />
                     <div className="card-body w-full h-full p-4 overflow-auto">
-                        {shouldShowQRCode.question ? (
+                        {/* Canonical: Only show QR code if there is no current question (unified with live/student page) */}
+                        {!currentTournamentQuestion ? (
                             <div className="w-full h-full flex flex-col items-center justify-center">
                                 <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
                                 <div className="font-mono text-center mt-2 break-all text-base">{code}</div>
@@ -224,27 +219,25 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                                         justifyContent: 'center',
                                     }}
                                 >
-                                    {currentTournamentQuestion && (
-                                        <QuestionCard
-                                            key={questionKey}
-                                            currentQuestion={currentTournamentQuestion}
-                                            questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex(uid => uid === currentQuestionUid) ?? 0 : 0}
-                                            totalQuestions={gameState?.questionUids.length ?? 0}
-                                            isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-                                            selectedAnswer={null}
-                                            setSelectedAnswer={() => { }}
-                                            selectedAnswers={[]}
-                                            setSelectedAnswers={() => { }}
-                                            handleSingleChoice={() => { }}
-                                            handleSubmitMultiple={() => { }}
-                                            answered={false}
-                                            isQuizMode={true}
-                                            readonly={true}
-                                            correctAnswers={correctAnswersData?.correctAnswers || []}
-                                            stats={statsToShow}
-                                            showStats={showStats}
-                                        />
-                                    )}
+                                    <QuestionCard
+                                        key={questionKey}
+                                        currentQuestion={currentTournamentQuestion}
+                                        questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex(uid => uid === currentQuestionUid) ?? 0 : 0}
+                                        totalQuestions={gameState?.questionUids.length ?? 0}
+                                        isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
+                                        selectedAnswer={null}
+                                        setSelectedAnswer={() => { }}
+                                        selectedAnswers={[]}
+                                        setSelectedAnswers={() => { }}
+                                        handleSingleChoice={() => { }}
+                                        handleSubmitMultiple={() => { }}
+                                        answered={false}
+                                        isQuizMode={true}
+                                        readonly={true}
+                                        correctAnswers={correctAnswersData?.correctAnswers || []}
+                                        stats={statsToShow}
+                                        showStats={showStats}
+                                    />
                                 </div>
                             </div>
                         )}

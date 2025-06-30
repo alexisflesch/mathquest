@@ -55,6 +55,13 @@ interface DraggableQuestionsListProps {
     getStatsForQuestion?: (uid: string) => number[] | undefined; // Provide stats for each question
     expandedUids: Set<string>; // NEW: expanded question UIDs
     onToggleExpand: (uid: string) => void; // NEW: toggle handler
+    getTimerState?: (questionUid: string) => {
+        timeLeftMs: number;
+        durationMs: number;
+        status: string;
+        questionUid: string;
+        isActive: boolean;
+    };
 }
 
 export default function DraggableQuestionsList({
@@ -82,6 +89,7 @@ export default function DraggableQuestionsList({
     getStatsForQuestion,
     expandedUids,
     onToggleExpand,
+    getTimerState,
 }: DraggableQuestionsListProps) {
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
@@ -176,22 +184,32 @@ export default function DraggableQuestionsList({
         }
     });
 
-    // Pass canonical timerStatus and liveStatus to SortableQuestion
+    // Use canonical timer state if getTimerState is provided
+    const getCanonicalTimer = (questionUid: string) => {
+        if (typeof getTimerState === 'function') {
+            return getTimerState(questionUid);
+        }
+        // fallback to legacy props
+        return {
+            timeLeftMs: (timerQuestionUid === questionUid) ? (timeLeftMs ?? 0) : 0,
+            durationMs: questions.find(q => q.uid === questionUid)?.durationMs ?? 0,
+            status: timerStatus ?? 'stop',
+            questionUid,
+            isActive: questionActiveUid === questionUid
+        };
+    };
+
+    // Pass canonical timer state to SortableQuestion
     return (
         <ul className="draggable-questions-list">
             {questions.map((q, idx) => {
-                const isActive = q.uid === questionActiveUid;
-                let canonicalDurationMs = q.durationMs;
-                if (isActive && timerStatus === 'stop' && typeof timerDurationMs === 'number' && timerDurationMs > 0) {
-                    canonicalDurationMs = timerDurationMs;
-                }
-                logger.info(`[TIMER DEBUG][DraggableQuestionsList] q.uid: ${q.uid}, isActive: ${isActive}, effectiveTimeLeft: ${effectiveTimeLeft}, canonicalDurationMs: ${canonicalDurationMs}, timerStatus: ${timerStatus}`);
+                const timer = getCanonicalTimer(q.uid);
                 return (
                     <SortableQuestion
                         key={q.uid}
                         q={q}
-                        durationMs={canonicalDurationMs ?? 0}
-                        isActive={isActive}
+                        durationMs={timer.durationMs}
+                        isActive={timer.isActive}
                         open={expandedUids.has(q.uid)}
                         setOpen={() => onToggleExpand(q.uid)}
                         onPlay={(uid, timerValue) => {
@@ -204,8 +222,8 @@ export default function DraggableQuestionsList({
                         }}
                         onPause={handlePause}
                         onStop={handleStop}
-                        liveTimeLeft={isActive ? effectiveTimeLeft : undefined}
-                        liveStatus={isActive ? timerStatus : undefined}
+                        liveTimeLeft={timer.isActive ? timer.timeLeftMs : undefined}
+                        liveStatus={timer.isActive ? (['run', 'pause', 'stop'].includes(timer.status) ? timer.status as 'run' | 'pause' | 'stop' : undefined) : undefined}
                         onImmediateUpdateActiveTimer={handleImmediateUpdate}
                         disabled={disabled}
                         quizId={quizId}

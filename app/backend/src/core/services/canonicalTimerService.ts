@@ -1,3 +1,6 @@
+/**
+ * Public helper: get the raw timer object from Redis for a question (or null if not found)
+ */
 import type { Redis } from 'ioredis';
 import { prisma } from '@/db/prisma';
 import createLogger from '@/utils/logger';
@@ -31,6 +34,21 @@ export interface CanonicalTimerState {
  * - Practice: no timer (all timer methods are no-ops)
  */
 export class CanonicalTimerService {
+
+    /**
+     * Public helper: get the raw timer object from Redis for a question (or null if not found)
+     */
+    public async getRawTimerFromRedis(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number): Promise<CanonicalTimerState | null> {
+        const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
+        const raw = await this.redis.get(key);
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw) as CanonicalTimerState;
+        } catch (err) {
+            logger.error({ accessCode, questionUid, err }, '[CANONICAL_TIMER_SERVICE] Failed to parse timer from Redis');
+            return null;
+        }
+    }
     /**
      * Stop the timer for a question, setting status to 'stop' and clearing time left.
      * - Quiz & live tournament: attaches to GameInstance
@@ -299,7 +317,7 @@ export class CanonicalTimerService {
      */
     async getElapsedTimeMs(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number): Promise<number> {
         if (playMode === 'practice') return 0;
-        // Always require canonical durationMs (no fallback)
+        // Always use canonical timer state and canonical duration/timeLeftMs
         let durationMs = 0;
         try {
             const question = await prisma.question.findUnique({ where: { uid: questionUid } });
@@ -311,7 +329,6 @@ export class CanonicalTimerService {
         }
         if (durationMs <= 0) {
             logger.error({ questionUid, durationMs }, '[CANONICAL_TIMER_SERVICE] Invalid canonical durationMs');
-            // handle error or return
         }
         const timer = await this.getTimer(accessCode, questionUid, playMode, isDiffered, userId, attemptCount, durationMs);
         logger.info({
@@ -324,11 +341,11 @@ export class CanonicalTimerService {
             timerState: timer
         }, '[TIMER_DEBUG] getElapsedTimeMs called');
         if (!timer) return 0;
-        if (timer.status === 'play') {
-            return timer.totalPlayTimeMs + (Date.now() - timer.lastStateChange);
-        } else {
-            return timer.totalPlayTimeMs;
-        }
+        // Canonical: elapsed = durationMs - timeLeftMs (always)
+        const canonicalDuration = typeof timer.durationMs === 'number' ? timer.durationMs : durationMs;
+        const canonicalTimeLeft = typeof timer.timeLeftMs === 'number' ? timer.timeLeftMs : canonicalDuration;
+        const elapsed = Math.max(0, canonicalDuration - canonicalTimeLeft);
+        return elapsed;
     }
 
     /**
@@ -384,26 +401,36 @@ export class CanonicalTimerService {
         const now = Date.now();
         const raw = await this.redis.get(key);
         let timer: CanonicalTimerState;
+        // Accepts an extra options arg for more control (currentQuestion, editType)
+        // For now, check globalThis._canonicalEditTimerOptions if present (set by handler)
+        const editOptions = (globalThis as any)._canonicalEditTimerOptions || {};
+        const isCurrent = !!editOptions.isCurrent;
         if (raw) {
             timer = JSON.parse(raw) as CanonicalTimerState;
-            timer.durationMs = durationMs;
-            // If running, recalculate timerEndDateMs and totalPlayTimeMs
-            if (timer.status === 'play') {
-                // Compute elapsed so far
+            if (timer.status === 'pause') {
+                // If current question, only update timeLeftMs
+                if (isCurrent) {
+                    timer.timeLeftMs = durationMs;
+                    logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated ONLY timeLeftMs for paused current question');
+                } else {
+                    // Not current: update only durationMs (not timeLeftMs)
+                    timer.durationMs = durationMs;
+                    // Remove timeLeftMs if present (prevents leaking value to other questions)
+                    if ('timeLeftMs' in timer) delete timer.timeLeftMs;
+                    logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated ONLY durationMs for paused non-current question (timeLeftMs removed if present)');
+                }
+            } else if (timer.status === 'play') {
+                // For running, update durationMs and adjust timerEndDateMs
+                timer.durationMs = durationMs;
                 const elapsed = now - timer.lastStateChange + (timer.totalPlayTimeMs || 0);
                 timer.totalPlayTimeMs = elapsed;
-                // Set new end date
                 timer.timerEndDateMs = now + Math.max(0, durationMs - elapsed);
-            } else if (timer.status === 'pause') {
-                // If paused, update timeLeftMs to min(timeLeftMs, durationMs)
-                if (typeof timer.timeLeftMs === 'number') {
-                    timer.timeLeftMs = Math.min(timer.timeLeftMs, durationMs);
-                } else {
-                    timer.timeLeftMs = durationMs;
-                }
+                logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated durationMs for running timer');
             } else if (timer.status === 'stop') {
-                // If stopped, just update durationMs
-                timer.timeLeftMs = durationMs;
+                // For stopped, update only durationMs (not timeLeftMs)
+                timer.durationMs = durationMs;
+                if ('timeLeftMs' in timer) delete timer.timeLeftMs;
+                logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated ONLY durationMs for stopped timer (timeLeftMs removed if present)');
             }
         } else {
             // No previous timer, create a new stopped timer with duration
@@ -414,12 +441,12 @@ export class CanonicalTimerService {
                 totalPlayTimeMs: 0,
                 lastStateChange: now,
                 durationMs,
-                timeLeftMs: durationMs,
+                // Do not set timeLeftMs for new stopped timer (let canonicalizer handle default)
                 timerEndDateMs: 0
             };
+            logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Created new timer');
         }
         await this.redis.set(key, JSON.stringify(timer));
-        logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Canonical duration edited');
         return timer;
     }
 }

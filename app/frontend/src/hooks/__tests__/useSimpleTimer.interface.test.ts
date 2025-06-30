@@ -9,11 +9,15 @@ import { renderHook } from '@testing-library/react';
 // Mock the hook directly in the jest.mock call
 jest.mock('../useSimpleTimer', () => ({
     useSimpleTimer: jest.fn(() => ({
-        timeLeftMs: 0,
-        status: 'stop' as const,
-        questionUid: null,
-        durationMs: 0,
-        isActive: false,
+        getTimerState: jest.fn(() => ({
+            timeLeftMs: 0,
+            status: 'stop' as const,
+            questionUid: null,
+            durationMs: 0,
+            isActive: false
+        })),
+        timerStates: {},
+        activeQuestionUid: null,
         startTimer: jest.fn(),
         pauseTimer: jest.fn(),
         stopTimer: jest.fn(),
@@ -40,12 +44,10 @@ describe('useSimpleTimer Interface', () => {
             })
         );
 
-        // Test state properties
-        expect(result.current).toHaveProperty('timeLeftMs');
-        expect(result.current).toHaveProperty('status');
-        expect(result.current).toHaveProperty('questionUid');
-        expect(result.current).toHaveProperty('durationMs');
-        expect(result.current).toHaveProperty('isActive');
+        // Test canonical timer API
+        expect(result.current).toHaveProperty('getTimerState');
+        expect(result.current).toHaveProperty('timerStates');
+        expect(result.current).toHaveProperty('activeQuestionUid');
 
         // Test action methods
         expect(result.current).toHaveProperty('startTimer');
@@ -66,11 +68,11 @@ describe('useSimpleTimer Interface', () => {
                 role: 'teacher'
             })
         );
-
-        expect(result.current.timeLeftMs).toBe(0);
-        expect(result.current.status).toBe('stop');
-        expect(result.current.questionUid).toBe(null);
-        expect(result.current.isActive).toBe(false);
+        const timerState = result.current.getTimerState('any');
+        expect(timerState?.timeLeftMs).toBe(0);
+        expect(timerState?.status).toBe('stop');
+        expect(timerState?.questionUid).toBe(null);
+        expect(timerState?.isActive).toBe(false);
     });
 
     it('should provide action methods with correct types', () => {

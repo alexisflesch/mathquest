@@ -227,15 +227,6 @@ function timerActionHandler(io, socket) {
             return;
         }
         const validPayload = parseResult.data;
-        logger.warn('🔥 CRITICAL DEBUG: Backend timer action received', {
-            payload: validPayload,
-            'payload.questionUid': validPayload.questionUid,
-            'payload.questionUid type': typeof validPayload.questionUid,
-            'payload.questionUid length': validPayload.questionUid ? validPayload.questionUid.length : 'null/undefined',
-            'payload.action': validPayload.action,
-            'payload.accessCode': validPayload.accessCode,
-            'JSON.stringify(payload)': JSON.stringify(validPayload)
-        });
         logger.info({ payload: validPayload }, 'Received quiz_timer_action event');
         // Look up game instance by access code
         const { accessCode, action, timerEndDateMs, questionUid } = validPayload;
@@ -259,15 +250,7 @@ function timerActionHandler(io, socket) {
         }
         const gameId = gameInstance.id;
         const userId = socket.data?.userId || socket.data?.user?.userId;
-        logger.warn('🔥 CRITICAL DEBUG: Destructured backend values', {
-            gameId,
-            action,
-            timerEndDateMs,
-            questionUid,
-            'questionUid type': typeof questionUid,
-            'questionUid length': questionUid ? questionUid.length : 'null/undefined',
-            userId
-        });
+        // ...existing code...
         logger.info({ gameId, userId, action, timerEndDateMs, questionUid }, 'Timer action handler entered');
         if (!gameId) {
             logger.warn({ action }, 'No gameId provided in payload, aborting timer action');
@@ -303,7 +286,7 @@ function timerActionHandler(io, socket) {
         logger.info({ gameId, userId, action, timerEndDateMs }, 'Timer action requested');
         try {
             // Verify authorization - user must be either the game initiator or the template creator
-            const gameInstance = await prisma_1.prisma.gameInstance.findFirst({
+            const authorizedGameInstance = await prisma_1.prisma.gameInstance.findFirst({
                 where: {
                     id: gameId,
                     OR: [
@@ -315,7 +298,7 @@ function timerActionHandler(io, socket) {
                     gameTemplate: true
                 }
             });
-            if (!gameInstance) {
+            if (!authorizedGameInstance) {
                 logger.warn({ gameId, userId, action }, 'Not authorized for this game, aborting timer action');
                 const errorPayload = {
                     message: 'Not authorized to control this game',
@@ -372,10 +355,70 @@ function timerActionHandler(io, socket) {
                 // handle error or return
             }
             switch (action) {
-                case 'run':
-                    await canonicalTimerService.startTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, userId, canonicalDurationMs);
-                    canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, String(canonicalQuestionUid), playMode, isDiffered, canonicalDurationMs);
+                case 'run': {
+                    // --- MODERNIZATION: Mark quiz as active if pending ---
+                    logger.info({ accessCode, currentStatus: gameState.status }, '[TIMER_ACTION][RUN] Checking if game status is pending before starting timer');
+                    if (gameState.status === 'pending') {
+                        logger.info({ accessCode, previousStatus: 'pending' }, '[TIMER_ACTION][RUN] Game status is pending, updating to active');
+                        gameState.status = 'active';
+                        try {
+                            await gameStateService_1.default.updateGameState(accessCode, gameState);
+                            logger.info({ accessCode, newStatus: gameState.status }, '[TIMER_ACTION][RUN] Game status updated to active and persisted in Redis');
+                            // --- Update game status in the database as well ---
+                            await prisma_1.prisma.gameInstance.update({
+                                where: { id: gameId },
+                                data: { status: 'active' }
+                            });
+                            logger.info({ accessCode, gameId }, '[TIMER_ACTION][RUN] Game status updated to active in database');
+                        }
+                        catch (err) {
+                            logger.error({ accessCode, err }, '[TIMER_ACTION][RUN] Failed to persist game status change to active');
+                        }
+                    }
+                    else {
+                        logger.info({ accessCode, currentStatus: gameState.status }, '[TIMER_ACTION][RUN] Game status is not pending, no update needed');
+                    }
+                    // --- CANONICAL: Always use edited duration if present ---
+                    let effectiveDurationMs = canonicalDurationMs;
+                    let redisTimer = null;
+                    try {
+                        redisTimer = await canonicalTimerService.getRawTimerFromRedis(accessCode, String(canonicalQuestionUid), playMode, isDiffered, userId);
+                        if (redisTimer && typeof redisTimer.durationMs === 'number' && redisTimer.durationMs > 0) {
+                            effectiveDurationMs = redisTimer.durationMs;
+                            logger.warn({
+                                accessCode,
+                                questionUid: String(canonicalQuestionUid),
+                                originalDurationMs: canonicalDurationMs,
+                                editedDurationMs: redisTimer.durationMs
+                            }, '[TIMER_ACTION][RUN] Using edited canonical durationMs from Redis');
+                        }
+                        else if (redisTimer) {
+                            logger.warn({
+                                accessCode,
+                                questionUid: String(canonicalQuestionUid),
+                                canonicalDurationMs,
+                                redisTimer
+                            }, '[TIMER_ACTION][RUN] No edited durationMs in Redis, using canonicalDurationMs from DB');
+                        }
+                        else {
+                            logger.warn({
+                                accessCode,
+                                questionUid: String(canonicalQuestionUid),
+                                canonicalDurationMs
+                            }, '[TIMER_ACTION][RUN] No timer in Redis, using canonicalDurationMs from DB');
+                        }
+                    }
+                    catch (err) {
+                        logger.error({
+                            accessCode,
+                            questionUid: String(canonicalQuestionUid),
+                            err
+                        }, '[TIMER_ACTION][RUN] Error loading timer from Redis');
+                    }
+                    await canonicalTimerService.startTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, userId, effectiveDurationMs);
+                    canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, String(canonicalQuestionUid), playMode, isDiffered, effectiveDurationMs);
                     break;
+                }
                 case 'pause':
                     await canonicalTimerService.pauseTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered);
                     canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, String(canonicalQuestionUid), playMode, isDiffered, canonicalDurationMs);
@@ -403,8 +446,33 @@ function timerActionHandler(io, socket) {
                     const isCurrent = (gameState.questionUids && gameState.currentQuestionIndex >= 0 && gameState.questionUids[gameState.currentQuestionIndex] === canonicalQuestionUid);
                     const timerState = await (0, gameStateService_1.getCanonicalTimer)(accessCode, String(canonicalQuestionUid), playMode, isDiffered, editDurationMs);
                     logger.debug({ isCurrent, timerState, gameState }, '[TIMER_ACTION][EDIT] Edit context and timer state');
-                    // Update timer duration in backend (service must support this)
+                    // Pass isCurrent to CanonicalTimerService via globalThis (hacky but avoids signature change)
+                    globalThis._canonicalEditTimerOptions = { isCurrent };
                     await canonicalTimerService.editTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, editDurationMs, userId);
+                    // --- Persist canonical duration in game state in Redis ---
+                    try {
+                        // Fetch current game state from Redis
+                        const gameStateRaw = await redis_1.redisClient.get(`${GAME_KEY_PREFIX}${accessCode}`);
+                        if (gameStateRaw) {
+                            const gameState = JSON.parse(gameStateRaw);
+                            // Update questionData.timeLimit if this is the current question
+                            if (gameState.questionData && gameState.questionData.uid === canonicalQuestionUid) {
+                                gameState.questionData.timeLimit = editDurationMs / 1000;
+                            }
+                            // There is no questions array or gameTemplate in GameState, but questionUids exists.
+                            // If you want to persist for all future emissions, you must update the DB or wherever the canonical source is, but for now update questionData only.
+                            // Save updated game state back to Redis
+                            await gameStateService_1.default.updateGameState(accessCode, gameState);
+                            logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Persisted edited durationMs in game state in Redis');
+                        }
+                        else {
+                            logger.warn({ accessCode, questionUid: canonicalQuestionUid }, '[TIMER_ACTION][EDIT] Could not fetch game state from Redis to persist durationMs');
+                        }
+                    }
+                    catch (err) {
+                        logger.error({ accessCode, questionUid: canonicalQuestionUid, err }, '[TIMER_ACTION][EDIT] Failed to persist edited durationMs in game state in Redis');
+                    }
+                    delete globalThis._canonicalEditTimerOptions;
                     // Re-fetch canonical timer after edit
                     canonicalTimer = await (0, gameStateService_1.getCanonicalTimer)(accessCode, String(canonicalQuestionUid), playMode, isDiffered, editDurationMs);
                     logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Canonical timer after edit');
@@ -421,9 +489,9 @@ function timerActionHandler(io, socket) {
                             // Emission handled below (all rooms)
                         }
                         else if (status === 'pause') {
-                            // Update duration and time left, emit to all rooms
-                            logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Editing paused timer, emitting to all rooms');
-                            logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Emitting to all rooms (paused)');
+                            // Update only timeLeftMs, emit to all rooms
+                            logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Editing paused timer (current), emitting to all rooms (only timeLeftMs updated)');
+                            logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Emitting to all rooms (paused, only timeLeftMs updated)');
                             // Emission handled below (all rooms)
                         }
                         else if (status === 'stop') {
@@ -434,9 +502,9 @@ function timerActionHandler(io, socket) {
                         }
                     }
                     else {
-                        // Editing a non-current question: update duration, emit only to dashboard
-                        logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Editing non-current question, emitting only to dashboard');
-                        logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Emitting only to dashboard (non-current)');
+                        // Editing a non-current question: update only timeLeftMs, emit only to dashboard
+                        logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Editing non-current question, emitting only to dashboard (only timeLeftMs updated)');
+                        logger.debug({ canonicalTimer }, '[TIMER_ACTION][EDIT] Emitting only to dashboard (non-current, only timeLeftMs updated)');
                         // Emission handled below (dashboard only)
                     }
                     break;
@@ -447,13 +515,7 @@ function timerActionHandler(io, socket) {
             // Get the current question UID for timer updates
             // If questionUid is provided in the payload, use it; otherwise use current question
             let targetQuestionUid = questionUid;
-            logger.warn('🔥 CRITICAL DEBUG: Question UID logic', {
-                'payload questionUid': questionUid,
-                'targetQuestionUid': targetQuestionUid,
-                'gameState.currentQuestionIndex': gameState.currentQuestionIndex,
-                'gameState.questionUids': gameState.questionUids,
-                'gameState.questionUids length': gameState.questionUids ? gameState.questionUids.length : 'null'
-            });
+            // ...existing code...
             if (targetQuestionUid) {
                 // Check if this is a different question than currently active
                 const currentQuestionUid = gameState.currentQuestionIndex >= 0 &&
@@ -461,13 +523,7 @@ function timerActionHandler(io, socket) {
                     gameState.questionUids[gameState.currentQuestionIndex]
                     ? gameState.questionUids[gameState.currentQuestionIndex] || null
                     : null;
-                logger.warn('🔥 CRITICAL DEBUG: Current vs target question comparison', {
-                    currentQuestionUid,
-                    targetQuestionUid,
-                    'are they different': currentQuestionUid !== targetQuestionUid,
-                    'gameState.currentQuestionIndex': gameState.currentQuestionIndex,
-                    'questionUids at currentIndex': gameState.questionUids?.[gameState.currentQuestionIndex]
-                });
+                // ...existing code...
                 if (currentQuestionUid !== targetQuestionUid) {
                     // Switch to the new question
                     const targetQuestionIndex = gameState.questionUids?.indexOf(targetQuestionUid);

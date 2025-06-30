@@ -1,3 +1,16 @@
+## 2025-06-30 - Fix: Accept answers when timer is paused
+
+**What was done:**
+- Updated backend answer handler to accept answers when timer.status is either 'run' or 'pause'.
+- No longer checks timerEndDateMs or timeLeftMs, as timer is stopped when time is up.
+- Fully aligned with canonical timer status logic; no legacy compatibility code added.
+
+**Testing:**
+- To validate: Submit answers when timer is 'run' and 'pause' (with time left). Both should be accepted.
+- Submitting when timer is 'stop' or any other status should be rejected.
+- See plan.md for checklist and phase completion.
+
+**Checklist/plan.md updated.**
 ## 2025-06-29 - Timer Integration Test Strategy Change & Diagnostics
 **2025-06-29 - Continued:**
 - Patched test to robustly parse `[SOCKET-EMIT-DEBUG]` log lines as JSON and count `run`/`stop` timer events.

@@ -145,9 +145,46 @@ export function lockAnswersHandler(io: SocketIOServer, socket: Socket) {
             });
 
             // To projection room
-            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, {
-                answersLocked: lock
+
+            // Always include canonical current question in projection_state
+            // Fetch all questions for this game instance (ordered)
+            const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
+                where: { id: gameId },
+                include: {
+                    gameTemplate: {
+                        include: {
+                            questions: {
+                                include: { question: true },
+                                orderBy: { sequence: 'asc' }
+                            }
+                        }
+                    }
+                }
             });
+            if (gameState && gameInstanceWithQuestions?.gameTemplate?.questions) {
+                const questionsArr = gameInstanceWithQuestions.gameTemplate.questions;
+                let questionIndex = typeof gameState.currentQuestionIndex === 'number' && gameState.currentQuestionIndex >= 0 && gameState.currentQuestionIndex < questionsArr.length
+                    ? gameState.currentQuestionIndex
+                    : -1;
+                let currentQuestion = null;
+                if (questionIndex !== -1) {
+                    currentQuestion = questionsArr[questionIndex]?.question;
+                }
+                if (currentQuestion) {
+                    const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
+                    const filteredQuestion = filterQuestionForClient(currentQuestion);
+                    gameState.questionData = filteredQuestion;
+                }
+            }
+
+            // Zod validation for projection_state payload
+            const { validateProjectionStatePayload } = require('./validateProjectionStateWithZod');
+            const projectionPayload = { gameState, answersLocked: lock };
+            const validation = validateProjectionStatePayload(projectionPayload);
+            if (!validation.success) {
+                logger.error({ errors: validation.error.errors, projectionPayload }, '❌ Zod validation failed for projection_state payload');
+            }
+            io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, projectionPayload);
 
             logger.info({ gameId, lock }, 'Answers lock status updated');
         } catch (error) {

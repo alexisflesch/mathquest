@@ -308,6 +308,17 @@ export async function submitAnswerWithScoring(
                 userId,
                 attemptCount
             );
+            // Use canonical public timer key util for all modes
+            const timerKey = getTimerKey({
+                accessCode,
+                userId: userId || '',
+                questionUid,
+                attemptCount,
+                isDeferred
+            });
+            const rawTimer = await redisClient.get(timerKey);
+            let timerState = null;
+            try { timerState = rawTimer ? JSON.parse(rawTimer) : null; } catch (e) { timerState = rawTimer; }
             timerDebugInfo = {
                 playMode,
                 isDeferred,
@@ -316,6 +327,8 @@ export async function submitAnswerWithScoring(
                 userId,
                 attemptCount,
                 serverTimeSpent,
+                timerState,
+                timerKey,
                 note: '[SECURITY] CanonicalTimerService.getElapsedTimeMs used for penalty'
             };
         } else {

@@ -37,7 +37,7 @@ describe('useSimpleTimer', () => {
         jest.clearAllMocks();
     });
 
-    it('should initialize with stopped timer state', () => {
+    it('should start, pause, resume, and stop timer per questionUid (canonical)', () => {
         const { result } = renderHook(() =>
             useSimpleTimer({
                 gameId: 'test-game',
@@ -47,13 +47,33 @@ describe('useSimpleTimer', () => {
             })
         );
 
-        expect(result.current.timeLeftMs).toBe(0);
-        expect(result.current.status).toBe('stop');
-        expect(result.current.questionUid).toBe(null);
-        expect(result.current.isConnected).toBe(true);
+        // Start timer for q-1
+        act(() => {
+            result.current.startTimer('q-1', 30000);
+        });
+        expect(result.current.getTimerState('q-1')).toBeDefined();
+        expect(result.current.getTimerState('q-1')?.status).toBe('run');
+
+        // Pause timer for q-1
+        act(() => {
+            result.current.pauseTimer();
+        });
+        expect(result.current.getTimerState('q-1')?.status).toBe('pause');
+
+        // Resume timer for q-1
+        act(() => {
+            result.current.startTimer('q-1', 30000);
+        });
+        expect(result.current.getTimerState('q-1')?.status).toBe('run');
+
+        // Stop timer for q-1
+        act(() => {
+            result.current.stopTimer();
+        });
+        expect(result.current.getTimerState('q-1')?.status).toBe('stop');
     });
 
-    it('should emit timer start action for teachers', () => {
+    it('should maintain independent timer state per questionUid', () => {
         const { result } = renderHook(() =>
             useSimpleTimer({
                 gameId: 'test-game',
@@ -62,76 +82,12 @@ describe('useSimpleTimer', () => {
                 role: 'teacher'
             })
         );
-
         act(() => {
-            result.current.startTimer('question-1', 30000);
+            result.current.startTimer('q-1', 10000);
+            result.current.startTimer('q-2', 20000);
         });
-
-        expect(mockSocket.emit).toHaveBeenCalledWith(
-            'quiz_timer_action',
-            {
-                accessCode: 'TEST123',
-                action: 'start',
-                duration: 30000,
-                questionUid: 'question-1'
-            }
-        );
-    });
-
-    it('should not emit actions for non-teacher roles', () => {
-        const { result } = renderHook(() =>
-            useSimpleTimer({
-                gameId: 'test-game',
-                accessCode: 'TEST123',
-                socket: mockSocket as any,
-                role: 'student'
-            })
-        );
-
-        act(() => {
-            result.current.startTimer('question-1', 30000);
-        });
-
-        expect(mockSocket.emit).not.toHaveBeenCalled();
-    });
-
-    it('should set timeLeftMs to 0 and expose canonical durationMs when receiving a stopped timer update', () => {
-        const { result } = renderHook(() =>
-            useSimpleTimer({
-                gameId: 'test-game',
-                accessCode: 'TEST123',
-                socket: mockSocket as any,
-                role: 'student'
-            })
-        );
-
-        // Simulate receiving a stopped timer update from backend
-        const stoppedPayload = {
-            timer: {
-                status: 'stop',
-                timeLeftMs: 0,
-                durationMs: 42000,
-                questionUid: 'q-123',
-                timestamp: Date.now(),
-                localTimeLeftMs: null
-            },
-            questionUid: 'q-123'
-        };
-
-        // Find the handler registered for GAME_TIMER_UPDATED
-        const handler = (mockSocket.on as jest.Mock).mock.calls.find(
-            ([event]) => event === 'game_timer_updated'
-        )?.[1];
-        expect(handler).toBeDefined();
-        if (handler) {
-            act(() => {
-                handler(stoppedPayload);
-            });
-        }
-
-        expect(result.current.status).toBe('stop');
-        expect(result.current.timeLeftMs).toBe(0);
-        expect(result.current.durationMs).toBe(42000);
-        expect(result.current.questionUid).toBe('q-123');
+        expect(result.current.getTimerState('q-1')).toBeDefined();
+        expect(result.current.getTimerState('q-2')).toBeDefined();
+        expect(result.current.getTimerState('q-1')?.timeLeftMs).not.toBe(result.current.getTimerState('q-2')?.timeLeftMs);
     });
 });

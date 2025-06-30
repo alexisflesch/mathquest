@@ -19,29 +19,6 @@ interface SimpleTimerTestProps {
 }
 
 export function SimpleTimerTest({ gameId, accessCode, role }: SimpleTimerTestProps) {
-    // Get socket connection
-    const { socket } = useGameSocket(
-        role as any,  // Cast to TimerRole
-        gameId,
-        { autoConnect: true }
-    );
-
-    // Use our new simple timer hook
-    const timer = useSimpleTimer({
-        gameId,
-        accessCode,
-        socket,
-        role
-    });
-
-    // Format time for display
-    const formatTime = (ms: number) => {
-        const seconds = Math.ceil(ms / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-    };
-
     // Sample questions for testing
     const sampleQuestions = [
         { uid: 'test-question-1', title: 'Question 1', duration: 30000 },
@@ -49,33 +26,60 @@ export function SimpleTimerTest({ gameId, accessCode, role }: SimpleTimerTestPro
         { uid: 'test-question-3', title: 'Question 3', duration: 60000 }
     ];
 
+    // Get socket connection
+    const { socket } = useGameSocket(
+        role as any,  // Cast to TimerRole
+        gameId,
+        { autoConnect: true }
+    );
+
+    // Use canonical per-question timer state
+    const timer = useSimpleTimer({
+        gameId,
+        accessCode,
+        socket,
+        role
+    });
+
+    // For demo: select the first sample question
+    const currentQuestionUid = sampleQuestions[0].uid;
+    const timerState = timer.getTimerState(currentQuestionUid);
+
+    // Format time for display
+    const formatTime = (ms: number | undefined) => {
+        if (typeof ms !== 'number') return '--:--';
+        const seconds = Math.ceil(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
     return (
         <div className="p-6 border rounded-lg bg-white shadow-lg max-w-md">
             <h3 className="text-lg font-bold mb-4">Simple Timer Test ({role})</h3>
 
             {/* Connection Status */}
             <div className="mb-4">
-                <span className={`px-2 py-1 rounded text-sm ${timer.isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                <span className={`px-2 py-1 rounded text-sm ${timer.isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     {timer.isConnected ? 'Connected' : 'Disconnected'}
                 </span>
             </div>
 
-            {/* Timer Display */}
+            {/* Timer Display (canonical per-question) */}
             <div className="mb-6 p-4 bg-gray-50 rounded">
                 <div className="text-2xl font-mono font-bold">
-                    {formatTime(timer.timeLeftMs)}
+                    {formatTime(timerState?.timeLeftMs)}
                 </div>
                 <div className="text-sm text-gray-600">
-                    Status: <span className="font-semibold">{timer.status}</span>
+                    Status: <span className="font-semibold">{timerState?.status ?? '--'}</span>
                 </div>
-                {timer.questionUid && (
+                {timerState?.questionUid && (
                     <div className="text-sm text-gray-600">
-                        Question: <span className="font-semibold">{timer.questionUid}</span>
+                        Question: <span className="font-semibold">{timerState.questionUid}</span>
                     </div>
                 )}
                 <div className="text-sm text-gray-600">
-                    Active: <span className="font-semibold">{timer.isActive ? 'Yes' : 'No'}</span>
+                    Active: <span className="font-semibold">{timerState?.isActive ? 'Yes' : 'No'}</span>
                 </div>
             </div>
 
@@ -99,13 +103,13 @@ export function SimpleTimerTest({ gameId, accessCode, role }: SimpleTimerTestPro
                         </div>
                     </div>
 
-                    {/* Timer Controls */}
+                    {/* Timer Controls (canonical per-question) */}
                     <div>
                         <h4 className="font-semibold mb-2">Timer Controls:</h4>
                         <div className="flex gap-2">
                             <button
                                 onClick={timer.pauseTimer}
-                                disabled={!timer.isConnected || timer.status !== 'run'}
+                                disabled={!timer.isConnected || timerState?.status !== 'run'}
                                 className="px-3 py-1 bg-yellow-500 text-white rounded disabled:opacity-50"
                             >
                                 Pause
@@ -113,18 +117,18 @@ export function SimpleTimerTest({ gameId, accessCode, role }: SimpleTimerTestPro
                             <button
                                 onClick={() => {
                                     // Canonical resume: re-run timer with current question and time left
-                                    if (timer.status === 'pause' && timer.questionUid) {
-                                        timer.startTimer(timer.questionUid, timer.timeLeftMs);
+                                    if (timerState?.status === 'pause' && timerState?.questionUid) {
+                                        timer.startTimer(timerState.questionUid, timerState.timeLeftMs ?? 0);
                                     }
                                 }}
-                                disabled={!timer.isConnected || timer.status !== 'pause'}
+                                disabled={!timer.isConnected || timerState?.status !== 'pause'}
                                 className="px-3 py-1 bg-green-500 text-white rounded disabled:opacity-50"
                             >
                                 Resume
                             </button>
                             <button
                                 onClick={timer.stopTimer}
-                                disabled={!timer.isConnected || timer.status === 'stop'}
+                                disabled={!timer.isConnected || timerState?.status === 'stop'}
                                 className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-50"
                             >
                                 Stop

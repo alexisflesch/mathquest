@@ -119,13 +119,13 @@ function gameAnswerHandler(io, socket, context) {
                 timerEndDateMs: timer.timerEndDateMs,
                 timerFull: timer
             }, '[TIMER] Timer state at answer submission');
-            if (timer.status !== 'run' || typeof timer.timerEndDateMs !== 'number' || timer.timerEndDateMs <= Date.now()) {
+            // Accept answers if timer.status is 'run' or 'pause'. Reject otherwise.
+            if (timer.status !== 'run' && timer.status !== 'pause') {
                 logger.info({
                     accessCode,
                     userId,
                     questionUid,
                     timerStatus: timer.status,
-                    timerEndDateMs: timer.timerEndDateMs,
                     message: 'Timer not running or time is up. Rejecting answer.'
                 }, '[TIMER] Timer not running or expired, rejecting answer.');
                 socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_ERROR, {

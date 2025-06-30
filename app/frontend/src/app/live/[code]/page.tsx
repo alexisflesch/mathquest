@@ -119,12 +119,15 @@ export default function LiveGamePage() {
         }
     });
 
-    // Modern timer hook integration
+    // Modern timer hook integration (canonical per-question)
     const timer = useSimpleTimer({
         accessCode: typeof code === 'string' ? code : '',
         socket,
         role: 'student'
     });
+    // Canonical: get timer state for the current question
+    const currentQuestionUid = gameState.currentQuestion?.uid;
+    const timerState = currentQuestionUid ? timer.getTimerState(currentQuestionUid) : undefined;
 
     // Local UI state
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -251,7 +254,6 @@ export default function LiveGamePage() {
     }, [socketError]); // Only depend on socketError, not the snackbar state
 
     // Reset selected answers when question changes
-    const currentQuestionUid = gameState.currentQuestion?.uid;
     const previousQuestionUid = useRef(currentQuestionUid);
     useEffect(() => {
         // Only reset when we actually move to a different question
@@ -343,18 +345,12 @@ export default function LiveGamePage() {
     useEffect(() => {
         if (process.env.NODE_ENV === 'development') {
             logger.debug('Timer debug:', {
-                newSimpleTimer: {
-                    timeLeftMs: timer.timeLeftMs,
-                    status: timer.status,
-                    isActive: timer.isActive,
-                    durationMs: timer.durationMs,
-                    questionUid: timer.questionUid
-                },
+                canonicalTimer: timerState,
                 gameMode,
                 isTimerShown: gameMode !== 'practice'
             });
         }
-    }, [timer, gameMode]);
+    }, [timerState, gameMode]);
 
     // Convert enhanced socket hook state to legacy QuestionCard format
     const currentQuestion: TournamentQuestion | null = useMemo(() => {
@@ -371,7 +367,7 @@ export default function LiveGamePage() {
         return {
             code: typeof code === 'string' ? code : '',
             question: convertedQuestion,
-            remainingTime: timer.timeLeftMs ? Math.ceil(timer.timeLeftMs / 1000) : undefined,
+            remainingTime: timerState?.timeLeftMs ? Math.ceil(timerState.timeLeftMs / 1000) : undefined,
             questionIndex: gameState.questionIndex,
             totalQuestions: gameState.totalQuestions,
             questionState: gameState.gameStatus === 'paused' ? 'paused' :
@@ -425,7 +421,7 @@ export default function LiveGamePage() {
             <div className={`card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6 relative${showFeedbackOverlay ? " blur-sm" : ""}`}>
                 {/* Show timer only for tournament/quiz modes */}
                 {gameMode !== 'practice' && (
-                    <TournamentTimer timerS={timer.timeLeftMs ? Math.ceil(timer.timeLeftMs / 1000) : null} isMobile={isMobile} />
+                    <TournamentTimer timerS={timerState?.timeLeftMs ? Math.ceil(timerState.timeLeftMs / 1000) : null} isMobile={isMobile} />
                 )}
 
                 <MathJaxWrapper>

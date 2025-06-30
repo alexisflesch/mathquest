@@ -118,9 +118,10 @@ export function projectionHandler(io: Server, socket: Socket) {
                 return;
             }
 
+
             let enhancedGameState = fullState.gameState;
 
-            // --- CANONICAL: Emit current question as LiveQuestionPayload to projection socket ---
+            // --- MODERNIZATION: Always include canonical current question in gameState.questionData and timer ---
             // Fetch all questions for this game instance (ordered)
             const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
                 where: { id: gameId },
@@ -136,133 +137,125 @@ export function projectionHandler(io: Server, socket: Socket) {
                 }
             });
 
-            if (fullState.gameState && gameInstanceWithQuestions?.gameTemplate?.questions) {
+            if (enhancedGameState && gameInstanceWithQuestions?.gameTemplate?.questions) {
                 const questionsArr = gameInstanceWithQuestions.gameTemplate.questions;
-                // --- MODERNIZATION: Always use currentQuestionIndex as canonical source of truth ---
-                let questionIndex = typeof fullState.gameState.currentQuestionIndex === 'number' && fullState.gameState.currentQuestionIndex >= 0 && fullState.gameState.currentQuestionIndex < questionsArr.length
-                    ? fullState.gameState.currentQuestionIndex
+                let questionIndex = typeof enhancedGameState.currentQuestionIndex === 'number' && enhancedGameState.currentQuestionIndex >= 0 && enhancedGameState.currentQuestionIndex < questionsArr.length
+                    ? enhancedGameState.currentQuestionIndex
                     : -1;
                 let currentQuestion = null;
-                let questionUid: string | null = null;
+                let currentQuestionUid = null;
                 if (questionIndex !== -1) {
                     currentQuestion = questionsArr[questionIndex]?.question;
-                    questionUid = currentQuestion?.uid;
+                    currentQuestionUid = currentQuestion?.uid;
                 }
-
-                if (currentQuestion && questionUid) {
+                if (currentQuestion) {
                     const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
                     const filteredQuestion = filterQuestionForClient(currentQuestion);
-                    const totalQuestions = questionsArr.length;
-                    // MODERNIZATION: Use canonical timer system for projection
-                    // Always use canonical timerEndDateMs from the timer object (no fallback allowed)
-                    const canonicalTimer = await gameStateService.getCanonicalTimer(
+                    enhancedGameState.questionData = filteredQuestion;
+                }
+                // --- MODERNIZATION: Always include canonical timer state for current question ---
+                if (currentQuestionUid) {
+                    const { getCanonicalTimer } = await import('@/core/services/gameStateService');
+                    // Use canonical timer system for projection
+                    const canonicalTimer = await getCanonicalTimer(
                         gameInstance.accessCode,
-                        questionUid,
-                        fullState.gameState.gameMode,
-                        fullState.gameState.status === 'completed',
-                        typeof currentQuestion.timeLimit === 'number' ? currentQuestion.timeLimit * 1000 : 0,
-                        undefined
+                        currentQuestionUid,
+                        enhancedGameState.gameMode,
+                        enhancedGameState.status === 'completed',
+                        (currentQuestion?.timeLimit || 30) * 1000 // durationMs
                     );
-                    const liveQuestionPayload = {
-                        question: filteredQuestion,
-                        timer: canonicalTimer, // Only canonical timer
-                        questionIndex,
-                        totalQuestions,
-                        questionState: 'active'
-                    };
-                    socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION, liveQuestionPayload);
-                    logger.info({ gameId, questionUid: filteredQuestion.uid, questionIndex, totalQuestions }, '[PROJECTION] Emitted canonical LiveQuestionPayload to projection socket on join');
-
-                    // If there's an active timer (running or paused), emit a timer update to trigger proper state in useSimpleTimer
-                    if (canonicalTimer && (canonicalTimer.status === 'run' || canonicalTimer.status === 'pause') && typeof canonicalTimer.timerEndDateMs === 'number' && canonicalTimer.timerEndDateMs > Date.now()) {
-                        logger.info({
-                            gameId,
-                            timer: canonicalTimer,
-                            status: canonicalTimer.status
-                        }, 'Emitting timer update for active timer in projection');
-
-                        // Canonical timer update payload must include all required fields
-                        const timerUpdatePayload = {
-                            timer: canonicalTimer,
-                            questionUid: canonicalTimer.questionUid,
-                            questionIndex,
-                            totalQuestions,
-                            answersLocked: enhancedGameState?.answersLocked ?? false
-                        };
-                        socket.emit('dashboard_timer_updated', timerUpdatePayload);
+                    if (canonicalTimer) {
+                        enhancedGameState.timer = canonicalTimer;
                     }
                 }
+            }
 
-                // Fetch the leaderboard snapshot (join-bonus-only) for projection
-                const snapshot = await getLeaderboardSnapshot(gameInstance.accessCode);
+            // Fetch the leaderboard snapshot (join-bonus-only) for projection
+            const snapshot = await getLeaderboardSnapshot(gameInstance.accessCode);
 
-                const payload = {
-                    accessCode: gameInstance.accessCode,
-                    gameState: enhancedGameState,
-                    participants: fullState.participants,
-                    answers: fullState.answers,
-                    leaderboard: snapshot // Use snapshot, not full leaderboard
-                };
 
-                // DEBUG: Log the leaderboard being sent to projection
-                logger.info({
-                    gameId,
-                    accessCode: gameInstance.accessCode,
-                    leaderboardCount: snapshot?.length || 0,
-                    leaderboard: snapshot?.map((entry: any) => ({
-                        userId: entry.userId,
-                        username: entry.username,
-                        avatarEmoji: entry.avatarEmoji,
-                        score: entry.score
-                    })) || []
-                }, '🔍 [DEBUG-PROJECTION] Sending initial leaderboard to projection');
+            // --- MODERNIZATION: Validate outgoing projection_state payload with Zod ---
+            const projectionPayload = {
+                accessCode: gameInstance.accessCode,
+                gameState: enhancedGameState,
+                participants: fullState.participants,
+                answers: fullState.answers,
+                leaderboard: snapshot // Use snapshot, not full leaderboard
+            };
 
-                // Detailed logging of the payload being sent
-                logger.info({
-                    gameId,
-                    accessCode: gameInstance.accessCode,
-                    payloadKeys: Object.keys(payload),
-                    gameStateKeys: enhancedGameState ? Object.keys(enhancedGameState) : null,
-                    questionData: enhancedGameState?.questionData ? 'present' : 'missing',
-                    questionDataUid: enhancedGameState?.questionData?.uid,
-                    participantsCount: fullState?.participants?.length || 0,
-                    answersKeys: fullState?.answers ? Object.keys(fullState.answers) : null,
-                    leaderboardCount: fullState?.leaderboard?.length || 0
-                }, 'Initial projection state payload details');
+            // DEBUG: Log the leaderboard being sent to projection
+            logger.info({
+                gameId,
+                accessCode: gameInstance.accessCode,
+                leaderboardCount: snapshot?.length || 0,
+                leaderboard: snapshot?.map((entry: any) => ({
+                    userId: entry.userId,
+                    username: entry.username,
+                    avatarEmoji: entry.avatarEmoji,
+                    score: entry.score
+                })) || []
+            }, '🔍 [DEBUG-PROJECTION] Sending initial leaderboard to projection');
 
-                socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, payload);
-                logger.info({ gameId, accessCode: gameInstance.accessCode }, 'Initial projection state sent');
+            // Detailed logging of the payload being sent
+            logger.info({
+                gameId,
+                accessCode: gameInstance.accessCode,
+                payloadKeys: Object.keys(projectionPayload),
+                gameStateKeys: enhancedGameState ? Object.keys(enhancedGameState) : null,
+                questionData: enhancedGameState?.questionData ? 'present' : 'missing',
+                questionDataUid: enhancedGameState?.questionData?.uid,
+                participantsCount: fullState?.participants?.length || 0,
+                answersKeys: fullState?.answers ? Object.keys(fullState.answers) : null,
+                leaderboardCount: fullState?.leaderboard?.length || 0
+            }, 'Initial projection state payload details');
 
-                // Send current projection display state if it exists
-                const displayState = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);
-                if (displayState) {
-                    logger.info({
+            // Zod validation for outgoing projection_state payload
+            try {
+                const { validateProjectionStatePayload } = await import('./validateProjectionStateWithZod');
+                const validationResult = validateProjectionStatePayload(projectionPayload);
+                if (!validationResult.success) {
+                    logger.error({
                         gameId,
-                        accessCode: gameInstance.accessCode,
-                        displayState
-                    }, 'Sending initial projection display state');
-
-                    // If stats are currently shown, send the show stats event
-                    if (displayState.showStats && displayState.statsQuestionUid) {
-                        socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, {
-                            questionUid: displayState.statsQuestionUid,
-                            show: true,
-                            stats: displayState.currentStats,
-                            timestamp: Date.now()
-                        });
-                        logger.info({ gameId, questionUid: displayState.statsQuestionUid }, 'Sent initial stats state (visible)');
-                    }
-
-                    // If correct answers are currently shown
-                    if (displayState.showCorrectAnswers && displayState.correctAnswersData) {
-                        socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS, {
-                            ...displayState.correctAnswersData,
-                            timestamp: Date.now()
-                        });
-                        logger.info({ gameId }, 'Sent initial correct answers state');
-                    }
+                        errors: validationResult.error?.errors,
+                        projectionPayload
+                    }, '[ZOD] Outgoing PROJECTION_STATE payload failed validation');
                 }
-            } // <-- Add this closing brace to close the main handler logic
+            } catch (zodErr) {
+                logger.error({ gameId, zodErr }, '[ZOD] Error running projection_state Zod validation');
+            }
+
+            socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, projectionPayload);
+            logger.info({ gameId, accessCode: gameInstance.accessCode }, 'Initial projection state sent');
+
+            // Send current projection display state if it exists
+            const displayState = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);
+            if (displayState) {
+                logger.info({
+                    gameId,
+                    accessCode: gameInstance.accessCode,
+                    displayState
+                }, 'Sending initial projection display state');
+
+                // If stats are currently shown, send the show stats event
+                if (displayState.showStats && displayState.statsQuestionUid) {
+                    socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, {
+                        questionUid: displayState.statsQuestionUid,
+                        show: true,
+                        stats: displayState.currentStats,
+                        timestamp: Date.now()
+                    });
+                    logger.info({ gameId, questionUid: displayState.statsQuestionUid }, 'Sent initial stats state (visible)');
+                }
+
+                // If correct answers are currently shown
+                if (displayState.showCorrectAnswers && displayState.correctAnswersData) {
+                    socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_CORRECT_ANSWERS, {
+                        ...displayState.correctAnswersData,
+                        timestamp: Date.now()
+                    });
+                    logger.info({ gameId }, 'Sent initial correct answers state');
+                }
+            } // <-- This closes the try block for the JOIN_PROJECTION handler
         } catch (error) {
             logger.error({ error, payload }, 'Error joining projection room');
             const errorPayload: ErrorPayload = {

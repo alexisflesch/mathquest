@@ -16,6 +16,7 @@ exports.submitAnswerWithScoring = submitAnswerWithScoring;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const redis_1 = require("@/config/redis");
+const timerKeyUtil_1 = require("./timerKeyUtil");
 const canonicalTimerService_1 = require("./canonicalTimerService");
 const logger = (0, logger_1.default)('ScoringService');
 /**
@@ -268,6 +269,22 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
         const questionUid = answerData.questionUid;
         if (playMode !== 'practice') {
             serverTimeSpent = await canonicalTimerService.getElapsedTimeMs(accessCode, questionUid, playMode, isDeferred, userId, attemptCount);
+            // Use canonical public timer key util for all modes
+            const timerKey = (0, timerKeyUtil_1.getTimerKey)({
+                accessCode,
+                userId: userId || '',
+                questionUid,
+                attemptCount,
+                isDeferred
+            });
+            const rawTimer = await redis_1.redisClient.get(timerKey);
+            let timerState = null;
+            try {
+                timerState = rawTimer ? JSON.parse(rawTimer) : null;
+            }
+            catch (e) {
+                timerState = rawTimer;
+            }
             timerDebugInfo = {
                 playMode,
                 isDeferred,
@@ -276,6 +293,8 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
                 userId,
                 attemptCount,
                 serverTimeSpent,
+                timerState,
+                timerKey,
                 note: '[SECURITY] CanonicalTimerService.getElapsedTimeMs used for penalty'
             };
         }

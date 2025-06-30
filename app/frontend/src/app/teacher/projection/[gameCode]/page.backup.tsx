@@ -455,7 +455,7 @@ export default function ProjectionPage() {
                             <div className="flex items-center gap-2 w-full h-full justify-center">
                                 <Timer className="w-8 h-8 block flex-shrink-0" style={{ color: 'var(--light-foreground)' }} />
                                 <span className="font-bold text-3xl" style={{ color: 'var(--light-foreground)', lineHeight: '1' }}>
-                                    {formatTimerMs(timeLeftMs)}
+                                    {formatTimerMs(timeLeftMs ?? null)}
                                 </span>
                             </div>
                         )}
