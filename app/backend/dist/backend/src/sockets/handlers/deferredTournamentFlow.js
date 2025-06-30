@@ -178,14 +178,39 @@ async function runDeferredQuestionSequence(io, socket, session) {
             const question = questions[i];
             // Use fixed attemptCount for all questions in this session
             logger.info({ accessCode, userId, attemptCount, questionUid: question.uid, logPoint: 'DEFERRED_QUESTION_LOOP_ENTRY' }, '[DEBUG] Entered deferred tournament question loop');
-            const timeLimitSec = question.timeLimit || 30;
+            // Log question object and time limit calculation
+            logger.info({
+                accessCode,
+                userId,
+                attemptCount,
+                questionUid: question.uid,
+                questionFull: question,
+                timeLimitRaw: question.timeLimit,
+                logPoint: 'DEFERRED_TIMER_START_ATTEMPT',
+            }, '[DEBUG] About to start timer for deferred tournament question');
+            const timeLimitSec = typeof question.timeLimit === 'number' && question.timeLimit > 0 ? question.timeLimit : 30;
             const durationMs = timeLimitSec * 1000;
+            logger.info({
+                accessCode,
+                userId,
+                attemptCount,
+                questionUid: question.uid,
+                timeLimitSec,
+                durationMs,
+                logPoint: 'DEFERRED_TIMER_DURATION_CALC',
+            }, '[DEBUG] Timer duration calculated for deferred tournament question');
             // --- UNIFIED TIMER LOGIC ---
             // Always use CanonicalTimerService with correct key (userId and attemptCount for deferred)
-            // FIX: Use attemptCount + 1 to match answer submission
-            const timerAttemptCount = attemptCount + 1;
-            await canonicalTimerService.resetTimer(accessCode, question.uid, playMode, isDiffered, userId, timerAttemptCount);
-            await canonicalTimerService.startTimer(accessCode, question.uid, playMode, isDiffered, userId, timerAttemptCount);
+            // Use the fixed attemptCount for the entire session (do NOT increment)
+            await canonicalTimerService.resetTimer(accessCode, question.uid, playMode, isDiffered, userId, attemptCount);
+            await canonicalTimerService.startTimer(accessCode, question.uid, playMode, isDiffered, userId, attemptCount);
+            logger.info({
+                accessCode,
+                userId,
+                attemptCount,
+                questionUid: question.uid,
+                logPoint: 'DEFERRED_TIMER_STARTED',
+            }, '[DEBUG] Timer started for deferred tournament question');
             // --- END UNIFIED TIMER LOGIC ---
             // Retrieve timer state from canonical service (optional, for emitting to client)
             // const timer = await canonicalTimerService.getTimer(accessCode, question.uid, playMode, isDiffered, userId);

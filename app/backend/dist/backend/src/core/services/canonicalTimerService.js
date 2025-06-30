@@ -87,9 +87,19 @@ class CanonicalTimerService {
             return null; // No timer in practice mode
         const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const now = Date.now();
+        // Fetch the canonical duration from the question in the DB (timeLimit in seconds * 1000)
         let durationMs = 0;
-        if (typeof attemptCount === 'number' && attemptCount > 0) {
-            durationMs = attemptCount;
+        try {
+            const question = await prisma_1.prisma.question.findUnique({ where: { uid: questionUid } });
+            if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
+                durationMs = question.timeLimit * 1000;
+            }
+            else {
+                durationMs = 30000; // fallback to 30s
+            }
+        }
+        catch (err) {
+            durationMs = 30000;
         }
         // Check if a paused timer exists and resume from it
         const raw = await this.redis.get(key);

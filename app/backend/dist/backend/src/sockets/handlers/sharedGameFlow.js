@@ -40,6 +40,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runGameFlow = runGameFlow;
+const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const redis_1 = require("@/config/redis");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const gameStateService_1 = __importDefault(require("@/core/services/gameStateService"));
@@ -158,6 +159,12 @@ async function runGameFlow(io, accessCode, questions, options) {
                     questionUid: questions[i].uid,
                     error
                 }, 'Failed to track question start times for users');
+            }
+            // --- Ensure canonical timer is started for quiz and tournament (for late joiners) ---
+            if (options.playMode === 'quiz' || options.playMode === 'tournament') {
+                const canonicalTimerService = new canonicalTimerService_1.CanonicalTimerService(redis_1.redisClient);
+                await canonicalTimerService.resetTimer(accessCode, questions[i].uid, options.playMode, false);
+                await canonicalTimerService.startTimer(accessCode, questions[i].uid, options.playMode, false);
             }
             // Emit timer update to start frontend countdown
             const canonicalTimer = toCanonicalTimer({ ...timer, questionUid: typeof questions[i].uid === 'string' && questions[i].uid.length > 0 ? questions[i].uid : '' });

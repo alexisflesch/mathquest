@@ -33,6 +33,7 @@
     - [x] Exit Criteria: Projection page displays the question and timer as soon as state arrives, with no hacks or duplication.
 
 
+
 [x] Phase: Fix projection page question/timer display after backend modernization
     - [x] Analyze why projection/[code] page does not show question/timer
     - [x] Compare state handling with live/[code] (student) page
@@ -40,6 +41,28 @@
     - [x] Update useProjectionQuizSocket to expose currentQuestion from canonical gameState
     - [x] Test projection/[code] page to confirm question and timer now display
     - [x] Mark phase complete after validation
+
+
+[ ] Phase: Logger Log Level Control for Debugging
+    - [x] Analyze: Review backend logger implementation and log level configuration
+    - [x] Update: Add custom 'focus' log level for targeted debugging
+    - [x] Document: Add instructions for setting log level in plan.md and example.env
+    - [ ] Test: Set LOG_LEVEL=focus and verify only focus logs appear
+    - [ ] Test: Set LOG_LEVEL=debug and verify debug+ logs appear
+    - [ ] Test: Set LOG_LEVEL=info and verify info+ logs appear
+    - [ ] Exit Criteria: Logger log level can be controlled for debugging without code changes
+
+## Steps
+- The backend logger now supports a custom 'focus' log level for targeted debugging (see backend/src/utils/logger.ts)
+- To debug, set LOG_LEVEL=focus in your .env or environment and use logger.focus() for important events
+- To reduce noise, set LOG_LEVEL=info or LOG_LEVEL=error
+- Documented in plan.md and example.env
+
+## Testing
+- Change LOG_LEVEL in .env or environment
+- Use logger.focus() in backend code for events you want to see
+- Restart backend
+- Observe logs: only messages at or above the set level should appear
 
 [x] Phase: Projection State Modernization (COMPLETE)
     - [x] Backend always emits canonical current question and timer in `projection_state`.

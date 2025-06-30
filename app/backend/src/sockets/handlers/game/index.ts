@@ -108,6 +108,8 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
                 socket.data.deferredAttemptCount = attemptCount;
             }
             sessionKey = `deferred_session:${accessCode}:${userId}:${attemptCount}`;
+            // Log the attemptCount and sessionKey for deferred answer submission
+            console.log('[DEBUG][DEFERRED_ANSWER_ATTEMPT]', { accessCode, userId, attemptCount, sessionKey, questionUid });
         } else {
             sessionKey = accessCode;
         }
@@ -147,7 +149,8 @@ export function registerGameHandlers(io: SocketIOServer, socket: Socket) {
             playMode: gameInstance.playMode,
             isDeferred,
             userId,
-            attemptCount
+            attemptCount,
+            logPoint: 'DEFERRED_ANSWER_TIMER_FETCH'
         });
         // Fetch timer (canonical: always resolve here, never in handler)
         let timer = null;

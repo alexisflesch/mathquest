@@ -3,6 +3,7 @@
 // This module should be imported by both quiz and tournament handlers
 
 import { Server as SocketIOServer, Socket } from 'socket.io';
+import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { redisClient } from '@/config/redis';
 import createLogger from '@/utils/logger';
 import gameStateService from '@/core/services/gameStateService';
@@ -149,6 +150,13 @@ export async function runGameFlow(
                     questionUid: questions[i].uid,
                     error
                 }, 'Failed to track question start times for users');
+            }
+
+            // --- Ensure canonical timer is started for quiz and tournament (for late joiners) ---
+            if (options.playMode === 'quiz' || options.playMode === 'tournament') {
+                const canonicalTimerService = new CanonicalTimerService(redisClient);
+                await canonicalTimerService.resetTimer(accessCode, questions[i].uid, options.playMode, false);
+                await canonicalTimerService.startTimer(accessCode, questions[i].uid, options.playMode, false);
             }
 
             // Emit timer update to start frontend countdown
