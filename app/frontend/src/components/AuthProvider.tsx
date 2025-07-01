@@ -388,6 +388,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Clear any guest data
                 localStorage.removeItem('mathquest_cookie_id');
 
+                // Store JWT for socket authentication (best practice: sessionStorage for short-lived, localStorage for persistent)
+                sessionStorage.setItem('mathquest_jwt_token', result.token);
+
                 // Update to teacher state
                 setUserState('teacher');
                 setUserProfile({
