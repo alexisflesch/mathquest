@@ -17,23 +17,23 @@ const JWT_SECRET = process.env.JWT_SECRET || 'mathquest_default_secret';
  */
 export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void) => {
     try {
-        logger.warn({
+        console.log('SOCKET AUTH: handshake received', {
             socketId: socket.id,
             auth: socket.handshake.auth,
             query: socket.handshake.query,
             headers: socket.handshake.headers
-        }, 'SOCKET AUTH: handshake received');
+        });
 
         // Accept userId and role from both auth and query for compatibility
         const userId = socket.handshake.auth.userId || socket.handshake.query.userId;
         const userType = socket.handshake.auth.userType || socket.handshake.query.userType;
         const token = socket.handshake.auth.token || socket.handshake.query.token;
-        logger.warn({
+        console.log('SOCKET AUTH: extracted handshake fields', {
             socketId: socket.id,
             userId,
             userType,
             tokenPrefix: token ? token.substring(0, 20) + '...' : null
-        }, 'SOCKET AUTH: extracted handshake fields');
+        });
 
         // Also check for JWT token in cookies (for web browser connections)
         let cookieToken = null;
@@ -43,12 +43,12 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
             const authTokenMatch = cookies.match(/authToken=([^;]+)/);
             cookieToken = teacherTokenMatch?.[1] || authTokenMatch?.[1] || null;
         }
-        logger.warn({
+        console.log('SOCKET AUTH: extracted cookie token', {
             socketId: socket.id,
             cookieTokenPrefix: cookieToken ? cookieToken.substring(0, 20) + '...' : null
-        }, 'SOCKET AUTH: extracted cookie token');
+        });
 
-        logger.warn({
+        console.log('SOCKET AUTH: authentication attempt', {
             socketId: socket.id,
             auth: socket.handshake.auth,
             query: socket.handshake.query,
@@ -58,7 +58,7 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
             tokenPrefix: (token || cookieToken)?.substring(0, 20) + '...' || null,
             hasCookieToken: !!cookieToken,
             cookieTokenPrefix: cookieToken?.substring(0, 20) + '...' || null
-        }, 'SOCKET AUTH: authentication attempt');
+        });
 
         // Store connection info for debugging
         const connectionInfo = {
@@ -76,18 +76,18 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
         if (token || cookieToken) {
             const actualToken = token || cookieToken;
             try {
-                logger.warn({
+                console.log('SOCKET AUTH: Attempting JWT verification', {
                     tokenLength: actualToken!.length,
                     tokenSource: token ? 'auth/query' : 'cookie',
                     socketId: socket.id
-                }, 'SOCKET AUTH: Attempting JWT verification');
+                });
                 const decoded = jwt.verify(actualToken!, JWT_SECRET) as JwtPayload;
 
-                logger.warn({
+                console.log('SOCKET AUTH: JWT decoded payload', {
                     decoded,
                     tokenSource: token ? 'auth/query' : 'cookie',
                     socketId: socket.id
-                }, 'SOCKET AUTH: JWT decoded payload');
+                });
 
                 // Use data from JWT token
                 userData = {
@@ -97,20 +97,20 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
                 };
                 finalUserId = decoded.userId;
 
-                logger.warn({
+                console.log('SOCKET AUTH: Socket authenticated via JWT token', {
                     userId: decoded.userId,
                     username: decoded.username,
                     role: decoded.role,
                     tokenSource: token ? 'auth/query' : 'cookie',
                     socketId: socket.id
-                }, 'SOCKET AUTH: Socket authenticated via JWT token');
+                });
             } catch (err) {
-                logger.warn({
+                console.log('SOCKET AUTH: Invalid token in socket connection', {
                     err: err instanceof Error ? err.message : err,
                     token: actualToken!.substring(0, 20) + '...',
                     tokenSource: token ? 'auth/query' : 'cookie',
                     socketId: socket.id
-                }, 'SOCKET AUTH: Invalid token in socket connection');
+                });
                 // Continue with userId-based auth if available
             }
         }
@@ -130,12 +130,12 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
             };
             finalUserId = effectiveUserId;
 
-            logger.warn({
+            console.log('SOCKET AUTH: Socket authenticated with userId', {
                 userId: effectiveUserId,
                 userType: effectiveUserType,
                 socketId: socket.id,
                 userData
-            }, 'SOCKET AUTH: Socket authenticated with userId');
+            });
         }
 
         // Set final socket data
@@ -143,14 +143,14 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void
             socket.data.user = userData;
             socket.data.userId = finalUserId;
 
-            logger.warn('SOCKET AUTH: Final socket data set', {
+            console.log('SOCKET AUTH: Final socket data set', {
                 socketId: socket.id,
                 finalUserId,
                 setUserId: socket.data.userId,
                 setUserData: socket.data.user
             });
         } else {
-            logger.warn({ socketId: socket.id }, 'SOCKET AUTH: Anonymous socket connection');
+            console.log('SOCKET AUTH: Anonymous socket connection', { socketId: socket.id });
         }
 
         // Store connection info in socket data for potential later use
