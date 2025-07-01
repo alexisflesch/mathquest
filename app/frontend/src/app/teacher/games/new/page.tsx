@@ -390,6 +390,7 @@ export default function CreateActivityPage() {
                 gradeLevel: activityMeta.levels[0] || 'Niveau non spécifié'
             });
 
+            // Modernization: Use canonical Next.js API route
             const gameTemplateResponse = await makeApiRequest<{ gameTemplate: { id: string } }>('/api/game-templates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

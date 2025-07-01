@@ -10,7 +10,8 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 // Load appropriate environment file based on NODE_ENV
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-const envPath = path_1.default.resolve(__dirname, `../${envFile}`);
+// Always resolve from project root, not __dirname (works for both src/ and dist/)
+const envPath = path_1.default.resolve(process.cwd(), envFile);
 const dotenvResult = dotenv_1.default.config({ path: envPath });
 // Log which .env file is loaded and a key variable for debugging
 console.log(`[ENV] Loaded: ${envPath}`);

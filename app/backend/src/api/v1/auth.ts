@@ -12,14 +12,13 @@ import type {
     PasswordResetResponse,
     PasswordResetConfirmResponse,
     AuthStatusResponse,
+    ErrorResponse,
     ProfileUpdateResponse,
-    TeacherUpgradeResponse,
-    ErrorResponse
+    TeacherUpgradeResponse
 } from '@shared/types/api/responses';
 import type {
     LoginRequest,
     RegisterRequest,
-    TeacherRegisterRequest,
     UpgradeAccountRequest,
     PasswordResetRequest,
     PasswordResetConfirmRequest,
@@ -38,8 +37,32 @@ import {
 
 // Create a route-specific logger
 const logger = createLogger('AuthAPI');
-
 const router = express.Router();
+
+/**
+ * Logout endpoint
+ * POST /api/v1/auth/logout
+ * Clears all authentication cookies and returns a success message
+ */
+router.post('/logout', (req, res) => {
+    // Clear both teacher and student auth cookies
+    res.clearCookie('teacherToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+    });
+    res.clearCookie('authToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+    });
+    res.status(200).json({ message: 'Logged out successfully' });
+});
+// ...existing code...
+
+// ...existing code...
 
 // Create a singleton instance or allow injection for testing
 let userServiceInstance: UserService | null = null;

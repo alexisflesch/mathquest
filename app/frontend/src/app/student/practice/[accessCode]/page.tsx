@@ -88,6 +88,7 @@ export default function PracticeSessionWithAccessCodePage() {
             try {
                 logger.info('Fetching game instance for access code:', accessCode);
 
+                // Modernization: Use canonical Next.js API route
                 const response = await makeApiRequest<GameInstanceResponse>(`/api/games/${accessCode}`, {
                     method: 'GET',
                 });

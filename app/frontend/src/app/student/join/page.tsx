@@ -46,6 +46,7 @@ export default function StudentJoinPage() {
             }
 
             // First, get the game instance to check playMode
+            // Modernization: Use canonical Next.js API route
             const gameData = await makeApiRequest<{ gameInstance: any }>(`/api/games/${code}`);
             const gameInstance = gameData.gameInstance;
 
@@ -57,7 +58,8 @@ export default function StudentJoinPage() {
             }
 
             // For quiz/tournament games, proceed with join logic
-            const data = await makeApiRequest<GameJoinResponse>('/api/games/' + code + '/join', {
+            // Modernization: Use canonical Next.js API route
+            const data = await makeApiRequest<GameJoinResponse>(`/api/games/${code}/join`, {
                 method: 'POST',
                 body: JSON.stringify({ userId: userProfile.userId }),
             });

@@ -18,6 +18,7 @@ import type { ConnectedCountPayload, JoinDashboardPayload, EndGamePayload, Dashb
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_CONFIG } from '@/config';
 import { computeTimeLeftMs } from '../utils/computeTimeLeftMs';
+import { makeApiRequest } from '@/config/api';
 
 // Derive type from Zod schema for type safety
 // type ConnectedCountPayload = z.infer<typeof connectedCountPayloadSchema>;
@@ -447,17 +448,19 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         async function fetchQuizName() {
             if (!code) return;
             try {
-                const response = await fetch(`/api/games/access-code/${code}`);
-                const data = await response.json();
+                // Modernization: Use makeApiRequest to Next.js API route
+                const data = await makeApiRequest<any>(`/api/games/access-code/${code}`);
                 // Prefer templateName for activity name
-                if (response.ok && data.gameInstance && data.gameInstance.templateName) {
-                    setQuizName(data.gameInstance.templateName);
-                } else if (data.templateName) {
-                    setQuizName(data.templateName);
-                } else if (data.gameInstance && data.gameInstance.quizName) {
-                    setQuizName(data.gameInstance.quizName);
-                } else if (data.quizName) {
-                    setQuizName(data.quizName);
+                if (data && typeof data === 'object') {
+                    if (data.gameInstance && data.gameInstance.templateName) {
+                        setQuizName(data.gameInstance.templateName);
+                    } else if (data.templateName) {
+                        setQuizName(data.templateName);
+                    } else if (data.gameInstance && data.gameInstance.quizName) {
+                        setQuizName(data.gameInstance.quizName);
+                    } else if (data.quizName) {
+                        setQuizName(data.quizName);
+                    }
                 }
             } catch (err) {
                 logger.warn('Failed to fetch quiz name from API:', err);

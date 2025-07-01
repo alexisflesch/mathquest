@@ -424,6 +424,7 @@ export default function TeacherGamesPage() {
 
             console.log('Fetching game templates for teacher...');
             const response = await makeApiRequest<GameTemplatesResponse>(
+                // Modernization: Use canonical Next.js API route
                 '/api/game-templates'
             );
 
@@ -467,6 +468,7 @@ export default function TeacherGamesPage() {
     }, []); const fetchGameInstances = useCallback(async (templateId: string) => {
         try {
             const response = await makeApiRequest<{ gameInstances: GameInstance[] }>(
+                // Modernization: Use canonical Next.js API route
                 `/api/game-templates/${templateId}/instances`
             );
 
@@ -507,6 +509,7 @@ export default function TeacherGamesPage() {
                 gameData.status = 'completed';
             }
 
+            // Modernization: Use canonical Next.js API route
             const response = await makeApiRequest<{ gameInstance: { id: string, accessCode?: string } }>('/api/games', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -578,10 +581,12 @@ export default function TeacherGamesPage() {
         setDeleteModal(prev => ({ ...prev, isLoading: true }));
 
         try {
+            // Modernization: Use canonical Next.js API route
             const url = deleteModal.forceDelete
                 ? `/api/game-templates/${deleteModal.templateId}?force=true`
                 : `/api/game-templates/${deleteModal.templateId}`;
 
+            // Modernization: Use canonical Next.js API route
             await makeApiRequest(url, {
                 method: 'DELETE'
             });
@@ -635,6 +640,7 @@ export default function TeacherGamesPage() {
         setDeleteInstanceModal(prev => ({ ...prev, isLoading: true }));
 
         try {
+            // Modernization: Use canonical Next.js API route
             await makeApiRequest(`/api/games/${deleteInstanceModal.instanceId}`, {
                 method: 'DELETE'
             });
