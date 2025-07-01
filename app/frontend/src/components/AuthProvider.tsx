@@ -302,12 +302,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 undefined,
                 UniversalLoginResponseSchema
             );
+            console.log('[AuthProvider] loginStudent result:', result);
 
             // Handle the union type - check if it's a student response
             if ('success' in result && result.success && 'user' in result && result.user && result.token) {
                 // This is a student login response
                 // Clear any guest data
                 localStorage.removeItem('mathquest_cookie_id');
+
+                // Store JWT for socket authentication (all users)
+                sessionStorage.setItem('mathquest_jwt_token', result.token);
 
                 // Update to student state
                 setUserState('student');
@@ -382,13 +386,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 undefined,
                 UniversalLoginResponseSchema
             );
+            console.log('[AuthProvider] loginTeacher result:', result);
 
             // Handle teacher login response (teacher format)
             if ('enseignantId' in result && result.enseignantId && result.token) {
                 // Clear any guest data
                 localStorage.removeItem('mathquest_cookie_id');
 
-                // Store JWT for socket authentication (best practice: sessionStorage for short-lived, localStorage for persistent)
+                // Store JWT for socket authentication (all users)
                 sessionStorage.setItem('mathquest_jwt_token', result.token);
 
                 // Update to teacher state
@@ -812,11 +817,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 UniversalLoginResponseSchema
             );
 
+            console.log('[AuthProvider] universalLogin result:', result);
             // Clear any guest data
             localStorage.removeItem('mathquest_cookie_id');
 
             // Handle teacher login response
             if ('enseignantId' in result && result.enseignantId && result.token) {
+                // Store JWT for socket authentication
+                sessionStorage.setItem('mathquest_jwt_token', result.token);
+
                 setUserState('teacher');
                 setUserProfile({
                     username: result.username || 'Teacher',
@@ -841,6 +850,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Handle student login response
             if ('success' in result && result.success && 'user' in result && result.user && result.token) {
+                // Store JWT for socket authentication
+                sessionStorage.setItem('mathquest_jwt_token', result.token);
+
                 setUserState('student');
                 setUserProfile({
                     username: result.user.username,

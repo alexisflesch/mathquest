@@ -1,4 +1,3 @@
-
 ## [2025-07-01] Phase: Dashboard Auth/Cookie Failure Audit
 
 ### Findings
@@ -41,6 +40,8 @@
 - [ ] Add or improve backend debug logging for the dashboard join event to capture incoming payload, user state, and error details.
 - [ ] Compare the dashboard join socket flow with working socket flows (e.g., lobby, games) to identify discrepancies.
 - [ ] Document all new findings and next steps in `plan.md`.
+- [x] Add console logging to `universalLogin` to verify backend response and ensure JWT is stored in `sessionStorage` after login.
+- [x] Confirm that the backend login response includes a `token` property for all user types.
 
 **Root cause:**
 - In local dev, cookies are often present and sent due to relaxed settings, so the proxy route works. In production, stricter cookie policies mean the backend never receives the session cookie, so authentication fails unless the JWT is sent in the Authorization header (which only happens with direct `makeApiRequest` calls).
