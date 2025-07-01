@@ -29,8 +29,14 @@ const logLevels = {
 };
 
 // Set minimum log level based on environment (can be overridden via env var)
-const DEFAULT_LOG_LEVEL = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
-const LOG_LEVEL = process.env.NODE_ENV === 'test' ? 'info' : (process.env.LOG_LEVEL || DEFAULT_LOG_LEVEL);
+// In production, force at least 'warn' to ensure warn+error logs are processed
+let DEFAULT_LOG_LEVEL = 'debug';
+if (process.env.NODE_ENV === 'production') {
+    DEFAULT_LOG_LEVEL = 'warn';
+} else if (process.env.NODE_ENV === 'test') {
+    DEFAULT_LOG_LEVEL = 'info';
+}
+const LOG_LEVEL = process.env.LOG_LEVEL || DEFAULT_LOG_LEVEL;
 
 // Determine log directory
 const LOG_DIR = path.join(process.cwd(), 'logs');
