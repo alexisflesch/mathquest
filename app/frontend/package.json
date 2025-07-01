@@ -24,7 +24,7 @@
         "better-react-mathjax": "^2.3.0",
         "dotenv": "^16.5.0",
         "flubber": "^0.4.2",
-        "framer-motion": "^12.9.4",
+        "framer-motion": "12.11.0",
         "french-badwords-list": "^1.0.7",
         "lucide-react": "^0.503.0",
         "next": "15.3.1",
