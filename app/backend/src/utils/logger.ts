@@ -78,7 +78,19 @@ if (process.env.NODE_ENV !== 'production') {
         })
     );
 } else {
-    // Production: Only file, only errors
+    // Production: Write WARN and ERROR to combined.log, ERROR to error.log
+    transports.push(
+        new winston.transports.File({
+            filename: path.join(LOG_DIR, 'combined.log'),
+            level: 'warn', // includes warn and error
+            maxsize: 10 * 1024 * 1024,
+            maxFiles: 5,
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+            )
+        })
+    );
     transports.push(
         new winston.transports.File({
             filename: path.join(LOG_DIR, 'error.log'),
