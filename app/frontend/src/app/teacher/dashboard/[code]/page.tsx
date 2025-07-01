@@ -26,25 +26,25 @@ export default function TeacherDashboardPage() {
             setLoading(false);
             return;
         }
-        fetch(`/api/validate-dashboard-access`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pageType: 'dashboard', accessCode: code }),
-            credentials: 'include',
-            cache: 'no-store',
-        })
-            .then(async (res) => {
-                if (!res.ok) {
-                    let reason = 'UNKNOWN';
-                    try { reason = (await res.json()).reason; } catch { }
-                    setResult({ valid: false, reason });
-                } else {
-                    const data = await res.json();
-                    setResult({ valid: data.valid, gameId: data.gameId, reason: data.reason });
+        // Use makeApiRequest for consistency with other authenticated pages
+        import('@/config/api').then(({ makeApiRequest }) => {
+            makeApiRequest<{ valid: boolean; reason: string; gameId?: string }>(
+                '/api/validate-dashboard-access',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pageType: 'dashboard', accessCode: code }),
+                    cache: 'no-store',
                 }
-            })
-            .catch(() => setResult({ valid: false, reason: 'FETCH_ERROR' }))
-            .finally(() => setLoading(false));
+            )
+                .then((data) => {
+                    setResult({ valid: data.valid, gameId: data.gameId, reason: data.reason });
+                })
+                .catch((err) => {
+                    setResult({ valid: false, reason: 'FETCH_ERROR' });
+                })
+                .finally(() => setLoading(false));
+        });
     }, [code]);
 
     if (loading) return <LoadingScreen message="Chargement du dashboard..." />;
