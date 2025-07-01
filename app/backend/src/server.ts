@@ -4,7 +4,8 @@ import path from 'path';
 
 // Load appropriate environment file based on NODE_ENV
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-const envPath = path.resolve(__dirname, `../${envFile}`);
+// Always resolve from project root, not __dirname (works for both src/ and dist/)
+const envPath = path.resolve(process.cwd(), envFile);
 const dotenvResult = dotenv.config({ path: envPath });
 // Log which .env file is loaded and a key variable for debugging
 console.log(`[ENV] Loaded: ${envPath}`);
