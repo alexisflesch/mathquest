@@ -6,26 +6,12 @@
 set -e
 
 
-# 1. Démarrer/redémarrer le backend avec pm2 (avec injection des variables d'environnement .env)
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BACKEND_ENV="$SCRIPT_DIR/backend/.env"
-cd "$SCRIPT_DIR/backend/dist/backend/src" || exit 1
+
+# Démarrage centralisé via ecosystem.config.js
 pm2 delete mathquest-backend 2>/dev/null || true
-if [ -f "$BACKEND_ENV" ]; then
-  # Charge les variables d'environnement du backend
-  export $(grep -v '^#' "$BACKEND_ENV" | xargs)
-fi
-pm2 start server.js --name mathquest-backend --env production
-echo "Backend (server.js) démarré avec pm2 sur le port 3007 (voir .env)"
-
-# 2. Démarrer/redémarrer le frontend Next.js avec pm2 (méthode robuste)
-cd "$SCRIPT_DIR/frontend" || exit 1
 pm2 delete mathquest-frontend 2>/dev/null || true
-pm2 start node --name mathquest-frontend --cwd "$SCRIPT_DIR/frontend" -- ./node_modules/next/dist/bin/next start -p 3008
-echo "Frontend Next.js démarré avec pm2 sur le port 3008 (mode serveur, méthode node direct)"
-
-# 3. Sauvegarder la configuration pm2
+pm2 start ecosystem.config.js
 pm2 save
 
-echo "Les deux services sont lancés et gérés par pm2. (backend:3007, frontend:3008)"
+echo "Les deux services (backend:3007, frontend:3008) sont lancés et gérés par pm2 via ecosystem.config.js."
 echo "Utilisez 'pm2 status' pour vérifier, 'pm2 restart mathquest-backend' ou 'pm2 restart mathquest-frontend' pour relancer."
