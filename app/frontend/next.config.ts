@@ -1,14 +1,10 @@
 import path from "path";
 import type { NextConfig } from "next";
 
+const isLightBuild = process.env.LIGHT_BUILD === '1';
 const nextConfig: NextConfig = {
-    eslint: {
-        // Enforce strict linting
-        dirs: ['.'],
-    },
-    typescript: {
-        // Enforce strict type checking
-    },
+    eslint: isLightBuild ? { ignoreDuringBuilds: true } : { dirs: ['.'] },
+    typescript: isLightBuild ? { ignoreBuildErrors: true } : {},
     // // Set default port to 3008
     // devServer: {
     //     port: 3008,
