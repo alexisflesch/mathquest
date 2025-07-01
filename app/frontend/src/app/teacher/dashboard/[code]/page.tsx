@@ -26,10 +26,10 @@ export default function TeacherDashboardPage() {
             setLoading(false);
             return;
         }
-        // Use makeApiRequest for consistency with other authenticated pages
+        // Directly call backend endpoint with makeApiRequest to ensure Authorization header is sent
         import('@/config/api').then(({ makeApiRequest }) => {
             makeApiRequest<{ valid: boolean; reason: string; gameId?: string }>(
-                '/api/validate-dashboard-access',
+                'validate-page-access',
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

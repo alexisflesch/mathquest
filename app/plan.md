@@ -12,8 +12,14 @@
 
 ### Next Steps
 
-- [ ] Compare the logic in `makeApiRequest` to the dashboard's fetch and identify any missing critical logic (e.g., token handling, error normalization).
-- [ ] Refactor the dashboard page to use `makeApiRequest` for the `/api/validate-dashboard-access` call for consistency.
+
+### Resolution Steps
+
+- [x] Compared the logic in `makeApiRequest` to the dashboard's fetch. Confirmed that only `makeApiRequest` sends the JWT from localStorage as an Authorization header, which is required for backend authentication in production.
+- [x] Refactored the dashboard page to call the backend endpoint directly with `makeApiRequest`, bypassing the Next.js API route. This ensures the Authorization header is sent, matching the working teacher pages.
 - [ ] Test if this resolves the authentication/cookie/session issue in production.
 - [ ] If not resolved, compare request/response headers and cookies in browser dev tools for both pages to identify any differences.
 - [ ] Document all changes and findings in `plan.md`.
+
+**Root cause:**
+- In local dev, cookies are often present and sent due to relaxed settings, so the proxy route works. In production, stricter cookie policies mean the backend never receives the session cookie, so authentication fails unless the JWT is sent in the Authorization header (which only happens with direct `makeApiRequest` calls).
