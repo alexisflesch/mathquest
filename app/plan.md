@@ -9,7 +9,36 @@ Replace all legacy or relative `/api/` backend API calls in the frontend with mo
 
 ## Checklist
 
-- [x] 1. Update `/api/auth/status` usage in `src/components/AuthProvider.tsx` (lines 164, 591)
+
+## [2025-07-01] Phase: Debug Local 404 for `/api/validate-dashboard-access`
+
+### Checklist
+
+- [x] 1. Confirm backend is running and accessible at the expected port.
+- [x] 2. Confirm the backend exposes `/api/v1/validate-page-access` (dashes) and not `/api/v1/validatePageAccess` (camelCase).
+- [x] 3. Confirm the frontend proxy route `/api/validate-dashboard-access` is implemented and proxies to the correct backend endpoint.
+- [x] 4. Test backend endpoint directly (e.g., with curl or browser).
+- [x] 5. Check backend logs for errors or missing route.
+- [x] 6. Document findings and update `plan.md`.
+
+
+**Root cause:**
+- Frontend proxy was calling `/api/v1/validatePageAccess` (camelCase), but backend exposes `/api/v1/validate-page-access` (dashes).
+- Fixed by updating the frontend proxy route to use the correct dashed endpoint.
+- 404 persisted because `.env.local` had `NEXT_PUBLIC_BACKEND_API_URL=http://localhost:3007/api/v1`, causing the proxy to call `/api/v1/api/v1/validate-page-access` (duplicated segment).
+
+**Fix:**
+- Do not change `.env.local` if other code expects `/api/v1` in the base URL.
+- Update the proxy route to only append `/validate-page-access` (not `/api/v1/validate-page-access`).
+- This keeps all usages of `NEXT_PUBLIC_BACKEND_API_URL` consistent and fixes the proxy route.
+- Restart frontend after this change.
+
+**Validation:**
+- Restart backend and frontend, then test dashboard access. Expect 401/403/200 from backend, not 404.
+
+---
+
+---
 - [x] 2. Update `/api/games` usage in `src/app/student/create-game/page.tsx` (lines 236, 278)
 - [x] 3. Update `/api/game-templates` usage in `src/app/teacher/games/page.tsx` (line 547)
 - [x] 4. Update `/api/auth/status` usage in `src/app/debug/page.tsx` (line 235)
@@ -31,6 +60,19 @@ Replace all legacy or relative `/api/` backend API calls in the frontend with mo
 - [x] 12. Manually update all problematic API calls to use canonical Next.js API route pattern and `BACKEND_API_BASE_URL` in API route handlers
 - [x] 13. Test all updated endpoints in the browser and via curl
 - [x] 14. Document all changes and update this checklist
+
+---
+
+## [2025-07-01] Phase: Zod Date Compatibility for Game Creation
+
+### Checklist
+
+- [x] Investigate why Zod validation fails for student game creation but not teacher flow
+- [x] Confirmed: shared Zod schema used strict `z.date()` (expects Date), but backend returns ISO strings
+- [x] Teacher flow likely bypassed or handled this, but student flow used strict validation
+- [x] Fix: Updated all relevant date fields in `shared/types/core/game.zod.ts` to use `z.coerce.date()`
+- [ ] Validate both teacher and student flows for game creation (no Zod date errors)
+- [ ] Document findings and communicate to team
 
 ---
 

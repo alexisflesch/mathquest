@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     let backendRes: Response;
     let data: any = null;
     try {
-        backendRes = await fetch(`${backendUrl}/api/v1/validate-page-access`, {
+        backendRes = await fetch(`${backendUrl}/validate-page-access`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -14,8 +14,8 @@ export const GameTemplateBaseSchema = z.object({
     discipline: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
     defaultMode: PlayModeSchema.nullable().optional(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
     creatorId: z.string(),
     // Relations
     creator: z.any().optional(), // User type would go here
@@ -31,11 +31,11 @@ export const GameInstanceBaseSchema = z.object({
     leaderboard: z.any().optional(), // JSON
     currentQuestionIndex: z.number().nullable().optional(),
     settings: z.any().optional(), // JSON
-    createdAt: z.date(),
-    startedAt: z.date().nullable().optional(),
-    endedAt: z.date().nullable().optional(),
-    differedAvailableFrom: z.date().nullable().optional(),
-    differedAvailableTo: z.date().nullable().optional(),
+    createdAt: z.coerce.date(),
+    startedAt: z.coerce.date().nullable().optional(),
+    endedAt: z.coerce.date().nullable().optional(),
+    differedAvailableFrom: z.coerce.date().nullable().optional(),
+    differedAvailableTo: z.coerce.date().nullable().optional(),
     isDiffered: z.boolean(),
     gameTemplateId: z.string(),
     initiatorUserId: z.string().nullable().optional(),
@@ -45,7 +45,7 @@ export const GameInstanceBaseSchema = z.object({
 
 export const GameParticipantRecordSchema = z.object({
     id: z.string(),
-    joinedAt: z.date(),
+    joinedAt: z.coerce.date(),
     avatarAnimal: z.string().optional(),
     answers: z.any().optional(), // JSON - could be more specific later
     gameInstanceId: z.string(),
@@ -93,8 +93,8 @@ export const GameInstanceCreationDataSchema = z.object({
     initiatorUserId: z.string().optional(),
     settings: z.any().optional(),
     isDiffered: z.boolean().optional(),
-    differedAvailableFrom: z.date().optional(),
-    differedAvailableTo: z.date().optional()
+    differedAvailableFrom: z.coerce.date().optional(),
+    differedAvailableTo: z.coerce.date().optional()
 });
 
 export const GameInstanceUpdateDataSchema = z.object({
@@ -103,8 +103,8 @@ export const GameInstanceUpdateDataSchema = z.object({
     currentQuestionIndex: z.number().nullable().optional(),
     leaderboard: z.any().optional(),
     settings: z.any().optional(),
-    startedAt: z.date().nullable().optional(),
-    endedAt: z.date().nullable().optional()
+    startedAt: z.coerce.date().nullable().optional(),
+    endedAt: z.coerce.date().nullable().optional()
 });
 
 export type PlayMode = z.infer<typeof PlayModeSchema>;
