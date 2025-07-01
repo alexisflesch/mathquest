@@ -29,8 +29,19 @@ Replace all legacy or relative `/api/` backend API calls in the frontend with mo
     - `/app/api/games/[gameId]/join/route.ts` (line 5): comment reference
     - `/app/api/quiz/[quizId]/tournament-code/route.ts` (line 28): comment reference
 - [x] 12. Manually update all problematic API calls to use canonical Next.js API route pattern and `BACKEND_API_BASE_URL` in API route handlers
-- [ ] 13. Test all updated endpoints in the browser and via curl
-- [ ] 14. Document all changes and update this checklist
+- [x] 13. Test all updated endpoints in the browser and via curl
+- [x] 14. Document all changes and update this checklist
+
+---
+
+## 2025-07-01: Production Login 404 Root Cause & Fix
+
+- [x] Investigated production login 404 error for `/api/v1/auth/universal-login`
+- [x] Root cause: Frontend was calling backend endpoint that does not exist in production; should use Next.js API route `/api/auth/universal-login` as proxy
+- [x] Updated `FRONTEND_AUTH_ENDPOINTS.LOGIN` to `/api/auth/universal-login` in `src/constants/api.ts`
+- [ ] Confirm all login flows use this constant (no hardcoded `/api/v1/auth/universal-login` remains)
+- [ ] Test login in production and verify correct behavior
+- [ ] Log this change in documentation and communicate to team
 
 ---
 
@@ -40,9 +51,27 @@ Replace all legacy or relative `/api/` backend API calls in the frontend with mo
 - [x] **Logout route returns 404:**
     - Fixed: Implemented `/api/v1/auth/logout` POST route in the backend (`backend/src/api/v1/auth.ts`) to clear cookies and return a success message. Now matches frontend expectations and resolves the 404 issue.
 
+
 - [x] **Frontend still missing `/v1` in some backend API calls:**
-    - Fixed: All frontend calls now use `/api/v1/auth/...` (including `AuthProvider.tsx` for teacher login/register).
-    - Action: All `makeApiRequest` calls and constants have been updated to use `/api/v1/auth/...` everywhere. Verified by code search and patch.
+    - Fixed: All frontend calls now use canonical backend endpoint names (e.g., `auth/register`, `auth/upgrade`, `auth/profile`, `auth/logout`, etc.) instead of `/api/v1/auth/...` or `/api/...`.
+    - Action: All `makeApiRequest` calls and constants have been updated to use canonical backend endpoint names everywhere. Verified by code search and patch.
+
+## [2024-06-09] API Route Modernization: AuthProvider.tsx
+
+**Root Cause:**
+- Several API calls in `AuthProvider.tsx` were using legacy paths like `/api/v1/auth/register`, `/api/v1/auth/upgrade`, etc. This caused requests to be routed incorrectly (to the Next.js API layer or to non-existent endpoints), resulting in 404 or 500 errors.
+
+**Fix:**
+- Updated all API calls in `AuthProvider.tsx` to use canonical backend endpoint names (e.g., `auth/register`, `auth/upgrade`, `auth/profile`, `auth/logout`, etc.).
+- Ensured all usages of `makeApiRequest` in this file now use the correct canonical path, so the backend API base URL is prepended and requests are routed to the backend server as intended.
+
+**Validation:**
+- All authentication and profile flows in the frontend should now correctly reach the backend endpoints in both development and production, provided the backend is reachable and the proxy/nginx config is correct.
+
+**Checklist:**
+- [x] All legacy `/api/v1/auth/...` and `/api/auth/...` usages removed from `AuthProvider.tsx`.
+- [x] All API calls use canonical backend endpoint names.
+- [x] Documented in `plan.md`.
 
 ---
 

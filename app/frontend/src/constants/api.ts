@@ -11,7 +11,7 @@ export const FRONTEND_API_BASE = '/api';
 
 // Authentication Endpoints (Frontend API routes)
 export const FRONTEND_AUTH_ENDPOINTS = {
-    LOGIN: '/api/v1/auth/universal-login',
+    LOGIN: '/api/auth/universal-login',
     LOGOUT: '/api/v1/auth/logout',
     STATUS: '/api/v1/auth/status',
     REGISTER: '/api/v1/auth/register',

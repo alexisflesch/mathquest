@@ -23,7 +23,7 @@
 "use client";
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { createLogger } from '@/clientLogger';
-import { STORAGE_KEYS } from '@/constants/auth';
+import { STORAGE_KEYS, AUTH_ENDPOINTS } from '@/constants/auth';
 import { makeApiRequest } from '@/config/api';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import {
@@ -248,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         try {
             const result = await makeApiRequest<UpgradeAccountResponse>(
-                '/api/v1/auth/upgrade',
+                'auth/upgrade',
                 {
                     method: 'POST',
                     body: JSON.stringify({
@@ -294,7 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loginStudent = useCallback(async (email: string, password: string) => {
         try {
             const result = await makeApiRequest<UniversalLoginResponse>(
-                '/api/v1/auth/universal-login',
+                AUTH_ENDPOINTS.LOGIN,
                 {
                     method: 'POST',
                     body: JSON.stringify({ email, password }),
@@ -335,7 +335,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const registerStudent = useCallback(async (email: string, password: string, username: string, avatar: string) => {
         try {
             const result = await makeApiRequest<RegisterResponse>(
-                '/api/v1/auth/register',
+                'auth/register',
                 {
                     method: 'POST',
                     body: JSON.stringify({ email, password, username, avatar, role: 'STUDENT' }),
@@ -374,7 +374,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loginTeacher = useCallback(async (email: string, password: string) => {
         try {
             const result = await makeApiRequest<UniversalLoginResponse>(
-                '/api/v1/auth',
+                'auth',
                 {
                     method: 'POST',
                     body: JSON.stringify({ action: 'teacher_login', email, password }),
@@ -414,7 +414,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const registerTeacher = useCallback(async (email: string, password: string, username: string, adminPassword: string, avatar: string) => {
         try {
             const result = await makeApiRequest<RegisterResponse>(
-                '/api/v1/auth',
+                'auth',
                 {
                     method: 'POST',
                     body: JSON.stringify({
@@ -460,7 +460,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const upgradeToTeacher = useCallback(async (adminPassword: string) => {
         try {
             const result = await makeApiRequest<TeacherUpgradeResponse>(
-                '/api/v1/auth/upgrade-to-teacher',
+                'auth/upgrade-to-teacher',
                 {
                     method: 'POST',
                     body: JSON.stringify({ adminPassword }),
@@ -503,7 +503,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // For students and teachers, update via API
             const result = await makeApiRequest<ProfileUpdateResponse>(
-                '/api/v1/auth/profile',
+                'auth/profile',
                 {
                     method: 'PUT',
                     body: JSON.stringify(data),
@@ -800,7 +800,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const universalLogin = useCallback(async (email: string, password: string) => {
         try {
             const result = await makeApiRequest<UniversalLoginResponse>(
-                '/api/v1/auth/universal-login',
+                AUTH_ENDPOINTS.LOGIN,
                 {
                     method: 'POST',
                     body: JSON.stringify({ email, password }),
@@ -898,10 +898,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             // Call frontend logout endpoint to clear HttpOnly cookies
-            logger.debug('Calling frontend logout API at /api/v1/auth/logout');
+            logger.debug('Calling frontend logout API at auth/logout');
             try {
                 const result = await makeApiRequest<LogoutResponse>(
-                    '/api/v1/auth/logout',
+                    'auth/logout',
                     {
                         method: 'POST',
                     },

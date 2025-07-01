@@ -107,7 +107,30 @@ python3 import_questions.py
 ```
 
 
-### 6. Lancer l’application
+
+### 6. Configurer nginx (recommandé pour production)
+
+Copiez le fichier d'exemple :  
+```bash
+cp nginx.example /etc/nginx/sites-available/mathquest
+```
+Adaptez les ports/upstreams si besoin, puis activez le site et rechargez nginx :
+```bash
+sudo ln -s /etc/nginx/sites-available/mathquest /etc/nginx/sites-enabled/
+sudo nginx -s reload
+```
+
+**Résumé du routage :**
+- `/api/v1/` → backend Node.js (port 4000)
+- `/socket.io/` → backend Node.js (websockets)
+- `/api` → Next.js API (port 3008)
+- `/` → Next.js frontend (port 3008)
+
+Voir le fichier `nginx.example` à la racine du projet pour un exemple complet.
+
+---
+
+### 7. Lancer l’application
 
 #### En développement
 ```bash
