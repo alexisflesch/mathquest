@@ -11,14 +11,14 @@ export const FRONTEND_API_BASE = '/api';
 
 // Authentication Endpoints (Frontend API routes)
 export const FRONTEND_AUTH_ENDPOINTS = {
-    LOGIN: '/api/auth/universal-login',
-    LOGOUT: '/api/auth/logout',
-    STATUS: 'auth/status', // Use backend-aware endpoint for status
-    REGISTER: '/api/auth/register',
-    PROFILE: '/api/auth/profile',
-    UPGRADE: '/api/auth/upgrade',
+    LOGIN: '/api/v1/auth/universal-login',
+    LOGOUT: '/api/v1/auth/logout',
+    STATUS: '/api/v1/auth/status',
+    REGISTER: '/api/v1/auth/register',
+    PROFILE: '/api/v1/auth/profile',
+    UPGRADE: '/api/v1/auth/upgrade',
     RESET_PASSWORD_CONFIRM: '/api/v1/auth/reset-password/confirm',
-    CLEAR_COOKIES: '/api/auth/clear-cookies'
+    CLEAR_COOKIES: '/api/v1/auth/clear-cookies'
 } as const;
 
 // Backend API Endpoints (V1 API)

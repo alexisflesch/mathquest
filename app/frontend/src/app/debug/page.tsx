@@ -239,11 +239,11 @@ export default function DebugPage() {
                             GET /api/v1/auth/status
                         </a>
                         <a
-                            href="/api/auth/clear-cookies"
+                            href="/api/v1/auth/clear-cookies"
                             target="_blank"
                             className="px-3 py-1 bg-teal-200 dark:bg-teal-800 text-center rounded hover:bg-teal-300"
                         >
-                            GET /api/auth/clear-cookies
+                            GET /api/v1/auth/clear-cookies
                         </a>
                     </div>
                 </div>
