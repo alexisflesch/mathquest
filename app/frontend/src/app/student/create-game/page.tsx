@@ -233,21 +233,17 @@ function StudentCreateTournamentPageInner() {
                 };
 
                 logger.debug("Creating practice GameInstance", requestBody);
-                const gameResponse = await makeApiRequest(
+                const gameData = await makeApiRequest<GameCreationResponse>(
                     'games',
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(requestBody),
-                    }
+                    },
+                    undefined,
+                    GameCreationResponseSchema
                 );
 
-                if (!gameResponse.ok) {
-                    const errorText = await gameResponse.text();
-                    throw new Error(`Erreur lors de la création: ${errorText}`);
-                }
-
-                const gameData = await gameResponse.json();
                 logger.info("Practice GameInstance created", gameData);
 
                 // Redirect to new practice session page with access code
@@ -276,19 +272,20 @@ function StudentCreateTournamentPageInner() {
             };
 
             logger.debug("Games API request body", requestBody);
-            const gameData = await makeApiRequest(
+            const gameData = await makeApiRequest<GameCreationResponse>(
                 'games',
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include', // Include cookies for authentication
                     body: JSON.stringify(requestBody),
-                }
+                },
+                undefined,
+                GameCreationResponseSchema
             );
 
-            const gameResponse = await gameData.json() as GameCreationResponse;
-            logger.info("Tournament created successfully", { code: gameResponse.gameInstance.accessCode });
-            router.push(`/lobby/${gameResponse.gameInstance.accessCode}`);
+            logger.info("Tournament created successfully", { code: gameData.gameInstance.accessCode });
+            router.push(`/lobby/${gameData.gameInstance.accessCode}`);
         } catch (err: unknown) {
             logger.error("Error creating tournament", err);
             if (err instanceof Error) setError(err.message);

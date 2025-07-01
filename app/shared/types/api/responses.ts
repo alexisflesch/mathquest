@@ -145,9 +145,7 @@ export interface GameInstanceWithTemplateResponse {
     };
 }
 
-export interface GameCreationResponse {
-    gameInstance: GameInstance;
-}
+// Removed: GameCreationResponse interface. Use Zod-inferred type from schemas.ts instead.
 
 export interface GameJoinResponse {
     success: boolean;

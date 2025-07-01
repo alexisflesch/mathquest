@@ -32,31 +32,53 @@ export {
     QuestionsCountResponseSchema
 } from './api/schemas';
 
-// Re-export specific commonly used types directly
-export type {
-    LoginRequest,
-    RegisterRequest,
-    CreateGameRequest,
-    GameJoinRequest,
-    GameStatusUpdateRequest,
-    CreateGameTemplateRequest,
-    UpdateGameTemplateRequest,
-    CreateQuestionRequest,
-    UpdateQuestionRequest
-} from './api/requests';
-
+// Re-export all API response types from schemas (canonical Zod-inferred types)
 export type {
     LoginResponse,
     RegisterResponse,
-    GameStateResponse,
+    UpgradeAccountResponse,
+    AuthStatusResponse,
+    ProfileUpdateResponse,
+    TeacherUpgradeResponse,
+    LogoutResponse,
+    ErrorResponse,
     GameCreationResponse,
-    QuizTemplatesResponse as QuizListResponse,
-    QuizTemplateCreationResponse as QuizCreationResponse,
-    QuestionResponse as QuestionsResponse,
-    QuestionFiltersResponse as QuestionsFiltersResponse,
-    GameTemplateCreationResponse,
     GameJoinResponse,
-} from './api/responses';
+    GameStatusUpdateResponse,
+    GameStateResponse,
+    LeaderboardResponse,
+    TeacherActiveGamesResponse,
+    GameInstancesByTemplateResponse,
+    QuestionCreationResponse,
+    QuestionResponse,
+    QuestionsResponse,
+    QuestionsListResponse,
+    QuestionUidsResponse,
+    QuestionsFiltersResponse,
+    QuestionsCountResponse,
+    GameTemplateResponse,
+    GameTemplatesResponse,
+    GameTemplateCreationResponse,
+    GameTemplateUpdateResponse,
+    QuizTemplateResponse,
+    QuizTemplatesResponse,
+    QuizCreationResponse,
+    QuizTemplateCreationResponse,
+    QuizTemplateUpdateResponse,
+    QuizTemplateDeleteResponse,
+    QuizTemplateQuestionResponse,
+    QuizListResponse,
+    TeacherQuizQuestionsResponse,
+    TournamentCodeResponse,
+    TournamentVerificationResponse,
+    SuccessResponse,
+    UniversalLoginResponse,
+    // Practice API responses
+    CreatePracticeSessionApiResponse,
+    GetPracticeSessionApiResponse,
+    GetPracticeSessionsApiResponse,
+    GetPracticeQuestionsApiResponse
+} from './api/schemas';
 
 // Re-export Question type from the correct location
 export type { BaseQuestion as Question } from './question';

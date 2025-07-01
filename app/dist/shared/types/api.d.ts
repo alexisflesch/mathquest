@@ -8,7 +8,8 @@ import * as ApiResponses from './api/responses';
 export { ApiSchemas, ApiRequests, ApiResponses };
 export { LoginRequestSchema, RegisterRequestSchema, CreateGameRequestSchema, GameJoinRequestSchema, GameStatusUpdateRequestSchema, CreateGameTemplateRequestSchema, UpdateGameTemplateRequestSchema, CreateQuestionRequestSchema, UpdateQuestionRequestSchema, QuestionsResponseSchema, GameCreationResponseSchema, QuizListResponseSchema, QuizCreationResponseSchema, QuestionsFiltersResponseSchema, GameTemplateCreationResponseSchema, TournamentCodeResponseSchema, QuestionsCountResponseSchema } from './api/schemas';
 export type { LoginRequest, RegisterRequest, CreateGameRequest, GameJoinRequest, GameStatusUpdateRequest, CreateGameTemplateRequest, UpdateGameTemplateRequest, CreateQuestionRequest, UpdateQuestionRequest } from './api/requests';
-export type { LoginResponse, RegisterResponse, GameStateResponse, GameCreationResponse, QuizTemplatesResponse as QuizListResponse, QuizTemplateCreationResponse as QuizCreationResponse, QuestionResponse as QuestionsResponse, QuestionFiltersResponse as QuestionsFiltersResponse, GameTemplateCreationResponse, GameJoinResponse, } from './api/responses';
+export type { LoginResponse, RegisterResponse, GameStateResponse, QuizTemplatesResponse as QuizListResponse, QuizTemplateCreationResponse as QuizCreationResponse, QuestionResponse as QuestionsResponse, QuestionFiltersResponse as QuestionsFiltersResponse, GameTemplateCreationResponse, GameJoinResponse, } from './api/responses';
+export type { GameCreationResponse } from './api/schemas';
 export type { BaseQuestion as Question } from './question';
 export type ApiResponse<T = any> = {
     success: boolean;

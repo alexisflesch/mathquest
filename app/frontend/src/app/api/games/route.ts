@@ -6,7 +6,7 @@ import {
     type CreateGameRequest,
     type ErrorResponse
 } from '@shared/types/api/schemas';
-import { type GameCreationResponse } from '@shared/types/api/responses';
+import { type GameCreationResponse } from '@shared/types/api/schemas';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 

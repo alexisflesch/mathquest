@@ -29,6 +29,32 @@ import {
     TournamentVerificationResponseSchema
 } from '@shared/types/api/schemas';
 
+// Import all shared API response types for use in export type blocks
+import type {
+    LoginResponse,
+    RegisterResponse,
+    UpgradeAccountResponse,
+    AuthStatusResponse,
+    ProfileUpdateResponse,
+    PasswordResetResponse,
+    PasswordResetConfirmResponse,
+    ErrorResponse,
+    GameJoinResponse,
+    GameStatusUpdateResponse,
+    GameInstanceResponse,
+    GameInstanceWithTemplateResponse,
+    GameStateResponse,
+    LeaderboardResponse,
+    TeacherActiveGamesResponse,
+    GameInstancesByTemplateResponse,
+    GameControlStateResponse,
+    QuestionSetResponse,
+    QuestionEndedResponse,
+    GameEndedResponse,
+    QuestionCreationResponse,
+    QuestionResponse
+} from '@shared/types/api/responses';
+
 // Re-export shared API response types
 export type {
     // Auth API Types
@@ -41,7 +67,6 @@ export type {
     PasswordResetConfirmResponse,
     ErrorResponse,
     // Game API Types  
-    GameCreationResponse,
     GameJoinResponse,
     GameStatusUpdateResponse,
     GameInstanceResponse,
@@ -58,6 +83,12 @@ export type {
     // Question API Types
     QuestionCreationResponse,
     QuestionResponse,
+};
+
+// Use Zod-inferred type for GameCreationResponse
+export type { GameCreationResponse } from '@shared/types/api/schemas';
+
+export type {
     QuestionUidsResponse,
     QuestionFiltersResponse,
     // Game Template API Types
@@ -179,13 +210,11 @@ export type { GameTemplate, GameInstance } from '@shared/types/core';
 export type { BaseParticipant, LeaderboardEntry } from '@shared/types/core/participant';
 
 // Import shared types and schemas that are already exported above
+// Removed duplicate import of RegisterResponse, UpgradeAccountResponse, LeaderboardResponse (already imported above)
 import type {
-    RegisterResponse,
-    UpgradeAccountResponse,
     QuestionFiltersResponse,
     UserByCookieResponse,
-    GameTemplateCreationResponse,
-    LeaderboardResponse
+    GameTemplateCreationResponse
 } from '@shared/types/api/responses';
 
 import type {

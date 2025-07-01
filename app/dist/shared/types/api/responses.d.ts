@@ -121,9 +121,6 @@ export interface GameInstanceWithTemplateResponse {
         gameTemplate: GameTemplate;
     };
 }
-export interface GameCreationResponse {
-    gameInstance: GameInstance;
-}
 export interface GameJoinResponse {
     success: boolean;
     gameInstance: GameInstance;
