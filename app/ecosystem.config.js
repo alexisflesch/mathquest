@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: "mathquest-backend",
-      script: "./backend/dist/backend/src/server.js",
-      cwd: "./backend/dist/backend/src",
+      script: "dist/backend/src/server.js",
+      cwd: "./backend",
       env: {
         NODE_ENV: "production",
         REDIS_URL: "redis://localhost:6379"
