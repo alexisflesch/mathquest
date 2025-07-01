@@ -5,7 +5,7 @@
 Replace all legacy or relative `/api/` backend API calls in the frontend with modern, environment-variable-based calls using the `makeApiRequest` helper and `NEXT_PUBLIC_BACKEND_API_URL`.
 
 
-
+--
 
 ## Checklist
 
