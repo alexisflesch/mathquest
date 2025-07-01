@@ -13,11 +13,11 @@ pm2 delete mathquest-backend 2>/dev/null || true
 pm2 start server.js --name mathquest-backend --env production
 echo "Backend (server.js) démarré avec pm2 sur le port 3007 (voir .env)"
 
-# 2. Démarrer/redémarrer le frontend Next.js avec pm2
+# 2. Démarrer/redémarrer le frontend Next.js avec pm2 (méthode robuste)
 cd "$SCRIPT_DIR/frontend" || exit 1
 pm2 delete mathquest-frontend 2>/dev/null || true
-pm2 start npx --name mathquest-frontend --interpreter bash -- start --port 3008
-echo "Frontend Next.js démarré avec pm2 sur le port 3008 (mode serveur)"
+pm2 start node --name mathquest-frontend --cwd "$SCRIPT_DIR/frontend" -- ./node_modules/next/dist/bin/next start -p 3008
+echo "Frontend Next.js démarré avec pm2 sur le port 3008 (mode serveur, méthode node direct)"
 
 # 3. Sauvegarder la configuration pm2
 pm2 save
