@@ -232,11 +232,11 @@ export default function DebugPage() {
                     <h2 className="text-xl font-semibold mb-2">API Testing</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <a
-                            href="/api/auth/status"
+                            href={process.env.NEXT_PUBLIC_BACKEND_API_URL ? `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/auth/status` : '/api/v1/auth/status'}
                             target="_blank"
                             className="px-3 py-1 bg-teal-200 dark:bg-teal-800 text-center rounded hover:bg-teal-300"
                         >
-                            GET /api/auth/status
+                            GET /api/v1/auth/status
                         </a>
                         <a
                             href="/api/auth/clear-cookies"

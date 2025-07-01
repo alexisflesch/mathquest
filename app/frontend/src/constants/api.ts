@@ -13,7 +13,7 @@ export const FRONTEND_API_BASE = '/api';
 export const FRONTEND_AUTH_ENDPOINTS = {
     LOGIN: '/api/auth/universal-login',
     LOGOUT: '/api/auth/logout',
-    STATUS: '/api/auth/status',
+    STATUS: 'auth/status', // Use backend-aware endpoint for status
     REGISTER: '/api/auth/register',
     PROFILE: '/api/auth/profile',
     UPGRADE: '/api/auth/upgrade',

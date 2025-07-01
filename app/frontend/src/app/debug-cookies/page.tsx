@@ -22,8 +22,8 @@ export default function DebugCookiesPage() {
             mathquest_avatar: localStorage.getItem('mathquest_avatar'),
         });
 
-        // Make a request to check server-side cookies
-        fetch('/api/debug-cookies')
+        // Make a request to check server-side cookies (backend)
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:3007/api/v1'}/debug-cookies`)
             .then(res => res.json())
             .then(data => setServerCookies(data))
             .catch(err => console.error('Error fetching server cookies:', err));

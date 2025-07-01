@@ -233,13 +233,14 @@ function StudentCreateTournamentPageInner() {
                 };
 
                 logger.debug("Creating practice GameInstance", requestBody);
-                const gameResponse = await fetch('/api/games', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody)
-                });
+                const gameResponse = await makeApiRequest(
+                    'games',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody),
+                    }
+                );
 
                 if (!gameResponse.ok) {
                     const errorText = await gameResponse.text();
@@ -275,19 +276,15 @@ function StudentCreateTournamentPageInner() {
             };
 
             logger.debug("Games API request body", requestBody);
-            const gameData = await fetch('/api/games', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include', // Include cookies for authentication
-                body: JSON.stringify(requestBody),
-            });
-
-            if (!gameData.ok) {
-                const errorData = await gameData.json();
-                throw new Error(errorData.error || 'Failed to create tournament');
-            }
+            const gameData = await makeApiRequest(
+                'games',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', // Include cookies for authentication
+                    body: JSON.stringify(requestBody),
+                }
+            );
 
             const gameResponse = await gameData.json() as GameCreationResponse;
             logger.info("Tournament created successfully", { code: gameResponse.gameInstance.accessCode });

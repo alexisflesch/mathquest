@@ -544,7 +544,7 @@ export default function TeacherGamesPage() {
                 questions: originalTemplate.questions
             };
 
-            await makeApiRequest('/api/game-templates', {
+            await makeApiRequest('game-templates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(duplicateData)

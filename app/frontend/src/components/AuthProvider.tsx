@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Try to get the existing user by cookieId through the auth status endpoint
                 try {
                     const statusResult = await makeApiRequest<AuthStatusResponse>(
-                        '/api/auth/status',
+                        'auth/status',
                         {},
                         undefined,
                         AuthStatusResponseSchema
@@ -588,16 +588,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Check teacher/student account status via API
         try {
-            const response = await fetch('/api/auth/status', {
-                method: 'GET',
-                credentials: 'include' // Include cookies
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const rawData = await response.json();
+            const rawData = await makeApiRequest<AuthStatusResponse>(
+                'auth/status',
+                { method: 'GET', credentials: 'include' },
+                undefined,
+                AuthStatusResponseSchema
+            );
 
             // Validate response with Zod schema
             let data: AuthStatusResponse;
@@ -750,9 +746,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const key = localStorage.key(i);
                 if (key) allLocal[key] = localStorage.getItem(key);
             }
-             
+
             console.log('[AuthProvider] localStorage:', allLocal);
-             
+
             console.log('[AuthProvider] document.cookie:', document.cookie);
         }
     }, []);
