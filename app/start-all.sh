@@ -13,7 +13,14 @@ pm2 save
 echo "Backend (server.js) démarré avec pm2 sur le port 3007 (voir .env)"
 
 # 2. Démarrer le frontend Next.js en mode serveur (port 3008)
-cd "$(dirname "$0")/frontend" || exit 1
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FRONTEND_DIR="$SCRIPT_DIR/frontend"
+if [ ! -d "$FRONTEND_DIR" ]; then
+  echo "[ERREUR] Le dossier $FRONTEND_DIR n'existe pas. Vérifiez le chemin du frontend."
+  ls -l "$SCRIPT_DIR" # Debug listing
+  exit 1
+fi
+cd "$FRONTEND_DIR" || exit 1
 if ! command -v npx &> /dev/null; then
   echo "npx n'est pas installé. Installez Node.js et npm."
   exit 1
