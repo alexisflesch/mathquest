@@ -44,21 +44,23 @@ const LOG_DIR = path.join(process.cwd(), 'logs');
 // Winston configuration
 const transports = [];
 
+// Always add a console transport for debugging, even in production (remove later if not needed)
+transports.push(
+    new winston.transports.Console({
+        format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+            winston.format.printf(({ timestamp, level, message, component, ...meta }) => {
+                const componentStr = component ? `[${component}] ` : '';
+                const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta, null, 2)}` : '';
+                return `${timestamp} ${level} ${componentStr}${message}${metaStr}`;
+            })
+        )
+    })
+);
+
 if (process.env.NODE_ENV !== 'production') {
     // Development: Console + file (all levels)
-    transports.push(
-        new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.colorize(),
-                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-                winston.format.printf(({ timestamp, level, message, component, ...meta }) => {
-                    const componentStr = component ? `[${component}] ` : '';
-                    const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta, null, 2)}` : '';
-                    return `${timestamp} ${level} ${componentStr}${message}${metaStr}`;
-                })
-            )
-        })
-    );
     transports.push(
         new winston.transports.File({
             filename: path.join(LOG_DIR, 'combined.log'),
@@ -176,8 +178,14 @@ function formatMessage(...args: any[]): string {
 // Create default logger instance
 export const logger = createLogger('Server');
 
-// Startup message to verify winston is working
+
+// Startup messages to verify winston is working and config is correct
 logger.info('Winston logger initialized successfully', {
+    logLevel: LOG_LEVEL,
+    logDir: LOG_DIR,
+    nodeEnv: process.env.NODE_ENV
+});
+logger.warn('Winston logger WARN test: This should appear in combined.log and console if warn logging is working.', {
     logLevel: LOG_LEVEL,
     logDir: LOG_DIR,
     nodeEnv: process.env.NODE_ENV
