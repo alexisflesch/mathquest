@@ -374,7 +374,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loginTeacher = useCallback(async (email: string, password: string) => {
         try {
             const result = await makeApiRequest<UniversalLoginResponse>(
-                '/api/auth',
+                '/api/v1/auth',
                 {
                     method: 'POST',
                     body: JSON.stringify({ action: 'teacher_login', email, password }),
@@ -414,7 +414,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const registerTeacher = useCallback(async (email: string, password: string, username: string, adminPassword: string, avatar: string) => {
         try {
             const result = await makeApiRequest<RegisterResponse>(
-                '/api/auth',
+                '/api/v1/auth',
                 {
                     method: 'POST',
                     body: JSON.stringify({
