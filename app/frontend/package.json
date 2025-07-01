@@ -8,6 +8,7 @@
         "start": "next start -p 3008",
         "lint": "next lint",
         "type-check": "tsc --project tsconfig.json --noEmit --pretty",
+        "light-build": "NEXT_PRIVATE_IGNORE_ESLINT=1 NEXT_PRIVATE_IGNORE_TYPECHECK=1 NODE_OPTIONS=--max-old-space-size=4096 next build",
         "test": "jest",
         "test:coverage": "jest --coverage"
     },
