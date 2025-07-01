@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     if (!backendUrl) {
         return NextResponse.json({ valid: false, reason: 'NO_BACKEND_URL' }, { status: 500 });
     }

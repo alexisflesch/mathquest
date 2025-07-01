@@ -55,7 +55,7 @@ async function validateProjectionAccess(code: string) {
         return { valid: false, reason: 'INVALID_CODE' };
     }
     // Call backend API for access validation
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/validate-dashboard-access`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/validate-dashboard-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accessCode: code }),
@@ -76,9 +76,9 @@ export default async function ProjectionPage({ params }: { params: Promise<{ gam
     if (!code || code === 'undefined') {
         return <AccessErrorPage message="Code d'accès manquant ou invalide." />;
     }
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     if (!backendUrl) {
-        return <AccessErrorPage message="Configuration serveur manquante : NEXT_PUBLIC_BACKEND_URL non défini." />;
+        return <AccessErrorPage message="Configuration serveur manquante : NEXT_PUBLIC_BACKEND_API_URL non défini." />;
     }
     const result = await validateProjectionAccess(code);
     if (!result.valid) {

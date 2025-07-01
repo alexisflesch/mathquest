@@ -56,7 +56,7 @@ export default function TeacherDashboardPage() {
         if (result?.reason === 'INVALID_CODE') message = 'Code d\'accès invalide ou inexistant.';
         if (result?.reason === 'NOT_FOUND') message = 'Quiz introuvable ou supprimé.';
         if (result?.reason === 'UNKNOWN') message = 'Erreur inconnue lors de la validation de l\'accès. Veuillez réessayer ou contacter le support.';
-        if (result?.reason === 'NO_BACKEND_URL') message = 'Configuration serveur manquante : NEXT_PUBLIC_BACKEND_URL non défini.';
+        if (result?.reason === 'NO_BACKEND_URL') message = 'Configuration serveur manquante : NEXT_PUBLIC_BACKEND_API_URL non défini.';
         if (result?.reason === 'FETCH_ERROR') message = 'Erreur réseau lors de la validation de l\'accès. Vérifiez votre connexion ou contactez le support.';
         return <AccessErrorPage message={message} />;
     }
