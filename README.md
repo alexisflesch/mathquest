@@ -106,6 +106,7 @@ cd script
 python3 import_questions.py
 ```
 
+
 ### 6. Lancer l’application
 
 #### En développement
@@ -113,28 +114,36 @@ python3 import_questions.py
 npm run dev
 ```
 
-#### En production
+#### En production (recommandé, tout-en-un)
+Utilisez le script d’automatisation pour lancer le backend **et** le frontend avec pm2 :
 ```bash
-npm run build
-npm start
+bash start-all.sh
+```
+Les deux services seront gérés de façon permanente par pm2 (survivent au reboot et à la fermeture du terminal).
+
+Vous pouvez vérifier l’état avec :
+```bash
+pm2 status
+```
+Pour relancer un service :
+```bash
+pm2 restart mathquest-backend
+pm2 restart mathquest-frontend
 ```
 
-### 7. Lancer le frontend (si séparé)
+#### (Alternative avancée) Lancer séparément
 
-Le frontend Next.js est inclus dans ce dépôt.
+##### Backend seul
+```bash
+cd backend/dist/backend/src
+pm2 start server.js --name mathquest-backend --env production
+```
 
-- Développement :
-  ```bash
-  cd frontend
-  npm install
-  npm run dev
-  ```
-
-- Production :
-  ```bash
-  npm run build
-  npm start
-  ```
+##### Frontend seul
+```bash
+cd frontend
+pm2 start node --name mathquest-frontend --cwd ./ -- ./node_modules/next/dist/bin/next start -p 3008
+```
 
 ---
 

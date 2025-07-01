@@ -6,10 +6,15 @@
 set -e
 
 
-# 1. Démarrer/redémarrer le backend avec pm2
+# 1. Démarrer/redémarrer le backend avec pm2 (avec injection des variables d'environnement .env)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BACKEND_ENV="$SCRIPT_DIR/backend/.env"
 cd "$SCRIPT_DIR/backend/dist/backend/src" || exit 1
 pm2 delete mathquest-backend 2>/dev/null || true
+if [ -f "$BACKEND_ENV" ]; then
+  # Charge les variables d'environnement du backend
+  export $(grep -v '^#' "$BACKEND_ENV" | xargs)
+fi
 pm2 start server.js --name mathquest-backend --env production
 echo "Backend (server.js) démarré avec pm2 sur le port 3007 (voir .env)"
 
