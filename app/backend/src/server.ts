@@ -4,7 +4,14 @@ import path from 'path';
 
 // Load appropriate environment file based on NODE_ENV
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-dotenv.config({ path: path.resolve(__dirname, `../${envFile}`) });
+const envPath = path.resolve(__dirname, `../${envFile}`);
+const dotenvResult = dotenv.config({ path: envPath });
+// Log which .env file is loaded and a key variable for debugging
+console.log(`[ENV] Loaded: ${envPath}`);
+console.log(`[ENV] DATABASE_URL:`, process.env.DATABASE_URL);
+if (dotenvResult.error) {
+    console.error('[ENV] Error loading .env file:', dotenvResult.error);
+}
 
 // Register module aliases for path mapping
 import 'module-alias/register';

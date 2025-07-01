@@ -10,7 +10,6 @@ import { teacherAuth, optionalAuth } from '@/middleware/auth';
 import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
 import type {
-    GameCreationResponse,
     GameInstanceResponse,
     GameJoinResponse,
     GameStatusUpdateResponse,
@@ -19,6 +18,7 @@ import type {
     TeacherActiveGamesResponse,
     GameInstancesByTemplateResponse
 } from '@shared/types/api/responses';
+import type { GameCreationResponse } from '@shared/types/api/schemas';
 import type {
     GameCreationRequest,
     GameJoinRequest,
