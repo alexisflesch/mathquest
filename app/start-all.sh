@@ -6,34 +6,21 @@
 set -e
 
 
-# 1. Démarrer/redémarrer le backend
+# 1. Démarrer/redémarrer le backend avec pm2
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR/backend/dist/backend/src" || exit 1
 pm2 delete mathquest-backend 2>/dev/null || true
 pm2 start server.js --name mathquest-backend --env production
-pm2 save
 echo "Backend (server.js) démarré avec pm2 sur le port 3007 (voir .env)"
 
-# Revenir à la racine du projet pour la suite
-cd "$SCRIPT_DIR"
+# 2. Démarrer/redémarrer le frontend Next.js avec pm2
+cd "$SCRIPT_DIR/frontend" || exit 1
+pm2 delete mathquest-frontend 2>/dev/null || true
+pm2 start npx --name mathquest-frontend --interpreter bash -- start --port 3008
+echo "Frontend Next.js démarré avec pm2 sur le port 3008 (mode serveur)"
 
-# 2. Démarrer le frontend Next.js en mode serveur (port 3008)
-FRONTEND_DIR="$SCRIPT_DIR/frontend"
-if [ ! -d "$FRONTEND_DIR" ]; then
-  echo "[ERREUR] Le dossier $FRONTEND_DIR n'existe pas. Vérifiez le chemin du frontend."
-  ls -l "$SCRIPT_DIR" # Debug listing
-  exit 1
-fi
-cd "$FRONTEND_DIR" || exit 1
-if ! command -v npx &> /dev/null; then
-  echo "npx n'est pas installé. Installez Node.js et npm."
-  exit 1
-fi
-# On force le port 3008 (priorité à .env.local si présent)
-export PORT=3008
-npx next start --port 3008 &
-FRONTEND_PID=$!
-echo "Frontend Next.js démarré sur http://localhost:3008 (mode serveur)"
+# 3. Sauvegarder la configuration pm2
+pm2 save
 
-echo "Les deux services sont lancés. (backend:3007, frontend:3008)"
-wait $FRONTEND_PID
+echo "Les deux services sont lancés et gérés par pm2. (backend:3007, frontend:3008)"
+echo "Utilisez 'pm2 status' pour vérifier, 'pm2 restart mathquest-backend' ou 'pm2 restart mathquest-frontend' pour relancer."
