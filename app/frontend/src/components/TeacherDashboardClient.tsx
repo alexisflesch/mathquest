@@ -124,9 +124,12 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             return;
         }
         logger.info('Initializing socket connection');
+        // Attach JWT from localStorage to socket handshake for production auth
+        const jwtToken = typeof window !== 'undefined' ? localStorage.getItem('mathquest_jwt_token') : null;
         const socket = io(SOCKET_CONFIG.url, {
             ...SOCKET_CONFIG,
-            autoConnect: true
+            autoConnect: true,
+            auth: jwtToken ? { token: jwtToken } : undefined,
         });
         socket.on(SOCKET_EVENTS.CONNECT, () => {
             logger.info('Socket connected:', socket.id);
