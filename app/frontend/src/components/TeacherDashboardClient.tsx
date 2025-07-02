@@ -7,7 +7,7 @@ import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
-import { UsersRound } from "lucide-react";
+import { UsersRound, Trophy } from "lucide-react";
 import type { Question } from '@shared/types/core/question';
 import InfinitySpin from '@/components/InfinitySpin';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -69,6 +69,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const [expandedUids, setExpandedUids] = useState<Set<string>>(new Set());
     const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
     const [showStats, setShowStats] = useState<boolean>(false); // NEW: global stats toggle
+    const [showTrophy, setShowTrophy] = useState<boolean>(false); // NEW: trophy toggle state
 
     // Confirmation dialogs
     const [showConfirm, setShowConfirm] = useState(false);
@@ -521,27 +522,56 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                 {/* Questions Section */}
                 {!loading && (
                     <section>
-                        <div className="flex items-center gap-2 mb-6">
+                        <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-semibold">Questions</h2>
-                            {/* NEW: Global Stats and Trophy Buttons */}
-                            <button
-                                className={`btn btn-outline flex items-center gap-1 ${showStats ? 'bg-blue-100 text-blue-700' : ''}`}
-                                onClick={handleStatsToggleGlobal}
-                                disabled={isDisabled}
-                                aria-pressed={showStats}
-                                title="Afficher/Masquer les statistiques globales"
-                            >
-                                <span role="img" aria-label="Bar Chart">📊</span> Stats
-                            </button>
-                            <button
-                                className="btn btn-outline flex items-center gap-1"
-                                onClick={handleTrophyGlobal}
-                                disabled={isDisabled}
-                                title="Afficher le classement final et les bonnes réponses"
-                            >
-                                <span role="img" aria-label="Trophy">🏆</span> Trophy
-                            </button>
-                            {loading && <InfinitySpin size={32} />}
+                            {/* Minimalist Stats + Trophy block */}
+                            <div className="flex items-center gap-3 ml-auto">
+                                {/* Stats Toggle Button */}
+                                <button
+                                    className={`group p-2 rounded transition-colors border-2
+                                        ${showStats
+                                            ? 'bg-[color:var(--primary)] text-white border-[color:var(--primary)]'
+                                            : 'border-[color:var(--primary)] text-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:bg-opacity-10 hover:text-white'}
+                                        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    onClick={handleStatsToggleGlobal}
+                                    disabled={isDisabled}
+                                    aria-pressed={showStats}
+                                    title="Afficher/Masquer les statistiques globales"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="w-6 h-6 transition-all duration-200 group-hover:stroke-white"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                    >
+                                        <rect x="3" y="10" width="4" height="11" rx="1" />
+                                        <rect x="9.5" y="3" width="4" height="18" rx="1" />
+                                        <rect x="16" y="14" width="4" height="7" rx="1" />
+                                    </svg>
+                                </button>
+                                {/* Trophy Toggle Button */}
+                                <button
+                                    className={`group p-2 rounded transition-colors border-2
+                                        ${showTrophy
+                                            ? 'bg-[color:var(--primary)] text-white border-[color:var(--primary)]'
+                                            : 'border-[color:var(--primary)] text-[color:var(--primary)] hover:bg-[color:var(--primary)] hover:bg-opacity-10 hover:text-white'}
+                                        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    onClick={() => {
+                                        handleTrophyGlobal();
+                                        setShowTrophy((prev) => !prev);
+                                    }}
+                                    disabled={isDisabled}
+                                    aria-pressed={showTrophy}
+                                    title="Afficher/Masquer le classement final et les bonnes réponses"
+                                >
+                                    <Trophy className="w-6 h-6 transition-all duration-200"
+                                        strokeWidth={2}
+                                    />
+                                </button>
+                                {loading && <InfinitySpin size={32} />}
+                            </div>
                         </div>
                         <DraggableQuestionsList
                             quizId={code}
