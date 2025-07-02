@@ -258,6 +258,12 @@ export default function LiveGamePage() {
     useEffect(() => {
         // Only reset when we actually move to a different question
         if (currentQuestionUid && currentQuestionUid !== previousQuestionUid.current) {
+            // Debug logger for question UID changes
+            console.log('[MATHQUEST_QUESTION_UID_CHANGE]', {
+                prev: previousQuestionUid.current,
+                next: currentQuestionUid,
+                timestamp: Date.now(),
+            });
             setSelectedAnswer(null);
             setSelectedAnswers([]);
             // Only hide error snackbar if it's not a timer-related error
@@ -427,6 +433,7 @@ export default function LiveGamePage() {
                 <MathJaxWrapper>
                     {currentQuestion ? (
                         <QuestionCard
+                            key={currentQuestionUid}
                             currentQuestion={currentQuestion}
                             questionIndex={gameState.questionIndex}
                             totalQuestions={gameState.totalQuestions}
