@@ -98,7 +98,7 @@ export default function StudentJoinPage() {
                 className="card w-full max-w-md shadow-xl bg-base-100 my-6"
             >
                 <div className="card-body items-center gap-8">
-                    <h1 className="card-title text-3xl mb-4">Rejoindre une session</h1>
+                    <h1 className="card-title text-2xl mb-4">Rejoindre une activité</h1>
                     <input
                         className="input input-bordered input-lg w-full text-center tracking-widest"
                         type="tel"
@@ -106,7 +106,7 @@ export default function StudentJoinPage() {
                         pattern="[0-9]*"
                         maxLength={8}
                         minLength={4}
-                        placeholder="Code de la session"
+                        placeholder="Code de l'activité"
                         value={code}
                         onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
                         autoFocus

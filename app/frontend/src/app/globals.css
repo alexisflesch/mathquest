@@ -37,6 +37,10 @@
 }
 
 /* Add dropdown-hover-foreground for both themes */
+/*
+  Canonical navbar height variable. Use everywhere for AppNav/topbar height.
+  Change this value to update all layouts at once.
+*/
 :root {
   --navbar-height: 56px;
   --background: #ebf0f5;
@@ -895,9 +899,31 @@ textarea:focus {
   text-decoration: none !important;
 }
 
+
+/*
+  Mobile: main-content sits below fixed AppNav (56px height).
+  Use height: calc(100dvh - 56px) to avoid overflow and unwanted scrollbars.
+  On desktop, revert to default (sidebar layout).
+*/
+
+/*
+  Mobile: main-content sits below fixed AppNav (56px height).
+  Use height: calc(100dvh - 56px) to avoid overflow and unwanted scrollbars.
+  On desktop, ensure min-height: 100dvh for full-viewport layouts.
+*/
+/*
+  Mobile: main-content sits below fixed AppNav (height: var(--navbar-height)).
+  Use height: calc(100dvh - var(--navbar-height)) to avoid overflow and unwanted scrollbars.
+  On desktop, ensure min-height: 100dvh for full-viewport layouts.
+*/
+/*
+  Mobile: main-content sits below fixed AppNav (height: var(--navbar-height)).
+  Use min-height: calc(100dvh - var(--navbar-height)) to allow scrolling for large content.
+  Add overflow-y: auto for scrollable content.
+*/
 .main-content {
-  min-height: 100dvh;
-  padding-top: 56px;
+  min-height: calc(100dvh - var(--navbar-height));
+  overflow-y: auto;
   padding-left: 1rem;
   padding-right: 1rem;
   background: var(--background);
@@ -910,7 +936,9 @@ textarea:focus {
 
 @media (min-width: 768px) {
   .main-content {
-    padding-top: 0;
+    height: auto;
+    min-height: 100dvh;
+    /* Desktop: sidebar, no AppNav at top, no offset needed */
   }
 }
 

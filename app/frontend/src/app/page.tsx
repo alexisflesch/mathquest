@@ -100,6 +100,9 @@ export default function Home() {
               </span>{' '}
               pour écrire des formules.
             </p>
+            <p className="text-lg text-success mt-2">
+              🔓 Pas besoin de compte pour jouer !
+            </p>
           </div>
 
           {/* Features Grid */}
@@ -152,7 +155,7 @@ export default function Home() {
             <div className="bg-base-200 p-6 rounded-lg">
               <h3 className="font-semibold mb-2">💡 Besoin d'aide ?</h3>
               <p>
-                Commencez par vous connecter en choisissant un pseudo et un avatar (pas besoind de créer un compte) puis utilisez le menu pour naviguer dans les différentes sections.
+                Commencez par vous connecter en choisissant un pseudo et un avatar (pas besoin de créer un compte) puis utilisez le menu pour naviguer dans les différentes sections.
               </p>
             </div>
           </div>

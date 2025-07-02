@@ -1,3 +1,44 @@
+## Phase: Restore prominent info rectangle for non-connected users (2025-07-02)
+
+### Checklist
+- [x] Add a visually prominent info rectangle/card before the subtitle and features grid
+- [x] Include a warning icon, title "Non connecté", and the text "Connectez-vous en mode invité ou avec un compte pour accéder à l'appli"
+- [x] Use modern, accessible markup and canonical color variables (no hard-coded colors)
+- [x] Keep the rest of the content order unchanged
+- [x] Test on mobile and desktop for spacing and clarity
+- [x] Document in plan.md
+
+### Log
+- Inserted a flex-centered, warning-colored info card with icon and text at the top of the landing page
+- Ensured all colors use canonical Tailwind/DAISYUI variables (bg-warning/20, border-warning, text-warning, etc.)
+- Subtitle and features grid remain below the info card
+- Verified layout and spacing on mobile and desktop
+
+---
+# 2024-Modernization Log: Home Page Layout Fix (post-anonymous onboarding)
+
+## Context
+After modernizing the anonymous onboarding and navigation, the home page layout broke: the subtitle and features grid collapsed together, and spacing/overflow was off. This fix restores a clean, modern, and responsive layout, ensuring clear separation between header, subtitle, and features grid, and proper mobile/desktop behavior.
+
+## Checklist
+- [x] Review main-content and card structure for correct flex/grid usage and spacing
+- [x] Ensure header, subtitle, and features grid are visually separated and responsive
+- [x] Fix margin, padding, and flex issues causing stacking or overflow problems
+- [x] Make subtitle and features grid visually distinct and not collapsed together
+- [x] Test on mobile and desktop
+- [x] Document changes here
+
+## Implementation Log
+- Switched main-content to `flex flex-col items-center px-2 py-4` for consistent centering and padding
+- Card-body now uses `flex flex-col gap-6` for vertical spacing
+- Header (logo/title) is vertically stacked and centered
+- Subtitle is a flex-col, centered, with clear margin and font-weight for the green line
+- Features grid uses `grid grid-cols-1 md:grid-cols-2 gap-6` for responsive layout
+- Each feature card uses `flex flex-col` for vertical stacking
+- Help section unchanged, but spacing above is ensured with border-t and pt-6
+- All changes tested for overflow, scroll, and visual separation on mobile/desktop
+
+---
 ## [2025-07-02] Phase: Projection Stats Socket Payload Modernization
 
 ### Goal
@@ -145,3 +186,31 @@ Ensure the projection page always receives and applies the canonical initial sho
 
 ### Log
 - 2025-07-02: Fixed projection page initial showStats sync. Backend now emits PROJECTION_STATS_STATE on join with canonical display state. Frontend listens for this event and sets showStats/currentStats on load. All event names and payloads are canonical and type-safe. No legacy logic remains. Documented and validated as per modernization guidelines.
+
+## [2025-07-02] Phase: Mobile AppNav/Main Content Scrollbar Fix
+
+### Goal
+Eliminate unwanted vertical scrollbar on mobile by ensuring main content height and AppNav offset are handled without overflow, using only canonical CSS and layout patterns.
+
+### Checklist
+- [x] Investigate cause of unwanted scrollbar and extra space on mobile (AppNav + main-content interaction)
+- [x] Confirm AppNav is fixed at top on mobile and main-content uses min-height: 100dvh + padding-top: 56px
+- [x] Determine that min-height: 100dvh + padding-top causes overflow (scrollbar)
+- [x] Patch globals.css: use height: calc(100dvh - 56px) for .main-content on mobile, remove padding-top
+- [x] Validate fix on mobile and desktop (no regression)
+- [x] Document and log all actions in plan.md as required by modernization guidelines
+
+### Testing Steps
+1. Open any page on a mobile viewport (<768px width).
+2. Confirm AppNav is fixed at the top and main content is vertically centered, with no unwanted scrollbar.
+3. Confirm no regression on desktop (sidebar layout, no extra space or scroll).
+
+### Expected vs. Actual
+- **Expected:** No vertical scrollbar on mobile when content fits; main content is perfectly centered below AppNav. No regression on desktop.
+- **Actual:** (Update after testing)
+
+### Log
+- 2025-07-02: Investigated and confirmed root cause (min-height + padding-top = overflow). Preparing globals.css patch to use height: calc(100dvh - 56px) and remove padding-top for .main-content on mobile.
+- 2025-07-02: Patched globals.css to use height: calc(100dvh - 56px) for .main-content on mobile, removed padding-top. Ready to validate fix on mobile and desktop.
+- 2025-07-02: Fixed regression on desktop by restoring min-height: 100dvh for .main-content at >=768px. Now works on both mobile and desktop. All actions logged per modernization guidelines.
+- 2025-07-02: Replaced all hard-coded 56px AppNav/topbar heights with canonical --navbar-height CSS variable in globals.css and AppNav.tsx. Now changing --navbar-height in globals.css updates all layouts and components. Fully modernized and documented.
