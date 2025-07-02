@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Register guest user in database so they can be found during upgrade
             try {
                 const result = await makeApiRequest<RegisterResponse>(
-                    '/api/v1/auth/register',
+                    'auth/register',
                     {
                         method: 'POST',
                         body: JSON.stringify({
