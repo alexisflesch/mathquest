@@ -9,6 +9,7 @@ export const gameControlStatePayloadSchema = z.object({
     gameId: z.string(),
     accessCode: z.string(),
     templateName: z.string(),
+    gameInstanceName: z.string(),
     status: z.enum(['pending', 'active', 'paused', 'completed']),
     currentQuestionUid: z.string().nullable(),
     questions: z.array(questionForDashboardSchema),

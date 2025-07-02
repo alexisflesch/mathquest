@@ -33,21 +33,29 @@ const logLevels = {
     debug: 3
 };
 // Set minimum log level based on environment (can be overridden via env var)
-const DEFAULT_LOG_LEVEL = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
-const LOG_LEVEL = process.env.NODE_ENV === 'test' ? 'info' : (process.env.LOG_LEVEL || DEFAULT_LOG_LEVEL);
+// In production, force at least 'warn' to ensure warn+error logs are processed
+let DEFAULT_LOG_LEVEL = 'debug';
+if (process.env.NODE_ENV === 'production') {
+    DEFAULT_LOG_LEVEL = 'warn';
+}
+else if (process.env.NODE_ENV === 'test') {
+    DEFAULT_LOG_LEVEL = 'info';
+}
+const LOG_LEVEL = process.env.LOG_LEVEL || DEFAULT_LOG_LEVEL;
 // Determine log directory
 const LOG_DIR = path_1.default.join(process.cwd(), 'logs');
 // Winston configuration
 const transports = [];
+// Always add a console transport for debugging, even in production (remove later if not needed)
+transports.push(new winston_1.default.transports.Console({
+    format: winston_1.default.format.combine(winston_1.default.format.colorize(), winston_1.default.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }), winston_1.default.format.printf(({ timestamp, level, message, component, ...meta }) => {
+        const componentStr = component ? `[${component}] ` : '';
+        const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta, null, 2)}` : '';
+        return `${timestamp} ${level} ${componentStr}${message}${metaStr}`;
+    }))
+}));
 if (process.env.NODE_ENV !== 'production') {
     // Development: Console + file (all levels)
-    transports.push(new winston_1.default.transports.Console({
-        format: winston_1.default.format.combine(winston_1.default.format.colorize(), winston_1.default.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }), winston_1.default.format.printf(({ timestamp, level, message, component, ...meta }) => {
-            const componentStr = component ? `[${component}] ` : '';
-            const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta, null, 2)}` : '';
-            return `${timestamp} ${level} ${componentStr}${message}${metaStr}`;
-        }))
-    }));
     transports.push(new winston_1.default.transports.File({
         filename: path_1.default.join(LOG_DIR, 'combined.log'),
         level: 'debug',
@@ -64,7 +72,14 @@ if (process.env.NODE_ENV !== 'production') {
     }));
 }
 else {
-    // Production: Only file, only errors
+    // Production: Write WARN and ERROR to combined.log, ERROR to error.log
+    transports.push(new winston_1.default.transports.File({
+        filename: path_1.default.join(LOG_DIR, 'combined.log'),
+        level: 'warn', // includes warn and error
+        maxsize: 10 * 1024 * 1024,
+        maxFiles: 5,
+        format: winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.json())
+    }));
     transports.push(new winston_1.default.transports.File({
         filename: path_1.default.join(LOG_DIR, 'error.log'),
         level: 'error',
@@ -123,8 +138,13 @@ function formatMessage(...args) {
 }
 // Create default logger instance
 exports.logger = createLogger('Server');
-// Startup message to verify winston is working
+// Startup messages to verify winston is working and config is correct
 exports.logger.info('Winston logger initialized successfully', {
+    logLevel: LOG_LEVEL,
+    logDir: LOG_DIR,
+    nodeEnv: process.env.NODE_ENV
+});
+exports.logger.warn('Winston logger WARN test: This should appear in combined.log and console if warn logging is working.', {
     logLevel: LOG_LEVEL,
     logDir: LOG_DIR,
     nodeEnv: process.env.NODE_ENV

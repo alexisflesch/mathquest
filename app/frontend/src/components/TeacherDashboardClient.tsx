@@ -58,7 +58,9 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
 
     // Basic state
     const [questions, setQuestions] = useState<Question[]>([]);
+    // Modernization: Store both templateName and gameInstanceName for dashboard title
     const [quizName, setQuizName] = useState<string>("");
+    const [gameInstanceName, setGameInstanceName] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -163,9 +165,12 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                 logger.info(`📍 Alternative room format (if quiz mode): teacher_<userId>_${code}`);
                 logger.info(`📍 Current accessCode: ${code}`);
             }
-            // Prefer templateName for activity name
+            // Modernization: Store both templateName and gameInstanceName for dashboard title
             if (canonicalState.templateName) {
                 setQuizName(canonicalState.templateName);
+            }
+            if (canonicalState.gameInstanceName) {
+                setGameInstanceName(canonicalState.gameInstanceName);
             }
             if (canonicalState.questions) {
                 const processedQuestions = canonicalState.questions.map(mapToCanonicalQuestion);
@@ -447,30 +452,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     }, [quizSocket, code, gameId, userProfile?.userId]);
 
     // Fetch quiz/activity name from API for reliability
-    useEffect(() => {
-        async function fetchQuizName() {
-            if (!code) return;
-            try {
-                // Modernization: Use makeApiRequest to Next.js API route
-                const data = await makeApiRequest<any>(`/api/games/access-code/${code}`);
-                // Prefer templateName for activity name
-                if (data && typeof data === 'object') {
-                    if (data.gameInstance && data.gameInstance.templateName) {
-                        setQuizName(data.gameInstance.templateName);
-                    } else if (data.templateName) {
-                        setQuizName(data.templateName);
-                    } else if (data.gameInstance && data.gameInstance.quizName) {
-                        setQuizName(data.gameInstance.quizName);
-                    } else if (data.quizName) {
-                        setQuizName(data.quizName);
-                    }
-                }
-            } catch (err) {
-                logger.warn('Failed to fetch quiz name from API:', err);
-            }
-        }
-        fetchQuizName();
-    }, [code]);
+    // Remove legacy fetchQuizName effect: all naming now comes from socket payload
 
     if (authLoading) return <LoadingScreen message="Vérification de l'authentification..." />;
     if (loading) return <LoadingScreen message="Chargement du tableau de bord..." />;
@@ -487,7 +469,10 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                                Activité <span className="italic">{quizName || '...'}</span>
+                                Activité <span className="text-lg sm:text-xl font-semibold text-foreground align-middle">{quizName || '...'}</span>
+                                {gameInstanceName && (
+                                    <span className="ml-2 text-base font-normal text-muted-foreground">— <span className="italic">{gameInstanceName}</span></span>
+                                )}
                             </h1>
                             {/* Projection page link */}
                             <a

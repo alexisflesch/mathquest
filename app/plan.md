@@ -1,4 +1,3 @@
-
 ## [2025-07-02] Phase: Dropdown Modernization (Light/Dark Theme Compliance)
 
 ### Goal
@@ -30,3 +29,18 @@ Modernize all dropdown components to use only canonical theme variables from `gl
 
 ### Log
 - 2025-07-02: Modernized `MultiSelectDropdown` and `EnhancedSingleSelectDropdown` to use only canonical theme classes for all states. Removed all hard-coded color styles. Next: update `EnhancedMultiSelectDropdown` and confirm all dropdowns are compliant.
+
+## [2025-07-02] Phase: Dashboard GameControlStatePayload Modernization
+
+### Goal
+Add `gameInstanceName` to the canonical dashboard state payload, update Zod validation, and ensure all backend/frontend usage is aligned. Document all changes per modernization guidelines.
+
+### Checklist
+- [x] Update shared TypeScript interface for dashboard state payload to include `gameInstanceName`
+- [x] Update Zod schema for dashboard state payload to require `gameInstanceName`
+- [x] Ensure all backend/frontend usage is aligned with new field
+- [x] Update dashboard page to display GameInstance name in the title
+- [ ] Log/document all changes as per modernization guidelines
+
+### Log
+- 2025-07-02: Frontend dashboard now displays both template (activity) name and GameInstance name in the title, using canonical socket payload only. Legacy API fetch removed.

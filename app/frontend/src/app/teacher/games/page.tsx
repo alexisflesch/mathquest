@@ -254,26 +254,26 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
 
                                                 if (instance.playMode === 'practice') {
                                                     statusLabel = 'Disponible';
-                                                    subtext = instance.accessCode ? `Code: ${instance.accessCode}` : '';
+                                                    subtext = instance.accessCode ? ` ${instance.accessCode}` : '';
                                                 } else if (instance.playMode === 'tournament') {
                                                     if (differedTo && differedTo < now) {
                                                         statusLabel = 'Terminé';
-                                                        subtext = instance.accessCode ? `Code: ${instance.accessCode}` : '';
+                                                        subtext = instance.accessCode ? `${instance.accessCode}` : '';
                                                     } else {
                                                         statusLabel = 'Disponible';
                                                         if (differedFrom && differedTo) {
                                                             const format = (d: Date) => d.toLocaleDateString('fr-FR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-                                                            subtext = `${instance.accessCode ? `Code: ${instance.accessCode} • ` : ''}${format(differedFrom)} → ${format(differedTo)}`;
+                                                            subtext = `${instance.accessCode ? `${instance.accessCode} • ` : ''}${format(differedFrom)} → ${format(differedTo)}`;
                                                         } else {
-                                                            subtext = instance.accessCode ? `Code: ${instance.accessCode}` : '';
+                                                            subtext = instance.accessCode ? `${instance.accessCode}` : '';
                                                         }
                                                     }
                                                 } else {
                                                     // Quiz
                                                     statusLabel = instance.status === 'pending' ? 'En attente' :
-                                                        instance.status === 'active' ? 'Active' :
-                                                            instance.status === 'completed' ? 'Terminée' : 'Annulée';
-                                                    subtext = instance.accessCode ? `Code: ${instance.accessCode}` : '';
+                                                        instance.status === 'active' ? 'Actif' :
+                                                            instance.status === 'completed' ? '' : 'Annulée';
+                                                    subtext = instance.accessCode ? `${instance.accessCode}` : '';
                                                     if (subtext && instance.createdAt) {
                                                         subtext += ` • ${formatDate(instance.createdAt)}`;
                                                     } else if (instance.createdAt) {
@@ -314,27 +314,48 @@ function ActivityCard({ template, expanded, onToggle, onStartActivity, onDuplica
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <span
-                                                                    className={`px-2 py-1 text-xs ${(instance.playMode === 'practice' || (instance.playMode === 'tournament' && statusLabel === 'Disponible')) ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
-                                                                        statusLabel === 'Terminé' ? 'bg-[color:var(--primary)] text-[color:var(--card)]' :
+                                                                {/* Status label: only for tournament, not for quiz when completed */}
+                                                                {instance.playMode === 'tournament' && (
+                                                                    <span
+                                                                        className={`px-2 py-1 text-xs ${statusLabel === 'Disponible' ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
+                                                                            statusLabel === 'Terminé' ? 'bg-[color:var(--primary)] text-[color:var(--card)]' :
+                                                                                statusLabel === 'En attente' ? 'bg-[color:var(--muted)] text-[color:var(--muted-foreground)]' :
+                                                                                    statusLabel === 'Active' ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
+                                                                                        'bg-[color:var(--alert)] text-[color:var(--card)]'
+                                                                            }`}
+                                                                        style={{ borderRadius: 'var(--radius)' }}
+                                                                    >
+                                                                        {statusLabel}
+                                                                    </span>
+                                                                )}
+                                                                {/* For quiz: do not show label if completed */}
+                                                                {instance.playMode === 'quiz' && instance.status !== 'completed' && (
+                                                                    <span
+                                                                        className={`px-2 py-1 text-xs ${statusLabel === 'Disponible' ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
                                                                             statusLabel === 'En attente' ? 'bg-[color:var(--muted)] text-[color:var(--muted-foreground)]' :
                                                                                 statusLabel === 'Active' ? 'bg-[color:var(--success)] text-[color:var(--card)]' :
                                                                                     'bg-[color:var(--alert)] text-[color:var(--card)]'
-                                                                        }`}
-                                                                    style={{ borderRadius: 'var(--radius)' }}
-                                                                >
-                                                                    {statusLabel}
-                                                                </span>
+                                                                            }`}
+                                                                        style={{ borderRadius: 'var(--radius)' }}
+                                                                    >
+                                                                        {statusLabel}
+                                                                    </span>
+                                                                )}
+                                                                {/* Tournament: keep button as is. Quiz: fix results link */}
                                                                 {instance.playMode === 'quiz' && (
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            window.open(`/teacher/dashboard/${instance.accessCode}`, '_blank');
+                                                                            if (instance.status === 'completed') {
+                                                                                window.open(`/leaderboard/${instance.accessCode}`, '_blank');
+                                                                            } else {
+                                                                                window.open(`/teacher/dashboard/${instance.accessCode}`, '_blank');
+                                                                            }
                                                                         }}
                                                                         className="text-xs px-2 py-1 bg-[color:var(--success)] text-[color:var(--success-foreground)] rounded hover:bg-opacity-90 transition-colors"
                                                                     >
                                                                         {instance.status === 'active' || instance.status === 'pending' ? 'Piloter' :
-                                                                            instance.status === 'completed' ? 'Voir résultats' : 'Voir détails'}
+                                                                            instance.status === 'completed' ? 'Résultats' : 'Voir détails'}
                                                                     </button>
                                                                 )}
                                                                 <button
@@ -795,7 +816,8 @@ export default function TeacherGamesPage() {
             <div className="sm:hidden">
                 <Link
                     href="/teacher/games/new"
-                    className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:bg-navbar transition-colors"
+                    className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors"
+                    style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
                 >
                     <Plus size={24} />
                 </Link>

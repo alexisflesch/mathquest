@@ -23,6 +23,12 @@ const logger = (0, logger_1.default)('ConnectionHandlers');
 function registerConnectionHandlers(io) {
     io.on('connection', (socket) => {
         logger.info('[SOCKET DEBUG] New socket connection:', socket.id);
+        console.log('[SOCKET DEBUG] New socket connection:', socket.id, {
+            handshake: socket.handshake,
+            headers: socket.handshake.headers,
+            auth: socket.handshake.auth,
+            query: socket.handshake.query
+        });
         // TOP-LEVEL: Log all events received by any socket for deep debugging
         socket.onAny((event, ...args) => {
             logger.info('[SOCKET DEBUG] onAny:', event, args, 'socket:', socket.id);

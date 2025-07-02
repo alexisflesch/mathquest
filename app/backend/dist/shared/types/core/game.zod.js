@@ -15,8 +15,8 @@ exports.GameTemplateBaseSchema = zod_1.z.object({
     discipline: zod_1.z.string().nullable().optional(),
     description: zod_1.z.string().nullable().optional(),
     defaultMode: exports.PlayModeSchema.nullable().optional(),
-    createdAt: zod_1.z.date(),
-    updatedAt: zod_1.z.date(),
+    createdAt: zod_1.z.coerce.date(),
+    updatedAt: zod_1.z.coerce.date(),
     creatorId: zod_1.z.string(),
     // Relations
     creator: zod_1.z.any().optional(), // User type would go here
@@ -31,11 +31,11 @@ exports.GameInstanceBaseSchema = zod_1.z.object({
     leaderboard: zod_1.z.any().optional(), // JSON
     currentQuestionIndex: zod_1.z.number().nullable().optional(),
     settings: zod_1.z.any().optional(), // JSON
-    createdAt: zod_1.z.date(),
-    startedAt: zod_1.z.date().nullable().optional(),
-    endedAt: zod_1.z.date().nullable().optional(),
-    differedAvailableFrom: zod_1.z.date().nullable().optional(),
-    differedAvailableTo: zod_1.z.date().nullable().optional(),
+    createdAt: zod_1.z.coerce.date(),
+    startedAt: zod_1.z.coerce.date().nullable().optional(),
+    endedAt: zod_1.z.coerce.date().nullable().optional(),
+    differedAvailableFrom: zod_1.z.coerce.date().nullable().optional(),
+    differedAvailableTo: zod_1.z.coerce.date().nullable().optional(),
     isDiffered: zod_1.z.boolean(),
     gameTemplateId: zod_1.z.string(),
     initiatorUserId: zod_1.z.string().nullable().optional(),
@@ -44,7 +44,7 @@ exports.GameInstanceBaseSchema = zod_1.z.object({
 });
 exports.GameParticipantRecordSchema = zod_1.z.object({
     id: zod_1.z.string(),
-    joinedAt: zod_1.z.date(),
+    joinedAt: zod_1.z.coerce.date(),
     avatarAnimal: zod_1.z.string().optional(),
     answers: zod_1.z.any().optional(), // JSON - could be more specific later
     gameInstanceId: zod_1.z.string(),
@@ -87,8 +87,8 @@ exports.GameInstanceCreationDataSchema = zod_1.z.object({
     initiatorUserId: zod_1.z.string().optional(),
     settings: zod_1.z.any().optional(),
     isDiffered: zod_1.z.boolean().optional(),
-    differedAvailableFrom: zod_1.z.date().optional(),
-    differedAvailableTo: zod_1.z.date().optional()
+    differedAvailableFrom: zod_1.z.coerce.date().optional(),
+    differedAvailableTo: zod_1.z.coerce.date().optional()
 });
 exports.GameInstanceUpdateDataSchema = zod_1.z.object({
     name: zod_1.z.string().optional(),
@@ -96,6 +96,6 @@ exports.GameInstanceUpdateDataSchema = zod_1.z.object({
     currentQuestionIndex: zod_1.z.number().nullable().optional(),
     leaderboard: zod_1.z.any().optional(),
     settings: zod_1.z.any().optional(),
-    startedAt: zod_1.z.date().nullable().optional(),
-    endedAt: zod_1.z.date().nullable().optional()
+    startedAt: zod_1.z.coerce.date().nullable().optional(),
+    endedAt: zod_1.z.coerce.date().nullable().optional()
 });
