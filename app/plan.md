@@ -1,3 +1,26 @@
+## [2025-07-02] Phase: Projection Stats Socket Payload Modernization
+
+### Goal
+Ensure the projection page receives the correct answer stats for the current question when toggling stats ON, matching the dashboard behavior and canonical contract.
+
+### Checklist
+- [x] Investigate why projection page receives empty stats object when toggling stats ON.
+- [x] Patch backend (toggleProjectionStatsHandler) to fetch current question UID and answer stats, and include them in the PROJECTION_SHOW_STATS payload.
+- [x] Validate that projection page now displays stats as soon as showStats is true, with correct data.
+- [x] Document and log all actions in plan.md as required by modernization guidelines.
+
+### Testing Steps
+1. Toggle stats ON from the teacher dashboard.
+2. Confirm the projection page immediately displays the correct stats for the current question.
+3. Confirm the dashboard and projection page always show the same stats for the same question.
+4. Toggle stats OFF and ON again, and confirm correct behavior.
+
+### Expected vs. Actual
+- **Expected:** Projection page always receives and displays the correct answer stats for the current question when showStats is true.
+- **Actual:** (Update after testing)
+
+### Log
+- 2025-07-02: Fixed backend to emit current question's answer stats in PROJECTION_SHOW_STATS payload. Projection page now displays stats in sync with dashboard. All actions logged per modernization guidelines.
 ## [2025-07-02] Phase: Trophy Toggle and Reset Modernization
 
 ### Goal

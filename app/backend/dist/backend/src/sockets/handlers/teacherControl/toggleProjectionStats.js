@@ -93,12 +93,32 @@ function toggleProjectionStatsHandler(io, socket) {
             catch (persistError) {
                 logger.error({ persistError, resolvedAccessCode }, 'Failed to persist showStats state');
             }
-            // Prepare projection stats payload (no questionUid)
-            const projectionStatsPayload = {
+            // Prepare projection stats payload: fetch current question and stats if toggling ON
+            let projectionStatsPayload = {
                 show,
-                stats: show ? {} : {}, // No stats for global toggle, backend/projection can decide what to show
+                stats: {},
                 timestamp: Date.now()
             };
+            if (show) {
+                // Fetch current question UID and answer stats
+                const { getFullGameState } = await Promise.resolve().then(() => __importStar(require('@/core/services/gameStateService')));
+                const { getAnswerStats } = await Promise.resolve().then(() => __importStar(require('./helpers')));
+                const fullState = await getFullGameState(gameInstance.accessCode);
+                const gameState = fullState?.gameState;
+                let currentQuestionUid = null;
+                if (gameState && typeof gameState.currentQuestionIndex === 'number' && Array.isArray(gameState.questionUids)) {
+                    currentQuestionUid = gameState.questionUids[gameState.currentQuestionIndex] || null;
+                }
+                if (currentQuestionUid) {
+                    const answerStats = await getAnswerStats(gameInstance.accessCode, currentQuestionUid);
+                    projectionStatsPayload = {
+                        show,
+                        stats: answerStats || {},
+                        questionUid: currentQuestionUid,
+                        timestamp: Date.now()
+                    };
+                }
+            }
             // Emit to projection room
             io.to(`projection_${gameInstance.id}`).emit(events_1.PROJECTOR_EVENTS.PROJECTION_SHOW_STATS, projectionStatsPayload);
             logger.info({ projectionStatsPayload }, 'Emitted global projection stats toggle');

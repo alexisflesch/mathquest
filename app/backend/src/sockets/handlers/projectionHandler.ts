@@ -245,15 +245,34 @@ export function projectionHandler(io: Server, socket: Socket) {
                 });
                 logger.info({ gameId, showStats: displayState.showStats }, 'Sent initial PROJECTION_STATS_STATE');
 
-                // If stats are currently shown, also send the show stats event for legacy compatibility
-                if (displayState.showStats && displayState.statsQuestionUid) {
+                // If stats are currently shown, fetch latest stats for current question and emit
+                if (displayState.showStats) {
+                    // Fetch current question UID from canonical game state
+                    const { getFullGameState } = await import('@/core/services/gameStateService');
+                    const { getAnswerStats } = await import('./teacherControl/helpers');
+                    const fullState = await getFullGameState(gameInstance.accessCode);
+                    const gameState = fullState?.gameState;
+                    let currentQuestionUid = null;
+                    if (gameState && typeof gameState.currentQuestionIndex === 'number' && Array.isArray(gameState.questionUids)) {
+                        currentQuestionUid = gameState.questionUids[gameState.currentQuestionIndex] || null;
+                    }
+                    let answerStats = {};
+                    if (currentQuestionUid) {
+                        answerStats = await getAnswerStats(gameInstance.accessCode, currentQuestionUid);
+                    }
+                    // Emit canonical event with latest stats
                     socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, {
-                        questionUid: displayState.statsQuestionUid,
+                        questionUid: currentQuestionUid,
                         show: true,
-                        stats: displayState.currentStats,
+                        stats: answerStats,
                         timestamp: Date.now()
                     });
-                    logger.info({ gameId, questionUid: displayState.statsQuestionUid }, 'Sent initial stats state (visible)');
+                    logger.info({ gameId, questionUid: currentQuestionUid }, 'Sent initial stats state (canonical, fresh stats)');
+                    // Optionally update Redis display state for consistency
+                    await gameStateService.updateProjectionDisplayState(gameInstance.accessCode, {
+                        currentStats: answerStats,
+                        statsQuestionUid: currentQuestionUid
+                    });
                 }
 
                 // If correct answers are currently shown

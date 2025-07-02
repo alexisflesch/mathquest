@@ -129,9 +129,14 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
             return { ...prev, [id]: newZoom };
         });
     };
+    // Convert currentStats (counts) to percentages for QuestionCard
+    const totalAnswers = Object.values(currentStats).reduce((sum, count) => sum + count, 0);
+    const statsArray = Object.keys(currentStats).length > 0 && totalAnswers > 0
+        ? Object.keys(currentStats).map((k) => (currentStats[Number(k)] / totalAnswers) * 100)
+        : [];
     const statsToShow: StatsData = {
-        stats: Object.values(currentStats),
-        totalAnswers: Object.values(currentStats).reduce((sum, count) => sum + count, 0)
+        stats: statsArray,
+        totalAnswers
     };
     return (
         <div className="main-content w-full max-w-none px-0">
