@@ -336,6 +336,30 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
             }
         }
 
+        // --- Emit initial showStats state to dashboard (for global stats toggle) ---
+        try {
+            const gameAccessCode = gameInstance?.accessCode || accessCode;
+            if (gameAccessCode) {
+                const displayState = await gameStateService.getProjectionDisplayState(gameAccessCode);
+                // Emit initial showStats state
+                if (displayState && typeof displayState.showStats === 'boolean') {
+                    socket.emit(TEACHER_EVENTS.TOGGLE_PROJECTION_STATS, {
+                        show: displayState.showStats
+                    });
+                    logger.info({ showStats: displayState.showStats, gameAccessCode }, 'Emitted initial showStats state to dashboard');
+                }
+                // Emit initial showCorrectAnswers state (trophy)
+                if (displayState && typeof displayState.showCorrectAnswers === 'boolean') {
+                    socket.emit(TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, {
+                        show: displayState.showCorrectAnswers
+                    });
+                    logger.info({ showCorrectAnswers: displayState.showCorrectAnswers, gameAccessCode }, 'Emitted initial showCorrectAnswers state to dashboard');
+                }
+            }
+        } catch (err) {
+            logger.error({ err }, 'Error emitting initial showStats state to dashboard');
+        }
+
         // Add a global catch-all event logger for deep debugging
         socket.onAny((event, ...args) => {
             logger.info({ event, args }, 'Socket.IO onAny event received');

@@ -29,6 +29,7 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
 
             // Use accessCode or gameId to find the game
             let gameInstance;
+            let resolvedAccessCode = accessCode;
             if (accessCode) {
                 gameInstance = await prisma.gameInstance.findUnique({
                     where: { accessCode }
@@ -37,6 +38,9 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
                 gameInstance = await prisma.gameInstance.findUnique({
                     where: { id: gameId }
                 });
+                if (gameInstance) {
+                    resolvedAccessCode = gameInstance.accessCode;
+                }
             }
 
             if (!gameInstance) {
@@ -45,6 +49,17 @@ export function toggleProjectionStatsHandler(io: SocketIOServer, socket: Socket)
                     error: 'Game not found'
                 });
                 return;
+            }
+
+            // Persist the new showStats state
+            try {
+                const { updateProjectionDisplayState } = await import('@/core/services/gameStateService');
+                if (resolvedAccessCode) {
+                    await updateProjectionDisplayState(resolvedAccessCode, { showStats: show });
+                    logger.info({ showStats: show, resolvedAccessCode }, 'Persisted showStats state');
+                }
+            } catch (persistError) {
+                logger.error({ persistError, resolvedAccessCode }, 'Failed to persist showStats state');
             }
 
             // Prepare projection stats payload (no questionUid)

@@ -44,6 +44,7 @@ interface DraggableQuestionsListProps {
     onPause: () => void;
     onStop: () => void;
     onEditTimer: (uid: string, newTime: number) => void;
+    onResume: (uid: string) => void;
     onReorder?: (newQuestions: Question[]) => void;
     timerStatus?: 'run' | 'pause' | 'stop';
     timerQuestionUid?: string | null;
@@ -78,6 +79,7 @@ export default function DraggableQuestionsList({
     onPause,
     onStop,
     onEditTimer,
+    onResume,
     onReorder,
     timerStatus,
     timerQuestionUid,
@@ -213,8 +215,7 @@ export default function DraggableQuestionsList({
                         open={expandedUids.has(q.uid)}
                         setOpen={() => onToggleExpand(q.uid)}
                         onPlay={(uid, timerValue) => {
-                            logger.info(`[DEBUG][DraggableQuestionsList] onPlay for ${uid} with timerValue (ms): ${timerValue}`);
-                            handlePlay(uid, timerValue);
+                            onPlay(uid, timerValue);
                         }}
                         onEditTimer={(newTimeMs) => {
                             logger.info(`[DEBUG][DraggableQuestionsList] onEditTimer for ${q.uid} with newTimeMs: ${newTimeMs}`);
@@ -229,6 +230,7 @@ export default function DraggableQuestionsList({
                         quizId={quizId}
                         currentTournamentCode={currentTournamentCode}
                         stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
+                        onResume={(uid) => onPlay(uid, 0)}
                     />
                 );
             })}

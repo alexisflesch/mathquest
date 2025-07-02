@@ -132,11 +132,40 @@ async function getCanonicalDurationMs(questionUid: string): Promise<number> {
         logger.warn({ questionUid }, '[getCanonicalDurationMs] No questionUid provided, using fallback 30000ms');
         return 30000; // fallback
     }
+
+    // Only scan keys that match the canonical game state pattern: mathquest:game:<accessCode> (no extra colons)
+    const redisKeys = await redisClient.keys(`${GAME_KEY_PREFIX}*`);
+    let foundGameState: any = null;
+    let foundAccessCode: string | null = null;
+    for (const key of redisKeys) {
+        // Only consider keys with exactly one colon after the prefix (i.e., no extra colons)
+        const suffix = key.replace(GAME_KEY_PREFIX, '');
+        if (suffix.includes(':')) continue; // skip keys like mathquest:game:answers:...
+        const raw = await redisClient.get(key);
+        if (!raw) continue;
+        try {
+            const state = JSON.parse(raw);
+            if (state && state.questionTimeLimits && state.questionTimeLimits[questionUid] !== undefined) {
+                foundGameState = state;
+                foundAccessCode = suffix;
+                break;
+            }
+        } catch (e) {
+            logger.error({ key, error: e }, '[getCanonicalDurationMs] Failed to parse game state JSON');
+        }
+    }
+    if (foundGameState && foundGameState.questionTimeLimits && foundGameState.questionTimeLimits[questionUid] !== undefined) {
+        const overrideSec = foundGameState.questionTimeLimits[questionUid];
+        const overrideMs = Math.round(Number(overrideSec) * 1000);
+        logger.info({ questionUid, overrideSec, overrideMs, accessCode: foundAccessCode }, '[getCanonicalDurationMs] Using override from Redis gameState.questionTimeLimits');
+        if (overrideMs > 0) return overrideMs;
+    }
+
+    // Fallback to DB
     const question = await prisma.question.findUnique({ where: { uid: questionUid } });
-    logger.warn({ questionUid, question, timeLimit: question?.timeLimit }, '[getCanonicalDurationMs] Fetched question for canonical duration');
-    // Canonical: durationMs is always ms, but DB only has timeLimit (seconds)
+    logger.warn({ questionUid, question, timeLimit: question?.timeLimit }, '[getCanonicalDurationMs] Fetched question for canonical duration (DB fallback)');
     if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
-        logger.warn({ questionUid, timeLimit: question.timeLimit, durationMs: question.timeLimit * 1000 }, '[getCanonicalDurationMs] Using question.timeLimit for canonical durationMs');
+        logger.warn({ questionUid, timeLimit: question.timeLimit, durationMs: question.timeLimit * 1000 }, '[getCanonicalDurationMs] Using question.timeLimit for canonical durationMs (DB fallback)');
         return question.timeLimit * 1000;
     }
     logger.warn({ questionUid, question }, '[getCanonicalDurationMs] No valid timeLimit, using fallback 30000ms');
@@ -390,8 +419,60 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
 
             switch (action) {
                 case 'run': {
+                    // --- MODERNIZATION: Always use teacher's requested durationMs for timer run ---
+                    let effectiveDurationMs: number;
+                    effectiveDurationMs = validPayload.durationMs && typeof validPayload.durationMs === 'number' && validPayload.durationMs > 0
+                        ? validPayload.durationMs
+                        : canonicalDurationMs;
+                    logger.info({
+                        accessCode,
+                        questionUid: String(canonicalQuestionUid),
+                        effectiveDurationMs,
+                        canonicalDurationMs,
+                        msg: '[DEBUG][RUN] Before startTimer, about to persist durationMs, values:'
+                    }, '[DEBUG][RUN] effectiveDurationMs and canonicalDurationMs before persistence');
                     // --- MODERNIZATION: Mark quiz as active if pending ---
                     logger.info({ accessCode, currentStatus: gameState.status }, '[TIMER_ACTION][RUN] Checking if game status is pending before starting timer');
+                    // [TROPHY_DEBUG] Reset showCorrectAnswers to false on every timer run action (projection display state)
+                    logger.info({
+                        accessCode,
+                        gameId,
+                        action,
+                        marker: '[TROPHY_DEBUG]',
+                        message: '[TROPHY_DEBUG] About to reset showCorrectAnswers to false and emit show_correct_answers { show: false }'
+                    }, '[TROPHY_DEBUG] About to reset showCorrectAnswers to false and emit show_correct_answers { show: false }');
+                    try {
+                        await gameStateService.updateProjectionDisplayState(accessCode, {
+                            showCorrectAnswers: false,
+                            correctAnswersData: null
+                        });
+                        const projectionStateAfter = await gameStateService.getProjectionDisplayState(accessCode);
+                        logger.info({
+                            accessCode,
+                            gameId,
+                            action,
+                            projectionStateAfter,
+                            marker: '[TROPHY_DEBUG]',
+                            message: '[TROPHY_DEBUG] showCorrectAnswers reset to false on timer run action (projection display state)'
+                        }, '[TROPHY_DEBUG] showCorrectAnswers reset to false on timer run action (projection display state)');
+                        // Emit to dashboard room so teacher UI updates trophy state (reset to false)
+                        const dashboardRoom = `dashboard_${gameId}`;
+                        io.to(dashboardRoom).emit(TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, { show: false });
+                        logger.info({
+                            dashboardRoom,
+                            show: false,
+                            event: TEACHER_EVENTS.SHOW_CORRECT_ANSWERS
+                        }, '[TROPHY_DEBUG] Emitted show_correct_answers { show: false } to dashboard room (timer run reset)');
+                    } catch (err) {
+                        logger.error({
+                            accessCode,
+                            gameId,
+                            action,
+                            err,
+                            marker: '[TROPHY_DEBUG]',
+                            message: '[TROPHY_DEBUG] Failed to reset showCorrectAnswers on timer run action (projection display state)'
+                        }, '[TROPHY_DEBUG] Failed to reset showCorrectAnswers on timer run action (projection display state)');
+                    }
                     if (gameState.status === 'pending') {
                         logger.info({ accessCode, previousStatus: 'pending' }, '[TIMER_ACTION][RUN] Game status is pending, updating to active');
                         gameState.status = 'active';
@@ -410,41 +491,97 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     } else {
                         logger.info({ accessCode, currentStatus: gameState.status }, '[TIMER_ACTION][RUN] Game status is not pending, no update needed');
                     }
-                    // --- CANONICAL: Always use edited duration if present ---
-                    let effectiveDurationMs = canonicalDurationMs;
-                    let redisTimer: any = null;
-                    try {
-                        redisTimer = await canonicalTimerService.getRawTimerFromRedis(accessCode, String(canonicalQuestionUid), playMode, isDiffered, userId);
-                        if (redisTimer && typeof redisTimer.durationMs === 'number' && redisTimer.durationMs > 0) {
-                            effectiveDurationMs = redisTimer.durationMs;
-                            logger.warn({
-                                accessCode,
-                                questionUid: String(canonicalQuestionUid),
-                                originalDurationMs: canonicalDurationMs,
-                                editedDurationMs: redisTimer.durationMs
-                            }, '[TIMER_ACTION][RUN] Using edited canonical durationMs from Redis');
-                        } else if (redisTimer) {
-                            logger.warn({
-                                accessCode,
-                                questionUid: String(canonicalQuestionUid),
-                                canonicalDurationMs,
-                                redisTimer
-                            }, '[TIMER_ACTION][RUN] No edited durationMs in Redis, using canonicalDurationMs from DB');
-                        } else {
-                            logger.warn({
-                                accessCode,
-                                questionUid: String(canonicalQuestionUid),
-                                canonicalDurationMs
-                            }, '[TIMER_ACTION][RUN] No timer in Redis, using canonicalDurationMs from DB');
-                        }
-                    } catch (err) {
-                        logger.error({
+                    // --- MODERNIZATION: Always use teacher's requested durationMs for timer run ---
+                    // (moved declaration above)
+                    if (validPayload.durationMs && typeof validPayload.durationMs === 'number' && validPayload.durationMs > 0) {
+                        logger.info({
                             accessCode,
                             questionUid: String(canonicalQuestionUid),
-                            err
-                        }, '[TIMER_ACTION][RUN] Error loading timer from Redis');
+                            requestedDurationMs: validPayload.durationMs,
+                            canonicalDurationMs,
+                        }, '[TIMER_ACTION][RUN] Using teacher\'s requested durationMs from payload (canonical, ignoring Redis/DB values)');
+                    } else {
+                        logger.warn({
+                            accessCode,
+                            questionUid: String(canonicalQuestionUid),
+                            canonicalDurationMs
+                        }, '[TIMER_ACTION][RUN] No valid durationMs in payload, using canonicalDurationMs from DB');
                     }
-                    await canonicalTimerService.startTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, userId, effectiveDurationMs);
+                    // Pass effectiveDurationMs as the 7th argument (durationMsOverride), not as attemptCount
+                    await canonicalTimerService.startTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, userId, undefined, effectiveDurationMs);
+                    logger.info({
+                        accessCode,
+                        questionUid: String(canonicalQuestionUid),
+                        effectiveDurationMs,
+                        msg: '[DEBUG][RUN] After startTimer, before persisting durationMs in Redis'
+                    }, '[DEBUG][RUN] After startTimer, before persisting durationMs in Redis');
+                    logger.info({
+                        accessCode,
+                        questionUid: String(canonicalQuestionUid),
+                        msg: '[DEBUG][RUN] About to fetch gameStateRaw from Redis for duration persistence'
+                    }, '[DEBUG][RUN] About to fetch gameStateRaw from Redis for duration persistence');
+                    // --- Persist canonical duration in game state in Redis for ALL questions (per-question map) ---
+                    try {
+                        const gameStateRaw = await redisClient.get(`${GAME_KEY_PREFIX}${accessCode}`);
+                        if (gameStateRaw) {
+                            const gameState: any = JSON.parse(gameStateRaw);
+                            logger.info({
+                                accessCode,
+                                questionUid: canonicalQuestionUid,
+                                gameStateBefore: gameState,
+                                msg: '[DEBUG][RUN] gameState before updating questionTimeLimits'
+                            }, '[DEBUG][RUN] gameState before updating questionTimeLimits');
+                            let oldValue: number | undefined = undefined;
+                            if (canonicalQuestionUid && gameState.questionTimeLimits && typeof gameState.questionTimeLimits === 'object') {
+                                oldValue = gameState.questionTimeLimits[canonicalQuestionUid];
+                            }
+                            logger.info({
+                                accessCode,
+                                questionUid: canonicalQuestionUid,
+                                oldValue,
+                                newValue: effectiveDurationMs / 1000,
+                                msg: '[DEBUG][RUN] Updating questionTimeLimits for questionUid'
+                            }, '[DEBUG][RUN] Updating questionTimeLimits for questionUid');
+                            // Canonical: persist all per-question time edits in a map
+                            if (!gameState.questionTimeLimits || typeof gameState.questionTimeLimits !== 'object') {
+                                gameState.questionTimeLimits = {};
+                            }
+                            if (canonicalQuestionUid) {
+                                gameState.questionTimeLimits[canonicalQuestionUid] = effectiveDurationMs / 1000;
+                            }
+                            // Also update questionData.timeLimit if this is the current question (for legacy consumers)
+                            if (gameState.questionData && gameState.questionData.uid === canonicalQuestionUid) {
+                                logger.info({
+                                    accessCode,
+                                    questionUid: canonicalQuestionUid,
+                                    oldValue: gameState.questionData.timeLimit,
+                                    newValue: effectiveDurationMs / 1000,
+                                    msg: '[DEBUG][RUN] Updating questionData.timeLimit for current question'
+                                }, '[DEBUG][RUN] Updating questionData.timeLimit for current question');
+                                gameState.questionData.timeLimit = effectiveDurationMs / 1000;
+                            }
+                            await gameStateService.updateGameState(accessCode, gameState);
+                            logger.info({
+                                accessCode,
+                                questionUid: canonicalQuestionUid,
+                                gameStateAfter: gameState,
+                                msg: '[DEBUG][RUN] gameState after updating questionTimeLimits and persisting to Redis'
+                            }, '[DEBUG][RUN] gameState after updating questionTimeLimits and persisting to Redis');
+                            logger.info({ accessCode, questionUid: canonicalQuestionUid, effectiveDurationMs }, '[TIMER_ACTION][RUN] Persisted timer durationMs in gameState.questionTimeLimits in Redis');
+                        } else {
+                            logger.warn({ accessCode, questionUid: canonicalQuestionUid }, '[TIMER_ACTION][RUN] Could not fetch game state from Redis to persist durationMs');
+                        }
+                    } catch (err) {
+                        logger.error({ accessCode, questionUid: canonicalQuestionUid, err }, '[TIMER_ACTION][RUN] Failed to persist timer durationMs in game state in Redis');
+                    }
+                    logger.info({
+                        accessCode,
+                        questionUid: String(canonicalQuestionUid),
+                        playMode,
+                        isDiffered,
+                        effectiveDurationMs,
+                        msg: '[DEBUG][RUN] About to call getCanonicalTimer with effectiveDurationMs'
+                    }, '[DEBUG][RUN] About to call getCanonicalTimer with effectiveDurationMs');
                     canonicalTimer = await getCanonicalTimer(
                         accessCode,
                         String(canonicalQuestionUid),
@@ -452,6 +589,12 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                         isDiffered,
                         effectiveDurationMs
                     );
+                    logger.info({
+                        accessCode,
+                        questionUid: String(canonicalQuestionUid),
+                        canonicalTimer,
+                        msg: '[DEBUG][RUN] canonicalTimer after getCanonicalTimer'
+                    }, '[DEBUG][RUN] canonicalTimer after getCanonicalTimer');
                     break;
                 }
                 case 'pause':
@@ -496,21 +639,24 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                     // Pass isCurrent to CanonicalTimerService via globalThis (hacky but avoids signature change)
                     (globalThis as any)._canonicalEditTimerOptions = { isCurrent };
                     await canonicalTimerService.editTimer(accessCode, String(canonicalQuestionUid), playMode, isDiffered, editDurationMs, userId);
-                    // --- Persist canonical duration in game state in Redis ---
+                    // --- Persist canonical duration in game state in Redis for ALL questions (per-question map) ---
                     try {
-                        // Fetch current game state from Redis
                         const gameStateRaw = await redisClient.get(`${GAME_KEY_PREFIX}${accessCode}`);
                         if (gameStateRaw) {
-                            const gameState: GameState = JSON.parse(gameStateRaw);
-                            // Update questionData.timeLimit if this is the current question
+                            const gameState: any = JSON.parse(gameStateRaw);
+                            // Canonical: persist all per-question time edits in a map
+                            if (!gameState.questionTimeLimits || typeof gameState.questionTimeLimits !== 'object') {
+                                gameState.questionTimeLimits = {};
+                            }
+                            if (canonicalQuestionUid) {
+                                gameState.questionTimeLimits[canonicalQuestionUid] = editDurationMs / 1000;
+                            }
+                            // Also update questionData.timeLimit if this is the current question (for legacy consumers)
                             if (gameState.questionData && gameState.questionData.uid === canonicalQuestionUid) {
                                 gameState.questionData.timeLimit = editDurationMs / 1000;
                             }
-                            // There is no questions array or gameTemplate in GameState, but questionUids exists.
-                            // If you want to persist for all future emissions, you must update the DB or wherever the canonical source is, but for now update questionData only.
-                            // Save updated game state back to Redis
                             await gameStateService.updateGameState(accessCode, gameState);
-                            logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Persisted edited durationMs in game state in Redis');
+                            logger.info({ accessCode, questionUid: canonicalQuestionUid, editDurationMs }, '[TIMER_ACTION][EDIT] Persisted edited durationMs in gameState.questionTimeLimits in Redis');
                         } else {
                             logger.warn({ accessCode, questionUid: canonicalQuestionUid }, '[TIMER_ACTION][EDIT] Could not fetch game state from Redis to persist durationMs');
                         }

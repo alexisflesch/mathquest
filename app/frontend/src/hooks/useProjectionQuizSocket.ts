@@ -77,6 +77,20 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         answerOptions?: string[];
     } | null>(null);
 
+    // NEW: Listen for initial stats state from backend (always sent on join)
+    useEffect(() => {
+        if (!socket.socket) return;
+        const handleInitialStatsState = (payload: { showStats: boolean; currentStats: Record<string, number>; statsQuestionUid: string | null; timestamp?: number }) => {
+            console.log('🟢 [PROJECTION] Received PROJECTION_STATS_STATE:', payload);
+            setShowStats(!!payload.showStats);
+            setCurrentStats(payload.currentStats || {});
+        };
+        (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATS_STATE, handleInitialStatsState);
+        return () => {
+            (socket.socket as any)?.off(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATS_STATE, handleInitialStatsState);
+        };
+    }, [socket.socket]);
+
     // Error state that page can handle
     const [socketError, setSocketError] = useState<any>(null);
 

@@ -58,6 +58,11 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
 
     // Basic state
     const [questions, setQuestions] = useState<Question[]>([]);
+
+    // Ref to always have the latest questions state (for timer actions)
+    const questionsRef = useRef<Question[]>([]);
+    useEffect(() => { questionsRef.current = questions; }, [questions]);
+
     // Modernization: Store both templateName and gameInstanceName for dashboard title
     const [quizName, setQuizName] = useState<string>("");
     const [gameInstanceName, setGameInstanceName] = useState<string>("");
@@ -68,8 +73,11 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null);
     const [expandedUids, setExpandedUids] = useState<Set<string>>(new Set());
     const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
-    const [showStats, setShowStats] = useState<boolean>(false); // NEW: global stats toggle
-    const [showTrophy, setShowTrophy] = useState<boolean>(false); // NEW: trophy toggle state
+    const [showStats, setShowStats] = useState<boolean>(false); // global stats toggle
+    const [showTrophy, setShowTrophy] = useState<boolean>(false); // trophy toggle state
+    // Suppression flags for initial backend event
+    const hasReceivedInitialStats = useRef(false);
+    const hasReceivedInitialTrophy = useRef(false);
 
     // Confirmation dialogs
     const [showConfirm, setShowConfirm] = useState(false);
@@ -149,6 +157,48 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         socket.onAny((eventName, ...args) => {
             if (eventName !== 'timer_updated' && eventName !== 'dashboard_timer_updated') {
                 logger.debug('Socket event:', eventName, ...args);
+            }
+        });
+        // Listen for backend confirmation of showStats state (projection_show_stats is canonical)
+        // Listen for backend-confirmed showStats state (projection_show_stats is canonical)
+        socket.on(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, (payload: { show: boolean }) => {
+            if (typeof payload?.show === 'boolean') {
+                setShowStats(payload.show);
+                logger.info('[DASHBOARD] Received showStats state from backend (projection_show_stats):', payload.show);
+                if (hasReceivedInitialStats.current) {
+                    setSnackbarMessage(payload.show ? 'Statistiques affichées' : 'Statistiques masquées');
+                    setTimeout(() => setSnackbarMessage(null), 2500);
+                } else {
+                    hasReceivedInitialStats.current = true;
+                }
+            }
+        });
+        // Listen for backend confirmation of showCorrectAnswers state (trophy)
+        socket.on(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, (payload: { show: boolean }) => {
+            if (typeof payload?.show === 'boolean') {
+                // Only allow toggling ON from backend confirmation; cannot be toggled off by teacher
+                if (payload.show) {
+                    setShowTrophy(true);
+                    logger.info('[DASHBOARD] Received showTrophy state from backend (show_correct_answers):', payload.show);
+                    setSnackbarMessage('Classement affiché');
+                    setTimeout(() => setSnackbarMessage(null), 2500);
+                    hasReceivedInitialTrophy.current = true;
+                }
+                // If backend sets show: false, allow it (e.g., on question change)
+                else {
+                    setShowTrophy(false);
+                    logger.info('[DASHBOARD] Trophy reset to hidden by backend (show_correct_answers):', payload.show);
+                }
+            }
+        });
+        // Listen for initial showStats state from backend (toggle_projection_stats)
+        socket.on(SOCKET_EVENTS.TEACHER.TOGGLE_PROJECTION_STATS, (payload: { show: boolean }) => {
+            if (typeof payload?.show === 'boolean') {
+                setShowStats(payload.show);
+                logger.info('[DASHBOARD] Received initial showStats state from backend (toggle_projection_stats):', payload.show);
+                // Set suppression flag so snackbar works on first user toggle
+                hasReceivedInitialStats.current = true;
+                // No snackbar here: only show snackbar on real-time toggle, not initial state
             }
         });
         socket.on(SOCKET_EVENTS.TEACHER.GAME_CONTROL_STATE, (state: any) => {
@@ -288,12 +338,18 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     });
 
     // Helper: get canonical timer state for a question
-    const getCanonicalTimerForQuestion = (questionUid: string) => getTimerState(questionUid) || {
-        timeLeftMs: 0,
-        durationMs: questions.find(q => q.uid === questionUid)?.durationMs ?? 0,
-        status: 'stop',
-        questionUid,
-        isActive: false
+    // Always use the latest durationMs from the questions state for display and logic
+    const getCanonicalTimerForQuestion = (questionUid: string) => {
+        const timer = getTimerState(questionUid);
+        const question = questions.find(q => q.uid === questionUid);
+        return {
+            ...timer,
+            durationMs: question?.durationMs ?? timer?.durationMs ?? 0,
+            questionUid,
+            isActive: timer?.isActive ?? false,
+            timeLeftMs: timer?.timeLeftMs ?? 0,
+            status: timer?.status ?? 'stop',
+        };
     };
 
     // Canonical: always use timer state from useSimpleTimer for timer display/actions
@@ -338,8 +394,10 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         const currentTimerState = timerStateRef.current;
         const currentTimerStatus = currentTimerState.status;
         const currentTimerQuestionUid = currentTimerState.questionUid;
+        // Always use the latest questions state from ref
+        const latestQuestions = questionsRef.current;
         if ((currentTimerStatus === 'run' || currentTimerStatus === 'pause') && currentTimerQuestionUid !== uid) {
-            const playIdx = questions.findIndex(q => q.uid === uid);
+            const playIdx = latestQuestions.findIndex(q => q.uid === uid);
             if (playIdx !== -1) {
                 setPendingPlayIdx(playIdx);
                 setShowConfirm(true);
@@ -347,12 +405,22 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             }
         }
         handleSelect(uid);
-        // Always use the teacher's intended durationMs from the UI/question object
-        const intendedDurationMs = questions.find(q => q.uid === uid)?.durationMs ?? 0;
+        // Always use the latest durationMs from the latest questions state
+        const q = latestQuestions.find(q => q.uid === uid);
+        const intendedDurationMs = q?.durationMs ?? _timeLeftMs;
         logger.info('[DASHBOARD][PLAY] Emitting startTimer with teacher-intended durationMs', { uid, intendedDurationMs });
         startTimer(uid, intendedDurationMs);
-    }, [questions, startTimer, handleSelect]);
+    }, [startTimer, handleSelect]);
     const handlePause = useCallback(() => { pauseTimer(); }, [pauseTimer]);
+    // Canonical: Resume should always use the latest edited duration if timer was edited while paused
+    const handleResume = useCallback((uid: string) => {
+        // Always use the latest questions state from ref
+        const latestQuestions = questionsRef.current;
+        const q = latestQuestions.find(q => q.uid === uid);
+        const intendedDurationMs = q?.durationMs ?? 0;
+        logger.info('[DASHBOARD][RESUME] Emitting startTimer (run) with teacher-intended durationMs after edit', { uid, intendedDurationMs });
+        startTimer(uid, intendedDurationMs);
+    }, [startTimer]);
     const handleStop = useCallback(() => { stopTimer(); }, [stopTimer]);
     const handleEditTimer = useCallback((uid: string, newTime: number) => {
         logger.info(`[DASHBOARD] handleEditTimer called`, { uid, newTime, unit: 'ms' });
@@ -425,32 +493,31 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // Remove handleStatsToggle, replace with global version
     const handleStatsToggleGlobal = useCallback(() => {
         if (!quizSocket) return;
-        const newShow = !showStats;
-        setShowStats(newShow);
+        // Always emit the toggle request, but do NOT update local state or snackbar here
         const payload = {
             accessCode: code,
             gameId,
-            show: newShow,
+            show: !showStats, // request the opposite of current state
             teacherId: userProfile?.userId
         };
         quizSocket.emit(SOCKET_EVENTS.TEACHER.TOGGLE_PROJECTION_STATS, payload);
-        setTimeout(() => {
-            const action = newShow ? 'affichage' : 'masquage';
-            setSnackbarMessage(`${action} global des statistiques`);
-        }, 0);
+        // No snackbar here: only show snackbar on backend confirmation
     }, [quizSocket, code, gameId, userProfile?.userId, showStats]);
 
     // Trophy button logic (no questionUid)
+    // Only allow toggling ON; cannot be toggled off by teacher
     const handleTrophyGlobal = useCallback(() => {
-        if (!quizSocket) return;
-        // Reveal leaderboard and show correct answers globally
+        if (!quizSocket || showTrophy) return; // Prevent toggling off
+        // Request leaderboard and correct answers, but do NOT update local state or snackbar here
         const revealLeaderboardPayload = { accessCode: code };
         quizSocket.emit(SOCKET_EVENTS.TEACHER.REVEAL_LEADERBOARD, revealLeaderboardPayload);
         quizSocket.emit(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, { accessCode: code, gameId, teacherId: userProfile?.userId });
-        setTimeout(() => {
-            setSnackbarMessage('Affichage des bonnes réponses et du classement final (global)');
-        }, 0);
-    }, [quizSocket, code, gameId, userProfile?.userId]);
+        // No snackbar here: only show snackbar on backend confirmation
+    }, [quizSocket, code, gameId, userProfile?.userId, showTrophy]);
+    // Reset trophy when question changes
+    useEffect(() => {
+        setShowTrophy(false);
+    }, [questionActiveUid]);
 
     // Fetch quiz/activity name from API for reliability
     // Remove legacy fetchQuizName effect: all naming now comes from socket payload
@@ -560,7 +627,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                         ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     onClick={() => {
                                         handleTrophyGlobal();
-                                        setShowTrophy((prev) => !prev);
+                                        // Do not update local state here; wait for backend confirmation
                                     }}
                                     disabled={isDisabled}
                                     aria-pressed={showTrophy}
@@ -585,6 +652,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             onSelect={handleSelect}
                             onPlay={handlePlay}
                             onPause={handlePause}
+                            onResume={handleResume}
                             onStop={handleStop}
                             onEditTimer={handleEditTimer}
                             onReorder={handleReorder}

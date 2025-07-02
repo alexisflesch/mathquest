@@ -104,20 +104,41 @@ export class CanonicalTimerService {
      * - Differed tournament: attaches to GameParticipant
      * - Practice: no timer
      */
-    async startTimer(accessCode: string, questionUid: string, playMode: PlayMode, isDiffered: boolean, userId?: string, attemptCount?: number) {
+    /**
+     * Start or resume the timer for a question, handling all modes.
+     * - Quiz & live tournament: attaches to GameInstance
+     * - Differed tournament: attaches to GameParticipant
+     * - Practice: no timer
+     * @param durationMs (optional) Canonical duration in ms to use (from handler/Redis override)
+     */
+    async startTimer(
+        accessCode: string,
+        questionUid: string,
+        playMode: PlayMode,
+        isDiffered: boolean,
+        userId?: string,
+        attemptCount?: number,
+        durationMsOverride?: number
+    ) {
         if (playMode === 'practice') return null; // No timer in practice mode
         const key = this.getKey(accessCode, questionUid, userId, playMode, isDiffered, attemptCount);
         const now = Date.now();
         let durationMs = 0;
-        try {
-            const question = await prisma.question.findUnique({ where: { uid: questionUid } });
-            if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
-                durationMs = question.timeLimit * 1000;
-            } else {
-                durationMs = 30000; // fallback to 30s
+        if (typeof durationMsOverride === 'number' && durationMsOverride > 0) {
+            durationMs = durationMsOverride;
+            logger.info({ accessCode, questionUid, durationMs }, '[TIMER_DEBUG][startTimer] Using provided durationMsOverride');
+        } else {
+            try {
+                const question = await prisma.question.findUnique({ where: { uid: questionUid } });
+                if (question && typeof question.timeLimit === 'number' && question.timeLimit > 0) {
+                    durationMs = question.timeLimit * 1000;
+                } else {
+                    durationMs = 30000; // fallback to 30s
+                }
+            } catch (err) {
+                durationMs = 30000;
             }
-        } catch (err) {
-            durationMs = 30000;
+            logger.info({ accessCode, questionUid, durationMs }, '[TIMER_DEBUG][startTimer] Used DB/default durationMs');
         }
         const raw = await this.redis.get(key);
         logger.info({ accessCode, questionUid, playMode, isDiffered, userId, attemptCount, key, raw, durationMs }, '[TIMER_DEBUG][startTimer] Raw timer before start/resume');
@@ -432,10 +453,15 @@ export class CanonicalTimerService {
         if (raw) {
             timer = JSON.parse(raw) as CanonicalTimerState;
             if (timer.status === 'pause') {
-                // If current question, only update timeLeftMs
+                // If current question, always update timeLeftMs; update durationMs only if needed
                 if (isCurrent) {
                     timer.timeLeftMs = durationMs;
-                    logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated ONLY timeLeftMs for paused current question');
+                    if (typeof timer.durationMs !== 'number' || durationMs > timer.durationMs) {
+                        timer.durationMs = durationMs;
+                        logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated BOTH timeLeftMs and durationMs for paused current question (durationMs increased)');
+                    } else {
+                        logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated ONLY timeLeftMs for paused current question (durationMs unchanged)');
+                    }
                 } else {
                     // Not current: update only durationMs (not timeLeftMs)
                     timer.durationMs = durationMs;

@@ -410,6 +410,22 @@ export function joinGameHandler(
                 }
             }
 
+
+            // --- MODERNIZATION: Emit correct_answers to student if trophy is active ---
+            // Only for live games (not differed), after join is complete
+            if (!gameInstance.isDiffered) {
+                const displayState = await gameStateService.getProjectionDisplayState(accessCode);
+                if (displayState?.showCorrectAnswers && displayState.correctAnswersData) {
+                    // Use canonical event and payload (match showCorrectAnswersHandler)
+                    const correctAnswersPayload = {
+                        questionUid: displayState.correctAnswersData.questionUid,
+                        correctAnswers: displayState.correctAnswersData.correctAnswers || []
+                    };
+                    socket.emit(SOCKET_EVENTS.GAME.CORRECT_ANSWERS as keyof ServerToClientEvents, correctAnswersPayload);
+                    logger.info({ accessCode, userId, questionUid: correctAnswersPayload.questionUid }, '[JOIN_GAME] Emitted correct_answers to student on join (trophy active)');
+                }
+            }
+
             // Emit updated participant count to teacher dashboard
             await emitParticipantCount(io, accessCode);
 

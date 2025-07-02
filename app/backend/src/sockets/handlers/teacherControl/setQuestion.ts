@@ -311,6 +311,17 @@ export function setQuestionHandler(io: SocketIOServer, socket: Socket) {
                 }
             }
 
+
+            // --- MODERNIZATION: Reset showCorrectAnswers state on new question ---
+            // This ensures the trophy is always reset when a new question is set
+            logger.info({ accessCode: gameInstance.accessCode }, '[TROPHY_DEBUG] Resetting showCorrectAnswers to false on setQuestion');
+            await gameStateService.updateProjectionDisplayState(gameInstance.accessCode, {
+                showCorrectAnswers: false,
+                correctAnswersData: null
+            });
+            const projectionStateAfter = await gameStateService.getProjectionDisplayState(gameInstance.accessCode);
+            logger.info({ accessCode: gameInstance.accessCode, projectionStateAfter }, '[TROPHY_DEBUG] Projection display state after reset on setQuestion');
+
             // Notify dashboard about question change (canonical payload)
             const dashboardRoom = `dashboard_${gameId}`;
             io.to(dashboardRoom).emit('dashboard_question_changed', {

@@ -236,7 +236,16 @@ export function projectionHandler(io: Server, socket: Socket) {
                     displayState
                 }, 'Sending initial projection display state');
 
-                // If stats are currently shown, send the show stats event
+                // Always emit the full stats state for projection initialization
+                socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATS_STATE, {
+                    showStats: displayState.showStats,
+                    currentStats: displayState.currentStats,
+                    statsQuestionUid: displayState.statsQuestionUid,
+                    timestamp: Date.now()
+                });
+                logger.info({ gameId, showStats: displayState.showStats }, 'Sent initial PROJECTION_STATS_STATE');
+
+                // If stats are currently shown, also send the show stats event for legacy compatibility
                 if (displayState.showStats && displayState.statsQuestionUid) {
                     socket.emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, {
                         questionUid: displayState.statsQuestionUid,

@@ -117,6 +117,14 @@ function showCorrectAnswersHandler(io, socket) {
                 questionUid: question.uid,
                 statePersisted: true
             }, 'Emitted correct answers to projection room and persisted state');
+            // Emit to dashboard room so teacher UI updates trophy state
+            const dashboardRoom = `dashboard_${gameInstance.id}`;
+            io.to(dashboardRoom).emit(events_1.SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, { show: true });
+            logger.info({
+                dashboardRoom,
+                show: true,
+                event: events_1.SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS
+            }, '[TROPHY_DEBUG] Emitted show_correct_answers to dashboard room');
             // TODO: Mark question as "closed" in game state if needed
             // This could involve updating Redis game state to track question status
             logger.info({

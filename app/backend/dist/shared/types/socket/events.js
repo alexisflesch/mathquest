@@ -111,7 +111,9 @@ exports.PROJECTOR_EVENTS = {
     // NEW: Projection content display controls
     PROJECTION_SHOW_STATS: 'projection_show_stats', // Show answer statistics
     PROJECTION_HIDE_STATS: 'projection_hide_stats', // Hide answer statistics
-    PROJECTION_CORRECT_ANSWERS: 'projection_correct_answers' // Display correct answers (from teacher trophy button)
+    PROJECTION_CORRECT_ANSWERS: 'projection_correct_answers', // Display correct answers (from teacher trophy button)
+    // MODERN: Always sent on join, contains canonical stats state
+    PROJECTION_STATS_STATE: 'projection_stats_state',
 };
 // ===== Student/Game Events =====
 exports.GAME_EVENTS = {

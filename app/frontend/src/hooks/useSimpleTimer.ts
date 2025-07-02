@@ -301,8 +301,10 @@ export function useSimpleTimer(config: SimpleTimerConfig): SimpleTimerHook {
             action: 'run',
             timerEndDateMs,
             targetTimeMs: durationMs,
+            durationMs, // <--- ensure durationMs is always sent for canonical backend logic
             questionUid
         };
+        logger.info('[FRONTEND][SOCKET][EMIT] quiz_timer_action payload', payload);
         socket.emit(TEACHER_EVENTS.TIMER_ACTION, payload);
     }, [role, socket, accessCode]);
 
