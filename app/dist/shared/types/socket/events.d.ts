@@ -85,6 +85,7 @@ export declare const PROJECTOR_EVENTS: {
     PROJECTION_SHOW_STATS: string;
     PROJECTION_HIDE_STATS: string;
     PROJECTION_CORRECT_ANSWERS: string;
+    PROJECTION_STATS_STATE: string;
 };
 export declare const GAME_EVENTS: {
     JOIN_GAME: string;
@@ -238,6 +239,7 @@ export declare const SOCKET_EVENTS: {
         PROJECTION_SHOW_STATS: string;
         PROJECTION_HIDE_STATS: string;
         PROJECTION_CORRECT_ANSWERS: string;
+        PROJECTION_STATS_STATE: string;
     };
     CONNECT: string;
     DISCONNECT: string;

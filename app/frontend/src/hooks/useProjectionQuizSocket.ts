@@ -1,4 +1,3 @@
-// ...existing code...
 /**
  * Projection Quiz Socket Hook
  * 
@@ -21,6 +20,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { Question, TimerStatus } from '@shared/types';
 import type { GameState } from '@shared/types/core/game';
 import { ProjectionLeaderboardUpdatePayload, ProjectionLeaderboardUpdatePayloadSchema } from '@shared/types/socket/projectionLeaderboardUpdatePayload';
+import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@shared/types/socket/projectionShowStats';
 
 const logger = createLogger('useProjectionQuizSocket');
 
@@ -351,16 +351,24 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
 
         // NEW: Handle projection stats show/hide
-        const handleProjectionShowStats = (payload: { questionUid: string; stats: Record<string, number>; timestamp?: number }) => {
-            console.log('🔥🔥🔥 [PROJECTION HOOK] RECEIVED SHOW STATS EVENT!');
-            console.log('📊 Payload:', payload);
-            console.log('🔥🔥🔥 Setting showStats to TRUE and updating currentStats');
-
-            logger.info('📊 [PROJECTION-FRONTEND] Show stats request received:', payload);
-            setCurrentStats(payload.stats || {});
-            setShowStats(true);
-
-            console.log('✅ Stats state updated successfully');
+        // Modernized: Handle show/hide stats in a single handler, respecting payload.show
+        const handleProjectionShowStats = (payload: ProjectionShowStatsPayload) => {
+            // Runtime validation
+            const parseResult = ProjectionShowStatsPayloadSchema.safeParse(payload);
+            if (!parseResult.success) {
+                console.error('[PROJECTION HOOK] Invalid PROJECTION_SHOW_STATS payload:', parseResult.error.errors, payload);
+                logger.error('[PROJECTION-FRONTEND] Invalid PROJECTION_SHOW_STATS payload:', parseResult.error.errors, payload);
+                return;
+            }
+            if (payload.show) {
+                logger.info('📊 [PROJECTION-FRONTEND] Show stats request received (show=TRUE):', payload);
+                setCurrentStats(payload.stats || {});
+                setShowStats(true);
+            } else {
+                logger.info('📊 [PROJECTION-FRONTEND] Hide stats request received (show=FALSE):', payload);
+                setShowStats(false);
+                setCurrentStats({});
+            }
         };
 
         const handleProjectionHideStats = (payload: { questionUid: string; timestamp?: number }) => {
@@ -391,12 +399,13 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                 answerOptions: payload.answerOptions
             });
             setShowCorrectAnswers(true);
+        };
 
-            // Optional: Auto-hide after some time
-            setTimeout(() => {
-                setShowCorrectAnswers(false);
-                setCorrectAnswersData(null);
-            }, 15000); // Hide after 15 seconds
+        // Hide correct answers when a new question arrives
+        const handleGameQuestionWithReset = (payload: { question: Question; questionUid: string; questionIndex?: number }) => {
+            setShowCorrectAnswers(false);
+            setCorrectAnswersData(null);
+            handleGameQuestion(payload);
         };
 
         // Listen to projection events using shared constants (with type casting until types are updated)
@@ -418,7 +427,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATE, handleGameStateUpdate);
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_LEADERBOARD_UPDATE, handleLeaderboardUpdate);
         // Listen for canonical game_question event
-        (socket.socket as any).on('game_question', handleGameQuestion);
+        (socket.socket as any).on('game_question', handleGameQuestionWithReset);
 
         // NEW: Listen to projection display control events
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS, handleProjectionShowStats);

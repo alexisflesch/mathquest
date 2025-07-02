@@ -214,3 +214,33 @@ Eliminate unwanted vertical scrollbar on mobile by ensuring main content height 
 - 2025-07-02: Patched globals.css to use height: calc(100dvh - 56px) for .main-content on mobile, removed padding-top. Ready to validate fix on mobile and desktop.
 - 2025-07-02: Fixed regression on desktop by restoring min-height: 100dvh for .main-content at >=768px. Now works on both mobile and desktop. All actions logged per modernization guidelines.
 - 2025-07-02: Replaced all hard-coded 56px AppNav/topbar heights with canonical --navbar-height CSS variable in globals.css and AppNav.tsx. Now changing --navbar-height in globals.css updates all layouts and components. Fully modernized and documented.
+
+## [2025-07-02] Phase: Canonical projection_show_stats event type/schema enforcement
+
+### Goal
+Enforce canonical, shared types and Zod validation for the projection_show_stats event payload across backend and frontend. Ensure all emissions and handlers use the canonical type and runtime validation, and document all changes per modernization rules.
+
+### Checklist
+- [x] Define canonical type and Zod schema for projection_show_stats event payload in shared/types/socket/projectionShowStats.ts
+- [x] Export type and schema from payloads.ts and payloads.zod.ts
+- [x] Document canonical event and payload in events.ts
+- [x] Add projection_show_stats to ServerToClientEvents in shared/types/socketEvents.ts
+- [x] Refactor backend emitQuestionHandler to use canonical type and runtime Zod validation
+- [x] Refactor frontend useProjectionQuizSocket hook to use canonical type and runtime Zod validation
+- [x] Validate all code compiles and passes type checks
+- [x] Log and document all changes in plan.md
+
+### Testing Steps
+1. Trigger a new question or toggle stats ON/OFF from the teacher dashboard.
+2. Confirm the projection page receives a projection_show_stats event with a payload matching the canonical type and schema.
+3. Confirm the frontend validates the payload at runtime and updates the UI accordingly.
+4. Confirm all type checks and runtime validation errors are logged if present.
+
+### Log
+- 2025-07-02: Defined canonical ProjectionShowStatsPayload type and Zod schema in shared/types/socket/projectionShowStats.ts.
+- 2025-07-02: Exported type and schema from payloads.ts and payloads.zod.ts.
+- 2025-07-02: Documented canonical event and payload in events.ts.
+- 2025-07-02: Added projection_show_stats to ServerToClientEvents in shared/types/socketEvents.ts.
+- 2025-07-02: Refactored backend emitQuestionHandler to use canonical type and runtime Zod validation for all emissions.
+- 2025-07-02: Refactored frontend useProjectionQuizSocket hook to use canonical type and runtime Zod validation for all handlers.
+- 2025-07-02: Validated all code compiles and passes type checks. All actions logged per modernization guidelines.

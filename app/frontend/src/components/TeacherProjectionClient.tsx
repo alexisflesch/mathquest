@@ -129,11 +129,29 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
             return { ...prev, [id]: newZoom };
         });
     };
-    // Convert currentStats (counts) to percentages for QuestionCard
-    const totalAnswers = Object.values(currentStats).reduce((sum, count) => sum + count, 0);
-    const statsArray = Object.keys(currentStats).length > 0 && totalAnswers > 0
-        ? Object.keys(currentStats).map((k) => (currentStats[Number(k)] / totalAnswers) * 100)
-        : [];
+    // Canonical: build stats array exactly as in TeacherDashboardClient
+    // Canonical: build stats array exactly as in TeacherDashboardClient
+    let statsArray: number[] = [];
+    let totalAnswers = 0;
+    let numOptions = 0;
+    if (currentTournamentQuestion && typeof currentTournamentQuestion.question === 'object' && currentTournamentQuestion.question !== null) {
+        if ('answerOptions' in currentTournamentQuestion.question && Array.isArray(currentTournamentQuestion.question.answerOptions)) {
+            numOptions = currentTournamentQuestion.question.answerOptions.length;
+            if (numOptions > 0 && currentStats && typeof currentStats === 'object') {
+                for (let i = 0; i < numOptions; i++) {
+                    const count = currentStats[i.toString()] || 0;
+                    statsArray.push(count);
+                    totalAnswers += count;
+                }
+                // Convert to percentages
+                if (totalAnswers > 0) {
+                    statsArray = statsArray.map(count => (count / totalAnswers) * 100);
+                } else {
+                    statsArray = Array(numOptions).fill(0);
+                }
+            }
+        }
+    }
     const statsToShow: StatsData = {
         stats: statsArray,
         totalAnswers
@@ -240,7 +258,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                                         isQuizMode={true}
                                         readonly={true}
                                         correctAnswers={correctAnswersData?.correctAnswers || []}
-                                        stats={statsToShow}
+                                        stats={showStats ? statsToShow : undefined}
                                         showStats={showStats}
                                     />
                                 </div>

@@ -133,6 +133,11 @@ export const PROJECTOR_EVENTS = {
     PROJECTION_STATS_STATE: 'projection_stats_state',
 };
 
+// [MODERNIZATION] Canonical event for projection stats display
+// Use PROJECTOR_EVENTS.PROJECTION_SHOW_STATS for event name
+// Canonical payload: ProjectionShowStatsPayload (see ./projectionShowStats)
+// Canonical Zod schema: ProjectionShowStatsPayloadSchema (see ./projectionShowStats)
+
 // ===== Student/Game Events =====
 export const GAME_EVENTS = {
     // Player actions

@@ -292,16 +292,35 @@ export function gameAnswerHandler(
 
                 // Emit to dashboard room - consistent naming across all game types
                 const dashboardRoom = `dashboard_${gameInstance.id}`;
+                const projectionRoom = `projection_${gameInstance.id}`;
 
                 logger.debug({
                     accessCode,
                     questionUid,
                     answerStats,
                     dashboardRoom,
+                    projectionRoom,
                     playMode: gameInstance.playMode
-                }, 'Emitting answer stats update to dashboard room');
+                }, 'Emitting answer stats update to dashboard and projection rooms');
 
                 io.to(dashboardRoom).emit(TEACHER_EVENTS.DASHBOARD_ANSWER_STATS_UPDATE as any, dashboardStatsPayload);
+                // Also emit to projection room using canonical event
+                // [MODERNIZATION] Fetch canonical showStats state from projection display state
+                const { getProjectionDisplayState } = await import('@/core/services/gameStateService');
+                let showStats = false;
+                try {
+                    const displayState = await getProjectionDisplayState(accessCode);
+                    showStats = !!(displayState && typeof displayState.showStats === 'boolean' ? displayState.showStats : false);
+                } catch (err) {
+                    logger.warn({ err, accessCode, questionUid }, '[PROJECTION] Could not fetch canonical showStats state, defaulting to false');
+                    showStats = false;
+                }
+                io.to(projectionRoom).emit(SOCKET_EVENTS.PROJECTOR.PROJECTION_SHOW_STATS as any, {
+                    questionUid,
+                    stats: answerStats,
+                    show: showStats,
+                    timestamp: Date.now()
+                });
             } catch (statsError) {
                 logger.error({
                     accessCode,

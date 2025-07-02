@@ -10,6 +10,7 @@ exports.gameControlStatePayloadSchema = zod_1.z.object({
     gameId: zod_1.z.string(),
     accessCode: zod_1.z.string(),
     templateName: zod_1.z.string(),
+    gameInstanceName: zod_1.z.string(),
     status: zod_1.z.enum(['pending', 'active', 'paused', 'completed']),
     currentQuestionUid: zod_1.z.string().nullable(),
     questions: zod_1.z.array(exports.questionForDashboardSchema),

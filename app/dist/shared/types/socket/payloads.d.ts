@@ -88,3 +88,4 @@ export interface RoomLeftPayload {
 export type SocketEventHandler = (io: Server, socket: Socket, payload: Record<string, unknown>) => void | Promise<void>;
 export * from './dashboardPayloads';
 export type { GameIdentificationPayload, JoinDashboardPayload, PauseTimerPayload, SetQuestionPayload as DashboardSetQuestionPayload, LockAnswersPayload, EndGamePayload, DashboardQuestionChangedPayload, DashboardTimerUpdatedPayload, DashboardAnswersLockChangedPayload, DashboardGameStatusChangedPayload, DashboardParticipantUpdatePayload, DashboardAnswerStatsUpdatePayload, DashboardJoinedPayload, ConnectedCountPayload, QuestionForDashboard, GameControlStatePayload, ShowCorrectAnswersPayload, ToggleProjectionStatsPayload } from './dashboardPayloads';
+export type { ProjectionShowStatsPayload } from './projectionShowStats';

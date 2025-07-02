@@ -140,6 +140,7 @@ export interface GameControlStatePayload {
     gameId: string;
     accessCode: string;
     templateName: string;
+    gameInstanceName: string;
     status: 'pending' | 'active' | 'paused' | 'completed';
     currentQuestionUid: string | null;
     questions: QuestionForDashboard[];

@@ -6,6 +6,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { redisClient } from '@/config/redis';
+import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@shared/types/socket/projectionShowStats';
 
 const logger = createLogger('EmitQuestionHandler');
 
@@ -141,5 +142,45 @@ export function emitQuestionHandler(
         // Emit to the socket (or room as needed)
         socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, liveQuestionPayload);
         logger.info({ accessCode, userId, questionUid: targetQuestion.uid }, '[DEBUG] Emitted question to user');
+
+        // [MODERNIZATION] Emit canonical stats for new question to both projection and dashboard rooms
+        const projectionRoom = `projection_${gameInstance.id}`;
+        const dashboardRoom = `dashboard_${gameInstance.id}`;
+        let answerStats = {};
+        let showStats = false;
+        try {
+            // Canonical: get stats for this question if any exist
+            const { getAnswerStats } = await import('../teacherControl/helpers');
+            answerStats = await getAnswerStats(accessCode, targetQuestion.uid);
+            // Defensive: always ensure answerStats is a non-null object
+            if (!answerStats || typeof answerStats !== 'object') answerStats = {};
+            showStats = answerStats && Object.keys(answerStats).length > 0;
+        } catch (err) {
+            logger.warn({ err, accessCode, questionUid: targetQuestion.uid }, '[PROJECTION] Could not fetch answer stats for new question, sending empty stats');
+            answerStats = {};
+            showStats = false;
+        }
+        // Canonical: use shared type and runtime validation for projection_show_stats event
+        const statsPayload: ProjectionShowStatsPayload = {
+            questionUid: targetQuestion.uid,
+            show: showStats,
+            stats: answerStats || {}, // Defensive: always non-null object
+            timestamp: Date.now()
+        };
+        // Validate at runtime before emitting
+        const parseResult = ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
+        if (!parseResult.success) {
+            logger.error({ errors: parseResult.error.errors, statsPayload }, '[PROJECTION] Invalid PROJECTION_SHOW_STATS payload, not emitting');
+        } else {
+            io.to(projectionRoom).emit(
+                "projection_show_stats",
+                statsPayload
+            );
+            io.to(dashboardRoom).emit(
+                "projection_show_stats",
+                statsPayload
+            );
+            logger.info({ projectionRoom, dashboardRoom, questionUid: targetQuestion.uid, showStats, answerStats }, '[PROJECTION] Emitted PROJECTION_SHOW_STATS (canonical stats) to both projection and dashboard rooms for new question');
+        }
     };
 }

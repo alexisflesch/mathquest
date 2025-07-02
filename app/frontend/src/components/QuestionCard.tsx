@@ -155,6 +155,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                     let statPercent: number | null = null;
                     if (showStats && stats && Array.isArray(stats.stats) && typeof stats.stats[idx] === 'number') {
                         statPercent = stats.stats[idx];
+                    } else {
+                        statPercent = null;
                     }
                     return (
                         <li

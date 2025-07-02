@@ -98,13 +98,13 @@ export declare const joinQuizPayloadSchema: z.ZodObject<{
     teacherId: z.ZodOptional<z.ZodString>;
     studentId: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    role: "teacher" | "student" | "projector";
     quizId: string;
+    role: "teacher" | "student" | "projector";
     teacherId?: string | undefined;
     studentId?: string | undefined;
 }, {
-    role: "teacher" | "student" | "projector";
     quizId: string;
+    role: "teacher" | "student" | "projector";
     teacherId?: string | undefined;
     studentId?: string | undefined;
 }>;
@@ -140,18 +140,18 @@ export declare const joinTournamentPayloadSchema: z.ZodObject<{
     code: string;
     userId?: string | undefined;
     username?: string | undefined;
-    isDeferred?: boolean | undefined;
-    cookieId?: string | undefined;
     avatar?: string | undefined;
+    isDeferred?: boolean | undefined;
     classId?: string | undefined;
+    cookieId?: string | undefined;
 }, {
     code: string;
     userId?: string | undefined;
     username?: string | undefined;
-    isDeferred?: boolean | undefined;
-    cookieId?: string | undefined;
     avatar?: string | undefined;
+    isDeferred?: boolean | undefined;
     classId?: string | undefined;
+    cookieId?: string | undefined;
 }>;
 export declare const tournamentAnswerPayloadSchema: z.ZodObject<{
     code: z.ZodString;
@@ -160,14 +160,14 @@ export declare const tournamentAnswerPayloadSchema: z.ZodObject<{
     clientTimestamp: z.ZodNumber;
     isDeferred: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    questionUid: string;
     code: string;
+    questionUid: string;
     answerIdx: number | number[];
     clientTimestamp: number;
     isDeferred?: boolean | undefined;
 }, {
-    questionUid: string;
     code: string;
+    questionUid: string;
     answerIdx: number | number[];
     clientTimestamp: number;
     isDeferred?: boolean | undefined;
@@ -219,29 +219,29 @@ export declare const gameTimerUpdatePayloadSchema: z.ZodObject<{
         isPaused: z.ZodOptional<z.ZodBoolean>;
         timeRemainingMs: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        durationMs?: number | undefined;
         startedAt?: number | undefined;
+        durationMs?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     }, {
-        durationMs?: number | undefined;
         startedAt?: number | undefined;
+        durationMs?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     questionUid?: string | undefined;
     timer?: {
-        durationMs?: number | undefined;
         startedAt?: number | undefined;
+        durationMs?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     } | undefined;
 }, {
     questionUid?: string | undefined;
     timer?: {
-        durationMs?: number | undefined;
         startedAt?: number | undefined;
+        durationMs?: number | undefined;
         isPaused?: boolean | undefined;
         timeRemainingMs?: number | undefined;
     } | undefined;
@@ -270,5 +270,44 @@ export declare const resumeTournamentPayloadSchema: z.ZodObject<{
 }, {
     code: string;
 }>;
+export declare const gameControlStatePayloadSchema: z.ZodObject<{
+    gameId: z.ZodString;
+    accessCode: z.ZodString;
+    templateName: z.ZodString;
+    gameInstanceName: z.ZodString;
+    status: z.ZodEnum<["pending", "active", "paused", "completed"]>;
+    currentQuestionUid: z.ZodNullable<z.ZodString>;
+    questions: z.ZodArray<z.ZodAny, "many">;
+    timer: z.ZodAny;
+    answersLocked: z.ZodBoolean;
+    participantCount: z.ZodNumber;
+    answerStats: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>;
+}, "strip", z.ZodTypeAny, {
+    status: "pending" | "active" | "paused" | "completed";
+    questions: any[];
+    accessCode: string;
+    gameId: string;
+    templateName: string;
+    gameInstanceName: string;
+    currentQuestionUid: string | null;
+    answersLocked: boolean;
+    participantCount: number;
+    timer?: any;
+    answerStats?: Record<string, number> | undefined;
+}, {
+    status: "pending" | "active" | "paused" | "completed";
+    questions: any[];
+    accessCode: string;
+    gameId: string;
+    templateName: string;
+    gameInstanceName: string;
+    currentQuestionUid: string | null;
+    answersLocked: boolean;
+    participantCount: number;
+    timer?: any;
+    answerStats?: Record<string, number> | undefined;
+}>;
+export type GameControlStatePayload = z.infer<typeof gameControlStatePayloadSchema>;
 export type SetTimerPayload = z.infer<typeof setTimerPayloadSchema>;
 export type UpdateTournamentCodePayload = z.infer<typeof updateTournamentCodePayloadSchema>;
+export { ProjectionShowStatsPayloadSchema } from './projectionShowStats';

@@ -111,8 +111,14 @@ exports.PROJECTOR_EVENTS = {
     // NEW: Projection content display controls
     PROJECTION_SHOW_STATS: 'projection_show_stats', // Show answer statistics
     PROJECTION_HIDE_STATS: 'projection_hide_stats', // Hide answer statistics
-    PROJECTION_CORRECT_ANSWERS: 'projection_correct_answers' // Display correct answers (from teacher trophy button)
+    PROJECTION_CORRECT_ANSWERS: 'projection_correct_answers', // Display correct answers (from teacher trophy button)
+    // MODERN: Always sent on join, contains canonical stats state
+    PROJECTION_STATS_STATE: 'projection_stats_state',
 };
+// [MODERNIZATION] Canonical event for projection stats display
+// Use PROJECTOR_EVENTS.PROJECTION_SHOW_STATS for event name
+// Canonical payload: ProjectionShowStatsPayload (see ./projectionShowStats)
+// Canonical Zod schema: ProjectionShowStatsPayloadSchema (see ./projectionShowStats)
 // ===== Student/Game Events =====
 exports.GAME_EVENTS = {
     // Player actions

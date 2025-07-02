@@ -266,6 +266,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     }) => void;
     projector_state: (payload: any) => void;
     projection_leaderboard_update: (payload: import('./socket/projectionLeaderboardUpdatePayload').ProjectionLeaderboardUpdatePayload) => void;
+    projection_show_stats: (payload: import('./socket/projectionShowStats').ProjectionShowStatsPayload) => void;
 }
 export interface InterServerEvents {
 }

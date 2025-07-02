@@ -142,3 +142,6 @@ export type GameControlStatePayload = z.infer<typeof gameControlStatePayloadSche
 // Type exports from Zod schemas
 export type SetTimerPayload = z.infer<typeof setTimerPayloadSchema>;
 export type UpdateTournamentCodePayload = z.infer<typeof updateTournamentCodePayloadSchema>;
+
+// [MODERNIZATION] Canonical Zod schema import for projection_show_stats event
+export { ProjectionShowStatsPayloadSchema } from './projectionShowStats';
