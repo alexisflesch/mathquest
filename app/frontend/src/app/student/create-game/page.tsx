@@ -299,8 +299,8 @@ function StudentCreateTournamentPageInner() {
     const getAvatar = () => userProfile?.avatar || localStorage.getItem('mathquest_avatar') || '🐨';
 
     return (
-        <div className="main-content">
-            <div className="card w-full max-w-xl shadow-xl bg-base-100 my-6">
+        <div className="main-content" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
+            <div className="card w-full max-w-xl shadow-xl" style={{ background: 'var(--card)', color: 'var(--foreground)' }}>
                 <div className="card-body items-center gap-8">
                     {/* Progress Bar DaisyUI */}
                     {/* All steps in a single row */}
@@ -385,25 +385,22 @@ function StudentCreateTournamentPageInner() {
                                     <button
                                         key={n}
                                         type="button"
-                                        className={`flex-1 rounded-lg border btn-primary transition-colors duration-100
-                                            py-3 text-lg font-semibold
-                                        `}
+                                        className="flex-1 rounded-lg border transition-colors duration-100 py-3 text-lg font-semibold"
                                         style={
                                             numQuestions === n
-                                                ? { backgroundColor: 'var(--navbar)', color: 'var(--primary-foreground)' }
-                                                : { backgroundColor: '#fff', color: '#111827', borderColor: 'var(--navbar)' }
+                                                ? {
+                                                    background: 'var(--navbar)',
+                                                    color: 'var(--primary-foreground)',
+                                                    borderColor: 'var(--navbar)'
+                                                }
+                                                : {
+                                                    background: 'var(--dropdown)',
+                                                    color: 'var(--dropdown-foreground)',
+                                                    borderColor: 'var(--navbar)'
+                                                }
                                         }
                                         onClick={() => setNumQuestions(n)}
-                                        onMouseEnter={e => {
-                                            if (numQuestions !== n) {
-                                                (e.currentTarget as HTMLButtonElement).style.color = "#fff";
-                                            }
-                                        }}
-                                        onMouseLeave={e => {
-                                            if (numQuestions !== n) {
-                                                (e.currentTarget as HTMLButtonElement).style.color = "#111827";
-                                            }
-                                        }}
+                                        aria-pressed={numQuestions === n}
                                     >
                                         {n}
                                     </button>

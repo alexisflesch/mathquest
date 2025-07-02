@@ -201,7 +201,7 @@ export default function DraggableQuestionsList({
 
     // Pass canonical timer state to SortableQuestion
     return (
-        <ul className="draggable-questions-list">
+        <ul className="draggable-questions-list flex flex-col gap-3 sm:gap-4">
             {questions.map((q, idx) => {
                 const timer = getCanonicalTimer(q.uid);
                 return (

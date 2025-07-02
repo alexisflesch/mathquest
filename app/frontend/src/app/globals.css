@@ -1,3 +1,21 @@
+/* Ensure enhanced multi-select dropdown option hover is always visible and theme-compliant */
+.enhanced-dropdown-option:hover {
+  background-color: var(--dropdown-hover) !important;
+  color: var(--dropdown-hover-foreground) !important;
+}
+
+/* Ensure multi-select dropdown option hover is always visible and theme-compliant */
+.multi-dropdown-option:hover {
+  background-color: var(--dropdown-hover) !important;
+  color: var(--dropdown-hover-foreground) !important;
+}
+
+/* Ensure dropdown option hover is always visible and theme-compliant */
+.enhanced-single-dropdown-option:hover {
+  background-color: var(--dropdown-hover) !important;
+  color: var(--dropdown-hover-foreground) !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,6 +27,16 @@
 #FF8C42;
 #10b981; */
 
+/* Dropdown hover and foreground utility classes */
+.bg-dropdown-hover {
+  background-color: var(--dropdown-hover) !important;
+}
+
+.text-dropdown-foreground {
+  color: var(--dropdown-foreground) !important;
+}
+
+/* Add dropdown-hover-foreground for both themes */
 :root {
   --navbar-height: 56px;
   --background: #ebf0f5;
@@ -40,10 +68,22 @@
   --tab-bar-bg: #f3f4f6;
   /* neutral-100/200 for light mode, not pure white */
   /* neutral-200 for light mode */
+
+  /* Dropdown hover color for light mode */
+  --dropdown-hover: #f3f4f6;
+  --dropdown-hover-foreground: #23272f;
 }
 
 /* Force theme by [data-theme] attribute on html, takes precedence over prefers-color-scheme */
+
 html[data-theme="dark"] {
+  --dropdown-hover: #374151;
+  --dropdown-hover-foreground: #f3f4f6;
+
+  .text-dropdown-hover-foreground {
+    color: var(--dropdown-hover-foreground) !important;
+  }
+
   --background: #23272f;
   --card: #2d3340;
   --foreground: #f3f4f6;

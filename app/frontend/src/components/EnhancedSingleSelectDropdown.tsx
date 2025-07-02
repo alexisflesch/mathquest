@@ -60,29 +60,31 @@ export default function EnhancedSingleSelectDropdown({
 
     return (
         <div className={`w-full flex flex-col gap-2 ${className}`}>
-            {label && <label className="font-bold text-lg mb-1">{label}</label>}
+            {label && <label className="font-bold text-lg mb-1 text-dropdown-foreground">{label}</label>}
             <div className="relative w-full" ref={dropdownRef}>
                 <button
-                    className="border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 w-full transition-colors"
+                    className="border border-dropdown-border hover:border-dropdown-border-hover bg-dropdown text-dropdown-foreground px-3 py-2 w-full transition-colors"
                     style={{ borderRadius: 'var(--radius)' }}
                     onClick={e => { e.preventDefault(); if (!disabled) setOpen(o => !o); }}
                     type="button"
                     disabled={disabled}
                 >
                     <div className="flex items-center justify-between w-full">
-                        <span className={`${value ? "text-gray-900 dark:text-gray-100" : "text-gray-500"} truncate flex-1 text-left text-sm`}>
+                        <span
+                            className={`truncate flex-1 text-left text-sm ${value ? 'text-dropdown-foreground' : 'text-placeholder-foreground'}`}
+                        >
                             {value || placeholder}
                         </span>
                         <ChevronDown
                             size={16}
-                            className="ml-2 flex-shrink-0 text-gray-500"
+                            className="ml-2 flex-shrink-0 text-placeholder-foreground"
                             style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
                         />
                     </div>
                 </button>
 
                 <div
-                    className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg mt-1 max-h-60 overflow-y-auto"
+                    className="absolute z-10 bg-dropdown text-dropdown-foreground border border-dropdown-border shadow-lg mt-1 max-h-60 overflow-y-auto"
                     style={{
                         display: open ? 'block' : 'none',
                         left: '0',
@@ -92,34 +94,29 @@ export default function EnhancedSingleSelectDropdown({
                         borderRadius: 'var(--radius)',
                     }}
                 >
-                    <style>{`
-                        .enhanced-single-dropdown-option:hover {
-                            background-color: #f3f4f6 !important;
-                        }
-                        .dark .enhanced-single-dropdown-option:hover {
-                            background-color: #374151 !important;
-                        }
-                    `}</style>
-
-                    {options.map((opt) => (
-                        <button
-                            key={opt}
-                            type="button"
-                            className={`enhanced-single-dropdown-option w-full text-left px-3 py-2 cursor-pointer text-sm ${value === opt
-                                    ? 'bg-gray-100 dark:bg-gray-700 font-medium text-gray-900 dark:text-gray-100'
-                                    : 'text-gray-900 dark:text-gray-100'
-                                }`}
-                            style={{
-                                border: "none",
-                                outline: "none",
-                                background: "none",
-                                userSelect: 'none'
-                            }}
-                            onClick={() => { onChange(opt); setOpen(false); }}
-                        >
-                            {opt}
-                        </button>
-                    ))}
+                    {options.map((opt) => {
+                        const isSelected = value === opt;
+                        return (
+                            <button
+                                key={opt}
+                                type="button"
+                                className={`enhanced-single-dropdown-option w-full text-left px-3 py-2 cursor-pointer text-sm transition-colors
+                                    ${isSelected
+                                        ? 'bg-dropdown-hover font-medium text-dropdown-hover-foreground'
+                                        : 'text-dropdown-foreground hover:bg-dropdown-hover hover:text-dropdown-hover-foreground'}
+                                `}
+                                style={{
+                                    border: "none",
+                                    outline: "none",
+                                    background: "none",
+                                    userSelect: 'none'
+                                }}
+                                onClick={() => { onChange(opt); setOpen(false); }}
+                            >
+                                {opt}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
         </div>

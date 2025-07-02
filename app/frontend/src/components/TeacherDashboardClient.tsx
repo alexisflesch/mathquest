@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import DraggableQuestionsList from "@/components/DraggableQuestionsList";
-import ConfirmDialog from "@/components/ConfirmDialog";
+import InfoModal from "@/components/SharedModal";
 import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { useAuthState } from '@/hooks/useAuthState';
@@ -603,21 +603,61 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                 )}
             </div>
             {/* Confirmation Dialog for Question Change */}
-            <ConfirmDialog
-                open={showConfirm}
+            <InfoModal
+                isOpen={showConfirm}
+                onClose={cancelPlay}
                 title="Changer de question ?"
-                message="Une autre question est en cours ou en pause. Voulez-vous vraiment lancer cette nouvelle question et arrêter la précédente ?"
-                onConfirm={confirmPlay}
-                onCancel={cancelPlay}
-            />
+                size="sm"
+                showCloseButton={true}
+            >
+                <div className="mb-6 text-base">
+                    Une autre question est en cours ou en pause. Voulez-vous vraiment lancer cette nouvelle question et arrêter la précédente ?
+                </div>
+                <div className="flex justify-end gap-3 mt-4">
+                    <button
+                        type="button"
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+                        onClick={cancelPlay}
+                    >
+                        Non
+                    </button>
+                    <button
+                        type="button"
+                        className="px-4 py-2 rounded-lg text-white transition disabled:opacity-50 bg-red-600 hover:bg-red-700 font-bold"
+                        onClick={confirmPlay}
+                    >
+                        Oui
+                    </button>
+                </div>
+            </InfoModal>
             {/* Confirmation Dialog for End Quiz */}
-            <ConfirmDialog
-                open={showEndQuizConfirm}
+            <InfoModal
+                isOpen={showEndQuizConfirm}
+                onClose={cancelEndQuiz}
                 title="Clôturer le quiz ?"
-                message="Êtes-vous sûr de vouloir clôturer ce quiz ? Cette action est irréversible."
-                onConfirm={confirmEndQuiz}
-                onCancel={cancelEndQuiz}
-            />
+                size="sm"
+                showCloseButton={true}
+            >
+                <div className="mb-6 text-base">
+                    Êtes-vous sûr de vouloir clôturer ce quiz ? Cette action est irréversible.
+                </div>
+                <div className="flex justify-end gap-3 mt-4">
+                    <button
+                        type="button"
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+                        onClick={cancelEndQuiz}
+                    >
+                        Non
+                    </button>
+                    <button
+                        type="button"
+                        className="px-4 py-2 rounded-lg text-white transition disabled:opacity-50 bg-red-600 hover:bg-red-700 font-bold"
+                        onClick={confirmEndQuiz}
+                    >
+                        Oui
+                    </button>
+                </div>
+            </InfoModal>
             {/* Snackbar */}
             {snackbarMessage && (
                 <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg">
