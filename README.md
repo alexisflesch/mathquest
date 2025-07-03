@@ -7,6 +7,8 @@
 
 🧑‍🎓 **Pour les élèves** : entraînez-vous seul·e ou défiez vos amis dans des tournois, sans inscription obligatoire.
 
+
+Une documentation (en cours d'écriture) est accessible à : https://alexisflesch.github.io/mathquest/
 ---
 
 ## 🌐 Fonctionnalités clés

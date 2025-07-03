@@ -6,7 +6,7 @@
 <h2 id="_1-preparer-vos-fichiers-yaml" tabindex="-1"><a class="header-anchor" href="#_1-preparer-vos-fichiers-yaml"><span>1. Préparer vos fichiers YAML</span></a></h2>
 <ul>
 <li>Utilisez un éditeur de texte pour créer vos fichiers YAML. Préférez un éditeur qui supporte la coloration syntaxique YAML (comme VSCode, Sublime Text, etc.).</li>
-<li>Rédigez vos questions au format YAML en respectant la <RouteLink to="/questions-yaml/">structure officielle</RouteLink>.</li>
+<li>Rédigez vos questions au format YAML en respectant la <a href="/questions-yaml/" target="_blank" rel="noopener noreferrer">structure officielle</a>.</li>
 <li>Utilisez les clés en anglais (<code v-pre>uid</code>, <code v-pre>text</code>, <code v-pre>answerOptions</code>, etc.), mais les valeurs (énoncés, thèmes, etc.) peuvent être en français.</li>
 <li><strong>L'<code v-pre>uid</code> doit être unique</strong> : il doit commencer par le nom de l'auteur (ex : <code v-pre>dupont-6e-maths-fractions-001</code>). Ajoutez niveau, discipline, thème si besoin pour éviter toute collision.</li>
 <li>Vous pouvez mettre autant de questions que vous voulez dans un même fichier YAML.</li>

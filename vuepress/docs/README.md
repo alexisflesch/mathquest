@@ -13,8 +13,9 @@ MathQuest est une alternative libre et open source à Kahoot, pensée pour les e
 
 
 
+
 ## Accès rapide
 
-- [Utilisation de l'application](/utilisation/)
-- [Installation](/installation/)
-- [Écriture de questions (YAML)](/questions-yaml/)
+- <RouterLink to="/utilisation/">Utilisation de l'application</RouterLink>
+- <RouterLink to="/installation/">Installation</RouterLink>
+- <RouterLink to="/questions-yaml/">Écriture de questions (YAML)</RouterLink>

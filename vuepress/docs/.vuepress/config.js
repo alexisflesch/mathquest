@@ -30,6 +30,22 @@ export default defineUserConfig({
           ],
         },
       ],
+      '/installation/': [
+        {
+          text: 'Installation',
+          children: [
+            '/installation/README.md',
+          ],
+        },
+      ],
+      '/utilisation/': [
+        {
+          text: 'Utilisation',
+          children: [
+            '/utilisation/README.md',
+          ],
+        },
+      ],
     },
   }),
 
