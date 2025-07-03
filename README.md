@@ -1,11 +1,11 @@
 
-# 🎓 Zornigma - Mathquest
+# 🎓 Zornigma - Mathquest (nom à définir)
 
 **Zornigma** est une application de quiz en temps réel **libre et gratuite**, pensée pour faciliter les révisions et dynamiser les cours. Elle s’inspire de Kahoot, mais avec une philosophie de partage des ressources, sans collecte de données ni marketing.
 
 👩‍🏫 **Pour les enseignants** : créez des sessions de quiz, affichez les résultats en direct, organisez des compétitions en classe, et profitez d’une base de données partagée que vous pouvez enrichir.
 
-🧑‍🎓 **Pour les élèves** : entraînez-vous seul·e ou défiez vos amis dans des tournois, sans inscription obligatoire. Seuls les enseignants créent un compte, via un simple email.
+🧑‍🎓 **Pour les élèves** : entraînez-vous seul·e ou défiez vos amis dans des tournois, sans inscription obligatoire.
 
 ---
 
@@ -74,14 +74,7 @@ redis-cli ping
 
 ### 2. Configuration
 
-Copier les fichiers `.env` à la racine du projet et dans le dossier `script/` si besoin :
-
-```bash
-cp example.env .env
-nano .env
-
-cp script/example.env script/.env
-nano script/.env
+Renseignez tous les fichiers `.env` (nommés example.env) 
 ```
 
 Adapter les identifiants de base de données, ports, etc.
@@ -94,7 +87,9 @@ npm install
 
 ### 4. Initialiser la base avec Prisma
 
+
 ```bash
+cd app/backend
 npx prisma migrate deploy
 npx prisma generate
 ```
@@ -121,7 +116,7 @@ sudo nginx -s reload
 ```
 
 **Résumé du routage :**
-- `/api/v1/` → backend Node.js (port 4000)
+- `/api/v1/` → backend Node.js (port 3007)
 - `/socket.io/` → backend Node.js (websockets)
 - `/api` → Next.js API (port 3008)
 - `/` → Next.js frontend (port 3008)
@@ -138,6 +133,20 @@ npm run dev
 ```
 
 #### En production (recommandé, tout-en-un)
+
+```bash
+cd app
+npm install
+cd shared
+npm install
+cd ../frontend
+npm install
+npm run build
+cd ../backend
+npm install
+npm run build
+```
+
 Utilisez le script d’automatisation pour lancer le backend **et** le frontend avec pm2 :
 ```bash
 bash start-all.sh
