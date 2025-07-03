@@ -1,0 +1,112 @@
+<template><div><h1 id="installation-complete-de-mathquest" tabindex="-1"><a class="header-anchor" href="#installation-complete-de-mathquest"><span>Installation complète de MathQuest</span></a></h1>
+<blockquote>
+<p>Suivez ce guide étape par étape pour installer MathQuest sur votre machine ou serveur.</p>
+</blockquote>
+<h2 id="prerequis" tabindex="-1"><a class="header-anchor" href="#prerequis"><span>Prérequis</span></a></h2>
+<ul>
+<li><strong>Node.js</strong> v18 ou supérieur (<a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">télécharger</a>)</li>
+<li><strong>npm</strong> (fourni avec Node.js)</li>
+<li><strong>PostgreSQL</strong> (base de données)</li>
+<li><strong>Redis</strong> (sessions et Socket.IO)</li>
+<li><strong>Python 3</strong> (pour l’import de questions, optionnel)</li>
+<li><strong>git</strong> (pour cloner le dépôt)</li>
+</ul>
+<h2 id="_1-cloner-le-depot" tabindex="-1"><a class="header-anchor" href="#_1-cloner-le-depot"><span>1. Cloner le dépôt</span></a></h2>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token function">git</span> clone <span class="token operator">&lt;</span>url-du-repo<span class="token operator">></span></span>
+<span class="line"><span class="token builtin class-name">cd</span> mathquest</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="_2-installer-postgresql-et-redis" tabindex="-1"><a class="header-anchor" href="#_2-installer-postgresql-et-redis"><span>2. Installer PostgreSQL et Redis</span></a></h2>
+<h3 id="postgresql" tabindex="-1"><a class="header-anchor" href="#postgresql"><span>PostgreSQL</span></a></h3>
+<ul>
+<li><strong>Linux (Debian/Ubuntu)</strong> :<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token function">sudo</span> <span class="token function">apt</span> update <span class="token operator">&amp;&amp;</span> <span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> postgresql postgresql-contrib</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div></div></div></li>
+<li><strong>macOS</strong> :<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line">brew <span class="token function">install</span> postgresql</span>
+<span class="line">brew services start postgresql</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div></li>
+<li><strong>Windows</strong> : <a href="https://www.postgresql.org/download/" target="_blank" rel="noopener noreferrer">Télécharger PostgreSQL</a></li>
+</ul>
+<p>Créer la base et l’utilisateur :</p>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token function">sudo</span> <span class="token parameter variable">-u</span> postgres psql</span>
+<span class="line">CREATE DATABASE mathquest<span class="token punctuation">;</span></span>
+<span class="line">CREATE <span class="token environment constant">USER</span> mathquest WITH PASSWORD <span class="token string">'votre_mot_de_passe'</span><span class="token punctuation">;</span></span>
+<span class="line">GRANT ALL PRIVILEGES ON DATABASE mathquest TO mathquest<span class="token punctuation">;</span></span>
+<span class="line"><span class="token punctuation">\</span>q</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h3 id="redis" tabindex="-1"><a class="header-anchor" href="#redis"><span>Redis</span></a></h3>
+<ul>
+<li><strong>Linux</strong> :<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token function">sudo</span> <span class="token function">apt</span> update <span class="token operator">&amp;&amp;</span> <span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> redis-server</span>
+<span class="line"><span class="token function">sudo</span> systemctl <span class="token builtin class-name">enable</span> redis-server <span class="token parameter variable">--now</span></span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div></li>
+<li><strong>macOS</strong> :<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line">brew <span class="token function">install</span> redis</span>
+<span class="line">brew services start redis</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div></li>
+<li><strong>Windows</strong> : <a href="https://redis.io/download" target="_blank" rel="noopener noreferrer">Redis Stack</a></li>
+</ul>
+<p>Vérifier le fonctionnement :</p>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line">redis-cli <span class="token function">ping</span></span>
+<span class="line"><span class="token comment"># Réponse attendue : PONG</span></span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="_3-configuration-des-variables-d-environnement" tabindex="-1"><a class="header-anchor" href="#_3-configuration-des-variables-d-environnement"><span>3. Configuration des variables d’environnement</span></a></h2>
+<p>Copiez les fichiers d’exemple puis adaptez-les :</p>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token function">cp</span> app/backend/example.env app/backend/.env</span>
+<span class="line"><span class="token function">cp</span> app/frontend/example.env app/frontend/.env</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><p>Modifiez les identifiants, ports, secrets, etc. selon votre environnement.</p>
+<h2 id="_4-installer-les-dependances" tabindex="-1"><a class="header-anchor" href="#_4-installer-les-dependances"><span>4. Installer les dépendances</span></a></h2>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token builtin class-name">cd</span> app</span>
+<span class="line"><span class="token function">npm</span> <span class="token function">install</span></span>
+<span class="line"><span class="token builtin class-name">cd</span> shared <span class="token operator">&amp;&amp;</span> <span class="token function">npm</span> <span class="token function">install</span></span>
+<span class="line"><span class="token builtin class-name">cd</span> <span class="token punctuation">..</span>/frontend <span class="token operator">&amp;&amp;</span> <span class="token function">npm</span> <span class="token function">install</span></span>
+<span class="line"><span class="token builtin class-name">cd</span> <span class="token punctuation">..</span>/backend <span class="token operator">&amp;&amp;</span> <span class="token function">npm</span> <span class="token function">install</span></span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="_5-initialiser-la-base-de-donnees" tabindex="-1"><a class="header-anchor" href="#_5-initialiser-la-base-de-donnees"><span>5. Initialiser la base de données</span></a></h2>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token builtin class-name">cd</span> app/backend</span>
+<span class="line">npx prisma migrate deploy</span>
+<span class="line">npx prisma generate</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="_6-optionnel-importer-des-questions" tabindex="-1"><a class="header-anchor" href="#_6-optionnel-importer-des-questions"><span>6. (Optionnel) Importer des questions</span></a></h2>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token builtin class-name">cd</span> script</span>
+<span class="line">python3 import_questions.py</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="_7-lancer-l-application" tabindex="-1"><a class="header-anchor" href="#_7-lancer-l-application"><span>7. Lancer l’application</span></a></h2>
+<h3 id="en-developpement-tout-en-un" tabindex="-1"><a class="header-anchor" href="#en-developpement-tout-en-un"><span>En développement (tout-en-un) :</span></a></h3>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token builtin class-name">cd</span> app</span>
+<span class="line"><span class="token function">npm</span> run dev</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div><ul>
+<li>Frontend : http://localhost:3008</li>
+<li>Backend API : http://localhost:3007</li>
+</ul>
+<h3 id="en-production-recommande" tabindex="-1"><a class="header-anchor" href="#en-production-recommande"><span>En production (recommandé) :</span></a></h3>
+<ul>
+<li>Construisez le frontend et le backend :<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token builtin class-name">cd</span> app/frontend <span class="token operator">&amp;&amp;</span> <span class="token function">npm</span> run build</span>
+<span class="line"><span class="token builtin class-name">cd</span> <span class="token punctuation">..</span>/backend <span class="token operator">&amp;&amp;</span> <span class="token function">npm</span> run build</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div></li>
+<li>Utilisez le script d’automatisation :<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line"><span class="token builtin class-name">cd</span> <span class="token punctuation">..</span>/<span class="token punctuation">..</span>/</span>
+<span class="line"><span class="token function">bash</span> app/start-all.sh</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div></div></div></li>
+</ul>
+<h3 id="avec-pm2-persistance" tabindex="-1"><a class="header-anchor" href="#avec-pm2-persistance"><span>Avec pm2 (persistance) :</span></a></h3>
+<div class="language-bash line-numbers-mode" data-highlighter="prismjs" data-ext="sh"><pre v-pre><code class="language-bash"><span class="line">pm2 status</span>
+<span class="line">pm2 restart mathquest-backend</span>
+<span class="line">pm2 restart mathquest-frontend</span>
+<span class="line"></span></code></pre>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="_8-optionnel-configurer-nginx-pour-la-production" tabindex="-1"><a class="header-anchor" href="#_8-optionnel-configurer-nginx-pour-la-production"><span>8. (Optionnel) Configurer nginx pour la production</span></a></h2>
+<p>Copiez et adaptez le fichier <code v-pre>nginx.example</code> fourni à la racine du projet.</p>
+<hr>
+<p><strong>Conseils</strong> :</p>
+<ul>
+<li>Vérifiez que PostgreSQL et Redis tournent (<code v-pre>systemctl status ...</code>).</li>
+<li>Les ports sont configurables dans les fichiers <code v-pre>.env</code>.</li>
+<li>Pour réinitialiser la base : <code v-pre>npx prisma migrate reset</code> (efface toutes les données).</li>
+<li>Consultez la documentation technique dans <code v-pre>/docs/</code> pour plus de détails.</li>
+</ul>
+</div></template>
+
+

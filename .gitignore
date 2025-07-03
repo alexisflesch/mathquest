@@ -14,3 +14,6 @@ postgre.md
 
 # Ignore deploy script
 script/deploy_to_vps.sh
+
+# Ignore node_modules directory
+node_modules/

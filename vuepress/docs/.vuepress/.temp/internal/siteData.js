@@ -1,0 +1,1 @@
+export const siteData = JSON.parse("{\"base\":\"/\",\"lang\":\"fr-FR\",\"title\":\"MathQuest\",\"description\":\"Alternative libre et open source à Kahoot, pour les enseignants et leurs élèves.\",\"head\":[],\"locales\":{}}")
