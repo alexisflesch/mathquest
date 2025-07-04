@@ -9,10 +9,6 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "Cercle"
     - "Carré"

@@ -91,7 +91,7 @@ def import_questions():
 
         for idx, q in enumerate(questions):
             # Champs obligatoires YAML (anglais)
-            required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers", "difficulty", "gradeLevel"]
+            required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers", "difficulty", "gradeLevel", "author"]
             missing = [field for field in required_fields if field not in q or q[field] in [None, "", []]]
             if missing:
                 msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants : {missing}"
