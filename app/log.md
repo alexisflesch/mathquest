@@ -1056,3 +1056,17 @@
     - All other questions reflect their canonical state.
 3. Inspect the DOM or use browser dev tools to verify the correct class is applied.
 4. (Optional) Add a visual test or Cypress/Playwright test to check class assignment after socket events.
+
+---
+
+## 2025-07-04 - Fix: Logout API returns canonical LogoutResponse
+
+**What was done:**
+- Updated backend /auth/logout endpoint to return `{ success: true, message: 'Logged out successfully' }` per canonical LogoutResponseSchema.
+- Added checklist to plan.md for logout API modernization.
+
+**Testing:**
+- After logout, frontend should no longer show ZodError about missing boolean.
+- Response now matches canonical schema: `{ success: true, message: string }`.
+
+**Checklist/plan.md updated.**
