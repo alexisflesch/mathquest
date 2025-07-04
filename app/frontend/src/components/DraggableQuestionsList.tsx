@@ -210,11 +210,18 @@ export default function DraggableQuestionsList(props: DraggableQuestionsListProp
         <ul className="draggable-questions-list flex flex-col gap-3 sm:gap-4">
             {questions.map((q, idx) => {
                 const timer = getCanonicalTimer(q.uid);
-                // Modernization: check if this question is terminated
-                const isTerminated = !!(terminatedQuestions && terminatedQuestions[q.uid]);
-                // Add debug log for question state
-                logger.info(`[QUESTION-STATE] q.uid=${q.uid} isTerminated=${isTerminated} terminatedQuestions=`, terminatedQuestions);
-                logger.info(`[RENDER][DraggableQuestionsList] Rendering SortableQuestion: q.uid=${q.uid} isTerminated=${isTerminated} className=${isTerminated ? 'question-finished' : ''}`);
+                const isActive = timer.isActive;
+                let className = '';
+                if (isActive) {
+                    if (timer.status === 'run') className = 'question-active-running';
+                    else if (timer.status === 'pause') className = 'question-active-paused';
+                    else if (timer.status === 'stop') className = 'question-active-stopped';
+                } else {
+                    const isTerminated = !!(terminatedQuestions && terminatedQuestions[q.uid]);
+                    if (isTerminated) className = 'question-finished';
+                    else className = 'question-pending';
+                }
+                logger.info(`[RENDER][DraggableQuestionsList] Rendering SortableQuestion: q.uid=${q.uid} className=${className}`);
                 return (
                     <SortableQuestion
                         key={q.uid}
@@ -240,8 +247,7 @@ export default function DraggableQuestionsList(props: DraggableQuestionsListProp
                         currentTournamentCode={currentTournamentCode}
                         stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
                         onResume={(uid) => onPlay(uid, 0)}
-                        // Pass question-finished class if terminated
-                        className={isTerminated ? 'question-finished' : ''}
+                        className={className}
                     />
                 );
             })}

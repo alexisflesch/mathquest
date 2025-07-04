@@ -1036,3 +1036,23 @@
     - This ensures tournaments created from the student flow are never set to 'completed' regardless of frontend bugs or missing fields.
     - Only teacher-created tournaments (with a GameTemplate) can be 'completed' on creation.
     - Fully aligned with modernization and canonical flow separation.
+
+## 2025-07-04 - Question State CSS Class Modernization (Teacher Dashboard)
+
+**What was done:**
+- Updated `DraggableQuestionsList` to assign the correct CSS class to each question:
+    - `.question-active-running`, `.question-active-paused`, `.question-active-stopped` for the active question (based on timer.status)
+    - `.question-finished` for terminated questions
+    - `.question-pending` for all other questions
+- All logic uses canonical state from backend events and shared types.
+- No legacy or compatibility code added.
+- All event names and payloads verified against shared/types.
+
+**Testing:**
+1. Open the teacher dashboard and start/stop/pause the timer for a question.
+2. Observe that:
+    - The active question gets the correct class based on timer status.
+    - The previously active question gets `.question-pending` if not finished, or `.question-finished` if finished.
+    - All other questions reflect their canonical state.
+3. Inspect the DOM or use browser dev tools to verify the correct class is applied.
+4. (Optional) Add a visual test or Cypress/Playwright test to check class assignment after socket events.

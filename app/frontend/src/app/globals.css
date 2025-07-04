@@ -879,13 +879,24 @@ textarea:focus {
     border: 3px solid #008000 !important;
   }
 
-  .question-active-stopped {}
+  .question-active-stopped {
+    background: #00bfff !important;
+    border: 3px solid #006b80 !important;
+  }
 
-  .question-active-running {}
+  .question-active-running {
+    background: #ff00bb !important;
+    border: 3px solid #800040 !important;
+  }
 
-  .question-active-paused {}
+  .question-active-paused {
+    background: #ffff00 !important;
+    border: 3px solid #8f8f07 !important;
+  }
 
-  .question-pending {}
+  .question-pending {
+    border: 3px solid black !important;
+  }
 }
 
 /* ================================
