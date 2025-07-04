@@ -651,7 +651,6 @@ router.delete('/:id', teacherAuth, async (req: Request, res: Response): Promise<
         }
 
         const { id } = req.params;
-
         if (!id) {
             res.status(400).json({ error: 'Game instance ID is required' });
             return;
@@ -659,8 +658,31 @@ router.delete('/:id', teacherAuth, async (req: Request, res: Response): Promise<
 
         logger.info({ instanceId: id, userId: req.user.userId }, 'Deleting game instance');
 
-        // Delete the game instance
+        // Fetch the game instance to get the accessCode
+        const gameInstance = await getGameInstanceService().getGameInstanceById(id);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game instance not found' });
+            return;
+        }
+        const accessCode = gameInstance.accessCode;
+
+        // Delete all Redis keys related to this game instance
+        const redisPatterns = [
+            `mathquest:game:*${accessCode}*`,
+            `mathquest:explanation_sent:${accessCode}:*`,
+            `mathquest:lobby:${accessCode}`
+        ];
+        for (const pattern of redisPatterns) {
+            const keys = await redisClient.keys(pattern);
+            if (keys.length > 0) {
+                await redisClient.del(...keys);
+            }
+        }
+
+        // Delete the game instance from the database
         await getGameInstanceService().deleteGameInstance(req.user.userId, id);
+
+        logger.info({ instanceId: id, userId: req.user.userId, accessCode }, 'Game instance and Redis state deleted');
 
         // Return 204 No Content for successful deletion
         res.status(204).send();

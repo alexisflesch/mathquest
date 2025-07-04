@@ -10,6 +10,7 @@ const gameParticipantService_1 = require("@/core/services/gameParticipantService
 const gameTemplateService_1 = require("@/core/services/gameTemplateService");
 // Import specific functions from gameStateService
 const gameStateService_1 = require("@/core/services/gameStateService");
+const redis_1 = require("@/config/redis");
 const prisma_1 = require("@/db/prisma");
 const auth_1 = require("@/middleware/auth");
 const validation_1 = require("@/middleware/validation");
@@ -575,8 +576,28 @@ router.delete('/:id', auth_1.teacherAuth, async (req, res) => {
             return;
         }
         logger.info({ instanceId: id, userId: req.user.userId }, 'Deleting game instance');
-        // Delete the game instance
+        // Fetch the game instance to get the accessCode
+        const gameInstance = await getGameInstanceService().getGameInstanceById(id);
+        if (!gameInstance) {
+            res.status(404).json({ error: 'Game instance not found' });
+            return;
+        }
+        const accessCode = gameInstance.accessCode;
+        // Delete all Redis keys related to this game instance
+        const redisPatterns = [
+            `mathquest:game:*${accessCode}*`,
+            `mathquest:explanation_sent:${accessCode}:*`,
+            `mathquest:lobby:${accessCode}`
+        ];
+        for (const pattern of redisPatterns) {
+            const keys = await redis_1.redisClient.keys(pattern);
+            if (keys.length > 0) {
+                await redis_1.redisClient.del(...keys);
+            }
+        }
+        // Delete the game instance from the database
         await getGameInstanceService().deleteGameInstance(req.user.userId, id);
+        logger.info({ instanceId: id, userId: req.user.userId, accessCode }, 'Game instance and Redis state deleted');
         // Return 204 No Content for successful deletion
         res.status(204).send();
     }
