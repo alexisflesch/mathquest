@@ -879,7 +879,25 @@ textarea:focus {
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.10);
     border-radius: var(--radius) !important;
     transition: background 0.15s;
+    position: relative;
   }
+
+  .question-finished::before {
+    content: '✓';
+    position: absolute;
+    top: -0.5rem;
+    left: -0.5rem;
+    background: #10b981;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    font-weight: 500;
+    box-shadow: none;
+    border: none;
+  }
+
+
 
   .question-active-stopped {
     border: 2px solid var(--primary) !important;
@@ -895,6 +913,10 @@ textarea:focus {
     border: 2px solid #8f8f07 !important;
   }
 
+  .question-pending {
+    border: 1.5px solid var(--border) !important;
+  }
+
   /* Factorized padding for all question state classes */
   .question-finished,
   .question-active-stopped,
@@ -907,9 +929,6 @@ textarea:focus {
     padding-right: 1rem !important;
   }
 
-  .question-pending {
-    border: 2px solid var(--border) !important;
-  }
 }
 
 /* ================================
