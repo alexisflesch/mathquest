@@ -63,36 +63,40 @@ interface DraggableQuestionsListProps {
         questionUid: string;
         isActive: boolean;
     };
+    // Modernization: terminatedQuestions from backend (Record<string, boolean>)
+    terminatedQuestions?: Record<string, boolean>;
 }
 
-export default function DraggableQuestionsList({
-    quizId,
-    currentTournamentCode,
-    quizSocket,
-    questions,
-    currentQuestionIdx,
-    isChronoRunning,
-    isQuizEnded, // Although not directly used here, accept it if passed
-    questionActiveUid,
-    onSelect,
-    onPlay,
-    onPause,
-    onStop,
-    onEditTimer,
-    onResume,
-    onReorder,
-    timerStatus,
-    timerQuestionUid,
-    timeLeftMs,
-    timerDurationMs, // Add to props
-    onTimerAction,
-    onImmediateUpdateActiveTimer,
-    disabled,
-    getStatsForQuestion,
-    expandedUids,
-    onToggleExpand,
-    getTimerState,
-}: DraggableQuestionsListProps) {
+export default function DraggableQuestionsList(props: DraggableQuestionsListProps) {
+    const {
+        quizId,
+        currentTournamentCode,
+        quizSocket,
+        questions,
+        currentQuestionIdx,
+        isChronoRunning,
+        isQuizEnded, // Although not directly used here, accept it if passed
+        questionActiveUid,
+        onSelect,
+        onPlay,
+        onPause,
+        onStop,
+        onEditTimer,
+        onResume,
+        onReorder,
+        timerStatus,
+        timerQuestionUid,
+        timeLeftMs,
+        timerDurationMs, // Add to props
+        onTimerAction,
+        onImmediateUpdateActiveTimer,
+        disabled,
+        getStatsForQuestion,
+        expandedUids,
+        onToggleExpand,
+        getTimerState,
+        terminatedQuestions,
+    } = props;
     // Remove excessive logging that causes re-renders
     // React.useEffect(() => {
     //     logger.debug(`Timer status: ${timerStatus}, Timer question ID: ${timerQuestionUid}, Time left: ${timeLeftMs}`);
@@ -206,6 +210,11 @@ export default function DraggableQuestionsList({
         <ul className="draggable-questions-list flex flex-col gap-3 sm:gap-4">
             {questions.map((q, idx) => {
                 const timer = getCanonicalTimer(q.uid);
+                // Modernization: check if this question is terminated
+                const isTerminated = !!(terminatedQuestions && terminatedQuestions[q.uid]);
+                // Add debug log for question state
+                logger.info(`[QUESTION-STATE] q.uid=${q.uid} isTerminated=${isTerminated} terminatedQuestions=`, terminatedQuestions);
+                logger.info(`[RENDER][DraggableQuestionsList] Rendering SortableQuestion: q.uid=${q.uid} isTerminated=${isTerminated} className=${isTerminated ? 'question-finished' : ''}`);
                 return (
                     <SortableQuestion
                         key={q.uid}
@@ -231,6 +240,8 @@ export default function DraggableQuestionsList({
                         currentTournamentCode={currentTournamentCode}
                         stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
                         onResume={(uid) => onPlay(uid, 0)}
+                        // Pass question-finished class if terminated
+                        className={isTerminated ? 'question-finished' : ''}
                     />
                 );
             })}

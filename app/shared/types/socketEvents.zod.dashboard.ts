@@ -20,3 +20,13 @@ export const gameControlStatePayloadSchema = z.object({
 });
 
 export type GameControlStatePayload = z.infer<typeof gameControlStatePayloadSchema>;
+
+export const showCorrectAnswersPayloadSchema = z.object({
+    gameId: z.string().optional(),
+    accessCode: z.string().optional(),
+    teacherId: z.string().optional(),
+    show: z.boolean(),
+    terminatedQuestions: z.record(z.boolean()),
+});
+
+export type ShowCorrectAnswersPayload = z.infer<typeof showCorrectAnswersPayloadSchema>;

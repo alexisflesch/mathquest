@@ -140,10 +140,11 @@ export interface ShowCorrectAnswersPayload {
     gameId?: string;
     accessCode?: string;
     teacherId?: string;
+    show: boolean;
     /**
      * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
      */
-    terminatedQuestions?: Record<string, boolean>;
+    terminatedQuestions: Record<string, boolean>;
 }
 
 /**

@@ -870,6 +870,22 @@ textarea:focus {
     min-width: 80px;
     display: inline-block;
   }
+
+  /* ================================
+     QUESTION STATE PLACEHOLDER CLASSES
+     ================================ */
+  .question-finished {
+    background: #00ff00 !important;
+    border: 3px solid #008000 !important;
+  }
+
+  .question-active-stopped {}
+
+  .question-active-running {}
+
+  .question-active-paused {}
+
+  .question-pending {}
 }
 
 /* ================================

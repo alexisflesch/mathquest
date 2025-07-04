@@ -425,12 +425,27 @@ function timerActionHandler(io, socket) {
                         }, '[TROPHY_DEBUG] showCorrectAnswers reset to false on timer run action (projection display state)');
                         // Emit to dashboard room so teacher UI updates trophy state (reset to false)
                         const dashboardRoom = `dashboard_${gameId}`;
-                        io.to(dashboardRoom).emit(events_1.TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, { show: false });
+                        // Fetch current terminatedQuestions from Redis (canonical)
+                        let terminatedQuestions = {};
+                        try {
+                            const terminatedKey = `mathquest:game:terminatedQuestions:${accessCode}`;
+                            const terminatedSet = await redis_1.redisClient.smembers(terminatedKey);
+                            if (Array.isArray(terminatedSet)) {
+                                terminatedSet.forEach((uid) => {
+                                    terminatedQuestions[uid] = true;
+                                });
+                            }
+                        }
+                        catch (err) {
+                            logger.error({ err }, '[TROPHY_DEBUG] Failed to fetch terminatedQuestions for show: false');
+                        }
+                        io.to(dashboardRoom).emit(events_1.TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, { show: false, terminatedQuestions });
                         logger.info({
                             dashboardRoom,
                             show: false,
+                            terminatedQuestions,
                             event: events_1.TEACHER_EVENTS.SHOW_CORRECT_ANSWERS
-                        }, '[TROPHY_DEBUG] Emitted show_correct_answers { show: false } to dashboard room (timer run reset)');
+                        }, '[TROPHY_DEBUG] Emitted show_correct_answers { show: false, terminatedQuestions } to dashboard room (timer run reset)');
                     }
                     catch (err) {
                         logger.error({

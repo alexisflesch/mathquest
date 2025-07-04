@@ -381,7 +381,8 @@ export function joinDashboardHandler(io: SocketIOServer, socket: Socket) {
                     showTrophy = false;
                 }
                 socket.emit(TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, {
-                    show: showTrophy
+                    show: showTrophy,
+                    terminatedQuestions: terminatedQuestions || {}
                 });
                 logger.info({ showCorrectAnswers: showTrophy, gameAccessCode }, 'Emitted initial showCorrectAnswers state to dashboard (modernized, safe for no current question)');
             }

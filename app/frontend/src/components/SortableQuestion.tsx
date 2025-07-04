@@ -33,6 +33,8 @@ export interface SortableQuestionProps {
     stats?: number[]; // Accepts number[] for per-question stats bar
     durationMs: number; // Canonical duration from parent
     onResume?: (uid: string) => void;
+    // Modernization: allow extra className for question state
+    className?: string;
 }
 
 // --- arePropsEqual reste inchangé ---
@@ -68,7 +70,7 @@ const arePropsEqual = (prevProps: SortableQuestionProps, nextProps: SortableQues
 
 
 // --- Component ---
-export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs }: SortableQuestionProps) => {
+export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, isActive, open, setOpen, onPlay, onPause, onStop, onEditTimer, liveTimeLeft, liveStatus, onImmediateUpdateActiveTimer, disabled, stats, durationMs, className }: SortableQuestionProps) => {
     // ...existing code...
 
     // ...existing code...
@@ -337,7 +339,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
     const timerEditInput = editingTimer ? (
         <div className="relative">
             <QuestionDisplay
-                className="question-dashboard opacity-40 pointer-events-none select-none"
+                className={`question-dashboard opacity-40 pointer-events-none select-none ${className ?? ''}`}
                 question={toLegacyQuestionShape(q)}
                 isOpen={open}
                 onToggleOpen={setOpen}
@@ -405,7 +407,7 @@ export const SortableQuestion = React.memo(({ q, quizId, currentTournamentCode, 
                 ) : (
                     // Affiche le composant QuestionDisplay normal
                     <QuestionDisplay
-                        className="question-dashboard"
+                        className={className}
                         question={toLegacyQuestionShape(q)}
                         isOpen={open}
                         onToggleOpen={setOpen}

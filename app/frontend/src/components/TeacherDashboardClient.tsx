@@ -20,6 +20,7 @@ import { io, Socket } from 'socket.io-client';
 import { SOCKET_CONFIG } from '@/config';
 import { computeTimeLeftMs } from '../utils/computeTimeLeftMs';
 import { makeApiRequest } from '@/config/api';
+import { showCorrectAnswersPayloadSchema, type ShowCorrectAnswersPayload } from '@shared/types/socketEvents.zod.dashboard';
 
 // Derive type from Zod schema for type safety
 // type ConnectedCountPayload = z.infer<typeof connectedCountPayloadSchema>;
@@ -35,10 +36,15 @@ function mapToCanonicalQuestion(q: any): Question {
     // Canonical: always use durationMs in ms, never timeLimit
     const durationMs = questionData.durationMs ?? q.durationMs;
 
+    // Enforce canonical UID: throw if missing
+    if (!questionData.uid || typeof questionData.uid !== 'string') {
+        throw new Error('[MODERNIZATION ERROR] Question is missing canonical uid: ' + JSON.stringify(q));
+    }
+
     return {
         ...q,
         text: questionData.text || q.text,
-        uid: questionData.uid || q.uid,
+        uid: questionData.uid, // Only canonical
         answerOptions,
         correctAnswers,
         durationMs, // canonical ms
@@ -176,22 +182,30 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             }
         });
         // Listen for backend confirmation of showCorrectAnswers state (trophy)
-        socket.on(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, (payload: { show: boolean }) => {
-            if (typeof payload?.show === 'boolean') {
-                // Only allow toggling ON from backend confirmation; cannot be toggled off by teacher
-                if (payload.show) {
+        socket.on(SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, (payload: ShowCorrectAnswersPayload) => {
+            const parsed = showCorrectAnswersPayloadSchema.safeParse(payload);
+            if (!parsed.success) {
+                logger.error('Invalid SHOW_CORRECT_ANSWERS payload', parsed.error);
+                return;
+            }
+            const { show, terminatedQuestions } = parsed.data;
+            if (typeof show === 'boolean') {
+                if (show) {
                     setShowTrophy(true);
-                    logger.info('[DASHBOARD] Received showTrophy state from backend (show_correct_answers):', payload.show);
+                    logger.info('[DASHBOARD] Received showTrophy state from backend (show_correct_answers):', show);
                     setSnackbarMessage('Classement affiché');
                     setTimeout(() => setSnackbarMessage(null), 2500);
                     hasReceivedInitialTrophy.current = true;
-                }
-                // If backend sets show: false, allow it (e.g., on question change)
-                else {
+                } else {
                     setShowTrophy(false);
-                    logger.info('[DASHBOARD] Trophy reset to hidden by backend (show_correct_answers):', payload.show);
+                    logger.info('[DASHBOARD] Trophy reset to hidden by backend (show_correct_answers):', show);
                 }
             }
+            setQuizState((prev: any) => ({
+                ...prev,
+                terminatedQuestions
+            }));
+            logger.info('[DASHBOARD] Updated terminatedQuestions from SHOW_CORRECT_ANSWERS:', terminatedQuestions);
         });
         // Listen for initial showStats state from backend (toggle_projection_stats)
         socket.on(SOCKET_EVENTS.TEACHER.TOGGLE_PROJECTION_STATS, (payload: { show: boolean }) => {
@@ -389,6 +403,16 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             timeLeftMs: timeLeftMs
         };
     }, [timerStatus, timerQuestionUid, timeLeftMs]);
+
+
+    // --- Terminated Questions: from canonical quizState ---
+    // Canonical: terminatedQuestions is a Record<string, boolean> in quizState (from backend)
+    const terminatedQuestions: Record<string, boolean> = useMemo(() => {
+        if (quizState && typeof quizState.terminatedQuestions === 'object' && quizState.terminatedQuestions !== null) {
+            return quizState.terminatedQuestions;
+        }
+        return {};
+    }, [quizState]);
 
     const mappedQuestions = useMemo(() => {
         return questions.map(mapToCanonicalQuestion);
@@ -699,6 +723,8 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                 return undefined;
                             }}
                             getTimerState={getCanonicalTimerForQuestion}
+                            // Pass terminatedQuestions to DraggableQuestionsList
+                            terminatedQuestions={terminatedQuestions}
                         />
                     </section>
                 )}
