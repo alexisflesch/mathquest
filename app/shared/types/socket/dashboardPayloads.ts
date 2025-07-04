@@ -119,6 +119,10 @@ export interface DashboardAnswerStatsUpdatePayload {
 export interface DashboardJoinedPayload {
     gameId: string;
     success: boolean;
+    /**
+     * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
+     */
+    terminatedQuestions: Record<string, boolean>;
 }
 
 /**
@@ -136,6 +140,10 @@ export interface ShowCorrectAnswersPayload {
     gameId?: string;
     accessCode?: string;
     teacherId?: string;
+    /**
+     * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
+     */
+    terminatedQuestions?: Record<string, boolean>;
 }
 
 /**

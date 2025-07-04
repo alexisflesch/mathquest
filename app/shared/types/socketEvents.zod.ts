@@ -190,6 +190,10 @@ export const requestNextQuestionPayloadSchema = z.object({
 export const correctAnswersPayloadSchema = z.object({
   questionUid: z.string().min(1, { message: "Question UID cannot be empty." }),
   correctAnswers: z.array(z.boolean()).optional(),
+  /**
+   * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
+   */
+  terminatedQuestions: z.record(z.string(), z.boolean()).optional(),
 });
 
 export const feedbackPayloadSchema = z.object({

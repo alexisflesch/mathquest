@@ -165,6 +165,10 @@ exports.requestNextQuestionPayloadSchema = zod_1.z.object({
 exports.correctAnswersPayloadSchema = zod_1.z.object({
     questionUid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }),
     correctAnswers: zod_1.z.array(zod_1.z.boolean()).optional(),
+    /**
+     * Map of questionUid to boolean indicating if correct answers have been shown (terminated)
+     */
+    terminatedQuestions: zod_1.z.record(zod_1.z.string(), zod_1.z.boolean()).optional(),
 });
 exports.feedbackPayloadSchema = zod_1.z.object({
     questionUid: zod_1.z.string().min(1, { message: "Question UID cannot be empty." }),

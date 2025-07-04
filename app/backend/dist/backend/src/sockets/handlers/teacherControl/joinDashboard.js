@@ -50,6 +50,8 @@ const gameStateService = __importStar(require("@/core/services/gameStateService"
 const logger = (0, logger_1.default)('JoinDashboardHandler');
 function joinDashboardHandler(io, socket) {
     return async (payload, callback) => {
+        // --- MODERNIZATION: Ensure terminatedQuestions is always in scope for all post-handler logic ---
+        let terminatedQuestions = {};
         // CRITICAL: Log every join_dashboard event received, even before validation
         logger.info({
             socketId: socket.id,
@@ -248,6 +250,19 @@ function joinDashboardHandler(io, socket) {
                 }
                 return;
             }
+            // --- MODERNIZATION: Fetch terminated questions from Redis and build map ---
+            try {
+                const terminatedKey = `mathquest:game:terminatedQuestions:${gameInstance.accessCode}`;
+                const terminatedSet = await redis_1.redisClient.smembers(terminatedKey);
+                if (Array.isArray(terminatedSet)) {
+                    terminatedSet.forEach((uid) => {
+                        terminatedQuestions[uid] = true;
+                    });
+                }
+            }
+            catch (err) {
+                logger.error({ err }, 'Failed to fetch terminated questions from Redis');
+            }
             // Send the comprehensive initial state
             socket.emit(events_1.TEACHER_EVENTS.GAME_CONTROL_STATE, controlState);
             // Send initial timer state to the dashboard timer hook
@@ -284,8 +299,8 @@ function joinDashboardHandler(io, socket) {
             }, 'Emitting dashboard_joined event');
             socket.emit(events_1.TEACHER_EVENTS.DASHBOARD_JOINED, {
                 gameId: gameInstance.id,
-                accessCode: gameInstance.accessCode,
-                userId: effectiveUserId
+                success: true,
+                terminatedQuestions
             });
             // Call the callback if provided
             if (callback) {
@@ -339,13 +354,27 @@ function joinDashboardHandler(io, socket) {
                     });
                     logger.info({ showStats: displayState.showStats, gameAccessCode }, 'Emitted initial showStats state to dashboard');
                 }
-                // Emit initial showCorrectAnswers state (trophy)
-                if (displayState && typeof displayState.showCorrectAnswers === 'boolean') {
-                    socket.emit(events_1.TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, {
-                        show: displayState.showCorrectAnswers
-                    });
-                    logger.info({ showCorrectAnswers: displayState.showCorrectAnswers, gameAccessCode }, 'Emitted initial showCorrectAnswers state to dashboard');
+                // Emit initial showCorrectAnswers state (trophy) based on terminatedQuestions map
+                let showTrophy = false;
+                try {
+                    // Use the same terminatedQuestions map as sent in dashboard_joined
+                    // If there is no current question, always emit show: false
+                    const currentQuestionUid = displayState?.correctAnswersData?.questionUid || null;
+                    if (currentQuestionUid && terminatedQuestions[currentQuestionUid]) {
+                        showTrophy = true;
+                    }
+                    else {
+                        showTrophy = false;
+                    }
                 }
+                catch (err) {
+                    logger.error({ err }, 'Error determining initial showCorrectAnswers state');
+                    showTrophy = false;
+                }
+                socket.emit(events_1.TEACHER_EVENTS.SHOW_CORRECT_ANSWERS, {
+                    show: showTrophy
+                });
+                logger.info({ showCorrectAnswers: showTrophy, gameAccessCode }, 'Emitted initial showCorrectAnswers state to dashboard (modernized, safe for no current question)');
             }
         }
         catch (err) {

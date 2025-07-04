@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import Snackbar from "./Snackbar";
 import DraggableQuestionsList from "@/components/DraggableQuestionsList";
 import InfoModal from "@/components/SharedModal";
 import { createLogger } from '@/clientLogger';
@@ -72,7 +73,8 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // UI state
     const [questionActiveUid, setQuestionActiveUid] = useState<string | null>(null);
     const [expandedUids, setExpandedUids] = useState<Set<string>>(new Set());
-    const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+    type SnackbarState = { message: string; type?: "success" | "error" } | string | null;
+    const [snackbarMessage, setSnackbarMessage] = useState<SnackbarState>(null);
     const [showStats, setShowStats] = useState<boolean>(false); // global stats toggle
     const [showTrophy, setShowTrophy] = useState<boolean>(false); // trophy toggle state
     // Suppression flags for initial backend event
@@ -303,15 +305,31 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             setLoading(false);
         });
         socket.on(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, (error: any) => {
-            logger.error('Dashboard error:', error);
-            // Show verbose error details if present
-            if (error.details) {
-                logger.error('Dashboard error details:', error.details);
-                setError(`Dashboard error: ${error.message || 'Unknown error'}\nDetails: ${JSON.stringify(error.details, null, 2)}`);
+            // Log dashboard errors as warnings for user-triggered actions (not errors)
+            logger.warn('Dashboard error:', error);
+            // Show user-facing dashboard errors as a snackbar (2s), not as a fatal error
+            if (error && error.message) {
+                setSnackbarMessage({ message: error.message, type: 'error' });
+                setTimeout(() => setSnackbarMessage(null), 2000);
+            } else if (error && typeof error === 'string') {
+                setSnackbarMessage({ message: String(error), type: 'error' });
+                setTimeout(() => setSnackbarMessage(null), 2000);
             } else {
-                setError(`Dashboard error: ${error.message || 'Unknown error'}`);
+                setSnackbarMessage({ message: 'Erreur inconnue du dashboard', type: 'error' });
+                setTimeout(() => setSnackbarMessage(null), 2000);
             }
-            setLoading(false);
+            // Only setError for fatal/structural errors (e.g., connection lost, invalid payload)
+            if (error && error.code && [
+                'VALIDATION_ERROR',
+                'GAME_NOT_FOUND',
+                'AUTHENTICATION_REQUIRED',
+                'STATE_ERROR',
+                'JOIN_ERROR',
+                'MISSING_PARAMS'
+            ].includes(error.code)) {
+                setError(`Dashboard error: ${error.message || 'Unknown error'}`);
+                setLoading(false);
+            }
         });
         setQuizSocket(socket);
         return () => {
@@ -742,11 +760,22 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                 </div>
             </InfoModal>
             {/* Snackbar */}
-            {snackbarMessage && (
-                <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg">
-                    {snackbarMessage}
-                </div>
-            )}
+            {/* Snackbar: now supports error type for red background */}
+            {snackbarMessage && typeof snackbarMessage === 'object' && 'message' in snackbarMessage ? (
+                <Snackbar
+                    open={!!snackbarMessage}
+                    message={snackbarMessage.message}
+                    type={snackbarMessage.type}
+                    onClose={() => setSnackbarMessage(null)}
+                />
+            ) : snackbarMessage && typeof snackbarMessage === 'string' ? (
+                <Snackbar
+                    open={!!snackbarMessage}
+                    message={snackbarMessage}
+                    type="success"
+                    onClose={() => setSnackbarMessage(null)}
+                />
+            ) : null}
         </div>
     );
 }

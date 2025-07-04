@@ -1,3 +1,5 @@
+- 2025-07-04: Added Redis tracking of terminated questions per game in showCorrectAnswersHandler. Now, whenever correct answers are shown, the questionUid is added to the Redis set `mathquest:game:terminatedQuestions:{accessCode}`. Used Zod validation for accessCode and questionUid. All logic is canonical and type-safe.
+// 2025-07-04: Added terminatedQuestions map to dashboard load and correct_answers payloads. Backend now fetches the set from Redis and includes it in both the initial dashboard payload and the correct_answers payload to the dashboard. All types and Zod schemas updated. Modernization complete for this phase.
 - Refactored CanonicalTimerService to use canonical getTimerKey utility for all timer key construction (2025-06-23)
     - All timer key construction is now DRY and unified
     - No legacy timer key logic remains in CanonicalTimerService
@@ -10,3 +12,4 @@
     - setQuestionHandler emits full filtered question object and timer to both live and projection rooms
     - Legacy projection question event (UID/timer only) replaced with full payload
     - All payloads use canonical shared types and are Zod-validated
+- 2025-07-04: Added Redis tracking of terminated questions per game in showCorrectAnswersHandler. Now, whenever correct answers are shown, the questionUid is added to the Redis set `mathquest:game:terminatedQuestions:{accessCode}`. Used Zod validation for accessCode and questionUid. All logic is canonical and type-safe

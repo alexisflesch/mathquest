@@ -181,6 +181,9 @@ function emitQuestionHandler(io, socket) {
             // Canonical: get stats for this question if any exist
             const { getAnswerStats } = await Promise.resolve().then(() => __importStar(require('../teacherControl/helpers')));
             answerStats = await getAnswerStats(accessCode, targetQuestion.uid);
+            // Defensive: always ensure answerStats is a non-null object
+            if (!answerStats || typeof answerStats !== 'object')
+                answerStats = {};
             showStats = answerStats && Object.keys(answerStats).length > 0;
         }
         catch (err) {
@@ -192,7 +195,7 @@ function emitQuestionHandler(io, socket) {
         const statsPayload = {
             questionUid: targetQuestion.uid,
             show: showStats,
-            stats: answerStats,
+            stats: answerStats || {}, // Defensive: always non-null object
             timestamp: Date.now()
         };
         // Validate at runtime before emitting

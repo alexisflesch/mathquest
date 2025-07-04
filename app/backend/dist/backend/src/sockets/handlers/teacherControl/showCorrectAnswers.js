@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -19,6 +52,16 @@ function showCorrectAnswersHandler(io, socket) {
         try {
             logger.info({ socketId: socket.id, payload }, 'Teacher requesting to show correct answers');
             const { gameId, accessCode, teacherId } = payload;
+            // Validate accessCode and questionUid with Zod
+            const { z } = await Promise.resolve().then(() => __importStar(require('zod')));
+            const accessCodeSchema = z.string().min(1);
+            if (!accessCodeSchema.safeParse(accessCode).success) {
+                logger.error({ socketId: socket.id, payload }, 'Invalid accessCode');
+                socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
+                    error: 'Invalid access code'
+                });
+                return;
+            }
             // Use accessCode or gameId to find the game
             let gameInstance;
             if (accessCode) {
@@ -68,9 +111,11 @@ function showCorrectAnswersHandler(io, socket) {
                 : null;
             if (!currentQuestionUid) {
                 logger.error({ socketId: socket.id, accessCode: gameInstance.accessCode }, 'No current question set in game state');
-                socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
-                    error: 'No current question set in game state'
-                });
+                const errorPayload = {
+                    code: 'NO_CURRENT_QUESTION',
+                    message: "Le quiz n'a pas encore commencé"
+                };
+                socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, errorPayload);
                 return;
             }
             // Find the current question in the template
@@ -83,10 +128,34 @@ function showCorrectAnswersHandler(io, socket) {
                 return;
             }
             const question = questionWrapper.question;
-            // Prepare correct answers payload for students
+            // Validate questionUid with Zod
+            const questionUidSchema = z.string().min(1);
+            if (!questionUidSchema.safeParse(question.uid).success) {
+                logger.error({ socketId: socket.id, questionUid: question.uid }, 'Invalid questionUid');
+                socket.emit(events_1.SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, {
+                    error: 'Invalid questionUid'
+                });
+                return;
+            }
+            // --- MODERNIZATION: Fetch terminated questions from Redis and build map ---
+            let terminatedQuestions = {};
+            try {
+                const terminatedKey = `mathquest:game:terminatedQuestions:${gameInstance.accessCode}`;
+                const terminatedSet = await (await Promise.resolve().then(() => __importStar(require('@/config/redis')))).redisClient.smembers(terminatedKey);
+                if (Array.isArray(terminatedSet)) {
+                    terminatedSet.forEach((uid) => {
+                        terminatedQuestions[uid] = true;
+                    });
+                }
+            }
+            catch (err) {
+                logger.error({ err }, 'Failed to fetch terminated questions from Redis');
+            }
+            // Prepare correct answers payload for students and dashboard
             const correctAnswersPayload = {
                 questionUid: question.uid,
-                correctAnswers: question.correctAnswers || []
+                correctAnswers: question.correctAnswers || [],
+                terminatedQuestions
             };
             // Prepare projection-specific payload with additional context
             const projectionCorrectAnswersPayload = {
@@ -119,12 +188,34 @@ function showCorrectAnswersHandler(io, socket) {
             }, 'Emitted correct answers to projection room and persisted state');
             // Emit to dashboard room so teacher UI updates trophy state
             const dashboardRoom = `dashboard_${gameInstance.id}`;
-            io.to(dashboardRoom).emit(events_1.SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, { show: true });
+            // --- MODERNIZATION: Track terminated questions in Redis ---
+            // Use canonical key: mathquest:game:terminatedQuestions:{accessCode}
+            const { redisClient } = await Promise.resolve().then(() => __importStar(require('@/config/redis')));
+            const terminatedKey = `mathquest:game:terminatedQuestions:${gameInstance.accessCode}`;
+            await redisClient.sadd(terminatedKey, question.uid);
+            logger.info({ terminatedKey, questionUid: question.uid }, 'Marked question as terminated in Redis');
+            // Re-fetch the set, but also optimistically add the just-terminated question
+            let updatedTerminatedQuestions = {};
+            try {
+                const updatedSet = await redisClient.smembers(terminatedKey);
+                if (Array.isArray(updatedSet)) {
+                    updatedSet.forEach((uid) => {
+                        updatedTerminatedQuestions[uid] = true;
+                    });
+                }
+            }
+            catch (err) {
+                logger.error({ err }, 'Failed to fetch updated terminated questions from Redis');
+            }
+            // Optimistically add the just-terminated questionUid
+            updatedTerminatedQuestions[question.uid] = true;
+            // Emit to dashboard room with up-to-date terminatedQuestions map
+            io.to(dashboardRoom).emit(events_1.SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS, { show: true, terminatedQuestions: updatedTerminatedQuestions });
             logger.info({
                 dashboardRoom,
                 show: true,
                 event: events_1.SOCKET_EVENTS.TEACHER.SHOW_CORRECT_ANSWERS
-            }, '[TROPHY_DEBUG] Emitted show_correct_answers to dashboard room');
+            }, '[TROPHY_DEBUG] Emitted show_correct_answers to dashboard room (after Redis update, optimistic)');
             // TODO: Mark question as "closed" in game state if needed
             // This could involve updating Redis game state to track question status
             logger.info({
