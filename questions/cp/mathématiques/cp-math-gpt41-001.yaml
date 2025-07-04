@@ -8,16 +8,13 @@
   themes: ["addition", "nombres"]
   difficulty: 1
   gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "2"
     - "3"
     - "4"
     - "1"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-002"
   text: "Quel est le chiffre qui vient après 4 ?"
@@ -32,6 +29,7 @@
     - "6"
     - "2"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-003"
   text: "Combien y a-t-il de côtés sur un triangle ?"
@@ -46,6 +44,7 @@
     - "2"
     - "5"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-004"
   text: "Complète : 1, 2, 3, __ ?"
@@ -60,6 +59,7 @@
     - "2"
     - "1"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-005"
   text: "Combien font 5 - 2 ?"
@@ -74,6 +74,7 @@
     - "4"
     - "1"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-006"
   text: "Quel est le plus grand : 7 ou 4 ?"
@@ -88,6 +89,7 @@
     - "Ils sont égaux"
     - "0"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-007"
   text: "Combien de doigts as-tu sur une main ?"
@@ -102,6 +104,7 @@
     - "6"
     - "10"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-008"
   text: "Combien font 1 + 1 ?"
@@ -116,6 +119,7 @@
     - "3"
     - "0"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-009"
   text: "Quel chiffre manque : 2, 3, __, 5 ?"
@@ -130,6 +134,7 @@
     - "6"
     - "7"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-010"
   text: "Combien font 3 + 2 ?"
@@ -144,3 +149,4 @@
     - "6"
     - "3"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"

@@ -9,10 +9,7 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "Chien"
     - "Chat"
@@ -28,12 +25,15 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
+  author: "gpt-4.1"
   answerOptions:
     - "Lumière"
     - "Chocolat"
     - "Jouets"
     - "Bonbons"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-corps-002"
   text: "Avec quelle partie du corps vois-tu ?"
@@ -43,14 +43,17 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "Les mains"
     - "Les yeux"
     - "Les pieds"
     - "Les oreilles"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-eau-001"
+  author: "gpt-4.1"
   text: "Que devient l'eau quand on la chauffe très fort ?"
   questionType: "single_choice"
   discipline: "sciences"
@@ -66,6 +69,7 @@
   correctAnswers: [false, true, false, false]
 
 - uid: "gpt41-cp-sciences-jour-nuit-001"
+  author: "gpt-4.1"
   text: "Quand le soleil brille, est-ce le jour ou la nuit ?"
   questionType: "single_choice"
   discipline: "sciences"

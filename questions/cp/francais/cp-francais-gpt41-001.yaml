@@ -1,5 +1,7 @@
+
 # Questions de français (orthographe) niveau CP pour MathQuest
 # Auteur : gpt4.1
+
 - uid: "gpt41-cp-francais-orthographe-001"
   text: "Sélectionne la bonne orthographe :"
   questionType: "single_choice"
@@ -8,20 +10,13 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "éléfant"
     - "éléphant"
     - "éléphent"
     - "éléfent"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-francais-orthographe-002"
   text: "Sélectionne la bonne orthographe :"
@@ -37,6 +32,7 @@
     - "château"
     - "chateaux"
   correctAnswers: [false, false, true, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-francais-orthographe-003"
   text: "Sélectionne la bonne orthographe :"
@@ -52,6 +48,7 @@
     - "maisson"
     - "méson"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-francais-orthographe-004"
   text: "Sélectionne la bonne orthographe :"
@@ -67,6 +64,7 @@
     - "lapain"
     - "lappain"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-francais-orthographe-005"
   text: "Sélectionne la bonne orthographe :"
@@ -82,6 +80,7 @@
     - "solleil"
     - "solail"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-francais-orthographe-006"
   text: "Sélectionne la bonne orthographe :"
@@ -97,6 +96,7 @@
     - "havion"
     - "aviom"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-francais-orthographe-007"
   text: "Sélectionne la bonne orthographe :"
@@ -112,6 +112,7 @@
     - "qartable"
     - "kartable"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-francais-orthographe-008"
   text: "Sélectionne la bonne orthographe :"
@@ -127,7 +128,7 @@
     - "mamant"
     - "mammanne"
   correctAnswers: [true, false, false, false]
-
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-francais-orthographe-010"
   text: "Sélectionne la bonne orthographe :"
@@ -143,3 +144,4 @@
     - "fenaitre"
     - "fênêtre"
   correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"

@@ -9,10 +9,7 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "Chat"
     - "Chien"
@@ -28,6 +25,8 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
+  author: "gpt-4.1"
   answerOptions:
     - "Fleur"
     - "Feuille"
@@ -43,6 +42,7 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "Table"
     - "Verre"
@@ -64,6 +64,7 @@
     - "Automne"
     - "Hiver"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-aliments-002"
   text: "Lequel de ces aliments vient d'une plante ?"
@@ -79,3 +80,4 @@
     - "Oeuf"
     - "Poisson"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"

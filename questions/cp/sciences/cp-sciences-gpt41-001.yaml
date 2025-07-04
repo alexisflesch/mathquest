@@ -9,16 +9,13 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "Vert"
     - "Violet"
     - "Orange"
     - "Marron"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-animaux-001"
   text: "Quel animal miaule ?"
@@ -34,6 +31,7 @@
     - "Vache"
     - "Cheval"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-saisons-001"
   text: "En quelle saison les feuilles tombent-elles des arbres ?"
@@ -43,12 +41,14 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+
   answerOptions:
     - "Printemps"
     - "Été"
     - "Automne"
     - "Hiver"
   correctAnswers: [false, false, true, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-corps-001"
   text: "Combien as-tu de bras ?"
@@ -58,12 +58,14 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+
   answerOptions:
     - "1"
     - "2"
     - "3"
     - "4"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-aliments-001"
   text: "Lequel de ces aliments est un fruit ?"
@@ -73,9 +75,11 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+
   answerOptions:
     - "Carotte"
     - "Pomme"
     - "Poireau"
     - "Chou"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"

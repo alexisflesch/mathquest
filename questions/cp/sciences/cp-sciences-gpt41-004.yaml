@@ -9,16 +9,14 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
-  difficulty: 1
-  gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "Chien"
     - "Poisson"
     - "Chat"
     - "Oiseau"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-plantes-003"
   text: "Quelle partie de la plante capte la lumière du soleil ?"
@@ -28,12 +26,15 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
+  author: "gpt-4.1"
   answerOptions:
     - "Racine"
     - "Feuille"
     - "Fleur"
     - "Tige"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-corps-003"
   text: "Combien as-tu de jambes ?"
@@ -43,12 +44,14 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "1"
     - "2"
     - "3"
     - "4"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-meteo-001"
   text: "Que porte-t-on quand il pleut ?"
@@ -64,8 +67,10 @@
     - "Des lunettes de soleil"
     - "Un bonnet"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-aliments-003"
+  author: "gpt-4.1"
   text: "Lequel de ces aliments est une boisson ?"
   questionType: "single_choice"
   discipline: "sciences"
@@ -94,6 +99,7 @@
     - "Les nuages"
     - "Les feuilles"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-eau-002"
   text: "Quel est l'état de l'eau quand elle est très froide ?"
@@ -109,6 +115,7 @@
     - "Gazeuse"
     - "Sucrée"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-animaux-005"
   text: "Lequel de ces animaux a des plumes ?"
@@ -124,8 +131,10 @@
     - "Poisson"
     - "Chien"
   correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-sciences-plantes-004"
+  author: "gpt-4.1"
   text: "Que donne un pommier ?"
   questionType: "single_choice"
   discipline: "sciences"
@@ -141,6 +150,7 @@
   correctAnswers: [false, true, false, false]
 
 - uid: "gpt41-cp-sciences-meteo-002"
+  author: "gpt-4.1"
   text: "Quel temps fait-il quand il neige ?"
   questionType: "single_choice"
   discipline: "sciences"

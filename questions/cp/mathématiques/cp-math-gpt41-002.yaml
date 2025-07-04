@@ -9,6 +9,7 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "Cercle"
     - "Carré"
@@ -24,6 +25,7 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "2"
     - "3"
@@ -39,6 +41,7 @@
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
+  author: "gpt-4.1"
   answerOptions:
     - "5"
     - "7"
@@ -53,13 +56,14 @@
   themes: ["formes", "reconnaissance"]
   timeLimit: 30
   difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "⬛"
     - "⚪"
     - "🔺"
     - "🔵"
   correctAnswers: [true, false, false, false]
+  gradeLevel: "CP"
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-suite-001"
   text: "Complète la suite : 2, 4, 6, __ ?"
@@ -68,13 +72,14 @@
   themes: ["suite numérique", "nombres pairs"]
   timeLimit: 30
   difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "7"
     - "8"
     - "10"
     - "12"
   correctAnswers: [false, true, false, false]
+  gradeLevel: "CP"
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-comparaison-001"
   text: "Quel est le plus petit nombre ?"
@@ -83,13 +88,14 @@
   themes: ["comparaison", "nombres"]
   timeLimit: 30
   difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "3"
     - "1"
     - "5"
     - "2"
   correctAnswers: [false, true, false, false]
+  gradeLevel: "CP"
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-reconnaissance-001"
   text: "Quel chiffre est écrit ici : 9 ?"
@@ -98,13 +104,14 @@
   themes: ["reconnaissance", "chiffres"]
   timeLimit: 30
   difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "6"
     - "8"
     - "9"
     - "7"
   correctAnswers: [false, false, true, false]
+  gradeLevel: "CP"
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-quantite-002"
   text: "Combien de canards vois-tu ? 🦆🦆"
@@ -113,13 +120,14 @@
   themes: ["quantité", "nombres"]
   timeLimit: 30
   difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "1"
     - "2"
     - "3"
     - "4"
   correctAnswers: [false, true, false, false]
+  gradeLevel: "CP"
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-suite-002"
   text: "Complète la suite : 1, 3, 5, __ ?"
@@ -128,13 +136,14 @@
   themes: ["suite numérique", "nombres impairs"]
   timeLimit: 30
   difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "6"
     - "7"
     - "8"
     - "9"
   correctAnswers: [false, true, false, false]
+  gradeLevel: "CP"
+  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-formes-002"
   text: "Quelle figure est ronde ?"
@@ -143,10 +152,11 @@
   themes: ["formes", "géométrie"]
   timeLimit: 30
   difficulty: 1
-  gradeLevel: "CP"
   answerOptions:
     - "Cercle"
     - "Carré"
     - "Triangle"
     - "Rectangle"
   correctAnswers: [true, false, false, false]
+  gradeLevel: "CP"
+  author: "gpt-4.1"
