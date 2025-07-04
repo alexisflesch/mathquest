@@ -1,3 +1,13 @@
+@layer components {
+  /* Ensure metadata (span) in .question-header is always right-aligned, even in compact mode */
+  .question-header>span {
+    margin-left: auto !important;
+    text-align: right !important;
+    flex-shrink: 0;
+    min-width: 80px;
+    display: inline-block;
+  }
+}
 /* Ensure enhanced multi-select dropdown option hover is always visible and theme-compliant */
 .enhanced-dropdown-option:hover {
   background-color: var(--dropdown-hover) !important;
