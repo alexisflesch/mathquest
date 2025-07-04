@@ -208,9 +208,19 @@ function joinDashboardHandler(io, socket) {
                 joinedAt: Date.now()
             }));
             // Get and send comprehensive game state for dashboard
-            const { controlState, errorDetails } = await (0, helpers_1.getGameControlState)(gameInstance.id, effectiveUserId, isTestEnvironment);
+            let { controlState, errorDetails } = await (0, helpers_1.getGameControlState)(gameInstance.id, effectiveUserId, isTestEnvironment);
             if (!controlState) {
-                logger.warn({ gameId, userId: effectiveUserId }, 'Could not retrieve game control state');
+                logger.warn({ gameId, userId: effectiveUserId }, 'Game control state missing, attempting to initialize game state in Redis');
+                // Attempt to initialize game state in Redis
+                const initialized = await gameStateService.initializeGameState(gameInstance.id);
+                if (initialized) {
+                    logger.info({ gameId, userId: effectiveUserId }, 'Game state initialized in Redis, retrying getGameControlState');
+                    // Try again to get control state
+                    ({ controlState, errorDetails } = await (0, helpers_1.getGameControlState)(gameInstance.id, effectiveUserId, isTestEnvironment));
+                }
+            }
+            if (!controlState) {
+                logger.warn({ gameId, userId: effectiveUserId }, 'Could not retrieve game control state after initialization attempt');
                 if (isTestEnvironment) {
                     // In test environment, return success anyway to not block tests
                     logger.info({ gameId }, 'Test environment: Returning successful response despite missing game state');

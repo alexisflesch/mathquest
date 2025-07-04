@@ -194,7 +194,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     logger.info(`[QuestionDisplay] Render: question.uid=${question.uid} className=${className}`);
     return (
         <div
-            className={`card question-display flex flex-col select-none transition-all duration-150 ease-in-out ${className} ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`question-display flex flex-col select-none transition-all duration-150 ease-in-out ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
             style={{ minWidth: 0 }}
             onClick={handleToggle}
             tabIndex={0}
@@ -202,7 +202,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             aria-expanded={isOpen}
         >
             <div
-                className={`w-full flex flex-col`}
+                className={`card w-full flex flex-col ${className}`}
                 style={{ minWidth: 0 }}
             >
                 <div className="flex flex-col">

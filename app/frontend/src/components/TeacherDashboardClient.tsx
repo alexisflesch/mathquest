@@ -323,7 +323,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         socket.on(SOCKET_EVENTS.TEACHER.ERROR_DASHBOARD, (error: any) => {
             // Log dashboard errors as warnings for user-triggered actions (not errors)
             logger.warn('Dashboard error:', error);
-            // Show user-facing dashboard errors as a snackbar (2s), not as a fatal error
+            // Always show user-facing dashboard errors as a snackbar (2s), never as a fatal error
             if (error && error.message) {
                 setSnackbarMessage({ message: error.message, type: 'error' });
                 setTimeout(() => setSnackbarMessage(null), 2000);
@@ -334,18 +334,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                 setSnackbarMessage({ message: 'Erreur inconnue du dashboard', type: 'error' });
                 setTimeout(() => setSnackbarMessage(null), 2000);
             }
-            // Only setError for fatal/structural errors (e.g., connection lost, invalid payload)
-            if (error && error.code && [
-                'VALIDATION_ERROR',
-                'GAME_NOT_FOUND',
-                'AUTHENTICATION_REQUIRED',
-                'STATE_ERROR',
-                'JOIN_ERROR',
-                'MISSING_PARAMS'
-            ].includes(error.code)) {
-                setError(`Dashboard error: ${error.message || 'Unknown error'}`);
-                setLoading(false);
-            }
+            // Do NOT setError or setLoading(false) for recoverable dashboard errors; keep loading and allow partial data.
         });
         setQuizSocket(socket);
         return () => {
