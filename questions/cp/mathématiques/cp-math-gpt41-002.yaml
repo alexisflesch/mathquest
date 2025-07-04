@@ -7,6 +7,12 @@
   discipline: "mathématiques"
   themes: ["formes", "géométrie"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Cercle"
     - "Carré"
@@ -20,6 +26,8 @@
   discipline: "mathématiques"
   themes: ["quantité", "nombres"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "2"
     - "3"
@@ -33,6 +41,8 @@
   discipline: "mathématiques"
   themes: ["ordre", "nombres"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "5"
     - "7"
@@ -46,6 +56,8 @@
   discipline: "mathématiques"
   themes: ["formes", "reconnaissance"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "⬛"
     - "⚪"
@@ -59,6 +71,8 @@
   discipline: "mathématiques"
   themes: ["suite numérique", "nombres pairs"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "7"
     - "8"
@@ -72,6 +86,8 @@
   discipline: "mathématiques"
   themes: ["comparaison", "nombres"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "3"
     - "1"
@@ -85,6 +101,8 @@
   discipline: "mathématiques"
   themes: ["reconnaissance", "chiffres"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "6"
     - "8"
@@ -98,6 +116,8 @@
   discipline: "mathématiques"
   themes: ["quantité", "nombres"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "1"
     - "2"
@@ -111,6 +131,8 @@
   discipline: "mathématiques"
   themes: ["suite numérique", "nombres impairs"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "6"
     - "7"
@@ -124,6 +146,8 @@
   discipline: "mathématiques"
   themes: ["formes", "géométrie"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Cercle"
     - "Carré"

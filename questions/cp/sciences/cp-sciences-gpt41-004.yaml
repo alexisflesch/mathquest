@@ -7,6 +7,12 @@
   discipline: "sciences"
   themes: ["animaux", "milieu de vie"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Chien"
     - "Poisson"
@@ -20,6 +26,8 @@
   discipline: "sciences"
   themes: ["plantes", "photosynthèse"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Racine"
     - "Feuille"
@@ -33,6 +41,8 @@
   discipline: "sciences"
   themes: ["corps humain"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "1"
     - "2"
@@ -46,6 +56,8 @@
   discipline: "sciences"
   themes: ["météo", "habitudes"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Un maillot de bain"
     - "Un parapluie"
@@ -59,6 +71,8 @@
   discipline: "sciences"
   themes: ["alimentation", "boissons"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Eau"
     - "Pain"
@@ -72,6 +86,8 @@
   discipline: "sciences"
   themes: ["phénomènes naturels", "nuit"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Le soleil"
     - "Les étoiles"
@@ -85,6 +101,8 @@
   discipline: "sciences"
   themes: ["eau", "états de la matière"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Liquide"
     - "Solide"
@@ -98,6 +116,8 @@
   discipline: "sciences"
   themes: ["animaux", "caractéristiques"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Chat"
     - "Oiseau"
@@ -111,6 +131,8 @@
   discipline: "sciences"
   themes: ["plantes", "fruits"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Des poires"
     - "Des pommes"
@@ -124,6 +146,8 @@
   discipline: "sciences"
   themes: ["météo", "phénomènes naturels"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Il fait chaud"
     - "Il fait froid"

@@ -6,6 +6,16 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "éléfant"
     - "éléphant"
@@ -19,6 +29,8 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "chateau"
     - "châtaeu"
@@ -32,6 +44,8 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "maisonne"
     - "maison"
@@ -45,6 +59,8 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "lapin"
     - "lappin"
@@ -58,6 +74,8 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "soleille"
     - "soleil"
@@ -71,6 +89,8 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "avion"
     - "aviant"
@@ -84,6 +104,8 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "cartable"
     - "carteble"
@@ -97,6 +119,8 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "maman"
     - "mamman"
@@ -111,6 +135,8 @@
   discipline: "français"
   themes: ["orthographe", "vocabulaire"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "fenêtre"
     - "fenettres"

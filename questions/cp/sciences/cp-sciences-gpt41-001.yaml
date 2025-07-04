@@ -7,6 +7,12 @@
   discipline: "sciences"
   themes: ["couleurs", "mélanges"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Vert"
     - "Violet"
@@ -20,6 +26,8 @@
   discipline: "sciences"
   themes: ["animaux", "sons"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Chien"
     - "Chat"
@@ -33,6 +41,8 @@
   discipline: "sciences"
   themes: ["saisons", "nature"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Printemps"
     - "Été"
@@ -46,6 +56,8 @@
   discipline: "sciences"
   themes: ["corps humain"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "1"
     - "2"
@@ -59,6 +71,8 @@
   discipline: "sciences"
   themes: ["alimentation", "fruits"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Carotte"
     - "Pomme"

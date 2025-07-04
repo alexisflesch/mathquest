@@ -9,6 +9,7 @@ title: Écriture de questions (YAML)
 > Cette page explique comment rédiger des questions pour MathQuest au format YAML, en utilisant les noms de champs **anglais** (cohérence avec le code). Les valeurs et la documentation sont en français.
 
 
+
 ## Exemple minimal (champs obligatoires)
 
 ```yaml
@@ -23,6 +24,8 @@ answerOptions:
   - "Berlin"
   - "Madrid"
 correctAnswers: [true, false, false, false]
+difficulty: 1
+gradeLevel: "6e"
 ```
 
 
@@ -58,6 +61,7 @@ feedbackWaitTime: 5
 ```
 
 
+
 ## Référence des champs YAML
 
 | Champ             | Type      | Obligatoire | Description |
@@ -68,8 +72,8 @@ feedbackWaitTime: 5
 | `questionType`    | string    | oui         | `multiple_choice` ou `single_choice` |
 | `discipline`      | string    | oui         | Discipline (ex : `mathématiques`, `géographie`) |
 | `themes`          | string[]  | oui         | Liste de thèmes (en français ou anglais) |
-| `difficulty`      | int       | non         | Niveau de difficulté (entier) |
-| `gradeLevel`      | string    | non         | Niveau scolaire (ex : `5e`, `Terminale`) |
+| `difficulty`      | int       | oui         | Niveau de difficulté (entier, obligatoire) |
+| `gradeLevel`      | string    | oui         | Niveau scolaire (ex : `5e`, `Terminale`, obligatoire) |
 | `author`          | string    | non         | Auteur de la question |
 | `explanation`     | string    | non         | Explication affichée après la réponse |
 | `tags`            | string[]  | non         | Liste de tags |

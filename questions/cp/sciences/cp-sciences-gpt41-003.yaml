@@ -7,6 +7,12 @@
   discipline: "sciences"
   themes: ["animaux", "reproduction"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Chat"
     - "Chien"
@@ -20,6 +26,8 @@
   discipline: "sciences"
   themes: ["plantes", "parties"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Fleur"
     - "Feuille"
@@ -33,6 +41,8 @@
   discipline: "sciences"
   themes: ["matière", "objets"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Table"
     - "Verre"
@@ -46,6 +56,8 @@
   discipline: "sciences"
   themes: ["saisons", "cycle"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Été"
     - "Printemps"
@@ -59,6 +71,8 @@
   discipline: "sciences"
   themes: ["alimentation", "origine"]
   timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
   answerOptions:
     - "Lait"
     - "Pain"

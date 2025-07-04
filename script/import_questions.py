@@ -65,89 +65,134 @@ def import_questions():
         return
 
     total_uploaded = 0
-    for yaml_path in get_yaml_paths():
+    total_errors = 0
+    total_warnings = 0
+    all_errors = []
+    all_warnings = []
+    all_questions = []
+    yaml_files = get_yaml_paths()
+    for yaml_path in yaml_files:
         logging.info(f'Processing file: {yaml_path}')
         try:
             with open(yaml_path, 'r', encoding='utf-8') as f:
                 questions = yaml.safe_load(f)
             if not isinstance(questions, list):
-                logging.error(f"Erreur de format dans le fichier : {yaml_path} (le fichier doit contenir une liste de questions)")
+                msg = f"Erreur de format dans le fichier : {yaml_path} (le fichier doit contenir une liste de questions)"
+                logging.error(msg)
+                all_errors.append(msg)
+                total_errors += 1
                 continue
         except Exception as e:
-            logging.error(f"Erreur lors de la lecture du fichier {yaml_path} : {e}")
-            continue
-
-        conn = None
-        cur = None
-        try:
-            conn = get_conn()
-            cur = conn.cursor()
-        except Exception as e:
-            logging.error(f"Erreur de connexion à la base de données : {e}")
+            msg = f"Erreur lors de la lecture du fichier {yaml_path} : {e}"
+            logging.error(msg)
+            all_errors.append(msg)
+            total_errors += 1
             continue
 
         for idx, q in enumerate(questions):
             # Champs obligatoires YAML (anglais)
-            required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers"]
+            required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers", "difficulty", "gradeLevel"]
             missing = [field for field in required_fields if field not in q or q[field] in [None, "", []]]
             if missing:
-                logging.error(f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants : {missing}")
+                msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants : {missing}"
+                logging.error(msg)
+                all_errors.append(msg)
+                total_errors += 1
                 continue
 
             # Champs recommandés mais non obligatoires
             if not q.get("title"):
-                logging.warning(f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}")
+                msg = f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}"
+                logging.warning(msg)
+                all_warnings.append(msg)
+                total_warnings += 1
             if not q.get("timeLimit"):
-                logging.warning(f"Question sans timeLimit (uid={q.get('uid')}) dans {yaml_path}")
+                msg = f"Question sans timeLimit (uid={q.get('uid')}) dans {yaml_path}"
+                logging.warning(msg)
+                all_warnings.append(msg)
+                total_warnings += 1
 
-            try:
-                cur.execute(
-                    '''INSERT INTO questions
-                    (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, is_hidden, answer_options, correct_answers, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
-                    ON CONFLICT (uid) DO UPDATE SET
-                    title = EXCLUDED.title,
-                    question_text = EXCLUDED.question_text,
-                    question_type = EXCLUDED.question_type,
-                    discipline = EXCLUDED.discipline,
-                    themes = EXCLUDED.themes,
-                    difficulty = EXCLUDED.difficulty,
-                    grade_level = EXCLUDED.grade_level,
-                    author = EXCLUDED.author,
-                    explanation = EXCLUDED.explanation,
-                    tags = EXCLUDED.tags,
-                    time_limit_seconds = EXCLUDED.time_limit_seconds,
-                    is_hidden = EXCLUDED.is_hidden,
-                    answer_options = EXCLUDED.answer_options,
-                    correct_answers = EXCLUDED.correct_answers,
-                    updated_at = NOW()''',
-                    [
-                        q.get('uid'),
-                        q.get('title'),
-                        q.get('text'),
-                        q.get('questionType'),
-                        q.get('discipline'),
-                        q.get('themes'),
-                        q.get('difficulty'),
-                        q.get('gradeLevel'),
-                        q.get('author'),
-                        q.get('explanation'),
-                        q.get('tags'),
-                        q.get('timeLimit'),
-                        q.get('isHidden', False),
-                        q.get('answerOptions'),
-                        q.get('correctAnswers')
-                    ]
-                )
-                total_uploaded += 1
-                # logging.info(f"Imported: {q.get('text')}")
-            except Exception as e:
-                logging.error(f"Erreur lors de l'import de la question (uid={q.get('uid')}) dans {yaml_path} : {e}")
-        if conn:
-            conn.commit()
-            cur.close()
-            conn.close()
+            all_questions.append((q, yaml_path))
+
+    if total_errors > 0:
+        logging.error("\n=== Import annulé : des erreurs ont été détectées dans les fichiers/questions ===")
+        logging.error(f"Nombre total d'erreurs : {total_errors}")
+        for err in all_errors:
+            logging.error(err)
+        logging.warning(f"Nombre total de warnings : {total_warnings}")
+        for warn in all_warnings:
+            logging.warning(warn)
+        logging.error("Corrigez les erreurs avant de relancer l'import.")
+        return
+
+    # Si aucune erreur, on upload
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        logging.info('Clearing the Question table...')
+        cur.execute('DELETE FROM questions')
+        conn.commit()
+    except Exception as e:
+        logging.error(f"Erreur de connexion à la base de données : {e}")
+        return
+
+    for q, yaml_path in all_questions:
+        try:
+            cur.execute(
+                '''INSERT INTO questions
+                (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, is_hidden, answer_options, correct_answers, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (uid) DO UPDATE SET
+                title = EXCLUDED.title,
+                question_text = EXCLUDED.question_text,
+                question_type = EXCLUDED.question_type,
+                discipline = EXCLUDED.discipline,
+                themes = EXCLUDED.themes,
+                difficulty = EXCLUDED.difficulty,
+                grade_level = EXCLUDED.grade_level,
+                author = EXCLUDED.author,
+                explanation = EXCLUDED.explanation,
+                tags = EXCLUDED.tags,
+                time_limit_seconds = EXCLUDED.time_limit_seconds,
+                is_hidden = EXCLUDED.is_hidden,
+                answer_options = EXCLUDED.answer_options,
+                correct_answers = EXCLUDED.correct_answers,
+                updated_at = NOW()''',
+                [
+                    q.get('uid'),
+                    q.get('title'),
+                    q.get('text'),
+                    q.get('questionType'),
+                    q.get('discipline'),
+                    q.get('themes'),
+                    q.get('difficulty'),
+                    q.get('gradeLevel'),
+                    q.get('author'),
+                    q.get('explanation'),
+                    q.get('tags'),
+                    q.get('timeLimit'),
+                    q.get('isHidden', False),
+                    q.get('answerOptions'),
+                    q.get('correctAnswers')
+                ]
+            )
+            total_uploaded += 1
+        except Exception as e:
+            msg = f"Erreur lors de l'import de la question (uid={q.get('uid')}) dans {yaml_path} : {e}"
+            logging.error(msg)
+            all_errors.append(msg)
+            total_errors += 1
+    if conn:
+        conn.commit()
+        cur.close()
+        conn.close()
+
     logging.info(f'Import process completed. Total questions uploadées : {total_uploaded}')
+    logging.warning(f'Nombre total de warnings : {total_warnings}')
+    if total_errors > 0:
+        logging.error(f'Nombre total d\'erreurs lors de l\'upload : {total_errors}')
+        for err in all_errors:
+            logging.error(err)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Import questions or clear database tables.')
