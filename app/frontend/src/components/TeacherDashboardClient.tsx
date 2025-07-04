@@ -90,6 +90,8 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     // Confirmation dialogs
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingPlayIdx, setPendingPlayIdx] = useState<number | null>(null);
+    const [showFinishedModal, setShowFinishedModal] = useState(false);
+    const [pendingFinishedPlayIdx, setPendingFinishedPlayIdx] = useState<number | null>(null);
     const [showEndQuizConfirm, setShowEndQuizConfirm] = useState(false);
 
     // Restore missing handlers for end quiz (move above return)
@@ -438,8 +440,16 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         const currentTimerQuestionUid = currentTimerState.questionUid;
         // Always use the latest questions state from ref
         const latestQuestions = questionsRef.current;
+        const playIdx = latestQuestions.findIndex(q => q.uid === uid);
+        const isTerminated = playIdx !== -1 && quizState?.terminatedQuestions && quizState.terminatedQuestions[uid];
+        // If clicking a finished question, show finished modal (takes precedence)
+        if (isTerminated) {
+            setPendingFinishedPlayIdx(playIdx);
+            setShowFinishedModal(true);
+            return;
+        }
+        // If another is running/paused, show confirm modal
         if ((currentTimerStatus === 'run' || currentTimerStatus === 'pause') && currentTimerQuestionUid !== uid) {
-            const playIdx = latestQuestions.findIndex(q => q.uid === uid);
             if (playIdx !== -1) {
                 setPendingPlayIdx(playIdx);
                 setShowConfirm(true);
@@ -452,7 +462,23 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         const intendedDurationMs = q?.durationMs ?? _timeLeftMs;
         logger.info('[DASHBOARD][PLAY] Emitting startTimer with teacher-intended durationMs', { uid, intendedDurationMs });
         startTimer(uid, intendedDurationMs);
-    }, [startTimer, handleSelect]);
+    }, [startTimer, handleSelect, quizState]);
+    // Confirm play for finished question (allow rerun)
+    const confirmFinishedPlay = useCallback(() => {
+        setShowFinishedModal(false);
+        if (pendingFinishedPlayIdx !== null && questions[pendingFinishedPlayIdx]) {
+            const question = questions[pendingFinishedPlayIdx];
+            handleSelect(question.uid);
+            // Rerun: start timer again for finished question
+            logger.info('[DASHBOARD][RERUN FINISHED] Emitting startTimer for finished question', { uid: question.uid, durationMs: question.durationMs });
+            startTimer(question.uid, question.durationMs);
+        }
+        setPendingFinishedPlayIdx(null);
+    }, [pendingFinishedPlayIdx, questions, handleSelect, startTimer]);
+    const cancelFinishedPlay = useCallback(() => {
+        setShowFinishedModal(false);
+        setPendingFinishedPlayIdx(null);
+    }, []);
     const handlePause = useCallback(() => { pauseTimer(); }, [pauseTimer]);
     // Canonical: Resume should always use the latest edited duration if timer was edited while paused
     const handleResume = useCallback((uid: string) => {
@@ -752,6 +778,34 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                         type="button"
                         className="px-4 py-2 rounded-lg text-white transition disabled:opacity-50 bg-red-600 hover:bg-red-700 font-bold"
                         onClick={confirmPlay}
+                    >
+                        Oui
+                    </button>
+                </div>
+            </InfoModal>
+            {/* Confirmation Dialog for Finished Question (takes precedence) */}
+            <InfoModal
+                isOpen={showFinishedModal}
+                onClose={cancelFinishedPlay}
+                title="Relancer la question terminée ?"
+                size="sm"
+                showCloseButton={true}
+            >
+                <div className="mb-6 text-base">
+                    Attention, cette question est terminée, vous avez déjà communiqué les résultats ! Voulez-vous vraiment la relancer ?
+                </div>
+                <div className="flex justify-end gap-3 mt-4">
+                    <button
+                        type="button"
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+                        onClick={cancelFinishedPlay}
+                    >
+                        Non
+                    </button>
+                    <button
+                        type="button"
+                        className="px-4 py-2 rounded-lg text-white transition disabled:opacity-50 bg-red-600 hover:bg-red-700 font-bold"
+                        onClick={confirmFinishedPlay}
                     >
                         Oui
                     </button>

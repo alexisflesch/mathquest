@@ -16,6 +16,8 @@
   color: var(--dropdown-hover-foreground) !important;
 }
 
+
+@import "./question-cards.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -860,76 +862,7 @@ textarea:focus {
   }
 }
 
-@layer components {
 
-  /* Ensure metadata (span) in .question-header is always right-aligned, even in compact mode */
-  .question-header>span {
-    margin-left: auto !important;
-    text-align: right !important;
-    flex-shrink: 0;
-    min-width: 80px;
-    display: inline-block;
-  }
-
-  /* ================================
-     QUESTION STATE CLASSES
-     ================================ */
-  .question-finished {
-    border: 2px solid #10b981 !important;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.10);
-    border-radius: var(--radius) !important;
-    transition: background 0.15s;
-    position: relative;
-  }
-
-  .question-finished::before {
-    content: '✓';
-    position: absolute;
-    top: -0.5rem;
-    left: -0.5rem;
-    background: #10b981;
-    color: white;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    padding: 0.1rem 0.4rem;
-    font-weight: 500;
-    box-shadow: none;
-    border: none;
-  }
-
-
-
-  .question-active-stopped {
-    border: 2px solid var(--primary) !important;
-  }
-
-  .question-active-running {
-    background: #ff00bb !important;
-    border: 2px solid #800040 !important;
-  }
-
-  .question-active-paused {
-    background: #ffff00 !important;
-    border: 2px solid #8f8f07 !important;
-  }
-
-  .question-pending {
-    border: 1.5px solid var(--border) !important;
-  }
-
-  /* Factorized padding for all question state classes */
-  .question-finished,
-  .question-active-stopped,
-  .question-active-running,
-  .question-active-paused,
-  .question-pending {
-    padding-top: 0.75rem !important;
-    padding-bottom: 0.75rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-}
 
 /* ================================
    EMOJI AVATAR CONSISTENCY

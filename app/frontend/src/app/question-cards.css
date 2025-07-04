@@ -1,0 +1,229 @@
+/* Terminated + Not Current + Timer Stopped */
+.question-finished-stopped {
+    border: 2px solid #10b981 !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.10);
+    border-radius: var(--radius) !important;
+    transition: background 0.15s;
+    position: relative;
+}
+
+.question-finished-stopped::before {
+    content: '✓';
+    position: absolute;
+    top: -0.5rem;
+    left: -0.5rem;
+    background: #10b981;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    font-weight: 500;
+    box-shadow: none;
+    border: none;
+}
+
+.question-finished-stopped::after {
+    content: none;
+}
+
+/* Terminated + Active (Running or Paused) */
+.question-finished-active-running,
+.question-finished-active-paused {
+    border: 2px solid #10b981 !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.10);
+    border-radius: var(--radius) !important;
+    transition: background 0.15s;
+    position: relative;
+    z-index: 1;
+    overflow: visible;
+}
+
+.question-finished-active-running::before,
+.question-finished-active-paused::before {
+    content: '✓';
+    position: absolute;
+    top: -0.5rem;
+    left: -0.5rem;
+    background: #10b981;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    font-weight: 500;
+    box-shadow: none;
+    border: none;
+}
+
+.question-finished-active-running::after,
+.question-finished-active-paused::after {
+    content: none;
+}
+
+.question-finished-active-running::before,
+.question-finished-active-paused::before {
+    /* Add pulse effect overlay using a pseudo-element */
+    /* The checkmark is already styled above, so use another pseudo for the pulse */
+}
+
+.question-finished-active-running::after,
+.question-finished-active-paused::after {
+    /* Pulse effect overlay */
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    box-shadow: 0 0 0 0 #10b981;
+    animation: border-pulse-finished 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes border-pulse-finished {
+    0% {
+        box-shadow: 0 0 0 0 #10b981;
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 #10b981;
+    }
+}
+
+/* ================================
+     QUESTION STATE CLASSES
+     ================================ */
+.question-finished {
+    border: 2px solid #10b981 !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.10);
+    border-radius: var(--radius) !important;
+    transition: background 0.15s;
+    position: relative;
+}
+
+.question-finished::before {
+    content: '✓';
+    position: absolute;
+    top: -0.5rem;
+    left: -0.5rem;
+    background: #10b981;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    font-weight: 500;
+    box-shadow: none;
+    border: none;
+}
+
+
+
+.question-active-stopped {
+    border: 2px solid var(--primary) !important;
+}
+
+.question-active-running {
+    border: 2px solid var(--primary) !important;
+}
+
+
+
+.question-active-paused {
+    border: 2px solid var(--primary) !important;
+    position: relative;
+    z-index: 1;
+    overflow: visible;
+}
+
+
+.question-active-paused::before {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    box-shadow: 0 0 0 0 var(--primary, #5fbcd3);
+    animation: border-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    /* Hide overflow for rounded corners */
+}
+
+.question-active-paused::after {
+    content: none;
+}
+
+.question-pending {
+    border: 1.5px solid var(--border) !important;
+}
+
+/* Factorized padding for all question state classes */
+.question-finished,
+.question-finished-stopped,
+.question-finished-active-paused,
+.question-finished-active-running,
+.question-active-stopped,
+.question-active-running,
+.question-active-paused,
+.question-pending {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+.question-active-running {
+    position: relative;
+    z-index: 1;
+    overflow: visible;
+}
+
+
+.question-active-running::before {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    box-shadow: 0 0 0 0 var(--primary, #5fbcd3);
+    animation: border-pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    /* Hide overflow for rounded corners */
+}
+
+
+.question-active-running::after {
+    content: none;
+}
+
+
+
+@keyframes border-pulse {
+    0% {
+        box-shadow: 0 0 0 0 var(--primary, #5fbcd3);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(95, 188, 211, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 var(--primary, #5fbcd3);
+    }
+}

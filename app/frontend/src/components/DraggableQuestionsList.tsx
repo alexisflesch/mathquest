@@ -213,13 +213,16 @@ export default function DraggableQuestionsList(props: DraggableQuestionsListProp
                 // Use questionActiveUid for isActive, not just timer.isActive
                 const isActive = questionActiveUid === q.uid;
                 let className = '';
-                logger.info(`[DEBUG][STATE] q.uid=${q.uid} | isActive=${isActive} | timer.status=${timer.status} | terminated=${!!(terminatedQuestions && terminatedQuestions[q.uid])}`);
+                const isTerminated = !!(terminatedQuestions && terminatedQuestions[q.uid]);
+                logger.info(`[DEBUG][STATE] q.uid=${q.uid} | isActive=${isActive} | timer.status=${timer.status} | terminated=${isTerminated}`);
                 if (isActive) {
-                    if (timer.status === 'run') className = 'question-active-running';
+                    if (isTerminated && timer.status === 'run') className = 'question-finished-active-running';
+                    else if (isTerminated && timer.status === 'pause') className = 'question-finished-active-paused';
+                    else if (isTerminated && timer.status === 'stop') className = 'question-finished-stopped';
+                    else if (timer.status === 'run') className = 'question-active-running';
                     else if (timer.status === 'pause') className = 'question-active-paused';
                     else if (timer.status === 'stop') className = 'question-active-stopped';
                 } else {
-                    const isTerminated = !!(terminatedQuestions && terminatedQuestions[q.uid]);
                     if (isTerminated) className = 'question-finished';
                     else className = 'question-pending';
                 }
