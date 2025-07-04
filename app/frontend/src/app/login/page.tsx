@@ -190,23 +190,7 @@ function LoginPageInner() {
                                         avatar: selectedAvatar
                                     });
                                 }} className="space-y-4">
-                                    {studentAuthMode === 'signup' && (
-                                        <div>
-                                            <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                                                <User className="inline w-4 h-4 mr-2" />
-                                                Pseudo
-                                            </label>
-                                            <input
-                                                type="text"
-                                                id="username"
-                                                name="username"
-                                                maxLength={20}
-                                                className="input input-bordered input-lg w-full"
-                                                autoComplete="username"
-                                                required
-                                            />
-                                        </div>
-                                    )}
+                                    {/* Only one set of fields, in correct order */}
                                     <div>
                                         <label htmlFor="email" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
                                             <Mail className="inline w-4 h-4 mr-2" />
@@ -252,6 +236,23 @@ function LoginPageInner() {
                                                 minLength={6}
                                                 className="input input-bordered input-lg w-full"
                                                 autoComplete="new-password"
+                                                required
+                                            />
+                                        </div>
+                                    )}
+                                    {studentAuthMode === 'signup' && (
+                                        <div>
+                                            <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
+                                                <User className="inline w-4 h-4 mr-2" />
+                                                Pseudo
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="username"
+                                                name="username"
+                                                maxLength={20}
+                                                className="input input-bordered input-lg w-full"
+                                                autoComplete="username"
                                                 required
                                             />
                                         </div>

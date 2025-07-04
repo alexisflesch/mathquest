@@ -56,25 +56,7 @@ export default function StudentAuthForm({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                {mode === 'signup' && (
-                    <div>
-                        <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
-                            <User className="inline w-4 h-4 mr-1" />
-                            Pseudo
-                        </label>
-                        <input
-                            type="text"
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Votre nom d'utilisateur"
-                            maxLength={20}
-                            className="w-full px-3 py-2 border border-[color:var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[color:var(--primary)] focus:border-[color:var(--primary)] bg-[color:var(--input)] text-[color:var(--foreground)]"
-                            required
-                        />
-                    </div>
-                )}
-
+                {/* Email field */}
                 <div>
                     <label htmlFor="email" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
                         <Mail className="inline w-4 h-4 mr-1" />
@@ -91,6 +73,7 @@ export default function StudentAuthForm({
                     />
                 </div>
 
+                {/* Password field */}
                 <div>
                     <label htmlFor="password" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
                         <Lock className="inline w-4 h-4 mr-1" />
@@ -119,6 +102,27 @@ export default function StudentAuthForm({
                         <p className="text-xs text-[color:var(--muted-foreground)] mt-1">Minimum 6 caractères</p>
                     )}
                 </div>
+
+                {/* Username field (signup only, after email/password) */}
+                {mode === 'signup' && (
+                    <div>
+                        <label htmlFor="username" className="block text-sm font-medium text-[color:var(--foreground)] mb-1">
+                            <User className="inline w-4 h-4 mr-1" />
+                            Pseudo
+                        </label>
+                        <input
+                            type="text"
+                            id="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Votre nom d'utilisateur"
+                            maxLength={20}
+                            autoComplete="username"
+                            className="w-full px-3 py-2 border border-[color:var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[color:var(--primary)] focus:border-[color:var(--primary)] bg-[color:var(--input)] text-[color:var(--foreground)]"
+                            required
+                        />
+                    </div>
+                )}
 
                 <button
                     type="submit"
