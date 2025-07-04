@@ -1,0 +1,122 @@
+# Questions de mathématiques niveau CP pour MathQuest
+# Auteur : gpt4.1
+
+- uid: "gpt41-cp-math-nombres-001"
+  text: "Combien font 2 + 1 ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["addition", "nombres"]
+  answerOptions:
+    - "2"
+    - "3"
+    - "4"
+    - "1"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-math-nombres-002"
+  text: "Quel est le chiffre qui vient après 4 ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["nombres", "suite numérique"]
+  answerOptions:
+    - "3"
+    - "5"
+    - "6"
+    - "2"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-math-nombres-003"
+  text: "Combien y a-t-il de côtés sur un triangle ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["formes", "géométrie"]
+  answerOptions:
+    - "3"
+    - "4"
+    - "2"
+    - "5"
+  correctAnswers: [true, false, false, false]
+
+- uid: "gpt41-cp-math-nombres-004"
+  text: "Complète : 1, 2, 3, __ ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["suite numérique", "nombres"]
+  answerOptions:
+    - "4"
+    - "5"
+    - "2"
+    - "1"
+  correctAnswers: [true, false, false, false]
+
+- uid: "gpt41-cp-math-nombres-005"
+  text: "Combien font 5 - 2 ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["soustraction", "nombres"]
+  answerOptions:
+    - "2"
+    - "3"
+    - "4"
+    - "1"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-math-nombres-006"
+  text: "Quel est le plus grand : 7 ou 4 ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["comparaison", "nombres"]
+  answerOptions:
+    - "7"
+    - "4"
+    - "Ils sont égaux"
+    - "0"
+  correctAnswers: [true, false, false, false]
+
+- uid: "gpt41-cp-math-nombres-007"
+  text: "Combien de doigts as-tu sur une main ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["corps humain", "nombres"]
+  answerOptions:
+    - "4"
+    - "5"
+    - "6"
+    - "10"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-math-nombres-008"
+  text: "Combien font 1 + 1 ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["addition", "nombres"]
+  answerOptions:
+    - "1"
+    - "2"
+    - "3"
+    - "0"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-math-nombres-009"
+  text: "Quel chiffre manque : 2, 3, __, 5 ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["suite numérique", "nombres"]
+  answerOptions:
+    - "4"
+    - "1"
+    - "6"
+    - "7"
+  correctAnswers: [true, false, false, false]
+
+- uid: "gpt41-cp-math-nombres-010"
+  text: "Combien font 3 + 2 ?"
+  questionType: "single_choice"
+  discipline: "mathématiques"
+  themes: ["addition", "nombres"]
+  answerOptions:
+    - "4"
+    - "5"
+    - "6"
+    - "3"
+  correctAnswers: [false, true, false, false]

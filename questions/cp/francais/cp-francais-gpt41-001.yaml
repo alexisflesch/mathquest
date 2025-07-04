@@ -1,0 +1,119 @@
+# Questions de français (orthographe) niveau CP pour MathQuest
+# Auteur : gpt4.1
+- uid: "gpt41-cp-francais-orthographe-001"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "éléfant"
+    - "éléphant"
+    - "éléphent"
+    - "éléfent"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-francais-orthographe-002"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "chateau"
+    - "châtaeu"
+    - "château"
+    - "chateaux"
+  correctAnswers: [false, false, true, false]
+
+- uid: "gpt41-cp-francais-orthographe-003"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "maisonne"
+    - "maison"
+    - "maisson"
+    - "méson"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-francais-orthographe-004"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "lapin"
+    - "lappin"
+    - "lapain"
+    - "lappain"
+  correctAnswers: [true, false, false, false]
+
+- uid: "gpt41-cp-francais-orthographe-005"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "soleille"
+    - "soleil"
+    - "solleil"
+    - "solail"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-francais-orthographe-006"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "avion"
+    - "aviant"
+    - "havion"
+    - "aviom"
+  correctAnswers: [true, false, false, false]
+
+- uid: "gpt41-cp-francais-orthographe-007"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "cartable"
+    - "carteble"
+    - "qartable"
+    - "kartable"
+  correctAnswers: [true, false, false, false]
+
+- uid: "gpt41-cp-francais-orthographe-008"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "maman"
+    - "mamman"
+    - "mamant"
+    - "mammanne"
+  correctAnswers: [true, false, false, false]
+
+
+- uid: "gpt41-cp-francais-orthographe-010"
+  text: "Sélectionne la bonne orthographe :"
+  questionType: "single_choice"
+  discipline: "français"
+  themes: ["orthographe", "vocabulaire"]
+  timeLimit: 30
+  answerOptions:
+    - "fenêtre"
+    - "fenettres"
+    - "fenaitre"
+    - "fênêtre"
+  correctAnswers: [true, false, false, false]

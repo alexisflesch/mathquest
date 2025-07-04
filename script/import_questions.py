@@ -52,35 +52,55 @@ def clear_db():
 def import_questions():
     logging.info('Starting import process...')
     # Clear the Question table before inserting new questions
-    conn = get_conn()
-    cur = conn.cursor()
-    logging.info('Clearing the Question table...')
-    cur.execute('DELETE FROM questions')
-    conn.commit()
-    cur.close()
-    conn.close()
-    
-    for yaml_path in get_yaml_paths():
-        logging.info(f'Processing file: {yaml_path}')
-        with open(yaml_path, 'r', encoding='utf-8') as f:
-            questions = yaml.safe_load(f)
+    try:
         conn = get_conn()
         cur = conn.cursor()
-        for q in questions:
+        logging.info('Clearing the Question table...')
+        cur.execute('DELETE FROM questions')
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logging.error(f"Erreur de connexion à la base de données : {e}")
+        return
+
+    total_uploaded = 0
+    for yaml_path in get_yaml_paths():
+        logging.info(f'Processing file: {yaml_path}')
+        try:
+            with open(yaml_path, 'r', encoding='utf-8') as f:
+                questions = yaml.safe_load(f)
+            if not isinstance(questions, list):
+                logging.error(f"Erreur de format dans le fichier : {yaml_path} (le fichier doit contenir une liste de questions)")
+                continue
+        except Exception as e:
+            logging.error(f"Erreur lors de la lecture du fichier {yaml_path} : {e}")
+            continue
+
+        conn = None
+        cur = None
+        try:
+            conn = get_conn()
+            cur = conn.cursor()
+        except Exception as e:
+            logging.error(f"Erreur de connexion à la base de données : {e}")
+            continue
+
+        for idx, q in enumerate(questions):
+            # Champs obligatoires YAML (anglais)
+            required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers"]
+            missing = [field for field in required_fields if field not in q or q[field] in [None, "", []]]
+            if missing:
+                logging.error(f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants : {missing}")
+                continue
+
+            # Champs recommandés mais non obligatoires
+            if not q.get("title"):
+                logging.warning(f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}")
+            if not q.get("timeLimit"):
+                logging.warning(f"Question sans timeLimit (uid={q.get('uid')}) dans {yaml_path}")
+
             try:
-                # Process reponses to extract answer options and correct answers
-                reponses = q.get('reponses', [])
-                answer_options = []
-                correct_answers = []
-                
-                for reponse in reponses:
-                    answer_options.append(reponse.get('texte', ''))
-                    correct_answers.append(reponse.get('correct', False))
-                
-                # Convert theme to array format
-                theme = q.get('theme')
-                themes = [theme] if theme else []
-                
                 cur.execute(
                     '''INSERT INTO questions
                     (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, is_hidden, answer_options, correct_answers, created_at, updated_at)
@@ -103,29 +123,31 @@ def import_questions():
                     updated_at = NOW()''',
                     [
                         q.get('uid'),
-                        q.get('titre'),
-                        q.get('question'),
-                        q.get('type'),
+                        q.get('title'),
+                        q.get('text'),
+                        q.get('questionType'),
                         q.get('discipline'),
-                        themes,
-                        q.get('difficulte'),
-                        q.get('niveau'),
-                        q.get('auteur'),
-                        q.get('explication'),
+                        q.get('themes'),
+                        q.get('difficulty'),
+                        q.get('gradeLevel'),
+                        q.get('author'),
+                        q.get('explanation'),
                         q.get('tags'),
-                        q.get('temps'),
-                        q.get('hidden', False),
-                        answer_options,
-                        correct_answers
+                        q.get('timeLimit'),
+                        q.get('isHidden', False),
+                        q.get('answerOptions'),
+                        q.get('correctAnswers')
                     ]
                 )
-                logging.info(f"Imported: {q.get('question')}")
+                total_uploaded += 1
+                # logging.info(f"Imported: {q.get('text')}")
             except Exception as e:
-                logging.error(f"Error importing: {q.get('question')}\n{e}")
-        conn.commit()
-        cur.close()
-        conn.close()
-    logging.info('Import process completed.')
+                logging.error(f"Erreur lors de l'import de la question (uid={q.get('uid')}) dans {yaml_path} : {e}")
+        if conn:
+            conn.commit()
+            cur.close()
+            conn.close()
+    logging.info(f'Import process completed. Total questions uploadées : {total_uploaded}')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Import questions or clear database tables.')

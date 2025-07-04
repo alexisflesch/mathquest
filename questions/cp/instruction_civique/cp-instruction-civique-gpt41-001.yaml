@@ -1,0 +1,67 @@
+# Questions d'instruction civique niveau CP pour MathQuest
+# Auteur : gpt4.1
+
+- uid: "gpt41-cp-civique-ecole-001"
+  text: "Que dois-tu faire avant d'entrer en classe ?"
+  questionType: "single_choice"
+  discipline: "instruction civique"
+  themes: ["école", "règles de vie"]
+  timeLimit: 30
+  answerOptions:
+    - "Dire bonjour"
+    - "Courir dans le couloir"
+    - "Crier très fort"
+    - "Jeter son cartable"
+  correctAnswers: [true, false, false, false]
+
+- uid: "gpt41-cp-civique-ami-001"
+  text: "Que fais-tu si un camarade tombe dans la cour ?"
+  questionType: "single_choice"
+  discipline: "instruction civique"
+  themes: ["entraide", "école"]
+  timeLimit: 30
+  answerOptions:
+    - "Je ris"
+    - "Je l'aide à se relever"
+    - "Je pars en courant"
+    - "Je l'ignore"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-civique-poubelle-001"
+  text: "Où dois-tu jeter un papier après avoir mangé ?"
+  questionType: "single_choice"
+  discipline: "instruction civique"
+  themes: ["propreté", "école"]
+  timeLimit: 30
+  answerOptions:
+    - "Par terre"
+    - "Dans la poubelle"
+    - "Dans la classe"
+    - "Sous la table"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-civique-politesse-001"
+  text: "Quel mot utilises-tu pour remercier quelqu'un ?"
+  questionType: "single_choice"
+  discipline: "instruction civique"
+  themes: ["politesse"]
+  timeLimit: 30
+  answerOptions:
+    - "Bonjour"
+    - "Merci"
+    - "Au revoir"
+    - "S'il te plaît"
+  correctAnswers: [false, true, false, false]
+
+- uid: "gpt41-cp-civique-traverser-001"
+  text: "Que dois-tu faire avant de traverser la rue ?"
+  questionType: "single_choice"
+  discipline: "instruction civique"
+  themes: ["sécurité routière"]
+  timeLimit: 30
+  answerOptions:
+    - "Regarder des deux côtés"
+    - "Courir sans regarder"
+    - "Fermer les yeux"
+    - "Téléphoner"
+  correctAnswers: [true, false, false, false]
