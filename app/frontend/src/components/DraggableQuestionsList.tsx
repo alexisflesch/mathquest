@@ -210,8 +210,10 @@ export default function DraggableQuestionsList(props: DraggableQuestionsListProp
         <ul className="draggable-questions-list flex flex-col gap-3 sm:gap-4">
             {questions.map((q, idx) => {
                 const timer = getCanonicalTimer(q.uid);
-                const isActive = timer.isActive;
+                // Use questionActiveUid for isActive, not just timer.isActive
+                const isActive = questionActiveUid === q.uid;
                 let className = '';
+                logger.info(`[DEBUG][STATE] q.uid=${q.uid} | isActive=${isActive} | timer.status=${timer.status} | terminated=${!!(terminatedQuestions && terminatedQuestions[q.uid])}`);
                 if (isActive) {
                     if (timer.status === 'run') className = 'question-active-running';
                     else if (timer.status === 'pause') className = 'question-active-paused';
@@ -221,32 +223,42 @@ export default function DraggableQuestionsList(props: DraggableQuestionsListProp
                     if (isTerminated) className = 'question-finished';
                     else className = 'question-pending';
                 }
-                logger.info(`[RENDER][DraggableQuestionsList] Rendering SortableQuestion: q.uid=${q.uid} className=${className}`);
+                logger.info(`[RENDER][DraggableQuestionsList] Rendering SortableQuestion: q.uid=${q.uid} className=${className} | timer.status=${timer.status} | isActive=${isActive}`);
                 return (
                     <SortableQuestion
                         key={q.uid}
                         q={q}
                         durationMs={timer.durationMs}
-                        isActive={timer.isActive}
+                        isActive={isActive}
                         open={expandedUids.has(q.uid)}
                         setOpen={() => onToggleExpand(q.uid)}
                         onPlay={(uid, timerValue) => {
+                            logger.info(`[ACTION][onPlay] uid=${uid} timerValue=${timerValue}`);
                             onPlay(uid, timerValue);
                         }}
                         onEditTimer={(newTimeMs) => {
-                            logger.info(`[DEBUG][DraggableQuestionsList] onEditTimer for ${q.uid} with newTimeMs: ${newTimeMs}`);
+                            logger.info(`[ACTION][onEditTimer] q.uid=${q.uid} newTimeMs=${newTimeMs}`);
                             onEditTimer(q.uid, newTimeMs);
                         }}
-                        onPause={handlePause}
-                        onStop={handleStop}
-                        liveTimeLeft={timer.isActive ? timer.timeLeftMs : undefined}
-                        liveStatus={timer.isActive ? (['run', 'pause', 'stop'].includes(timer.status) ? timer.status as 'run' | 'pause' | 'stop' : undefined) : undefined}
+                        onPause={() => {
+                            logger.info(`[ACTION][onPause] q.uid=${q.uid}`);
+                            handlePause();
+                        }}
+                        onStop={() => {
+                            logger.info(`[ACTION][onStop] q.uid=${q.uid}`);
+                            handleStop();
+                        }}
+                        liveTimeLeft={isActive ? timer.timeLeftMs : undefined}
+                        liveStatus={isActive ? (['run', 'pause', 'stop'].includes(timer.status) ? timer.status as 'run' | 'pause' | 'stop' : undefined) : undefined}
                         onImmediateUpdateActiveTimer={handleImmediateUpdate}
                         disabled={disabled}
                         quizId={quizId}
                         currentTournamentCode={currentTournamentCode}
                         stats={getStatsForQuestion ? getStatsForQuestion(q.uid) : undefined}
-                        onResume={(uid) => onPlay(uid, 0)}
+                        onResume={(uid) => {
+                            logger.info(`[ACTION][onResume] uid=${uid}`);
+                            onPlay(uid, 0);
+                        }}
                         className={className}
                     />
                 );
