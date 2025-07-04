@@ -872,30 +872,97 @@ textarea:focus {
   }
 
   /* ================================
-     QUESTION STATE PLACEHOLDER CLASSES
+     QUESTION STATE CLASSES
      ================================ */
   .question-finished {
-    background: #00ff00 !important;
-    border: 3px solid #008000 !important;
+    background: rgba(16, 185, 129, 0.18) !important;
+    /* semi-transparent green */
+    border: 2px solid #10b981 !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.10);
+    border-radius: var(--radius) !important;
+    transition: background 0.15s;
+    /* Visually disable all content inside except interactive elements */
+  }
+
+  .question-finished *:not(button):not([role="button"]):not(a):not(input):not(select):not(textarea) {
+    opacity: 0.85;
+    filter: grayscale(0.18) brightness(1.01);
+    pointer-events: none;
+    user-select: none;
+    color: var(--foreground) !important;
+    transition: opacity 0.15s, filter 0.15s, color 0.15s;
+  }
+
+  /* Keep interactive elements (buttons, links, form controls) fully visible and interactive */
+  .question-finished button,
+  .question-finished [role="button"],
+  .question-finished a,
+  .question-finished input,
+  .question-finished select,
+  .question-finished textarea {
+    opacity: 1;
+    filter: none;
+    pointer-events: auto;
+    user-select: auto;
+    color: inherit !important;
+    transition: opacity 0.15s, filter 0.15s, color 0.15s;
+  }
+
+  /* Disabled look for all content inside .question-finished, but keep interactivity */
+  .question-finished,
+  .question-finished * {
+    /* Faded/muted look */
+    opacity: 0.56;
+    filter: grayscale(0.25) brightness(0.96);
+    pointer-events: auto !important;
+    /* Ensure text and icons are still readable */
+    color: inherit !important;
+    box-shadow: none;
+    /* Remove any text-shadow for clarity */
+    text-shadow: none !important;
+    /* Remove forced background for children */
+    background-blend-mode: luminosity;
+  }
+
+  /* But keep buttons and links at full opacity and color on hover/focus/active */
+  .question-finished button:hover,
+  .question-finished button:focus,
+  .question-finished a:hover,
+  .question-finished a:focus {
+    opacity: 1 !important;
+    filter: none !important;
+    color: unset !important;
   }
 
   .question-active-stopped {
     background: #00bfff !important;
-    border: 3px solid #006b80 !important;
+    border: 2px solid #006b80 !important;
   }
 
   .question-active-running {
     background: #ff00bb !important;
-    border: 3px solid #800040 !important;
+    border: 2px solid #800040 !important;
   }
 
   .question-active-paused {
     background: #ffff00 !important;
-    border: 3px solid #8f8f07 !important;
+    border: 2px solid #8f8f07 !important;
+  }
+
+  /* Factorized padding for all question state classes */
+  .question-finished,
+  .question-active-stopped,
+  .question-active-running,
+  .question-active-paused,
+  .question-pending {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
 
   .question-pending {
-    border: 3px solid black !important;
+    border: 2px solid var(--border) !important;
   }
 }
 
