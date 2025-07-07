@@ -1,3 +1,5 @@
+@import "./dialogs.css";
+
 @layer components {
 
   /* Ensure metadata (span) in .question-header is always right-aligned, even in compact mode */

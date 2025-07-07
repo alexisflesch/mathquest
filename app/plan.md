@@ -1,3 +1,22 @@
+- [x] Implement modal for "tournament code n'existe pas" with minimalistic, border-only "Fermer" button (matches teacher modals)
++ [x] Move all modal/dialog button and layout styles to dialogs.css; removed hard-coded values from join modal, using canonical classes
+- [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.") with right-aligned "Fermer" button and left-aligned text
++ [x] Implement modal for "tournament code n'existe pas" with minimalistic, border-only "Fermer" button (matches teacher modals)
+- [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.")
++ [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.") with right-aligned "Fermer" button and left-aligned text
+- [ ] Implement modal for "tournament code doesn't exist"
++ [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.")
+# Modal Integration for Student Join Page
+
+### Phase 1: Planning & Checklist
+- [x] Review requirements and modal component
+- [x] Identify where `/student/join` logic lives (frontend page/component)
+- [ ] Implement modal for "tournament code doesn't exist"
+- [ ] Implement modal for "tournament in differed mode"
+- [ ] Ensure all text, button labels, and event names are canonical/shared
+- [ ] Log actions in `log.md`
+- [ ] Add/Update Zod validation if any data is passed to the modal
+- [ ] Add test/validation steps
 ## Tournament Rejoin Stuck Bug
 
 ### Phase 1: Diagnose and Document

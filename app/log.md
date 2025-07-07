@@ -1,3 +1,24 @@
+# 2025-07-07 dialogs.css Extraction
+- Created `dialogs.css` for all modal/dialog button and layout styles (student/teacher, minimalistic, theme-compliant)
+- Removed all hard-coded modal button/layout styles from `/student/join/page.tsx`, now using canonical classes from `dialogs.css`
+# 2025-07-07 Modal Button Hover Utility
+- Updated "Fermer" button to use `hover:bg-dropdown-hover hover:text-dropdown-hover-foreground` for consistent, theme-compliant mouse over effect via globals.css.
+# 2025-07-07 Modal Button Dark Mode Fix
+- Updated "Fermer" button hover style to use `hover:bg-[color:var(--muted)]` for proper dark mode support (no white-on-white issue).
+# 2025-07-07 Modal Button Minimalism
+- Updated "Fermer" button in not-found modal to use minimalistic, border-only style (no primary color), matching teacher modals.
+# 2025-07-07 Modal UI Polish
+- Updated not-found modal on `/student/join`:
+  - Added right-aligned "Fermer" button
+  - Main text is now left-aligned for clarity
+# 2025-07-07 Modal French Text Correction
+- Updated not-found modal on `/student/join` to use French: "Le code que vous avez saisi n'existe pas." and title "Code invalide" for full localization compliance.
+# 2025-07-07 Modal Integration for Student Join Page
+- Integrated `SharedModal` (InfoModal) into `/student/join` page for two cases:
+  1. Tournament code does not exist: shows warning modal with close button.
+  2. Tournament exists but is in differed mode: shows warning modal with OK/Cancel buttons and French message.
+- All modal logic uses canonical types and no legacy compatibility fields.
+- No compatibility layers or mapping; direct use of shared modal component.
 ## 2025-06-30 - Fix: Accept answers when timer is paused
 
 **What was done:**

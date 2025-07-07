@@ -1,0 +1,34 @@
+/* dialogs.css: Canonical styles for all modal/dialog actions (student/teacher, minimalistic, theme-compliant) */
+
+.dialog-modal-btn {
+    margin-top: 1.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--foreground);
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+}
+
+.dialog-modal-btn:hover,
+.dialog-modal-btn:focus {
+    background: var(--dropdown-hover);
+    color: var(--dropdown-hover-foreground);
+    outline: none;
+}
+
+.dialog-modal-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dialog-modal-content {
+    text-align: left;
+}
+
+.dialog-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}

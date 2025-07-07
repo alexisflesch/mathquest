@@ -19,6 +19,7 @@
 
 "use client";
 import React, { useState } from "react";
+import InfoModal from '@/components/SharedModal';
 import { useRouter } from "next/navigation";
 import { makeApiRequest } from '@/config/api';
 import { GameJoinResponse } from '@/types/api';
@@ -29,6 +30,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [modal, setModal] = useState<null | { type: 'notfound' | 'differed', message: string }>(null);
     const router = useRouter();
     const { userProfile } = useAuthState();
 
@@ -46,19 +48,20 @@ export default function StudentJoinPage() {
             }
 
             // First, get the game instance to check playMode
-            // Modernization: Use canonical Next.js API route
             const gameData = await makeApiRequest<{ gameInstance: any }>(`/api/games/${code}`);
             const gameInstance = gameData.gameInstance;
 
-            // Check if this is a practice session
+            if (!gameInstance) {
+                setModal({ type: 'notfound', message: "Ce code de tournoi n'existe pas." });
+                return;
+            }
+
             if (gameInstance.playMode === 'practice') {
-                // Redirect directly to practice session - no joining required
                 router.push(`/student/practice/${code}`);
                 return;
             }
 
             // For quiz/tournament games, proceed with join logic
-            // Modernization: Use canonical Next.js API route
             const data = await makeApiRequest<GameJoinResponse>(`/api/games/${code}/join`, {
                 method: 'POST',
                 body: JSON.stringify({ userId: userProfile.userId }),
@@ -67,10 +70,11 @@ export default function StudentJoinPage() {
             const status = game.status;
             const accessCode = game.accessCode || code;
 
-            // Strict naming: use only canonical GameStatus values
-            // Backend and frontend must use: 'pending', 'active', 'paused', 'completed', 'archived'
             if (game.isDiffered) {
-                router.push(`/live/${accessCode}`);
+                setModal({
+                    type: 'differed',
+                    message: "Ce tournoi est terminé. Vous pouvez le jouer en différé si vous le souhaitez."
+                });
                 return;
             }
             if (status === 'pending') {
@@ -82,12 +86,15 @@ export default function StudentJoinPage() {
                 return;
             }
             if (status === 'completed' || status === 'ended') {
-                router.push(`/live/${accessCode}?differed=1`);
+                setModal({
+                    type: 'differed',
+                    message: "Ce tournoi est terminé. Vous pouvez le jouer en différé si vous le souhaitez."
+                });
                 return;
             }
             setError(`Code erroné (status: ${status})`);
         } catch (err: any) {
-            setError(err?.message || "Code erroné");
+            setModal({ type: 'notfound', message: err?.message || "Code erroné" });
         }
     };
 
@@ -125,6 +132,50 @@ export default function StudentJoinPage() {
                     </button>
                 </div>
             </form>
+
+            {/* Modal for not found or differed mode */}
+            <InfoModal
+                isOpen={!!modal}
+                onClose={() => setModal(null)}
+                title={modal?.type === 'notfound' ? 'Code invalide' : 'Tournoi terminé'}
+                showCloseButton={false}
+                size="sm"
+            >
+                {modal?.type === 'notfound' ? (
+                    <div className="dialog-modal-content gap-4">
+                        <span>Le code que vous avez saisi n'existe pas.</span>
+                        <div className="dialog-modal-actions">
+                            <button
+                                className="dialog-modal-btn"
+                                onClick={() => setModal(null)}
+                            >
+                                Fermer
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="dialog-modal-content gap-4">
+                        <span>{modal?.message}</span>
+                        <div className="dialog-modal-actions">
+                            <button
+                                className="dialog-modal-btn"
+                                onClick={() => setModal(null)}
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                className="dialog-modal-btn"
+                                onClick={() => {
+                                    setModal(null);
+                                    router.push(`/live/${code}?differed=1`);
+                                }}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </InfoModal>
         </div>
     );
 }
