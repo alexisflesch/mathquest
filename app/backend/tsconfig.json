@@ -8,13 +8,13 @@
         "strict": true,
         "skipLibCheck": true,
         "resolveJsonModule": true,
-        "baseUrl": ".",
+        "baseUrl": "src",
         "paths": {
             "@/*": [
-                "src/*"
+                "*"
             ],
             "@shared/*": [
-                "../shared/*"
+                "../../shared/*"
             ]
         },
         "moduleResolution": "node",
