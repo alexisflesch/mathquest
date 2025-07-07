@@ -41,14 +41,12 @@ export default function ClassementPodium({ top3, others, zoomFactor = 1, correct
                     return (
                         <motion.div
                             key={user.userId || `player-${podiumIdx}`}
-                            // Utiliser une valeur relative à la hauteur du viewport
-                            initial={{ y: "-100vh", opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            // Utiliser une animation custom pour surmonter les limites du conteneur
+                            initial={{ y: "-100vh", opacity: 0, scale: 1.2 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
                             transition={{
-                                defaultMode: 'spring',
-                                bounce: 0.3,
-                                duration: 1.5,
+                                type: 'spring',
+                                bounce: 0.45,
+                                duration: 1.9,
                                 delay: animationDelay
                             }}
                             className={`flex flex-col items-center justify-end ${zIndex} ${heightClass}`}

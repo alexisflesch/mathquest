@@ -186,3 +186,32 @@ Ensure all Redis state for a game instance is deleted when the instance is delet
 - All Redis keys for a deleted gameInstance are removed.
 - No legacy or orphaned Redis state remains after deletion.
 - Change is documented and testable.
+
+# 2025-07-07 - Projection Page Drag-and-Drop Modernization (dnd-kit)
+
+## Phase 1: Planning & Documentation
+- [x] Diagnose mobile drag-and-drop/resizing issues (react-grid-layout is not touch-native)
+- [x] Select dnd-kit (drag) and re-resizable (resize) for modern, mobile+desktop support
+- [x] Create backup of legacy component as TeacherProjectionClient.back.tsx and page.back.tsx
+- [x] Update plan.md with new phase and checklist
+
+## Phase 2: Implementation (dnd-kit + re-resizable)
+- [ ] Remove react-grid-layout from projection page
+- [ ] Implement drag-and-drop with dnd-kit (touch + mouse)
+- [ ] Implement resizing with re-resizable (touch + mouse)
+- [ ] Ensure all elements (timer, question, QR, classement) are draggable and resizable
+- [ ] Use canonical shared types and props (no legacy/compatibility code)
+- [ ] Use globals.css for all styles (no hard-coded colors)
+- [ ] Log all actions in log.md
+
+## Phase 3: Test and Validate
+- [ ] Test drag and resize on desktop (mouse)
+- [ ] Test drag and resize on tablet (touch)
+- [ ] Confirm no regression in socket events, Zod validation, or shared types
+- [ ] Add/describe test cases
+- [ ] Update plan.md and log.md with results and mark tasks as complete
+
+### Exit Criteria
+- All projection page elements are draggable and resizable on both desktop and tablet
+- No legacy/compatibility code remains
+- All changes are documented and testable
