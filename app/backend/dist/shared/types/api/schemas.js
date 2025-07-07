@@ -427,7 +427,7 @@ exports.PracticeQuestionDataSchema = zod_1.z.object({
     text: zod_1.z.string().min(1, "Question text is required"),
     answerOptions: zod_1.z.array(zod_1.z.string()).min(2, "At least 2 answer options required"),
     questionType: zod_1.z.string().min(1, "Question type is required"),
-    timeLimit: zod_1.z.number().int().min(1).optional(),
+    timeLimit: zod_1.z.number().int().min(1),
     gradeLevel: zod_1.z.string().min(1, "Grade level is required"),
     discipline: zod_1.z.string().min(1, "Discipline is required"),
     themes: zod_1.z.array(zod_1.z.string()).min(1, "At least one theme is required")

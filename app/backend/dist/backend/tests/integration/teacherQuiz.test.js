@@ -79,6 +79,7 @@ describe('Teacher-driven Quiz Flow', () => {
             gradeLevel: 'elementary',
             questionType: questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER, // Added: String
             themes: ['arithmetic'], // Added example for themes as it's a required array
+            timeLimit: 30, // Added default timeLimit (required)
             // ... other question fields
         };
         await prisma_1.prisma.question.upsert({

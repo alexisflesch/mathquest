@@ -2,6 +2,22 @@ import yaml
 import psycopg2
 import os
 import logging
+import sys
+
+# ANSI color codes for pretty output
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def color_text(text, color):
+    return f"{color}{text}{Colors.ENDC}"
 import argparse
 from dotenv import load_dotenv
 
@@ -90,11 +106,20 @@ def import_questions():
             continue
 
         for idx, q in enumerate(questions):
-            # Champs obligatoires YAML (anglais)
-            required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers", "difficulty", "gradeLevel", "author"]
+            # Champs obligatoires YAML (anglais) - timeLimit is now required and must be a positive integer
+            required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers", "difficulty", "gradeLevel", "author", "timeLimit"]
             missing = [field for field in required_fields if field not in q or q[field] in [None, "", []]]
-            if missing:
-                msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants : {missing}"
+            # Validate timeLimit is a positive integer
+            invalid_time_limit = False
+            if "timeLimit" in q:
+                try:
+                    time_limit_val = int(q["timeLimit"])
+                    if time_limit_val <= 0:
+                        invalid_time_limit = True
+                except Exception:
+                    invalid_time_limit = True
+            if missing or invalid_time_limit:
+                msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants ou timeLimit invalide : {missing if missing else ''}{' (timeLimit must be a positive integer)' if invalid_time_limit else ''}"
                 logging.error(msg)
                 all_errors.append(msg)
                 total_errors += 1
@@ -103,11 +128,6 @@ def import_questions():
             # Champs recommandés mais non obligatoires
             if not q.get("title"):
                 msg = f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}"
-                logging.warning(msg)
-                all_warnings.append(msg)
-                total_warnings += 1
-            if not q.get("timeLimit"):
-                msg = f"Question sans timeLimit (uid={q.get('uid')}) dans {yaml_path}"
                 logging.warning(msg)
                 all_warnings.append(msg)
                 total_warnings += 1
@@ -187,12 +207,24 @@ def import_questions():
         cur.close()
         conn.close()
 
-    logging.info(f'Import process completed. Total questions uploadées : {total_uploaded}')
-    logging.warning(f'Nombre total de warnings : {total_warnings}')
+    # --- PRETTY SUMMARY ---
+    print("\n" + "="*50)
+    print(color_text("\U0001F4DA Import Summary", Colors.HEADER))
+    print("="*50)
+    print(f"{color_text('Total questions uploaded:', Colors.OKGREEN)} {color_text(str(total_uploaded), Colors.OKGREEN if total_uploaded > 0 else Colors.WARNING)}")
+    warn_str = color_text(f"{total_warnings} \U000026A0\ufe0f", Colors.WARNING) if total_warnings > 0 else color_text("0", Colors.OKGREEN)
+    err_str = color_text(f"{total_errors} \U0000274C", Colors.FAIL) if total_errors > 0 else color_text("0", Colors.OKGREEN)
+    print(f"{color_text('Warnings:', Colors.WARNING)} {warn_str}")
+    print(f"{color_text('Errors:', Colors.FAIL)} {err_str}")
+    if total_warnings > 0:
+        print(color_text("\nWarnings:", Colors.WARNING))
+        for warn in all_warnings:
+            print(color_text(f"  - {warn}", Colors.WARNING))
     if total_errors > 0:
-        logging.error(f'Nombre total d\'erreurs lors de l\'upload : {total_errors}')
+        print(color_text("\nErrors:", Colors.FAIL))
         for err in all_errors:
-            logging.error(err)
+            print(color_text(f"  - {err}", Colors.FAIL))
+    print("="*50 + "\n")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Import questions or clear database tables.')

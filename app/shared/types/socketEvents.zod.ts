@@ -107,7 +107,7 @@ export const questionDataForStudentSchema = z.object({
   text: z.string().min(1, { message: "Question text cannot be empty." }),
   answerOptions: z.array(z.string().min(1)).min(1, { message: "At least one answer option is required." }),
   questionType: z.string().min(1, { message: "Question type cannot be empty." }),
-  timeLimit: z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }).optional(),
+  timeLimit: z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }),
   currentQuestionIndex: z.number().int({ message: "Question index must be an integer." }).nonnegative({ message: "Question index cannot be negative." }).optional(),
   totalQuestions: z.number().int({ message: "Total questions must be an integer." }).positive({ message: "Total questions must be positive." }).optional(),
 });

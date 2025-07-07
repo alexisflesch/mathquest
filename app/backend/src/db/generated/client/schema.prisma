@@ -48,7 +48,7 @@ model Question {
   author           String?
   explanation      String?
   tags             String[]
-  timeLimit        Int?                      @map("time_limit_seconds")
+  timeLimit        Int                       @map("time_limit_seconds")
   isHidden         Boolean?                  @default(false) @map("is_hidden")
   createdAt        DateTime                  @default(now()) @map("created_at")
   updatedAt        DateTime                  @updatedAt @map("updated_at")

@@ -95,7 +95,7 @@ exports.questionDataForStudentSchema = zod_1.z.object({
     text: zod_1.z.string().min(1, { message: "Question text cannot be empty." }),
     answerOptions: zod_1.z.array(zod_1.z.string().min(1)).min(1, { message: "At least one answer option is required." }),
     questionType: zod_1.z.string().min(1, { message: "Question type cannot be empty." }),
-    timeLimit: zod_1.z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }).optional(),
+    timeLimit: zod_1.z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }),
     currentQuestionIndex: zod_1.z.number().int({ message: "Question index must be an integer." }).nonnegative({ message: "Question index cannot be negative." }).optional(),
     totalQuestions: zod_1.z.number().int({ message: "Total questions must be an integer." }).positive({ message: "Total questions must be positive." }).optional(),
 });

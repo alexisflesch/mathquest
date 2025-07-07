@@ -6,6 +6,7 @@
   questionType: "single_choice"
   discipline: "mathématiques"
   themes: ["addition", "nombres"]
+  timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
   answerOptions:
@@ -21,6 +22,7 @@
   questionType: "single_choice"
   discipline: "mathématiques"
   themes: ["nombres", "suite numérique"]
+  timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
   answerOptions:
@@ -35,6 +37,7 @@
   text: "Combien y a-t-il de côtés sur un triangle ?"
   questionType: "single_choice"
   discipline: "mathématiques"
+  timeLimit: 30
   themes: ["formes", "géométrie"]
   difficulty: 1
   gradeLevel: "CP"
@@ -50,6 +53,7 @@
   text: "Complète : 1, 2, 3, __ ?"
   questionType: "single_choice"
   discipline: "mathématiques"
+  timeLimit: 30
   themes: ["suite numérique", "nombres"]
   difficulty: 1
   gradeLevel: "CP"
@@ -65,6 +69,7 @@
   text: "Combien font 5 - 2 ?"
   questionType: "single_choice"
   discipline: "mathématiques"
+  timeLimit: 30
   themes: ["soustraction", "nombres"]
   difficulty: 1
   gradeLevel: "CP"
@@ -80,6 +85,7 @@
   text: "Quel est le plus grand : 7 ou 4 ?"
   questionType: "single_choice"
   discipline: "mathématiques"
+  timeLimit: 30
   themes: ["comparaison", "nombres"]
   difficulty: 1
   gradeLevel: "CP"
@@ -95,6 +101,7 @@
   text: "Combien de doigts as-tu sur une main ?"
   questionType: "single_choice"
   discipline: "mathématiques"
+  timeLimit: 30
   themes: ["corps humain", "nombres"]
   difficulty: 1
   gradeLevel: "CP"
@@ -110,6 +117,7 @@
   text: "Combien font 1 + 1 ?"
   questionType: "single_choice"
   discipline: "mathématiques"
+  timeLimit: 30
   themes: ["addition", "nombres"]
   difficulty: 1
   gradeLevel: "CP"
@@ -125,6 +133,7 @@
   text: "Quel chiffre manque : 2, 3, __, 5 ?"
   questionType: "single_choice"
   discipline: "mathématiques"
+  timeLimit: 30
   themes: ["suite numérique", "nombres"]
   difficulty: 1
   gradeLevel: "CP"
@@ -140,6 +149,7 @@
   text: "Combien font 3 + 2 ?"
   questionType: "single_choice"
   discipline: "mathématiques"
+  timeLimit: 30
   themes: ["addition", "nombres"]
   difficulty: 1
   gradeLevel: "CP"

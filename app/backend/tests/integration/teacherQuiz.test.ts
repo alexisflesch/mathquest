@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken'; // For token generation
 
 import { startTestServer } from '../testSetup';
 import { prisma } from '../../src/db/prisma';
-import { QUESTION_TYPES } from '@shared/constants/questionTypes';
+import { QUESTION_TYPES } from '../../../shared/constants/questionTypes';
 
 // Utility to wait for a specific event - ensure this is robust
 function waitForEvent(socket: ClientSocket, event: string, timeout = 5000) { // Increased default timeout slightly
@@ -84,6 +84,7 @@ describe('Teacher-driven Quiz Flow', () => {
             gradeLevel: 'elementary',
             questionType: QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER, // Added: String
             themes: ['arithmetic'], // Added example for themes as it's a required array
+            timeLimit: 30, // Added default timeLimit (required)
             // ... other question fields
         };
         await prisma.question.upsert({

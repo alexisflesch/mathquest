@@ -5195,7 +5195,7 @@ export namespace Prisma {
     author: string | null
     explanation: string | null
     tags: string[]
-    timeLimit: number | null
+    timeLimit: number
     isHidden: boolean | null
     createdAt: Date
     updatedAt: Date
@@ -5334,7 +5334,7 @@ export namespace Prisma {
       author: string | null
       explanation: string | null
       tags: string[]
-      timeLimit: number | null
+      timeLimit: number
       isHidden: boolean | null
       createdAt: Date
       updatedAt: Date
@@ -11372,7 +11372,7 @@ export namespace Prisma {
     author?: StringNullableFilter<"Question"> | string | null
     explanation?: StringNullableFilter<"Question"> | string | null
     tags?: StringNullableListFilter<"Question">
-    timeLimit?: IntNullableFilter<"Question"> | number | null
+    timeLimit?: IntFilter<"Question"> | number
     isHidden?: BoolNullableFilter<"Question"> | boolean | null
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
@@ -11394,7 +11394,7 @@ export namespace Prisma {
     author?: SortOrderInput | SortOrder
     explanation?: SortOrderInput | SortOrder
     tags?: SortOrder
-    timeLimit?: SortOrderInput | SortOrder
+    timeLimit?: SortOrder
     isHidden?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11419,7 +11419,7 @@ export namespace Prisma {
     author?: StringNullableFilter<"Question"> | string | null
     explanation?: StringNullableFilter<"Question"> | string | null
     tags?: StringNullableListFilter<"Question">
-    timeLimit?: IntNullableFilter<"Question"> | number | null
+    timeLimit?: IntFilter<"Question"> | number
     isHidden?: BoolNullableFilter<"Question"> | boolean | null
     createdAt?: DateTimeFilter<"Question"> | Date | string
     updatedAt?: DateTimeFilter<"Question"> | Date | string
@@ -11441,7 +11441,7 @@ export namespace Prisma {
     author?: SortOrderInput | SortOrder
     explanation?: SortOrderInput | SortOrder
     tags?: SortOrder
-    timeLimit?: SortOrderInput | SortOrder
+    timeLimit?: SortOrder
     isHidden?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11470,7 +11470,7 @@ export namespace Prisma {
     author?: StringNullableWithAggregatesFilter<"Question"> | string | null
     explanation?: StringNullableWithAggregatesFilter<"Question"> | string | null
     tags?: StringNullableListFilter<"Question">
-    timeLimit?: IntNullableWithAggregatesFilter<"Question"> | number | null
+    timeLimit?: IntWithAggregatesFilter<"Question"> | number
     isHidden?: BoolNullableWithAggregatesFilter<"Question"> | boolean | null
     createdAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Question"> | Date | string
@@ -11988,7 +11988,7 @@ export namespace Prisma {
     author?: string | null
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
-    timeLimit?: number | null
+    timeLimit: number
     isHidden?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -12010,7 +12010,7 @@ export namespace Prisma {
     author?: string | null
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
-    timeLimit?: number | null
+    timeLimit: number
     isHidden?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -12032,7 +12032,7 @@ export namespace Prisma {
     author?: NullableStringFieldUpdateOperationsInput | string | null
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
-    timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    timeLimit?: IntFieldUpdateOperationsInput | number
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12054,7 +12054,7 @@ export namespace Prisma {
     author?: NullableStringFieldUpdateOperationsInput | string | null
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
-    timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    timeLimit?: IntFieldUpdateOperationsInput | number
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12076,7 +12076,7 @@ export namespace Prisma {
     author?: string | null
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
-    timeLimit?: number | null
+    timeLimit: number
     isHidden?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -12097,7 +12097,7 @@ export namespace Prisma {
     author?: NullableStringFieldUpdateOperationsInput | string | null
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
-    timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    timeLimit?: IntFieldUpdateOperationsInput | number
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12118,7 +12118,7 @@ export namespace Prisma {
     author?: NullableStringFieldUpdateOperationsInput | string | null
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
-    timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    timeLimit?: IntFieldUpdateOperationsInput | number
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12740,6 +12740,17 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type BoolNullableFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
     not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
@@ -12846,6 +12857,22 @@ export namespace Prisma {
     _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
     not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
@@ -12908,17 +12935,6 @@ export namespace Prisma {
     _max?: NestedEnumPlayModeNullableFilter<$PrismaModel>
   }
 
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
   export type GameTemplateScalarRelationFilter = {
     is?: GameTemplateWhereInput
     isNot?: GameTemplateWhereInput
@@ -12966,22 +12982,6 @@ export namespace Prisma {
 
   export type QuestionsInGameTemplateSumOrderByAggregateInput = {
     sequence?: SortOrder
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type EnumPlayModeFilter<$PrismaModel = never> = {
@@ -13477,6 +13477,14 @@ export namespace Prisma {
     push?: string | string[]
   }
 
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type NullableBoolFieldUpdateOperationsInput = {
     set?: boolean | null
   }
@@ -13640,14 +13648,6 @@ export namespace Prisma {
     create?: XOR<QuestionCreateWithoutGameTemplatesInput, QuestionUncheckedCreateWithoutGameTemplatesInput>
     connectOrCreate?: QuestionCreateOrConnectWithoutGameTemplatesInput
     connect?: QuestionWhereUniqueInput
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type GameTemplateUpdateOneRequiredWithoutQuestionsNestedInput = {
@@ -13961,31 +13961,6 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
-  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
-  }
-
-  export type NestedEnumPlayModeNullableFilter<$PrismaModel = never> = {
-    equals?: $Enums.PlayMode | EnumPlayModeFieldRefInput<$PrismaModel> | null
-    in?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel> | null
-    not?: NestedEnumPlayModeNullableFilter<$PrismaModel> | $Enums.PlayMode | null
-  }
-
-  export type NestedEnumPlayModeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.PlayMode | EnumPlayModeFieldRefInput<$PrismaModel> | null
-    in?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel> | null
-    not?: NestedEnumPlayModeNullableWithAggregatesFilter<$PrismaModel> | $Enums.PlayMode | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedEnumPlayModeNullableFilter<$PrismaModel>
-    _max?: NestedEnumPlayModeNullableFilter<$PrismaModel>
-  }
-
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -14011,6 +13986,31 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumPlayModeNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.PlayMode | EnumPlayModeFieldRefInput<$PrismaModel> | null
+    in?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumPlayModeNullableFilter<$PrismaModel> | $Enums.PlayMode | null
+  }
+
+  export type NestedEnumPlayModeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PlayMode | EnumPlayModeFieldRefInput<$PrismaModel> | null
+    in?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.PlayMode[] | ListEnumPlayModeFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumPlayModeNullableWithAggregatesFilter<$PrismaModel> | $Enums.PlayMode | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumPlayModeNullableFilter<$PrismaModel>
+    _max?: NestedEnumPlayModeNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumPlayModeFilter<$PrismaModel = never> = {
@@ -14795,7 +14795,7 @@ export namespace Prisma {
     author?: string | null
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
-    timeLimit?: number | null
+    timeLimit: number
     isHidden?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14816,7 +14816,7 @@ export namespace Prisma {
     author?: string | null
     explanation?: string | null
     tags?: QuestionCreatetagsInput | string[]
-    timeLimit?: number | null
+    timeLimit: number
     isHidden?: boolean | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14892,7 +14892,7 @@ export namespace Prisma {
     author?: NullableStringFieldUpdateOperationsInput | string | null
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
-    timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    timeLimit?: IntFieldUpdateOperationsInput | number
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14913,7 +14913,7 @@ export namespace Prisma {
     author?: NullableStringFieldUpdateOperationsInput | string | null
     explanation?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: QuestionUpdatetagsInput | string[]
-    timeLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    timeLimit?: IntFieldUpdateOperationsInput | number
     isHidden?: NullableBoolFieldUpdateOperationsInput | boolean | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

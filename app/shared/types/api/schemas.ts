@@ -576,7 +576,7 @@ export const PracticeQuestionDataSchema = z.object({
     text: z.string().min(1, "Question text is required"),
     answerOptions: z.array(z.string()).min(2, "At least 2 answer options required"),
     questionType: z.string().min(1, "Question type is required"),
-    timeLimit: z.number().int().min(1).optional(),
+    timeLimit: z.number().int().min(1),
     gradeLevel: z.string().min(1, "Grade level is required"),
     discipline: z.string().min(1, "Discipline is required"),
     themes: z.array(z.string()).min(1, "At least one theme is required")
