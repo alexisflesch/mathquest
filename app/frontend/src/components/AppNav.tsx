@@ -126,7 +126,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
         'Rejoindre une activité': Users,
         'Entraînement libre': Dumbbell,
         'Créer un tournoi': PlusCircle,
-        'Mes sessions': ClipboardList,
+        'Historique': ClipboardList,
         'Espace enseignant': BookOpen,
         'Mes activités': BookOpen,
         'Créer une activité': FilePlus,
@@ -165,7 +165,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     { label: 'Entraînement libre', href: '/student/create-game?training=true' },
                     { label: 'Rejoindre une activité', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
-                    { label: 'Mes sessions', href: '/my-tournaments' },
+                    { label: 'Historique', href: '/my-tournaments' },
                     { label: 'Profil invité', href: '/profile' },
                 ];
             case 'student':
@@ -174,7 +174,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     { label: 'Entraînement libre', href: '/student/create-game?training=true' },
                     { label: 'Rejoindre une activité', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
-                    { label: 'Mes sessions', href: '/my-tournaments' },
+                    { label: 'Historique', href: '/my-tournaments' },
                     { label: 'Mon profil', href: '/profile' },
                 ];
             case 'teacher':
@@ -183,7 +183,7 @@ export default function AppNav({ sidebarCollapsed, setSidebarCollapsed }: {
                     { label: 'Entraînement libre', href: '/student/create-game?training=true' },
                     { label: 'Rejoindre une activité', href: '/student/join' },
                     { label: 'Créer un tournoi', href: '/student/create-game' },
-                    { label: 'Mes sessions', href: '/my-tournaments' },
+                    { label: 'Historique', href: '/my-tournaments' },
                     { defaultMode: 'section', label: 'Enseignant' },
                     { label: 'Mes activités', href: '/teacher/games' },
                     { label: 'Créer une activité', href: '/teacher/games/new' },
