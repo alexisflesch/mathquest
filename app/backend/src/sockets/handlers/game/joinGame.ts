@@ -401,11 +401,15 @@ export function joinGameHandler(
                         .filter(q => q != null);
 
                     if (actualQuestions.length > 0) {
-                        logger.info({ accessCode, userId, questionCount: actualQuestions.length }, 'Starting individual deferred tournament game flow');
-
-                        // Use the new per-user deferred session logic
-                        const { startDeferredTournamentSession } = await import('../deferredTournamentFlow');
-                        await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions);
+                        logger.info({ accessCode, userId, questionCount: actualQuestions.length }, '[DEBUG] About to import startDeferredTournamentSession');
+                        try {
+                            const { startDeferredTournamentSession } = await import('../deferredTournamentFlow');
+                            logger.info({ accessCode, userId }, '[DEBUG] Successfully imported startDeferredTournamentSession');
+                            await startDeferredTournamentSession(io, socket, accessCode, userId, actualQuestions);
+                            logger.info({ accessCode, userId }, '[DEBUG] startDeferredTournamentSession completed');
+                        } catch (err) {
+                            logger.error({ accessCode, userId, err }, '[ERROR] Failed to start deferred tournament session');
+                        }
                     }
                 }
             }

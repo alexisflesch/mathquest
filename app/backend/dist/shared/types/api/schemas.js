@@ -244,9 +244,12 @@ exports.GameStateResponseSchema = zod_1.z.object({
     isLive: zod_1.z.boolean()
 });
 // --- Leaderboard Schemas ---
-const leaderboardEntry_zod_1 = require("../core/leaderboardEntry.zod");
-const LeaderboardEntrySchema = leaderboardEntry_zod_1.LeaderboardEntrySchema.extend({
-    avatar: leaderboardEntry_zod_1.LeaderboardEntrySchema.shape.avatarEmoji.optional(), // alias for API compatibility
+const LeaderboardEntrySchema = zod_1.z.object({
+    userId: zod_1.z.string(),
+    username: zod_1.z.string(),
+    avatar: zod_1.z.string().optional(),
+    score: zod_1.z.number(),
+    rank: zod_1.z.number().optional()
 });
 exports.LeaderboardResponseSchema = zod_1.z.object({
     leaderboard: zod_1.z.array(LeaderboardEntrySchema)
