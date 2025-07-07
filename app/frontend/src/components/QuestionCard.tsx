@@ -4,7 +4,9 @@ import GoodAnswer from '@/components/GoodAnswer';
 import WrongAnswer from '@/components/WrongAnswer';
 import type { Question, Answer } from '@shared/types/quiz/question'; // Corrected import
 import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
-import type { QuestionData, TournamentQuestion } from '@shared/types/socketEvents';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+import type { z } from 'zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
@@ -19,8 +21,10 @@ interface StatsData {
     totalAnswers: number;
 }
 
+import type { QuestionData } from '@shared/types/socketEvents';
+
 interface QuestionCardProps {
-    currentQuestion: TournamentQuestion;
+    currentQuestion: QuestionDataForStudent;
     questionIndex: number;
     totalQuestions: number;
     isMultipleChoice: boolean;
@@ -40,9 +44,9 @@ interface QuestionCardProps {
 }
 
 // Helper to get the question type (for multiple choice detection)
-const getQuestionType = (q: FilteredQuestion | QuestionData | string): string | undefined => {
+const getQuestionType = (q: FilteredQuestion | QuestionDataForStudent | string): string | undefined => {
     if (typeof q === 'object' && q !== null) {
-        // FilteredQuestion uses 'defaultMode', QuestionData uses 'questionType'
+        // FilteredQuestion uses 'defaultMode', QuestionDataForStudent uses 'questionType'
         if ('defaultMode' in q && typeof q.defaultMode === 'string') return q.defaultMode;
         if ('questionType' in q && typeof q.questionType === 'string') return q.questionType;
     }
@@ -50,21 +54,12 @@ const getQuestionType = (q: FilteredQuestion | QuestionData | string): string | 
 };
 
 // Updated helper functions using canonical shared type fields directly
-const getQuestionTextToRender = (payload: TournamentQuestion | null): string => {
+const getQuestionTextToRender = (payload: QuestionDataForStudent | null): string => {
     if (!payload) return "Question non disponible";
     try {
-        const { question } = payload;
-
-        if (typeof question === 'string') {
-            return question;
+        if (typeof payload.text === 'string') {
+            return payload.text;
         }
-
-        if (typeof question === 'object' && question !== null) {
-            if ('text' in question && typeof question.text === 'string') {
-                return question.text;
-            }
-        }
-
         return "Question mal formatée";
     } catch (error) {
         logger.warn('[QuestionCard] Error extracting question text:', error);
@@ -72,18 +67,12 @@ const getQuestionTextToRender = (payload: TournamentQuestion | null): string => 
     }
 };
 
-const getAnswersToRender = (payload: TournamentQuestion | null): string[] => {
+const getAnswersToRender = (payload: QuestionDataForStudent | null): string[] => {
     if (!payload) return [];
     try {
-        const { question } = payload;
-
-        if (typeof question === 'object' && question !== null) {
-            // Use canonical answerOptions field only
-            if ('answerOptions' in question && Array.isArray(question.answerOptions)) {
-                return question.answerOptions;
-            }
+        if (Array.isArray(payload.answerOptions)) {
+            return payload.answerOptions;
         }
-
         return [];
     } catch (error) {
         logger.warn('[QuestionCard] Error extracting answers:', error);
@@ -113,7 +102,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     // Use shared type helpers for type detection
     const isMultipleChoiceQuestion = React.useMemo(() => {
         if (!currentQuestion) return false;
-        const t = getQuestionType(currentQuestion.question);
+        const t = getQuestionType(currentQuestion);
         return t === QUESTION_TYPES.MULTIPLE_CHOICE;
     }, [currentQuestion]);
 

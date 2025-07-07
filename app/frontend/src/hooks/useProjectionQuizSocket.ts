@@ -17,7 +17,10 @@ import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from './useSimpleTimer';
 import { useGameSocket } from './useGameSocket';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
-import type { Question, TimerStatus } from '@shared/types';
+import type { TimerStatus } from '@shared/types';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+import type { z } from 'zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import type { GameState } from '@shared/types/core/game';
 import { ProjectionLeaderboardUpdatePayload, ProjectionLeaderboardUpdatePayloadSchema } from '@shared/types/socket/projectionLeaderboardUpdatePayload';
 import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@shared/types/socket/projectionShowStats';
@@ -30,21 +33,26 @@ const logger = createLogger('useProjectionQuizSocket');
  */
 export function useProjectionQuizSocket(accessCode: string, gameId: string | null) {
     // NEW: Handle canonical game_question event (for question updates)
-    const handleGameQuestion = (payload: { question: Question; questionUid: string; questionIndex?: number }) => {
+    const handleGameQuestion = (payload: QuestionDataForStudent) => {
         logger.info('🟢 [PROJECTION] game_question received:', payload);
+        // Validate with Zod
+        const parseResult = questionDataForStudentSchema.safeParse(payload);
+        if (!parseResult.success) {
+            logger.error({ errors: parseResult.error.errors, payload }, '[PROJECTION] Invalid GAME_QUESTION payload received');
+            return;
+        }
         setGameState(prev => {
             if (!prev) return prev;
-            let idx = payload.questionIndex;
+            let idx = payload.currentQuestionIndex;
             if (typeof idx !== 'number' && Array.isArray(prev.questionUids)) {
-                idx = prev.questionUids.findIndex((uid: string) => uid === payload.questionUid);
+                idx = prev.questionUids.findIndex((uid: string) => uid === payload.uid);
             }
-            // If questionData is an array, update the correct index; otherwise, set as single question
             let newQuestionData: any = prev.questionData;
             if (Array.isArray(prev.questionData) && typeof idx === 'number' && idx >= 0) {
                 newQuestionData = [...prev.questionData];
-                newQuestionData[idx] = payload.question;
+                newQuestionData[idx] = payload;
             } else {
-                newQuestionData = payload.question;
+                newQuestionData = payload;
             }
             return {
                 ...prev,
@@ -201,7 +209,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         if (!socket.socket) return;
 
         // Handle question changes from teacher dashboard (timer updates will come through timer system)
-        const handleQuestionChanged = (payload: { question: Question; questionUid: string; questionIndex?: number; timer?: any }) => {
+        // LEGACY: Remove usage of Question type, use canonical type or remove if not needed
+        const handleQuestionChanged = (payload: { question: any; questionUid: string; questionIndex?: number; timer?: any }) => {
             logger.info('📋 Projection question changed:', payload);
             setGameState(prev => {
                 if (!prev) return prev;
@@ -402,7 +411,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
 
         // Hide correct answers when a new question arrives
-        const handleGameQuestionWithReset = (payload: { question: Question; questionUid: string; questionIndex?: number }) => {
+        const handleGameQuestionWithReset = (payload: QuestionDataForStudent) => {
             setShowCorrectAnswers(false);
             setCorrectAnswersData(null);
             handleGameQuestion(payload);
@@ -483,7 +492,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
     // Return clean interface using canonical types only
 
     // Derive currentQuestion from gameState and current index
-    let currentQuestion: Question | null = null;
+    let currentQuestion: any = null;
     if (gameState && Array.isArray(gameState.questionData) && typeof gameState.currentQuestionIndex === 'number') {
         currentQuestion = gameState.questionData[gameState.currentQuestionIndex] || null;
     } else if (gameState && gameState.questionData && !Array.isArray(gameState.questionData)) {

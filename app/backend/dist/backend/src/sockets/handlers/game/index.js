@@ -282,13 +282,27 @@ function registerGameHandlers(io, socket) {
             const { filterQuestionForClient } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/quiz/liveQuestion')));
             const filteredQuestion = filterQuestionForClient(firstQuestion);
             // Send first question data using filtered question
-            socket.emit(events_1.GAME_EVENTS.GAME_QUESTION, {
-                question: filteredQuestion,
-                timer: firstQuestion.timeLimit || 30,
-                questionIndex: 0,
-                totalQuestions: gameInstance.gameTemplate.questions.length,
-                questionState: 'active'
-            });
+            // Modernized: Canonical, flat payload for game_question
+            const { questionDataSchema } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/socketEvents.zod')));
+            let canonicalPayload = {
+                ...filteredQuestion,
+                currentQuestionIndex: 0,
+                totalQuestions: gameInstance.gameTemplate.questions.length
+            };
+            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+            if (canonicalPayload.timeLimit == null) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { timeLimit, ...rest } = canonicalPayload;
+                canonicalPayload = rest;
+            }
+            const parseResult = questionDataSchema.safeParse(canonicalPayload);
+            if (!parseResult.success) {
+                logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+            }
+            else {
+                socket.emit(events_1.GAME_EVENTS.GAME_QUESTION, canonicalPayload);
+                logger.info({ socketId: socket.id, questionUid: firstQuestion.uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to user');
+            }
         }
         catch (err) {
             logger.error({ socketId: socket.id, error: err }, 'Error in start_game handler');

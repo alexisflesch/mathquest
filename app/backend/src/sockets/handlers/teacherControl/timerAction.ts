@@ -244,6 +244,9 @@ function emitCanonicalTimerEvents(
 // Only import getCanonicalTimer and CanonicalTimerService once at the top of the file
 // import { getCanonicalTimer } from '@/core/services/gameStateService';
 // import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
+// Modernization: Canonical imports for question filtering and validation
+import { filterQuestionForClient } from '@/../../shared/types/quiz/liveQuestion';
+import { questionDataForStudentSchema } from '@/../../shared/types/socketEvents.zod';
 
 export function timerActionHandler(io: SocketIOServer, socket: Socket) {
     return async (payload: TimerActionPayload) => {
@@ -758,17 +761,26 @@ export function timerActionHandler(io: SocketIOServer, socket: Socket) {
                         const projectionRoom = `projection_${gameId}`;
 
                         if (question) {
-                            // Prepare canonical gameQuestionPayload using shared types and Zod validation
-                            const gameQuestionPayload = {
-                                question: question, // Use canonical Question type from shared/types
-                                questionState: 'active' as const,
-                                questionUid: targetQuestionUid,
-                                // Add any other required canonical fields from shared/types/socket/events
+                            // Modernization: Use canonical, flat payload for game_question
+                            let filteredQuestion = filterQuestionForClient(question);
+                            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+                            if (filteredQuestion.timeLimit == null) {
+                                const { timeLimit, ...rest } = filteredQuestion;
+                                filteredQuestion = rest;
+                            }
+                            const canonicalPayload = {
+                                ...filteredQuestion,
+                                currentQuestionIndex: typeof gameState.currentQuestionIndex === 'number' ? gameState.currentQuestionIndex : 0,
+                                totalQuestions: Array.isArray(gameState.questionUids) ? gameState.questionUids.length : 1
                             };
-                            // Send question to both live and projection rooms using canonical event name
-                            io.to([liveRoom, projectionRoom]).emit('game_question', gameQuestionPayload);
-                            logger.info({ gameId, targetQuestionUid, liveRoom, projectionRoom, message: '[TIMER_ACTION] Sent new question to live and projection rooms' },
-                                '[TIMER_ACTION] Sent new question to live and projection rooms');
+                            const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+                            if (!parseResult.success) {
+                                logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+                            } else {
+                                io.to([liveRoom, projectionRoom]).emit('game_question', canonicalPayload);
+                                logger.info({ gameId, targetQuestionUid, liveRoom, projectionRoom, canonicalPayload, message: '[TIMER_ACTION] Sent canonical game_question to live and projection rooms' },
+                                    '[TIMER_ACTION] Sent canonical game_question to live and projection rooms');
+                            }
                         }
 
                         // Broadcast question change to dashboard

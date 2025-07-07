@@ -82,16 +82,32 @@ export async function runGameFlow(
             }
             logger.info({ accessCode, questionIndex: i, questionUid: questions[i].uid }, '[DEBUG] Preparing to emit game_question');
 
-            // ⚠️ SECURITY: Filter question to remove sensitive data (correctAnswers, explanation, etc.)
-            const filteredQuestion = filterQuestionForClient(questions[i]);
 
-            const gameQuestionPayload = {
-                question: filteredQuestion,
-                questionIndex: i, // Use shared type field name
-                totalQuestions: questions.length, // Add total questions count
-                feedbackWaitTime: questions[i].feedbackWaitTime || (options.playMode === 'tournament' ? 1.5 : 1),
-                timer: timer // Use timer state for initial question emission
+            // Modernized: Canonical, flat payload for game_question
+            const { questionDataForStudentSchema } = await import('@/../../shared/types/socketEvents.zod');
+            let filteredQuestion = filterQuestionForClient(questions[i]);
+            // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+            if (filteredQuestion.timeLimit == null) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { timeLimit, ...rest } = filteredQuestion;
+                filteredQuestion = rest;
+            }
+            const canonicalPayload = {
+                ...filteredQuestion,
+                currentQuestionIndex: i,
+                totalQuestions: questions.length
             };
+            // Define liveRoom and projectionRoom before use
+            const liveRoom = `game_${accessCode}`;
+            const projectionRoom = `projection_${currentState?.gameState?.gameId || ''}`;
+            // Validate with Zod before emitting
+            const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+            if (!parseResult.success) {
+                logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+            } else {
+                io.to([liveRoom, projectionRoom]).emit('game_question', canonicalPayload);
+                logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_question', questionUid: questions[i].uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to live and projection rooms');
+            }
 
             // Fetch all sockets in the room
             const roomName = `game_${accessCode}`;
@@ -114,13 +130,6 @@ export async function runGameFlow(
             }
 
             logger.info({ accessCode, event: 'game_question', questionUid: questions[i].uid }, '[TRACE] Emitted game_question');
-
-            // Emit to both live and projection rooms using the canonical event and payload
-            const liveRoom = `game_${accessCode}`;
-            const projectionRoom = `projection_${currentState?.gameState?.gameId || ''}`;
-            console.log(projectionRoom, 'Projection room for game flow');
-            io.to([liveRoom, projectionRoom]).emit('game_question', gameQuestionPayload);
-            logger.info({ rooms: [liveRoom, projectionRoom], event: 'game_question', questionUid: questions[i].uid, payload: gameQuestionPayload }, '[TRACE] Emitted game_question to live and projection rooms');
 
             // Track question start time for all users currently in the room for server-side timing
             try {

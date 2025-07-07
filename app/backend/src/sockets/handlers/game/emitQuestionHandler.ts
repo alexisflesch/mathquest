@@ -7,6 +7,8 @@ import { QUESTION_TYPES } from '@shared/constants/questionTypes';
 import { CanonicalTimerService } from '@/core/services/canonicalTimerService';
 import { redisClient } from '@/config/redis';
 import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@shared/types/socket/projectionShowStats';
+import { filterQuestionForClient } from '@shared/types/quiz/liveQuestion';
+import { questionDataSchema } from '@shared/types/socketEvents.zod';
 
 const logger = createLogger('EmitQuestionHandler');
 
@@ -124,24 +126,36 @@ export function emitQuestionHandler(
             // No timer for practice mode
             timerPayload = null;
         }
-        // Prepare payload
+        // Modernized: Prepare canonical, flat payload for game_question
         const questionIndex = allQuestions.findIndex(q => q.questionUid === targetQuestion.uid);
         const totalQuestions = allQuestions.length;
-        const liveQuestionPayload = {
-            question: {
-                uid: targetQuestion.uid,
-                text: targetQuestion.text,
-                questionType: targetQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
-                answerOptions: targetQuestion.answerOptions || []
-            },
-            ...(timerPayload ? { timer: timerPayload } : {}),
-            questionIndex: questionIndex,
-            totalQuestions: totalQuestions,
-            questionState: 'active' as const
+        let filteredQuestion = filterQuestionForClient(targetQuestion);
+        // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+        if (filteredQuestion.timeLimit == null) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { timeLimit, ...rest } = filteredQuestion;
+            filteredQuestion = rest;
+        }
+        const canonicalPayload = {
+            ...filteredQuestion,
+            currentQuestionIndex: questionIndex,
+            totalQuestions: totalQuestions
         };
-        // Emit to the socket (or room as needed)
-        socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, liveQuestionPayload);
-        logger.info({ accessCode, userId, questionUid: targetQuestion.uid }, '[DEBUG] Emitted question to user');
+        // Use canonical student schema for student/game flows
+        const { questionDataForStudentSchema } = await import('@shared/types/socketEvents.zod');
+        const questionParseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+        if (!questionParseResult.success) {
+            logger.error({
+                errors: questionParseResult.error.errors,
+                canonicalPayload,
+                schema: 'questionDataForStudentSchema',
+                payloadKeys: Object.keys(canonicalPayload),
+                payload: canonicalPayload
+            }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+        } else {
+            socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, canonicalPayload);
+            logger.info({ accessCode, userId, questionUid: targetQuestion.uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to user (student flow)');
+        }
 
         // [MODERNIZATION] Emit canonical stats for new question to both projection and dashboard rooms
         const projectionRoom = `projection_${gameInstance.id}`;
@@ -168,9 +182,9 @@ export function emitQuestionHandler(
             timestamp: Date.now()
         };
         // Validate at runtime before emitting
-        const parseResult = ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
-        if (!parseResult.success) {
-            logger.error({ errors: parseResult.error.errors, statsPayload }, '[PROJECTION] Invalid PROJECTION_SHOW_STATS payload, not emitting');
+        const statsParseResult = ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
+        if (!statsParseResult.success) {
+            logger.error({ errors: statsParseResult.error.errors, statsPayload }, '[PROJECTION] Invalid PROJECTION_SHOW_STATS payload, not emitting');
         } else {
             io.to(projectionRoom).emit(
                 "projection_show_stats",

@@ -32,9 +32,10 @@ import type {
     GameJoinedPayload,
     ErrorPayload,
     GameAlreadyPlayedPayload,
-    QuestionData,
     GameStateUpdatePayload
 } from '@shared/types/socketEvents';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 
 import type {
     GameEndedPayload
@@ -54,7 +55,6 @@ import {
     isGameJoinedPayload,
     createSafeEventHandler,
     validateEventPayload,
-    isLiveQuestionPayload,
     isCorrectAnswersPayload,
     isGameStateUpdatePayload,
     isAnswerReceivedPayload,
@@ -251,33 +251,39 @@ export function useStudentGameSocket({
                 gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
             }));
         }, isGameJoinedPayload, SOCKET_EVENTS.GAME.GAME_JOINED));
-        socket.on(SOCKET_EVENTS.GAME.GAME_QUESTION as any, createSafeEventHandler<LiveQuestionPayload>((payload) => {
-            logger.info('Received game_question', payload);
-
-            setGameState(prev => {
-                const newState = {
-                    ...prev,
-                    currentQuestion: payload.question,
-                    questionIndex: payload.questionIndex ?? 0,
-                    totalQuestions: payload.totalQuestions ?? prev.totalQuestions ?? 1, // Fallback to prevent 0
-                    answered: false,
-                    gameStatus: 'active' as const,
-                    phase: 'question' as const,
-                    feedbackRemaining: null,
-                    correctAnswers: null,
-                    connectedToRoom: true
-                };
-
-                logger.info('=== QUESTION STATE UPDATED ===', {
-                    questionUid: payload.question.uid,
-                    questionIndex: payload.questionIndex ?? 0,
-                    totalQuestions: payload.totalQuestions ?? 0,
-                    questionText: payload.question.text.substring(0, 50) + '...'
+        socket.on(
+            SOCKET_EVENTS.GAME.GAME_QUESTION as any,
+            createSafeEventHandler<QuestionDataForStudent>((payload) => {
+                logger.info('Received canonical game_question', payload);
+                // Validate at runtime with Zod
+                const parseResult = questionDataForStudentSchema.safeParse(payload);
+                if (!parseResult.success) {
+                    logger.error({ errors: parseResult.error.errors, payload }, '[MODERNIZATION] Invalid GAME_QUESTION payload received on frontend');
+                    return;
+                }
+                setGameState(prev => {
+                    const newState = {
+                        ...prev,
+                        currentQuestion: payload,
+                        questionIndex: payload.currentQuestionIndex ?? 0,
+                        totalQuestions: payload.totalQuestions ?? prev.totalQuestions ?? 1,
+                        answered: false,
+                        gameStatus: 'active' as const,
+                        phase: 'question' as const,
+                        feedbackRemaining: null,
+                        correctAnswers: null,
+                        connectedToRoom: true
+                    };
+                    logger.info('=== QUESTION STATE UPDATED ===', {
+                        questionUid: payload.uid,
+                        questionIndex: payload.currentQuestionIndex ?? 0,
+                        totalQuestions: payload.totalQuestions ?? 0,
+                        questionText: payload.text.substring(0, 50) + '...'
+                    });
+                    return newState;
                 });
-
-                return newState;
-            });
-        }, isLiveQuestionPayload, SOCKET_EVENTS.GAME.GAME_QUESTION));
+            }, (data): data is QuestionDataForStudent => questionDataForStudentSchema.safeParse(data).success, SOCKET_EVENTS.GAME.GAME_QUESTION)
+        );
 
         // Game state update handler
         socket.on(SOCKET_EVENTS.GAME.GAME_STATE_UPDATE as any, createSafeEventHandler<GameStateUpdatePayload>((data) => {

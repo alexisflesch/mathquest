@@ -1,3 +1,49 @@
+# 2025-07-07 - Canonical game_question for timerAction and deferredTournamentFlow
+
+**What was done:**
+- Patched `/backend/src/sockets/handlers/teacherControl/timerAction.ts` to emit only the canonical, flat, Zod-validated payload for `game_question` (no nested `question`, no extra fields, no sensitive data) to both live and projection rooms.
+- Patched `/backend/src/sockets/handlers/deferredTournamentFlow.ts` to emit only the canonical, flat, Zod-validated payload for `game_question` to player rooms.
+- All legacy/compatibility fields and nested objects removed from these emissions.
+- All payloads are now validated with `questionDataForStudentSchema` before emit.
+
+**Testing:**
+- Start a game from the teacher dashboard and click "play". Confirm that both the live and projection pages receive a flat, canonical payload for `game_question` (no `question` field, no sensitive data, matches Zod schema).
+- Confirm that the live and projection pages render questions correctly and do not error on payload shape.
+- Confirm that no legacy/compatibility code or types remain in these backend emitters.
+# 2025-07-07 - Projection Page Modernization
+
+**What was done:**
+- Updated `/frontend/src/hooks/useProjectionQuizSocket.ts` to use canonical `QuestionDataForStudent` everywhere for `game_question` events.
+- Removed all usage of legacy `Question` type for projection question payloads in the socket hook and component.
+- Updated `/frontend/src/components/TeacherProjectionClient.tsx` to use canonical `QuestionDataForStudent` directly, no mapping or legacy types.
+- Updated `/frontend/src/components/QuestionCard.tsx` to use canonical `QuestionDataForStudent` for all question rendering.
+- Confirmed that projection page renders correctly, receives only canonical, Zod-validated payloads, and never leaks sensitive fields (like `correctAnswers`).
+- All legacy compatibility code and types for projection question payloads removed.
+
+**Testing:**
+- Join a game as a teacher and open the projection page. Confirm that questions render, stats display, and no errors occur.
+- Confirm that the payload received by the projection page matches the canonical `questionDataForStudentSchema` (no `correctAnswers`, no nested `question`, no legacy fields).
+- Confirm that the projection page does not break if a question is missing optional fields (e.g., `timeLimit`).
+- Confirm that all changes are logged in `plan.md` and `log.md`.
+# 2025-07-07 - Modernize all game_question emissions to canonical Zod schema
+
+**What was done:**
+- Audited all backend code paths emitting `game_question` (late join, emitQuestionHandler, helpers, start_game)
+- Updated `/backend/src/sockets/handlers/game/emitQuestionHandler.ts` to emit canonical, flat payload (Zod-validated)
+- Updated `/backend/src/sockets/handlers/game/helpers.ts` (`sendFirstQuestionAndStartTimer`) to emit canonical, flat payload (Zod-validated)
+- Updated `/backend/src/sockets/handlers/game/index.ts` (`start_game` handler) to emit canonical, flat payload (Zod-validated)
+- Confirmed `/backend/src/sockets/handlers/game/joinGame.ts` already emits canonical payload for late joiners
+
+**Testing:**
+- To validate: Join a game as a late joiner, in practice mode, quiz, and tournament. Confirm frontend receives only canonical, Zod-compliant payloads (flat, no nested `question`, no extra fields).
+- All code paths now use shared types and runtime Zod validation for `game_question`.
+
+**2025-07-07 - PATCHED sharedGameFlow.ts:**
+- Replaced legacy emission of `game_question` (nested `question` field, extra fields) with canonical, flat payload using shared Zod schema and type.
+- Now imports and uses `questionDataSchema` from `shared/types/socketEvents.zod.ts` for both type and runtime validation.
+- All `game_question` events (including projection and dashboard flows) are now strictly Zod-validated and canonical.
+
+**Checklist/plan.md updated.**
 # 2025-07-07 dialogs.css Extraction
 - Created `dialogs.css` for all modal/dialog button and layout styles (student/teacher, minimalistic, theme-compliant)
 - Removed all hard-coded modal button/layout styles from `/student/join/page.tsx`, now using canonical classes from `dialogs.css`

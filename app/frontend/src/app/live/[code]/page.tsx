@@ -25,7 +25,7 @@ import { createLogger } from '@/clientLogger';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
 import QuestionCard from '@/components/QuestionCard';
-import type { TournamentQuestion } from '@shared/types';
+import type { QuestionData } from '@shared/types/socketEvents';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
 import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
@@ -358,29 +358,11 @@ export default function LiveGamePage() {
         }
     }, [timerState, gameMode]);
 
-    // Convert enhanced socket hook state to legacy QuestionCard format
-    const currentQuestion: TournamentQuestion | null = useMemo(() => {
+    // Use canonical QuestionData directly
+    const currentQuestion: QuestionData | null = useMemo(() => {
         if (!gameState.currentQuestion) return null;
-
-        // Convert StudentGameQuestion to the format expected by TournamentQuestionCard
-        const convertedQuestion: FilteredQuestion = {
-            uid: gameState.currentQuestion.uid,
-            text: gameState.currentQuestion.text,
-            questionType: gameState.currentQuestion.questionType || QUESTION_TYPES.MULTIPLE_CHOICE_EN,
-            answerOptions: gameState.currentQuestion.answerOptions || []
-        };
-
-        return {
-            code: typeof code === 'string' ? code : '',
-            question: convertedQuestion,
-            remainingTime: timerState?.timeLeftMs ? Math.ceil(timerState.timeLeftMs / 1000) : undefined,
-            questionIndex: gameState.questionIndex,
-            totalQuestions: gameState.totalQuestions,
-            questionState: gameState.gameStatus === 'paused' ? 'paused' :
-                gameState.gameStatus === 'active' ? 'active' : 'stopped',
-            tournoiState: 'running'
-        };
-    }, [gameState, code, timer]);    // Determine if component should be readonly (showing answers)
+        return gameState.currentQuestion;
+    }, [gameState.currentQuestion]);
     const isReadonly = useMemo(() => {
         return gameState.phase === 'show_answers' ||
             gameState.gameStatus === 'completed' ||

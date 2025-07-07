@@ -11,10 +11,12 @@ import { Timer } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import ClassementPodium from '@/components/ClassementPodium';
 import ZoomControls from '@/components/ZoomControls';
-import type { TournamentQuestion, QuizQuestion } from '@shared/types';
-import type { QuestionData } from '@shared/types/socketEvents';
+import type { TournamentQuestion } from '@shared/types';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+import type { z } from 'zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import { QUESTION_TYPES } from '@shared/types';
-import type { Question } from '@shared/types';
+// Remove legacy Question type usage
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const logger = createLogger('ProjectionPage');
@@ -51,8 +53,9 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         currentQuestion: rawCurrentQuestion // <-- MODERN: canonical current question from socket event
     } = useProjectionQuizSocket(code, gameId);
     // Fix typing: currentQuestion is Question | null
-    const currentQuestion = (rawCurrentQuestion && typeof rawCurrentQuestion === 'object')
-        ? ({ ...(rawCurrentQuestion as any), timeLimit: (rawCurrentQuestion as any).timeLimit ?? undefined } as Question)
+    // Use canonical type directly: QuestionDataForStudent | null
+    const currentQuestion: QuestionDataForStudent | null = (rawCurrentQuestion && typeof rawCurrentQuestion === 'object')
+        ? (rawCurrentQuestion as QuestionDataForStudent)
         : null;
 
     // Responsive layout state
@@ -95,9 +98,9 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
     // --- END LEGACY ---
 
     // MODERN: Use canonical currentQuestion (FilteredQuestion) from the socket hook
-    const currentTournamentQuestion: TournamentQuestion | null = currentQuestion
-        ? { question: currentQuestion as any } // Pass only the canonical FilteredQuestion, force type for now
-        : null;
+    // For projection, just use the canonical student payload directly
+    // Pass the canonical QuestionDataForStudent directly to QuestionCard
+    const currentTournamentQuestion: QuestionDataForStudent | null = currentQuestion;
     const currentQuestionUid = currentQuestion?.uid;
     const tournamentUrl = code ? `${baseUrl}/live/${code}` : '';
     // Canonical: Only show QR code if there is no current question (like live/student page)
@@ -134,21 +137,19 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
     let statsArray: number[] = [];
     let totalAnswers = 0;
     let numOptions = 0;
-    if (currentTournamentQuestion && typeof currentTournamentQuestion.question === 'object' && currentTournamentQuestion.question !== null) {
-        if ('answerOptions' in currentTournamentQuestion.question && Array.isArray(currentTournamentQuestion.question.answerOptions)) {
-            numOptions = currentTournamentQuestion.question.answerOptions.length;
-            if (numOptions > 0 && currentStats && typeof currentStats === 'object') {
-                for (let i = 0; i < numOptions; i++) {
-                    const count = currentStats[i.toString()] || 0;
-                    statsArray.push(count);
-                    totalAnswers += count;
-                }
-                // Convert to percentages
-                if (totalAnswers > 0) {
-                    statsArray = statsArray.map(count => (count / totalAnswers) * 100);
-                } else {
-                    statsArray = Array(numOptions).fill(0);
-                }
+    if (currentTournamentQuestion && Array.isArray(currentTournamentQuestion.answerOptions)) {
+        numOptions = currentTournamentQuestion.answerOptions.length;
+        if (numOptions > 0 && currentStats && typeof currentStats === 'object') {
+            for (let i = 0; i < numOptions; i++) {
+                const count = currentStats[i.toString()] || 0;
+                statsArray.push(count);
+                totalAnswers += count;
+            }
+            // Convert to percentages
+            if (totalAnswers > 0) {
+                statsArray = statsArray.map(count => (count / totalAnswers) * 100);
+            } else {
+                statsArray = Array(numOptions).fill(0);
             }
         }
     }

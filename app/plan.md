@@ -1,3 +1,27 @@
+# 2025-07-07 - Modernize all game_question emissions to canonical Zod schema
+
+## Phase 1: Audit and Refactor All Emissions
+- [x] Audit all backend code paths emitting `game_question` (late join, emitQuestionHandler, helpers, start_game)
+- [x] Identify legacy/invalid payloads (nested `question`, extra fields, etc.)
+- [x] Update `/backend/src/sockets/handlers/game/emitQuestionHandler.ts` to emit canonical, flat payload (Zod-validated)
+- [x] Update `/backend/src/sockets/handlers/game/helpers.ts` (`sendFirstQuestionAndStartTimer`) to emit canonical, flat payload (Zod-validated)
+- [x] Update `/backend/src/sockets/handlers/game/index.ts` (`start_game` handler) to emit canonical, flat payload (Zod-validated)
+- [x] Confirm `/backend/src/sockets/handlers/game/joinGame.ts` already emits canonical payload for late joiners
+
+## Phase 2: Test and Validate
+- [x] Patch `sharedGameFlow.ts` to emit only canonical, flat, Zod-validated payloads for `game_question` (no legacy fields, no nested `question`)
+- [x] Test all join and question flows (late join, practice, quiz, tournament) and confirm frontend receives only canonical, Zod-compliant payloads
+- [x] Add/describe test cases for all code paths
+- [x] Log actions in `log.md`
+
+## Phase 3: Documentation and Checklist
+- [x] Update this checklist and mark all tasks as complete after validation
+
+### Exit Criteria
+- All `game_question` events use canonical, flat payloads matching `questionDataForStudentSchema` (student/projection) or `questionDataForTeacherSchema` (teacher/dashboard)
+- No legacy/extra fields or nested objects in any emission
+- All payloads are Zod-validated before emit
+- All changes logged in `log.md` and checklist updated
 - [x] Implement modal for "tournament code n'existe pas" with minimalistic, border-only "Fermer" button (matches teacher modals)
 + [x] Move all modal/dialog button and layout styles to dialogs.css; removed hard-coded values from join modal, using canonical classes
 - [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.") with right-aligned "Fermer" button and left-aligned text
@@ -6,14 +30,14 @@
 + [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.") with right-aligned "Fermer" button and left-aligned text
 - [ ] Implement modal for "tournament code doesn't exist"
 + [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.")
-# Modal Integration for Student Join Page
-
-### Phase 1: Planning & Checklist
-- [x] Review requirements and modal component
-- [x] Identify where `/student/join` logic lives (frontend page/component)
-- [ ] Implement modal for "tournament code doesn't exist"
-- [ ] Implement modal for "tournament in differed mode"
-- [ ] Ensure all text, button labels, and event names are canonical/shared
+- [x] Update projection socket hook to use canonical QuestionDataForStudent everywhere
+- [x] Remove all usage of legacy Question type for projection question payloads
+- [x] Update TeacherProjectionClient to use canonical QuestionDataForStudent directly
+- [x] Update QuestionCard to use canonical QuestionDataForStudent
+- [x] Test projection page: confirm correct rendering, no sensitive data leaks, and no legacy fields
+- [x] Repeat for live page and any other consumers (backend: timerAction, deferredTournamentFlow)
+- [x] Update plan.md and log.md with all actions and findings
+- [x] Clean up any remaining legacy/compatibility code or types
 - [ ] Log actions in `log.md`
 - [ ] Add/Update Zod validation if any data is passed to the modal
 - [ ] Add test/validation steps
@@ -36,6 +60,49 @@
 - [ ] Update plan.md with results and mark tasks as complete
 
 # Guest User Game Creation Fix
+# 2025-07-07 - Canonical Split: Student vs. Teacher Question Payloads
+
+## Phase 1: Planning & Schema Design
+- [ ] Document rationale for splitting question payloads (security, type safety, modernization)
+- [ ] Define two canonical shared types and Zod schemas in `shared/types/socketEvents.zod.ts`:
+    - `QuestionDataForStudent` (no sensitive fields)
+    - `QuestionDataForTeacher` (includes sensitive fields like `correctAnswers`)
+- [ ] Update this plan and checklist
+
+## Phase 2: Update Shared Types & Zod Schemas
+- [ ] Implement `QuestionDataForStudent` and `QuestionDataForTeacher` in shared/types/socketEvents.zod.ts
+- [ ] Remove any legacy/optional/compatibility fields from question payload types
+- [ ] Ensure all event names and payloads match canonical shared types
+- [ ] Log all changes in `log.md`
+
+## Phase 3: Backend Refactor
+- [ ] Update all backend emitters to use the correct canonical type:
+    - Student/game flows emit `QuestionDataForStudent`
+    - Teacher/projection/dashboard flows emit `QuestionDataForTeacher`
+- [ ] Add/verify Zod validation for all emissions
+- [ ] Ensure no sensitive fields are ever sent to students
+- [ ] Log all changes in `log.md`
+
+## Phase 4: Frontend Refactor
+- [ ] Update all frontend consumers (socket hooks, pages, components) to use the correct canonical type:
+    - Student flows use `QuestionDataForStudent`
+    - Teacher/projection/dashboard flows use `QuestionDataForTeacher`
+- [ ] Remove all legacy/compatibility type guards and interfaces
+- [ ] Ensure all runtime validation uses the correct Zod schema
+- [ ] Log all changes in `log.md`
+
+## Phase 5: Test and Validate
+- [ ] Test all flows (late join, practice, quiz, tournament, dashboard, projection)
+- [ ] Confirm only the correct canonical payload is used and accepted everywhere
+- [ ] Add/describe test cases for all code paths
+- [ ] Update plan.md and log.md with results and mark tasks as complete
+
+### Exit Criteria
+- Two canonical types and Zod schemas exist: one for student, one for teacher/projection
+- All backend and frontend code uses the correct type for each flow
+- No sensitive fields are ever sent to students
+- No legacy/optional/compatibility fields remain
+- All changes and rationale are documented in plan.md and log.md
 
 ## Phase 1: Diagnose and Document
 

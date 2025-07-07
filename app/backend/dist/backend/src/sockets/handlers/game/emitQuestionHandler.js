@@ -40,10 +40,10 @@ exports.emitQuestionHandler = emitQuestionHandler;
 const prisma_1 = require("@/db/prisma");
 const logger_1 = __importDefault(require("@/utils/logger"));
 const events_1 = require("@shared/types/socket/events");
-const questionTypes_1 = require("@shared/constants/questionTypes");
 const canonicalTimerService_1 = require("@/core/services/canonicalTimerService");
 const redis_1 = require("@/config/redis");
 const projectionShowStats_1 = require("@shared/types/socket/projectionShowStats");
+const liveQuestion_1 = require("@shared/types/quiz/liveQuestion");
 const logger = (0, logger_1.default)('EmitQuestionHandler');
 function emitQuestionHandler(io, socket) {
     return async (payload) => {
@@ -154,24 +154,37 @@ function emitQuestionHandler(io, socket) {
             // No timer for practice mode
             timerPayload = null;
         }
-        // Prepare payload
+        // Modernized: Prepare canonical, flat payload for game_question
         const questionIndex = allQuestions.findIndex(q => q.questionUid === targetQuestion.uid);
         const totalQuestions = allQuestions.length;
-        const liveQuestionPayload = {
-            question: {
-                uid: targetQuestion.uid,
-                text: targetQuestion.text,
-                questionType: targetQuestion.questionType || questionTypes_1.QUESTION_TYPES.MULTIPLE_CHOICE_SINGLE_ANSWER,
-                answerOptions: targetQuestion.answerOptions || []
-            },
-            ...(timerPayload ? { timer: timerPayload } : {}),
-            questionIndex: questionIndex,
-            totalQuestions: totalQuestions,
-            questionState: 'active'
+        let filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(targetQuestion);
+        // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+        if (filteredQuestion.timeLimit == null) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { timeLimit, ...rest } = filteredQuestion;
+            filteredQuestion = rest;
+        }
+        const canonicalPayload = {
+            ...filteredQuestion,
+            currentQuestionIndex: questionIndex,
+            totalQuestions: totalQuestions
         };
-        // Emit to the socket (or room as needed)
-        socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, liveQuestionPayload);
-        logger.info({ accessCode, userId, questionUid: targetQuestion.uid }, '[DEBUG] Emitted question to user');
+        // Use canonical student schema for student/game flows
+        const { questionDataForStudentSchema } = await Promise.resolve().then(() => __importStar(require('@shared/types/socketEvents.zod')));
+        const questionParseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+        if (!questionParseResult.success) {
+            logger.error({
+                errors: questionParseResult.error.errors,
+                canonicalPayload,
+                schema: 'questionDataForStudentSchema',
+                payloadKeys: Object.keys(canonicalPayload),
+                payload: canonicalPayload
+            }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+        }
+        else {
+            socket.emit(events_1.SOCKET_EVENTS.GAME.GAME_QUESTION, canonicalPayload);
+            logger.info({ accessCode, userId, questionUid: targetQuestion.uid, canonicalPayload }, '[MODERNIZATION] Emitted canonical GAME_QUESTION to user (student flow)');
+        }
         // [MODERNIZATION] Emit canonical stats for new question to both projection and dashboard rooms
         const projectionRoom = `projection_${gameInstance.id}`;
         const dashboardRoom = `dashboard_${gameInstance.id}`;
@@ -199,9 +212,9 @@ function emitQuestionHandler(io, socket) {
             timestamp: Date.now()
         };
         // Validate at runtime before emitting
-        const parseResult = projectionShowStats_1.ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
-        if (!parseResult.success) {
-            logger.error({ errors: parseResult.error.errors, statsPayload }, '[PROJECTION] Invalid PROJECTION_SHOW_STATS payload, not emitting');
+        const statsParseResult = projectionShowStats_1.ProjectionShowStatsPayloadSchema.safeParse(statsPayload);
+        if (!statsParseResult.success) {
+            logger.error({ errors: statsParseResult.error.errors, statsPayload }, '[PROJECTION] Invalid PROJECTION_SHOW_STATS payload, not emitting');
         }
         else {
             io.to(projectionRoom).emit("projection_show_stats", statsPayload);

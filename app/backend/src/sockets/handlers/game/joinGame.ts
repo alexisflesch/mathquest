@@ -287,35 +287,20 @@ export function joinGameHandler(
                             const currentQuestion = gameInstanceWithQuestions.gameTemplate.questions[gameState.currentQuestionIndex]?.question;
                             if (currentQuestion) {
                                 const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
-                                const filteredQuestion = filterQuestionForClient(currentQuestion);
+                                let filteredQuestion = filterQuestionForClient(currentQuestion);
 
-                                // --- MODERNIZATION: Use canonical timer system for late joiners ---
-                                // LEGACY: The following line is legacy and should be removed after migration:
-                                // const actualTimer = calculateTimerForLateJoiner(gameState.timer);
-                                // TODO: Remove all legacy timer usage after full migration.
-                                // MIGRATION NOTE: Use canonical timer system only.
-                                // Always use canonical durationMs from the question object (no fallback allowed)
-                                const durationMs = typeof currentQuestion.timeLimit === 'number' && currentQuestion.timeLimit > 0 ? currentQuestion.timeLimit * 1000 : 0;
-                                if (durationMs <= 0) {
-                                    logger.error({ currentQuestion, durationMs }, '[JOIN_GAME] Failed to get canonical durationMs');
-                                    // handle error or return
+                                // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+                                if (filteredQuestion.timeLimit == null) {
+                                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                    const { timeLimit, ...rest } = filteredQuestion;
+                                    filteredQuestion = rest;
                                 }
-                                const canonicalTimer = await getCanonicalTimer(
-                                    accessCode,
-                                    currentQuestion.uid,
-                                    gameState.gameMode,
-                                    gameState.status === 'completed',
-                                    durationMs,
-                                    undefined
-                                );
 
-                                // Send current question with canonical timer
-                                const lateJoinerQuestionPayload = {
-                                    question: filteredQuestion,
-                                    questionIndex: gameState.currentQuestionIndex, // Use shared type field name
-                                    totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length, // Add total questions count
-                                    feedbackWaitTime: currentQuestion.feedbackWaitTime || (gameInstance.playMode === 'tournament' ? 1.5 : 1),
-                                    timer: canonicalTimer // Only canonical timer
+                                // Add required top-level fields
+                                const questionPayload = {
+                                    ...filteredQuestion,
+                                    currentQuestionIndex: gameState.currentQuestionIndex,
+                                    totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length
                                 };
 
                                 logger.info({
@@ -323,21 +308,29 @@ export function joinGameHandler(
                                     userId,
                                     playMode: gameInstance.playMode,
                                     questionIndex: gameState.currentQuestionIndex,
-                                    // originalTimeLeft: gameState.timer?.timeLeftMs, // LEGACY: Remove after migration
-                                    // originalStatus: gameState.timer?.status, // LEGACY: Remove after migration
-                                    canonicalTimer,
-                                    payload: lateJoinerQuestionPayload
-                                }, '[MODERNIZATION] Sending current question to late joiner with canonical timer');
+                                    payload: questionPayload
+                                }, '[MODERNIZATION] Sending current question to late joiner (schema-compliant)');
 
-                                socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, lateJoinerQuestionPayload);
+                                socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, questionPayload);
 
                                 // Also send timer update (canonical)
-                                if (canonicalTimer) {
-                                    const timerUpdatePayload: GameTimerUpdatePayload = {
-                                        timer: canonicalTimer,
-                                        questionUid: canonicalTimer.questionUid
-                                    };
-                                    socket.emit(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED as any, timerUpdatePayload);
+                                const durationMs = typeof currentQuestion.timeLimit === 'number' && currentQuestion.timeLimit > 0 ? currentQuestion.timeLimit * 1000 : 0;
+                                if (durationMs > 0) {
+                                    const canonicalTimer = await getCanonicalTimer(
+                                        accessCode,
+                                        currentQuestion.uid,
+                                        gameState.gameMode,
+                                        gameState.status === 'completed',
+                                        durationMs,
+                                        undefined
+                                    );
+                                    if (canonicalTimer) {
+                                        const timerUpdatePayload: GameTimerUpdatePayload = {
+                                            timer: canonicalTimer,
+                                            questionUid: canonicalTimer.questionUid
+                                        };
+                                        socket.emit(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED as any, timerUpdatePayload);
+                                    }
                                 }
                             }
                         }

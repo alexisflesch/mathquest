@@ -97,17 +97,30 @@ export const notificationPayloadSchema = z.object({
   defaultMode: z.enum(['info', 'warning', 'error', 'success']),
 });
 
-export const questionDataSchema = z.object({
+
+// === CANONICAL SPLIT: Student vs. Teacher Question Payloads ===
+
+// Student: never receives correctAnswers or explanation
+export const questionDataForStudentSchema = z.object({
   uid: z.string().min(1, { message: "Question UID cannot be empty." }),
   title: z.string().min(1).optional(),
   text: z.string().min(1, { message: "Question text cannot be empty." }),
   answerOptions: z.array(z.string().min(1)).min(1, { message: "At least one answer option is required." }),
-  correctAnswers: z.array(z.boolean()), // Now required everywhere
   questionType: z.string().min(1, { message: "Question type cannot be empty." }),
   timeLimit: z.number().int({ message: "Time limit must be an integer." }).positive({ message: "Time limit must be positive." }).optional(),
   currentQuestionIndex: z.number().int({ message: "Question index must be an integer." }).nonnegative({ message: "Question index cannot be negative." }).optional(),
   totalQuestions: z.number().int({ message: "Total questions must be an integer." }).positive({ message: "Total questions must be positive." }).optional(),
 });
+
+// Teacher/Projection: includes correctAnswers and explanation
+export const questionDataForTeacherSchema = questionDataForStudentSchema.extend({
+  correctAnswers: z.array(z.boolean()),
+  explanation: z.string().optional(),
+});
+
+// For legacy/compatibility: REMOVE after migration
+/** @deprecated Use questionDataForStudentSchema or questionDataForTeacherSchema */
+export const questionDataSchema = questionDataForStudentSchema;
 
 export const leaderboardEntryDataSchema = z.object({
   userId: z.string().min(1, { message: "Player ID cannot be empty." }),

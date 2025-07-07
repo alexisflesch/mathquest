@@ -252,22 +252,31 @@ async function runDeferredQuestionSequence(io, socket, session) {
                 await gameStateService_1.default.updateGameState(sessionStateKey, updatedState);
             }
             // Send question to player
-            const filteredQuestion = (0, liveQuestion_1.filterQuestionForClient)(question);
-            const gameQuestionPayload = {
-                question: filteredQuestion,
-                questionIndex: i,
-                totalQuestions: questions.length,
-                feedbackWaitTime: question.feedbackWaitTime || 1.5,
-                timer: timer
+            // Modernization: Use canonical, flat payload for game_question
+            const { questionDataForStudentSchema } = await Promise.resolve().then(() => __importStar(require('@/../../shared/types/socketEvents.zod')));
+            let canonicalPayload = {
+                ...(0, liveQuestion_1.filterQuestionForClient)(question),
+                currentQuestionIndex: i,
+                totalQuestions: questions.length
             };
-            logger.info({
-                accessCode,
-                userId,
-                playerRoom,
-                questionIndex: i,
-                timer: timer
-            }, 'Emitting game_question for deferred session');
-            io.to(playerRoom).emit('game_question', gameQuestionPayload);
+            if (canonicalPayload.timeLimit == null) {
+                const { timeLimit, ...rest } = canonicalPayload;
+                canonicalPayload = rest;
+            }
+            const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+            if (!parseResult.success) {
+                logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+            }
+            else {
+                logger.info({
+                    accessCode,
+                    userId,
+                    playerRoom,
+                    questionIndex: i,
+                    canonicalPayload
+                }, 'Emitting canonical game_question for deferred session');
+                io.to(playerRoom).emit('game_question', canonicalPayload);
+            }
             // Emit timer update
             const timerUpdatePayload = {
                 questionUid: question.uid,

@@ -58,29 +58,37 @@ export async function sendFirstQuestionAndStartTimer({
     const { filterQuestionForClient } = await import('@/../../shared/types/quiz/liveQuestion');
     const filteredQuestion = filterQuestionForClient(firstQ);
 
-    const payload = {
-        question: filteredQuestion,
-        questionIndex: 0, // Use shared type field name
-        totalQuestions: 1, // Practice mode has 1 question at a time
-        timer: firstQ.timeLimit || 30 // Include timer duration
+    // Modernized: Canonical, flat payload for game_question
+    const { questionDataForStudentSchema } = await import('@/../../shared/types/socketEvents.zod');
+    let canonicalPayload = {
+        ...filteredQuestion,
+        currentQuestionIndex: 0,
+        totalQuestions: 1
     };
+    // Remove timeLimit if null or undefined (schema expects it omitted, not null)
+    if (canonicalPayload.timeLimit == null) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { timeLimit, ...rest } = canonicalPayload;
+        canonicalPayload = rest;
+    }
+    const parseResult = questionDataForStudentSchema.safeParse(canonicalPayload);
+    if (!parseResult.success) {
+        logger.error({ errors: parseResult.error.errors, canonicalPayload }, '[MODERNIZATION] Invalid GAME_QUESTION payload, not emitting');
+        return;
+    }
     if (mode === 'practice') {
         // target is a socket
-        logger.info({ targetSocketId: target.id, event: 'game_question', payloadJson: JSON.stringify(payload) }, 'Emitting game_question to practice mode socket');
-
-        // Check if the socket is connected and valid
+        logger.info({ targetSocketId: target.id, event: 'game_question', payloadJson: JSON.stringify(canonicalPayload) }, 'Emitting canonical game_question to practice mode socket');
         logger.info({ socketConnected: target.connected, socketId: target.id }, 'Socket connection state');
-
         try {
-            // Emit with an explicit acknowledgement callback
-            target.emit('game_question', payload); // TODO: Define shared type if missing
+            target.emit('game_question', canonicalPayload);
             logger.info('game_question event emitted');
         } catch (err) {
             logger.error({ err }, 'Error emitting game_question');
         }
     } else {
         // target is a room string
-        io.to(target).emit('game_question', payload); // TODO: Define shared type if missing
+        io.to(target).emit('game_question', canonicalPayload);
     }
     // Timer logic (if needed)
     // For practice, timer is per-player; for quiz, timer is per-room/teacher controlled
