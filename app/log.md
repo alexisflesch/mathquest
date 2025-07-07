@@ -875,140 +875,6 @@
 
 **Files to modify**: `backend/src/sockets/handlers/sharedGameFlow.ts`
 
-## 2025-06-19 - ✅ FIXED: Deferred Tournament Game Flow Startup
-
-**Issue**: User joins deferred tournament successfully but gets stuck at "En attente de la prochaine question" because deferred game flow doesn't start.
-
-**Root Cause**: `joinGame.ts` was checking `gameInstance.isDiffered` condition which we removed when simplifying the logic. The deferred game flow was never starting.
-
-**Solution**:
-- ✅ Updated condition from `gameInstance.isDiffered && gameInstance.playMode === 'tournament'`
-- ✅ To: `gameInstance.status === 'completed' && gameInstance.playMode === 'tournament'`
-
-**Logic Flow**:
-1. User joins completed tournament → ✅ Access granted by gameParticipantService
-2. Socket joins game room → ✅ Working
-3. `game_joined` event emitted → ✅ Working  
-4. **NEW**: Deferred game flow starts automatically → ✅ Fixed
-
-**Files Modified**: `backend/src/sockets/handlers/game/joinGame.ts`
-
-**Verification**: Tournament 3270 should now start the deferred game flow when user joins
-
-## 2025-06-19 - 🎯 UX Enhancement: Real-time Leaderboard Population
-
-**What**: Implemented join-order bonus scoring and real-time leaderboard updates when students join games
-**Why**: Teacher UX improvement - projection leaderboard populates immediately instead of being empty until first question
-
-**Key Features Implemented**:
-
-1. **Join-Order Bonus System** (`backend/src/utils/joinOrderBonus.ts`):
-   - First 20 students get micro-bonuses: 0.01, 0.009, 0.008, etc.
-   - Prevents duplicate bonuses using Redis lists
-   - Automatic expiration (24 hours)
-
-2. **Lobby-Based Leaderboard for Quiz Mode** (`backend/src/sockets/handlers/lobbyHandler.ts`):
-   - Students joining quiz lobby immediately get join-order bonus
-   - Leaderboard updates broadcast to projection room
-   - Only for quiz mode (where students wait in lobby for teacher to start)
-
-3. **Game-Join Leaderboard Updates** (`backend/src/sockets/handlers/game/joinGame.ts`):
-   - All game modes get join-order bonuses when actually joining game
-   - Prevents double bonuses for students who were already in lobby
-   - Real-time leaderboard broadcast to projection
-
-4. **Projection Room Broadcast Utility** (`backend/src/utils/projectionLeaderboardBroadcast.ts`):
-   - Centralized leaderboard broadcasting to projection rooms
-   - Supports broadcasting to multiple room types (game, projection, dashboard)
-   - Top 20 leaderboard limit for projection display
-
-5. **Socket Events Enhanced** (`shared/types/socket/events.ts`):
-   - Added `LEADERBOARD_UPDATE` to GAME_EVENTS
-   - Added `PROJECTION_LEADERBOARD_UPDATE` to PROJECTOR_EVENTS
-
-6. **Frontend Projection Updates** (`frontend/src/hooks/useProjectionQuizSocket.ts`):
-   - Added leaderboard state and update handlers
-   - Listens for `PROJECTION_LEADERBOARD_UPDATE` events
-   - Handles initial leaderboard data from game state
-
-**UX Flow**:
-1. **Quiz Mode**: Student joins lobby → micro-bonus assigned → projection leaderboard updates → teacher sees populated leaderboard
-2. **Tournament Mode**: Student joins game → micro-bonus assigned → projection leaderboard updates
-3. **Question Phase**: Regular scores override micro-scores as expected
-
-**Files Modified**:
-- `backend/src/utils/joinOrderBonus.ts` - Join order tracking and bonus calculation
-- `backend/src/utils/projectionLeaderboardBroadcast.ts` - Projection room broadcast utility  
-- `backend/src/sockets/handlers/lobbyHandler.ts` - Quiz lobby leaderboard updates
-- `backend/src/sockets/handlers/game/joinGame.ts` - Game join leaderboard updates
-- `shared/types/socket/events.ts` - Added leaderboard socket events
-- `frontend/src/hooks/useProjectionQuizSocket.ts` - Frontend leaderboard handling
-
-**Result**: Teachers now see immediate leaderboard population on projection displays, significantly improving classroom UX and eliminating the "empty screen" problem.
-
-## 2025-06-19 17:15 - 🔧 FIXED: Avatar Emoji Display in Projection Leaderboard
-**What**: Fixed legacy avatar rendering issue in ClassementPodium component
-**Problem**: Component was trying to render avatarEmoji as Image URL instead of emoji text
-**Error**: `Failed to construct 'URL': Invalid URL` when students joined with emoji avatars
-**How it was fixed**:
-1. **Updated ClassementPodium.tsx**: Changed from `<Image src={user.avatarEmoji}>` to `<span>{user.avatarEmoji}</span>`
-2. **Removed unused import**: Removed `import Image from 'next/image'` since no longer needed
-3. **Verified emoji display**: Now correctly shows emoji (🐼, 😊, etc.) instead of broken image links
-
-**Result**: ✅ COMPLETE LEADERBOARD UX ENHANCEMENT
-- Students appear on projection leaderboard immediately after joining lobby (quiz mode)
-- Join-order bonuses work correctly (0.01, 0.009, 0.008... for first 20 students)
-- Avatar emojis display properly in leaderboard podium
-- Real-time updates flow: Student joins → Redis bonus → Leaderboard calc → Projection broadcast → UI update
-
-**Impact**: Teachers now see populated leaderboard immediately when students join, vastly improved UX
-**Files**: `frontend/src/components/ClassementPodium.tsx` - Fixed avatar emoji rendering
-
-## 2025-06-19 - UX: Score Display Rounding
-
-**What was done**: Rounded all score displays to nearest integer for cleaner UX
-
-**Details**:
-- Updated `ClassementPodium.tsx` to display `Math.round(user.score)` for both podium and others list
-- Updated leaderboard page `/app/leaderboard/[code]/page.tsx` to round scores
-- Updated `Scoreboard.tsx` component to round scores
-- Ensures join-order bonus micro-scores (0.01, 0.009, etc.) display as clean integers
-- Improves readability and reduces visual clutter on projection displays
-
-**Files modified**:
-- `/frontend/src/components/ClassementPodium.tsx`
-- `/frontend/src/app/leaderboard/[code]/page.tsx` 
-- `/frontend/src/components/Scoreboard.tsx`
-
-**Result**: All score displays now show rounded integers while maintaining precise scoring internally
-
----
-
-## 2025-06-19 18:30 - CRITICAL: Discovered Socket Payload Type Inconsistency
-
-**Root Cause Found**: The "Unknown Player" username issue is caused by **inconsistent leaderboard payload structures** between two different code paths:
-
-1. **Socket broadcasts** (working): Uses `calculateLeaderboard()` → includes `username` field ✅
-2. **Initial projection state** (broken): Uses `getFullGameState()` → **missing `username` field** ❌
-
-**Evidence from logs**:
-- Socket events show correct usernames: "snouff", "Claudia", "Polo", "Alexis"
-- Initial state payload missing username field entirely: `{ "userId": "...", "avatarEmoji": "🐸", "score": 0 }` (no username!)
-
-**Violation of Modernization Guidelines**:
-- `.instructions.md` requires: "All API contracts and socket events must use canonical shared types"
-- Shared types define `LeaderboardEntry` with **required `username` field**
-- `getFullGameState()` in `backend/src/core/gameStateService.ts` lines 387-394 builds leaderboard without username
-
-**Fix Required**: 
-- Update `getFullGameState()` to return proper `LeaderboardEntry[]` types
-- Ensure both code paths use identical payload structure
-- Add Zod validation for outgoing socket payloads
-
-**Files needing updates**:
-- `backend/src/core/gameStateService.ts` (getFullGameState leaderboard construction)
-- Add shared type imports and enforce LeaderboardEntry interface
-
 ## 2025-07-01 - Tournament Creation Status Modernization
 
 **What was done:**
@@ -1070,3 +936,43 @@
 - Response now matches canonical schema: `{ success: true, message: string }`.
 
 **Checklist/plan.md updated.**
+
+## 2025-07-07 - Guest User Game Creation Fix
+
+**What was done:**
+- Updated `/api/v1/games` POST endpoint to allow users with role `GUEST` to create games, tournaments, and access history.
+- This aligns guest UX with students, as required.
+- See `plan.md` for phase breakdown and checklist.
+
+**Testing:**
+- Log in as a guest user (not anonymous).
+- Attempt to create a practice session and a tournament.
+- Access the history page as a guest.
+- Confirm that all actions succeed and no 401 Unauthorized errors occur.
+
+**Expected vs. Actual:**
+- **Expected:** Guest users can create sessions/tournaments and access their history.
+- **Actual:** (To be filled after validation)
+
+**Notes:**
+- No legacy compatibility code was added; only the canonical role check was modernized.
+- All changes follow the modernization guidelines in `.github/instructions/.instructions.md`.
+
+## 2025-07-07 - Anonymous Access Redirect Bug
+
+**What was done:**
+- Moved `middleware.ts` from `frontend/src/` to `frontend/` root so Next.js recognizes and applies route protection.
+- This restores the redirect for anonymous users to `/login?returnTo=...` on all protected pages.
+- See `plan.md` for phase breakdown and checklist.
+
+**Testing:**
+- As an anonymous user, try to access any page except `/` or `/login`.
+- You should be immediately redirected to the login page with a `returnTo` parameter.
+
+**Expected vs. Actual:**
+- **Expected:** Anonymous users are always redirected to login on protected pages.
+- **Actual:** (To be filled after validation)
+
+**Notes:**
+- No legacy compatibility code was added; only the canonical middleware location was restored.
+- All changes follow the modernization guidelines in `.github/instructions/.instructions.md`.

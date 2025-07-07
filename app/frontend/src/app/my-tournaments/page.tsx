@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { SquareArrowRight, BarChart3 } from "lucide-react";
+import { Users, Target, Dumbbell, SquareArrowRight, BarChart3 } from "lucide-react";
 import { makeApiRequest } from '@/config/api';
 import { TournamentListItem, MyTournamentsResponse, MyTournamentsResponseSchema } from '@shared/types/api/schemas';
 import { useAuth } from '@/components/AuthProvider';
@@ -17,29 +17,44 @@ interface GameModeToggleProps {
 }
 
 function GameModeToggle({ currentMode, onModeChange, className = "" }: GameModeToggleProps) {
+    // Use lucide-react icons to match teacher/games modal
     const modes = [
-        { key: 'tournament' as const, label: 'Tournois', icon: '🏆' },
-        { key: 'quiz' as const, label: 'Quiz (en classe)', icon: '📝' },
-        { key: 'practice' as const, label: 'Entraînement', icon: '🎯' }
+        { key: 'tournament' as const, label: 'Tournois', icon: <Users size={18} /> },
+        { key: 'quiz' as const, label: 'Quiz', icon: <Target size={18} /> },
+        { key: 'practice' as const, label: 'Entraînement', icon: <Dumbbell size={18} /> }
     ];
 
     return (
-        <div className={`bg-[color:var(--muted)] p-1 rounded-lg flex justify-between gap-1 ${className}`}>
-            {modes.map(({ key, label, icon }) => (
-                <button
-                    key={key}
-                    onClick={() => onModeChange(key)}
-                    className={`
-                        flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2
-                        ${currentMode === key
-                            ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm'
-                            : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)]'
-                        }
-                    `}
-                >
-                    <span className="mr-2">{icon}</span>
-                    {label}
-                </button>
+        <div
+            className={`bg-[color:var(--muted)] p-1 rounded-lg flex items-center justify-evenly ${className}`}
+            style={{ minWidth: 0 }}
+        >
+            {modes.map(({ key, label, icon }, idx) => (
+                <React.Fragment key={key}>
+                    <button
+                        onClick={() => onModeChange(key)}
+                        className={`
+                            group flex flex-col items-center justify-center transition-all duration-200 rounded-md
+                            ${currentMode === key
+                                ? 'bg-[color:var(--card)] text-[color:var(--primary)] shadow-sm px-3 py-2 font-semibold'
+                                : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] px-2 py-2'
+                            }
+                        `}
+                        style={{ minWidth: currentMode === key ? 0 : 36, minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        aria-current={currentMode === key ? 'page' : undefined}
+                    >
+                        <span className="flex items-center justify-center w-full">
+                            {icon}
+                            {currentMode === key && (
+                                <span className="ml-2 whitespace-nowrap">{label}</span>
+                            )}
+                        </span>
+                    </button>
+                    {/* Separator except after last tab */}
+                    {idx < modes.length - 1 && (
+                        <span aria-hidden="true" className="mx-1 text-[color:var(--border)] select-none flex items-center justify-center h-full">|</span>
+                    )}
+                </React.Fragment>
             ))}
         </div>
     );
@@ -120,18 +135,18 @@ export default function MyTournamentsPage() {
         // Wait for auth to finish loading
         if (isLoading) return;
 
-        // Check if user is authenticated
-        if (!isAuthenticated) {
-            setError("Vous devez être connecté pour voir vos données.");
-            setLoading(false);
-            return;
-        }
+
 
         loadGames(gameMode);
     }, [isLoading, isAuthenticated, userState, userProfile.userId, gameMode]);
 
+
     if (isLoading || loading) return <div className="min-h-screen flex items-center justify-center bg-base-200">Chargement…</div>;
-    if (error) return <div className="min-h-screen flex items-center justify-center bg-base-200"><div className="alert alert-error">{error}</div></div>;
+    // Show warning for guests
+    const showGuestWarning = userState === 'guest';
+    if (error) return <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
+        <div className="alert alert-error">{error}</div>
+    </div>;
 
     // Add filtering by playMode for each mode
     const filteredPending = pending.filter(t => t.playMode === gameMode);
@@ -169,7 +184,7 @@ export default function MyTournamentsPage() {
                                 <Link
                                     href={isCompleted ? `/leaderboard/${game.code}` : `/lobby/${game.code}`}
                                     className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center"
-                                    title={isCompleted ? "Voir les statistiques" : "Rejoindre le lobby"}
+                                    title={isCompleted ? "Voir le classement" : "Rejoindre le lobby"}
                                 >
                                     {isCompleted ? (
                                         <BarChart3 style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />

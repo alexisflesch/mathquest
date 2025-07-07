@@ -15,5 +15,6 @@ exports.LeaderboardEntrySchema = zod_1.z.object({
     rank: zod_1.z.number().optional(),
     participationType: zod_1.z.nativeEnum(participant_1.ParticipationType).optional(),
     attemptCount: zod_1.z.number().optional(),
-    participationId: zod_1.z.string().optional()
+    participationId: zod_1.z.string().optional(),
+    isCurrentUser: zod_1.z.boolean().optional() // Modern: backend-driven row highlighting
 });

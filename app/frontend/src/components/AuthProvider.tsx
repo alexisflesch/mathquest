@@ -76,6 +76,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [userState, setUserState] = useState<UserState>('anonymous');
     const [userProfile, setUserProfile] = useState<UserProfile>({});
 
+    /**
+     * Returns the canonical userId for the current user (authenticated or guest).
+     * - For authenticated users: userProfile.userId
+     * - For guests: userProfile.userId (if present, from DB) or userProfile.cookieId
+     * Returns undefined if not available.
+     */
+    const getCurrentUserId = useCallback((): string | undefined => {
+        if (userProfile.userId) return userProfile.userId;
+        if (userProfile.cookieId) return userProfile.cookieId;
+        return undefined;
+    }, [userProfile]);
+
     // États de compatibilité (backward compatibility)
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isStudent, setIsStudent] = useState(false);
@@ -979,7 +991,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         canCreateQuiz,
         canJoinGame,
         requiresAuth,
-        updateProfile
+        updateProfile,
+
+        // Utility
+        getCurrentUserId,
     };
 
     return (

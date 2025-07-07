@@ -78,8 +78,9 @@ router.post('/', auth_1.optionalAuth, (0, validation_1.validateRequestBody)(sche
             userId = initiatorStudentId;
             role = 'STUDENT';
         }
-        if (!userId) {
-            res.status(401).json({ error: 'Authentication required (teacher or student)' });
+        // Allow GUEST users as well as STUDENT and TEACHER
+        if (!userId || !role || !['STUDENT', 'TEACHER', 'GUEST'].includes(role.toUpperCase())) {
+            res.status(401).json({ error: 'Authentication required (teacher, student, or guest)' });
             return;
         }
         let finalgameTemplateId = gameTemplateId;
@@ -357,19 +358,23 @@ router.patch('/:id/differed', auth_1.teacherAuth, async (req, res) => {
  * GET /api/v1/games/:code/leaderboard
  * Returns the leaderboard for a given game instance (by access code)
  */
+// Modernized: Accepts optional userId query param and marks isCurrentUser in leaderboard
 router.get('/:code/leaderboard', async (req, res) => {
     const { code } = req.params;
+    const userId = req.query.userId;
     try {
         const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
         if (!gameInstance) {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        // Use the new getFormattedLeaderboard function
-        const leaderboard = await (0, gameStateService_1.getFormattedLeaderboard)(code);
-        // If gameInstance.leaderboard is the source of truth and needs to be updated,
-        // consider doing that here or in a separate sync process.
-        // For now, we return the Redis-based leaderboard directly.
+        let leaderboard = await (0, gameStateService_1.getFormattedLeaderboard)(code);
+        if (userId) {
+            leaderboard = leaderboard.map(entry => ({
+                ...entry,
+                isCurrentUser: entry.userId === userId
+            }));
+        }
         res.json({ leaderboard });
     }
     catch (error) {
