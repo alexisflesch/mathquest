@@ -28,7 +28,7 @@
 + [x] Implement modal for "tournament code n'existe pas" with minimalistic, border-only "Fermer" button (matches teacher modals)
 - [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.")
 + [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.") with right-aligned "Fermer" button and left-aligned text
-- [ ] Implement modal for "tournament code doesn't exist"
+- [x] Implement modal for "tournament code doesn't exist"
 + [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.")
 - [x] Update projection socket hook to use canonical QuestionDataForStudent everywhere
 - [x] Remove all usage of legacy Question type for projection question payloads
@@ -39,6 +39,24 @@
 - [x] Update plan.md and log.md with all actions and findings
 - [x] Clean up any remaining legacy/compatibility code or types
 - [ ] Log actions in `log.md`
+
+## Phase 4: Frontend Canonical Question Type Modernization (2025-07-07)
+
+- [x] Remove all usage of `FilteredQuestion` and legacy types from frontend
+- [x] Update all student-facing question payloads to use `questionDataForStudent` (Zod-validated)
+- [x] Ensure all constructed `QuestionDataForStudent` objects include required fields (especially `timeLimit`)
+- [x] Remove duplicate imports and type declarations in `QuestionCard.tsx`
+- [x] Update `TournamentQuestionCard.tsx` and test files to remove references to `FilteredQuestion` and `LiveQuestionPayload`
+- [x] Fix state shape/type mismatches in `useStudentGameSocket.ts` and related files
+- [x] Update all usages of `SocketSchemas.question` in `useEnhancedStudentGameSocket.ts` to use the correct Zod schema for student payloads
+- [x] Manually review and test all affected files to ensure compliance with canonical types and modernization rules
+- [x] Update plan.md and documentation to reflect all changes and ensure phase-based planning and logging
+
+### Exit Criteria
+- All frontend code uses canonical, Zod-validated `questionDataForStudent` for student payloads
+- No references to legacy types (`FilteredQuestion`, `LiveQuestionPayload`, etc.) remain
+- All TypeScript errors related to question types are resolved
+- All changes and test/validation steps are documented in `plan.md` and `log.md`
 - [ ] Add/Update Zod validation if any data is passed to the modal
 - [ ] Add test/validation steps
 ## Tournament Rejoin Stuck Bug

@@ -26,7 +26,9 @@ import type {
     TimerUpdatePayload,
     GameAnswerPayload
 } from '@shared/types/socketEvents';
-import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import type { z } from 'zod';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 import type { GameTimerState, PlayMode } from '@shared/types';
 
@@ -34,7 +36,7 @@ const logger = createLogger('useEnhancedStudentGameSocket');
 
 // Enhanced game state interface using shared types
 export interface EnhancedStudentGameUIState {
-    currentQuestion: FilteredQuestion | null;
+    currentQuestion: QuestionDataForStudent | null;
     questionIndex: number;
     totalQuestions: number;
     timer: GameTimerState | null; // Use shared timer type
@@ -194,17 +196,17 @@ export function useEnhancedStudentGameSocket({
         }, SocketSchemas.gameJoined);
 
         // Game question event with validation
-        middleware.on('game_question', (payload: QuestionData) => {
+        middleware.on('game_question', (payload: QuestionDataForStudent) => {
             logger.info('✅ Validated game_question event', payload);
             setGameState(prev => ({
                 ...prev,
-                currentQuestion: payload as FilteredQuestion,
+                currentQuestion: payload,
                 questionIndex: payload.currentQuestionIndex ?? 0,
                 totalQuestions: payload.totalQuestions ?? 0,
                 answered: false,
                 phase: 'question'
             }));
-        }, SocketSchemas.question);
+        }, SocketSchemas.studentQuestion);
 
         // Timer update with validation - keep timer state minimal for now
         middleware.on('timer_update', (payload: TimerUpdatePayload) => {
@@ -253,7 +255,7 @@ export function useEnhancedStudentGameSocket({
             logger.info('Standard game_question event', payload);
             setGameState(prev => ({
                 ...prev,
-                currentQuestion: payload as FilteredQuestion,
+                currentQuestion: payload as QuestionDataForStudent,
                 questionIndex: payload.currentQuestionIndex ?? 0,
                 totalQuestions: payload.totalQuestions ?? 0,
                 answered: false,

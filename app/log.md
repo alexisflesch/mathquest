@@ -1,3 +1,25 @@
+# 2025-07-07 - Frontend Canonical Question Type Modernization
+
+## Actions
+- Removed all usage of `FilteredQuestion` and legacy types from frontend
+- Updated all student-facing question payloads to use `questionDataForStudent` (Zod-validated)
+- Ensured all constructed `QuestionDataForStudent` objects include required fields (especially `timeLimit`)
+- Removed duplicate imports and type declarations in `QuestionCard.tsx`
+- Updated `TournamentQuestionCard.tsx` and test files to remove references to `FilteredQuestion` and `LiveQuestionPayload`
+- Fixed state shape/type mismatches in `useStudentGameSocket.ts` and related files
+- Updated all usages of `SocketSchemas.question` in `useEnhancedStudentGameSocket.ts` to use the correct Zod schema for student payloads
+- Manually reviewed and tested all affected files to ensure compliance with canonical types and modernization rules
+- Updated `plan.md` and documentation to reflect all changes and ensure phase-based planning and logging
+
+## Validation
+- Ran `npx tsc` and confirmed **no TypeScript errors** remain in any affected files
+- All question payloads for students are now strictly canonical and Zod-validated
+- No references to legacy types (`FilteredQuestion`, `LiveQuestionPayload`, etc.) remain
+- All changes and test/validation steps are documented in `plan.md` and `log.md`
+
+## Next Steps
+- Continue to enforce canonical types and Zod validation for all future changes
+- Review and update any remaining documentation or edge cases as needed
 # 2025-07-07 - Canonical game_question for timerAction and deferredTournamentFlow
 
 **What was done:**

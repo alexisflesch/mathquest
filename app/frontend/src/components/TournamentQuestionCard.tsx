@@ -3,7 +3,9 @@ import MathJaxWrapper from '@/components/MathJaxWrapper';
 import GoodAnswer from '@/components/GoodAnswer';
 import WrongAnswer from '@/components/WrongAnswer';
 import type { Question } from '@shared/types/quiz/question';
-import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import type { z } from 'zod';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import type { QuestionData, TournamentQuestion } from '@shared/types/socketEvents';
 import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
@@ -40,12 +42,11 @@ interface TournamentQuestionCardProps {
 }
 
 // Helper to get the question type (for multiple choice detection)
-const getQuestionType = (q: FilteredQuestion | QuestionData | string): string | undefined => {
+const getQuestionType = (q: any): string | undefined => {
     if (typeof q === 'object' && q !== null) {
-        // FilteredQuestion uses 'defaultMode', QuestionData uses 'questionType'
-        if ('defaultMode' in q && typeof q.defaultMode === 'string') return q.defaultMode;
         if ('questionType' in q && typeof q.questionType === 'string') return q.questionType;
     }
+    if (typeof q === 'string') return q;
     return undefined;
 };
 

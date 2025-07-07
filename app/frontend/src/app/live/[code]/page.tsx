@@ -30,7 +30,9 @@ import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
 import { useStudentGameSocket } from '@/hooks/useStudentGameSocket';
 import { useSimpleTimer } from '@/hooks/useSimpleTimer';
-import { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import type { z } from 'zod';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
@@ -358,10 +360,10 @@ export default function LiveGamePage() {
         }
     }, [timerState, gameMode]);
 
-    // Use canonical QuestionData directly
-    const currentQuestion: QuestionData | null = useMemo(() => {
+    // Use canonical QuestionDataForStudent for students (never includes correctAnswers)
+    const currentQuestion: QuestionDataForStudent | null = useMemo(() => {
         if (!gameState.currentQuestion) return null;
-        return gameState.currentQuestion;
+        return gameState.currentQuestion as QuestionDataForStudent;
     }, [gameState.currentQuestion]);
     const isReadonly = useMemo(() => {
         return gameState.phase === 'show_answers' ||
@@ -428,7 +430,7 @@ export default function LiveGamePage() {
                             handleSubmitMultiple={handleSubmitMultiple}
                             answered={gameState.answered}
                             isQuizMode={gameMode === 'quiz'}
-                            correctAnswers={gameState.correctAnswers || []}
+                            // Do NOT pass correctAnswers for students
                             readonly={isReadonly}
                         />
                     ) : (

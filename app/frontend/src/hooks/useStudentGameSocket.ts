@@ -43,7 +43,7 @@ import type {
 
 import type {
     LiveQuestionPayload,
-    FilteredQuestion
+    // FilteredQuestion removed: use QuestionDataForStudent instead
 } from '@shared/types/quiz/liveQuestion';
 
 
@@ -101,7 +101,7 @@ export interface TournamentAnswerResult {
  */
 export interface StudentGameUIState {
     // UI-specific game state
-    currentQuestion: FilteredQuestion | null;
+    currentQuestion: QuestionDataForStudent | null;
     questionIndex: number;
     totalQuestions: number;
     answered: boolean;
@@ -294,7 +294,8 @@ export function useStudentGameSocket({
                         uid: data.currentQuestion.uid,
                         text: data.currentQuestion.text,
                         questionType: data.currentQuestion.questionType,
-                        answerOptions: data.currentQuestion.answerOptions || []
+                        answerOptions: data.currentQuestion.answerOptions || [],
+                        timeLimit: data.currentQuestion.timeLimit ?? 30 // fallback to 30s if missing
                     }
                     : prev.currentQuestion,
                 questionIndex: data.questionIndex ?? prev.questionIndex,

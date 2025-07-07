@@ -3,9 +3,8 @@ import MathJaxWrapper from '@/components/MathJaxWrapper';
 import GoodAnswer from '@/components/GoodAnswer';
 import WrongAnswer from '@/components/WrongAnswer';
 import type { Question, Answer } from '@shared/types/quiz/question'; // Corrected import
-import type { LiveQuestionPayload, FilteredQuestion } from '@shared/types/quiz/liveQuestion';
-import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
 import type { z } from 'zod';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
 type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import { QUESTION_TYPES } from '@shared/types';
 import { createLogger } from '@/clientLogger';
@@ -23,8 +22,11 @@ interface StatsData {
 
 import type { QuestionData } from '@shared/types/socketEvents';
 
+// Accept only QuestionDataForStudent for student payloads
+type CanonicalQuestionCard = QuestionDataForStudent;
+
 interface QuestionCardProps {
-    currentQuestion: QuestionDataForStudent;
+    currentQuestion: CanonicalQuestionCard;
     questionIndex: number;
     totalQuestions: number;
     isMultipleChoice: boolean;
@@ -44,7 +46,7 @@ interface QuestionCardProps {
 }
 
 // Helper to get the question type (for multiple choice detection)
-const getQuestionType = (q: FilteredQuestion | QuestionDataForStudent | string): string | undefined => {
+const getQuestionType = (q: CanonicalQuestionCard | string): string | undefined => {
     if (typeof q === 'object' && q !== null) {
         // FilteredQuestion uses 'defaultMode', QuestionDataForStudent uses 'questionType'
         if ('defaultMode' in q && typeof q.defaultMode === 'string') return q.defaultMode;
@@ -54,7 +56,7 @@ const getQuestionType = (q: FilteredQuestion | QuestionDataForStudent | string):
 };
 
 // Updated helper functions using canonical shared type fields directly
-const getQuestionTextToRender = (payload: QuestionDataForStudent | null): string => {
+const getQuestionTextToRender = (payload: CanonicalQuestionCard | null): string => {
     if (!payload) return "Question non disponible";
     try {
         if (typeof payload.text === 'string') {
@@ -67,7 +69,7 @@ const getQuestionTextToRender = (payload: QuestionDataForStudent | null): string
     }
 };
 
-const getAnswersToRender = (payload: QuestionDataForStudent | null): string[] => {
+const getAnswersToRender = (payload: CanonicalQuestionCard | null): string[] => {
     if (!payload) return [];
     try {
         if (Array.isArray(payload.answerOptions)) {

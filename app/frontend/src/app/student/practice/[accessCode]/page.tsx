@@ -13,7 +13,9 @@ import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import InfoModal from '@/components/SharedModal';
 import { createLogger } from '@/clientLogger';
 import { makeApiRequest } from '@/config/api';
-import type { FilteredQuestion } from '@shared/types/quiz/liveQuestion';
+import type { z } from 'zod';
+import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
+type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import type { TournamentQuestion } from '@shared/types';
 import type { GameInstanceResponse } from '@shared/types/api/responses';
 import type { GameInstance } from '@shared/types/core/game';
@@ -253,25 +255,17 @@ export default function PracticeSessionWithAccessCodePage() {
         setShowStatsModal(true);
     };
 
-    // Convert practice question to format expected by QuestionCard (exactly like live page)
-    const currentQuestion: TournamentQuestion | null = useMemo(() => {
+    // Use canonical QuestionDataForStudent directly for QuestionCard
+    const currentQuestion: QuestionDataForStudent | null = useMemo(() => {
         if (!practiceState.currentQuestion) return null;
-
-        const convertedQuestion: FilteredQuestion = {
+        return {
             uid: practiceState.currentQuestion.uid,
             text: practiceState.currentQuestion.text,
             questionType: practiceState.currentQuestion.questionType,
-            answerOptions: practiceState.currentQuestion.answerOptions || []
+            answerOptions: practiceState.currentQuestion.answerOptions || [],
+            timeLimit: practiceState.currentQuestion.timeLimit ?? 30 // fallback to 30s if missing
         };
-
-        return {
-            question: convertedQuestion,
-            remainingTime: undefined, // No timer for practice
-            questionIndex: (practiceState.questionProgress?.currentQuestionNumber || 1) - 1, // Convert to 0-based index
-            totalQuestions: practiceState.questionProgress?.totalQuestions || practiceParams.limit,
-            tournoiState: 'running'
-        };
-    }, [practiceState.currentQuestion, practiceState.questionProgress, practiceParams.limit]);
+    }, [practiceState.currentQuestion]);
 
     // Determine if component should be readonly (showing answers like live page)
     const isReadonly = useMemo(() => {
