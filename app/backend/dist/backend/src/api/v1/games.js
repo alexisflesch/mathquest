@@ -160,13 +160,21 @@ router.get('/:accessCode', async (req, res) => {
             res.status(400).json({ error: 'Invalid access code format' });
             return;
         }
-        const includeParticipants = req.query.includeParticipants === 'true';
-        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(accessCode, includeParticipants);
+        // Always fetch the game instance (no participants, no questions)
+        const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(accessCode, false);
         if (!gameInstance) {
             res.status(404).json({ error: 'Game not found' });
             return;
         }
-        res.status(200).json({ gameInstance });
+        // Canonical: Only return minimal public info for lobby/public consumers
+        // Use shared PublicGameInstance type
+        // linkedQuizId is always in settings (object or JSON), never top-level
+        let linkedQuizId = null;
+        if (gameInstance.settings && typeof gameInstance.settings === 'object' && 'linkedQuizId' in gameInstance.settings) {
+            linkedQuizId = gameInstance.settings.linkedQuizId ?? null;
+        }
+        const publicGameInstance = { accessCode: gameInstance.accessCode, playMode: gameInstance.playMode, linkedQuizId, status: gameInstance.status, name: gameInstance.name };
+        res.status(200).json({ gameInstance: publicGameInstance });
     }
     catch (error) {
         logger.error({ error }, 'Error fetching game instance');

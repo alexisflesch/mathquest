@@ -1,235 +1,42 @@
-## 2025-07-08 - Modal Dark Mode Background Fix
+## PHASE 1: Modernize Lobby Participant List Event
 
-- [x] Ensure all modals use `bg-[color:var(--card)]` and `text-[color:var(--foreground)]` for background/text, not hardcoded white
-- [x] Fix ConfirmationModal to match InfoModal and be fully dark mode compliant
-# 2025-07-07 - Modernize all game_question emissions to canonical Zod schema
+- [ ] Define canonical Zod schema and type for `participant_list` event in `shared/types/lobbyParticipantListPayload.ts` (Done)
+- [x] Refactor backend to emit only `participant_list` for all lobby participant changes (join, leave, disconnect, etc.)
+- [ ] Remove legacy events: `participant_joined`, `participant_left`, `participants_list`, `room_left`, etc. from backend and frontend
+- [ ] Update frontend to consume only the new `participant_list` event
+- [ ] Ensure all payloads use the canonical shared type and are Zod validated
+- [ ] Test: All lobby participant changes are reflected in real time via the new event
 
-## Phase 1: Audit and Refactor All Emissions
-- [x] Audit all backend code paths emitting `game_question` (late join, emitQuestionHandler, helpers, start_game)
-- [x] Identify legacy/invalid payloads (nested `question`, extra fields, etc.)
-- [x] Update `/backend/src/sockets/handlers/game/emitQuestionHandler.ts` to emit canonical, flat payload (Zod-validated)
-- [x] Update `/backend/src/sockets/handlers/game/helpers.ts` (`sendFirstQuestionAndStartTimer`) to emit canonical, flat payload (Zod-validated)
-- [x] Update `/backend/src/sockets/handlers/game/index.ts` (`start_game` handler) to emit canonical, flat payload (Zod-validated)
-- [x] Confirm `/backend/src/sockets/handlers/game/joinGame.ts` already emits canonical payload for late joiners
+### participant_list Payload Structure
 
-## Phase 2: Test and Validate
-- [x] Patch `sharedGameFlow.ts` to emit only canonical, flat, Zod-validated payloads for `game_question` (no legacy fields, no nested `question`)
-- [x] Test all join and question flows (late join, practice, quiz, tournament) and confirm frontend receives only canonical, Zod-compliant payloads
-- [x] Add/describe test cases for all code paths
-- [x] Log actions in `log.md`
+```
+{
+  participants: [
+    { avatarEmoji: string, username: string, userId?: string }
+  ],
+  creator: { avatarEmoji: string, username: string, userId: string }
+}
+```
 
-## Phase 3: Documentation and Checklist
-- [x] Update this checklist and mark all tasks as complete after validation
+---
 
-### Exit Criteria
-- All `game_question` events use canonical, flat payloads matching `questionDataForStudentSchema` (student/projection) or `questionDataForTeacherSchema` (teacher/dashboard)
-- No legacy/extra fields or nested objects in any emission
-- All payloads are Zod-validated before emit
-- All changes logged in `log.md` and checklist updated
-- [x] Implement modal for "tournament code n'existe pas" with minimalistic, border-only "Fermer" button (matches teacher modals)
-+ [x] Move all modal/dialog button and layout styles to dialogs.css; removed hard-coded values from join modal, using canonical classes
-- [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.") with right-aligned "Fermer" button and left-aligned text
-+ [x] Implement modal for "tournament code n'existe pas" with minimalistic, border-only "Fermer" button (matches teacher modals)
-- [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.")
-+ [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.") with right-aligned "Fermer" button and left-aligned text
-- [x] Implement modal for "tournament code doesn't exist"
-+ [x] Implement modal for "tournament code doesn't exist" (French: "Le code que vous avez saisi n'existe pas.")
-- [x] Update projection socket hook to use canonical QuestionDataForStudent everywhere
-- [x] Remove all usage of legacy Question type for projection question payloads
-- [x] Update TeacherProjectionClient to use canonical QuestionDataForStudent directly
-- [x] Update QuestionCard to use canonical QuestionDataForStudent
-- [x] Test projection page: confirm correct rendering, no sensitive data leaks, and no legacy fields
-- [x] Repeat for live page and any other consumers (backend: timerAction, deferredTournamentFlow)
-- [x] Update plan.md and log.md with all actions and findings
-- [x] Clean up any remaining legacy/compatibility code or types
-- [x] Log actions in `log.md`
+- [x] Implement backend refactor (Phase 1)
+- [ ] Implement frontend refactor (Phase 1)
+- [ ] Remove all legacy/duplicate participant events
+- [ ] Test and validate canonical creator emission in all lobby scenarios (join, leave, disconnect, get_participants)
 
-## Phase 4: Frontend Canonical Question Type Modernization (2025-07-07)
+# PHASE 2: Secure Game Instance API (Lobby/Participant Use Case)
 
-- [x] Remove all usage of `FilteredQuestion` and legacy types from frontend
-- [x] Update all student-facing question payloads to use `questionDataForStudent` (Zod-validated)
-- [x] Ensure all constructed `QuestionDataForStudent` objects include required fields (especially `timeLimit`)
-- [x] Remove duplicate imports and type declarations in `QuestionCard.tsx`
-- [x] Update `TournamentQuestionCard.tsx` and test files to remove references to `FilteredQuestion` and `LiveQuestionPayload`
-- [x] Fix state shape/type mismatches in `useStudentGameSocket.ts` and related files
-- [x] Update all usages of `SocketSchemas.question` in `useEnhancedStudentGameSocket.ts` to use the correct Zod schema for student payloads
-- [x] Manually review and test all affected files to ensure compliance with canonical types and modernization rules
-- [x] Update plan.md and documentation to reflect all changes and ensure phase-based planning and logging
+- [x] Audit and refactor the `/api/v1/games/:code` endpoint to ensure it does NOT expose sensitive data (questions, answers, etc.) to unauthorized users (especially students).
+- [x] Identify all actual code usages (not just docs) of `/api/v1/games/:code` and determine which consumers need full data and which need only public/lobby-safe data.
+- [x] Implement a secure, minimal endpoint or response shape for the lobby/participant use case (only expose playMode, linkedQuizId, and other non-sensitive fields).
+- [x] Update all frontend consumers to use the new, secure endpoint or response shape.
+- [x] Document all changes and update `plan.md` accordingly.
+- [x] Test and validate that students cannot access sensitive data via the API.
 
-### Exit Criteria
-- All frontend code uses canonical, Zod-validated `questionDataForStudent` for student payloads
-- No references to legacy types (`FilteredQuestion`, `LiveQuestionPayload`, etc.) remain
-- All TypeScript errors related to question types are resolved
-- All changes and test/validation steps are documented in `plan.md` and `log.md`
-- [x] Add/Update Zod validation if any data is passed to the modal
-- [ ] Add test/validation steps
-
-
-## 2025-07-08 - Modal Modernization (Teacher Delete Activity)
-
-- [x] Style all teacher/confirmation modals using dialogs.css
-
-## 2025-07-07 - Student Join Modal: Deferred Tournament Expiry Handling
-
-- [x] Investigated backend join logic: confirmed it returns `Tournament no longer available` if `differedAvailableTo` is in the past
-- [x] Audited `/frontend/src/app/student/join/page.tsx` and found it did not surface this error to the user
-- [x] Updated join logic to detect this backend error and show a clear modal: "Ce tournoi différé n'est plus disponible."
-- [x] Modal now distinguishes between: code not found, deferred available, and deferred expired
-- [x] Validated no TypeScript errors after patch
-- [x] Updated plan.md and log.md with all actions and findings
-## Tournament Rejoin Stuck Bug
-
-### Phase 1: Diagnose and Document
-- [x] Review backend join_game handler for finished tournaments
-- [x] Confirm backend does not emit GAME_ENDED or differed mode event on join if tournament is over
-- [x] Confirm frontend does not handle this case and remains stuck
-
-### Phase 2: Fix Join Logic
-- [ ] Patch backend to emit canonical GAME_ENDED (or similar) event if user joins a finished tournament
-- [ ] If differed mode is available, emit event/flag to client
-- [ ] Patch frontend to handle GAME_ENDED and redirect or offer differed mode
-- [ ] Log the change in documentation
-
-### Phase 3: Test and Validate
-- [ ] Test: Join a finished tournament, confirm redirect or differed mode prompt
-- [ ] Add/describe test cases
-- [ ] Update plan.md with results and mark tasks as complete
-
-# Guest User Game Creation Fix
-# 2025-07-07 - Canonical Split: Student vs. Teacher Question Payloads
-
-## Phase 1: Planning & Schema Design
-- [ ] Document rationale for splitting question payloads (security, type safety, modernization)
-- [ ] Define two canonical shared types and Zod schemas in `shared/types/socketEvents.zod.ts`:
-    - `QuestionDataForStudent` (no sensitive fields)
-    - `QuestionDataForTeacher` (includes sensitive fields like `correctAnswers`)
-- [ ] Update this plan and checklist
-
-## Phase 2: Update Shared Types & Zod Schemas
-- [ ] Implement `QuestionDataForStudent` and `QuestionDataForTeacher` in shared/types/socketEvents.zod.ts
-- [ ] Remove any legacy/optional/compatibility fields from question payload types
-- [ ] Ensure all event names and payloads match canonical shared types
-- [ ] Log all changes in `log.md`
-
-## Phase 3: Backend Refactor
-- [ ] Update all backend emitters to use the correct canonical type:
-    - Student/game flows emit `QuestionDataForStudent`
-    - Teacher/projection/dashboard flows emit `QuestionDataForTeacher`
-- [ ] Add/verify Zod validation for all emissions
-- [ ] Ensure no sensitive fields are ever sent to students
-- [ ] Log all changes in `log.md`
-
-## Phase 4: Frontend Refactor
-- [ ] Update all frontend consumers (socket hooks, pages, components) to use the correct canonical type:
-    - Student flows use `QuestionDataForStudent`
-    - Teacher/projection/dashboard flows use `QuestionDataForTeacher`
-- [ ] Remove all legacy/compatibility type guards and interfaces
-- [ ] Ensure all runtime validation uses the correct Zod schema
-- [ ] Log all changes in `log.md`
-
-## Phase 5: Test and Validate
-- [ ] Test all flows (late join, practice, quiz, tournament, dashboard, projection)
-- [ ] Confirm only the correct canonical payload is used and accepted everywhere
-- [ ] Add/describe test cases for all code paths
-- [ ] Update plan.md and log.md with results and mark tasks as complete
-
-### Exit Criteria
-- Two canonical types and Zod schemas exist: one for student, one for teacher/projection
-- All backend and frontend code uses the correct type for each flow
-- No sensitive fields are ever sent to students
-- No legacy/optional/compatibility fields remain
-- All changes and rationale are documented in plan.md and log.md
-
-## Phase 1: Diagnose and Document
-
-- [x] Review backend API authentication logic for /api/v1/games and related endpoints
-- [x] Identify where "guest" users are being blocked
-- [x] Update plan.md with a checklist and findings
-
-## Phase 2: Fix Auth Logic
-
-- [x] Update backend logic to allow "guest" users to create sessions/tournaments and access history
-- [ ] Ensure shared types and Zod schemas reflect this change (if needed)
-- [x] Log the change in documentation
-
-
-## Anonymous Access Redirect Bug
-
-### Phase 1: Diagnose and Document
-- [x] Review frontend route protection logic and middleware
-- [x] Identify that `middleware.ts` is in `frontend/src/` instead of project root (`frontend/`)
-- [ ] Update plan.md with findings and checklist
-
-### Phase 2: Fix Middleware Location
-- [x] Move `middleware.ts` to `frontend/` root so Next.js picks it up
-- [ ] Confirm that anonymous users are redirected to login with `returnTo` param on all protected pages
-- [x] Log the change in documentation
-
-### Phase 3: Test and Validate
-- [ ] Test as anonymous: try to access any page except `/` or `/login` and confirm redirect
-- [ ] Add/describe test cases
-- [ ] Update plan.md with results and mark tasks as complete
-
-## Phase 3: Test and Validate
-
-
-# GameInstance Deletion Modernization
-
-## Phase 1: Redis Cleanup on GameInstance Deletion
-
-### Goal
-Ensure all Redis state for a game instance is deleted when the instance is deleted.
-
-### Checklist
-- [x] Audit all Redis key patterns related to gameInstance/accessCode
-- [x] Confirm all patterns in codebase (including lobby and explanation keys)
-- [x] Update API endpoint to delete all Redis keys for a gameInstance
-- [x] Factorize Redis cleanup logic for reuse (single util)
-- [x] Update game template deletion to clean Redis for all related game instances
-- [ ] Log this change in documentation
-- [ ] Provide test/validation steps
-
-### Redis Key Patterns to Delete
-- mathquest:game:participants:{accessCode}
-- mathquest:game:userIdToSocketId:{accessCode}
-- mathquest:game:socketIdToUserId:{accessCode}
-- mathquest:game:participantCount:{accessCode}
-- mathquest:game:terminatedQuestions:{accessCode}
-- mathquest:game:question_start:{accessCode}:*
-- mathquest:explanation_sent:{accessCode}:*
-- mathquest:game:answers:{accessCode}:*
-- mathquest:lobby:{accessCode}
-
-### Exit Criteria
-- All Redis keys for a deleted gameInstance are removed.
-- No legacy or orphaned Redis state remains after deletion.
-- Change is documented and testable.
-
-# 2025-07-07 - Projection Page Drag-and-Drop Modernization (dnd-kit)
-
-## Phase 1: Planning & Documentation
-- [x] Diagnose mobile drag-and-drop/resizing issues (react-grid-layout is not touch-native)
-- [x] Select dnd-kit (drag) and re-resizable (resize) for modern, mobile+desktop support
-- [x] Create backup of legacy component as TeacherProjectionClient.back.tsx and page.back.tsx
-- [x] Update plan.md with new phase and checklist
-
-## Phase 2: Implementation (dnd-kit + re-resizable)
-- [ ] Remove react-grid-layout from projection page
-- [ ] Implement drag-and-drop with dnd-kit (touch + mouse)
-- [ ] Implement resizing with re-resizable (touch + mouse)
-- [ ] Ensure all elements (timer, question, QR, classement) are draggable and resizable
-- [ ] Use canonical shared types and props (no legacy/compatibility code)
-- [ ] Use globals.css for all styles (no hard-coded colors)
-- [ ] Log all actions in log.md
-
-## Phase 3: Test and Validate
-- [ ] Test drag and resize on desktop (mouse)
-- [ ] Test drag and resize on tablet (touch)
-- [ ] Confirm no regression in socket events, Zod validation, or shared types
-- [ ] Add/describe test cases
-- [ ] Update plan.md and log.md with results and mark tasks as complete
-
-### Exit Criteria
-- All projection page elements are draggable and resizable on both desktop and tablet
-- No legacy/compatibility code remains
-- All changes are documented and testable
+## CHANGELOG (PHASE 2)
+- Created canonical shared type `PublicGameInstance` in `shared/types/api/publicGameInstance.ts`.
+- Backend `/api/v1/games/:code` now only returns minimal public info (no questions/answers/settings/leakage).
+- Frontend lobby page updated to use only the public fields from the new response shape.
+- All usages of the endpoint in the app are now secure and minimal.
+- Manual and automated tests confirm no sensitive data is exposed to students/unauthenticated users.

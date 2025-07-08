@@ -13,12 +13,31 @@ const joinOrderBonus_1 = require("@/utils/joinOrderBonus");
 const projectionLeaderboardBroadcast_1 = require("@/utils/projectionLeaderboardBroadcast");
 const events_1 = require("@shared/types/socket/events");
 const socketEvents_zod_1 = require("@shared/types/socketEvents.zod");
+const lobbyParticipantListPayload_1 = require("@shared/types/lobbyParticipantListPayload");
 // Create a handler-specific logger
 const logger = (0, logger_1.default)('LobbyHandler');
 // Redis key prefixes
 const LOBBY_KEY_PREFIX = 'mathquest:lobby:';
 // Store intervals for game status checking
 const gameStatusCheckIntervals = new Map();
+function emitParticipantList(io, accessCode, participants, creator) {
+    // Map to canonical payload
+    const payload = {
+        participants: participants.map(p => ({
+            avatarEmoji: p.avatarEmoji || '🐼',
+            username: p.username,
+            userId: p.userId
+        })),
+        creator
+    };
+    // Validate with Zod
+    const parseResult = lobbyParticipantListPayload_1.lobbyParticipantListPayloadSchema.safeParse(payload);
+    if (!parseResult.success) {
+        // Log error, but still emit for now
+        console.error('Invalid participant_list payload', parseResult.error.format(), payload);
+    }
+    io.to(`lobby_${accessCode}`).emit('participant_list', payload);
+}
 /**
  * Setup periodic game status checking for a lobby
  * This checks if the game has become active and notifies participants
@@ -141,7 +160,8 @@ function registerLobbyHandlers(io, socket) {
                     status: true,
                     name: true,
                     gameTemplateId: true,
-                    playMode: true
+                    playMode: true,
+                    initiatorUserId: true
                 }
             });
             if (!gameInstance) {
@@ -193,9 +213,7 @@ function registerLobbyHandlers(io, socket) {
                 for (const existingParticipant of existingParticipantsForUser) {
                     await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, existingParticipant.id);
                     // Notify that each old participant left
-                    socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, {
-                        id: existingParticipant.id
-                    });
+                    // socket.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANT_LEFT, { id: existingParticipant.id }); // Modernized: handled by participant_list
                 }
             }
             // Now join the lobby room
@@ -250,18 +268,32 @@ function registerLobbyHandlers(io, socket) {
                     }, 'Cleaned up duplicate participant entry');
                 }
             }
-            // Notify others that someone joined (only if this is a new user, not a reconnection)
-            if (!isReconnection) {
-                // Emit the full participant object constructed with socket.data.user details
-                socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_JOINED, participant);
+            // Find creator by matching userId to gameInstance.initiatorUserId, fallback to first participant
+            let creator = null;
+            if (gameInstance.initiatorUserId) {
+                // Always fetch the true creator from the DB, even if not present in participants
+                const creatorUser = await prisma_1.prisma.user.findUnique({
+                    where: { id: gameInstance.initiatorUserId },
+                    select: { id: true, username: true, avatarEmoji: true }
+                });
+                if (creatorUser) {
+                    creator = {
+                        avatarEmoji: creatorUser.avatarEmoji || '🐼',
+                        username: creatorUser.username,
+                        userId: creatorUser.id
+                    };
+                }
+                else {
+                    creator = {
+                        avatarEmoji: '🐼',
+                        username: 'Unknown',
+                        userId: gameInstance.initiatorUserId
+                    };
+                }
             }
-            // Send full participants list to everyone in the lobby
-            io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
-                participants,
-                gameId: gameInstance.id,
-                gameName: gameInstance.name,
-                isQuizLinked: gameInstance.playMode === 'quiz'
-            });
+            if (creator) {
+                emitParticipantList(io, accessCode, participants, creator);
+            }
             // Emit updated participant count to teacher dashboard
             await (0, participantCountUtils_1.emitParticipantCount)(io, accessCode);
             // UX ENHANCEMENT: For quiz mode, populate projection leaderboard when students join lobby
@@ -388,20 +420,34 @@ function registerLobbyHandlers(io, socket) {
                     await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, participant.id);
                 }
             }
-            // Notify others that someone left
-            socket.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socket.id });
-            // Get game details for isQuizLinked flag
+            // Always fetch canonical creator from DB using gameInstance.initiatorUserId
+            let creator = null;
+            // Fetch gameInstance for this accessCode
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
                 where: { accessCode },
-                select: { playMode: true }
+                select: { initiatorUserId: true }
             });
-            // Send updated participants list
-            io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
-                participants,
-                isQuizLinked: gameInstance?.playMode === 'quiz'
-            });
-            // Emit room_left event to the socket that left
-            socket.emit(events_1.LOBBY_EVENTS.ROOM_LEFT, { accessCode });
+            if (gameInstance && gameInstance.initiatorUserId) {
+                const creatorUser = await prisma_1.prisma.user.findUnique({
+                    where: { id: gameInstance.initiatorUserId },
+                    select: { id: true, username: true, avatarEmoji: true }
+                });
+                if (creatorUser) {
+                    creator = {
+                        avatarEmoji: creatorUser.avatarEmoji || '🐼',
+                        username: creatorUser.username,
+                        userId: creatorUser.id
+                    };
+                }
+                else {
+                    creator = {
+                        avatarEmoji: '🐼',
+                        username: 'Unknown',
+                        userId: gameInstance.initiatorUserId
+                    };
+                }
+            }
+            emitParticipantList(io, accessCode, participants, creator);
             // Emit the updated participant count to all clients in the lobby
             await (0, participantCountUtils_1.emitParticipantCount)(io, accessCode);
             // Stop game status checking for this lobby
@@ -440,10 +486,10 @@ function registerLobbyHandlers(io, socket) {
                     message: 'Joined during get_participants request'
                 });
             }
-            // Get game details
+            // Get game details (including initiatorUserId)
             const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
                 where: { accessCode },
-                select: { id: true, name: true, status: true, playMode: true }
+                select: { id: true, name: true, status: true, playMode: true, initiatorUserId: true }
             });
             if (!gameInstance) {
                 socket.emit(events_1.LOBBY_EVENTS.LOBBY_ERROR, {
@@ -474,12 +520,36 @@ function registerLobbyHandlers(io, socket) {
                     });
                 }
             }
-            // Send participants list only to requesting socket
-            socket.emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, {
-                participants,
-                gameId: gameInstance.id,
-                gameName: gameInstance.name,
-                isQuizLinked: gameInstance.playMode === 'quiz'
+            // Find creator (for now: first participant in list)
+            // Always fetch canonical creator from DB using gameInstance.initiatorUserId
+            let creator = null;
+            if (gameInstance && gameInstance.initiatorUserId) {
+                const creatorUser = await prisma_1.prisma.user.findUnique({
+                    where: { id: gameInstance.initiatorUserId },
+                    select: { id: true, username: true, avatarEmoji: true }
+                });
+                if (creatorUser) {
+                    creator = {
+                        avatarEmoji: creatorUser.avatarEmoji || '🐼',
+                        username: creatorUser.username,
+                        userId: creatorUser.id
+                    };
+                }
+                else {
+                    creator = {
+                        avatarEmoji: '🐼',
+                        username: 'Unknown',
+                        userId: gameInstance.initiatorUserId
+                    };
+                }
+            }
+            socket.emit('participant_list', {
+                participants: participants.map(p => ({
+                    avatarEmoji: p.avatarEmoji || '🐼',
+                    username: p.username,
+                    userId: p.userId
+                })),
+                creator
             });
         }
         catch (error) {
@@ -534,10 +604,35 @@ function registerLobbyHandlers(io, socket) {
                                 await redis_1.redisClient.hdel(`${LOBBY_KEY_PREFIX}${accessCode}`, participant.id);
                             }
                         }
-                        // Notify others that someone left - using io instead of socket.to to ensure delivery
-                        io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socketId });
-                        // Send updated participants list
-                        io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANTS_LIST, { participants: updatedParticipants });
+                        // Find creator (for now: first participant in list)
+                        // Always fetch canonical creator from DB using gameInstance.initiatorUserId
+                        let creator = null;
+                        // Fetch gameInstance for this accessCode
+                        const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
+                            where: { accessCode },
+                            select: { initiatorUserId: true }
+                        });
+                        if (gameInstance && gameInstance.initiatorUserId) {
+                            const creatorUser = await prisma_1.prisma.user.findUnique({
+                                where: { id: gameInstance.initiatorUserId },
+                                select: { id: true, username: true, avatarEmoji: true }
+                            });
+                            if (creatorUser) {
+                                creator = {
+                                    avatarEmoji: creatorUser.avatarEmoji || '🐼',
+                                    username: creatorUser.username,
+                                    userId: creatorUser.id
+                                };
+                            }
+                            else {
+                                creator = {
+                                    avatarEmoji: '🐼',
+                                    username: 'Unknown',
+                                    userId: gameInstance.initiatorUserId
+                                };
+                            }
+                        }
+                        emitParticipantList(io, accessCode, updatedParticipants, creator);
                         // Emit the updated participant count to all clients in the lobby
                         await (0, participantCountUtils_1.emitParticipantCount)(io, accessCode);
                         if (disconnectingParticipant) {
@@ -552,7 +647,7 @@ function registerLobbyHandlers(io, socket) {
                     catch (redisError) {
                         logger.error({ error: redisError, accessCode, socketId }, 'Redis error during lobby disconnect handling');
                         // Still emit participant_left event even if Redis fails
-                        io.to(`lobby_${accessCode}`).emit(events_1.LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socketId });
+                        // io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANT_LEFT, { id: socketId }); // Modernized: handled by participant_list
                     }
                 }
             }

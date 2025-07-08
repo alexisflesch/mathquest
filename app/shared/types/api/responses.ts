@@ -135,8 +135,10 @@ export interface TeacherProfileResponse {
 
 // --- Game API Responses ---
 
+import type { PublicGameInstance } from './publicGameInstance';
+
 export interface GameInstanceResponse {
-    gameInstance: GameInstance;
+    gameInstance: PublicGameInstance;
 }
 
 export interface GameInstanceWithTemplateResponse {
