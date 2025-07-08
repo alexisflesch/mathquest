@@ -15,4 +15,16 @@ exports.PublicGameInstanceSchema = zod_1.z.object({
     linkedQuizId: zod_1.z.string().nullable().optional(),
     status: zod_1.z.string(),
     name: zod_1.z.string().optional(),
+    practiceSettings: zod_1.z
+        .object({
+        gradeLevel: zod_1.z.string(),
+        discipline: zod_1.z.string(),
+        themes: zod_1.z.array(zod_1.z.string()),
+        questionCount: zod_1.z.number(),
+        showImmediateFeedback: zod_1.z.boolean(),
+        allowRetry: zod_1.z.boolean(),
+        randomizeQuestions: zod_1.z.boolean(),
+        gameTemplateId: zod_1.z.string().optional(),
+    })
+        .optional(),
 });

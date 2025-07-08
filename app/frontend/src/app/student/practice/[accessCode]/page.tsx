@@ -19,6 +19,7 @@ type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import type { TournamentQuestion } from '@shared/types';
 import type { GameInstanceResponse } from '@shared/types/api/responses';
 import type { GameInstance } from '@shared/types/core/game';
+import type { PublicGameInstance } from '@shared/types/api/publicGameInstance';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
 
 const logger = createLogger('PracticeSessionWithAccessCode');
@@ -49,8 +50,8 @@ export default function PracticeSessionWithAccessCodePage() {
     const userId = getUserId();
     const username = getUsername();
 
-    // State for game instance loading
-    const [gameInstance, setGameInstance] = useState<GameInstance | null>(null);
+    // State for game instance loading (minimal public info)
+    const [gameInstance, setGameInstance] = useState<PublicGameInstance | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -89,55 +90,40 @@ export default function PracticeSessionWithAccessCodePage() {
         const fetchGameInstance = async () => {
             try {
                 logger.info('Fetching game instance for access code:', accessCode);
-
-                // Modernization: Use canonical Next.js API route
                 const response = await makeApiRequest<GameInstanceResponse>(`/api/games/${accessCode}`, {
                     method: 'GET',
                 });
-
                 if (!response || !response.gameInstance) {
                     throw new Error('Failed to fetch game instance');
                 }
-
                 const instance = response.gameInstance;
-
                 // Verify this is a practice session
                 if (instance.playMode !== 'practice') {
                     logger.warn('Game instance is not a practice session, redirecting to appropriate page');
                     router.push(`/student/join?accessCode=${accessCode}`);
                     return;
                 }
-
                 logger.info('Successfully loaded practice game instance:', instance);
                 setGameInstance(instance);
 
-                // Extract practice parameters from game instance
-                let settings = instance.settings?.practiceSettings;
-                if (!settings && instance.gameTemplate) {
-                    const template = instance.gameTemplate;
-                    settings = {
-                        discipline: template.discipline || '',
-                        gradeLevel: template.gradeLevel || '',
-                        themes: template.themes || [],
-                        questionCount: template.questions?.length || 10,
-                        showImmediateFeedback: true,
-                        allowRetry: true,
-                        randomizeQuestions: false,
-                        gameTemplateId: instance.gameTemplateId
-                    };
-                    logger.info('Extracted practice settings from GameTemplate:', settings);
-                }
-
-                if (settings) {
+                // Extract practice parameters from instance (now provided by backend)
+                if (instance.practiceSettings) {
                     setPracticeParams({
-                        discipline: settings.discipline || '',
-                        level: settings.gradeLevel || '',
-                        themes: settings.themes || [],
-                        limit: settings.questionCount || 10,
-                        gameTemplateId: settings.gameTemplateId
+                        discipline: instance.practiceSettings.discipline,
+                        level: instance.practiceSettings.gradeLevel,
+                        themes: instance.practiceSettings.themes,
+                        limit: instance.practiceSettings.questionCount,
+                        gameTemplateId: instance.practiceSettings.gameTemplateId
+                    });
+                } else {
+                    setPracticeParams({
+                        discipline: '',
+                        level: '',
+                        themes: [],
+                        limit: 10,
+                        gameTemplateId: undefined
                     });
                 }
-
                 setLoading(false);
             } catch (err) {
                 logger.error('Error fetching game instance:', err);
@@ -145,7 +131,6 @@ export default function PracticeSessionWithAccessCodePage() {
                 setLoading(false);
             }
         };
-
         fetchGameInstance();
     }, [accessCode, router]);
 

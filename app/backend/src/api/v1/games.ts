@@ -216,7 +216,35 @@ router.get('/:accessCode', async (req: Request, res: Response<GameInstanceRespon
         if (gameInstance.settings && typeof gameInstance.settings === 'object' && 'linkedQuizId' in gameInstance.settings) {
             linkedQuizId = (gameInstance.settings as any).linkedQuizId ?? null;
         }
-        const publicGameInstance = { accessCode: gameInstance.accessCode, playMode: gameInstance.playMode, linkedQuizId, status: gameInstance.status, name: gameInstance.name };
+
+        // If this is a practice session, extract canonical practiceSettings
+        let practiceSettings = undefined;
+        if (gameInstance.playMode === 'practice') {
+            // Prefer settings.practiceSettings if present, else fallback to gameTemplate
+            if (gameInstance.settings && typeof gameInstance.settings === 'object' && 'practiceSettings' in gameInstance.settings) {
+                practiceSettings = (gameInstance.settings as any).practiceSettings;
+            } else if (gameInstance.gameTemplate) {
+                practiceSettings = {
+                    discipline: gameInstance.gameTemplate.discipline || '',
+                    gradeLevel: gameInstance.gameTemplate.gradeLevel || '',
+                    themes: gameInstance.gameTemplate.themes || [],
+                    questionCount: Array.isArray(gameInstance.gameTemplate.questions) ? gameInstance.gameTemplate.questions.length : 10,
+                    showImmediateFeedback: true,
+                    allowRetry: true,
+                    randomizeQuestions: false,
+                    gameTemplateId: gameInstance.gameTemplate.id
+                };
+            }
+        }
+
+        const publicGameInstance = {
+            accessCode: gameInstance.accessCode,
+            playMode: gameInstance.playMode,
+            linkedQuizId,
+            status: gameInstance.status,
+            name: gameInstance.name,
+            ...(practiceSettings ? { practiceSettings } : {})
+        };
         res.status(200).json({ gameInstance: publicGameInstance });
     } catch (error) {
         logger.error({ error }, 'Error fetching game instance');
