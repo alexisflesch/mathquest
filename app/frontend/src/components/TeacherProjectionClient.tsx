@@ -59,9 +59,32 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         { id: 'qrcode', x: 40, y: 160, w: 220, h: 220 },
         { id: 'classement', x: 940, y: 40, w: 320, h: 400 },
     ];
-    const [elements, setElements] = useState(() =>
-        defaultElements.map(e => ({ ...e, z: 1 }))
-    );
+    // Key for localStorage
+    const LS_KEY = `projection-layout-v1`;
+    // Load from localStorage if available
+    const [elements, setElements] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = window.localStorage.getItem(LS_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.every(e => e.id && typeof e.x === 'number' && typeof e.y === 'number')) {
+                        return parsed;
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+        return defaultElements.map(e => ({ ...e, z: 1 }));
+    });
+
+    // Save to localStorage on change
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(LS_KEY, JSON.stringify(elements));
+        }
+    }, [elements]);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [zoomFactors, setZoomFactors] = useState({ question: 1, classement: 1 });
     const [podiumKey, setPodiumKey] = useState(0);

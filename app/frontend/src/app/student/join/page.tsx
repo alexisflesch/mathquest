@@ -30,7 +30,7 @@ import { SOCKET_EVENTS } from '@shared/types/socket/events';
 export default function StudentJoinPage() {
     const [code, setCode] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [modal, setModal] = useState<null | { type: 'notfound' | 'differed', message: string }>(null);
+    const [modal, setModal] = useState<null | { type: 'notfound' | 'differed' | 'expired', message: string }>(null);
     const router = useRouter();
     const { userProfile } = useAuthState();
 
@@ -94,7 +94,12 @@ export default function StudentJoinPage() {
             }
             setError(`Code erroné (status: ${status})`);
         } catch (err: any) {
-            setModal({ type: 'notfound', message: err?.message || "Code erroné" });
+            const msg = err?.message || "Code erroné";
+            if (msg.includes('Tournament no longer available') || msg.includes('plus disponible')) {
+                setModal({ type: 'expired', message: "Ce tournoi différé n'est plus disponible." });
+            } else {
+                setModal({ type: 'notfound', message: msg });
+            }
         }
     };
 
@@ -133,15 +138,21 @@ export default function StudentJoinPage() {
                 </div>
             </form>
 
-            {/* Modal for not found or differed mode */}
+            {/* Modal for not found, differed, or expired mode */}
             <InfoModal
                 isOpen={!!modal}
                 onClose={() => setModal(null)}
-                title={modal?.type === 'notfound' ? 'Code invalide' : 'Tournoi terminé'}
+                title={
+                    modal?.type === 'notfound'
+                        ? 'Code invalide'
+                        : modal?.type === 'expired'
+                            ? 'Tournoi différé expiré'
+                            : 'Tournoi terminé'
+                }
                 showCloseButton={false}
                 size="sm"
             >
-                {modal?.type === 'notfound' ? (
+                {modal?.type === 'notfound' && (
                     <div className="dialog-modal-content gap-4">
                         <span>Le code que vous avez saisi n'existe pas.</span>
                         <div className="dialog-modal-actions">
@@ -153,7 +164,21 @@ export default function StudentJoinPage() {
                             </button>
                         </div>
                     </div>
-                ) : (
+                )}
+                {modal?.type === 'expired' && (
+                    <div className="dialog-modal-content gap-4">
+                        <span>{modal?.message}</span>
+                        <div className="dialog-modal-actions">
+                            <button
+                                className="dialog-modal-btn"
+                                onClick={() => setModal(null)}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                )}
+                {modal?.type === 'differed' && (
                     <div className="dialog-modal-content gap-4">
                         <span>{modal?.message}</span>
                         <div className="dialog-modal-actions">

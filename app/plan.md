@@ -1,3 +1,7 @@
+## 2025-07-08 - Modal Dark Mode Background Fix
+
+- [x] Ensure all modals use `bg-[color:var(--card)]` and `text-[color:var(--foreground)]` for background/text, not hardcoded white
+- [x] Fix ConfirmationModal to match InfoModal and be fully dark mode compliant
 # 2025-07-07 - Modernize all game_question emissions to canonical Zod schema
 
 ## Phase 1: Audit and Refactor All Emissions
@@ -38,7 +42,7 @@
 - [x] Repeat for live page and any other consumers (backend: timerAction, deferredTournamentFlow)
 - [x] Update plan.md and log.md with all actions and findings
 - [x] Clean up any remaining legacy/compatibility code or types
-- [ ] Log actions in `log.md`
+- [x] Log actions in `log.md`
 
 ## Phase 4: Frontend Canonical Question Type Modernization (2025-07-07)
 
@@ -57,8 +61,22 @@
 - No references to legacy types (`FilteredQuestion`, `LiveQuestionPayload`, etc.) remain
 - All TypeScript errors related to question types are resolved
 - All changes and test/validation steps are documented in `plan.md` and `log.md`
-- [ ] Add/Update Zod validation if any data is passed to the modal
+- [x] Add/Update Zod validation if any data is passed to the modal
 - [ ] Add test/validation steps
+
+
+## 2025-07-08 - Modal Modernization (Teacher Delete Activity)
+
+- [x] Style all teacher/confirmation modals using dialogs.css
+
+## 2025-07-07 - Student Join Modal: Deferred Tournament Expiry Handling
+
+- [x] Investigated backend join logic: confirmed it returns `Tournament no longer available` if `differedAvailableTo` is in the past
+- [x] Audited `/frontend/src/app/student/join/page.tsx` and found it did not surface this error to the user
+- [x] Updated join logic to detect this backend error and show a clear modal: "Ce tournoi différé n'est plus disponible."
+- [x] Modal now distinguishes between: code not found, deferred available, and deferred expired
+- [x] Validated no TypeScript errors after patch
+- [x] Updated plan.md and log.md with all actions and findings
 ## Tournament Rejoin Stuck Bug
 
 ### Phase 1: Diagnose and Document
