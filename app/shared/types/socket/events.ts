@@ -90,22 +90,22 @@ export const TOURNAMENT_EVENTS = {
     COUNTDOWN_COMPLETE: 'countdown_complete'
 };
 
-// ===== Lobby Events =====
+// ===== Lobby Events (DEPRECATED - Use GAME_EVENTS.JOIN_GAME instead) =====
 export const LOBBY_EVENTS = {
-    // Player actions
-    JOIN_LOBBY: 'join_lobby',
-    LEAVE_LOBBY: 'leave_lobby',
-    GET_PARTICIPANTS: 'get_participants',
+    // Player actions - DEPRECATED
+    JOIN_LOBBY: 'join_lobby', // DEPRECATED: Use GAME_EVENTS.JOIN_GAME
+    LEAVE_LOBBY: 'leave_lobby', // DEPRECATED: Use GAME_EVENTS.LEAVE_GAME
+    GET_PARTICIPANTS: 'get_participants', // DEPRECATED: Use GAME_EVENTS.REQUEST_PARTICIPANTS
 
-    // Server responses
-    LOBBY_ERROR: 'lobby_error',
-    PARTICIPANT_JOINED: 'participant_joined',
-    PARTICIPANT_LEFT: 'participant_left',
-    PARTICIPANTS_LIST: 'participants_list',
-    ROOM_LEFT: 'room_left',
-    ROOM_JOINED: 'room_joined',
-    REDIRECT_TO_GAME: 'redirect_to_game', // Canonical redirect event
-    GAME_STARTED: 'game_started'
+    // Server responses - DEPRECATED
+    LOBBY_ERROR: 'lobby_error', // DEPRECATED: Use GAME_EVENTS.GAME_ERROR
+    PARTICIPANT_JOINED: 'participant_joined', // DEPRECATED: Use GAME_EVENTS.PLAYER_JOINED_GAME
+    PARTICIPANT_LEFT: 'participant_left', // DEPRECATED: Use GAME_EVENTS.PLAYER_LEFT_GAME
+    PARTICIPANTS_LIST: 'participants_list', // DEPRECATED: Use GAME_EVENTS.GAME_PARTICIPANTS
+    ROOM_LEFT: 'room_left', // DEPRECATED: Use GAME_EVENTS.PLAYER_LEFT_GAME
+    ROOM_JOINED: 'room_joined', // DEPRECATED: Use GAME_EVENTS.GAME_JOINED
+    REDIRECT_TO_GAME: 'redirect_to_game', // DEPRECATED: Use GAME_EVENTS.GAME_JOINED with status
+    GAME_STARTED: 'game_started' // DEPRECATED: Use GAME_EVENTS.GAME_STATE_UPDATE
 };
 
 // ===== Projector Events =====
@@ -140,8 +140,9 @@ export const PROJECTOR_EVENTS = {
 
 // ===== Student/Game Events =====
 export const GAME_EVENTS = {
-    // Player actions
-    JOIN_GAME: 'join_game',
+    // Player actions - UNIFIED JOIN FLOW
+    JOIN_GAME: 'join_game', // Unified event for both lobby and game joining
+    LEAVE_GAME: 'leave_game', // Unified event for leaving (replaces leave_lobby)
     GAME_ANSWER: 'game_answer',
     REQUEST_PARTICIPANTS: 'request_participants',
     REQUEST_NEXT_QUESTION: 'request_next_question',
@@ -150,6 +151,7 @@ export const GAME_EVENTS = {
     // Server responses
     GAME_JOINED: 'game_joined',
     PLAYER_JOINED_GAME: 'player_joined_game',
+    PLAYER_LEFT_GAME: 'player_left_game', // New event for when player leaves
     GAME_PARTICIPANTS: 'game_participants',
     GAME_QUESTION: 'game_question',
     ANSWER_RECEIVED: 'answer_received',

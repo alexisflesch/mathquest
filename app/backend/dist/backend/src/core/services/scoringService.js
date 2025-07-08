@@ -140,9 +140,8 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
         // --- PATCH: Use status for deferred mode detection ---
         const isDeferred = gameInstance?.playMode === 'tournament' && gameInstance?.status === 'completed';
         logger.info({ gameInstanceId, userId, playMode: gameInstance?.playMode, status: gameInstance?.status, isDeferred }, '[LOG] GameInstance fetch result (using status for deferred mode)');
-        // Remove duplicate declarations of isDeferred and attemptCount
-        // Only declare once, after fetching gameInstance and participant
-        const attemptCount = participant.attemptCount;
+        // Use canonical attemptCount for all modes (deferred bug workaround removed)
+        const attemptCount = participant.nbAttempts;
         // Use canonical attemptCount for all modes (deferred bug workaround removed)
         const attemptCountForTimer = attemptCount;
         // FIX: Always use attempt-namespaced key for DEFERRED participants
@@ -158,7 +157,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
                 answerKey,
                 playMode: gameInstance?.playMode,
                 status: gameInstance?.status,
-                participationType: participant.participationType,
+                participationType: isDeferred ? 'DEFERRED' : 'LIVE',
                 note: '[CLEANUP] Using canonical attemptCount for timer and answer key in DEFERRED mode.'
             }, '[MODERN] Using canonical attempt-based answer key for DEFERRED participant');
         }
@@ -173,7 +172,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
             attemptCount,
             playMode: gameInstance?.playMode,
             status: gameInstance?.status,
-            participationType: participant.participationType
+            participationType: isDeferred ? 'DEFERRED' : 'LIVE'
         }, '[DIAGNOSTIC] Using answer key for duplicate check and storage');
         logger.info({ gameInstanceId, userId, answerKey }, '[LOG] About to read previous answer from Redis');
         const prev = await redis_1.redisClient.hget(answerKey, userId);
@@ -241,7 +240,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
-                totalScore: participant.score || 0,
+                totalScore: isDeferred ? (participant.deferredScore || 0) : (participant.liveScore || 0),
                 answerChanged: false,
                 previousAnswer,
                 message: 'Same answer already submitted'
@@ -257,7 +256,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
-                totalScore: participant.score || 0,
+                totalScore: isDeferred ? (participant.deferredScore || 0) : (participant.liveScore || 0),
                 answerChanged: previousAnswerExists,
                 previousAnswer,
                 message: 'Question not found'
@@ -325,15 +324,19 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
         // Replace previous score for this question (not increment)
         let scoreDelta = newScore - previousScore;
         // For all modes, always increment the score by scoreDelta
-        let scoreUpdateData = { score: { increment: scoreDelta } };
+        let scoreUpdateData = {};
         // If in deferred mode, keep the max between previous attempt and new attempt
         if (isDeferred) {
             // Fetch the current DB score again to ensure up-to-date
             const currentDbParticipant = await prisma_1.prisma.gameParticipant.findUnique({ where: { id: participant.id } });
-            const currentDbScore = currentDbParticipant?.score || 0;
+            const currentDbScore = currentDbParticipant?.deferredScore || 0;
             const newTotal = currentDbScore + scoreDelta;
             // Set score to max of previous best and new total
-            scoreUpdateData = { score: Math.max(currentDbScore, newTotal) };
+            scoreUpdateData = { deferredScore: Math.max(currentDbScore, newTotal) };
+        }
+        else {
+            // For live mode, increment the live score
+            scoreUpdateData = { liveScore: { increment: scoreDelta } };
         }
         logger.info({ gameInstanceId, userId, scoreUpdateData }, '[LOG] About to update participant score in DB');
         // [LOG REMOVED] Noisy log for DB score update
@@ -342,7 +345,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
             where: { id: participant.id },
             data: scoreUpdateData
         });
-        logger.info({ gameInstanceId, userId, updatedScore: updatedParticipant.score }, '[LOG] Updated participant score in DB');
+        logger.info({ gameInstanceId, userId, updatedScore: isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore }, '[LOG] Updated participant score in DB');
         // [LOG REMOVED] Noisy log for DB score update
         // Update Redis with new answer (remove answerData.timeSpent, store serverTimeSpent only)
         if (gameInstance) {
@@ -361,23 +364,23 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
             const redisParticipantData = await redis_1.redisClient.hget(participantKey, userId);
             if (redisParticipantData) {
                 const participantData = JSON.parse(redisParticipantData);
-                participantData.score = updatedParticipant.score;
+                participantData.score = isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore;
                 await redis_1.redisClient.hset(participantKey, userId, JSON.stringify(participantData));
                 // [LOG REMOVED] Noisy log for Redis participant update
             }
             // Update Redis leaderboard ZSET
             const leaderboardKey = `mathquest:game:leaderboard:${gameInstance.accessCode}`;
             // [LOG REMOVED] Noisy log for leaderboard ZSET update
-            await redis_1.redisClient.zadd(leaderboardKey, updatedParticipant.score || 0, userId);
+            await redis_1.redisClient.zadd(leaderboardKey, (isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore) || 0, userId);
             // [LOG REMOVED] Noisy log for leaderboard ZSET update
         }
-        logger.info({ gameInstanceId, userId, scoreDelta, totalScore: updatedParticipant.score }, '[LOG] Final score result for answer submission');
+        logger.info({ gameInstanceId, userId, scoreDelta, totalScore: isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore }, '[LOG] Final score result for answer submission');
         logger.info({
             gameInstanceId,
             userId,
             questionUid: answerData.questionUid,
             scoreDelta,
-            totalScore: updatedParticipant.score,
+            totalScore: isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore,
             timePenalty,
             serverTimeSpent,
             isDeferred,
@@ -387,7 +390,7 @@ async function submitAnswerWithScoring(gameInstanceId, userId, answerData, isDef
         return {
             scoreUpdated: scoreDelta !== 0,
             scoreAdded: scoreDelta,
-            totalScore: updatedParticipant.score || 0,
+            totalScore: (isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore) || 0,
             answerChanged: previousAnswerExists,
             previousAnswer,
             message: scoreDelta !== 0 ? 'Score updated' : 'Answer recorded but no points awarded',

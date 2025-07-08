@@ -160,7 +160,7 @@ export default function TournamentLeaderboardPage() {
                             const currentUserId = getCurrentUserId();
                             const isCurrent = currentUserId && p.userId === currentUserId;
 
-                            // Determine if this is a deferred participation
+                            // Use participationType from API response
                             const isDeferred = p.participationType === 'DEFERRED';
 
                             // Use participationId as key if available, otherwise fallback to userId + index
@@ -183,7 +183,7 @@ export default function TournamentLeaderboardPage() {
                                     >
                                         {p.avatarEmoji}
                                     </div>
-                                    <span className="w-8 text-center">#{idx + 1}</span>
+                                    <span className="w-8 text-center">#{p.rank || idx + 1}</span>
                                     <span className="flex-1 flex items-baseline gap-2">
                                         {isDeferred ? (
                                             <span title="Différé" role="img" aria-label="deferred">🕒</span>
@@ -191,8 +191,8 @@ export default function TournamentLeaderboardPage() {
                                             <span title="Live" role="img" aria-label="live">⚡</span>
                                         )}
                                         {p.username || 'Joueur'}
-                                        {/* Show attempt count for multiple attempts */}
-                                        {p.attemptCount && p.attemptCount > 1 && (
+                                        {/* Show attempt count only for deferred entries with multiple attempts */}
+                                        {isDeferred && p.attemptCount && p.attemptCount > 1 && (
                                             <span className="text-xs opacity-75 ml-1">
                                                 ({p.attemptCount} tentative{p.attemptCount > 1 ? 's' : ''})
                                             </span>

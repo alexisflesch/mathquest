@@ -162,7 +162,9 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                                 userId: targetUserId
                             },
                             select: {
-                                score: true
+                                liveScore: true,
+                                deferredScore: true,
+                                status: true
                             }
                         });
                         return { gameId: game.id, participant };
@@ -171,6 +173,7 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                     participatedGames.forEach(game => {
                         const participantInfo = participantData.find(p => p.gameId === game.id);
                         const participation = participantInfo?.participant;
+                        const isDeferred = participation?.status === 'ACTIVE' && game.status === 'completed';
                         const tournament = {
                             id: game.id,
                             code: game.accessCode,
@@ -182,7 +185,7 @@ router.get('/', auth_1.optionalAuth, async (req, res) => {
                             date_fin: game.endedAt?.toISOString() || null,
                             creatorUsername: game.initiatorUser?.username || 'Inconnu',
                             position: 0, // Rank removed - would need to calculate from leaderboard if needed
-                            score: participation?.score || 0
+                            score: isDeferred ? (participation?.deferredScore || 0) : (participation?.liveScore || 0)
                         };
                         if (game.status === 'pending') {
                             pending.push(tournament);

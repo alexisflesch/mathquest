@@ -87,22 +87,13 @@ function registerGameHandlers(io, socket) {
             socket.emit(events_1.GAME_EVENTS.GAME_ERROR, { message: 'Game instance not found.' });
             return;
         }
-        // Fetch participant (by gameInstanceId, userId, and participationType)
+        // Fetch participant (by gameInstanceId, userId) - unified participant model
         let participant;
-        if (gameInstance.playMode === 'tournament') {
-            // Determine participationType from session intent
-            // If the user is in a deferred session, use 'DEFERRED', else 'LIVE'
-            const isDeferred = !!(gameInstance.differedAvailableFrom && gameInstance.differedAvailableTo && gameInstance.status === 'completed' && payload && payload.deferred === true);
-            if (isDeferred || (typeof payload === 'object' && payload.deferred === true)) {
-                participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' } });
-            }
-            else {
-                participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'LIVE' } });
-            }
-        }
-        else {
-            participant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId } });
-        }
+        // With the new schema, there's only one participant per user/game
+        participant = await prisma.gameParticipant.findFirst({
+            where: { gameInstanceId: gameInstance.id, userId },
+            include: { user: true }
+        });
         if (!participant) {
             // Defensive: Try to create participant row if missing
             console.log('[DEBUG] Participant not found, attempting to create', { accessCode, userId });
@@ -132,14 +123,13 @@ function registerGameHandlers(io, socket) {
         // Always use per-user session key and timer for deferred
         let sessionKey;
         let attemptCount = 1;
-        if (isDeferred || (gameInstance.playMode === 'tournament' && participant.participationType === 'DEFERRED')) {
+        if (isDeferred || (gameInstance.playMode === 'tournament' && gameInstance.status === 'completed')) {
             // Use socket-stored attemptCount if present (set at session start), else fetch from DB
             if (socket.data.deferredAttemptCount) {
                 attemptCount = socket.data.deferredAttemptCount;
             }
             else {
-                const deferredParticipant = await prisma.gameParticipant.findFirst({ where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' }, select: { attemptCount: true } });
-                attemptCount = deferredParticipant?.attemptCount || 1;
+                attemptCount = participant?.nbAttempts || 1;
                 // Store for this socket/session
                 socket.data.deferredAttemptCount = attemptCount;
             }
@@ -199,7 +189,7 @@ function registerGameHandlers(io, socket) {
             timer = null;
             canonicalTimer = null;
         }
-        else if (isDeferred || (gameInstance.playMode === 'tournament' && participant.participationType === 'DEFERRED')) {
+        else if (isDeferred || (gameInstance.playMode === 'tournament' && gameInstance.status === 'completed')) {
             timer = await timerService.getTimer(accessCode, questionUid, gameInstance.playMode, true, userId, attemptCount, durationMs);
         }
         else {

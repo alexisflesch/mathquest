@@ -48,6 +48,7 @@ const joinOrderBonus_1 = require("@/utils/joinOrderBonus");
 const projectionLeaderboardBroadcast_1 = require("@/utils/projectionLeaderboardBroadcast");
 const joinService_1 = require("@/core/services/gameParticipant/joinService");
 const scoreService_1 = require("@/core/services/gameParticipant/scoreService");
+const lobbyHandler_1 = require("../lobbyHandler");
 const logger = (0, logger_1.default)('JoinGameHandler');
 // Update handler signature with shared types
 function joinGameHandler(io, socket) {
@@ -138,6 +139,8 @@ function joinGameHandler(io, socket) {
                 }
                 logger.debug({ roomName, socketId: socket.id }, '[DEBUG] Player joining room');
                 await socket.join(roomName);
+                // Also join lobby room for participant list updates
+                await socket.join(`lobby_${accessCode}`);
                 // --- DEBUG: Print room membership after join ---
                 const joinedRoomSockets = io.sockets.adapter.rooms.get(roomName);
                 const joinedRoomSocketIds = joinedRoomSockets ? Array.from(joinedRoomSockets) : [];
@@ -170,7 +173,10 @@ function joinGameHandler(io, socket) {
             // UX ENHANCEMENT: Assign join-order bonus for early joiners (only if not already assigned in lobby)
             const joinOrderBonus = await (0, joinOrderBonus_1.assignJoinOrderBonus)(accessCode, userId);
             // Apply join-order bonus to participant score
-            const finalScore = (joinResult.participant.score ?? 0) + joinOrderBonus;
+            const currentScore = gameInstance.isDiffered ?
+                (joinResult.participant.deferredScore ?? 0) :
+                (joinResult.participant.liveScore ?? 0);
+            const finalScore = currentScore + joinOrderBonus;
             // Create participant data using core types (map from Prisma structure)
             const participantDataForRedis = {
                 id: joinResult.participant.id,
@@ -245,7 +251,7 @@ function joinGameHandler(io, socket) {
                 await scoreService_1.DifferedScoreService.updateBestScoreInRedis({
                     gameInstanceId: gameInstance.id,
                     userId,
-                    score: joinResult.participant.score || 0
+                    score: joinResult.participant.deferredScore || 0
                 });
             }
             // Canonical: On join, emit either current question (if active) or participants_list (if pending)
@@ -325,7 +331,7 @@ function joinGameHandler(io, socket) {
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
                         username: username || 'Unknown',
-                        score: participantDataForRedis.score, // Use the score with join-order bonus
+                        score: participantDataForRedis.score,
                         avatarEmoji: avatarEmoji || joinResult.participant.user?.avatarEmoji || '🐼',
                         online: true
                     }
@@ -398,6 +404,8 @@ function joinGameHandler(io, socket) {
             }
             // Emit updated participant count to teacher dashboard
             await (0, participantCountUtils_1.emitParticipantCount)(io, accessCode);
+            // MODERNIZATION: Emit unified participant list for lobby display
+            await (0, lobbyHandler_1.emitParticipantList)(io, accessCode);
             // Emit updated participant count
             const participantCount = await prisma_1.prisma.gameParticipant.count({
                 where: { gameInstanceId: gameInstance.id }
@@ -414,7 +422,7 @@ function joinGameHandler(io, socket) {
                     userId: p.userId,
                     username: p.user?.username || 'Unknown',
                     avatar: p.user?.avatarEmoji || '�',
-                    score: p.score ?? 0,
+                    score: gameInstance.isDiffered ? (p.deferredScore ?? 0) : (p.liveScore ?? 0),
                     avatarEmoji: p.user?.avatarEmoji || '🐼',
                     joinedAt: p.joinedAt ? (typeof p.joinedAt === 'string' ? p.joinedAt : p.joinedAt.toISOString()) : new Date().toISOString(),
                     online: true,

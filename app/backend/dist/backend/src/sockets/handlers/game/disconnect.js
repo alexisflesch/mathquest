@@ -32,65 +32,98 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.disconnectHandler = disconnectHandler;
 const redis_1 = require("@/config/redis");
+const lobbyHandler_1 = require("../lobbyHandler");
+const logger_1 = __importDefault(require("@/utils/logger"));
 const PARTICIPANTS_KEY_PREFIX = 'mathquest:game:participants:';
 const SOCKETID_TO_USERID_KEY_PREFIX = 'mathquest:socketIdToUserId:';
 const USERID_TO_SOCKETID_KEY_PREFIX = 'mathquest:userIdToSocketId:';
 function disconnectHandler(io, socket) {
     return async () => {
-        // Look up userId for this socket
-        const socketIdToUserIdKey = `${SOCKETID_TO_USERID_KEY_PREFIX}`;
-        const userId = await redis_1.redisClient.hget(socketIdToUserIdKey, socket.id);
-        if (!userId)
+        const logger = (0, logger_1.default)('DisconnectHandler');
+        logger.info({ socketId: socket.id }, '[DISCONNECT] User disconnected');
+        // Get access code from socket data
+        const accessCode = socket.data?.accessCode;
+        if (!accessCode) {
+            logger.info({ socketId: socket.id }, '[DISCONNECT] No access code found in socket data, skipping cleanup');
             return;
-        // Remove this socket from userIdToSocketId mapping
-        const userIdToSocketIdKey = `${USERID_TO_SOCKETID_KEY_PREFIX}`;
+        }
+        // Use game-specific Redis keys (consistent with joinGame.ts)
+        const socketIdToUserIdKey = `mathquest:game:socketIdToUserId:${accessCode}`;
+        const userIdToSocketIdKey = `mathquest:game:userIdToSocketId:${accessCode}`;
+        const participantsKey = `mathquest:game:participants:${accessCode}`;
+        // Look up userId for this socket
+        const userId = await redis_1.redisClient.hget(socketIdToUserIdKey, socket.id);
+        logger.debug({
+            socketIdToUserIdKey,
+            socketId: socket.id,
+            userId,
+            accessCode
+        }, '[DISCONNECT] Redis lookup result');
+        if (!userId) {
+            logger.info({ socketId: socket.id, accessCode }, '[DISCONNECT] No userId found for socket, skipping cleanup');
+            return;
+        }
+        logger.info({ socketId: socket.id, userId, accessCode }, '[DISCONNECT] Found userId for disconnected socket');
+        // Remove this socket from Redis mappings
         await redis_1.redisClient.hdel(userIdToSocketIdKey, userId);
         await redis_1.redisClient.hdel(socketIdToUserIdKey, socket.id);
-        // Check if any other sockets for this userId remain
+        // Check if any other sockets for this userId remain in this game
         const remainingSockets = await redis_1.redisClient.hvals(userIdToSocketIdKey);
         const stillConnected = remainingSockets.includes(socket.id);
+        logger.info({
+            userId,
+            accessCode,
+            stillConnected,
+            remainingSockets
+        }, '[DISCONNECT] Checked for remaining sockets in this game');
         if (!stillConnected) {
-            // Remove participant from all games if no sockets remain for this user
-            const keys = await redis_1.redisClient.keys(`${PARTICIPANTS_KEY_PREFIX}*`);
-            for (const key of keys) {
-                await redis_1.redisClient.hdel(key, userId);
-                // Extract accessCode from key
-                const match = key.match(/mathquest:game:participants:(.+)$/);
-                if (match) {
-                    const accessCode = match[1];
-                    // Fetch all participants for this game
-                    const dbParticipants = await Promise.resolve().then(() => __importStar(require('@/db/prisma'))).then(m => m.prisma.gameParticipant.findMany({
-                        where: { gameInstance: { accessCode } },
-                        include: { user: true }
-                    }));
-                    // Deduplicate by userId (canonical)
-                    const uniqueMap = new Map();
-                    for (const p of await dbParticipants) {
-                        if (!uniqueMap.has(p.userId)) {
-                            uniqueMap.set(p.userId, {
-                                avatarEmoji: p.user?.avatarEmoji || '🐼',
-                                username: p.user?.username || 'Unknown',
-                                userId: p.userId
-                            });
-                        }
+            logger.info({ userId, accessCode }, '[DISCONNECT] No remaining sockets for this user in this game, removing participant');
+            // Remove participant from Redis
+            await redis_1.redisClient.hdel(participantsKey, userId);
+            // Remove from database if they're still in PENDING status
+            // Don't remove ACTIVE participants as they might have started playing
+            try {
+                const { prisma } = await Promise.resolve().then(() => __importStar(require('@/db/prisma')));
+                const participant = await prisma.gameParticipant.findFirst({
+                    where: {
+                        userId,
+                        gameInstance: { accessCode },
+                        status: 'PENDING'
                     }
-                    const participants = Array.from(uniqueMap.values());
-                    // Find creator (initiatorUserId)
-                    const gameInstance = await Promise.resolve().then(() => __importStar(require('@/db/prisma'))).then(m => m.prisma.gameInstance.findUnique({ where: { accessCode }, select: { initiatorUserId: true } }));
-                    const creator = participants.find(p => p.userId === gameInstance?.initiatorUserId) || participants[0];
-                    const payload = { participants, creator };
-                    // Validate with Zod
-                    const { lobbyParticipantListPayloadSchema } = await Promise.resolve().then(() => __importStar(require('@shared/types/lobbyParticipantListPayload')));
-                    const parseResult = lobbyParticipantListPayloadSchema.safeParse(payload);
-                    if (parseResult.success) {
-                        const roomName = `game_${accessCode}`;
-                        io.to(roomName).emit('participants_list', parseResult.data);
-                    }
+                });
+                if (participant) {
+                    await prisma.gameParticipant.delete({
+                        where: { id: participant.id }
+                    });
+                    logger.info({
+                        userId,
+                        accessCode,
+                        participantId: participant.id
+                    }, '[DISCONNECT] Removed PENDING participant from database');
+                }
+                else {
+                    logger.info({
+                        userId,
+                        accessCode
+                    }, '[DISCONNECT] No PENDING participant found in database to remove');
                 }
             }
+            catch (dbError) {
+                logger.error({
+                    userId,
+                    accessCode,
+                    error: dbError
+                }, '[DISCONNECT] Error removing participant from database');
+            }
+            // Emit updated participant list
+            logger.info({ userId, accessCode }, '[DISCONNECT] Emitting updated participant list');
+            await (0, lobbyHandler_1.emitParticipantList)(io, accessCode);
         }
     };
 }

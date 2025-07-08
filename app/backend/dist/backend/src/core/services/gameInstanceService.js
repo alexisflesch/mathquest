@@ -141,7 +141,7 @@ class GameInstanceService {
                             }
                         },
                         orderBy: {
-                            score: 'desc'
+                            liveScore: 'desc'
                         }
                     } : false
                 }
@@ -185,7 +185,7 @@ class GameInstanceService {
                             }
                         },
                         orderBy: {
-                            score: 'desc'
+                            liveScore: 'desc'
                         }
                     } : false
                 }

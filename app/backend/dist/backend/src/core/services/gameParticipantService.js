@@ -17,10 +17,9 @@ function mapPrismaToGameParticipant(prismaParticipant) {
         userId: prismaParticipant.userId,
         username: prismaParticipant.user?.username || 'Unknown',
         avatarEmoji: prismaParticipant.user?.avatarEmoji || '😀',
-        score: prismaParticipant.score || 0,
+        score: prismaParticipant.liveScore || prismaParticipant.deferredScore || 0,
         joinedAt: prismaParticipant.joinedAt?.toISOString() || new Date().toISOString(),
-        participationType: prismaParticipant.participationType,
-        attemptCount: prismaParticipant.attemptCount || 1,
+        attemptCount: prismaParticipant.nbAttempts || 1,
         online: true // Default to online when mapping
     };
 }
@@ -69,242 +68,6 @@ async function clearAllDeferredAnswers(gameInstanceId, userId) {
  */
 class GameParticipantService {
     /**
-     * Join a game using access code
-     * @param userId The ID of the user joining the game
-     * @param accessCode The access code of the game to join
-     * @param username Optional username to use for the user
-     * @param avatarEmoji Optional avatar emoji to use for the user
-     * @returns Result of the join attempt
-     */
-    async joinGame(userId, accessCode, username, avatarEmoji) {
-        try {
-            // Find the game instance
-            const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
-                where: { accessCode },
-                select: {
-                    id: true,
-                    name: true,
-                    status: true,
-                    playMode: true,
-                    isDiffered: true,
-                    differedAvailableFrom: true,
-                    differedAvailableTo: true,
-                    gameTemplate: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            });
-            if (!gameInstance) {
-                return {
-                    success: false,
-                    error: 'Game not found'
-                };
-            }
-            // If completed, check deferred access rules based on playMode
-            if (gameInstance.status === 'completed') {
-                // Tournaments are always available for deferred play (within time window)
-                // Quiz mode should not allow deferred access
-                const allowDeferred = gameInstance.playMode === 'tournament';
-                if (!allowDeferred) {
-                    logger.info({ userId, accessCode, playMode: gameInstance.playMode }, 'Attempt to join completed game - deferred mode not allowed for this playMode');
-                    return {
-                        success: false,
-                        error: 'Game is already completed'
-                    };
-                }
-                // For tournaments, check time window if set
-                const now = new Date();
-                const from = gameInstance.differedAvailableFrom ? new Date(gameInstance.differedAvailableFrom) : null;
-                const to = gameInstance.differedAvailableTo ? new Date(gameInstance.differedAvailableTo) : null;
-                if (from && now < from) {
-                    return {
-                        success: false,
-                        error: 'Tournament not available yet'
-                    };
-                }
-                if (to && now > to) {
-                    return {
-                        success: false,
-                        error: 'Tournament no longer available'
-                    };
-                }
-            }
-            // Determine participation type based on game status
-            const participationType = gameInstance.status === 'completed' ? 'DEFERRED' : 'LIVE';
-            let participant;
-            if (participationType === 'LIVE') {
-                // Check for existing participant for this user/game
-                const existingLiveParticipant = await prisma_1.prisma.gameParticipant.findFirst({
-                    where: {
-                        gameInstanceId: gameInstance.id,
-                        userId: userId,
-                        participationType: 'LIVE'
-                    },
-                    include: { user: true }
-                });
-                if (existingLiveParticipant) {
-                    logger.info({
-                        userId,
-                        accessCode,
-                        participantId: existingLiveParticipant.id,
-                        participationType: 'LIVE',
-                        reused: true
-                    }, 'Reusing existing LIVE participant, preventing duplicate');
-                    participant = existingLiveParticipant;
-                }
-                else {
-                    // Create new user if they don't exist, or connect if they do.
-                    await prisma_1.prisma.user.upsert({
-                        where: { id: userId },
-                        update: {},
-                        create: {
-                            id: userId,
-                            username: username || `guest-${userId.substring(0, 8)}`,
-                            role: 'STUDENT',
-                            avatarEmoji: avatarEmoji || null,
-                            studentProfile: { create: { cookieId: `cookie-${userId}` } }
-                        }
-                    });
-                    // Create new participant for live play
-                    const newParticipant = await prisma_1.prisma.gameParticipant.create({
-                        data: {
-                            gameInstanceId: gameInstance.id,
-                            userId: userId,
-                            joinedAt: new Date(),
-                            score: 0,
-                            participationType: 'LIVE',
-                            attemptCount: 1
-                        }
-                    });
-                    participant = await prisma_1.prisma.gameParticipant.findUnique({
-                        where: { id: newParticipant.id },
-                        include: { user: true }
-                    });
-                    logger.info({
-                        userId,
-                        accessCode,
-                        participantId: participant?.id,
-                        participationType: 'LIVE',
-                        reused: false
-                    }, 'Created new LIVE participant');
-                }
-            }
-            else {
-                // For DEFERRED tournaments, handle existing records differently
-                logger.info({
-                    userId,
-                    accessCode,
-                    gameInstanceId: gameInstance.id
-                }, 'BUG INVESTIGATION: Looking for existing DEFERRED participant');
-                let existingDeferredParticipant = await prisma_1.prisma.gameParticipant.findFirst({
-                    where: {
-                        gameInstanceId: gameInstance.id,
-                        userId: userId,
-                        participationType: 'DEFERRED'
-                    },
-                    include: { user: true }
-                });
-                // Create new user if they don't exist, or connect if they do.
-                await prisma_1.prisma.user.upsert({
-                    where: { id: userId },
-                    update: {},
-                    create: {
-                        id: userId,
-                        username: username || `guest-${userId.substring(0, 8)}`,
-                        role: 'STUDENT',
-                        avatarEmoji: avatarEmoji || null,
-                        studentProfile: { create: { cookieId: `cookie-${userId}` } }
-                    }
-                });
-                if (existingDeferredParticipant) {
-                    // Always update the existing DEFERRED row: increment attemptCount, reset answers
-                    const prevAttemptCount = existingDeferredParticipant.attemptCount;
-                    participant = await prisma_1.prisma.gameParticipant.update({
-                        where: { id: existingDeferredParticipant.id },
-                        data: {
-                            joinedAt: new Date(),
-                            attemptCount: { increment: 1 }
-                        },
-                        include: { user: true }
-                    });
-                    logger.info({
-                        userId,
-                        accessCode,
-                        participantId: participant?.id,
-                        prevAttemptCount,
-                        newAttemptCount: participant?.attemptCount,
-                        participant,
-                        participantKeys: participant ? Object.keys(participant) : null,
-                        participantUser: participant?.user,
-                        participantUserKeys: participant?.user ? Object.keys(participant.user) : null
-                    }, '[DEFERRED] Updated existing DEFERRED participant for new attempt (with extra debug)');
-                    await clearDeferredAnswers(gameInstance.id, userId, participant?.attemptCount);
-                    // Optionally clear ALL answers for previous attempts (if required by business logic)
-                    // await clearAllDeferredAnswers(gameInstance.id, userId);
-                }
-                else {
-                    // Create new deferred participant ONLY if none exists
-                    participant = await prisma_1.prisma.gameParticipant.create({
-                        data: {
-                            gameInstanceId: gameInstance.id,
-                            userId: userId,
-                            joinedAt: new Date(),
-                            score: 0,
-                            participationType: 'DEFERRED',
-                            attemptCount: 1
-                        },
-                        include: { user: true }
-                    });
-                    logger.info({
-                        userId,
-                        accessCode,
-                        participantId: participant?.id,
-                        participationType: 'DEFERRED',
-                        participant,
-                        participantKeys: participant ? Object.keys(participant) : null,
-                        participantUser: participant?.user,
-                        participantUserKeys: participant?.user ? Object.keys(participant.user) : null
-                    }, 'Created new DEFERRED participant (with extra debug)');
-                }
-            }
-            logger.info({
-                userId,
-                accessCode,
-                participantBeforeMapping: participant,
-                participantKeys: participant ? Object.keys(participant) : null,
-                participantUser: participant?.user,
-                participantUserKeys: participant?.user ? Object.keys(participant.user) : null
-            }, '[DEFERRED] Participant object immediately before mapping');
-            return {
-                success: true,
-                gameInstance,
-                participant: mapPrismaToGameParticipant(participant)
-            };
-        }
-        catch (error) {
-            logger.error({
-                error: error instanceof Error ? error.stack || error.message : error,
-                userId,
-                accessCode,
-                errorType: typeof error,
-                errorString: String(error),
-                errorJson: (() => { try {
-                    return JSON.stringify(error);
-                }
-                catch {
-                    return undefined;
-                } })()
-            }, 'Error joining game - detailed');
-            throw error; // Rethrow to surface error in stack traces and higher-level logs
-            // return {
-            //     success: false,
-            //     error: 'An error occurred while joining the game'
-            // };
-        }
-    }
-    /**
      * Create a new game participant
      * @param gameInstanceId The ID of the game instance
      * @param userId The ID of the user
@@ -316,7 +79,10 @@ class GameParticipantService {
         try {
             const participant = await prisma_1.prisma.gameParticipant.create({
                 data: {
-                    score: 0,
+                    liveScore: 0,
+                    deferredScore: 0,
+                    nbAttempts: 1,
+                    status: 'ACTIVE',
                     gameInstance: { connect: { id: gameInstanceId } },
                     user: {
                         connectOrCreate: {
@@ -423,7 +189,7 @@ class GameParticipantService {
                 where: {
                     gameInstanceId: gameInstanceId,
                     userId: userId,
-                    participationType: 'DEFERRED'
+                    status: 'ACTIVE' // In the new schema, deferred participants are ACTIVE
                 },
                 include: { user: true }
             });
@@ -435,34 +201,34 @@ class GameParticipantService {
                 };
             }
             // Keep the best score between existing and new
-            const bestScore = Math.max(existingParticipant.score, newScore);
+            const bestScore = Math.max(existingParticipant.deferredScore, newScore);
             logger.info({
                 gameInstanceId,
                 userId,
-                previousScore: existingParticipant.score,
+                previousScore: existingParticipant.deferredScore,
                 newScore,
                 bestScore,
-                attemptCount: existingParticipant.attemptCount,
-                action: bestScore > existingParticipant.score ? 'updated' : 'preserved'
+                attemptCount: existingParticipant.nbAttempts,
+                action: bestScore > existingParticipant.deferredScore ? 'updated' : 'preserved'
             }, '[DIAGNOSTIC] updateDeferredScore: Best score logic for DEFERRED');
             const updatedParticipant = await prisma_1.prisma.gameParticipant.update({
                 where: { id: existingParticipant.id },
-                data: { score: bestScore },
+                data: { deferredScore: bestScore },
                 include: { user: true }
             });
             logger.info({
                 gameInstanceId,
                 userId,
                 participantId: updatedParticipant.id,
-                previousScore: existingParticipant.score,
+                previousScore: existingParticipant.deferredScore,
                 newScore,
                 bestScore,
-                attemptCount: updatedParticipant.attemptCount
+                attemptCount: updatedParticipant.nbAttempts
             }, 'Updated deferred participant with best score');
             return {
                 success: true,
                 participant: mapPrismaToGameParticipant(updatedParticipant),
-                isNewBest: bestScore > existingParticipant.score
+                isNewBest: bestScore > existingParticipant.deferredScore
             };
         }
         catch (error) {
@@ -487,7 +253,7 @@ class GameParticipantService {
                 where: {
                     gameInstanceId: gameInstanceId,
                     userId: userId,
-                    participationType: 'DEFERRED'
+                    status: 'ACTIVE' // In the new schema, deferred participants are ACTIVE
                 },
                 include: { user: true }
             });
@@ -502,15 +268,15 @@ class GameParticipantService {
             // We'll store the best score ever achieved in a separate field or use Redis
             const redisKey = `mathquest:deferred:best_score:${gameInstanceId}:${userId}`;
             const previousBestScore = await redis_1.redisClient.get(redisKey);
-            const bestScore = Math.max(currentAttemptScore, previousBestScore ? parseInt(previousBestScore) : 0, participant.score || 0);
+            const bestScore = Math.max(currentAttemptScore, previousBestScore ? parseInt(previousBestScore) : 0, participant.deferredScore || 0);
             logger.info({
                 gameInstanceId,
                 userId,
                 currentAttemptScore,
                 previousBestScore: previousBestScore ? parseInt(previousBestScore) : 0,
-                participantScore: participant.score,
+                participantScore: participant.deferredScore,
                 bestScore,
-                attemptCount: participant.attemptCount,
+                attemptCount: participant.nbAttempts,
                 action: bestScore > (previousBestScore ? parseInt(previousBestScore) : 0) ? 'updated' : 'preserved'
             }, '[DIAGNOSTIC] finalizeDeferredAttempt: Best score logic for DEFERRED');
             // Update Redis with the best score
@@ -518,7 +284,7 @@ class GameParticipantService {
             // Update the participant with the best score
             const updatedParticipant = await prisma_1.prisma.gameParticipant.update({
                 where: { id: participant.id },
-                data: { score: bestScore },
+                data: { deferredScore: bestScore },
                 include: { user: true }
             });
             logger.info({
@@ -528,7 +294,7 @@ class GameParticipantService {
                 currentAttemptScore,
                 previousBestScore: previousBestScore ? parseInt(previousBestScore) : 0,
                 finalBestScore: bestScore,
-                attemptCount: participant.attemptCount
+                attemptCount: participant.nbAttempts
             }, 'Finalized deferred tournament attempt with best score');
             return {
                 success: true,

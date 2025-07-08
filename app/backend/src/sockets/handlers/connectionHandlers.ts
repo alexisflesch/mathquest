@@ -4,7 +4,6 @@ import { registerLobbyHandlers } from './lobbyHandler';
 import gameHandler from './gameHandler';
 import teacherControlHandler from './teacherControlHandler';
 import { registerTournamentHandlers } from './tournament';
-import { disconnectHandler } from './disconnectHandler';
 import { registerPracticeSessionHandlers, handlePracticeSessionDisconnect } from './practiceSessionHandler';
 import { projectionHandler } from './projectionHandler';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '@shared/types/socketEvents';
@@ -43,8 +42,7 @@ export function registerConnectionHandlers(io: SocketIOServer<ClientToServerEven
         socket.on('disconnect', (reason) => {
             // Handle practice session cleanup first
             handlePracticeSessionDisconnect(io, socket);
-            // Then handle normal disconnect
-            disconnectHandler(io, socket)(reason);
+            // Note: Game-specific disconnect handler is registered in game/index.ts
         });
 
         // Register feature-specific handlers

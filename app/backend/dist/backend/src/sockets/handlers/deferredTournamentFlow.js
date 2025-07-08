@@ -379,8 +379,8 @@ async function getDeferredAttemptCount(accessCode, userId) {
     if (!gameInstance)
         return 1;
     const participant = await prisma_1.prisma.gameParticipant.findFirst({
-        where: { gameInstanceId: gameInstance.id, userId, participationType: 'DEFERRED' },
-        select: { attemptCount: true }
+        where: { gameInstanceId: gameInstance.id, userId },
+        select: { nbAttempts: true }
     });
-    return participant?.attemptCount || 1;
+    return participant?.nbAttempts || 1;
 }

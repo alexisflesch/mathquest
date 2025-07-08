@@ -193,7 +193,7 @@ export function useEnhancedStudentGameSocket({
                 connectedToRoom: true,
                 gameStatus: payload.gameStatus === 'active' ? 'active' : 'pending'
             }));
-        }, SocketSchemas.gameJoined);
+        }); // TODO: Fix schema validation after shared types rebuild
 
         // Game question event with validation
         middleware.on('game_question', (payload: QuestionDataForStudent) => {

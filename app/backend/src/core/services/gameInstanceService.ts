@@ -155,7 +155,7 @@ export class GameInstanceService {
                             }
                         },
                         orderBy: {
-                            score: 'desc'
+                            liveScore: 'desc'
                         }
                     } : false
                 }
@@ -200,7 +200,7 @@ export class GameInstanceService {
                             }
                         },
                         orderBy: {
-                            score: 'desc'
+                            liveScore: 'desc'
                         }
                     } : false
                 }

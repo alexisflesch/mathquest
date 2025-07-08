@@ -34,12 +34,32 @@ import type {
 // Define LeaderboardEntryData for this file's usage
 type LeaderboardEntryData = LeaderboardEntry;
 
+// ===== UNIFIED JOIN EVENT PAYLOAD =====
+
+/**
+ * Unified payload for joining a game (replaces separate lobby and game join events)
+ * Used for both lobby and live game joining in the new unified flow
+ */
 export interface JoinGamePayload {
     accessCode: string;
     userId: string;
     username: string;
     avatarEmoji?: string;
     isDiffered?: boolean; // For joining a differed mode game
+}
+
+// ===== LEGACY EVENT PAYLOADS (DEPRECATED) =====
+// These will be removed after the unified join flow is implemented
+
+/**
+ * @deprecated Use JoinGamePayload instead
+ * Payload for joining a game lobby
+ */
+export interface JoinLobbyPayload {
+    accessCode: string;
+    userId: string;
+    username: string;
+    avatarEmoji?: string;
 }
 
 // Re-export core types for backward compatibility
@@ -135,19 +155,8 @@ export interface QuestionData {
     explanation?: string; // Question explanation
 }
 
-// ===== Lobby Event Payloads =====
-
 /**
- * Payload for joining a game lobby
- */
-export interface JoinLobbyPayload {
-    accessCode: string;
-    userId: string;
-    username: string;
-    avatarEmoji?: string;
-}
-
-/**
+ * @deprecated Use JoinGamePayload instead
  * Payload for leaving a game lobby
  */
 export interface LeaveLobbyPayload {
@@ -156,6 +165,7 @@ export interface LeaveLobbyPayload {
 }
 
 /**
+ * @deprecated Use JoinGamePayload instead
  * Payload for requesting participants list
  */
 export interface GetParticipantsPayload {

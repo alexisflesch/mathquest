@@ -35,20 +35,26 @@ import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
 type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
-import { SOCKET_EVENTS, LOBBY_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
-import LobbyLayout from '@/components/LobbyLayout';
+import { SOCKET_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
+import type { GameParticipant } from '@shared/types/core/participant';
 import type { LobbyParticipantListPayload, LobbyParticipant } from '@shared/types/lobbyParticipantListPayload';
-
-// --- Lobby State for Live Page ---
-const initialLobbyState = {
-    participants: [] as LobbyParticipant[],
-    creator: null as LobbyParticipant | null,
-    countdown: null as number | null,
-    isLobby: false,
-};
+import LobbyLayout from '@/components/LobbyLayout';
 
 // Create a logger for this component
 const logger = createLogger('LiveGamePage');
+
+// Modern unified participant payload
+interface UnifiedParticipantListPayload {
+    participants: GameParticipant[];
+    creator: GameParticipant;
+}
+
+// Unified participant state for lobby display
+interface LobbyUIState {
+    participants: GameParticipant[];
+    creator: GameParticipant | null;
+    countdown: number | null;
+}
 
 
 export default function LiveGamePage() {
@@ -65,10 +71,6 @@ export default function LiveGamePage() {
             setIsDiffered(params.get('differed') === '1');
         }
     }, []);
-
-    // Lobby state for pre-game
-    const [lobbyState, setLobbyState] = useState(initialLobbyState);
-    const lobbySocketRef = useRef<any>(null);
 
     // Get user data from AuthProvider
     const userId = userProfile.userId || userProfile.cookieId || `temp_${Date.now()}`;
@@ -98,64 +100,51 @@ export default function LiveGamePage() {
         }
     });
 
-    // Canonical: Listen for lobby and game events, no join_lobby/get_participants emission
+    // Unified participant state for lobby display
+    const [lobbyState, setLobbyState] = useState<LobbyUIState>({
+        participants: [],
+        creator: null,
+        countdown: null
+    });
+
+    // Listen for unified participant events
     useEffect(() => {
-        logger.info('[LOBBY] useEffect triggered (canonical)', {
-            socketExists: !!socket,
-            code,
-            userId,
-            username,
-            avatarEmoji,
-            gameStatus: gameState.gameStatus,
-            lobbySocketRefCurrent: !!lobbySocketRef.current
-        });
         if (!socket) return;
-        const s = socket as any;
-        lobbySocketRef.current = s;
 
-        // Remove any previous listeners before adding new ones (prevents duplicate handlers)
-        s.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST);
-        s.off('countdown_tick');
-        s.off('countdown_complete');
-        s.off('game_started');
-
-        // Listen for canonical participants_list event (shared constant)
-        s.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST, (payload: LobbyParticipantListPayload) => {
-            logger.info('[LOBBY] Received participants_list', payload);
-            setLobbyState((prev: typeof initialLobbyState) => ({
+        const handleParticipantsList = (payload: UnifiedParticipantListPayload) => {
+            logger.info('[LOBBY] Received unified participants_list', payload);
+            setLobbyState(prev => ({
                 ...prev,
                 participants: payload.participants,
-                creator: payload.creator,
-                isLobby: true,
+                creator: payload.creator
             }));
-        });
-
-        // Listen for countdown events (optional, if backend emits)
-        s.on('countdown_tick', (payload: { countdown: number }) => {
-            logger.info('[LOBBY] Received countdown_tick', payload);
-            setLobbyState((prev: typeof initialLobbyState) => ({ ...prev, countdown: payload.countdown }));
-        });
-        s.on('countdown_complete', () => {
-            logger.info('[LOBBY] Received countdown_complete');
-            setLobbyState((prev: typeof initialLobbyState) => ({ ...prev, countdown: 0 }));
-        });
-
-        // Listen for game started event
-        s.on('game_started', () => {
-            logger.info('[LOBBY] Received game_started');
-            setLobbyState((prev: typeof initialLobbyState) => ({ ...prev, isLobby: false }));
-        });
-
-        // Clean up listeners on unmount or when game starts
-        return () => {
-            logger.info('[LOBBY] Cleaning up lobby listeners');
-            s.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST);
-            s.off('countdown_tick');
-            s.off('countdown_complete');
-            s.off('game_started');
-            lobbySocketRef.current = null;
         };
-    }, [socket, code, userId, username, avatarEmoji, gameState.gameStatus]);
+
+        const handleCountdownTick = (payload: { countdown: number }) => {
+            logger.info('[LOBBY] Received countdown_tick', payload);
+            setLobbyState(prev => ({ ...prev, countdown: payload.countdown }));
+        };
+
+        const handleCountdownComplete = () => {
+            logger.info('[LOBBY] Received countdown_complete');
+            setLobbyState(prev => ({ ...prev, countdown: 0 }));
+        };
+
+        // Use the existing socket event constant
+        socket.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
+        // These events are not in the typed interface yet, so use any
+        (socket as any).on('countdown_tick', handleCountdownTick);
+        (socket as any).on('countdown_complete', handleCountdownComplete);
+
+        return () => {
+            socket.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST as any, handleParticipantsList);
+            (socket as any).off('countdown_tick', handleCountdownTick);
+            (socket as any).off('countdown_complete', handleCountdownComplete);
+        };
+    }, [socket]);
+
+    // Show lobby UI when game status is pending (unified participant model)
+    const showLobby = gameState.gameStatus === 'pending' && gameState.connectedToRoom;
 
     // Show loading while authentication is being checked
     if (isLoading) {
@@ -452,11 +441,12 @@ export default function LiveGamePage() {
         return () => { }; // Return empty cleanup function when snackbar is not open
     }, [snackbarOpen]); // Only depend on snackbarOpen
 
-    // If lobby state is active, show lobby (single source of truth)
-    if (lobbyState.isLobby) {
-        logger.info('[LOBBY] Rendering LobbyLayout', {
+    // Show lobby UI if game is pending and user is connected
+    if (showLobby) {
+        logger.info('[LOBBY] Rendering lobby with unified participant model', {
             gameStatus: gameState.gameStatus,
-            lobbyState
+            participantCount: lobbyState.participants.length,
+            creator: lobbyState.creator?.username
         });
 
         // Determine if current user is the creator

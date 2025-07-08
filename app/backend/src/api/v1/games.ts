@@ -9,6 +9,8 @@ import { prisma } from '@/db/prisma';
 import { teacherAuth, optionalAuth } from '@/middleware/auth';
 import { validateRequestBody } from '@/middleware/validation';
 import createLogger from '@/utils/logger';
+// Import modular join service to replace legacy joinGame
+import { joinGame as joinGameModular } from '@/core/services/gameParticipant/joinService';
 import type {
     GameInstanceResponse,
     GameJoinResponse,
@@ -223,16 +225,17 @@ router.get('/:accessCode', async (req: Request, res: Response<GameInstanceRespon
             // Prefer settings.practiceSettings if present, else fallback to gameTemplate
             if (gameInstance.settings && typeof gameInstance.settings === 'object' && 'practiceSettings' in gameInstance.settings) {
                 practiceSettings = (gameInstance.settings as any).practiceSettings;
-            } else if (gameInstance.gameTemplate) {
+            } else if ('gameTemplate' in gameInstance && gameInstance.gameTemplate) {
+                const template = gameInstance.gameTemplate as any;
                 practiceSettings = {
-                    discipline: gameInstance.gameTemplate.discipline || '',
-                    gradeLevel: gameInstance.gameTemplate.gradeLevel || '',
-                    themes: gameInstance.gameTemplate.themes || [],
-                    questionCount: Array.isArray(gameInstance.gameTemplate.questions) ? gameInstance.gameTemplate.questions.length : 10,
+                    discipline: template.discipline || '',
+                    gradeLevel: template.gradeLevel || '',
+                    themes: template.themes || [],
+                    questionCount: Array.isArray(template.questions) ? template.questions.length : 10,
                     showImmediateFeedback: true,
                     allowRetry: true,
                     randomizeQuestions: false,
-                    gameTemplateId: gameInstance.gameTemplate.id
+                    gameTemplateId: template.id
                 };
             }
         }
@@ -303,7 +306,12 @@ router.post('/:accessCode/join', validateRequestBody(GameJoinRequestSchema), asy
             return;
         }
 
-        const joinResult = await getGameParticipantService().joinGame(userId, accessCode);
+        const joinResult = await joinGameModular({
+            userId,
+            accessCode,
+            username: undefined, // API doesn't provide username
+            avatarEmoji: undefined // API doesn't provide avatarEmoji
+        });
 
         if (!joinResult.success) {
             res.status(400).json({ error: joinResult.error || 'Failed to join game' });
@@ -315,10 +323,40 @@ router.post('/:accessCode/join', validateRequestBody(GameJoinRequestSchema), asy
             return;
         }
 
+        // Map the gameInstance to include required fields
+        const gameInstance = {
+            ...joinResult.gameInstance,
+            accessCode, // Add the access code from the parameter
+            createdAt: new Date(), // Add missing createdAt field
+            gameTemplateId: 'unknown', // Add missing gameTemplateId field
+            gameTemplate: {
+                id: 'unknown',
+                name: joinResult.gameInstance.gameTemplate?.name || 'Unknown Template',
+                themes: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                creatorId: 'unknown'
+            }
+        };
+
+        // Map the participant to include required fields
+        const isDeferred = joinResult.participant.status === 'ACTIVE' && joinResult.gameInstance.status === 'completed';
+        const participant = {
+            id: joinResult.participant.id,
+            userId: joinResult.participant.userId,
+            username: joinResult.participant.user?.username || 'Unknown',
+            avatarEmoji: joinResult.participant.user?.avatarEmoji || '🐼',
+            score: isDeferred ? (joinResult.participant.deferredScore || 0) : (joinResult.participant.liveScore || 0),
+            joinedAt: joinResult.participant.joinedAt?.toISOString() || new Date().toISOString(),
+            participationType: isDeferred ? 'DEFERRED' : 'LIVE',
+            attemptCount: joinResult.participant.nbAttempts || 1,
+            online: true
+        };
+
         res.status(200).json({
             success: true,
-            gameInstance: joinResult.gameInstance,
-            participant: joinResult.participant
+            gameInstance,
+            participant
         });
     } catch (error) {
         logger.error({ error }, 'Error joining game');

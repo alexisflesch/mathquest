@@ -76,12 +76,14 @@ export const PlayMode: {
 export type PlayMode = (typeof PlayMode)[keyof typeof PlayMode]
 
 
-export const ParticipationType: {
-  LIVE: 'LIVE',
-  DEFERRED: 'DEFERRED'
+export const ParticipantStatus: {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  LEFT: 'LEFT'
 };
 
-export type ParticipationType = (typeof ParticipationType)[keyof typeof ParticipationType]
+export type ParticipantStatus = (typeof ParticipantStatus)[keyof typeof ParticipantStatus]
 
 }
 
@@ -93,9 +95,9 @@ export type PlayMode = $Enums.PlayMode
 
 export const PlayMode: typeof $Enums.PlayMode
 
-export type ParticipationType = $Enums.ParticipationType
+export type ParticipantStatus = $Enums.ParticipantStatus
 
-export const ParticipationType: typeof $Enums.ParticipationType
+export const ParticipantStatus: typeof $Enums.ParticipantStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -9774,85 +9776,107 @@ export namespace Prisma {
   }
 
   export type GameParticipantAvgAggregateOutputType = {
-    score: number | null
-    attemptCount: number | null
+    liveScore: number | null
+    deferredScore: number | null
+    nbAttempts: number | null
   }
 
   export type GameParticipantSumAggregateOutputType = {
-    score: number | null
-    attemptCount: number | null
+    liveScore: number | null
+    deferredScore: number | null
+    nbAttempts: number | null
   }
 
   export type GameParticipantMinAggregateOutputType = {
     id: string | null
     gameInstanceId: string | null
     userId: string | null
-    score: number | null
+    liveScore: number | null
+    deferredScore: number | null
+    nbAttempts: number | null
+    status: $Enums.ParticipantStatus | null
     joinedAt: Date | null
-    participationType: $Enums.ParticipationType | null
-    attemptCount: number | null
+    lastActiveAt: Date | null
+    completedAt: Date | null
   }
 
   export type GameParticipantMaxAggregateOutputType = {
     id: string | null
     gameInstanceId: string | null
     userId: string | null
-    score: number | null
+    liveScore: number | null
+    deferredScore: number | null
+    nbAttempts: number | null
+    status: $Enums.ParticipantStatus | null
     joinedAt: Date | null
-    participationType: $Enums.ParticipationType | null
-    attemptCount: number | null
+    lastActiveAt: Date | null
+    completedAt: Date | null
   }
 
   export type GameParticipantCountAggregateOutputType = {
     id: number
     gameInstanceId: number
     userId: number
-    score: number
+    liveScore: number
+    deferredScore: number
+    nbAttempts: number
+    status: number
     joinedAt: number
-    participationType: number
-    attemptCount: number
+    lastActiveAt: number
+    completedAt: number
     _all: number
   }
 
 
   export type GameParticipantAvgAggregateInputType = {
-    score?: true
-    attemptCount?: true
+    liveScore?: true
+    deferredScore?: true
+    nbAttempts?: true
   }
 
   export type GameParticipantSumAggregateInputType = {
-    score?: true
-    attemptCount?: true
+    liveScore?: true
+    deferredScore?: true
+    nbAttempts?: true
   }
 
   export type GameParticipantMinAggregateInputType = {
     id?: true
     gameInstanceId?: true
     userId?: true
-    score?: true
+    liveScore?: true
+    deferredScore?: true
+    nbAttempts?: true
+    status?: true
     joinedAt?: true
-    participationType?: true
-    attemptCount?: true
+    lastActiveAt?: true
+    completedAt?: true
   }
 
   export type GameParticipantMaxAggregateInputType = {
     id?: true
     gameInstanceId?: true
     userId?: true
-    score?: true
+    liveScore?: true
+    deferredScore?: true
+    nbAttempts?: true
+    status?: true
     joinedAt?: true
-    participationType?: true
-    attemptCount?: true
+    lastActiveAt?: true
+    completedAt?: true
   }
 
   export type GameParticipantCountAggregateInputType = {
     id?: true
     gameInstanceId?: true
     userId?: true
-    score?: true
+    liveScore?: true
+    deferredScore?: true
+    nbAttempts?: true
+    status?: true
     joinedAt?: true
-    participationType?: true
-    attemptCount?: true
+    lastActiveAt?: true
+    completedAt?: true
     _all?: true
   }
 
@@ -9946,10 +9970,13 @@ export namespace Prisma {
     id: string
     gameInstanceId: string
     userId: string
-    score: number
+    liveScore: number
+    deferredScore: number
+    nbAttempts: number
+    status: $Enums.ParticipantStatus
     joinedAt: Date
-    participationType: $Enums.ParticipationType
-    attemptCount: number
+    lastActiveAt: Date | null
+    completedAt: Date | null
     _count: GameParticipantCountAggregateOutputType | null
     _avg: GameParticipantAvgAggregateOutputType | null
     _sum: GameParticipantSumAggregateOutputType | null
@@ -9975,10 +10002,13 @@ export namespace Prisma {
     id?: boolean
     gameInstanceId?: boolean
     userId?: boolean
-    score?: boolean
+    liveScore?: boolean
+    deferredScore?: boolean
+    nbAttempts?: boolean
+    status?: boolean
     joinedAt?: boolean
-    participationType?: boolean
-    attemptCount?: boolean
+    lastActiveAt?: boolean
+    completedAt?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
@@ -9987,10 +10017,13 @@ export namespace Prisma {
     id?: boolean
     gameInstanceId?: boolean
     userId?: boolean
-    score?: boolean
+    liveScore?: boolean
+    deferredScore?: boolean
+    nbAttempts?: boolean
+    status?: boolean
     joinedAt?: boolean
-    participationType?: boolean
-    attemptCount?: boolean
+    lastActiveAt?: boolean
+    completedAt?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
@@ -9999,10 +10032,13 @@ export namespace Prisma {
     id?: boolean
     gameInstanceId?: boolean
     userId?: boolean
-    score?: boolean
+    liveScore?: boolean
+    deferredScore?: boolean
+    nbAttempts?: boolean
+    status?: boolean
     joinedAt?: boolean
-    participationType?: boolean
-    attemptCount?: boolean
+    lastActiveAt?: boolean
+    completedAt?: boolean
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["gameParticipant"]>
@@ -10011,13 +10047,16 @@ export namespace Prisma {
     id?: boolean
     gameInstanceId?: boolean
     userId?: boolean
-    score?: boolean
+    liveScore?: boolean
+    deferredScore?: boolean
+    nbAttempts?: boolean
+    status?: boolean
     joinedAt?: boolean
-    participationType?: boolean
-    attemptCount?: boolean
+    lastActiveAt?: boolean
+    completedAt?: boolean
   }
 
-  export type GameParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "gameInstanceId" | "userId" | "score" | "joinedAt" | "participationType" | "attemptCount", ExtArgs["result"]["gameParticipant"]>
+  export type GameParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "gameInstanceId" | "userId" | "liveScore" | "deferredScore" | "nbAttempts" | "status" | "joinedAt" | "lastActiveAt" | "completedAt", ExtArgs["result"]["gameParticipant"]>
   export type GameParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     gameInstance?: boolean | GameInstanceDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -10041,10 +10080,13 @@ export namespace Prisma {
       id: string
       gameInstanceId: string
       userId: string
-      score: number
+      liveScore: number
+      deferredScore: number
+      nbAttempts: number
+      status: $Enums.ParticipantStatus
       joinedAt: Date
-      participationType: $Enums.ParticipationType
-      attemptCount: number
+      lastActiveAt: Date | null
+      completedAt: Date | null
     }, ExtArgs["result"]["gameParticipant"]>
     composites: {}
   }
@@ -10473,10 +10515,13 @@ export namespace Prisma {
     readonly id: FieldRef<"GameParticipant", 'String'>
     readonly gameInstanceId: FieldRef<"GameParticipant", 'String'>
     readonly userId: FieldRef<"GameParticipant", 'String'>
-    readonly score: FieldRef<"GameParticipant", 'Int'>
+    readonly liveScore: FieldRef<"GameParticipant", 'Int'>
+    readonly deferredScore: FieldRef<"GameParticipant", 'Int'>
+    readonly nbAttempts: FieldRef<"GameParticipant", 'Int'>
+    readonly status: FieldRef<"GameParticipant", 'ParticipantStatus'>
     readonly joinedAt: FieldRef<"GameParticipant", 'DateTime'>
-    readonly participationType: FieldRef<"GameParticipant", 'ParticipationType'>
-    readonly attemptCount: FieldRef<"GameParticipant", 'Int'>
+    readonly lastActiveAt: FieldRef<"GameParticipant", 'DateTime'>
+    readonly completedAt: FieldRef<"GameParticipant", 'DateTime'>
   }
     
 
@@ -11011,10 +11056,13 @@ export namespace Prisma {
     id: 'id',
     gameInstanceId: 'gameInstanceId',
     userId: 'userId',
-    score: 'score',
+    liveScore: 'liveScore',
+    deferredScore: 'deferredScore',
+    nbAttempts: 'nbAttempts',
+    status: 'status',
     joinedAt: 'joinedAt',
-    participationType: 'participationType',
-    attemptCount: 'attemptCount'
+    lastActiveAt: 'lastActiveAt',
+    completedAt: 'completedAt'
   };
 
   export type GameParticipantScalarFieldEnum = (typeof GameParticipantScalarFieldEnum)[keyof typeof GameParticipantScalarFieldEnum]
@@ -11165,16 +11213,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'ParticipationType'
+   * Reference to a field of type 'ParticipantStatus'
    */
-  export type EnumParticipationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParticipationType'>
+  export type EnumParticipantStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParticipantStatus'>
     
 
 
   /**
-   * Reference to a field of type 'ParticipationType[]'
+   * Reference to a field of type 'ParticipantStatus[]'
    */
-  export type ListEnumParticipationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParticipationType[]'>
+  export type ListEnumParticipantStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParticipantStatus[]'>
     
 
 
@@ -11747,10 +11795,13 @@ export namespace Prisma {
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    score?: IntFilter<"GameParticipant"> | number
+    liveScore?: IntFilter<"GameParticipant"> | number
+    deferredScore?: IntFilter<"GameParticipant"> | number
+    nbAttempts?: IntFilter<"GameParticipant"> | number
+    status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
-    participationType?: EnumParticipationTypeFilter<"GameParticipant"> | $Enums.ParticipationType
-    attemptCount?: IntFilter<"GameParticipant"> | number
+    lastActiveAt?: DateTimeNullableFilter<"GameParticipant"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"GameParticipant"> | Date | string | null
     gameInstance?: XOR<GameInstanceScalarRelationFilter, GameInstanceWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
@@ -11759,37 +11810,47 @@ export namespace Prisma {
     id?: SortOrder
     gameInstanceId?: SortOrder
     userId?: SortOrder
-    score?: SortOrder
+    liveScore?: SortOrder
+    deferredScore?: SortOrder
+    nbAttempts?: SortOrder
+    status?: SortOrder
     joinedAt?: SortOrder
-    participationType?: SortOrder
-    attemptCount?: SortOrder
+    lastActiveAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
     gameInstance?: GameInstanceOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
   }
 
   export type GameParticipantWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    gameInstanceId_userId?: GameParticipantGameInstanceIdUserIdCompoundUniqueInput
     AND?: GameParticipantWhereInput | GameParticipantWhereInput[]
     OR?: GameParticipantWhereInput[]
     NOT?: GameParticipantWhereInput | GameParticipantWhereInput[]
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    score?: IntFilter<"GameParticipant"> | number
+    liveScore?: IntFilter<"GameParticipant"> | number
+    deferredScore?: IntFilter<"GameParticipant"> | number
+    nbAttempts?: IntFilter<"GameParticipant"> | number
+    status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
-    participationType?: EnumParticipationTypeFilter<"GameParticipant"> | $Enums.ParticipationType
-    attemptCount?: IntFilter<"GameParticipant"> | number
+    lastActiveAt?: DateTimeNullableFilter<"GameParticipant"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"GameParticipant"> | Date | string | null
     gameInstance?: XOR<GameInstanceScalarRelationFilter, GameInstanceWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
-  }, "id">
+  }, "id" | "gameInstanceId_userId">
 
   export type GameParticipantOrderByWithAggregationInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
     userId?: SortOrder
-    score?: SortOrder
+    liveScore?: SortOrder
+    deferredScore?: SortOrder
+    nbAttempts?: SortOrder
+    status?: SortOrder
     joinedAt?: SortOrder
-    participationType?: SortOrder
-    attemptCount?: SortOrder
+    lastActiveAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
     _count?: GameParticipantCountOrderByAggregateInput
     _avg?: GameParticipantAvgOrderByAggregateInput
     _max?: GameParticipantMaxOrderByAggregateInput
@@ -11804,10 +11865,13 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"GameParticipant"> | string
     gameInstanceId?: StringWithAggregatesFilter<"GameParticipant"> | string
     userId?: StringWithAggregatesFilter<"GameParticipant"> | string
-    score?: IntWithAggregatesFilter<"GameParticipant"> | number
+    liveScore?: IntWithAggregatesFilter<"GameParticipant"> | number
+    deferredScore?: IntWithAggregatesFilter<"GameParticipant"> | number
+    nbAttempts?: IntWithAggregatesFilter<"GameParticipant"> | number
+    status?: EnumParticipantStatusWithAggregatesFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeWithAggregatesFilter<"GameParticipant"> | Date | string
-    participationType?: EnumParticipationTypeWithAggregatesFilter<"GameParticipant"> | $Enums.ParticipationType
-    attemptCount?: IntWithAggregatesFilter<"GameParticipant"> | number
+    lastActiveAt?: DateTimeNullableWithAggregatesFilter<"GameParticipant"> | Date | string | null
+    completedAt?: DateTimeNullableWithAggregatesFilter<"GameParticipant"> | Date | string | null
   }
 
   export type UserCreateInput = {
@@ -12409,10 +12473,13 @@ export namespace Prisma {
 
   export type GameParticipantCreateInput = {
     id?: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
     gameInstance: GameInstanceCreateNestedOneWithoutParticipantsInput
     user: UserCreateNestedOneWithoutGameParticipationsInput
   }
@@ -12421,18 +12488,24 @@ export namespace Prisma {
     id?: string
     gameInstanceId: string
     userId: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
   }
 
   export type GameParticipantUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gameInstance?: GameInstanceUpdateOneRequiredWithoutParticipantsNestedInput
     user?: UserUpdateOneRequiredWithoutGameParticipationsNestedInput
   }
@@ -12441,38 +12514,50 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type GameParticipantCreateManyInput = {
     id?: string
     gameInstanceId: string
     userId: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
   }
 
   export type GameParticipantUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type GameParticipantUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -13129,11 +13214,11 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
-  export type EnumParticipationTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.ParticipationType | EnumParticipationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ParticipationType[] | ListEnumParticipationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ParticipationType[] | ListEnumParticipationTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumParticipationTypeFilter<$PrismaModel> | $Enums.ParticipationType
+  export type EnumParticipantStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ParticipantStatus | EnumParticipantStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ParticipantStatus[] | ListEnumParticipantStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ParticipantStatus[] | ListEnumParticipantStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumParticipantStatusFilter<$PrismaModel> | $Enums.ParticipantStatus
   }
 
   export type GameInstanceScalarRelationFilter = {
@@ -13141,54 +13226,70 @@ export namespace Prisma {
     isNot?: GameInstanceWhereInput
   }
 
+  export type GameParticipantGameInstanceIdUserIdCompoundUniqueInput = {
+    gameInstanceId: string
+    userId: string
+  }
+
   export type GameParticipantCountOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
     userId?: SortOrder
-    score?: SortOrder
+    liveScore?: SortOrder
+    deferredScore?: SortOrder
+    nbAttempts?: SortOrder
+    status?: SortOrder
     joinedAt?: SortOrder
-    participationType?: SortOrder
-    attemptCount?: SortOrder
+    lastActiveAt?: SortOrder
+    completedAt?: SortOrder
   }
 
   export type GameParticipantAvgOrderByAggregateInput = {
-    score?: SortOrder
-    attemptCount?: SortOrder
+    liveScore?: SortOrder
+    deferredScore?: SortOrder
+    nbAttempts?: SortOrder
   }
 
   export type GameParticipantMaxOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
     userId?: SortOrder
-    score?: SortOrder
+    liveScore?: SortOrder
+    deferredScore?: SortOrder
+    nbAttempts?: SortOrder
+    status?: SortOrder
     joinedAt?: SortOrder
-    participationType?: SortOrder
-    attemptCount?: SortOrder
+    lastActiveAt?: SortOrder
+    completedAt?: SortOrder
   }
 
   export type GameParticipantMinOrderByAggregateInput = {
     id?: SortOrder
     gameInstanceId?: SortOrder
     userId?: SortOrder
-    score?: SortOrder
+    liveScore?: SortOrder
+    deferredScore?: SortOrder
+    nbAttempts?: SortOrder
+    status?: SortOrder
     joinedAt?: SortOrder
-    participationType?: SortOrder
-    attemptCount?: SortOrder
+    lastActiveAt?: SortOrder
+    completedAt?: SortOrder
   }
 
   export type GameParticipantSumOrderByAggregateInput = {
-    score?: SortOrder
-    attemptCount?: SortOrder
+    liveScore?: SortOrder
+    deferredScore?: SortOrder
+    nbAttempts?: SortOrder
   }
 
-  export type EnumParticipationTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.ParticipationType | EnumParticipationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ParticipationType[] | ListEnumParticipationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ParticipationType[] | ListEnumParticipationTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumParticipationTypeWithAggregatesFilter<$PrismaModel> | $Enums.ParticipationType
+  export type EnumParticipantStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ParticipantStatus | EnumParticipantStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ParticipantStatus[] | ListEnumParticipantStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ParticipantStatus[] | ListEnumParticipantStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumParticipantStatusWithAggregatesFilter<$PrismaModel> | $Enums.ParticipantStatus
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumParticipationTypeFilter<$PrismaModel>
-    _max?: NestedEnumParticipationTypeFilter<$PrismaModel>
+    _min?: NestedEnumParticipantStatusFilter<$PrismaModel>
+    _max?: NestedEnumParticipantStatusFilter<$PrismaModel>
   }
 
   export type StudentProfileCreateNestedOneWithoutUserInput = {
@@ -13758,8 +13859,8 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
-  export type EnumParticipationTypeFieldUpdateOperationsInput = {
-    set?: $Enums.ParticipationType
+  export type EnumParticipantStatusFieldUpdateOperationsInput = {
+    set?: $Enums.ParticipantStatus
   }
 
   export type GameInstanceUpdateOneRequiredWithoutParticipantsNestedInput = {
@@ -14066,21 +14167,21 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
-  export type NestedEnumParticipationTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.ParticipationType | EnumParticipationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ParticipationType[] | ListEnumParticipationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ParticipationType[] | ListEnumParticipationTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumParticipationTypeFilter<$PrismaModel> | $Enums.ParticipationType
+  export type NestedEnumParticipantStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ParticipantStatus | EnumParticipantStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ParticipantStatus[] | ListEnumParticipantStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ParticipantStatus[] | ListEnumParticipantStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumParticipantStatusFilter<$PrismaModel> | $Enums.ParticipantStatus
   }
 
-  export type NestedEnumParticipationTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.ParticipationType | EnumParticipationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ParticipationType[] | ListEnumParticipationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ParticipationType[] | ListEnumParticipationTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumParticipationTypeWithAggregatesFilter<$PrismaModel> | $Enums.ParticipationType
+  export type NestedEnumParticipantStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ParticipantStatus | EnumParticipantStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ParticipantStatus[] | ListEnumParticipantStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ParticipantStatus[] | ListEnumParticipantStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumParticipantStatusWithAggregatesFilter<$PrismaModel> | $Enums.ParticipantStatus
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumParticipationTypeFilter<$PrismaModel>
-    _max?: NestedEnumParticipationTypeFilter<$PrismaModel>
+    _min?: NestedEnumParticipantStatusFilter<$PrismaModel>
+    _max?: NestedEnumParticipantStatusFilter<$PrismaModel>
   }
 
   export type StudentProfileCreateWithoutUserInput = {
@@ -14159,20 +14260,26 @@ export namespace Prisma {
 
   export type GameParticipantCreateWithoutUserInput = {
     id?: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
     gameInstance: GameInstanceCreateNestedOneWithoutParticipantsInput
   }
 
   export type GameParticipantUncheckedCreateWithoutUserInput = {
     id?: string
     gameInstanceId: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
   }
 
   export type GameParticipantCreateOrConnectWithoutUserInput = {
@@ -14322,10 +14429,13 @@ export namespace Prisma {
     id?: StringFilter<"GameParticipant"> | string
     gameInstanceId?: StringFilter<"GameParticipant"> | string
     userId?: StringFilter<"GameParticipant"> | string
-    score?: IntFilter<"GameParticipant"> | number
+    liveScore?: IntFilter<"GameParticipant"> | number
+    deferredScore?: IntFilter<"GameParticipant"> | number
+    nbAttempts?: IntFilter<"GameParticipant"> | number
+    status?: EnumParticipantStatusFilter<"GameParticipant"> | $Enums.ParticipantStatus
     joinedAt?: DateTimeFilter<"GameParticipant"> | Date | string
-    participationType?: EnumParticipationTypeFilter<"GameParticipant"> | $Enums.ParticipationType
-    attemptCount?: IntFilter<"GameParticipant"> | number
+    lastActiveAt?: DateTimeNullableFilter<"GameParticipant"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"GameParticipant"> | Date | string | null
   }
 
   export type GameTemplateUpsertWithWhereUniqueWithoutCreatorInput = {
@@ -14994,20 +15104,26 @@ export namespace Prisma {
 
   export type GameParticipantCreateWithoutGameInstanceInput = {
     id?: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
     user: UserCreateNestedOneWithoutGameParticipationsInput
   }
 
   export type GameParticipantUncheckedCreateWithoutGameInstanceInput = {
     id?: string
     userId: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
   }
 
   export type GameParticipantCreateOrConnectWithoutGameInstanceInput = {
@@ -15311,10 +15427,13 @@ export namespace Prisma {
   export type GameParticipantCreateManyUserInput = {
     id?: string
     gameInstanceId: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
   }
 
   export type GameTemplateCreateManyCreatorInput = {
@@ -15387,29 +15506,38 @@ export namespace Prisma {
 
   export type GameParticipantUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gameInstance?: GameInstanceUpdateOneRequiredWithoutParticipantsNestedInput
   }
 
   export type GameParticipantUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type GameParticipantUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     gameInstanceId?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type GameTemplateUpdateWithoutCreatorInput = {
@@ -15577,37 +15705,49 @@ export namespace Prisma {
   export type GameParticipantCreateManyGameInstanceInput = {
     id?: string
     userId: string
-    score?: number
+    liveScore?: number
+    deferredScore?: number
+    nbAttempts?: number
+    status?: $Enums.ParticipantStatus
     joinedAt?: Date | string
-    participationType?: $Enums.ParticipationType
-    attemptCount?: number
+    lastActiveAt?: Date | string | null
+    completedAt?: Date | string | null
   }
 
   export type GameParticipantUpdateWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutGameParticipationsNestedInput
   }
 
   export type GameParticipantUncheckedUpdateWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type GameParticipantUncheckedUpdateManyWithoutGameInstanceInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    score?: IntFieldUpdateOperationsInput | number
+    liveScore?: IntFieldUpdateOperationsInput | number
+    deferredScore?: IntFieldUpdateOperationsInput | number
+    nbAttempts?: IntFieldUpdateOperationsInput | number
+    status?: EnumParticipantStatusFieldUpdateOperationsInput | $Enums.ParticipantStatus
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    participationType?: EnumParticipationTypeFieldUpdateOperationsInput | $Enums.ParticipationType
-    attemptCount?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
 

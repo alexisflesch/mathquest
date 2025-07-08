@@ -15,6 +15,8 @@ const prisma_1 = require("@/db/prisma");
 const auth_1 = require("@/middleware/auth");
 const validation_1 = require("@/middleware/validation");
 const logger_1 = __importDefault(require("@/utils/logger"));
+// Import modular join service to replace legacy joinGame
+const joinService_1 = require("@/core/services/gameParticipant/joinService");
 const schemas_1 = require("@shared/types/api/schemas");
 // Create a route-specific logger
 const logger = (0, logger_1.default)('GamesAPI');
@@ -180,16 +182,17 @@ router.get('/:accessCode', async (req, res) => {
             if (gameInstance.settings && typeof gameInstance.settings === 'object' && 'practiceSettings' in gameInstance.settings) {
                 practiceSettings = gameInstance.settings.practiceSettings;
             }
-            else if (gameInstance.gameTemplate) {
+            else if ('gameTemplate' in gameInstance && gameInstance.gameTemplate) {
+                const template = gameInstance.gameTemplate;
                 practiceSettings = {
-                    discipline: gameInstance.gameTemplate.discipline || '',
-                    gradeLevel: gameInstance.gameTemplate.gradeLevel || '',
-                    themes: gameInstance.gameTemplate.themes || [],
-                    questionCount: Array.isArray(gameInstance.gameTemplate.questions) ? gameInstance.gameTemplate.questions.length : 10,
+                    discipline: template.discipline || '',
+                    gradeLevel: template.gradeLevel || '',
+                    themes: template.themes || [],
+                    questionCount: Array.isArray(template.questions) ? template.questions.length : 10,
                     showImmediateFeedback: true,
                     allowRetry: true,
                     randomizeQuestions: false,
-                    gameTemplateId: gameInstance.gameTemplate.id
+                    gameTemplateId: template.id
                 };
             }
         }
@@ -252,7 +255,12 @@ router.post('/:accessCode/join', (0, validation_1.validateRequestBody)(schemas_1
             res.status(400).json({ error: 'Player ID is required' });
             return;
         }
-        const joinResult = await getGameParticipantService().joinGame(userId, accessCode);
+        const joinResult = await (0, joinService_1.joinGame)({
+            userId,
+            accessCode,
+            username: undefined, // API doesn't provide username
+            avatarEmoji: undefined // API doesn't provide avatarEmoji
+        });
         if (!joinResult.success) {
             res.status(400).json({ error: joinResult.error || 'Failed to join game' });
             return;
@@ -261,10 +269,38 @@ router.post('/:accessCode/join', (0, validation_1.validateRequestBody)(schemas_1
             res.status(500).json({ error: 'Incomplete join result' });
             return;
         }
+        // Map the gameInstance to include required fields
+        const gameInstance = {
+            ...joinResult.gameInstance,
+            accessCode, // Add the access code from the parameter
+            createdAt: new Date(), // Add missing createdAt field
+            gameTemplateId: 'unknown', // Add missing gameTemplateId field
+            gameTemplate: {
+                id: 'unknown',
+                name: joinResult.gameInstance.gameTemplate?.name || 'Unknown Template',
+                themes: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                creatorId: 'unknown'
+            }
+        };
+        // Map the participant to include required fields
+        const isDeferred = joinResult.participant.status === 'ACTIVE' && joinResult.gameInstance.status === 'completed';
+        const participant = {
+            id: joinResult.participant.id,
+            userId: joinResult.participant.userId,
+            username: joinResult.participant.user?.username || 'Unknown',
+            avatarEmoji: joinResult.participant.user?.avatarEmoji || '🐼',
+            score: isDeferred ? (joinResult.participant.deferredScore || 0) : (joinResult.participant.liveScore || 0),
+            joinedAt: joinResult.participant.joinedAt?.toISOString() || new Date().toISOString(),
+            participationType: isDeferred ? 'DEFERRED' : 'LIVE',
+            attemptCount: joinResult.participant.nbAttempts || 1,
+            online: true
+        };
         res.status(200).json({
             success: true,
-            gameInstance: joinResult.gameInstance,
-            participant: joinResult.participant
+            gameInstance,
+            participant
         });
     }
     catch (error) {

@@ -23,12 +23,13 @@ import {
 } from '@shared/types/socketEvents.zod';
 import { GAME_EVENTS } from '@shared/types/socket/events';
 // Import core participant types
-import { GameParticipant, ParticipantData } from '@shared/types/core/participant';
+import { GameParticipant, ParticipantData, ParticipationType, ParticipantStatus } from '@shared/types/core/participant';
 import { calculateTimerForLateJoiner } from '../../../core/services/timerUtils';
 import { assignJoinOrderBonus } from '@/utils/joinOrderBonus';
 import { broadcastLeaderboardToProjection } from '@/utils/projectionLeaderboardBroadcast';
 import { joinGame as joinGameModular } from '@/core/services/gameParticipant/joinService';
 import { DifferedScoreService } from '@/core/services/gameParticipant/scoreService';
+import { emitParticipantList } from '../lobbyHandler';
 
 const logger = createLogger('JoinGameHandler');
 
@@ -134,6 +135,10 @@ export function joinGameHandler(
                 }
                 logger.debug({ roomName, socketId: socket.id }, '[DEBUG] Player joining room');
                 await socket.join(roomName);
+
+                // Also join lobby room for participant list updates
+                await socket.join(`lobby_${accessCode}`);
+
                 // --- DEBUG: Print room membership after join ---
                 const joinedRoomSockets = io.sockets.adapter.rooms.get(roomName);
                 const joinedRoomSocketIds = joinedRoomSockets ? Array.from(joinedRoomSockets) : [];
@@ -169,7 +174,10 @@ export function joinGameHandler(
             const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
 
             // Apply join-order bonus to participant score
-            const finalScore = (joinResult.participant.score ?? 0) + joinOrderBonus;
+            const currentScore = gameInstance.isDiffered ?
+                (joinResult.participant.deferredScore ?? 0) :
+                (joinResult.participant.liveScore ?? 0);
+            const finalScore = currentScore + joinOrderBonus;
 
             // Create participant data using core types (map from Prisma structure)
             const participantDataForRedis: ParticipantData = {
@@ -253,7 +261,7 @@ export function joinGameHandler(
                 await DifferedScoreService.updateBestScoreInRedis({
                     gameInstanceId: gameInstance.id,
                     userId,
-                    score: joinResult.participant.score || 0
+                    score: joinResult.participant.deferredScore || 0
                 });
             }
 
@@ -335,16 +343,17 @@ export function joinGameHandler(
             }
 
             if (!gameInstance.isDiffered && socket.data.currentGameRoom) {
-                const playerJoinedPayload: PlayerJoinedGamePayload = {
+                const playerJoinedPayload = {
                     participant: {
                         id: joinResult.participant.id,
                         userId: joinResult.participant.userId,
                         username: username || 'Unknown',
-                        score: participantDataForRedis.score, // Use the score with join-order bonus
+                        score: participantDataForRedis.score,
                         avatarEmoji: avatarEmoji || (joinResult.participant as any).user?.avatarEmoji || '🐼',
                         online: true
                     }
                 };
+
                 logger.info({ playerJoinedPayload, room: socket.data.currentGameRoom }, 'Emitting player_joined_game to room');
                 socket.to(socket.data.currentGameRoom).emit('player_joined_game', playerJoinedPayload);
 
@@ -420,6 +429,9 @@ export function joinGameHandler(
             // Emit updated participant count to teacher dashboard
             await emitParticipantCount(io, accessCode);
 
+            // MODERNIZATION: Emit unified participant list for lobby display
+            await emitParticipantList(io, accessCode);
+
             // Emit updated participant count
             const participantCount = await prisma.gameParticipant.count({
                 where: { gameInstanceId: gameInstance.id }
@@ -436,7 +448,7 @@ export function joinGameHandler(
                     userId: p.userId,
                     username: p.user?.username || 'Unknown',
                     avatar: p.user?.avatarEmoji || '�',
-                    score: p.score ?? 0,
+                    score: gameInstance.isDiffered ? (p.deferredScore ?? 0) : (p.liveScore ?? 0),
                     avatarEmoji: p.user?.avatarEmoji || '🐼',
                     joinedAt: p.joinedAt ? (typeof p.joinedAt === 'string' ? p.joinedAt : p.joinedAt.toISOString()) : new Date().toISOString(),
                     online: true,

@@ -195,7 +195,7 @@ function gameAnswerHandler(io, socket, context) {
             }, isDeferred // PATCH: propagate deferred mode)
             );
             scoringPerformed = true;
-            scoringMode = participant.participationType === 'DEFERRED' ? 'DEFERRED' : gameInstance.playMode;
+            scoringMode = (gameInstance.status === 'completed' || gameInstance.isDiffered) ? 'DEFERRED' : gameInstance.playMode;
             scoringResult = submissionResult;
             logger.info({
                 accessCode,
@@ -204,9 +204,9 @@ function gameAnswerHandler(io, socket, context) {
                 scoringMode,
                 scoringPerformed,
                 submissionResult,
-                attemptCount: participant?.attemptCount,
-                answerKeyUsed: participant.participationType === 'DEFERRED'
-                    ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
+                attemptCount: participant?.nbAttempts,
+                answerKeyUsed: (gameInstance.status === 'completed' || gameInstance.isDiffered)
+                    ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.nbAttempts}`
                     : `mathquest:game:answers:${accessCode}:${questionUid}`
             }, '[DIAGNOSTIC] Scoring service called in gameAnswerHandler (with answer key and attempt)');
             if (!submissionResult.success) {
@@ -237,9 +237,9 @@ function gameAnswerHandler(io, socket, context) {
                     totalScore: scoreResult.totalScore,
                     answerChanged: scoreResult.answerChanged,
                     message: scoreResult.message,
-                    attemptCount: participant?.attemptCount,
-                    answerKeyUsed: participant.participationType === 'DEFERRED'
-                        ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.attemptCount}`
+                    attemptCount: participant?.nbAttempts,
+                    answerKeyUsed: (gameInstance.status === 'completed' || gameInstance.isDiffered)
+                        ? `mathquest:game:answers:${accessCode}:${questionUid}:${participant?.nbAttempts}`
                         : `mathquest:game:answers:${accessCode}:${questionUid}`
                 }, '[DIAGNOSTIC] Answer processed with scoring result and answer key');
                 // Emit feedback about the submission

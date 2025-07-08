@@ -28,6 +28,17 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<Leade
     try {
         logger.info({ accessCode }, "Fetching all participations for leaderboard");
 
+        // Get game instance to determine participation type
+        const gameInstance = await prisma.gameInstance.findUnique({
+            where: { accessCode },
+            select: { status: true }
+        });
+
+        if (!gameInstance) {
+            logger.warn({ accessCode }, "Game instance not found for leaderboard");
+            return [];
+        }
+
         // Get ALL participants directly from the database to show all participations
         const participants = await prisma.gameParticipant.findMany({
             where: {
@@ -37,11 +48,8 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<Leade
                 user: {
                     select: { username: true, avatarEmoji: true }
                 }
-            },
-            orderBy: [
-                { score: 'desc' },
-                { joinedAt: 'asc' }  // Secondary sort by join time for consistent ordering
-            ]
+            }
+            // Remove orderBy - we'll sort after computing the actual scores
         });
 
         if (participants.length === 0) {
@@ -55,23 +63,71 @@ export async function getFormattedLeaderboard(accessCode: string): Promise<Leade
             uniqueUsers: new Set(participants.map(p => p.userId)).size
         }, "Found participations for leaderboard");
 
-        // Map all participations to leaderboard entries
-        const leaderboard = participants.map((participant, index) => ({
-            userId: participant.userId,
-            username: participant.user?.username || 'Unknown Player',
-            avatarEmoji: participant.user?.avatarEmoji || undefined,
-            score: participant.score || 0,
-            rank: index + 1,
-            participationType: participant.participationType as ParticipationType,
-            attemptCount: participant.attemptCount || 1,
-            participationId: participant.id  // Add unique ID for each participation
+        // Map all participations to leaderboard entries - create separate entries for live and deferred scores
+        const leaderboardEntries: LeaderboardEntry[] = [];
+
+        for (const participant of participants) {
+            const baseEntry = {
+                userId: participant.userId,
+                username: participant.user?.username || 'Unknown Player',
+                avatarEmoji: participant.user?.avatarEmoji || undefined,
+                attemptCount: participant.nbAttempts || 1,
+                participationId: participant.id  // Add unique ID for each participation
+            };
+
+            // Add live score entry if it exists and is > 0
+            if (participant.liveScore && participant.liveScore > 0) {
+                leaderboardEntries.push({
+                    ...baseEntry,
+                    score: participant.liveScore,
+                    rank: 0, // Will be set after sorting
+                    participationType: ParticipationType.LIVE,
+                    attemptCount: 1 // Live entries always have 1 attempt
+                });
+            }
+
+            // Add deferred score entry if it exists and is > 0
+            if (participant.deferredScore && participant.deferredScore > 0) {
+                leaderboardEntries.push({
+                    ...baseEntry,
+                    score: participant.deferredScore,
+                    rank: 0, // Will be set after sorting
+                    participationType: ParticipationType.DEFERRED,
+                    attemptCount: participant.nbAttempts || 1 // Show actual attempt count for deferred
+                });
+            }
+
+            // If no scores exist, add a single entry with 0 score
+            if ((!participant.liveScore || participant.liveScore === 0) && (!participant.deferredScore || participant.deferredScore === 0)) {
+                const isDeferred = participant.status === 'ACTIVE' && gameInstance.status === 'completed';
+                leaderboardEntries.push({
+                    ...baseEntry,
+                    score: 0,
+                    rank: 0, // Will be set after sorting
+                    participationType: isDeferred ? ParticipationType.DEFERRED : ParticipationType.LIVE
+                });
+            }
+        }
+
+        // Sort by score descending, then by username for consistent ordering
+        leaderboardEntries.sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            return a.username.localeCompare(b.username);
+        });
+
+        // Assign ranks after sorting
+        const leaderboard = leaderboardEntries.map((entry, index) => ({
+            ...entry,
+            rank: index + 1
         }));
 
         logger.info({
             accessCode,
             count: leaderboard.length,
-            liveCount: leaderboard.filter(p => p.participationType === 'LIVE').length,
-            deferredCount: leaderboard.filter(p => p.participationType === 'DEFERRED').length
+            liveCount: leaderboard.filter(p => p.participationType === ParticipationType.LIVE).length,
+            deferredCount: leaderboard.filter(p => p.participationType === ParticipationType.DEFERRED).length
         }, "Formatted leaderboard with all participations");
 
         return leaderboard;
