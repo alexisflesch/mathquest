@@ -77,11 +77,7 @@ export default function StudentJoinPage() {
                 });
                 return;
             }
-            if (status === 'pending') {
-                router.push(`/lobby/${accessCode}`);
-                return;
-            }
-            if (status === 'active') {
+            if (status === 'pending' || status === 'active') {
                 router.push(`/live/${accessCode}`);
                 return;
             }

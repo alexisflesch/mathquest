@@ -17,7 +17,7 @@
  */
 
 "use client";
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from '@/components/AuthProvider';
 import Snackbar from '@/components/Snackbar';
@@ -35,17 +35,29 @@ import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
 type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, LOBBY_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
+import LobbyLayout from '@/components/LobbyLayout';
+import type { LobbyParticipantListPayload, LobbyParticipant } from '@shared/types/lobbyParticipantListPayload';
+
+// --- Lobby State for Live Page ---
+const initialLobbyState = {
+    participants: [] as LobbyParticipant[],
+    creator: null as LobbyParticipant | null,
+    countdown: null as number | null,
+    isLobby: false,
+};
 
 // Create a logger for this component
 const logger = createLogger('LiveGamePage');
 
+
 export default function LiveGamePage() {
+
     const { code } = useParams();
     const router = useRouter();
     const { userState, userProfile, isLoading } = useAuth();
 
-    // Detect differed mode from URL
+    // Detect differed mode from URL (must be before useStudentGameSocket)
     const [isDiffered, setIsDiffered] = useState(false);
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -54,48 +66,13 @@ export default function LiveGamePage() {
         }
     }, []);
 
-    // Authentication guard - redirect if user is not properly authenticated
-    useEffect(() => {
-        if (isLoading) {
-            // Still checking authentication, wait
-            return;
-        }
-
-        if (userState === 'anonymous') {
-            logger.warn('User is anonymous, redirecting to home page');
-            router.push('/');
-            return;
-        }
-
-        if (!userProfile.username || !userProfile.avatar) {
-            logger.warn('User profile incomplete, redirecting to home page', { userProfile });
-            router.push('/');
-            return;
-        }
-
-        logger.info('User authentication verified for live game', { userState, userProfile });
-    }, [isLoading, userState, userProfile, router]);
-
-    // Show loading while authentication is being checked
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-                <div className="text-center">
-                    <InfinitySpin size={48} />
-                    <p className="mt-4 text-gray-600">Vérification de l'authentification...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // Don't render if not authenticated
-    if (userState === 'anonymous' || !userProfile.username || !userProfile.avatar) {
-        return null;
-    }
+    // Lobby state for pre-game
+    const [lobbyState, setLobbyState] = useState(initialLobbyState);
+    const lobbySocketRef = useRef<any>(null);
 
     // Get user data from AuthProvider
     const userId = userProfile.userId || userProfile.cookieId || `temp_${Date.now()}`;
-    const username = userProfile.username;
+    const username: string | null = userProfile.username ?? null;
     const avatarEmoji = userProfile.avatar;
 
     // Enhanced socket hook integration
@@ -121,6 +98,82 @@ export default function LiveGamePage() {
         }
     });
 
+    // Canonical: Listen for lobby and game events, no join_lobby/get_participants emission
+    useEffect(() => {
+        logger.info('[LOBBY] useEffect triggered (canonical)', {
+            socketExists: !!socket,
+            code,
+            userId,
+            username,
+            avatarEmoji,
+            gameStatus: gameState.gameStatus,
+            lobbySocketRefCurrent: !!lobbySocketRef.current
+        });
+        if (!socket) return;
+        const s = socket as any;
+        lobbySocketRef.current = s;
+
+        // Remove any previous listeners before adding new ones (prevents duplicate handlers)
+        s.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST);
+        s.off('countdown_tick');
+        s.off('countdown_complete');
+        s.off('game_started');
+
+        // Listen for canonical participants_list event (shared constant)
+        s.on(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST, (payload: LobbyParticipantListPayload) => {
+            logger.info('[LOBBY] Received participants_list', payload);
+            setLobbyState((prev: typeof initialLobbyState) => ({
+                ...prev,
+                participants: payload.participants,
+                creator: payload.creator,
+                isLobby: true,
+            }));
+        });
+
+        // Listen for countdown events (optional, if backend emits)
+        s.on('countdown_tick', (payload: { countdown: number }) => {
+            logger.info('[LOBBY] Received countdown_tick', payload);
+            setLobbyState((prev: typeof initialLobbyState) => ({ ...prev, countdown: payload.countdown }));
+        });
+        s.on('countdown_complete', () => {
+            logger.info('[LOBBY] Received countdown_complete');
+            setLobbyState((prev: typeof initialLobbyState) => ({ ...prev, countdown: 0 }));
+        });
+
+        // Listen for game started event
+        s.on('game_started', () => {
+            logger.info('[LOBBY] Received game_started');
+            setLobbyState((prev: typeof initialLobbyState) => ({ ...prev, isLobby: false }));
+        });
+
+        // Clean up listeners on unmount or when game starts
+        return () => {
+            logger.info('[LOBBY] Cleaning up lobby listeners');
+            s.off(SOCKET_EVENTS.LOBBY.PARTICIPANTS_LIST);
+            s.off('countdown_tick');
+            s.off('countdown_complete');
+            s.off('game_started');
+            lobbySocketRef.current = null;
+        };
+    }, [socket, code, userId, username, avatarEmoji, gameState.gameStatus]);
+
+    // Show loading while authentication is being checked
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                <div className="text-center">
+                    <InfinitySpin size={48} />
+                    <p className="mt-4 text-gray-600">Vérification de l'authentification...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Don't render if not authenticated
+    if (userState === 'anonymous' || !userProfile.username || !userProfile.avatar) {
+        return null;
+    }
+
     // Modern timer hook integration (canonical per-question)
     const timer = useSimpleTimer({
         accessCode: typeof code === 'string' ? code : '',
@@ -131,6 +184,7 @@ export default function LiveGamePage() {
     const currentQuestionUid = gameState.currentQuestion?.uid;
     const timerState = currentQuestionUid ? timer.getTimerState(currentQuestionUid) : undefined;
 
+
     // Local UI state
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
@@ -139,6 +193,7 @@ export default function LiveGamePage() {
     const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
     const [isMobile, setIsMobile] = useState(false);
     const [lastErrorTimestamp, setLastErrorTimestamp] = useState<number>(0);
+    const [startClicked, setStartClicked] = useState(false);
 
     // Feedback system state
     const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
@@ -157,13 +212,22 @@ export default function LiveGamePage() {
     // The frontend should NOT make autonomous decisions about redirecting
     // It should wait for backend signals via socket events like 'tournament_finished_redirect'
 
-    // Automatically join the game when user data is ready
+    // Join the game ONLY when socket is connected and user data is ready
+    const hasJoinedRef = useRef(false);
     useEffect(() => {
-        if (userId && username && typeof code === 'string' && !connected && !connecting) {
-            logger.info('Joining game with enhanced socket hook');
+        if (userId && username && typeof code === 'string' && connected && !hasJoinedRef.current) {
+            logger.info('Joining game with enhanced socket hook (on socket connect)');
             joinGame();
+            hasJoinedRef.current = true;
         }
-    }, [userId, username, code, connected, connecting, joinGame]);
+        // Reset join flag if code or user changes (e.g., navigating to a new game)
+        // This ensures joinGame is called again if the user switches games or logs in/out
+        // (code/userId/username are all dependencies)
+        // Reset if disconnected
+        if (!connected) {
+            hasJoinedRef.current = false;
+        }
+    }, [userId, username, code, connected, joinGame]);
 
     // Handle game end - Wait for backend signaling, do NOT redirect automatically
     // The backend should emit 'tournament_finished_redirect' or similar event
@@ -388,6 +452,57 @@ export default function LiveGamePage() {
         return () => { }; // Return empty cleanup function when snackbar is not open
     }, [snackbarOpen]); // Only depend on snackbarOpen
 
+    // If lobby state is active, show lobby (single source of truth)
+    if (lobbyState.isLobby) {
+        logger.info('[LOBBY] Rendering LobbyLayout', {
+            gameStatus: gameState.gameStatus,
+            lobbyState
+        });
+
+        // Determine if current user is the creator
+        const isCreator = lobbyState.creator && lobbyState.creator.userId === userId;
+
+        // Render the start button only for the creator
+        const startButton = isCreator && !startClicked ? (
+            <button
+                className="btn btn-primary btn-lg w-full mt-4"
+                onClick={() => {
+                    if (socket) {
+                        socket.emit('start_tournament', { accessCode: typeof code === 'string' ? code : String(code) });
+                        setStartClicked(true);
+                    }
+                }}
+            >
+                Démarrer le tournoi
+            </button>
+        ) : null;
+
+        return (
+            <LobbyLayout
+                creator={lobbyState.creator ? (
+                    <>
+                        <div className="w-[50px] h-[50px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--secondary)" }}>
+                            {lobbyState.creator.avatarEmoji}
+                        </div>
+                        <span className="font-bold text-lg truncate">{lobbyState.creator.username}</span>
+                    </>
+                ) : <span>Chargement...</span>}
+                code={<span className="text-lg font-mono font-bold tracking-widest bg-base-200 rounded px-2 py-0.5 mt-1">{code}</span>}
+                shareButton={null}
+                participantsHeader={<div className="font-semibold text-lg">Participants connectés</div>}
+                participantsList={lobbyState.participants.map((p, i) => (
+                    <div key={p.userId ? `${p.userId}-${i}` : i} className="flex flex-col items-center">
+                        <div className="w-[49px] h-[49px] rounded-full border-2 flex items-center justify-center text-3xl" style={{ borderColor: "var(--primary)" }}>{p.avatarEmoji}</div>
+                        <span className="text-sm mt-0 truncate max-w-[70px]">{p.username}</span>
+                    </div>
+                ))}
+                startButton={startButton}
+                countdown={lobbyState.countdown !== null ? <div className="text-5xl font-extrabold text-primary mt-2 text-right w-full">{lobbyState.countdown}</div> : null}
+            />
+        );
+    }
+
+    // Otherwise, show the live game UI
     return (
         <div className="main-content">
             {/* Enhanced Feedback Overlay */}
@@ -430,7 +545,7 @@ export default function LiveGamePage() {
                             handleSubmitMultiple={handleSubmitMultiple}
                             answered={gameState.answered}
                             isQuizMode={gameMode === 'quiz'}
-                            // Do NOT pass correctAnswers for students
+                            correctAnswers={gameState.phase === 'show_answers' && gameState.correctAnswers ? gameState.correctAnswers : undefined}
                             readonly={isReadonly}
                         />
                     ) : (

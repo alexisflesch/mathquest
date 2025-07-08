@@ -285,7 +285,7 @@ function StudentCreateTournamentPageInner() {
             );
 
             logger.info("Tournament created successfully", { code: gameData.gameInstance.accessCode });
-            router.push(`/lobby/${gameData.gameInstance.accessCode}`);
+            router.push(`/live/${gameData.gameInstance.accessCode}`);
         } catch (err: unknown) {
             logger.error("Error creating tournament", err);
             if (err instanceof Error) setError(err.message);

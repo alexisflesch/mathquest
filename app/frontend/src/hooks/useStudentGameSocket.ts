@@ -2,14 +2,15 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import { SOCKET_CONFIG } from '@/config';
-import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { SOCKET_EVENTS, LOBBY_EVENTS } from '@shared/types/socket/events';
 import { createSocketConfig } from '@/utils';
 import {
     joinGamePayloadSchema,
     gameAnswerPayloadSchema,
     requestNextQuestionPayloadSchema,
     answerReceivedPayloadSchema,
-    feedbackPayloadSchema
+    feedbackPayloadSchema,
+    joinLobbyPayloadSchema
 } from '@shared/types/socketEvents.zod';
 import { z } from 'zod';
 
@@ -32,7 +33,8 @@ import type {
     GameJoinedPayload,
     ErrorPayload,
     GameAlreadyPlayedPayload,
-    GameStateUpdatePayload
+    GameStateUpdatePayload,
+    JoinLobbyPayload
 } from '@shared/types/socketEvents';
 import { questionDataForStudentSchema } from '@shared/types/socketEvents.zod';
 type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
@@ -135,12 +137,14 @@ export interface StudentGameSocketHook {
     // Connection status
     connected: boolean;
     connecting: boolean;
+
     error: string | null;
 
     // Actions
     joinGame: () => void;
     submitAnswer: (questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => void;
     requestNextQuestion: (currentQuestionUid: string) => void;
+    joinLobby: () => void;
 }
 
 export function useStudentGameSocket({
@@ -412,6 +416,7 @@ export function useStudentGameSocket({
         };
     }, [socket]);
 
+
     // --- Action Functions ---
     const joinGame = useCallback(() => {
         if (!socket || !accessCode || !userId || !username) {
@@ -431,6 +436,22 @@ export function useStudentGameSocket({
             logger.error('Invalid join_game payload:', error);
         }
     }, [socket, accessCode, userId, username, avatarEmoji, isDiffered]);
+
+    // --- Canonical Lobby Join ---
+    const joinLobby = useCallback(() => {
+        if (!socket || !accessCode || !userId || !username) {
+            logger.warn("Cannot join lobby: missing socket or parameters");
+            return;
+        }
+        logger.info(`[LOBBY] Emitting join_lobby for accessCode ${accessCode}`, { userId, username });
+        const payload: JoinLobbyPayload = { accessCode, userId, username, avatarEmoji: avatarEmoji || '🐼' };
+        try {
+            const validatedPayload = joinLobbyPayloadSchema.parse(payload);
+            (socket as any).emit(LOBBY_EVENTS.JOIN_LOBBY, validatedPayload);
+        } catch (error) {
+            logger.error('[LOBBY] Invalid join_lobby payload:', error);
+        }
+    }, [socket, accessCode, userId, username, avatarEmoji]);
 
     const submitAnswer = useCallback((questionUid: string, answer: GameAnswerPayload['answer'], timeSpent: number) => {
         if (!socket || !accessCode || !userId) {
@@ -469,12 +490,16 @@ export function useStudentGameSocket({
         }
     }, [socket, accessCode, userId]);
 
-    // Auto-join game when connected
+    // Auto-join game and lobby when connected
     useEffect(() => {
         if (connected && !gameState.connectedToRoom && accessCode && userId && username) {
             joinGame();
+            // Also join lobby if in lobby mode (pending status)
+            if (gameState.gameStatus === 'pending') {
+                joinLobby();
+            }
         }
-    }, [connected, gameState.connectedToRoom, accessCode, userId, username, joinGame]);
+    }, [connected, gameState.connectedToRoom, accessCode, userId, username, joinGame, joinLobby, gameState.gameStatus]);
 
     return {
         socket,
@@ -483,6 +508,7 @@ export function useStudentGameSocket({
         connecting,
         error,
         joinGame,
+        joinLobby,
         submitAnswer,
         requestNextQuestion
     };

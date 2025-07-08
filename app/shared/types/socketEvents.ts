@@ -223,6 +223,11 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
     update_tournament_code: (payload: { gameId: string; newCode: string }) => void;
     // Tournament events
     join_tournament: (payload: { code: string; username?: string; avatar?: string; isDeferred?: boolean; userId?: string; classId?: string; cookieId?: string }) => void;
+    /**
+     * [LEGACY, to be modernized] Start tournament (creator only)
+     * This is required for now for the live page start button. Remove when backend/contract is modernized.
+     */
+    start_tournament: (payload: { accessCode: string }) => void;
     // Add other client-to-server events here
 }
 
@@ -239,6 +244,9 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     player_joined_game: (payload: PlayerJoinedGamePayload) => void; // Updated to use PlayerJoinedGamePayload
     player_left_game: (payload: { userId: string; socketId: string }) => void; // Broadcast when a player leaves
     game_participants: (payload: { participants: ParticipantData[] }) => void; // Full list of participants
+
+    // Lobby events
+    participants_list: (payload: import('./lobbyParticipantListPayload').LobbyParticipantListPayload) => void; // Canonical lobby participants list
 
     // Game control events
     game_control_question_set: (payload: { questionIndex: number; timer: any }) => void;

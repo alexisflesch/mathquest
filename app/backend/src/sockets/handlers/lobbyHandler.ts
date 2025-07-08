@@ -55,7 +55,9 @@ function emitParticipantList(io: SocketIOServer, accessCode: string, participant
         // Log error, but still emit for now
         console.error('Invalid participant_list payload', parseResult.error.format(), payload);
     }
-    io.to(`lobby_${accessCode}`).emit('participant_list', payload);
+    // Emit to both lobby and live rooms using canonical event name
+    io.to(`lobby_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANTS_LIST, payload);
+    io.to(`game_${accessCode}`).emit(LOBBY_EVENTS.PARTICIPANTS_LIST, payload);
 }
 
 /**

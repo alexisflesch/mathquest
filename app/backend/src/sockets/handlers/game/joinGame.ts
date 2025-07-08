@@ -257,86 +257,80 @@ export function joinGameHandler(
                 });
             }
 
-            // For live games (quiz and tournament, not deferred), check if game is active and send current state to late joiners
-            if (!gameInstance.isDiffered && gameInstance.status === 'active' && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
-                logger.info({ accessCode, userId, playMode: gameInstance.playMode }, 'Live game is active, sending current state to late joiner');
-
-                try {
-                    const currentGameState = await gameStateService.getFullGameState(accessCode);
-                    if (currentGameState && currentGameState.gameState && currentGameState.gameState.currentQuestionIndex >= 0) {
-                        const { gameState } = currentGameState;
-
-                        // Get the current question data
-                        const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
-                            where: { id: gameInstance.id },
-                            include: {
-                                gameTemplate: {
-                                    include: {
-                                        questions: {
-                                            include: { question: true },
-                                            orderBy: { sequence: 'asc' }
+            // Canonical: On join, emit either current question (if active) or participants_list (if pending)
+            if (!gameInstance.isDiffered && (gameInstance.playMode === 'tournament' || gameInstance.playMode === 'quiz')) {
+                if (gameInstance.status === 'active') {
+                    logger.info({ accessCode, userId, playMode: gameInstance.playMode }, 'Live game is active, sending current state to late joiner');
+                    try {
+                        const currentGameState = await gameStateService.getFullGameState(accessCode);
+                        if (currentGameState && currentGameState.gameState && currentGameState.gameState.currentQuestionIndex >= 0) {
+                            const { gameState } = currentGameState;
+                            // Get the current question data
+                            const gameInstanceWithQuestions = await prisma.gameInstance.findUnique({
+                                where: { id: gameInstance.id },
+                                include: {
+                                    gameTemplate: {
+                                        include: {
+                                            questions: {
+                                                include: { question: true },
+                                                orderBy: { sequence: 'asc' }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            if (gameInstanceWithQuestions?.gameTemplate?.questions &&
+                                gameState.currentQuestionIndex < gameInstanceWithQuestions.gameTemplate.questions.length) {
+                                const currentQuestion = gameInstanceWithQuestions.gameTemplate.questions[gameState.currentQuestionIndex]?.question;
+                                if (currentQuestion) {
+                                    const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
+                                    let filteredQuestion = filterQuestionForClient(currentQuestion);
+                                    if (filteredQuestion.timeLimit == null) {
+                                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                        const { timeLimit, ...rest } = filteredQuestion;
+                                        filteredQuestion = rest;
+                                    }
+                                    const questionPayload = {
+                                        ...filteredQuestion,
+                                        currentQuestionIndex: gameState.currentQuestionIndex,
+                                        totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length
+                                    };
+                                    logger.info({
+                                        accessCode,
+                                        userId,
+                                        playMode: gameInstance.playMode,
+                                        questionIndex: gameState.currentQuestionIndex,
+                                        payload: questionPayload
+                                    }, '[MODERNIZATION] Sending current question to late joiner (schema-compliant)');
+                                    socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, questionPayload);
+                                    // Also send timer update (canonical)
+                                    const durationMs = typeof currentQuestion.timeLimit === 'number' && currentQuestion.timeLimit > 0 ? currentQuestion.timeLimit * 1000 : 0;
+                                    if (durationMs > 0) {
+                                        const canonicalTimer = await getCanonicalTimer(
+                                            accessCode,
+                                            currentQuestion.uid,
+                                            gameState.gameMode,
+                                            gameState.status === 'completed',
+                                            durationMs,
+                                            undefined
+                                        );
+                                        if (canonicalTimer) {
+                                            const timerUpdatePayload: GameTimerUpdatePayload = {
+                                                timer: canonicalTimer,
+                                                questionUid: canonicalTimer.questionUid
+                                            };
+                                            socket.emit(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED as any, timerUpdatePayload);
                                         }
                                     }
                                 }
                             }
-                        });
-
-                        if (gameInstanceWithQuestions?.gameTemplate?.questions &&
-                            gameState.currentQuestionIndex < gameInstanceWithQuestions.gameTemplate.questions.length) {
-
-                            const currentQuestion = gameInstanceWithQuestions.gameTemplate.questions[gameState.currentQuestionIndex]?.question;
-                            if (currentQuestion) {
-                                const { filterQuestionForClient } = await import('@shared/types/quiz/liveQuestion');
-                                let filteredQuestion = filterQuestionForClient(currentQuestion);
-
-                                // Remove timeLimit if null or undefined (schema expects it omitted, not null)
-                                if (filteredQuestion.timeLimit == null) {
-                                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                    const { timeLimit, ...rest } = filteredQuestion;
-                                    filteredQuestion = rest;
-                                }
-
-                                // Add required top-level fields
-                                const questionPayload = {
-                                    ...filteredQuestion,
-                                    currentQuestionIndex: gameState.currentQuestionIndex,
-                                    totalQuestions: gameInstanceWithQuestions.gameTemplate.questions.length
-                                };
-
-                                logger.info({
-                                    accessCode,
-                                    userId,
-                                    playMode: gameInstance.playMode,
-                                    questionIndex: gameState.currentQuestionIndex,
-                                    payload: questionPayload
-                                }, '[MODERNIZATION] Sending current question to late joiner (schema-compliant)');
-
-                                socket.emit(SOCKET_EVENTS.GAME.GAME_QUESTION as any, questionPayload);
-
-                                // Also send timer update (canonical)
-                                const durationMs = typeof currentQuestion.timeLimit === 'number' && currentQuestion.timeLimit > 0 ? currentQuestion.timeLimit * 1000 : 0;
-                                if (durationMs > 0) {
-                                    const canonicalTimer = await getCanonicalTimer(
-                                        accessCode,
-                                        currentQuestion.uid,
-                                        gameState.gameMode,
-                                        gameState.status === 'completed',
-                                        durationMs,
-                                        undefined
-                                    );
-                                    if (canonicalTimer) {
-                                        const timerUpdatePayload: GameTimerUpdatePayload = {
-                                            timer: canonicalTimer,
-                                            questionUid: canonicalTimer.questionUid
-                                        };
-                                        socket.emit(SOCKET_EVENTS.GAME.GAME_TIMER_UPDATED as any, timerUpdatePayload);
-                                    }
-                                }
-                            }
                         }
+                    } catch (error) {
+                        logger.error({ error, accessCode, userId }, 'Error sending current state to late joiner');
                     }
-                } catch (error) {
-                    logger.error({ error, accessCode, userId }, 'Error sending current state to late joiner');
+                } else if (gameInstance.status === 'pending') {
+                    // Canonical: participant_list emission is now handled by lobbyHandler only
+                    logger.info({ accessCode, userId }, '[MODERNIZATION] Game is pending, participant_list emission handled by lobbyHandler');
                 }
             }
 

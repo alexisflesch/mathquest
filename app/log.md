@@ -1,3 +1,11 @@
+
+# [2025-07-08] Live page: Canonical creator logic & start button (blocked on backend event)
+
+- Audited `LobbyLayout` and live page for creator logic and start button rendering.
+- Patched live page to render "Démarrer le tournoi" button for the creator only, using canonical types/props from the canonical participant list event.
+- Button click handler is a no-op with alert: **no canonical client-to-server event exists for starting a tournament** (`start_tournament` is not in ClientToServerEvents). Backend must expose a canonical event for this action.
+- Updated `plan.md` and `log.md` to document this gap and checklist.
+- Validated that the button appears for the creator and only for the creator, and shows an alert on click.
 # 2025-07-08 - Student Join Modal: Deferred Tournament Expiry Handling
 
 **What was done:**
