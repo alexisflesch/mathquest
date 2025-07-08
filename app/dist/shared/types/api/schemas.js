@@ -68,7 +68,8 @@ exports.CreateGameRequestSchema = zod_1.z.object({
     discipline: zod_1.z.string().optional(),
     themes: zod_1.z.array(zod_1.z.string()).optional(),
     nbOfQuestions: zod_1.z.number().int().positive().optional(),
-    initiatorStudentId: zod_1.z.string().uuid().optional()
+    initiatorStudentId: zod_1.z.string().uuid().optional(),
+    status: zod_1.z.enum(['pending', 'completed']).optional()
 });
 exports.GameJoinRequestSchema = zod_1.z.object({
     userId: zod_1.z.string().uuid('Invalid user ID'),
@@ -426,7 +427,7 @@ exports.PracticeQuestionDataSchema = zod_1.z.object({
     text: zod_1.z.string().min(1, "Question text is required"),
     answerOptions: zod_1.z.array(zod_1.z.string()).min(2, "At least 2 answer options required"),
     questionType: zod_1.z.string().min(1, "Question type is required"),
-    timeLimit: zod_1.z.number().int().min(1).optional(),
+    timeLimit: zod_1.z.number().int().min(1),
     gradeLevel: zod_1.z.string().min(1, "Grade level is required"),
     discipline: zod_1.z.string().min(1, "Discipline is required"),
     themes: zod_1.z.array(zod_1.z.string()).min(1, "At least one theme is required")

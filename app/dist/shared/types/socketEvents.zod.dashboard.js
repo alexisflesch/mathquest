@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.gameControlStatePayloadSchema = exports.questionForDashboardSchema = void 0;
+exports.showCorrectAnswersPayloadSchema = exports.gameControlStatePayloadSchema = exports.questionForDashboardSchema = void 0;
 const zod_1 = require("zod");
 const timer_zod_1 = require("./core/timer.zod");
 const question_zod_1 = require("./quiz/question.zod");
@@ -18,4 +18,11 @@ exports.gameControlStatePayloadSchema = zod_1.z.object({
     answersLocked: zod_1.z.boolean(),
     participantCount: zod_1.z.number().int().nonnegative(),
     answerStats: zod_1.z.record(zod_1.z.string(), zod_1.z.number()).optional(),
+});
+exports.showCorrectAnswersPayloadSchema = zod_1.z.object({
+    gameId: zod_1.z.string().optional(),
+    accessCode: zod_1.z.string().optional(),
+    teacherId: zod_1.z.string().optional(),
+    show: zod_1.z.boolean(),
+    terminatedQuestions: zod_1.z.record(zod_1.z.boolean()),
 });

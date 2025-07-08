@@ -113,8 +113,9 @@ export interface UserByCookieResponse {
 export interface TeacherProfileResponse {
     user: PublicUserResponse;
 }
+import type { PublicGameInstance } from './publicGameInstance';
 export interface GameInstanceResponse {
-    gameInstance: GameInstance;
+    gameInstance: PublicGameInstance;
 }
 export interface GameInstanceWithTemplateResponse {
     gameInstance: GameInstance & {

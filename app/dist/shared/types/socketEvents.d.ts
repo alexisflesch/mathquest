@@ -176,6 +176,13 @@ export interface ClientToServerEvents extends PracticeClientToServerEvents {
         classId?: string;
         cookieId?: string;
     }) => void;
+    /**
+     * [LEGACY, to be modernized] Start tournament (creator only)
+     * This is required for now for the live page start button. Remove when backend/contract is modernized.
+     */
+    start_tournament: (payload: {
+        accessCode: string;
+    }) => void;
 }
 export interface ServerToClientEvents extends PracticeServerToClientEvents {
     connect: () => void;
@@ -199,6 +206,7 @@ export interface ServerToClientEvents extends PracticeServerToClientEvents {
     game_participants: (payload: {
         participants: ParticipantData[];
     }) => void;
+    participants_list: (payload: import('./lobbyParticipantListPayload').LobbyParticipantListPayload) => void;
     game_control_question_set: (payload: {
         questionIndex: number;
         timer: any;

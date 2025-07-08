@@ -6,7 +6,7 @@ const zod_1 = require("zod");
 // The answer stats object is a mapping from answer option (string) to count (number)
 exports.ProjectionShowStatsStatsSchema = zod_1.z.record(zod_1.z.string(), zod_1.z.number());
 exports.ProjectionShowStatsPayloadSchema = zod_1.z.object({
-    questionUid: zod_1.z.string(),
+    questionUid: zod_1.z.string().optional(), // Allow missing questionUid for hide events
     show: zod_1.z.boolean(),
     stats: exports.ProjectionShowStatsStatsSchema, // e.g. { "A": 3, "B": 5 }
     timestamp: zod_1.z.number()
