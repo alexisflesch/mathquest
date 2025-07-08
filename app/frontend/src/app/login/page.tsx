@@ -201,7 +201,7 @@ function LoginPageInner() {
                                             id="email"
                                             name="email"
                                             className="input input-bordered input-lg w-full"
-                                            autoComplete="email"
+                                            autoComplete="username"
                                             required
                                         />
                                     </div>
@@ -252,7 +252,6 @@ function LoginPageInner() {
                                                 name="username"
                                                 maxLength={20}
                                                 className="input input-bordered input-lg w-full"
-                                                autoComplete="username"
                                                 required
                                             />
                                         </div>
