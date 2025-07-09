@@ -96,41 +96,8 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
         playerRoom,
         questionCount: questions.length
     }, 'Starting deferred tournament session');
-    // Clear Redis deferred session data to ensure clean state when deferred session starts
-    // This prevents old deferred scores from contaminating new sessions
-    // NOTE: We don't clear timer data here because timers are created during the session
-    try {
-        const deferredSessionKeys = [
-            `mathquest:game:participants:${accessCode}`,
-            `mathquest:game:leaderboard:${accessCode}`,
-            `mathquest:game:answers:${accessCode}:*`,
-            `deferred_session:${accessCode}:${userId}:*`
-        ];
-        for (const key of deferredSessionKeys) {
-            if (key.includes('*')) {
-                // Handle wildcard keys
-                const keys = await redis_1.redisClient.keys(key);
-                if (keys.length > 0) {
-                    await redis_1.redisClient.del(...keys);
-                }
-            }
-            else {
-                await redis_1.redisClient.del(key);
-            }
-        }
-        logger.info({
-            accessCode,
-            userId,
-            clearedKeys: deferredSessionKeys
-        }, '[REDIS-CLEANUP] Cleared Redis deferred session data at session start for clean state');
-    }
-    catch (error) {
-        logger.error({
-            accessCode,
-            userId,
-            error: error instanceof Error ? error.message : String(error)
-        }, '[REDIS-CLEANUP] Error clearing Redis deferred session data at session start');
-    }
+    // [MODERNIZATION] Redis cleanup at deferred session start is now disabled to prevent participant/score loss.
+    // If you need to clear Redis for a new session, do it at session end only.
     // Catch-all entry log
     // Place entry log after accessCode and userId are defined
     logger.info({ accessCode, userId, logPoint: 'DEFERRED_SESSION_ENTRY' }, '[DEBUG] Entered startDeferredTournamentSession');

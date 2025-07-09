@@ -53,31 +53,10 @@ export async function runGameFlow(
     runningGameFlows.add(accessCode);
     logger.info({ accessCode, playMode: options.playMode, questionCount: questions.length }, `[SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.`);
 
+
     try {
-        // Clear Redis game data to ensure clean state when game starts
-        // This prevents old live scores from contaminating new sessions
-        const gameDataKeys = [
-            `mathquest:game:participants:${accessCode}`,
-            `mathquest:game:leaderboard:${accessCode}`,
-            `mathquest:game:answers:${accessCode}:*`,
-            `mathquest:game:join_order:${accessCode}`,
-            `mathquest:game:userIdToSocketId:${accessCode}`,
-            `mathquest:game:socketIdToUserId:${accessCode}`
-        ];
-
-        for (const key of gameDataKeys) {
-            if (key.includes('*')) {
-                // Handle wildcard keys
-                const keys = await redisClient.keys(key);
-                if (keys.length > 0) {
-                    await redisClient.del(...keys);
-                }
-            } else {
-                await redisClient.del(key);
-            }
-        }
-
-        logger.info({ accessCode, clearedKeys: gameDataKeys }, '[REDIS-CLEANUP] Cleared Redis game data at game start for clean state');
+        // [MODERNIZATION] Redis cleanup at game start is now disabled to prevent participant/score loss.
+        // If you need to clear Redis for a new game, do it at game end only.
 
         // Update all PENDING participants to ACTIVE when game starts
         // This prevents them from being removed when they disconnect

@@ -1,4 +1,3 @@
-
 # [2025-07-08] Live page: Canonical creator logic & start button (blocked on backend event)
 
 - Audited `LobbyLayout` and live page for creator logic and start button rendering.
@@ -411,5 +410,19 @@
 - Modal background should be dark (not white), text should be light, and all borders/colors should match theme
 - No hardcoded white backgrounds remain in modal code
 - All changes are theme-compliant and work in both light/dark mode
+
+**Checklist/plan.md updated.**
+# 2025-07-09 - Redis State Modernization: Prevent Participant/Score Loss
+
+**What was done:**
+- Investigated and confirmed that Redis cleanup at game start (in `sharedGameFlow.ts`) and deferred session start (in `deferredTournamentFlow.ts`) was wiping all participants and scores, causing leaderboard/podium loss on join/replay.
+- Commented out/removed all Redis cleanup at game start and deferred session start. Redis is now only cleared at game/session end.
+- Updated `plan.md` with a new phase-based checklist for this modernization.
+
+**Testing:**
+- Join/replay a quiz or tournament game with multiple participants.
+- Observe that all participants and their scores persist in Redis throughout the game/session.
+- Leaderboard and podium remain correct for all users.
+- Redis is only cleared at the end of the game/session (not at start).
 
 **Checklist/plan.md updated.**

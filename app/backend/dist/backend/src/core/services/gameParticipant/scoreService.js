@@ -31,7 +31,7 @@ class DifferedScoreService {
      * Get or create a differed participation for a user/tournament.
      * If a new attempt, resets score and increments attempt count.
      */
-    static async getOrCreateParticipation({ userId, gameInstanceId }) {
+    static async getOrCreateParticipation({ userId, gameInstanceId, mode }) {
         // Find existing participant for this user/gameInstance (unified model)
         let participant = await prisma_1.prisma.gameParticipant.findFirst({
             where: {
@@ -53,14 +53,17 @@ class DifferedScoreService {
             });
         }
         else {
-            // New attempt: increment attemptCount, reset score
-            participant = await prisma_1.prisma.gameParticipant.update({
-                where: { id: participant.id },
-                data: {
-                    nbAttempts: { increment: 1 },
-                    deferredScore: 0
-                }
-            });
+            // Only reset score and increment attempts for tournament mode
+            if (mode === 'tournament') {
+                participant = await prisma_1.prisma.gameParticipant.update({
+                    where: { id: participant.id },
+                    data: {
+                        nbAttempts: { increment: 1 },
+                        deferredScore: 0
+                    }
+                });
+            }
+            // For quiz mode, do not reset score or increment attempts
         }
         return participant;
     }
