@@ -1,4 +1,49 @@
-# PHASE: Timer Edit Logic Fix - Immediate TimeLeft Changes with Fair Penalties (2025-07-09)
+# PHASE: Participant List Update Bug Fix - Creator Preservation (2025-07-09)
+
+## Context
+
+**CRITICAL BUG**: When the creator leaves a tournament/quiz, the participant list stops being emitted to remaining participants because the `emitParticipantList` function was looking for the creator in the participants list and returning early when not found.
+
+**Key Issue**: For quiz mode, the creator will NOT be in the live room participants list, so this logic was fundamentally flawed.
+
+## Expected Behavior
+
+- Creator information (username/avatar) must always be available for display
+- Participant list updates must always be emitted, regardless of creator presence
+- Creator leaving should not break participant list updates for remaining users
+
+---
+
+## Phase 1: Fix Participant List Logic ✅
+
+- [x] **FIXED**: Remove logic that returns early when creator not found in participants
+- [x] **CREATOR PRESERVATION**: Always fetch creator info from database, independent of participants
+- [x] **QUIZ MODE SUPPORT**: Creator info available even when not in participants list
+- [x] **EMIT GUARANTEE**: Participant list always emitted as long as game instance exists
+- [x] **NULL SAFETY**: Added null check for initiatorUserId to prevent type errors
+
+---
+
+## Phase 2: Testing & Validation
+
+- [ ] **Test Tournament**: Creator leaves → verify participant list updates for remaining users
+- [ ] **Test Quiz Mode**: Creator not in participants → verify creator info still displayed
+- [ ] **Test Empty Participants**: No participants left → verify graceful handling
+- [ ] **Test Creator Display**: Live page shows creator username/avatar correctly
+
+---
+
+## Phase 3: Documentation
+
+- [ ] Document the creator preservation logic
+- [ ] Update socket event documentation
+- [ ] Verify all related tests pass
+
+---
+
+# PREVIOUS PHASES
+
+## PHASE: Timer Edit Logic Fix - Immediate TimeLeft Changes with Fair Penalties (2025-07-09)
 
 ## Context
 

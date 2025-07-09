@@ -100,13 +100,39 @@ export async function emitParticipantList(io: SocketIOServer, accessCode: string
             online: true // Assume online if they're in PENDING or ACTIVE status
         }));
 
-        // Find creator participant
-        const creator = participants.find(p => p.userId === gameInstance.initiatorUserId);
-
-        if (!creator) {
-            logger.warn({ accessCode, creatorId: gameInstance.initiatorUserId }, '[PARTICIPANT_LIST] Creator not found in participants list');
+        // Get creator information from database (needed for quiz mode where creator isn't in participants)
+        if (!gameInstance.initiatorUserId) {
+            logger.error({ accessCode }, '[PARTICIPANT_LIST] Game instance has no initiatorUserId');
             return;
         }
+
+        const creatorUser = await prisma.user.findUnique({
+            where: { id: gameInstance.initiatorUserId },
+            select: {
+                id: true,
+                username: true,
+                avatarEmoji: true
+            }
+        });
+
+        if (!creatorUser) {
+            logger.error({ accessCode, creatorId: gameInstance.initiatorUserId }, '[PARTICIPANT_LIST] Creator user not found in database');
+            return;
+        }
+
+        // Create creator object (independent of whether they're in participants or not)
+        const creator = {
+            userId: creatorUser.id,
+            username: creatorUser.username,
+            avatarEmoji: creatorUser.avatarEmoji || '🐼'
+        };
+
+        logger.info({
+            accessCode,
+            creatorId: creator.userId,
+            creatorUsername: creator.username,
+            isCreatorInParticipants: participants.some(p => p.userId === creator.userId)
+        }, '[PARTICIPANT_LIST] Creator info loaded from database');
 
         // For now, send in the format the frontend expects (LobbyParticipantListPayload)
         // TODO: Update frontend to handle UnifiedParticipantListPayload
