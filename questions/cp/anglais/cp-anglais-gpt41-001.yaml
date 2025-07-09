@@ -1,0 +1,175 @@
+- uid: "gpt41-cp-anglais-vocabulaire-004"
+  title: "Répondre oui"
+  text: "Comment dit-on 'oui' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Yes"
+    - "No"
+    - "Please"
+    - "Hello"
+  correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-anglais-vocabulaire-005"
+  title: "Répondre non"
+  text: "Comment dit-on 'non' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Yes"
+    - "Thank you"
+    - "No"
+    - "Goodbye"
+  correctAnswers: [false, false, true, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-anglais-vocabulaire-006"
+  title: "Dire merci"
+  text: "Comment dit-on 'merci' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Thank you"
+    - "Goodbye"
+    - "Yes"
+    - "Dog"
+  correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-anglais-vocabulaire-007"
+  title: "Dire au revoir"
+  text: "Comment dit-on 'au revoir' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Hello"
+    - "Cat"
+    - "Goodbye"
+    - "No"
+  correctAnswers: [false, false, true, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-anglais-vocabulaire-008"
+  title: "Un animal de compagnie"
+  text: "Comment dit-on 'chien' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  tags: ["animaux"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Dog"
+    - "Cat"
+    - "Bird"
+    - "Fish"
+  correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-anglais-vocabulaire-009"
+  title: "Un autre animal"
+  text: "Comment dit-on 'chat' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  tags: ["animaux"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Bird"
+    - "Cat"
+    - "Dog"
+    - "Mouse"
+  correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-anglais-vocabulaire-010"
+  title: "Saluer quelqu’un"
+  text: "Comment dit-on 'bonjour' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Goodbye"
+    - "Hello"
+    - "Thank you"
+    - "Yes"
+  correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
+
+
+- uid: "gpt41-cp-anglais-vocabulaire-011"
+  title: "La couleur rouge"
+  text: "Comment dit-on 'rouge' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Blue"
+    - "Green"
+    - "Red"
+    - "Yellow"
+  correctAnswers: [false, false, true, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-anglais-vocabulaire-012"
+  title: "La couleur verte"
+  text: "Comment dit-on 'vert' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Green"
+    - "Red"
+    - "Black"
+    - "White"
+  correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-anglais-vocabulaire-013"
+  title: "La couleur bleue"
+  text: "Comment dit-on 'bleu' en anglais ?"
+  questionType: "single_choice"
+  discipline: "Anglais"
+  themes: ["Vocabulaire"]
+  tags: ["couleurs"]
+  timeLimit: 30
+  difficulty: 1
+  gradeLevel: "CP"
+  answerOptions:
+    - "Yellow"
+    - "Blue"
+    - "Green"
+    - "Pink"
+  correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"

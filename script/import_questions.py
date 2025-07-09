@@ -31,7 +31,7 @@ DB_HOST = os.getenv('DB_HOST')
 DB_PORT = int(os.getenv('DB_PORT', 5432))
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
 # Import all YAML files in ../questions
 def get_yaml_paths():
@@ -66,19 +66,19 @@ def clear_db():
     logging.info('Tables game_participants, game_instances, and game_templates cleared.')
 
 def import_questions():
-    logging.info('Starting import process...')
-    # Clear the Question table before inserting new questions
-    try:
-        conn = get_conn()
-        cur = conn.cursor()
-        logging.info('Clearing the Question table...')
-        cur.execute('DELETE FROM questions')
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        logging.error(f"Erreur de connexion à la base de données : {e}")
-        return
+    def print_colored(level, msg):
+        prefix = f"[{level}] "
+        if level == 'INFO':
+            print(color_text(prefix + msg, Colors.OKGREEN))
+        elif level == 'WARNING':
+            print(color_text(prefix + msg, Colors.WARNING))
+        elif level == 'ERROR':
+            print(color_text(prefix + msg, Colors.FAIL))
+        else:
+            print(prefix + msg)
+
+    print_colored('INFO', 'Starting import process...')
+    # NE PAS supprimer la table tant que la validation n'est pas finie !
 
     total_uploaded = 0
     total_errors = 0
@@ -86,53 +86,133 @@ def import_questions():
     all_errors = []
     all_warnings = []
     all_questions = []
-    yaml_files = get_yaml_paths()
-    for yaml_path in yaml_files:
-        logging.info(f'Processing file: {yaml_path}')
-        try:
-            with open(yaml_path, 'r', encoding='utf-8') as f:
-                questions = yaml.safe_load(f)
-            if not isinstance(questions, list):
-                msg = f"Erreur de format dans le fichier : {yaml_path} (le fichier doit contenir une liste de questions)"
+    # --- NOUVELLE LOGIQUE ---
+    import glob
+    questions_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../questions'))
+    # 1. Trouver tous les dossiers à la racine de questions/
+    root_items = os.listdir(questions_dir)
+    root_dirs = [d for d in root_items if os.path.isdir(os.path.join(questions_dir, d))]
+    # 2. Charger les nomenclatures (ex: cp.yaml, ce1.yaml, ...)
+    nomenclatures = {}
+    for d in root_dirs:
+        nom_path = os.path.join(questions_dir, f"{d}.yaml")
+        if os.path.isfile(nom_path):
+            try:
+                with open(nom_path, 'r', encoding='utf-8') as f:
+                    nomenclatures[d] = yaml.safe_load(f)
+            except Exception as e:
+                msg = f"Erreur lors de la lecture de la nomenclature {nom_path} : {e}"
                 logging.error(msg)
                 all_errors.append(msg)
                 total_errors += 1
-                continue
-        except Exception as e:
-            msg = f"Erreur lors de la lecture du fichier {yaml_path} : {e}"
-            logging.error(msg)
-            all_errors.append(msg)
-            total_errors += 1
-            continue
-
-        for idx, q in enumerate(questions):
-            # Champs obligatoires YAML (anglais) - timeLimit is now required and must be a positive integer
-            required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers", "difficulty", "gradeLevel", "author", "timeLimit"]
-            missing = [field for field in required_fields if field not in q or q[field] in [None, "", []]]
-            # Validate timeLimit is a positive integer
-            invalid_time_limit = False
-            if "timeLimit" in q:
-                try:
-                    time_limit_val = int(q["timeLimit"])
-                    if time_limit_val <= 0:
-                        invalid_time_limit = True
-                except Exception:
-                    invalid_time_limit = True
-            if missing or invalid_time_limit:
-                msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants ou timeLimit invalide : {missing if missing else ''}{' (timeLimit must be a positive integer)' if invalid_time_limit else ''}"
-                logging.error(msg)
-                all_errors.append(msg)
-                total_errors += 1
-                continue
-
-            # Champs recommandés mais non obligatoires
-            if not q.get("title"):
-                msg = f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}"
-                logging.warning(msg)
-                all_warnings.append(msg)
-                total_warnings += 1
-
-            all_questions.append((q, yaml_path))
+    # 3. Parcourir tous les fichiers questions (sauf nomenclatures)
+    for d in root_dirs:
+        dir_path = os.path.join(questions_dir, d)
+        # Préparer la structure de nomenclature pour ce dossier (niveau)
+        nomenclature = nomenclatures.get(d)
+        disciplines_dict = {}
+        if nomenclature and 'disciplines' in nomenclature:
+            for disc in nomenclature['disciplines']:
+                disc_name = disc.get('nom')
+                if not disc_name:
+                    continue
+                themes_dict = {}
+                for theme in disc.get('themes', []):
+                    theme_name = theme.get('nom')
+                    if not theme_name:
+                        continue
+                    tags = set(theme.get('tags', []))
+                    themes_dict[theme_name] = tags
+                disciplines_dict[disc_name] = themes_dict
+        # Chercher tous les .yaml dans ce dossier
+        for root, dirs, files in os.walk(dir_path):
+            for f in files:
+                if f.endswith('.yaml'):
+                    yaml_path = os.path.join(root, f)
+                    # Sauter les nomenclatures (ex: cp.yaml à la racine)
+                    if os.path.abspath(yaml_path) == os.path.abspath(os.path.join(questions_dir, f"{d}.yaml")):
+                        continue
+                    # logging.info(f'Processing file: {yaml_path}')
+                    print_colored('INFO', f'Processing file: {yaml_path}')
+                    try:
+                        with open(yaml_path, 'r', encoding='utf-8') as file:
+                            questions = yaml.safe_load(file)
+                        if not isinstance(questions, list):
+                            msg = f"Erreur de format dans le fichier : {yaml_path} (le fichier doit contenir une liste de questions)"
+                            # logging.error(msg)
+                            print_colored('ERROR', msg)
+                            all_errors.append(msg)
+                            total_errors += 1
+                            raise Exception(msg)
+                    except Exception as e:
+                        msg = f"Erreur lors de la lecture du fichier {yaml_path} : {e}"
+                        # logging.error(msg)
+                        print_colored('ERROR', msg)
+                        all_errors.append(msg)
+                        total_errors += 1
+                        return
+                    # Pour chaque question, valider la nomenclature
+                    for idx, q in enumerate(questions):
+                        required_fields = ["uid", "text", "questionType", "discipline", "themes", "answerOptions", "correctAnswers", "difficulty", "gradeLevel", "author", "timeLimit"]
+                        missing = [field for field in required_fields if field not in q or q[field] in [None, "", []]]
+                        invalid_time_limit = False
+                        if "timeLimit" in q:
+                            try:
+                                time_limit_val = int(q["timeLimit"])
+                                if time_limit_val <= 0:
+                                    invalid_time_limit = True
+                            except Exception:
+                                invalid_time_limit = True
+                        # --- Validation stricte nomenclature ---
+                        # 1. Discipline
+                        discipline = q.get('discipline')
+                        if discipline not in disciplines_dict:
+                            msg = f"Discipline '{discipline}' inconnue pour la question (uid={q.get('uid')}) dans {yaml_path}"
+                            # logging.error(msg)
+                            print_colored('ERROR', msg)
+                            all_errors.append(msg)
+                            total_errors += 1
+                            return
+                        # 2. Themes
+                        themes = q.get('themes', [])
+                        if isinstance(themes, str):
+                            themes = [themes]
+                        for theme in themes:
+                            if discipline in disciplines_dict and theme not in disciplines_dict[discipline]:
+                                msg = f"Thème '{theme}' inconnu pour la discipline '{discipline}' (uid={q.get('uid')}) dans {yaml_path}"
+                                # logging.error(msg)
+                                print_colored('ERROR', msg)
+                                all_errors.append(msg)
+                                total_errors += 1
+                                return
+                            # 3. Tags (optionnel, si la question a des tags)
+                            if 'tags' in q and q['tags']:
+                                tags = q['tags']
+                                if isinstance(tags, str):
+                                    tags = [tags]
+                                known_tags = disciplines_dict.get(discipline, {}).get(theme, set())
+                                for tag in tags:
+                                    if tag not in known_tags:
+                                        msg = f"Tag '{tag}' inconnu pour le thème '{theme}' de la discipline '{discipline}' (uid={q.get('uid')}) dans {yaml_path}"
+                                        # logging.error(msg)
+                                        print_colored('ERROR', msg)
+                                        all_errors.append(msg)
+                                        total_errors += 1
+                                        return
+                        if missing or invalid_time_limit:
+                            msg = f"Question manquante ou incomplète dans {yaml_path} (index {idx}): champs manquants ou timeLimit invalide : {missing if missing else ''}{' (timeLimit must be a positive integer)' if invalid_time_limit else ''}"
+                            # logging.error(msg)
+                            print_colored('ERROR', msg)
+                            all_errors.append(msg)
+                            total_errors += 1
+                            return
+                        if not q.get("title"):
+                            msg = f"Question sans titre (uid={q.get('uid')}) dans {yaml_path}"
+                            # logging.warning(msg)
+                            print_colored('WARNING', msg)
+                            all_warnings.append(msg)
+                            total_warnings += 1
+                        all_questions.append((q, yaml_path))
 
     if total_errors > 0:
         logging.error("\n=== Import annulé : des erreurs ont été détectées dans les fichiers/questions ===")
@@ -149,63 +229,62 @@ def import_questions():
     try:
         conn = get_conn()
         cur = conn.cursor()
-        logging.info('Clearing the Question table...')
+        print_colored('INFO', 'Clearing the Question table...')
         cur.execute('DELETE FROM questions')
         conn.commit()
-    except Exception as e:
-        logging.error(f"Erreur de connexion à la base de données : {e}")
-        return
-
-    for q, yaml_path in all_questions:
-        try:
-            cur.execute(
-                '''INSERT INTO questions
-                (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, is_hidden, answer_options, correct_answers, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
-                ON CONFLICT (uid) DO UPDATE SET
-                title = EXCLUDED.title,
-                question_text = EXCLUDED.question_text,
-                question_type = EXCLUDED.question_type,
-                discipline = EXCLUDED.discipline,
-                themes = EXCLUDED.themes,
-                difficulty = EXCLUDED.difficulty,
-                grade_level = EXCLUDED.grade_level,
-                author = EXCLUDED.author,
-                explanation = EXCLUDED.explanation,
-                tags = EXCLUDED.tags,
-                time_limit_seconds = EXCLUDED.time_limit_seconds,
-                is_hidden = EXCLUDED.is_hidden,
-                answer_options = EXCLUDED.answer_options,
-                correct_answers = EXCLUDED.correct_answers,
-                updated_at = NOW()''',
-                [
-                    q.get('uid'),
-                    q.get('title'),
-                    q.get('text'),
-                    q.get('questionType'),
-                    q.get('discipline'),
-                    q.get('themes'),
-                    q.get('difficulty'),
-                    q.get('gradeLevel'),
-                    q.get('author'),
-                    q.get('explanation'),
-                    q.get('tags'),
-                    q.get('timeLimit'),
-                    q.get('isHidden', False),
-                    q.get('answerOptions'),
-                    q.get('correctAnswers')
-                ]
-            )
-            total_uploaded += 1
-        except Exception as e:
-            msg = f"Erreur lors de l'import de la question (uid={q.get('uid')}) dans {yaml_path} : {e}"
-            logging.error(msg)
-            all_errors.append(msg)
-            total_errors += 1
-    if conn:
+        # Insérer les questions seulement après suppression
+        for q, yaml_path in all_questions:
+            try:
+                cur.execute(
+                    '''INSERT INTO questions
+                    (uid, title, question_text, question_type, discipline, themes, difficulty, grade_level, author, explanation, tags, time_limit_seconds, is_hidden, answer_options, correct_answers, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                    ON CONFLICT (uid) DO UPDATE SET
+                    title = EXCLUDED.title,
+                    question_text = EXCLUDED.question_text,
+                    question_type = EXCLUDED.question_type,
+                    discipline = EXCLUDED.discipline,
+                    themes = EXCLUDED.themes,
+                    difficulty = EXCLUDED.difficulty,
+                    grade_level = EXCLUDED.grade_level,
+                    author = EXCLUDED.author,
+                    explanation = EXCLUDED.explanation,
+                    tags = EXCLUDED.tags,
+                    time_limit_seconds = EXCLUDED.time_limit_seconds,
+                    is_hidden = EXCLUDED.is_hidden,
+                    answer_options = EXCLUDED.answer_options,
+                    correct_answers = EXCLUDED.correct_answers,
+                    updated_at = NOW()''',
+                    [
+                        q.get('uid'),
+                        q.get('title'),
+                        q.get('text'),
+                        q.get('questionType'),
+                        q.get('discipline'),
+                        q.get('themes'),
+                        q.get('difficulty'),
+                        q.get('gradeLevel'),
+                        q.get('author'),
+                        q.get('explanation'),
+                        q.get('tags'),
+                        q.get('timeLimit'),
+                        q.get('isHidden', False),
+                        q.get('answerOptions'),
+                        q.get('correctAnswers')
+                    ]
+                )
+                total_uploaded += 1
+            except Exception as e:
+                msg = f"Erreur lors de l'import de la question (uid={q.get('uid')}) dans {yaml_path} : {e}"
+                logging.error(msg)
+                all_errors.append(msg)
+                total_errors += 1
         conn.commit()
         cur.close()
         conn.close()
+    except Exception as e:
+        logging.error(f"Erreur de connexion à la base de données : {e}")
+        return
 
     # --- PRETTY SUMMARY ---
     print("\n" + "="*50)

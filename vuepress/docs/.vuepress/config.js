@@ -9,6 +9,10 @@ export default defineUserConfig({
   title: 'MathQuest',
   description: 'Alternative libre et open source à Kahoot, pour les enseignants et leurs élèves.',
   base: '/mathquest/',
+  
+  head: [
+    ['link', { rel: 'icon', href: '/favicon.ico' }]
+  ],
 
   theme: defaultTheme({
     logo: '/assets/logo.svg',

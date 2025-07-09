@@ -6,22 +6,19 @@
 <h2 id="_1-preparer-vos-fichiers-yaml" tabindex="-1"><a class="header-anchor" href="#_1-preparer-vos-fichiers-yaml"><span>1. Préparer vos fichiers YAML</span></a></h2>
 <ul>
 <li>Utilisez un éditeur de texte pour créer vos fichiers YAML. Préférez un éditeur qui supporte la coloration syntaxique YAML (comme VSCode, Sublime Text, etc.).</li>
-<li>Rédigez vos questions au format YAML en respectant la <a href="/questions-yaml/" target="_blank" rel="noopener noreferrer">structure officielle</a>.</li>
+<li>Rédigez vos questions au format YAML en respectant la <RouteLink to="/questions-yaml/">structure officielle</RouteLink>.</li>
 <li>Utilisez les clés en anglais (<code v-pre>uid</code>, <code v-pre>text</code>, <code v-pre>answerOptions</code>, etc.), mais les valeurs (énoncés, thèmes, etc.) peuvent être en français.</li>
 <li><strong>L'<code v-pre>uid</code> doit être unique</strong> : il doit commencer par le nom de l'auteur (ex : <code v-pre>dupont-6e-maths-fractions-001</code>). Ajoutez niveau, discipline, thème si besoin pour éviter toute collision.</li>
 <li>Vous pouvez mettre autant de questions que vous voulez dans un même fichier YAML.</li>
 </ul>
 <h2 id="_2-proposer-une-contribution" tabindex="-1"><a class="header-anchor" href="#_2-proposer-une-contribution"><span>2. Proposer une contribution</span></a></h2>
-<ul>
-<li>Deux possibilités :
+<p>Deux possibilités :</p>
 <ul>
 <li><strong>Contact direct (recommandé pour débuter)</strong> : envoyez vos fichiers ou questions à alexis.flesch@gmail.com (idéal si vous n'êtes pas à l'aise avec GitHub).</li>
 <li><strong>Pull Request sur GitHub</strong> :
 <ul>
 <li>Rendez-vous sur <a href="https://github.com/aflesch/mathquest" target="_blank" rel="noopener noreferrer">le dépôt GitHub de MathQuest</a> et cliquez sur &quot;Fork&quot; pour créer votre copie personnelle.</li>
 <li>Ajoutez vos fichiers YAML dans le bon dossier (<code v-pre>questions/6e/</code>, etc.), puis ouvrez une Pull Request vers la branche principale du dépôt d'origine. Décrivez brièvement votre contribution (niveau, thèmes, nombre de questions, etc.).</li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -36,26 +33,14 @@
 <li>Utilisez le script d'import local pour vérifier que vos fichiers sont valides et importables (voir la doc principale).</li>
 <li>Corrigez toute erreur de format ou de validation.</li>
 </ul>
-<h2 id="_5-proposer-une-contribution" tabindex="-1"><a class="header-anchor" href="#_5-proposer-une-contribution"><span>5. Proposer une contribution</span></a></h2>
-<ul>
-<li>Deux possibilités :
-<ul>
-<li><strong>Pull Request sur GitHub</strong> : depuis votre fork, ouvrez une Pull Request vers la branche principale du dépôt d'origine. Décrivez brièvement votre contribution (niveau, thèmes, nombre de questions, etc.).</li>
-<li><strong>Contact direct</strong> : envoyez vos fichiers ou questions à alexis.flesch@gmail.com (idéal pour les débutants ou si vous n'êtes pas à l'aise avec GitHub).</li>
-</ul>
-</li>
-</ul>
-<h2 id="_6-revue-et-integration" tabindex="-1"><a class="header-anchor" href="#_6-revue-et-integration"><span>6. Revue et intégration</span></a></h2>
+<h2 id="_5-revue-et-integration" tabindex="-1"><a class="header-anchor" href="#_5-revue-et-integration"><span>5. Revue et intégration</span></a></h2>
 <ul>
 <li>Les mainteneurs vérifieront la qualité, la cohérence et l'absence de doublons.</li>
 <li>Après validation, vos questions seront intégrées à la base commune et disponibles pour tous !</li>
 </ul>
-<h2 id="_7-bonnes-pratiques-et-conventions" tabindex="-1"><a class="header-anchor" href="#_7-bonnes-pratiques-et-conventions"><span>7. Bonnes pratiques et conventions</span></a></h2>
-<ul>
-<li>Il n'existe pas encore de liste officielle de niveaux/disciplines/thèmes/tags, mais vous pouvez consulter la partie &quot;Créer une activité&quot; de l'application pour voir les valeurs existantes (menus déroulants).</li>
-<li>Pour les niveaux, utilisez les noms standards : <code v-pre>6e</code>, <code v-pre>5e</code>, ..., <code v-pre>L1</code>, <code v-pre>L2</code>, <code v-pre>L3</code>, <code v-pre>M1</code>, <code v-pre>M2</code>.</li>
-</ul>
-<p><strong>Merci pour votre contribution !</strong></p>
+<h2 id="_6-bonnes-pratiques-et-conventions" tabindex="-1"><a class="header-anchor" href="#_6-bonnes-pratiques-et-conventions"><span>6. Bonnes pratiques et conventions</span></a></h2>
+<p>Pour les niveaux, utilisez les noms standards : <code v-pre>6e</code>, <code v-pre>5e</code>, ..., <code v-pre>L1</code>, <code v-pre>L2</code>, <code v-pre>L3</code>, <code v-pre>M1</code>, <code v-pre>M2</code>. Pour les disciplines, les thèmes et les &quot;tags&quot;, vous pouvez vous référer aux menus déroulants ci-dessous. Si vous souhaitez améliorer la nomenclature ou proposer de nouveaux thèmes/tags, n'hésitez pas à le mentionner dans votre contribution.</p>
+<QuestionsExplorer /><p><strong>Merci pour votre contribution !</strong></p>
 </div></template>
 
 

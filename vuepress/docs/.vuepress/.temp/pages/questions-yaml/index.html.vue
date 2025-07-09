@@ -1,12 +1,14 @@
 <template><div><h1 id="rediger-des-questions-au-format-yaml" tabindex="-1"><a class="header-anchor" href="#rediger-des-questions-au-format-yaml"><span>Rédiger des questions au format YAML</span></a></h1>
 <blockquote>
-<p>Cette page explique comment rédiger des questions pour MathQuest au format YAML, en utilisant les noms de champs <strong>anglais</strong> (cohérence avec le code). Les valeurs et la documentation sont en français.</p>
+<p>Cette page explique comment rédiger des questions pour MathQuest au format YAML, en utilisant les noms de champs <strong>anglais</strong> (cohérence avec le code). Les valeurs et la documentation sont en français. Les noms des disciplines, des thèmes et des tags doivent respecter la nomenclature définie dans le dossier <code v-pre>questions</code>: chaque niveau (cp, ce1, etc...) a son propre fichier YAML de référence.</p>
 </blockquote>
 <h2 id="exemple-minimal-champs-obligatoires" tabindex="-1"><a class="header-anchor" href="#exemple-minimal-champs-obligatoires"><span>Exemple minimal (champs obligatoires)</span></a></h2>
 <div class="language-yaml line-numbers-mode" data-highlighter="prismjs" data-ext="yml"><pre v-pre><code class="language-yaml"><span class="line"><span class="token key atrule">uid</span><span class="token punctuation">:</span> <span class="token string">"Q-0001"</span></span>
+<span class="line"><span class="token key atrule">author</span><span class="token punctuation">:</span> <span class="token string">"Alexis Flesch"</span></span>
 <span class="line"><span class="token key atrule">text</span><span class="token punctuation">:</span> <span class="token string">"Quelle est la capitale de la France ?"</span></span>
 <span class="line"><span class="token key atrule">questionType</span><span class="token punctuation">:</span> <span class="token string">"single_choice"</span></span>
-<span class="line"><span class="token key atrule">discipline</span><span class="token punctuation">:</span> <span class="token string">"géographie"</span></span>
+<span class="line"><span class="token key atrule">discipline</span><span class="token punctuation">:</span> <span class="token string">"Géographie"</span></span>
+<span class="line"><span class="token key atrule">timeLimit</span><span class="token punctuation">:</span> <span class="token number">15</span></span>
 <span class="line"><span class="token key atrule">themes</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"Europe"</span><span class="token punctuation">,</span> <span class="token string">"France"</span><span class="token punctuation">]</span></span>
 <span class="line"><span class="token key atrule">answerOptions</span><span class="token punctuation">:</span></span>
 <span class="line">  <span class="token punctuation">-</span> <span class="token string">"Paris"</span></span>
@@ -14,8 +16,10 @@
 <span class="line">  <span class="token punctuation">-</span> <span class="token string">"Berlin"</span></span>
 <span class="line">  <span class="token punctuation">-</span> <span class="token string">"Madrid"</span></span>
 <span class="line"><span class="token key atrule">correctAnswers</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token boolean important">true</span><span class="token punctuation">,</span> <span class="token boolean important">false</span><span class="token punctuation">,</span> <span class="token boolean important">false</span><span class="token punctuation">,</span> <span class="token boolean important">false</span><span class="token punctuation">]</span></span>
+<span class="line"><span class="token key atrule">difficulty</span><span class="token punctuation">:</span> <span class="token number">1</span></span>
+<span class="line"><span class="token key atrule">gradeLevel</span><span class="token punctuation">:</span> <span class="token string">"6e"</span></span>
 <span class="line"></span></code></pre>
-<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="exemple-complet-toutes-options" tabindex="-1"><a class="header-anchor" href="#exemple-complet-toutes-options"><span>Exemple complet (toutes options)</span></a></h2>
+<div class="line-numbers" aria-hidden="true" style="counter-reset:line-number 0"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="exemple-complet-toutes-options" tabindex="-1"><a class="header-anchor" href="#exemple-complet-toutes-options"><span>Exemple complet (toutes options)</span></a></h2>
 <p>Ci-dessous un exemple complet avec toutes les clefs possibles ainsi que la syntaxe à utiliser pour écrire un champ sur plusieurs lignes.</p>
 <div class="language-yaml line-numbers-mode" data-highlighter="prismjs" data-ext="yml"><pre v-pre><code class="language-yaml"><span class="line"><span class="token key atrule">uid</span><span class="token punctuation">:</span> <span class="token string">"Q-0002"</span></span>
 <span class="line"><span class="token key atrule">title</span><span class="token punctuation">:</span> <span class="token string">"Capitale européenne"</span></span>
@@ -92,14 +96,14 @@
 <tr>
 <td><code v-pre>difficulty</code></td>
 <td>int</td>
-<td>non</td>
-<td>Niveau de difficulté (entier)</td>
+<td>oui</td>
+<td>Niveau de difficulté (entier, obligatoire)</td>
 </tr>
 <tr>
 <td><code v-pre>gradeLevel</code></td>
 <td>string</td>
-<td>non</td>
-<td>Niveau scolaire (ex : <code v-pre>5e</code>, <code v-pre>Terminale</code>)</td>
+<td>oui</td>
+<td>Niveau scolaire (ex : <code v-pre>5e</code>, <code v-pre>Terminale</code>, obligatoire)</td>
 </tr>
 <tr>
 <td><code v-pre>author</code></td>

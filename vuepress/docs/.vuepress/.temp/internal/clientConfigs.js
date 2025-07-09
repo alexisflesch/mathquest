@@ -9,6 +9,7 @@ import * as clientConfig7 from '/home/aflesch/mathquest/vuepress/docs/.vuepress/
 import * as clientConfig8 from '/home/aflesch/mathquest/vuepress/docs/.vuepress/.temp/markdown-tab/config.js'
 import * as clientConfig9 from '/home/aflesch/mathquest/vuepress/node_modules/@vuepress/plugin-theme-data/lib/client/config.js'
 import * as clientConfig10 from '/home/aflesch/mathquest/vuepress/node_modules/@vuepress/theme-default/lib/client/config.js'
+import * as clientConfig11 from '/home/aflesch/mathquest/vuepress/docs/.vuepress/client.js'
 
 export const clientConfigs = [
   clientConfig0,
@@ -22,4 +23,5 @@ export const clientConfigs = [
   clientConfig8,
   clientConfig9,
   clientConfig10,
+  clientConfig11,
 ].map((m) => m.default).filter(Boolean)

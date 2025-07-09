@@ -2,10 +2,13 @@
 # Auteur : gpt4.1
 
 - uid: "gpt41-cp-math-nombres-001"
+  author: "gpt-4.1"
+  discipline: "Mathématiques"
+  title: "Addition simple"
   text: "Combien font 2 + 1 ?"
   questionType: "single_choice"
-  discipline: "mathématiques"
-  themes: ["addition", "nombres"]
+  discipline: "Mathématiques"
+  themes: ["Calcul"]
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
@@ -15,13 +18,14 @@
     - "4"
     - "1"
   correctAnswers: [false, true, false, false]
-  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-002"
+  author: "gpt-4.1"
+  title: "Nombre suivant"
   text: "Quel est le chiffre qui vient après 4 ?"
   questionType: "single_choice"
-  discipline: "mathématiques"
-  themes: ["nombres", "suite numérique"]
+  discipline: "Mathématiques"
+  themes: ["Nombres"]
   timeLimit: 30
   difficulty: 1
   gradeLevel: "CP"
@@ -31,14 +35,15 @@
     - "6"
     - "2"
   correctAnswers: [false, true, false, false]
-  author: "gpt-4.1"
 
 - uid: "gpt41-cp-math-nombres-003"
+  author: "gpt-4.1"
+  title: "Côtés d'un triangle"
   text: "Combien y a-t-il de côtés sur un triangle ?"
   questionType: "single_choice"
-  discipline: "mathématiques"
+  discipline: "Mathématiques"
   timeLimit: 30
-  themes: ["formes", "géométrie"]
+  themes: ["Géométrie"]
   difficulty: 1
   gradeLevel: "CP"
   answerOptions:
@@ -47,116 +52,40 @@
     - "2"
     - "5"
   correctAnswers: [true, false, false, false]
-  author: "gpt-4.1"
 
-- uid: "gpt41-cp-math-nombres-004"
-  text: "Complète : 1, 2, 3, __ ?"
+
+- uid: "gpt41-cp-math-nombres-003"
+  author: "gpt-4.1"
+  title: "Suite de nombres"
+  text: "Complète la suite : 1,3,5,_"
   questionType: "single_choice"
-  discipline: "mathématiques"
+  discipline: "Mathématiques"
   timeLimit: 30
-  themes: ["suite numérique", "nombres"]
+  themes: ["Nombres"]
   difficulty: 1
   gradeLevel: "CP"
   answerOptions:
-    - "4"
-    - "5"
-    - "2"
-    - "1"
-  correctAnswers: [true, false, false, false]
-  author: "gpt-4.1"
-
-- uid: "gpt41-cp-math-nombres-005"
-  text: "Combien font 5 - 2 ?"
-  questionType: "single_choice"
-  discipline: "mathématiques"
-  timeLimit: 30
-  themes: ["soustraction", "nombres"]
-  difficulty: 1
-  gradeLevel: "CP"
-  answerOptions:
-    - "2"
-    - "3"
-    - "4"
-    - "1"
-  correctAnswers: [false, true, false, false]
-  author: "gpt-4.1"
-
-- uid: "gpt41-cp-math-nombres-006"
-  text: "Quel est le plus grand : 7 ou 4 ?"
-  questionType: "single_choice"
-  discipline: "mathématiques"
-  timeLimit: 30
-  themes: ["comparaison", "nombres"]
-  difficulty: 1
-  gradeLevel: "CP"
-  answerOptions:
-    - "7"
-    - "4"
-    - "Ils sont égaux"
-    - "0"
-  correctAnswers: [true, false, false, false]
-  author: "gpt-4.1"
-
-- uid: "gpt41-cp-math-nombres-007"
-  text: "Combien de doigts as-tu sur une main ?"
-  questionType: "single_choice"
-  discipline: "mathématiques"
-  timeLimit: 30
-  themes: ["corps humain", "nombres"]
-  difficulty: 1
-  gradeLevel: "CP"
-  answerOptions:
-    - "4"
-    - "5"
     - "6"
+    - "7"
+    - "8"
     - "10"
   correctAnswers: [false, true, false, false]
-  author: "gpt-4.1"
 
-- uid: "gpt41-cp-math-nombres-008"
-  text: "Combien font 1 + 1 ?"
-  questionType: "single_choice"
-  discipline: "mathématiques"
+
+- uid: "aflesch-cp-math-nombres-003"
+  author: "Alexis Flesch"
+  title: "Nombres pairs"
+  text: "Quels nombres sont des doubles ?"
+  questionType: "multiple_choice"
+  discipline: "Mathématiques"
   timeLimit: 30
-  themes: ["addition", "nombres"]
-  difficulty: 1
+  themes: ["Nombres"]
+  difficulty: 2
   gradeLevel: "CP"
   answerOptions:
-    - "1"
-    - "2"
-    - "3"
-    - "0"
-  correctAnswers: [false, true, false, false]
-  author: "gpt-4.1"
-
-- uid: "gpt41-cp-math-nombres-009"
-  text: "Quel chiffre manque : 2, 3, __, 5 ?"
-  questionType: "single_choice"
-  discipline: "mathématiques"
-  timeLimit: 30
-  themes: ["suite numérique", "nombres"]
-  difficulty: 1
-  gradeLevel: "CP"
-  answerOptions:
-    - "4"
-    - "1"
     - "6"
     - "7"
-  correctAnswers: [true, false, false, false]
-  author: "gpt-4.1"
-
-- uid: "gpt41-cp-math-nombres-010"
-  text: "Combien font 3 + 2 ?"
-  questionType: "single_choice"
-  discipline: "mathématiques"
-  timeLimit: 30
-  themes: ["addition", "nombres"]
-  difficulty: 1
-  gradeLevel: "CP"
-  answerOptions:
-    - "4"
-    - "5"
-    - "6"
-    - "3"
-  correctAnswers: [false, true, false, false]
-  author: "gpt-4.1"
+    - "8"
+    - "12"
+    - "13"
+  correctAnswers: [true, false, true, true, false]

@@ -6,7 +6,7 @@ title: Écriture de questions (YAML)
 
 # Rédiger des questions au format YAML
 
-> Cette page explique comment rédiger des questions pour MathQuest au format YAML, en utilisant les noms de champs **anglais** (cohérence avec le code). Les valeurs et la documentation sont en français.
+> Cette page explique comment rédiger des questions pour MathQuest au format YAML, en utilisant les noms de champs **anglais** (cohérence avec le code). Les valeurs et la documentation sont en français. Les noms des disciplines, des thèmes et des tags doivent respecter la nomenclature définie dans le dossier `questions`: chaque niveau (cp, ce1, etc...) a son propre fichier YAML de référence.
 
 
 
@@ -14,9 +14,11 @@ title: Écriture de questions (YAML)
 
 ```yaml
 uid: "Q-0001"
+author: "Alexis Flesch"
 text: "Quelle est la capitale de la France ?"
 questionType: "single_choice"
-discipline: "géographie"
+discipline: "Géographie"
+timeLimit: 15
 themes: ["Europe", "France"]
 answerOptions:
   - "Paris"
