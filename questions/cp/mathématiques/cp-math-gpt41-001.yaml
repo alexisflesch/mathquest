@@ -89,3 +89,76 @@
     - "12"
     - "13"
   correctAnswers: [true, false, true, true, false]
+
+
+- uid: "gpt41-cp-maths-nombres-002"
+  title: "Comparer des nombres"
+  text: "Quel nombre est le plus grand ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Nombres"]
+  tags: ["comparer des quantités"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "42"
+    - "24"
+    - "34"
+    - "14"
+  correctAnswers: [true, false, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-maths-nombres-003"
+  title: "Complément à 10"
+  text: "Quel nombre faut-il ajouter à 7 pour faire 10 ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Calcul"]
+  tags: ["compléments à 10"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "4"
+    - "3"
+    - "2"
+    - "1"
+  correctAnswers: [false, true, false, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-maths-nombres-004"
+  title: "Décomposer un nombre"
+  text: "Quelle opération donne 6 ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Calcul"]
+  tags: ["additions simples"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "5 + 3"
+    - "7 + 1"
+    - "4 + 2"
+    - "3 + 5"
+  correctAnswers: [false, false, true, false]
+  author: "gpt-4.1"
+
+- uid: "gpt41-cp-maths-géométrie-002"
+  title: "Nommer une forme"
+  text: "Quel est le nom d’une forme avec 3 cotés ?"
+  questionType: "single_choice"
+  discipline: "Mathématiques"
+  themes: ["Géométrie"]
+  tags: ["formes géométriques usuelles"]
+  timeLimit: 30
+  difficulty: 2
+  gradeLevel: "CP"
+  answerOptions:
+    - "Cercle"
+    - "Rectangle"
+    - "Carré"
+    - "Triangle"
+  correctAnswers: [false, false, true, false]
+  author: "gpt-4.1"
