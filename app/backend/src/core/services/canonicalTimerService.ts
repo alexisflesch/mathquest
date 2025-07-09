@@ -300,11 +300,22 @@ export class CanonicalTimerService {
         let elapsed = 0;
         let timerEndDateMs = 0;
         if (status === 'run') {
-            elapsed = (timer.lastStateChange && timer.startedAt)
-                ? (now - timer.lastStateChange) + (timer.totalPlayTimeMs || 0)
-                : 0;
-            timeLeftMs = Math.max(0, canonicalDurationMs - elapsed);
-            timerEndDateMs = now + timeLeftMs;
+            // Check if timerEndDateMs is set directly (from editTimer)
+            if (typeof timer.timerEndDateMs === 'number' && timer.timerEndDateMs > 0) {
+                // Use the explicitly set end time
+                timeLeftMs = Math.max(0, timer.timerEndDateMs - now);
+                elapsed = canonicalDurationMs - timeLeftMs;
+                timerEndDateMs = timer.timerEndDateMs;
+                logger.info({ accessCode, questionUid, canonicalDurationMs, elapsed, timeLeftMs, timerEndDateMs, timer, now }, '[CANONICAL_TIMER][getTimer] Running state using explicitly set timerEndDateMs');
+            } else {
+                // Normal case: compute from elapsed time
+                elapsed = (timer.lastStateChange && timer.startedAt)
+                    ? (now - timer.lastStateChange) + (timer.totalPlayTimeMs || 0)
+                    : 0;
+                timeLeftMs = Math.max(0, canonicalDurationMs - elapsed);
+                timerEndDateMs = now + timeLeftMs;
+                logger.info({ accessCode, questionUid, canonicalDurationMs, elapsed, timeLeftMs, timer, now }, '[CANONICAL_TIMER][getTimer] Running state computed from elapsed time');
+            }
         } else if (status === 'pause') {
             // Use persisted timeLeftMs if present (set by pauseTimer), else compute from totalPlayTimeMs
             if (typeof timer.timeLeftMs === 'number' && timer.timeLeftMs >= 0) {
@@ -470,12 +481,31 @@ export class CanonicalTimerService {
                     logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated ONLY durationMs for paused non-current question (timeLeftMs removed if present)');
                 }
             } else if (timer.status === 'play') {
-                // For running, update durationMs and adjust timerEndDateMs
-                timer.durationMs = durationMs;
-                const elapsed = now - timer.lastStateChange + (timer.totalPlayTimeMs || 0);
-                timer.totalPlayTimeMs = elapsed;
-                timer.timerEndDateMs = now + Math.max(0, durationMs - elapsed);
-                logger.info({ accessCode, questionUid, durationMs, timer }, '[TIMER][editTimer] Updated durationMs for running timer');
+                // For running: immediately change the remaining time (what teacher is editing)
+                const originalDurationMs = timer.durationMs || 0;
+                const currentElapsed = (timer.lastStateChange && timer.startedAt)
+                    ? (now - timer.lastStateChange) + (timer.totalPlayTimeMs || 0)
+                    : 0;
+
+                // CRITICAL: Teacher wants to immediately change timeLeftMs (remaining time)
+                // This should take effect right now, not restart the timer
+
+                // Update durationMs if the new time left requires it (for increases)
+                const newTotalDuration = currentElapsed + durationMs; // elapsed + new time left
+                if (newTotalDuration > originalDurationMs) {
+                    timer.durationMs = newTotalDuration;
+                    logger.info({ accessCode, questionUid, originalDurationMs, newTotalDuration, timer }, '[TIMER][editTimer] Increased durationMs to accommodate new timeLeftMs');
+                }
+
+                // Set the new end time directly - this takes immediate effect
+                timer.timerEndDateMs = now + durationMs;
+
+                // Update timing state to reflect the new end time
+                // We need to recalculate totalPlayTimeMs to maintain consistency
+                timer.totalPlayTimeMs = Math.max(0, (timer.durationMs || newTotalDuration) - durationMs);
+                timer.lastStateChange = now;
+
+                logger.info({ accessCode, questionUid, durationMs, originalDurationMs, currentElapsed, newEndTime: timer.timerEndDateMs, timer }, '[TIMER][editTimer] Updated running timer with immediate effect');
             } else if (timer.status === 'stop') {
                 // For stopped, update only durationMs (not timeLeftMs)
                 timer.durationMs = durationMs;
