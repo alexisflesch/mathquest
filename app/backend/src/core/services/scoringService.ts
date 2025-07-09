@@ -269,10 +269,17 @@ export async function submitAnswerWithScoring(
                 mode: gameInstance?.playMode,
                 note: 'Duplicate answer detected, no score update.'
             }, '[DIAGNOSTIC] Duplicate answer detected for DEFERRED/LIVE/QUIZ');
+
+            // Get current total score from Redis
+            const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
+            const redisParticipantData = await redisClient.hget(participantKey, userId);
+            const currentRedisScore = redisParticipantData ?
+                (JSON.parse(redisParticipantData).score || 0) : 0;
+
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
-                totalScore: isDeferred ? (participant.deferredScore || 0) : (participant.liveScore || 0),
+                totalScore: currentRedisScore,
                 answerChanged: false,
                 previousAnswer,
                 message: 'Same answer already submitted'
@@ -285,10 +292,17 @@ export async function submitAnswerWithScoring(
         });
         if (!question) {
             logger.error({ gameInstanceId, userId, questionUid: answerData.questionUid }, '[ERROR] Question not found');
+
+            // Get current total score from Redis
+            const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
+            const redisParticipantData = await redisClient.hget(participantKey, userId);
+            const currentRedisScore = redisParticipantData ?
+                (JSON.parse(redisParticipantData).score || 0) : 0;
+
             return {
                 scoreUpdated: false,
                 scoreAdded: 0,
-                totalScore: isDeferred ? (participant.deferredScore || 0) : (participant.liveScore || 0),
+                totalScore: currentRedisScore,
                 answerChanged: previousAnswerExists,
                 previousAnswer,
                 message: 'Question not found'
@@ -356,28 +370,41 @@ export async function submitAnswerWithScoring(
         }, '[TIME_PENALTY] Calculated score and time penalty (canonical)');
         // Replace previous score for this question (not increment)
         let scoreDelta = newScore - previousScore;
-        // For all modes, always increment the score by scoreDelta
-        let scoreUpdateData: any = {};
-        // If in deferred mode, keep the max between previous attempt and new attempt
+
+        // ANTI-CHEATING: Store scores in Redis only during game, not in database
+        // Database will be updated only when game ends via persistLeaderboardToGameInstance
+        let currentTotalScore = 0;
+
+        // Calculate new total score based on mode
         if (isDeferred) {
-            // Fetch the current DB score again to ensure up-to-date
-            const currentDbParticipant = await prisma.gameParticipant.findUnique({ where: { id: participant.id } });
-            const currentDbScore = currentDbParticipant?.deferredScore || 0;
-            const newTotal = currentDbScore + scoreDelta;
-            // Set score to max of previous best and new total
-            scoreUpdateData = { deferredScore: Math.max(currentDbScore, newTotal) };
+            // For deferred mode, we need to handle score replacement properly
+            // The scoreDelta already accounts for the difference between new and previous answer scores
+            // So we just add the delta to get the new total (this replaces the previous answer score)
+            const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
+            const redisParticipantData = await redisClient.hget(participantKey, userId);
+            const currentRedisScore = redisParticipantData ?
+                (JSON.parse(redisParticipantData).score || 0) : 0;
+            currentTotalScore = currentRedisScore + scoreDelta;
+
+            // No max logic here - we trust that scoreDelta correctly represents the change
+            // The max logic will be applied later during persistence to database
         } else {
-            // For live mode, increment the live score
-            scoreUpdateData = { liveScore: { increment: scoreDelta } };
+            // For live mode, increment the score
+            const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
+            const redisParticipantData = await redisClient.hget(participantKey, userId);
+            const currentRedisScore = redisParticipantData ?
+                (JSON.parse(redisParticipantData).score || 0) : 0;
+            currentTotalScore = currentRedisScore + scoreDelta;
         }
-        logger.info({ gameInstanceId, userId, scoreUpdateData }, '[LOG] About to update participant score in DB');
-        // [LOG REMOVED] Noisy log for DB score update
-        // Update participant score in DB
-        const updatedParticipant = await prisma.gameParticipant.update({
-            where: { id: participant.id },
-            data: scoreUpdateData
-        });
-        logger.info({ gameInstanceId, userId, updatedScore: isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore }, '[LOG] Updated participant score in DB');
+
+        logger.info({
+            gameInstanceId,
+            userId,
+            currentTotalScore,
+            scoreDelta,
+            isDeferred,
+            note: 'ANTI-CHEATING: Updating Redis only, database will be updated at game end'
+        }, '[ANTI-CHEATING] Calculated new total score for Redis update');
         // [LOG REMOVED] Noisy log for DB score update
         // Update Redis with new answer (remove answerData.timeSpent, store serverTimeSpent only)
         if (gameInstance) {
@@ -394,39 +421,40 @@ export async function submitAnswerWithScoring(
                 })
             );
             // [LOG REMOVED] Noisy diagnostic log for Redis answer storage
-            // Update Redis participant data to sync with database
+            // Update Redis participant data with new total score
             const participantKey = `mathquest:game:participants:${gameInstance.accessCode}`;
             // [LOG REMOVED] Noisy log for Redis participant update
             const redisParticipantData = await redisClient.hget(participantKey, userId);
             if (redisParticipantData) {
                 const participantData = JSON.parse(redisParticipantData);
-                participantData.score = isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore;
+                participantData.score = currentTotalScore;
                 await redisClient.hset(participantKey, userId, JSON.stringify(participantData));
                 // [LOG REMOVED] Noisy log for Redis participant update
             }
-            // Update Redis leaderboard ZSET
+            // Update Redis leaderboard ZSET with new total score
             const leaderboardKey = `mathquest:game:leaderboard:${gameInstance.accessCode}`;
             // [LOG REMOVED] Noisy log for leaderboard ZSET update
-            await redisClient.zadd(leaderboardKey, (isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore) || 0, userId);
+            await redisClient.zadd(leaderboardKey, currentTotalScore, userId);
             // [LOG REMOVED] Noisy log for leaderboard ZSET update
         }
-        logger.info({ gameInstanceId, userId, scoreDelta, totalScore: isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore }, '[LOG] Final score result for answer submission');
+        logger.info({ gameInstanceId, userId, scoreDelta, totalScore: currentTotalScore }, '[LOG] Final score result for answer submission');
         logger.info({
             gameInstanceId,
             userId,
             questionUid: answerData.questionUid,
             scoreDelta,
-            totalScore: isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore,
+            totalScore: currentTotalScore,
             timePenalty,
             serverTimeSpent,
             isDeferred,
             playMode: gameInstance?.playMode,
-            attemptCount
-        }, '[TIME_PENALTY] Final score and time penalty for answer submission');
+            attemptCount,
+            note: 'ANTI-CHEATING: Redis-only update, database will be updated at game end'
+        }, '[ANTI-CHEATING] Final score and time penalty for answer submission');
         return {
             scoreUpdated: scoreDelta !== 0,
             scoreAdded: scoreDelta,
-            totalScore: (isDeferred ? updatedParticipant.deferredScore : updatedParticipant.liveScore) || 0,
+            totalScore: currentTotalScore,
             answerChanged: previousAnswerExists,
             previousAnswer,
             message: scoreDelta !== 0 ? 'Score updated' : 'Answer recorded but no points awarded',

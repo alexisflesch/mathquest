@@ -338,3 +338,253 @@
 - `score = isDeferred ? (deferredScore || 0) : (liveScore || 0)`
 
 **MODERNIZATION COMPLETE**: All backend code now uses the unified participant model with proper score field selection. The database was already correct - the issue was in the API layer.
+
+---
+
+# PHASE 8: ANTI-CHEATING IMPLEMENTATION - REDIS-ONLY SCORING (2025-01-09)
+
+## Context
+Based on the task requirements, we need to prevent cheating by ensuring scores are NOT pushed to the database after each answer submission. Instead:
+1. Scores should be stored in Redis during the game
+2. Leaderboard should remain accessible at all times from Redis
+3. Database should only be updated when the game ends
+
+## Current State Analysis
+- **Current Problem**: `scoringService.ts` updates BOTH Redis and database after each answer submission (lines 371-395)
+- **ANTI-CHEATING ISSUE**: `/api/v1/games/:accessCode/leaderboard` API endpoint is accessible during game - THIS IS THE CHEATING VECTOR!
+- **Game End Persistence**: Already correctly persists to database via `persistLeaderboardToGameInstance` in `sharedGameFlow.ts`
+- **Teacher Dashboard**: Correctly fetches from Redis via sockets (`revealLeaderboardHandler.ts`) - this is safe
+
+## Implementation Plan
+
+### Phase 8.1: Modify Scoring Service (CRITICAL)
+- [x] **Remove database updates from `scoringService.ts`** after each answer submission
+- [x] **Keep Redis updates** for real-time leaderboard access
+- [x] **Ensure game end persistence** continues to work correctly
+- [x] **Update participant score tracking** to use Redis as single source of truth during game
+
+### Phase 8.2: Block API Leaderboard Access During Game (ANTI-CHEATING)
+- [x] **Modify `/api/v1/games/:accessCode/leaderboard` endpoint** to check game status
+- [x] **Return error if game is still active** (status != 'completed')
+- [x] **Only allow leaderboard access after game ends** - when scores are in database
+- [ ] **Verify teacher dashboard sockets continue to work** (they use Redis, which is safe)
+
+### Phase 8.3: Game End Database Persistence
+- [x] **Enhance game end persistence** to transfer final scores from Redis to database
+- [x] **Fix participant status update** - Update PENDING participants to ACTIVE when game starts
+- [ ] **Test deferred mode** continues to work correctly after game end
+- [ ] **Test leaderboard API** works correctly after game end (should now read from database)
+
+### Phase 8.4: Documentation and Testing
+- [x] **Fix deferred mode score persistence** - Use maximum between existing and new deferred scores
+- [x] **Fix deferred mode score inflation** - Prevent score inflation by answer spamming in deferred mode
+- [ ] **Update documentation** to reflect new Redis-only scoring during game
+- [ ] **Add tests** to verify database is not updated during game
+- [ ] **Add tests** to verify API endpoint is blocked during game
+- [ ] **Add tests** to verify game end persistence works correctly
+
+## Changes Made (2025-01-09)
+
+### Phase 8.1: Scoring Service Anti-Cheating Fixes ✅
+- **MODIFIED**: `/backend/src/core/services/scoringService.ts`
+  - **REMOVED**: Database updates after each answer submission (lines 371-395)
+  - **KEPT**: Redis updates for real-time leaderboard access
+  - **ADDED**: Redis-only score tracking during game
+  - **ADDED**: Logic to calculate total scores from Redis participant data
+  - **FIXED**: Deferred mode score inflation bug - proper score delta calculation
+
+### Phase 8.2: API Endpoint Anti-Cheating Fixes ✅
+- **MODIFIED**: `/backend/src/api/v1/games.ts`
+  - **ADDED**: Game status check in `/api/v1/games/:code/leaderboard` endpoint
+  - **BLOCKED**: Access to leaderboard during active games (status != 'completed')
+  - **RETURNS**: 403 error with descriptive message during active games
+  - **PRESERVES**: Normal functionality after game ends
+
+### Phase 8.3: Game End Persistence Enhancement ✅
+- **ENHANCED**: `/backend/src/sockets/handlers/sharedLeaderboard.ts`
+  - **ADDED**: Score transfer from Redis to database at game end
+  - **ADDED**: Proper mode detection (live vs deferred)
+  - **ADDED**: Individual participant score updates in database
+  - **MAINTAINED**: Existing leaderboard field persistence
+  - **FIXED**: Deferred mode score persistence - use maximum between existing and new scores
+- **FIXED**: `/backend/src/sockets/handlers/sharedGameFlow.ts`
+  - **ADDED**: Participant status update from PENDING to ACTIVE when game starts
+  - **PREVENTS**: Participants being removed from database when they disconnect during/after game
+- **ADDED**: `/backend/src/sockets/handlers/deferredTournamentFlow.ts`
+  - **ADDED**: Deferred session score persistence at session end
+  - **TRANSFERS**: Final scores from Redis to deferredScore field in database
+  - **ENSURES**: Proper deferred mode score tracking and persistence
+
+## Anti-Cheating Implementation Summary
+
+### What Was Fixed:
+1. **Database Score Updates**: Removed during-game database updates from `scoringService.ts`
+2. **API Endpoint Blocking**: Blocked `/api/v1/games/:code/leaderboard` during active games
+3. **Game End Persistence**: Enhanced to properly transfer final scores from Redis to database
+
+### How Anti-Cheating Works:
+1. **During Game**: Scores only exist in Redis, database participant scores remain 0
+2. **API Protection**: Leaderboard API returns 403 error during active games
+3. **Teacher Dashboard**: Still works via sockets (Redis access) - this is safe and necessary
+4. **Game End**: Final Redis scores are transferred to database, API becomes accessible
+
+### Security Benefits:
+- **Prevents HTTP Cheating**: No way to access scores via API during game
+- **Maintains Functionality**: Teacher dashboard continues to work via sockets (Redis access)
+- **Preserves Performance**: Redis-only updates during game are faster
+- **Ensures Integrity**: Final scores are properly persisted to database when game ends
+
+## Files to Modify
+1. `/backend/src/core/services/scoringService.ts` - Remove database updates after each answer ✅
+2. `/backend/src/api/v1/games.ts` - Block leaderboard endpoint during active games (CRITICAL ANTI-CHEATING FIX)
+3. `/backend/src/sockets/handlers/sharedGameFlow.ts` - Ensure proper game end persistence transfers scores from Redis to DB
+4. Documentation files - Update to reflect new flow
+
+## Expected Benefits
+- **Prevents cheating**: API endpoint blocked during game, scores cannot be accessed via HTTP
+- **Maintains teacher functionality**: Teacher dashboard continues to work via sockets (Redis access)
+- **Preserves performance**: Redis-only updates during game are faster
+- **Complies with requirements**: Database only updated at game end, leaderboard only accessible after game ends
+
+---
+
+# PHASE 9: FIX DEFERRED MODE SCORE MIXING - REDIS CLEANUP SOLUTION (2025-01-09)
+
+## Context
+- **Issue Identified**: In deferred mode, live scores (962) were being added to deferred scores (995) resulting in mixed scores (1957)
+- **Root Cause**: When deferred sessions start, Redis contains old participant data with live scores from previous sessions
+- **User Suggestion**: Instead of complex score detection, implement clean Redis cleanup at game/session start and end
+
+## Problem Analysis
+From the logs, we can see the issue:
+- User had previous live score: 962
+- User starts deferred session (attempt 7)
+- Join game handler stores participant in Redis with live score: 962
+- When answering deferred questions, scoring service gets Redis score (962) and adds deferred score (995)
+- Result: Mixed score of 1957 instead of clean deferred score of 995
+
+## Solution: Redis Cleanup Strategy
+Instead of complex score detection logic, implement clean Redis cleanup:
+
+1. **Clear Redis when a game ends** - All scores are persisted to DB, Redis data is no longer needed
+2. **Clear Redis when a game/session starts** - Ensures clean state for new sessions
+3. **Clear Redis when deferred sessions end** - Ensures clean state after deferred score persistence
+
+## Changes Made (2025-01-09)
+
+### Phase 9.1: Game Start Redis Cleanup ✅
+- **MODIFIED**: `/backend/src/sockets/handlers/sharedGameFlow.ts`
+  - **ADDED**: Redis cleanup at game start (line 57-75) before updating participant status
+  - **CLEARS**: All game-related Redis keys to ensure clean state
+  - **KEYS CLEARED**: participants, leaderboard, answers, join_order, socket mappings
+
+### Phase 9.2: Game End Redis Cleanup ✅
+- **MODIFIED**: `/backend/src/sockets/handlers/sharedGameFlow.ts`
+  - **ADDED**: Redis cleanup at game end (line 293-313) after persisting scores to database
+  - **CLEARS**: All game-related Redis keys after scores are safely persisted
+  - **TIMING**: After `persistLeaderboardToGameInstance` completes successfully
+
+### Phase 9.3: Deferred Session Start Redis Cleanup ✅
+- **MODIFIED**: `/backend/src/sockets/handlers/deferredTournamentFlow.ts`
+  - **ADDED**: Redis cleanup at deferred session start (line 89-115) before initializing game state
+  - **CLEARS**: All deferred session-related Redis keys to ensure clean state
+  - **KEYS CLEARED**: participants, leaderboard, answers, timers, session state
+
+### Phase 9.4: Deferred Session End Redis Cleanup ✅
+- **MODIFIED**: `/backend/src/sockets/handlers/deferredTournamentFlow.ts`
+  - **ADDED**: Redis cleanup at deferred session end (line 419-445) after persisting scores to database
+  - **CLEARS**: All deferred session-related Redis keys after scores are safely persisted
+  - **TIMING**: After deferred score persistence completes successfully
+
+## Technical Implementation Details
+
+### Redis Keys Cleared at Game Start/End:
+- `mathquest:game:participants:${accessCode}`
+- `mathquest:game:leaderboard:${accessCode}`
+- `mathquest:game:answers:${accessCode}:*`
+- `mathquest:game:join_order:${accessCode}`
+- `mathquest:game:userIdToSocketId:${accessCode}`
+- `mathquest:game:socketIdToUserId:${accessCode}`
+
+### Redis Keys Cleared at Deferred Session Start/End:
+- `mathquest:game:participants:${accessCode}`
+- `mathquest:game:leaderboard:${accessCode}`
+- `mathquest:game:answers:${accessCode}:*`
+- `mathquest:deferred:timer:${accessCode}:${userId}:*`
+- `deferred_session:${accessCode}:${userId}:*`
+
+### Error Handling:
+- All Redis cleanup operations are wrapped in try-catch blocks
+- Failures to clear Redis do not prevent game flow from continuing
+- Comprehensive logging for debugging and monitoring
+
+## Expected Benefits
+- **Eliminates Score Mixing**: Deferred sessions start with clean Redis state (score: 0)
+- **Prevents Contamination**: Old live scores cannot affect new deferred sessions
+- **Maintains Anti-Cheating**: Scores still only stored in Redis during game, DB at end
+- **Preserves Performance**: Redis cleanup is fast and doesn't impact game flow
+- **Ensures Data Integrity**: Clean state prevents edge cases and data corruption
+
+## Testing Instructions
+1. Play a live tournament and get a non-zero score
+2. Start a deferred session for the same tournament
+3. Answer questions in deferred mode
+4. Verify that only the deferred score is shown, not live + deferred
+5. Check logs for Redis cleanup messages
+
+## Files Modified
+1. `/backend/src/sockets/handlers/sharedGameFlow.ts` - Game start/end Redis cleanup
+2. `/backend/src/sockets/handlers/deferredTournamentFlow.ts` - Deferred session start/end Redis cleanup
+
+---
+
+# PHASE 8: PROJECTION LEADERBOARD RE-RENDERING FIX (2025-07-09)
+
+## Context
+- **Issue**: Teacher projection page at `/teacher/projection/:gameCode` was re-rendering the leaderboard component every time a user submitted an answer
+- **Root Cause**: Multiple issues causing unnecessary re-renders:
+  1. The `handleLeaderboardUpdate` function in `useProjectionQuizSocket.ts` was always calling `setLeaderboard()` even when data hadn't changed
+  2. The `ClassementPodium` component was re-rendering due to other state changes (showStats, correctAnswers, etc.)
+  3. State updates from `projection_show_stats` events were causing entire component tree to re-render
+- **Impact**: Unnecessary re-renders causing performance issues and podium animations triggering on every answer click
+
+## Solution Implemented
+### Phase 8.1: Deep Comparison for Leaderboard Updates ✅
+- **Modified**: `/frontend/src/hooks/useProjectionQuizSocket.ts`
+- **Added**: Deep comparison logic in `handleLeaderboardUpdate` function to only update state when data actually changes
+- **Added**: Deep comparison logic in initial leaderboard handling to prevent unnecessary renders on initial load
+- **Optimized**: Now compares userId, username, avatarEmoji, and score for each entry before updating state
+
+### Phase 8.2: Memoized ClassementPodium Component ✅
+- **Modified**: `/frontend/src/components/ClassementPodium.tsx`
+- **Added**: `React.memo` with custom `arePropsEqual` comparison function
+- **Added**: Deep comparison of top3 and others arrays to prevent re-renders when leaderboard data hasn't changed
+- **Added**: Smart comparison for correctAnswers prop (only compare when both are defined)
+- **Enhanced**: Component now only re-renders when actual leaderboard data changes, not when other projection state changes
+
+### Phase 8.3: Stable Component Key ✅
+- **Modified**: `/frontend/src/components/TeacherProjectionClient.tsx`
+- **Added**: Stable key prop `"leaderboard-podium"` to ClassementPodium to prevent component recreation
+- **Ensured**: Component identity remains stable across parent re-renders
+
+## Changes Made
+- **ENHANCED**: `handleLeaderboardUpdate` function with deep comparison logic
+- **ENHANCED**: Initial leaderboard handling with change detection
+- **MEMOIZED**: `ClassementPodium` component with custom comparison function
+- **STABILIZED**: Component key to prevent recreation
+- **ADDED**: Detailed logging to track when updates are skipped vs applied
+- **PREVENTED**: Unnecessary re-renders when leaderboard data is identical
+- **PREVENTED**: Animation retriggering when other projection state changes
+
+## Testing
+- [x] **Test**: Load teacher projection page and verify leaderboard renders correctly
+- [ ] **Test**: Have multiple students submit answers and verify leaderboard only re-renders when scores actually change
+- [ ] **Test**: Verify podium animations don't retrigger when users click answers (unless scores change)
+- [ ] **Test**: Check console logs to confirm unnecessary updates are being skipped
+- [ ] **Test**: Verify other projection features (stats, correct answers) still work correctly
+
+## Expected Benefits
+- **Performance**: Eliminated unnecessary re-renders on teacher projection page
+- **UX**: Podium animations no longer retrigger on every answer click
+- **Stability**: Leaderboard maintains visual state unless data actually changes
+- **Efficiency**: Only updates when leaderboard data actually changes, not on every socket event

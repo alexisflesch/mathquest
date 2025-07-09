@@ -428,6 +428,7 @@ router.patch('/:id/differed', auth_1.teacherAuth, async (req, res) => {
 /**
  * GET /api/v1/games/:code/leaderboard
  * Returns the leaderboard for a given game instance (by access code)
+ * ANTI-CHEATING: Only accessible after game ends (status = 'completed')
  */
 // Modernized: Accepts optional userId query param and marks isCurrentUser in leaderboard
 router.get('/:code/leaderboard', async (req, res) => {
@@ -437,6 +438,18 @@ router.get('/:code/leaderboard', async (req, res) => {
         const gameInstance = await getGameInstanceService().getGameInstanceByAccessCode(code);
         if (!gameInstance) {
             res.status(404).json({ error: 'Game not found' });
+            return;
+        }
+        // ANTI-CHEATING: Block leaderboard access during active games
+        if (gameInstance.status !== 'completed') {
+            logger.warn({
+                accessCode: code,
+                gameStatus: gameInstance.status,
+                userId: userId || 'anonymous'
+            }, '[ANTI-CHEATING] Blocked leaderboard access during active game');
+            res.status(403).json({
+                error: 'Leaderboard not available during active game. Please wait for the game to end.'
+            });
             return;
         }
         let leaderboard = await (0, gameStateService_1.getFormattedLeaderboard)(code);

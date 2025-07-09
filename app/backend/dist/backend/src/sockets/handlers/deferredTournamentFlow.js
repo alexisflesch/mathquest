@@ -96,6 +96,41 @@ async function startDeferredTournamentSession(io, socket, accessCode, userId, qu
         playerRoom,
         questionCount: questions.length
     }, 'Starting deferred tournament session');
+    // Clear Redis deferred session data to ensure clean state when deferred session starts
+    // This prevents old deferred scores from contaminating new sessions
+    // NOTE: We don't clear timer data here because timers are created during the session
+    try {
+        const deferredSessionKeys = [
+            `mathquest:game:participants:${accessCode}`,
+            `mathquest:game:leaderboard:${accessCode}`,
+            `mathquest:game:answers:${accessCode}:*`,
+            `deferred_session:${accessCode}:${userId}:*`
+        ];
+        for (const key of deferredSessionKeys) {
+            if (key.includes('*')) {
+                // Handle wildcard keys
+                const keys = await redis_1.redisClient.keys(key);
+                if (keys.length > 0) {
+                    await redis_1.redisClient.del(...keys);
+                }
+            }
+            else {
+                await redis_1.redisClient.del(key);
+            }
+        }
+        logger.info({
+            accessCode,
+            userId,
+            clearedKeys: deferredSessionKeys
+        }, '[REDIS-CLEANUP] Cleared Redis deferred session data at session start for clean state');
+    }
+    catch (error) {
+        logger.error({
+            accessCode,
+            userId,
+            error: error instanceof Error ? error.message : String(error)
+        }, '[REDIS-CLEANUP] Error clearing Redis deferred session data at session start');
+    }
     // Catch-all entry log
     // Place entry log after accessCode and userId are defined
     logger.info({ accessCode, userId, logPoint: 'DEFERRED_SESSION_ENTRY' }, '[DEBUG] Entered startDeferredTournamentSession');
@@ -333,6 +368,107 @@ async function runDeferredQuestionSequence(io, socket, session) {
             userId,
             totalQuestions: questions.length
         }, 'Deferred tournament session completed and session marked over');
+        // ANTI-CHEATING: Persist final deferred scores to database
+        try {
+            logger.info({
+                accessCode,
+                userId,
+                note: 'ANTI-CHEATING: Persisting final deferred scores to database'
+            }, '[ANTI-CHEATING] Starting deferred score persistence');
+            // Get the game instance
+            const gameInstance = await prisma_1.prisma.gameInstance.findUnique({
+                where: { accessCode },
+                select: { id: true }
+            });
+            if (gameInstance) {
+                // Get the participant's final score from Redis
+                const participantKey = `mathquest:game:participants:${accessCode}`;
+                const redisParticipantData = await redis_1.redisClient.hget(participantKey, userId);
+                if (redisParticipantData) {
+                    const participantData = JSON.parse(redisParticipantData);
+                    const finalScore = participantData.score || 0;
+                    // Find the participant in the database
+                    const dbParticipant = await prisma_1.prisma.gameParticipant.findFirst({
+                        where: {
+                            gameInstanceId: gameInstance.id,
+                            userId: userId
+                        },
+                        orderBy: {
+                            joinedAt: 'desc'
+                        }
+                    });
+                    if (dbParticipant) {
+                        // For deferred mode, keep the maximum between current DB score and new session score
+                        const currentDeferredScore = dbParticipant.deferredScore || 0;
+                        const bestScore = Math.max(currentDeferredScore, finalScore);
+                        await prisma_1.prisma.gameParticipant.update({
+                            where: { id: dbParticipant.id },
+                            data: { deferredScore: bestScore }
+                        });
+                        logger.info({
+                            accessCode,
+                            userId,
+                            participantId: dbParticipant.id,
+                            sessionScore: finalScore,
+                            currentDeferredScore,
+                            bestScore,
+                            note: 'ANTI-CHEATING: Successfully persisted best deferred score to database (Math.max logic)'
+                        }, '[ANTI-CHEATING] Deferred score persisted to database (best score kept)');
+                    }
+                    else {
+                        logger.error({ accessCode, userId }, '[ANTI-CHEATING] Participant not found in database for deferred score persistence');
+                    }
+                }
+                else {
+                    logger.warn({ accessCode, userId }, '[ANTI-CHEATING] No Redis participant data found for deferred score persistence');
+                }
+            }
+            else {
+                logger.error({ accessCode }, '[ANTI-CHEATING] Game instance not found for deferred score persistence');
+            }
+        }
+        catch (error) {
+            logger.error({
+                accessCode,
+                userId,
+                error: error instanceof Error ? error.message : String(error)
+            }, '[ANTI-CHEATING] Error persisting deferred scores to database');
+        }
+        // Clear Redis deferred session data after persisting scores to database
+        // This ensures clean state and prevents old deferred scores from contaminating future sessions
+        try {
+            const deferredSessionKeys = [
+                `mathquest:game:participants:${accessCode}`,
+                `mathquest:game:leaderboard:${accessCode}`,
+                `mathquest:game:answers:${accessCode}:*`,
+                `mathquest:deferred:timer:${accessCode}:${userId}:*`,
+                `deferred_session:${accessCode}:${userId}:*`
+            ];
+            for (const key of deferredSessionKeys) {
+                if (key.includes('*')) {
+                    // Handle wildcard keys
+                    const keys = await redis_1.redisClient.keys(key);
+                    if (keys.length > 0) {
+                        await redis_1.redisClient.del(...keys);
+                    }
+                }
+                else {
+                    await redis_1.redisClient.del(key);
+                }
+            }
+            logger.info({
+                accessCode,
+                userId,
+                clearedKeys: deferredSessionKeys
+            }, '[REDIS-CLEANUP] Cleared Redis deferred session data after persisting scores');
+        }
+        catch (error) {
+            logger.error({
+                accessCode,
+                userId,
+                error: error instanceof Error ? error.message : String(error)
+            }, '[REDIS-CLEANUP] Error clearing Redis deferred session data');
+        }
     }
     catch (error) {
         logger.error({ accessCode, userId, error }, 'Error in deferred question sequence');

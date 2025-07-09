@@ -69,6 +69,41 @@ async function runGameFlow(io, accessCode, questions, options) {
     runningGameFlows.add(accessCode);
     logger.info({ accessCode, playMode: options.playMode, questionCount: questions.length }, `[SharedGameFlow] Starting game flow. Initial delay removed as countdown is now handled by caller.`);
     try {
+        // Clear Redis game data to ensure clean state when game starts
+        // This prevents old live scores from contaminating new sessions
+        const gameDataKeys = [
+            `mathquest:game:participants:${accessCode}`,
+            `mathquest:game:leaderboard:${accessCode}`,
+            `mathquest:game:answers:${accessCode}:*`,
+            `mathquest:game:join_order:${accessCode}`,
+            `mathquest:game:userIdToSocketId:${accessCode}`,
+            `mathquest:game:socketIdToUserId:${accessCode}`
+        ];
+        for (const key of gameDataKeys) {
+            if (key.includes('*')) {
+                // Handle wildcard keys
+                const keys = await redis_1.redisClient.keys(key);
+                if (keys.length > 0) {
+                    await redis_1.redisClient.del(...keys);
+                }
+            }
+            else {
+                await redis_1.redisClient.del(key);
+            }
+        }
+        logger.info({ accessCode, clearedKeys: gameDataKeys }, '[REDIS-CLEANUP] Cleared Redis game data at game start for clean state');
+        // Update all PENDING participants to ACTIVE when game starts
+        // This prevents them from being removed when they disconnect
+        await prisma_1.prisma.gameParticipant.updateMany({
+            where: {
+                gameInstance: { accessCode },
+                status: 'PENDING'
+            },
+            data: {
+                status: 'ACTIVE'
+            }
+        });
+        logger.info({ accessCode }, '[SharedGameFlow] Updated all PENDING participants to ACTIVE status');
         logger.info({ accessCode }, `[SharedGameFlow] Proceeding with first question immediately.`);
         for (let i = 0; i < questions.length; i++) {
             // Set and persist timer in game state before emitting question
@@ -252,6 +287,29 @@ async function runGameFlow(io, accessCode, questions, options) {
             const finalLeaderboard = await calculateLeaderboard(accessCode);
             await persistLeaderboardToGameInstance(accessCode, finalLeaderboard);
             logger.info({ accessCode, leaderboard: finalLeaderboard }, '[SharedGameFlow] Final leaderboard persisted to database');
+            // Clear Redis game data after persisting scores to database
+            // This ensures clean state and prevents old scores from contaminating future sessions
+            const gameDataKeys = [
+                `mathquest:game:participants:${accessCode}`,
+                `mathquest:game:leaderboard:${accessCode}`,
+                `mathquest:game:answers:${accessCode}:*`,
+                `mathquest:game:join_order:${accessCode}`,
+                `mathquest:game:userIdToSocketId:${accessCode}`,
+                `mathquest:game:socketIdToUserId:${accessCode}`
+            ];
+            for (const key of gameDataKeys) {
+                if (key.includes('*')) {
+                    // Handle wildcard keys
+                    const keys = await redis_1.redisClient.keys(key);
+                    if (keys.length > 0) {
+                        await redis_1.redisClient.del(...keys);
+                    }
+                }
+                else {
+                    await redis_1.redisClient.del(key);
+                }
+            }
+            logger.info({ accessCode, clearedKeys: gameDataKeys }, '[REDIS-CLEANUP] Cleared Redis game data at game end after persisting scores');
         }
         catch (error) {
             logger.error({ accessCode, error }, '[SharedGameFlow] Error persisting final leaderboard');

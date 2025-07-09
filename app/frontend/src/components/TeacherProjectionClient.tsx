@@ -43,11 +43,23 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         timeLeftMs,
         connectedCount,
         leaderboard: hookLeaderboard,
+        leaderboardUpdateTrigger,
         showStats,
         currentStats,
         correctAnswersData,
         currentQuestion: rawCurrentQuestion
     } = useProjectionQuizSocket(code, gameId);
+    // Track animation state for podium
+    const [shouldAnimatePodium, setShouldAnimatePodium] = useState(false);
+    useEffect(() => {
+        if (leaderboardUpdateTrigger > 0) {
+            setShouldAnimatePodium(true);
+            // Optionally reset after animation duration (e.g. 2s)
+            const timeout = setTimeout(() => setShouldAnimatePodium(false), 2000);
+            return () => { clearTimeout(timeout); };
+        }
+        return undefined;
+    }, [leaderboardUpdateTrigger]);
     const currentQuestion: QuestionDataForStudent | null = (rawCurrentQuestion && typeof rawCurrentQuestion === 'object')
         ? (rawCurrentQuestion as QuestionDataForStudent)
         : null;
@@ -378,6 +390,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                                     }}
                                 >
                                     <ClassementPodium
+                                        key="leaderboard-podium"
                                         top3={hookLeaderboard.slice(0, 3).map((entry) => ({
                                             userId: entry.userId,
                                             name: entry.username || 'Unknown Player',
@@ -390,6 +403,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                                             score: entry.score,
                                         }))}
                                         correctAnswers={correctAnswersData?.correctAnswers || []}
+                                        animate={shouldAnimatePodium}
                                     />
                                 </div>
                             )}

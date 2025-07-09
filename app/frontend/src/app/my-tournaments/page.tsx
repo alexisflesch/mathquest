@@ -182,7 +182,7 @@ export default function MyTournamentsPage() {
                                 </Link>
                             ) : isQuiz ? (
                                 <Link
-                                    href={isCompleted ? `/leaderboard/${game.code}` : `/lobby/${game.code}`}
+                                    href={isCompleted ? `/leaderboard/${game.code}` : `/live/${game.code}`}
                                     className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center"
                                     title={isCompleted ? "Voir le classement" : "Rejoindre le lobby"}
                                 >
@@ -227,7 +227,7 @@ export default function MyTournamentsPage() {
                             <li key={t.id} className="flex items-center gap-4 pt-0 pb-0 pl-2 pr-1 rounded bg-base-200">
                                 <span className="font-mono text-lg">{t.code}</span>
                                 <span className="flex-1 truncate">{formatActivityDate(t)}</span>
-                                <Link href={`/lobby/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Rejoindre le lobby">
+                                <Link href={`/live/${t.code}`} className="btn btn-ghost btn-sm p-2 min-h-0 flex items-center justify-center" title="Rejoindre le lobby">
                                     <SquareArrowRight style={{ width: 28, height: 28, minWidth: 0, minHeight: 0 }} color="var(--primary)" />
                                 </Link>
                             </li>

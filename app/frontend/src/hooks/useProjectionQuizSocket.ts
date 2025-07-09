@@ -73,6 +73,8 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         avatarEmoji?: string;
         score: number;
     }>>([]);
+    // Track when a leaderboard update is received from the backend
+    const [leaderboardUpdateTrigger, setLeaderboardUpdateTrigger] = useState(0);
 
     // NEW: Projection display state
     const [showStats, setShowStats] = useState<boolean>(false);
@@ -275,11 +277,44 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                 avatarEmoji: entry.avatarEmoji,
                 score: entry.score || 0
             }));
-            setLeaderboard(processedLeaderboard);
+
+
+            // Log both arrays for debugging
+            setLeaderboard(prevLeaderboard => {
+                logger.debug('[LEADERBOARD DIFF DEBUG] prevLeaderboard:', JSON.stringify(prevLeaderboard));
+                logger.debug('[LEADERBOARD DIFF DEBUG] processedLeaderboard:', JSON.stringify(processedLeaderboard));
+
+                // Compare lengths first (quick check)
+                if (prevLeaderboard.length !== processedLeaderboard.length) {
+                    logger.info('🔄 [PROJECTION-FRONTEND] Leaderboard length changed, updating state');
+                    setLeaderboardUpdateTrigger(t => t + 1); // Mark as new leaderboard update
+                    return processedLeaderboard;
+                }
+
+                // Compare each entry
+                const hasChanged = processedLeaderboard.some((newEntry, index) => {
+                    const prevEntry = prevLeaderboard[index];
+                    return !prevEntry ||
+                        prevEntry.userId !== newEntry.userId ||
+                        prevEntry.username !== newEntry.username ||
+                        prevEntry.avatarEmoji !== newEntry.avatarEmoji ||
+                        prevEntry.score !== newEntry.score;
+                });
+
+                if (hasChanged) {
+                    logger.info('🔄 [PROJECTION-FRONTEND] Leaderboard data changed, updating state');
+                    setLeaderboardUpdateTrigger(t => t + 1); // Mark as new leaderboard update
+                    return processedLeaderboard;
+                } else {
+                    logger.debug('⏸️ [PROJECTION-FRONTEND] Leaderboard data unchanged, skipping update');
+                    return prevLeaderboard; // Return previous state to prevent re-render
+                }
+            });
+
             logger.info({
                 leaderboardCount: processedLeaderboard.length,
                 topScores: processedLeaderboard.slice(0, 5).map(p => ({ username: p.username, score: p.score }))
-            }, '✅ [PROJECTION-FRONTEND] Updated projection leaderboard state');
+            }, '✅ [PROJECTION-FRONTEND] Processed projection leaderboard update');
         };        // Handle game state updates (including initial state from getFullGameState)
         const handleGameStateUpdate = (payload: any) => {
             logger.info('🎮 Game state update received:', payload);
@@ -323,13 +358,44 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
                         }, '🔍 [FRONTEND-DEBUG-INITIAL] Processing initial leaderboard entry for username');
                     });
 
-                    setLeaderboard(payload.leaderboard.map((entry: any) => ({
+                    const initialLeaderboard = payload.leaderboard.map((entry: any) => ({
                         userId: entry.userId,
                         username: entry.username || 'Unknown Player',
                         avatarEmoji: entry.avatarEmoji,
                         score: entry.score || 0
-                    })));
-                    logger.info(`🎯 Initialized projection leaderboard with ${payload.leaderboard.length} students from initial state`);
+                    }));
+
+                    // Only update if data is different (initial state comparison)
+                    setLeaderboard(prevLeaderboard => {
+                        // On initial load, prevLeaderboard will be empty array
+                        if (prevLeaderboard.length === 0 && initialLeaderboard.length > 0) {
+                            logger.info(`🎯 Initializing projection leaderboard with ${initialLeaderboard.length} students from initial state`);
+                            return initialLeaderboard;
+                        }
+
+                        // Compare if already has data
+                        if (prevLeaderboard.length !== initialLeaderboard.length) {
+                            logger.info('🔄 [PROJECTION-FRONTEND] Initial leaderboard length changed, updating state');
+                            return initialLeaderboard;
+                        }
+
+                        const hasChanged = initialLeaderboard.some((newEntry: any, index: number) => {
+                            const prevEntry = prevLeaderboard[index];
+                            return !prevEntry ||
+                                prevEntry.userId !== newEntry.userId ||
+                                prevEntry.username !== newEntry.username ||
+                                prevEntry.avatarEmoji !== newEntry.avatarEmoji ||
+                                prevEntry.score !== newEntry.score;
+                        });
+
+                        if (hasChanged) {
+                            logger.info('🔄 [PROJECTION-FRONTEND] Initial leaderboard data changed, updating state');
+                            return initialLeaderboard;
+                        } else {
+                            logger.debug('⏸️ [PROJECTION-FRONTEND] Initial leaderboard data unchanged, skipping update');
+                            return prevLeaderboard;
+                        }
+                    });
                 }
 
                 // Debug: log the timer and question details
@@ -514,6 +580,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
         // Leaderboard data for projection display (UX enhancement)
         leaderboard,
+        leaderboardUpdateTrigger,
 
         // NEW: Projection display state
         showStats,

@@ -2,6 +2,7 @@ import { redisClient } from '@/config/redis';
 import type { LeaderboardEntry, ParticipationType } from '@shared/types/core';
 import { prisma } from '@/db/prisma';
 import { ProjectionLeaderboardUpdatePayload } from '@shared/types/socket/projectionLeaderboardUpdatePayload';
+import { calculateLeaderboard } from '@/sockets/handlers/sharedLeaderboard';
 
 const LEADERBOARD_SNAPSHOT_PREFIX = 'leaderboard:snapshot:';
 
@@ -77,12 +78,43 @@ export async function computeFullLeaderboardAndSnapshot(accessCode: string): Pro
 
     if (!gameInstance) return null;
 
-    // Fetch all participants for this game
+    // If game is active, use Redis-based leaderboard calculation
+    if (gameInstance.status === 'active') {
+        const redisLeaderboard = await calculateLeaderboard(accessCode);
+
+        // Fetch participant details from database for additional metadata
+        const participants = await prisma.gameParticipant.findMany({
+            where: { gameInstance: { accessCode } },
+            include: { user: true }
+        });
+
+        // Build leaderboard entries with additional metadata
+        const leaderboardEntries = redisLeaderboard.map((entry, index) => {
+            const participant = participants.find(p => p.userId === entry.userId);
+            return {
+                userId: entry.userId,
+                username: entry.username,
+                avatarEmoji: entry.avatarEmoji,
+                score: entry.score,
+                participationType: 'LIVE' as ParticipationType,
+                attemptCount: participant?.nbAttempts || 1,
+                participationId: participant?.id || '',
+                rank: index + 1
+            };
+        });
+
+        // Store in Redis
+        await setLeaderboardSnapshot(accessCode, leaderboardEntries as any);
+        return { leaderboard: leaderboardEntries as any };
+    }
+
+    // For completed games, use database-based calculation
     const participants = await prisma.gameParticipant.findMany({
         where: { gameInstance: { accessCode } },
         include: { user: true }
     });
     if (!participants) return null;
+
     // Compute scores and build leaderboard entries - create separate entries for live and deferred scores
     const leaderboardEntries: any[] = [];
 
@@ -140,10 +172,7 @@ export async function computeFullLeaderboardAndSnapshot(accessCode: string): Pro
         ...entry,
         rank: index + 1
     }));
-    // Sort by score descending, then username
-    leaderboard.sort((a, b) => b.score - a.score || a.username.localeCompare(b.username));
-    // Assign ranks (cast to any to allow adding rank property)
-    (leaderboard as any).forEach((entry: any, idx: number) => { entry.rank = idx + 1; });
+
     // Store in Redis
     await setLeaderboardSnapshot(accessCode, leaderboard as any);
     return { leaderboard: leaderboard as any };

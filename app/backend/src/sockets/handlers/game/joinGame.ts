@@ -174,7 +174,9 @@ export function joinGameHandler(
             const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
 
             // Apply join-order bonus to participant score
-            const currentScore = gameInstance.isDiffered ?
+            // For deferred sessions (attempt > 1), use deferred score. For live sessions, use live score.
+            const isInDeferredSession = joinResult.participant.nbAttempts > 1;
+            const currentScore = isInDeferredSession ?
                 (joinResult.participant.deferredScore ?? 0) :
                 (joinResult.participant.liveScore ?? 0);
             const finalScore = currentScore + joinOrderBonus;
