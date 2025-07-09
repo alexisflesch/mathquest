@@ -247,6 +247,7 @@ function StudentCreateTournamentPageInner() {
                 logger.info("Practice GameInstance created", gameData);
 
                 // Redirect to new practice session page with access code
+                // Don't reset loading state - let the redirect happen smoothly
                 router.push(`/student/practice/${gameData.gameInstance.accessCode}`);
                 return;
             }
@@ -285,12 +286,13 @@ function StudentCreateTournamentPageInner() {
             );
 
             logger.info("Tournament created successfully", { code: gameData.gameInstance.accessCode });
+            // Don't reset loading state - let the redirect happen smoothly
             router.push(`/live/${gameData.gameInstance.accessCode}`);
         } catch (err: unknown) {
             logger.error("Error creating tournament", err);
             if (err instanceof Error) setError(err.message);
             else setError('Erreur lors de la création du tournoi.');
-        } finally {
+            // Only reset loading state on error
             setLoading(false);
         }
     };

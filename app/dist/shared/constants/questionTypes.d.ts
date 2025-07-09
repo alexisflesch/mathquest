@@ -12,9 +12,9 @@
  */
 export declare const QUESTION_TYPES: {
     /** Single choice question - canonical type */
-    readonly SINGLE_CHOICE: "choix_simple";
+    readonly SINGLE_CHOICE: "single_choice";
     /** Multiple choice question - canonical type */
-    readonly MULTIPLE_CHOICE: "choix_multiple";
+    readonly MULTIPLE_CHOICE: "multiple_choice";
     /** Multiple choice with single answer - canonical type */
     readonly MULTIPLE_CHOICE_SINGLE_ANSWER: "multiple_choice_single_answer";
     /** Multiple choice - alternative English form */

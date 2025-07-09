@@ -13,7 +13,7 @@ import { GameTimerState } from '../core/timer';
 export interface FilteredQuestion {
     uid: string;
     text: string;             // The question text
-    questionType: string;     // Question type (choix_simple, choix_multiple, etc.) - CANONICAL FIELD NAME
+    questionType: string;     // Question type (single_choice, multiple_choice, etc.) - CANONICAL FIELD NAME
     answerOptions: string[];  // Answer options - CANONICAL FIELD NAME
     // Additional properties required by frontend components (non-sensitive)
     timeLimit?: number;         // Time limit for this question

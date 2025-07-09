@@ -21,6 +21,7 @@ import type { GameInstanceResponse } from '@shared/types/api/responses';
 import type { GameInstance } from '@shared/types/core/game';
 import type { PublicGameInstance } from '@shared/types/api/publicGameInstance';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { QUESTION_TYPES } from '@shared/types';
 
 const logger = createLogger('PracticeSessionWithAccessCode');
 
@@ -180,7 +181,7 @@ export default function PracticeSessionWithAccessCodePage() {
 
     // Helper: is multiple choice (exactly like live page)
     const isMultipleChoice = useMemo(() => {
-        return practiceState.currentQuestion?.questionType === "choix_multiple";
+        return practiceState.currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
     }, [practiceState.currentQuestion?.questionType]);
 
     // Handle single choice answer submission (exactly like live page)
@@ -288,7 +289,7 @@ export default function PracticeSessionWithAccessCodePage() {
 
     // Game instance loading state
     if (loading) {
-        return <LoadingScreen message="Loading practice session..." />;
+        return <LoadingScreen message="Chargement..." />;
     }
 
     // Game instance error state

@@ -348,7 +348,7 @@ export default function LiveGamePage() {
 
     // Helper: is multiple choice
     const isMultipleChoice = useMemo(() => {
-        return gameState.currentQuestion?.questionType === "choix_multiple";
+        return gameState.currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE;
     }, [gameState.currentQuestion?.questionType]);
 
     // Handle single choice answer submission

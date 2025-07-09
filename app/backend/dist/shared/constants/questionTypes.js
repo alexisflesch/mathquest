@@ -16,9 +16,9 @@ exports.isValidQuestionType = isValidQuestionType;
  */
 exports.QUESTION_TYPES = {
     /** Single choice question - canonical type */
-    SINGLE_CHOICE: 'choix_simple',
+    SINGLE_CHOICE: 'single_choice',
     /** Multiple choice question - canonical type */
-    MULTIPLE_CHOICE: 'choix_multiple',
+    MULTIPLE_CHOICE: 'multiple_choice',
     /** Multiple choice with single answer - canonical type */
     MULTIPLE_CHOICE_SINGLE_ANSWER: 'multiple_choice_single_answer',
     /** Multiple choice - alternative English form */

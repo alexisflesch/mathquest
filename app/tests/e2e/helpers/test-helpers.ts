@@ -172,7 +172,7 @@ export class TestDataHelper {
             questions.push({
                 uid: `question_${Date.now()}_${i}`,
                 text: `What is the result of ${i + 1} + ${i + 2} in ${topic}?`,
-                questionType: 'choix_simple',
+                questionType: 'single_choice',
                 answerOptions: [
                     `${(i + 1) + (i + 2)}`, // Correct answer
                     `${(i + 1) + (i + 2) + 1}`,

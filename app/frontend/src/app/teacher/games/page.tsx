@@ -755,10 +755,6 @@ export default function TeacherGamesPage() {
                         <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                             Commencez par créer votre première activité pour engager vos élèves dans l'apprentissage des mathématiques.
                         </p>
-                        <Link href="/teacher/games/new" className="btn-primary flex items-center gap-2 whitespace-nowrap">
-                            <Plus size={20} />
-                            Créer ma première activité
-                        </Link>
                     </div>
                 )}
 
