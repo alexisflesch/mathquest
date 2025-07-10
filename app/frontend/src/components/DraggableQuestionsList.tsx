@@ -286,7 +286,7 @@ export default React.memo(function DraggableQuestionsList(props: DraggableQuesti
     // Custom comparison function to debug which props are changing
     const keys = Object.keys(nextProps) as Array<keyof DraggableQuestionsListProps>;
     let hasChanges = false;
-    
+
     for (const key of keys) {
         if (prevProps[key] !== nextProps[key]) {
             logger.info(`🔄 [QUESTIONS-LIST-PROP-CHANGE] ${key} changed`, {
@@ -296,6 +296,6 @@ export default React.memo(function DraggableQuestionsList(props: DraggableQuesti
             hasChanges = true;
         }
     }
-    
+
     return !hasChanges; // Return true if props are equal (no re-render), false if changed (re-render)
 });

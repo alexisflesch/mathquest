@@ -630,7 +630,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     if (loading) return <LoadingScreen message="Chargement du tableau de bord..." />;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
     if (!code) return <div className="p-8 text-orange-600">Aucun code d'accès fourni.</div>;
-    
+
     // Add a projection page URL for the current code
     const projectionUrl = `/teacher/projection/${code}`;
     return (
