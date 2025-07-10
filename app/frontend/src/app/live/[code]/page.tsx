@@ -50,37 +50,37 @@ const logger = createLogger('LiveGamePage');
 const EMPTY_LEADERBOARD: any[] = [];
 
 // Memoized Timer Display Component
-const TimerDisplay = React.memo(({ 
-    gameMode, 
-    timerState, 
-    isMobile 
-}: { 
-    gameMode: string; 
-    timerState: any; 
-    isMobile: boolean; 
+const TimerDisplay = React.memo(({
+    gameMode,
+    timerState,
+    isMobile
+}: {
+    gameMode: string;
+    timerState: any;
+    isMobile: boolean;
 }) => {
     // Re-render logging for TimerDisplay
     const renderCount = useRef(0);
     const lastRenderTime = useRef(Date.now());
-    
+
     useEffect(() => {
         renderCount.current++;
         const now = Date.now();
         const timeSinceLastRender = now - lastRenderTime.current;
         lastRenderTime.current = now;
-        
+
         logger.info(`🔄 [TIMER-RERENDER] TimerDisplay re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
     });
-    
+
     if (gameMode === 'practice') return null;
-    
+
     const timerSeconds = timerState?.timeLeftMs ? Math.floor(timerState.timeLeftMs / 1000) : null;
     return <TournamentTimer timerS={timerSeconds} isMobile={isMobile} />;
 });
 TimerDisplay.displayName = 'TimerDisplay';
 
 // Memoized Leaderboard FAB Component  
-const LeaderboardFAB = React.memo(({ 
+const LeaderboardFAB = React.memo(({
     isMobile,
     userId,
     leaderboardLength,
@@ -96,16 +96,16 @@ const LeaderboardFAB = React.memo(({
     // Re-render logging for LeaderboardFAB
     const renderCount = useRef(0);
     const lastRenderTime = useRef(Date.now());
-    
+
     useEffect(() => {
         renderCount.current++;
         const now = Date.now();
         const timeSinceLastRender = now - lastRenderTime.current;
         lastRenderTime.current = now;
-        
+
         logger.info(`🔄 [FAB-RERENDER] LeaderboardFAB re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
     });
-    
+
     if (!isMobile || !userId || leaderboardLength === 0 || !userRank) {
         return null;
     }
@@ -173,16 +173,16 @@ const QuestionDisplay = React.memo(({
     // Re-render logging for QuestionDisplay
     const renderCount = useRef(0);
     const lastRenderTime = useRef(Date.now());
-    
+
     useEffect(() => {
         renderCount.current++;
         const now = Date.now();
         const timeSinceLastRender = now - lastRenderTime.current;
         lastRenderTime.current = now;
-        
+
         logger.info(`🔄 [QUESTION-RERENDER] QuestionDisplay re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
     });
-    
+
     if (currentQuestion) {
         return (
             <QuestionCard
@@ -246,16 +246,16 @@ const PracticeModeProgression = React.memo(({
     // Re-render logging for PracticeModeProgression
     const renderCount = useRef(0);
     const lastRenderTime = useRef(Date.now());
-    
+
     useEffect(() => {
         renderCount.current++;
         const now = Date.now();
         const timeSinceLastRender = now - lastRenderTime.current;
         lastRenderTime.current = now;
-        
+
         logger.info(`🔄 [PRACTICE-RERENDER] PracticeModeProgression re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
     });
-    
+
     if (gameMode !== 'practice' || !answered || showFeedbackOverlay) {
         return null;
     }
@@ -318,13 +318,13 @@ export default function LiveGamePage() {
     // Re-render logging for performance monitoring
     const renderCount = useRef(0);
     const lastRenderTime = useRef(Date.now());
-    
+
     useEffect(() => {
         renderCount.current++;
         const now = Date.now();
         const timeSinceLastRender = now - lastRenderTime.current;
         lastRenderTime.current = now;
-        
+
         logger.info(`🔄 [LIVE-RERENDER] Component re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
     });
 

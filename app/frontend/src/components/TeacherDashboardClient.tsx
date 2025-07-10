@@ -55,6 +55,19 @@ function mapToCanonicalQuestion(q: any): Question {
 }
 
 export default function TeacherDashboardClient({ code, gameId }: { code: string, gameId: string }) {
+
+    // Re-render logging for performance monitoring
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+
+        logger.info(`🔄 [DASHBOARD-RERENDER] TeacherDashboard re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
     // --- Canonical timer sync: update per-question durationMs after every timer update ---
     const lastTimerQuestionUidRef = useRef<string | null>(null);
     const lastTimerDurationMsRef = useRef<number | null>(null);
@@ -362,7 +375,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
 
     // Helper: get canonical timer state for a question
     // Always use the latest durationMs from the questions state for display and logic
-    const getCanonicalTimerForQuestion = (questionUid: string) => {
+    const getCanonicalTimerForQuestion = useCallback((questionUid: string) => {
         const timer = getTimerState(questionUid);
         const question = questions.find(q => q.uid === questionUid);
         return {
@@ -373,13 +386,24 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
             timeLeftMs: timer?.timeLeftMs ?? 0,
             status: timer?.status ?? 'stop',
         };
-    };
+    }, [getTimerState, questions]);
 
     // Canonical: always use timer state from useSimpleTimer for timer display/actions
-    const timerStatus = timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).status : 'stop';
-    const timerQuestionUid = timerActiveQuestionUid;
-    const timeLeftMs = timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).timeLeftMs : 0;
-    const timerDurationMs = timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).durationMs : 0;
+    const timerStatus = useMemo(() => {
+        return timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).status : 'stop';
+    }, [timerActiveQuestionUid, getCanonicalTimerForQuestion]);
+
+    const timerQuestionUid = useMemo(() => {
+        return timerActiveQuestionUid;
+    }, [timerActiveQuestionUid]);
+
+    const timeLeftMs = useMemo(() => {
+        return timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).timeLeftMs : 0;
+    }, [timerActiveQuestionUid, getCanonicalTimerForQuestion]);
+
+    const timerDurationMs = useMemo(() => {
+        return timerActiveQuestionUid ? getCanonicalTimerForQuestion(timerActiveQuestionUid).durationMs : 0;
+    }, [timerActiveQuestionUid, getCanonicalTimerForQuestion]);
 
     // Ref for timer state (for play/confirm logic)
     const timerStateRef = useRef({
@@ -408,6 +432,24 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     const mappedQuestions = useMemo(() => {
         return questions.map(mapToCanonicalQuestion);
     }, [questions]);
+
+    // Memoized stats calculation function
+    const getStatsForQuestion = useCallback((uid: string) => {
+        const stats = answerStats[uid];
+        if (stats && typeof stats === 'object') {
+            const question = mappedQuestions.find(q => q.uid === uid);
+            const numOptions = question?.answerOptions?.length || 0;
+            if (numOptions === 0) return undefined;
+            const statsObj = stats as Record<string, number>;
+            const percentageArray: number[] = [];
+            for (let i = 0; i < numOptions; i++) {
+                const percentage = statsObj[i.toString()] || 0;
+                percentageArray.push(percentage);
+            }
+            return percentageArray;
+        }
+        return undefined;
+    }, [answerStats, mappedQuestions]);
 
     const handleSelect = useCallback((uid: string) => {
         setQuestionActiveUid(uid);
@@ -576,6 +618,11 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
         setShowTrophy(false);
     }, [questionActiveUid]);
 
+    // Memoize frequently changing props to prevent unnecessary re-renders
+    const isDisabled = useMemo(() => {
+        return !quizSocket || !quizSocket.connected || quizState?.ended;
+    }, [quizSocket?.connected, quizState?.ended]);
+
     // Fetch quiz/activity name from API for reliability
     // Remove legacy fetchQuizName effect: all naming now comes from socket payload
 
@@ -583,7 +630,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
     if (loading) return <LoadingScreen message="Chargement du tableau de bord..." />;
     if (error) return <div className="p-8 text-red-600">Erreur: {error}</div>;
     if (!code) return <div className="p-8 text-orange-600">Aucun code d'accès fourni.</div>;
-    const isDisabled = !quizSocket || !quizSocket.connected || quizState?.ended;
+    
     // Add a projection page URL for the current code
     const projectionUrl = `/teacher/projection/${code}`;
     return (
@@ -721,22 +768,7 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                             disabled={isDisabled}
                             expandedUids={expandedUids}
                             onToggleExpand={handleToggleExpand}
-                            getStatsForQuestion={(uid: string) => {
-                                const stats = answerStats[uid];
-                                if (stats && typeof stats === 'object') {
-                                    const question = mappedQuestions.find(q => q.uid === uid);
-                                    const numOptions = question?.answerOptions?.length || 0;
-                                    if (numOptions === 0) return undefined;
-                                    const statsObj = stats as Record<string, number>;
-                                    const percentageArray: number[] = [];
-                                    for (let i = 0; i < numOptions; i++) {
-                                        const percentage = statsObj[i.toString()] || 0;
-                                        percentageArray.push(percentage);
-                                    }
-                                    return percentageArray;
-                                }
-                                return undefined;
-                            }}
+                            getStatsForQuestion={getStatsForQuestion}
                             getTimerState={getCanonicalTimerForQuestion}
                             // Pass terminatedQuestions to DraggableQuestionsList
                             terminatedQuestions={terminatedQuestions}

@@ -19,7 +19,7 @@
  * This is a central component of the teacher's quiz management interface.
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Socket } from 'socket.io-client';
 import { createLogger } from '@/clientLogger';
 import type { Question } from '@shared/types/core/question';
@@ -67,7 +67,21 @@ interface DraggableQuestionsListProps {
     terminatedQuestions?: Record<string, boolean>;
 }
 
-export default function DraggableQuestionsList(props: DraggableQuestionsListProps) {
+export default React.memo(function DraggableQuestionsList(props: DraggableQuestionsListProps) {
+
+    // Re-render logging for performance monitoring
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+
+        logger.info(`🔄 [QUESTIONS-LIST-RERENDER] DraggableQuestionsList re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+
     const {
         quizId,
         currentTournamentCode,
@@ -268,4 +282,20 @@ export default function DraggableQuestionsList(props: DraggableQuestionsListProp
             })}
         </ul>
     );
-}
+}, (prevProps, nextProps) => {
+    // Custom comparison function to debug which props are changing
+    const keys = Object.keys(nextProps) as Array<keyof DraggableQuestionsListProps>;
+    let hasChanges = false;
+    
+    for (const key of keys) {
+        if (prevProps[key] !== nextProps[key]) {
+            logger.info(`🔄 [QUESTIONS-LIST-PROP-CHANGE] ${key} changed`, {
+                prev: typeof prevProps[key] === 'object' ? 'object' : prevProps[key],
+                next: typeof nextProps[key] === 'object' ? 'object' : nextProps[key]
+            });
+            hasChanges = true;
+        }
+    }
+    
+    return !hasChanges; // Return true if props are equal (no re-render), false if changed (re-render)
+});
