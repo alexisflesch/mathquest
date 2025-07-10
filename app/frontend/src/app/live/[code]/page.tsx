@@ -25,6 +25,7 @@ import { createLogger } from '@/clientLogger';
 import MathJaxWrapper from '@/components/MathJaxWrapper';
 import TournamentTimer from '@/components/TournamentTimer';
 import QuestionCard from '@/components/QuestionCard';
+import LeaderboardModal from '@/components/LeaderboardModal';
 import type { QuestionData } from '@shared/types/socketEvents';
 import AnswerFeedbackOverlay from '@/components/AnswerFeedbackOverlay';
 import { makeApiRequest } from '@/config/api';
@@ -36,6 +37,8 @@ type QuestionDataForStudent = z.infer<typeof questionDataForStudentSchema>;
 import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
+import { Trophy } from 'lucide-react';
+import { LeaderboardEntry } from '@shared/types/core/leaderboardEntry.zod';
 import type { GameParticipant } from '@shared/types/core/participant';
 import type { LobbyParticipantListPayload, LobbyParticipant } from '@shared/types/lobbyParticipantListPayload';
 import LobbyLayout from '@/components/LobbyLayout';
@@ -188,6 +191,46 @@ export default function LiveGamePage() {
     const [showFeedbackOverlay, setShowFeedbackOverlay] = useState(false);
     const [feedbackText, setFeedbackText] = useState<string>("");
     const [feedbackDuration, setFeedbackDuration] = useState<number>(0);
+
+    // Leaderboard modal state
+    const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+
+    // Calculate user's score and rank from leaderboard
+    const userLeaderboardData = useMemo(() => {
+        logger.info('🏆 [USER-LEADERBOARD] Calculating user leaderboard data', {
+            userId,
+            leaderboardLength: gameState.leaderboard.length,
+            leaderboard: gameState.leaderboard
+        });
+
+        if (!userId || !gameState.leaderboard.length) {
+            logger.info('🏆 [USER-LEADERBOARD] No userId or empty leaderboard, returning defaults', {
+                userId,
+                leaderboardLength: gameState.leaderboard.length
+            });
+            return { score: 0, rank: null, totalPlayers: 0 };
+        }
+
+        // Sort leaderboard by score and find user's position
+        const sortedLeaderboard = [...gameState.leaderboard].sort((a: any, b: any) => b.score - a.score);
+        const userEntry = sortedLeaderboard.find((entry: any) => entry.userId === userId);
+        const userRank = userEntry ? sortedLeaderboard.findIndex((entry: any) => entry.userId === userId) + 1 : null;
+
+        const result = {
+            score: userEntry?.score || 0,
+            rank: userRank,
+            totalPlayers: sortedLeaderboard.length
+        };
+
+        logger.info('🏆 [USER-LEADERBOARD] Calculated user leaderboard data', {
+            userId,
+            userEntry,
+            result,
+            sortedLeaderboard: sortedLeaderboard.map(entry => ({ userId: entry.userId, score: entry.score }))
+        });
+
+        return result;
+    }, [userId, gameState.leaderboard]);
 
     // Handle responsive design
     useEffect(() => {
@@ -413,6 +456,19 @@ export default function LiveGamePage() {
         }
     }, [timerState, gameMode]);
 
+    // Debug FAB visibility conditions
+    useEffect(() => {
+        const fabShouldShow = isMobile && userId && gameState.leaderboard.length > 0 && userLeaderboardData.rank;
+        logger.info('🏆 [FAB-DEBUG] FAB visibility check', {
+            isMobile,
+            userId: !!userId,
+            leaderboardLength: gameState.leaderboard.length,
+            userRank: userLeaderboardData.rank,
+            fabShouldShow,
+            timestamp: Date.now()
+        });
+    }, [isMobile, userId, gameState.leaderboard.length, userLeaderboardData.rank]);
+
     // Use canonical QuestionDataForStudent for students (never includes correctAnswers)
     const currentQuestion: QuestionDataForStudent | null = useMemo(() => {
         if (!gameState.currentQuestion) return null;
@@ -612,6 +668,44 @@ export default function LiveGamePage() {
                     mode={gameMode}
                 />
             )}
+
+            {/* Mobile Leaderboard FAB */}
+            {isMobile && userId && gameState.leaderboard.length > 0 && userLeaderboardData.rank && (
+                <button
+                    onClick={() => {
+                        logger.info('🏆 [FAB] Mobile leaderboard FAB clicked', {
+                            userId,
+                            leaderboardLength: gameState.leaderboard.length,
+                            userRank: userLeaderboardData.rank,
+                            userScore: userLeaderboardData.score
+                        });
+                        setShowLeaderboardModal(true);
+                    }}
+                    className="fixed right-4 z-[150] flex items-center space-x-2 px-3 py-2 bg-transparent text-[var(--success)] rounded-full hover:bg-white/10 transition-all duration-200"
+                    style={{
+                        zIndex: 150,
+                        top: 'calc(var(--navbar-height) / 2)',
+                        transform: 'translateY(-50%)'
+                    }}
+                    aria-label="Voir le classement complet"
+                >
+                    <Trophy className="w-5 h-5" />
+                    <span className="text-sm font-medium">
+                        #{userLeaderboardData.rank}
+                    </span>
+                </button>
+            )}
+
+            {/* Leaderboard Modal */}
+            <LeaderboardModal
+                isOpen={showLeaderboardModal}
+                onClose={() => {
+                    logger.info('🏆 [MODAL] Leaderboard modal closed');
+                    setShowLeaderboardModal(false);
+                }}
+                leaderboard={gameState.leaderboard}
+                currentUserId={userId}
+            />
         </div>
     );
 }

@@ -5,7 +5,9 @@ import { redisClient } from '@/config/redis';
 import { z } from 'zod';
 import { emitParticipantCount } from '@/sockets/utils/participantCountUtils';
 import gameStateService, { getCanonicalTimer } from '@/core/services/gameStateService';
+import { calculateLeaderboard } from '../sharedLeaderboard';
 import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { emitLeaderboardFromSnapshot } from '@/core/services/gameParticipant/leaderboardSnapshotService';
 // Import shared types
 import {
     ClientToServerEvents,
@@ -173,13 +175,39 @@ export function joinGameHandler(
             // UX ENHANCEMENT: Assign join-order bonus for early joiners (only if not already assigned in lobby)
             const joinOrderBonus = await assignJoinOrderBonus(accessCode, userId);
 
-            // Apply join-order bonus to participant score
-            // For deferred sessions (attempt > 1), use deferred score. For live sessions, use live score.
-            const isInDeferredSession = joinResult.participant.nbAttempts > 1;
-            const currentScore = isInDeferredSession ?
-                (joinResult.participant.deferredScore ?? 0) :
-                (joinResult.participant.liveScore ?? 0);
-            const finalScore = currentScore + joinOrderBonus;
+            // 🐛 BUG FIX: Preserve existing Redis score when user rejoins/reloads
+            // During live gameplay, scores are stored in Redis, not database. 
+            // When user rejoins, we must preserve their Redis score, not overwrite with database score (which is 0).
+            let finalScore = 0;
+            const existingRedisData = await redisClient.hget(participantsKey, userId);
+            if (existingRedisData) {
+                // User is rejoining - preserve their existing Redis score
+                const existingParticipant = JSON.parse(existingRedisData);
+                finalScore = existingParticipant.score || 0;
+                logger.info({
+                    accessCode,
+                    userId,
+                    username,
+                    existingScore: finalScore,
+                    trigger: 'rejoin_preserve_score'
+                }, '🔄 [REJOIN] Preserved existing Redis score for rejoining participant');
+            } else {
+                // New user - use database score + join bonus
+                const isInDeferredSession = joinResult.participant.nbAttempts > 1;
+                const currentScore = isInDeferredSession ?
+                    (joinResult.participant.deferredScore ?? 0) :
+                    (joinResult.participant.liveScore ?? 0);
+                finalScore = currentScore + joinOrderBonus;
+                logger.info({
+                    accessCode,
+                    userId,
+                    username,
+                    databaseScore: currentScore,
+                    joinOrderBonus,
+                    finalScore,
+                    trigger: 'new_join_with_bonus'
+                }, '🆕 [NEW-JOIN] Applied database score + join bonus for new participant');
+            }
 
             // Create participant data using core types (map from Prisma structure)
             const participantDataForRedis: ParticipantData = {
@@ -217,17 +245,36 @@ export function joinGameHandler(
             // Store main participant data keyed by userId
             await redisClient.hset(participantsKey, joinResult.participant.userId, JSON.stringify(participantDataForRedis));
 
-            // Update leaderboard in Redis with participant score (including any join-order bonus)
+            // 🚨 CRITICAL BUG FIX: Preserve existing Redis scores during user rejoin
+            // During active gameplay, Redis is the source of truth. Never overwrite existing scores.
             const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`;
-            await redisClient.zadd(leaderboardKey, finalScore, userId);
+            const existingLeaderboardScore = await redisClient.zscore(leaderboardKey, userId);
 
-            logger.debug({
-                accessCode,
-                userId,
-                finalScore,
-                joinOrderBonus,
-                leaderboardKey
-            }, 'Added participant to leaderboard with final score (including join-order bonus)');
+            if (existingLeaderboardScore === null) {
+                // User not in leaderboard yet - safe to add with final score
+                await redisClient.zadd(leaderboardKey, finalScore, userId);
+                logger.info({
+                    accessCode,
+                    userId,
+                    finalScore,
+                    joinOrderBonus,
+                    leaderboardKey,
+                    action: 'added_new_user'
+                }, '[LEADERBOARD] Added new participant to Redis leaderboard');
+            } else {
+                // User already in leaderboard - preserve existing score in BOTH leaderboard AND participant data
+                participantDataForRedis.score = parseFloat(existingLeaderboardScore);
+                await redisClient.hset(participantsKey, joinResult.participant.userId, JSON.stringify(participantDataForRedis));
+                
+                logger.warn({
+                    accessCode,
+                    userId,
+                    existingScore: existingLeaderboardScore,
+                    attemptedScore: finalScore,
+                    leaderboardKey,
+                    action: 'preserved_existing_score'
+                }, '[LEADERBOARD] Preserved existing Redis leaderboard score - did not overwrite');
+            }
 
             // Update mappings
             logger.debug({ userIdToSocketIdKey, userId, socketId: socket.id }, 'Updating userIdToSocketId mapping');
@@ -257,6 +304,42 @@ export function joinGameHandler(
             };
             logger.info({ gameJoinedPayload }, 'Emitting game_joined');
             socket.emit(SOCKET_EVENTS.GAME.GAME_JOINED as any, gameJoinedPayload);
+
+            // 🎯 LEADERBOARD ON JOIN: Send current leaderboard state to new joiners
+            // This handles late joiners, reconnections, and page reloads gracefully
+            try {
+                // Only send leaderboard if game has started (status: 'active' or 'completed')
+                // Skip if game is still pending (no participants have scores yet)
+                if (gameInstance.status === 'active' || gameInstance.status === 'completed') {
+                    // Use snapshot-based emission for consistency
+                    await emitLeaderboardFromSnapshot(
+                        io,
+                        accessCode,
+                        [socket.id], // Emit only to this specific socket
+                        'join_game_initial_load'
+                    );
+
+                    logger.info({
+                        accessCode,
+                        userId,
+                        gameStatus: gameInstance.status,
+                        trigger: 'join_game_initial_load',
+                        dataSource: 'leaderboard_snapshot'
+                    }, '[JOIN-LEADERBOARD] Emitted initial leaderboard state to new joiner from snapshot');
+                } else {
+                    logger.debug({
+                        accessCode,
+                        userId,
+                        gameStatus: gameInstance.status
+                    }, '[JOIN-LEADERBOARD] Skipping leaderboard emission - game not started yet');
+                }
+            } catch (leaderboardError) {
+                logger.error({
+                    accessCode,
+                    userId,
+                    error: leaderboardError
+                }, '[JOIN-LEADERBOARD] Error emitting initial leaderboard to new joiner');
+            }
 
             // Use modular scoreService for best score update if needed (for deferred)
             if (gameInstance.isDiffered) {

@@ -151,6 +151,62 @@ backend/src/
 - **Prisma ORM** - Type-safe database access
 - **Prisma Migrate** - Database schema management
 - **Connection Pooling** - Efficient database connections
+- **Redis** - In-memory data store for real-time game state
+
+### Redis Scoring Storage System
+
+**Critical Architecture Decision: Redis is the single source of truth for live scores during active gameplay.**
+
+#### Redis Key Structure for Game Sessions
+For each active game session with `gameId`, Redis maintains three distinct data structures:
+
+1. **`participants:${gameId}`** - Hash containing participant metadata
+   - **Purpose**: Player information and connection tracking
+   - **Data**: `{ userId: { name, avatar, joinedAt, connectionStatus } }`
+   - **Lifecycle**: Created on game start, updated on player joins/leaves
+
+2. **`leaderboard:${gameId}`** - Hash containing live scores
+   - **Purpose**: Real-time scoring during active gameplay
+   - **Data**: `{ userId: score }` (numeric scores only)
+   - **Lifecycle**: Updated immediately on correct answers, cleared on game end
+   - **Critical**: This is the authoritative source for live scores
+
+3. **`snapshot:${gameId}`** - Hash containing leaderboard snapshots
+   - **Purpose**: Lobby population and late joiner initialization
+   - **Data**: `{ userId: score }` (usually 0 for lobby state)
+   - **Lifecycle**: Created from database on game start, NOT updated during gameplay
+
+#### Data Flow Architecture
+
+```
+Game Lifecycle Data Flow:
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Game Start    │    │  Active Game    │    │   Game End      │
+│                 │    │                 │    │                 │
+│ DB → snapshot   │    │ Redis live      │    │ Redis → DB      │
+│ (lobby scores)  │    │ (authoritative) │    │ (persistence)   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+#### Join Type Handling
+- **New Lobby Join**: Uses `snapshot` data (typically score 0)
+- **Late Join**: Receives current `leaderboard` state, initializes with score 0
+- **Mid-Game Rejoin**: Preserves existing `leaderboard` score, never overwrites
+- **Projection Room**: Always uses live `leaderboard` data
+
+#### Critical Implementation Rules
+1. **Never overwrite live scores**: `leaderboard` data must never be replaced with `snapshot` data during active gameplay
+2. **Emit canonical payloads**: All leaderboard emissions must use `{ leaderboard: LeaderboardEntry[] }` format
+3. **Redis-first updates**: Score updates go to Redis first, database updates are batched/deferred
+4. **Atomic operations**: Use Redis transactions for score updates to prevent race conditions
+
+#### Common Anti-Patterns to Avoid
+- ❌ Using database scores during active gameplay
+- ❌ Overwriting live Redis scores with snapshot data on rejoin
+- ❌ Mixing `participants` and `leaderboard` data structures
+- ❌ Relying on database for real-time score queries
+
+This architecture ensures consistent, real-time scoring while maintaining data integrity across all game states and user interaction patterns.
 
 ### Schema Design
 ```sql

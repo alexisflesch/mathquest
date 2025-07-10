@@ -111,6 +111,9 @@ export interface StudentGameUIState {
     correctAnswers: boolean[] | null;
     lastAnswerFeedback?: AnswerReceived | null;
 
+    // Canonical leaderboard state (shared type)
+    leaderboard: import('@shared/types/core/leaderboardEntry.zod').LeaderboardEntry[];
+
     // Game metadata from shared types
     gameMode?: PlayMode;
     linkedQuizId?: string | null;
@@ -169,10 +172,51 @@ export function useStudentGameSocket({
         phase: 'question',
         feedbackRemaining: null,
         correctAnswers: null,
+        leaderboard: [],
         gameMode: isDiffered ? 'practice' : 'tournament',
         linkedQuizId: null,
         lastAnswerFeedback: null
     });
+    // --- Leaderboard Update Handler ---
+    useEffect(() => {
+        if (!socket) return;
+        // Canonical event: leaderboard_update { leaderboard: LeaderboardEntry[] }
+        const handleLeaderboardUpdate = (payload: { leaderboard: import('@shared/types/core/leaderboardEntry.zod').LeaderboardEntry[] }) => {
+            logger.info('🏆 [LEADERBOARD] Received leaderboard_update event', {
+                payloadKeys: Object.keys(payload),
+                leaderboardLength: payload.leaderboard?.length || 0,
+                leaderboard: payload.leaderboard,
+                timestamp: Date.now()
+            });
+
+            if (!payload.leaderboard) {
+                logger.warn('🏆 [LEADERBOARD] Received leaderboard_update with no leaderboard property', payload);
+                return;
+            }
+
+            setGameState(prev => {
+                logger.info('🏆 [LEADERBOARD] Updating game state with new leaderboard', {
+                    previousLength: prev.leaderboard.length,
+                    newLength: payload.leaderboard.length,
+                    previousLeaderboard: prev.leaderboard,
+                    newLeaderboard: payload.leaderboard
+                });
+
+                return {
+                    ...prev,
+                    leaderboard: payload.leaderboard || []
+                };
+            });
+        };
+
+        logger.info('🏆 [LEADERBOARD] Setting up leaderboard_update event listener');
+        socket.on('leaderboard_update', handleLeaderboardUpdate);
+
+        return () => {
+            logger.info('🏆 [LEADERBOARD] Cleaning up leaderboard_update event listener');
+            socket.off('leaderboard_update', handleLeaderboardUpdate);
+        };
+    }, [socket]);
 
     // Use unified timer system for student countdown
     // --- Socket Connection ---

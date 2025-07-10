@@ -5,9 +5,13 @@ exports.getLeaderboardSnapshot = getLeaderboardSnapshot;
 exports.setLeaderboardSnapshot = setLeaderboardSnapshot;
 exports.addUserToSnapshot = addUserToSnapshot;
 exports.computeFullLeaderboardAndSnapshot = computeFullLeaderboardAndSnapshot;
+exports.syncSnapshotWithLiveData = syncSnapshotWithLiveData;
+exports.emitLeaderboardFromSnapshot = emitLeaderboardFromSnapshot;
 const redis_1 = require("@/config/redis");
 const prisma_1 = require("@/db/prisma");
+const projectionLeaderboardUpdatePayload_1 = require("@shared/types/socket/projectionLeaderboardUpdatePayload");
 const sharedLeaderboard_1 = require("@/sockets/handlers/sharedLeaderboard");
+const logger_1 = require("@/utils/logger");
 const LEADERBOARD_SNAPSHOT_PREFIX = 'leaderboard:snapshot:';
 /**
  * Get the Redis key for a leaderboard snapshot for a game instance
@@ -163,4 +167,84 @@ async function computeFullLeaderboardAndSnapshot(accessCode) {
     // Store in Redis
     await setLeaderboardSnapshot(accessCode, leaderboard);
     return { leaderboard: leaderboard };
+}
+/**
+ * Sync the snapshot with current live leaderboard data
+ * This should be called at specific sync points:
+ * - After each question ends (when scores are finalized)
+ * - When a new user joins (to include them in the snapshot)
+ * - When the game starts (to initialize from database)
+ */
+async function syncSnapshotWithLiveData(accessCode) {
+    try {
+        // Calculate current leaderboard from live Redis data
+        const liveLeaderboard = await (0, sharedLeaderboard_1.calculateLeaderboard)(accessCode);
+        // Fetch participant details from database for additional metadata
+        const participants = await prisma_1.prisma.gameParticipant.findMany({
+            where: { gameInstance: { accessCode } },
+            include: { user: true }
+        });
+        // Build leaderboard entries with additional metadata
+        const leaderboardEntries = liveLeaderboard.map((entry, index) => {
+            const participant = participants.find(p => p.userId === entry.userId);
+            return {
+                userId: entry.userId,
+                username: entry.username,
+                avatarEmoji: entry.avatarEmoji,
+                score: entry.score,
+                participationType: 'LIVE',
+                attemptCount: participant?.nbAttempts || 1,
+                participationId: participant?.id || '',
+                rank: index + 1
+            };
+        });
+        // Update the snapshot with current live data
+        await setLeaderboardSnapshot(accessCode, leaderboardEntries);
+        return leaderboardEntries;
+    }
+    catch (error) {
+        logger_1.logger.error({ accessCode, error }, '[SNAPSHOT] Error syncing snapshot with live data');
+        // Return current snapshot as fallback
+        return await getLeaderboardSnapshot(accessCode);
+    }
+}
+/**
+ * Emit leaderboard update using the snapshot as source of truth
+ * This ensures consistency and prevents race conditions
+ */
+async function emitLeaderboardFromSnapshot(io, accessCode, targetRooms, context = 'default') {
+    try {
+        const snapshot = await getLeaderboardSnapshot(accessCode);
+        if (snapshot.length === 0) {
+            logger_1.logger.warn({ accessCode, context }, '[SNAPSHOT] No leaderboard data in snapshot, skipping emission');
+            return;
+        }
+        // Create canonical leaderboard_update payload
+        const leaderboardPayload = { leaderboard: snapshot };
+        // Validate with Zod before emitting
+        const parseResult = projectionLeaderboardUpdatePayload_1.ProjectionLeaderboardUpdatePayloadSchema.safeParse(leaderboardPayload);
+        if (!parseResult.success) {
+            logger_1.logger.error({
+                accessCode,
+                context,
+                errors: parseResult.error.issues,
+                snapshot: snapshot.slice(0, 3) // Log first 3 entries for debugging
+            }, '[SNAPSHOT] Invalid leaderboard payload from snapshot, not emitting');
+            return;
+        }
+        // Emit to all target rooms
+        for (const room of targetRooms) {
+            io.to(room).emit('leaderboard_update', leaderboardPayload);
+        }
+        logger_1.logger.info({
+            accessCode,
+            context,
+            targetRooms,
+            leaderboardCount: snapshot.length,
+            event: 'leaderboard_update'
+        }, '[SNAPSHOT] Emitted leaderboard from snapshot to target rooms');
+    }
+    catch (error) {
+        logger_1.logger.error({ accessCode, context, error }, '[SNAPSHOT] Error emitting leaderboard from snapshot');
+    }
 }

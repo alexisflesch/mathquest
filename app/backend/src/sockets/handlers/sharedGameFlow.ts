@@ -13,6 +13,9 @@ import { emitQuestionHandler } from './game/emitQuestionHandler';
 import { dashboardTimerUpdatedPayloadSchema } from '@shared/types/socketEvents.zod';
 import type { GameTimerState } from '@shared/types/core/timer';
 import { computeTimerTimes } from '@/core/services/timerHelpers';
+import { SOCKET_EVENTS } from '@shared/types/socket/events';
+import { calculateLeaderboard, persistLeaderboardToGameInstance } from './sharedLeaderboard';
+import { syncSnapshotWithLiveData, emitLeaderboardFromSnapshot } from '@/core/services/gameParticipant/leaderboardSnapshotService';
 
 const logger = createLogger('SharedGameFlow');
 
@@ -211,6 +214,36 @@ export async function runGameFlow(
             io.to(`game_${accessCode}`).emit('correct_answers', correctAnswersPayload);
             logger.info({ accessCode, event: 'correct_answers', questionUid: questions[i].uid, correctAnswers: questions[i].correctAnswers }, '[TRACE] Emitted correct_answers');
             options.onQuestionEnd?.(i);
+
+            // 🔒 SECURITY: Emit leaderboard only after question ends (timer expired)
+            // This prevents students from determining answer correctness during submission
+            try {
+                // First, sync the snapshot with current live data
+                const syncedSnapshot = await syncSnapshotWithLiveData(accessCode);
+
+                // Then emit the leaderboard from the snapshot (source of truth)
+                await emitLeaderboardFromSnapshot(
+                    io,
+                    accessCode,
+                    [`game_${accessCode}`],
+                    'after_question_end'
+                );
+
+                logger.info({
+                    accessCode,
+                    event: 'leaderboard_update',
+                    questionUid: questions[i].uid,
+                    leaderboardCount: syncedSnapshot.length,
+                    timing: 'after_question_end'
+                }, '[SECURITY] Emitted secure leaderboard_update after question timer expired using snapshot');
+            } catch (leaderboardError) {
+                logger.error({
+                    accessCode,
+                    questionUid: questions[i].uid,
+                    error: leaderboardError
+                }, '[SECURITY] Error emitting secure leaderboard update');
+            }
+
             // [MODERNIZATION] Removed legacy call to gameStateService.calculateScores.
             // All scoring is now handled via ScoringService.submitAnswerWithScoring or canonical participant service.
             // If batch scoring is needed, refactor to use canonical logic per participant/answer.
@@ -265,7 +298,6 @@ export async function runGameFlow(
 
         // Game completed - persist final leaderboard to database
         try {
-            const { calculateLeaderboard, persistLeaderboardToGameInstance } = await import('./sharedLeaderboard');
             const finalLeaderboard = await calculateLeaderboard(accessCode);
             await persistLeaderboardToGameInstance(accessCode, finalLeaderboard);
             logger.info({ accessCode, leaderboard: finalLeaderboard }, '[SharedGameFlow] Final leaderboard persisted to database');

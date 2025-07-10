@@ -36,6 +36,15 @@ export async function broadcastLeaderboardToProjection(
         logger.debug({ accessCode }, '🔍 [PROJECTION-BROADCAST] Calculating leaderboard from Redis');
         const leaderboard = await calculateLeaderboard(accessCode);
 
+        // DEBUG: Add detailed logging of Redis leaderboard data
+        logger.info({
+            accessCode,
+            gameId,
+            leaderboardCount: leaderboard.length,
+            topPlayers: leaderboard.slice(0, 3).map(p => ({ username: p.username, score: p.score })),
+            fullLeaderboard: leaderboard.map(p => ({ username: p.username, score: p.score, userId: p.userId }))
+        }, '📊 [PROJECTION-BROADCAST] DEBUG: Leaderboard calculated from Redis');
+
         logger.info({
             accessCode,
             gameId,

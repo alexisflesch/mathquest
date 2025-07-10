@@ -368,14 +368,10 @@ export function gameAnswerHandler(
                 }
             } else {
                 // Quiz mode or other: minimal answer_received
-                let roomName = accessCode;
-                if (gameInstance.playMode === 'quiz' && gameInstance.initiatorUserId) {
-                    roomName = `teacher_${gameInstance.initiatorUserId}_${accessCode}`;
-                } else if (gameInstance.playMode === 'tournament') {
-                    roomName = `game_${accessCode}`;
-                }
-                logger.info({ leaderboard, roomName }, 'Emitting leaderboard_update to room');
-                io.to(roomName).emit(SOCKET_EVENTS.GAME.LEADERBOARD_UPDATE as any, { leaderboard });
+                // 🔒 SECURITY FIX: Removed immediate leaderboard emission to prevent cheating
+                // Students were able to determine answer correctness by observing leaderboard changes
+                // Leaderboards are now only emitted after question timer expires (see sharedGameFlow.ts)
+
                 logger.info({ questionUid, timeSpent }, 'Emitting answer_received for non-differed mode (without correct field)');
                 try {
                     socket.emit(SOCKET_EVENTS.GAME.ANSWER_RECEIVED as any, { questionUid, timeSpent });
