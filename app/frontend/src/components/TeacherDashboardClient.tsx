@@ -9,6 +9,7 @@ import { useSimpleTimer } from '@/hooks/useSimpleTimer';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAccessGuard } from '@/hooks/useAccessGuard';
 import { UsersRound, Trophy } from "lucide-react";
+import { motion } from 'framer-motion';
 import type { Question } from '@shared/types/core/question';
 import InfinitySpin from '@/components/InfinitySpin';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -737,9 +738,23 @@ export default function TeacherDashboardClient({ code, gameId }: { code: string,
                                     aria-pressed={showTrophy}
                                     title="Afficher/Masquer le classement final et les bonnes réponses"
                                 >
-                                    <Trophy className="w-6 h-6 transition-all duration-200"
-                                        strokeWidth={2}
-                                    />
+                                    <motion.div
+                                        animate={{
+                                            scale: [1, 1.15, 1],
+                                            rotate: [0, -8, 8, -8, 0],
+                                            y: [0, -3, 3, -3, 0]
+                                        }}
+                                        transition={{
+                                            duration: 1,
+                                            ease: "easeInOut",
+                                            repeat: Infinity,
+                                            repeatDelay: 2.5
+                                        }}
+                                    >
+                                        <Trophy className="w-6 h-6 transition-all duration-200"
+                                            strokeWidth={2}
+                                        />
+                                    </motion.div>
                                 </button>
                                 {loading && <InfinitySpin size={32} />}
                             </div>

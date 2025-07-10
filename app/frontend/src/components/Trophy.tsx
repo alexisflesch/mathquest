@@ -14,8 +14,18 @@ const Trophy = ({ size = 64, iconColor, className = "" }: TrophyProps) => {
             <motion.div
                 className="flex items-center justify-center"
                 style={{ width: size, height: size, backgroundColor: "transparent", zIndex: 2 }}
-                animate={{ y: [-2, 1, -2], scale: [1, 1.05, 1] }}
-                transition={{ duration: 1, ease: "easeInOut", repeat: Infinity, repeatType: "loop" }}
+                animate={{
+                    y: [-3, 2, -3],
+                    scale: [1, 1.08, 1],
+                    rotate: [0, -2, 2, -2, 0]
+                }}
+                transition={{
+                    duration: 1.2,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    repeatDelay: 1
+                }}
             >
                 <LucideTrophy size={size} color={iconColor} strokeWidth={2.5} />
             </motion.div>

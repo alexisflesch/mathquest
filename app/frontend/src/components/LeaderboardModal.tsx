@@ -13,6 +13,7 @@
 import React from 'react';
 import InfoModal from './SharedModal';
 import { Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { LeaderboardEntry } from '@shared/types/core/leaderboardEntry.zod';
 
 interface LeaderboardModalProps {
@@ -48,7 +49,20 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
             <div className="max-h-96 overflow-y-auto">
                 {sortedLeaderboard.length === 0 ? (
                     <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
-                        <Trophy className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <motion.div
+                            animate={{
+                                scale: [1, 1.1, 1],
+                                rotate: [0, -3, 3, -3, 0]
+                            }}
+                            transition={{
+                                duration: 1.5,
+                                ease: "easeInOut",
+                                repeat: Infinity,
+                                repeatDelay: 3
+                            }}
+                        >
+                            <Trophy className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        </motion.div>
                         <p>Aucun classement disponible</p>
                     </div>
                 ) : (

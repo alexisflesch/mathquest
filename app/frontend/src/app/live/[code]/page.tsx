@@ -38,6 +38,7 @@ import InfinitySpin from '@/components/InfinitySpin';
 import { QUESTION_TYPES } from '@shared/types';
 import { SOCKET_EVENTS, TOURNAMENT_EVENTS } from '@shared/types/socket/events';
 import { Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { LeaderboardEntry } from '@shared/types/core/leaderboardEntry.zod';
 import type { GameParticipant } from '@shared/types/core/participant';
 import type { LobbyParticipantListPayload, LobbyParticipant } from '@shared/types/lobbyParticipantListPayload';
@@ -79,7 +80,7 @@ const TimerDisplay = React.memo(({
 });
 TimerDisplay.displayName = 'TimerDisplay';
 
-// Memoized Leaderboard FAB Component  
+// Memoized Leaderboard FAB Component (Mobile: right side, Desktop: top left)
 const LeaderboardFAB = React.memo(({
     isMobile,
     userId,
@@ -106,22 +107,46 @@ const LeaderboardFAB = React.memo(({
         logger.info(`🔄 [FAB-RERENDER] LeaderboardFAB re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
     });
 
-    if (!isMobile || !userId || leaderboardLength === 0 || !userRank) {
+    if (!userId || leaderboardLength === 0 || !userRank) {
         return null;
     }
+
+    // Mobile positioning (right side, fixed to viewport)
+    const mobileClasses = "fixed right-4 z-[150] flex items-center space-x-2 px-3 py-2 bg-transparent text-[var(--success)] rounded-full hover:bg-white/10 transition-all duration-200";
+    const mobileStyle = {
+        zIndex: 150,
+        top: 'calc(var(--navbar-height) / 2)',
+        transform: 'translateY(-50%)'
+    };
+
+    // Desktop positioning (relative to main-content, absolute inside)
+    const desktopClasses = "absolute left-4 top-4 z-[150] flex items-center space-x-2 px-4 py-2 bg-[var(--navbar)] backdrop-blur-sm text-[var(--success)] rounded-full transition-all duration-200 shadow-lg";
+    const desktopStyle = {
+        zIndex: 150,
+    };
 
     return (
         <button
             onClick={onOpen}
-            className="fixed right-4 z-[150] flex items-center space-x-2 px-3 py-2 bg-transparent text-[var(--success)] rounded-full hover:bg-white/10 transition-all duration-200"
-            style={{
-                zIndex: 150,
-                top: 'calc(var(--navbar-height) / 2)',
-                transform: 'translateY(-50%)'
-            }}
+            className={isMobile ? mobileClasses : desktopClasses}
+            style={isMobile ? mobileStyle : desktopStyle}
             aria-label="Voir le classement complet"
         >
-            <Trophy className="w-5 h-5" />
+            <motion.div
+                animate={{
+                    scale: [1, 1.2, 1],
+                    rotate: [0, -5, 5, -5, 0],
+                    x: [0, -2, 2, -2, 0]
+                }}
+                transition={{
+                    duration: 0.8,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                    repeatDelay: 2
+                }}
+            >
+                <Trophy className="w-5 h-5" />
+            </motion.div>
             <span className="text-sm font-medium">
                 #{userRank}
             </span>
@@ -752,13 +777,15 @@ export default function LiveGamePage() {
 
     // Debug FAB visibility conditions
     useEffect(() => {
-        const fabShouldShow = isMobile && userId && stableLeaderboard.length > 0 && userLeaderboardData.rank;
+        const mobileFabShouldShow = isMobile && userId && stableLeaderboard.length > 0 && userLeaderboardData.rank;
+        const desktopFabShouldShow = !isMobile && userId && stableLeaderboard.length > 0 && userLeaderboardData.rank;
         logger.info('🏆 [FAB-DEBUG] FAB visibility check', {
             isMobile,
             userId: !!userId,
             leaderboardLength: stableLeaderboard.length,
             userRank: userLeaderboardData.rank,
-            fabShouldShow,
+            mobileFabShouldShow,
+            desktopFabShouldShow,
             timestamp: Date.now()
         });
     }, [isMobile, userId, stableLeaderboard.length, userLeaderboardData.rank]);
@@ -931,7 +958,7 @@ export default function LiveGamePage() {
                 />
             )}
 
-            {/* Mobile Leaderboard FAB */}
+            {/* Leaderboard FAB (Mobile: right side, Desktop: top left) */}
             <LeaderboardFAB
                 isMobile={isMobile}
                 userId={userId}
