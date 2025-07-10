@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { DndContext, useDraggable } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { Resizable } from 're-resizable';
@@ -49,6 +49,7 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         correctAnswersData,
         currentQuestion: rawCurrentQuestion
     } = useProjectionQuizSocket(code, gameId);
+
     // Track animation state for podium
     const [shouldAnimatePodium, setShouldAnimatePodium] = useState(false);
     useEffect(() => {

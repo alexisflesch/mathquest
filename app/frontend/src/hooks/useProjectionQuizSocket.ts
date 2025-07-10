@@ -27,6 +27,10 @@ import { ProjectionShowStatsPayload, ProjectionShowStatsPayloadSchema } from '@s
 
 const logger = createLogger('useProjectionQuizSocket');
 
+// Stable empty objects to prevent unnecessary re-renders
+const EMPTY_STATS: Record<string, number> = {};
+const EMPTY_LEADERBOARD: Array<{ userId: string; username: string; avatarEmoji?: string; score: number }> = [];
+
 /**
  * Hook for teacher projection page that displays quiz content
  * Uses modern timer system and joins projection room using shared constants
@@ -72,13 +76,13 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         username: string;
         avatarEmoji?: string;
         score: number;
-    }>>([]);
+    }>>(EMPTY_LEADERBOARD);
     // Track when a leaderboard update is received from the backend
     const [leaderboardUpdateTrigger, setLeaderboardUpdateTrigger] = useState(0);
 
     // NEW: Projection display state
     const [showStats, setShowStats] = useState<boolean>(false);
-    const [currentStats, setCurrentStats] = useState<Record<string, number>>({});
+    const [currentStats, setCurrentStats] = useState<Record<string, number>>(EMPTY_STATS);
     const [showCorrectAnswers, setShowCorrectAnswers] = useState<boolean>(false);
     const [correctAnswersData, setCorrectAnswersData] = useState<{
         questionUid: string;
@@ -93,7 +97,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         const handleInitialStatsState = (payload: { showStats: boolean; currentStats: Record<string, number>; statsQuestionUid: string | null; timestamp?: number }) => {
             console.log('🟢 [PROJECTION] Received PROJECTION_STATS_STATE:', payload);
             setShowStats(!!payload.showStats);
-            setCurrentStats(payload.currentStats || {});
+            setCurrentStats(payload.currentStats || EMPTY_STATS);
         };
         (socket.socket as any).on(SOCKET_EVENTS.PROJECTOR.PROJECTION_STATS_STATE, handleInitialStatsState);
         return () => {
@@ -485,12 +489,12 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             }
             if (payload.show) {
                 logger.info('📊 [PROJECTION-FRONTEND] Show stats request received (show=TRUE):', payload);
-                setCurrentStats(payload.stats || {});
+                setCurrentStats(payload.stats || EMPTY_STATS);
                 setShowStats(true);
             } else {
                 logger.info('📊 [PROJECTION-FRONTEND] Hide stats request received (show=FALSE):', payload);
                 setShowStats(false);
-                setCurrentStats({});
+                setCurrentStats(EMPTY_STATS);
             }
         };
 
@@ -501,7 +505,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
             logger.info('📊 [PROJECTION-FRONTEND] Hide stats request received:', payload);
             setShowStats(false);
-            setCurrentStats({});
+            setCurrentStats(EMPTY_STATS);
 
             console.log('✅ Stats hidden successfully');
         };
@@ -603,6 +607,14 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         };
     }, [socket.socket]);
 
+    // Memoize currentStats to prevent unnecessary re-renders when object content hasn't changed
+    const memoizedCurrentStats = useMemo(() => {
+        if (Object.keys(currentStats).length === 0) {
+            return EMPTY_STATS;
+        }
+        return currentStats;
+    }, [currentStats]);
+
     // Return clean interface using canonical types only
 
     // Derive currentQuestion from gameState and current index
@@ -633,7 +645,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
 
             // NEW: Projection display state
             showStats,
-            currentStats,
+            currentStats: memoizedCurrentStats,
             showCorrectAnswers,
             correctAnswersData,
 
