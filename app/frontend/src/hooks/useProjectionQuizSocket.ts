@@ -12,7 +12,7 @@
  * - Zod validation for socket payloads
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { createLogger } from '@/clientLogger';
 import { useSimpleTimer } from './useSimpleTimer';
 import { useGameSocket } from './useGameSocket';
@@ -118,6 +118,54 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         timerQuestionUid = gameState.questionUids[gameState.currentQuestionIndex] || null;
     }
     const timerState = timerQuestionUid ? timer.getTimerState(timerQuestionUid) : undefined;
+
+    // Optimize timer updates: only update when display value changes (every second, not every 100ms)
+    const [optimizedTimeLeftMs, setOptimizedTimeLeftMs] = useState<number | undefined>(timerState?.timeLeftMs);
+    const [optimizedTimerStatus, setOptimizedTimerStatus] = useState<TimerStatus | undefined>(timerState?.status);
+    const lastTimeLeftMsRef = useRef<number | undefined>(timerState?.timeLeftMs);
+    const lastTimerStatusRef = useRef<TimerStatus | undefined>(timerState?.status);
+
+    // Extract just the timeLeftMs and status values to avoid dependency on the entire timerState object
+    const currentTimeLeftMs = timerState?.timeLeftMs;
+    const currentTimerStatus = timerState?.status;
+
+    useEffect(() => {
+        let shouldUpdateTimeLeft = false;
+        let shouldUpdateStatus = false;
+
+        // Check if timer status changed
+        if (currentTimerStatus !== lastTimerStatusRef.current) {
+            console.log('🔍 [TIMER DEBUG] Status changed:', lastTimerStatusRef.current, '->', currentTimerStatus);
+            lastTimerStatusRef.current = currentTimerStatus;
+            shouldUpdateStatus = true;
+        }
+
+        // Check if time left changed meaningfully
+        if (currentTimeLeftMs !== lastTimeLeftMsRef.current) {
+            lastTimeLeftMsRef.current = currentTimeLeftMs;
+
+            if (currentTimeLeftMs === null || currentTimeLeftMs === undefined) {
+                shouldUpdateTimeLeft = true;
+            } else {
+                const newDisplaySeconds = Math.floor(currentTimeLeftMs / 1000);
+                const currentDisplaySeconds = optimizedTimeLeftMs ? Math.floor(optimizedTimeLeftMs / 1000) : -1;
+
+                // Only update if the displayed seconds value has changed
+                if (newDisplaySeconds !== currentDisplaySeconds) {
+                    console.log('🔍 [TIMER DEBUG] Display seconds changed:', currentDisplaySeconds, '->', newDisplaySeconds);
+                    shouldUpdateTimeLeft = true;
+                }
+            }
+        }
+
+        // Update states only if needed
+        if (shouldUpdateTimeLeft) {
+            setOptimizedTimeLeftMs(currentTimeLeftMs);
+        }
+        if (shouldUpdateStatus) {
+            setOptimizedTimerStatus(currentTimerStatus);
+        }
+    }, [currentTimeLeftMs, currentTimerStatus]); // Only depend on extracted values
 
     // Join projection room when socket connects
     useEffect(() => {
@@ -566,52 +614,67 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
         currentQuestion = gameState.questionData;
     }
 
-    const returnValue = {
-        // Socket connection status
-        isConnected: socket.socketState.connected,
+    const returnValue = useMemo(() => {
+        return {
+            // Socket connection status
+            isConnected: socket.socketState.connected,
 
-        // Game state using canonical types
-        gameState,
-        currentQuestion,
-        currentQuestionUid: timerQuestionUid, // Use timer's questionUid only
+            // Game state using canonical types
+            gameState,
+            currentQuestion,
+            currentQuestionUid: timerQuestionUid, // Use timer's questionUid only
+            connectedCount,
+            gameStatus: gameState?.status ?? 'pending',
+            isAnswersLocked: gameState?.answersLocked ?? false,
+
+            // Leaderboard data for projection display (UX enhancement)
+            leaderboard,
+            leaderboardUpdateTrigger,
+
+            // NEW: Projection display state
+            showStats,
+            currentStats,
+            showCorrectAnswers,
+            correctAnswersData,
+
+            // Canonical timer state (per-question) - ONLY optimized values
+            timerStatus: optimizedTimerStatus,
+            timerQuestionUid: timerQuestionUid,
+            timeLeftMs: optimizedTimeLeftMs,
+
+            // Socket error for auth handling (DRY principle)
+            socketError,
+
+            // Socket reference (if needed for advanced usage)
+            socket: socket.socket
+        };
+    }, [
+        // MINIMAL DEPS: Only include values that should trigger re-renders when they actually change display
+        socket.socketState.connected,
+        gameState?.status,
+        gameState?.currentQuestionIndex,
+        gameState?.answersLocked,
+        timerQuestionUid,
         connectedCount,
-        gameStatus: gameState?.status ?? 'pending',
-        isAnswersLocked: gameState?.answersLocked ?? false,
-
-        // Leaderboard data for projection display (UX enhancement)
-        leaderboard,
+        leaderboard?.length, // Only re-render if count changes
         leaderboardUpdateTrigger,
-
-        // NEW: Projection display state
         showStats,
-        currentStats,
         showCorrectAnswers,
-        correctAnswersData,
-
-        // Canonical timer state (per-question)
-        timerStates: timer.timerStates,
-        getTimerState: timer.getTimerState,
-
-        // Canonical timer state (per-question)
-        timerStatus: timerState?.status,
-        timerQuestionUid: timerQuestionUid,
-        timeLeftMs: timerState?.timeLeftMs,
-
-        // Socket error for auth handling (DRY principle)
-        socketError,
-
-        // Socket reference (if needed for advanced usage)
-        socket: socket.socket
-    };
+        correctAnswersData?.questionUid, // Only if question changes
+        optimizedTimerStatus, // Use optimized status instead of timerState?.status
+        optimizedTimeLeftMs, // This only changes when display seconds change
+        socketError?.message
+    ]);
 
     // Debug logging to see what we're returning
-    console.log('🚀 [HOOK] PROJECTION STATE VALUES:', {
-        showStats,
-        currentStats,
-        showCorrectAnswers,
-        correctAnswersData
-    });
+    // console.log('🚀 [HOOK] PROJECTION STATE VALUES:', {
+    //     showStats,
+    //     currentStats,
+    //     showCorrectAnswers,
+    //     correctAnswersData
+    // });
 
+    /*
     logger.debug('🔍 useProjectionQuizSocket returning:', {
         hasGameState: !!returnValue.gameState,
         gameStateKeys: returnValue.gameState ? Object.keys(returnValue.gameState) : null,
@@ -631,6 +694,7 @@ export function useProjectionQuizSocket(accessCode: string, gameId: string | nul
             finalStatus: returnValue.timerStatus
         }
     });
+    */
 
     return returnValue;
 }

@@ -20,7 +20,7 @@ export async function calculateLeaderboard(accessCode: string) {
         // Fetch scores from the leaderboard sorted set (source of truth for live scores)
         const leaderboardKey = `mathquest:game:leaderboard:${accessCode}`;
         const leaderboardRaw = await redisClient.zrevrange(leaderboardKey, 0, -1, 'WITHSCORES');
-        
+
         // Fetch participant metadata (usernames, avatars, etc.)
         const participantsKey = `mathquest:game:participants:${accessCode}`;
         const participantsRaw = await redisClient.hgetall(participantsKey);
@@ -70,7 +70,7 @@ export async function calculateLeaderboard(accessCode: string) {
             const userId = leaderboardRaw[i];
             const score = parseInt(leaderboardRaw[i + 1], 10);
             const metadata = participantsMetadata.get(userId);
-            
+
             if (metadata) {
                 const leaderboardEntry = {
                     userId,
@@ -78,7 +78,7 @@ export async function calculateLeaderboard(accessCode: string) {
                     avatarEmoji: metadata.avatarEmoji,
                     score
                 };
-                
+
                 logger.debug({
                     accessCode,
                     index: i / 2,
@@ -87,7 +87,7 @@ export async function calculateLeaderboard(accessCode: string) {
                     metadata,
                     leaderboardEntry
                 }, '🔍 [LEADERBOARD-CALC] Processing leaderboard entry');
-                
+
                 leaderboard.push(leaderboardEntry);
             } else {
                 logger.warn({

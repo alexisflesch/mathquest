@@ -270,12 +270,22 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                             color: 'var(--primary-foreground)',
                             width: '100%',
                             height: '100%',
+                            willChange: 'transform', // Optimize for frequent updates
+                            transform: 'translateZ(0)', // Force GPU acceleration
                         }}
                         onClick={() => bringToFront("live-timer")}
                     >
                         <div className="flex items-center gap-2 w-full h-full justify-center">
                             <Timer className="w-8 h-8 block flex-shrink-0" style={{ color: 'var(--light-foreground)' }} />
-                            <span className="font-bold text-3xl" style={{ color: 'var(--light-foreground)', lineHeight: '1' }}>
+                            <span
+                                className="font-bold text-3xl"
+                                style={{
+                                    color: 'var(--light-foreground)',
+                                    lineHeight: '1',
+                                    willChange: 'contents', // Optimize for content changes
+                                    transform: 'translateZ(0)', // Force GPU acceleration
+                                }}
+                            >
                                 {formatTimerMs(timeLeftMs ?? null)}
                             </span>
                         </div>

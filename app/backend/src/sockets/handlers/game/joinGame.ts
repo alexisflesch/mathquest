@@ -265,7 +265,7 @@ export function joinGameHandler(
                 // User already in leaderboard - preserve existing score in BOTH leaderboard AND participant data
                 participantDataForRedis.score = parseFloat(existingLeaderboardScore);
                 await redisClient.hset(participantsKey, joinResult.participant.userId, JSON.stringify(participantDataForRedis));
-                
+
                 logger.warn({
                     accessCode,
                     userId,
