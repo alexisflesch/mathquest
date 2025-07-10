@@ -46,6 +46,259 @@ import LobbyLayout from '@/components/LobbyLayout';
 // Create a logger for this component
 const logger = createLogger('LiveGamePage');
 
+// Stable empty objects to prevent unnecessary re-renders
+const EMPTY_LEADERBOARD: any[] = [];
+
+// Memoized Timer Display Component
+const TimerDisplay = React.memo(({ 
+    gameMode, 
+    timerState, 
+    isMobile 
+}: { 
+    gameMode: string; 
+    timerState: any; 
+    isMobile: boolean; 
+}) => {
+    // Re-render logging for TimerDisplay
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+    
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+        
+        logger.info(`🔄 [TIMER-RERENDER] TimerDisplay re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+    
+    if (gameMode === 'practice') return null;
+    
+    const timerSeconds = timerState?.timeLeftMs ? Math.floor(timerState.timeLeftMs / 1000) : null;
+    return <TournamentTimer timerS={timerSeconds} isMobile={isMobile} />;
+});
+TimerDisplay.displayName = 'TimerDisplay';
+
+// Memoized Leaderboard FAB Component  
+const LeaderboardFAB = React.memo(({ 
+    isMobile,
+    userId,
+    leaderboardLength,
+    userRank,
+    onOpen
+}: {
+    isMobile: boolean;
+    userId: string | null;
+    leaderboardLength: number;
+    userRank: number | null;
+    onOpen: () => void;
+}) => {
+    // Re-render logging for LeaderboardFAB
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+    
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+        
+        logger.info(`🔄 [FAB-RERENDER] LeaderboardFAB re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+    
+    if (!isMobile || !userId || leaderboardLength === 0 || !userRank) {
+        return null;
+    }
+
+    return (
+        <button
+            onClick={onOpen}
+            className="fixed right-4 z-[150] flex items-center space-x-2 px-3 py-2 bg-transparent text-[var(--success)] rounded-full hover:bg-white/10 transition-all duration-200"
+            style={{
+                zIndex: 150,
+                top: 'calc(var(--navbar-height) / 2)',
+                transform: 'translateY(-50%)'
+            }}
+            aria-label="Voir le classement complet"
+        >
+            <Trophy className="w-5 h-5" />
+            <span className="text-sm font-medium">
+                #{userRank}
+            </span>
+        </button>
+    );
+});
+LeaderboardFAB.displayName = 'LeaderboardFAB';
+
+// Memoized Question Display Component
+const QuestionDisplay = React.memo(({
+    currentQuestion,
+    questionIndex,
+    totalQuestions,
+    isMultipleChoice,
+    selectedAnswer,
+    setSelectedAnswer,
+    selectedAnswers,
+    setSelectedAnswers,
+    handleSingleChoice,
+    handleSubmitMultiple,
+    answered,
+    isQuizMode,
+    correctAnswers,
+    readonly,
+    gameStatus,
+    connecting,
+    connected,
+    currentQuestionUid
+}: {
+    currentQuestion: QuestionDataForStudent | null;
+    questionIndex: number;
+    totalQuestions: number;
+    isMultipleChoice: boolean;
+    selectedAnswer: number | null;
+    setSelectedAnswer: (answer: number | null) => void;
+    selectedAnswers: number[];
+    setSelectedAnswers: (cb: (prev: number[]) => number[]) => void;
+    handleSingleChoice: (idx: number) => void;
+    handleSubmitMultiple: () => void;
+    answered: boolean;
+    isQuizMode: boolean;
+    correctAnswers: boolean[] | undefined;
+    readonly: boolean;
+    gameStatus: string;
+    connecting: boolean;
+    connected: boolean;
+    currentQuestionUid: string | undefined;
+}) => {
+    // Re-render logging for QuestionDisplay
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+    
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+        
+        logger.info(`🔄 [QUESTION-RERENDER] QuestionDisplay re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+    
+    if (currentQuestion) {
+        return (
+            <QuestionCard
+                key={currentQuestionUid}
+                currentQuestion={currentQuestion}
+                questionIndex={questionIndex}
+                totalQuestions={totalQuestions}
+                isMultipleChoice={isMultipleChoice}
+                selectedAnswer={selectedAnswer}
+                setSelectedAnswer={setSelectedAnswer}
+                selectedAnswers={selectedAnswers}
+                setSelectedAnswers={setSelectedAnswers}
+                handleSingleChoice={handleSingleChoice}
+                handleSubmitMultiple={handleSubmitMultiple}
+                answered={answered}
+                isQuizMode={isQuizMode}
+                correctAnswers={correctAnswers}
+                readonly={readonly}
+            />
+        );
+    }
+
+    return (
+        <div className="text-center text-lg text-gray-500 p-8">
+            {gameStatus === 'completed' ? (
+                <>
+                    <div className="text-2xl mb-4">🎉 Jeu terminé !</div>
+                    <div>Redirection vers le classement...</div>
+                </>
+            ) : connecting ? 'Connexion...' :
+                !connected ? 'Connexion en cours...' :
+                    'En attente de la prochaine question...'
+            }
+        </div>
+    );
+});
+QuestionDisplay.displayName = 'QuestionDisplay';
+
+// Memoized Practice Mode Progression Component
+const PracticeModeProgression = React.memo(({
+    gameMode,
+    answered,
+    showFeedbackOverlay,
+    questionIndex,
+    totalQuestions,
+    handleRequestNextQuestion,
+    hasExplanation,
+    onReopenFeedback,
+    currentQuestion
+}: {
+    gameMode: string;
+    answered: boolean;
+    showFeedbackOverlay: boolean;
+    questionIndex: number;
+    totalQuestions: number;
+    handleRequestNextQuestion: () => void;
+    hasExplanation: boolean;
+    onReopenFeedback: () => void;
+    currentQuestion: any;
+}) => {
+    // Re-render logging for PracticeModeProgression
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+    
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+        
+        logger.info(`🔄 [PRACTICE-RERENDER] PracticeModeProgression re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
+    
+    if (gameMode !== 'practice' || !answered || showFeedbackOverlay) {
+        return null;
+    }
+
+    return (
+        <div className="p-4 text-center">
+            <div className="space-y-2">
+                <div className="text-sm text-gray-600">
+                    Question {questionIndex + 1} sur {totalQuestions} terminée
+                </div>
+                {questionIndex < totalQuestions - 1 ? (
+                    <button
+                        className="btn btn-primary btn-lg"
+                        onClick={handleRequestNextQuestion}
+                        disabled={!currentQuestion}
+                    >
+                        Question suivante →
+                    </button>
+                ) : (
+                    <button
+                        className="btn btn-success btn-lg"
+                        onClick={handleRequestNextQuestion}
+                        disabled={!currentQuestion}
+                    >
+                        Terminer l'entraînement ✓
+                    </button>
+                )}
+
+                {/* Show explanation again if available */}
+                {hasExplanation && (
+                    <button
+                        className="btn btn-outline btn-sm"
+                        onClick={onReopenFeedback}
+                    >
+                        Revoir l'explication
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+});
+PracticeModeProgression.displayName = 'PracticeModeProgression';
+
 // Modern unified participant payload
 interface UnifiedParticipantListPayload {
     participants: GameParticipant[];
@@ -61,6 +314,19 @@ interface LobbyUIState {
 
 
 export default function LiveGamePage() {
+
+    // Re-render logging for performance monitoring
+    const renderCount = useRef(0);
+    const lastRenderTime = useRef(Date.now());
+    
+    useEffect(() => {
+        renderCount.current++;
+        const now = Date.now();
+        const timeSinceLastRender = now - lastRenderTime.current;
+        lastRenderTime.current = now;
+        
+        logger.info(`🔄 [LIVE-RERENDER] Component re-render #${renderCount.current} (${timeSinceLastRender}ms since last)`);
+    });
 
     const { code } = useParams();
     const router = useRouter();
@@ -195,24 +461,28 @@ export default function LiveGamePage() {
     // Leaderboard modal state
     const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
 
+    // Use stable leaderboard reference to prevent unnecessary re-renders
+    const stableLeaderboard = useMemo(() => {
+        return gameState.leaderboard.length > 0 ? gameState.leaderboard : EMPTY_LEADERBOARD;
+    }, [gameState.leaderboard]);
     // Calculate user's score and rank from leaderboard
     const userLeaderboardData = useMemo(() => {
         logger.info('🏆 [USER-LEADERBOARD] Calculating user leaderboard data', {
             userId,
-            leaderboardLength: gameState.leaderboard.length,
-            leaderboard: gameState.leaderboard
+            leaderboardLength: stableLeaderboard.length,
+            leaderboard: stableLeaderboard
         });
 
-        if (!userId || !gameState.leaderboard.length) {
+        if (!userId || !stableLeaderboard.length) {
             logger.info('🏆 [USER-LEADERBOARD] No userId or empty leaderboard, returning defaults', {
                 userId,
-                leaderboardLength: gameState.leaderboard.length
+                leaderboardLength: stableLeaderboard.length
             });
             return { score: 0, rank: null, totalPlayers: 0 };
         }
 
         // Sort leaderboard by score and find user's position
-        const sortedLeaderboard = [...gameState.leaderboard].sort((a: any, b: any) => b.score - a.score);
+        const sortedLeaderboard = [...stableLeaderboard].sort((a: any, b: any) => b.score - a.score);
         const userEntry = sortedLeaderboard.find((entry: any) => entry.userId === userId);
         const userRank = userEntry ? sortedLeaderboard.findIndex((entry: any) => entry.userId === userId) + 1 : null;
 
@@ -230,7 +500,7 @@ export default function LiveGamePage() {
         });
 
         return result;
-    }, [userId, gameState.leaderboard]);
+    }, [userId, stableLeaderboard]);
 
     // Handle responsive design
     useEffect(() => {
@@ -395,7 +665,7 @@ export default function LiveGamePage() {
     }, [gameState.currentQuestion?.questionType]);
 
     // Handle single choice answer submission
-    const handleSingleChoice = (idx: number) => {
+    const handleSingleChoice = useCallback((idx: number) => {
         if (gameState.gameStatus !== 'active') return;
 
         setSelectedAnswer(idx === selectedAnswer ? null : idx);
@@ -411,10 +681,10 @@ export default function LiveGamePage() {
         });
 
         submitAnswer(gameState.currentQuestion.uid, idx, clientTimestamp);
-    };
+    }, [gameState.gameStatus, gameState.currentQuestion, selectedAnswer, gameMode, submitAnswer]);
 
     // Handle multiple choice answer submission
-    const handleSubmitMultiple = () => {
+    const handleSubmitMultiple = useCallback(() => {
         if (gameState.gameStatus !== 'active' || selectedAnswers.length === 0) {
             if (selectedAnswers.length === 0) {
                 setSnackbarMessage("Veuillez sélectionner au moins une réponse.");
@@ -435,15 +705,39 @@ export default function LiveGamePage() {
         });
 
         submitAnswer(gameState.currentQuestion.uid, selectedAnswers, clientTimestamp);
-    };
+    }, [gameState.gameStatus, gameState.currentQuestion, selectedAnswers, gameMode, submitAnswer]);
 
     // Handle next question request (for practice mode)
-    const handleRequestNextQuestion = () => {
+    const handleRequestNextQuestion = useCallback(() => {
         if (gameMode === 'practice' && gameState.currentQuestion) {
             logger.debug('Requesting next question in practice mode');
             requestNextQuestion(gameState.currentQuestion.uid);
         }
-    };
+    }, [gameMode, gameState.currentQuestion, requestNextQuestion]);
+
+    // Memoized modal handlers
+    const handleLeaderboardOpen = useCallback(() => {
+        logger.info('🏆 [FAB] Mobile leaderboard FAB clicked', {
+            userId,
+            leaderboardLength: stableLeaderboard.length,
+            userRank: userLeaderboardData.rank,
+            userScore: userLeaderboardData.score
+        });
+        setShowLeaderboardModal(true);
+    }, [userId, stableLeaderboard.length, userLeaderboardData.rank, userLeaderboardData.score]);
+
+    const handleLeaderboardClose = useCallback(() => {
+        logger.info('🏆 [MODAL] Leaderboard modal closed');
+        setShowLeaderboardModal(false);
+    }, []);
+
+    const handleFeedbackClose = useCallback(() => {
+        setShowFeedbackOverlay(false);
+    }, []);
+
+    const handleFeedbackReopen = useCallback(() => {
+        setShowFeedbackOverlay(true);
+    }, []);
 
     // Debug timer value (development only)
     useEffect(() => {
@@ -458,16 +752,16 @@ export default function LiveGamePage() {
 
     // Debug FAB visibility conditions
     useEffect(() => {
-        const fabShouldShow = isMobile && userId && gameState.leaderboard.length > 0 && userLeaderboardData.rank;
+        const fabShouldShow = isMobile && userId && stableLeaderboard.length > 0 && userLeaderboardData.rank;
         logger.info('🏆 [FAB-DEBUG] FAB visibility check', {
             isMobile,
             userId: !!userId,
-            leaderboardLength: gameState.leaderboard.length,
+            leaderboardLength: stableLeaderboard.length,
             userRank: userLeaderboardData.rank,
             fabShouldShow,
             timestamp: Date.now()
         });
-    }, [isMobile, userId, gameState.leaderboard.length, userLeaderboardData.rank]);
+    }, [isMobile, userId, stableLeaderboard.length, userLeaderboardData.rank]);
 
     // Use canonical QuestionDataForStudent for students (never includes correctAnswers)
     const currentQuestion: QuestionDataForStudent | null = useMemo(() => {
@@ -479,6 +773,12 @@ export default function LiveGamePage() {
             gameState.gameStatus === 'completed' ||
             (gameState.answered && gameMode === 'practice');
     }, [gameState.phase, gameState.gameStatus, gameState.answered, gameMode]);
+
+    // Transform correctAnswers from number[] to boolean[] for QuestionCard
+    const correctAnswersBoolean = useMemo(() => {
+        // gameState.correctAnswers is already boolean[] from the socket hook
+        return gameState.phase === 'show_answers' && gameState.correctAnswers ? gameState.correctAnswers : undefined;
+    }, [gameState.phase, gameState.correctAnswers]);
 
     // Auto-hide snackbar after 2 seconds
     useEffect(() => {
@@ -557,7 +857,7 @@ export default function LiveGamePage() {
                     <AnswerFeedbackOverlay
                         explanation={feedbackText}
                         duration={feedbackDuration}
-                        onClose={() => setShowFeedbackOverlay(false)}
+                        onClose={handleFeedbackClose}
                         isCorrect={gameState.lastAnswerFeedback?.correct}
                         correctAnswers={gameState.correctAnswers || undefined}
                         answerOptions={gameState.currentQuestion?.answerOptions}
@@ -570,82 +870,44 @@ export default function LiveGamePage() {
 
             {/* Main Question Card */}
             <div className={`card w-full max-w-2xl bg-base-100 rounded-lg shadow-xl my-6 relative${showFeedbackOverlay ? " blur-sm" : ""}`}>
-                {/* Show timer only for tournament/quiz modes */}
-                {gameMode !== 'practice' && (
-                    <TournamentTimer timerS={timerState?.timeLeftMs ? Math.floor(timerState.timeLeftMs / 1000) : null} isMobile={isMobile} />
-                )}
+                {/* Memoized Timer Display */}
+                <TimerDisplay gameMode={gameMode} timerState={timerState} isMobile={isMobile} />
 
                 <MathJaxWrapper>
-                    {currentQuestion ? (
-                        <QuestionCard
-                            key={currentQuestionUid}
-                            currentQuestion={currentQuestion}
-                            questionIndex={gameState.questionIndex}
-                            totalQuestions={gameState.totalQuestions}
-                            isMultipleChoice={isMultipleChoice}
-                            selectedAnswer={selectedAnswer}
-                            setSelectedAnswer={setSelectedAnswer}
-                            selectedAnswers={selectedAnswers}
-                            setSelectedAnswers={setSelectedAnswers}
-                            handleSingleChoice={handleSingleChoice}
-                            handleSubmitMultiple={handleSubmitMultiple}
-                            answered={gameState.answered}
-                            isQuizMode={gameMode === 'quiz'}
-                            correctAnswers={gameState.phase === 'show_answers' && gameState.correctAnswers ? gameState.correctAnswers : undefined}
-                            readonly={isReadonly}
-                        />
-                    ) : (
-                        <div className="text-center text-lg text-gray-500 p-8">
-                            {gameState.gameStatus === 'completed' ?
-                                <>
-                                    <div className="text-2xl mb-4">🎉 Jeu terminé !</div>
-                                    <div>Redirection vers le classement...</div>
-                                </> :
-                                connecting ? 'Connexion...' :
-                                    !connected ? 'Connexion en cours...' :
-                                        'En attente de la prochaine question...'
-                            }
-                        </div>
-                    )}
+                    <QuestionDisplay
+                        currentQuestion={currentQuestion}
+                        questionIndex={gameState.questionIndex}
+                        totalQuestions={gameState.totalQuestions}
+                        isMultipleChoice={isMultipleChoice}
+                        selectedAnswer={selectedAnswer}
+                        setSelectedAnswer={setSelectedAnswer}
+                        selectedAnswers={selectedAnswers}
+                        setSelectedAnswers={setSelectedAnswers}
+                        handleSingleChoice={handleSingleChoice}
+                        handleSubmitMultiple={handleSubmitMultiple}
+                        answered={gameState.answered}
+                        isQuizMode={gameMode === 'quiz'}
+                        correctAnswers={correctAnswersBoolean}
+                        readonly={isReadonly}
+                        gameStatus={gameState.gameStatus}
+                        connecting={connecting}
+                        connected={connected}
+                        currentQuestionUid={currentQuestionUid}
+                    />
                 </MathJaxWrapper>
 
                 {/* Enhanced practice mode progression */}
-                {gameMode === 'practice' && gameState.answered && !showFeedbackOverlay && (
-                    <div className="p-4 text-center">
-                        <div className="space-y-2">
-                            <div className="text-sm text-gray-600">
-                                Question {gameState.questionIndex + 1} sur {gameState.totalQuestions} terminée
-                            </div>
-                            {gameState.questionIndex < gameState.totalQuestions - 1 ? (
-                                <button
-                                    className="btn btn-primary btn-lg"
-                                    onClick={handleRequestNextQuestion}
-                                    disabled={!gameState.currentQuestion}
-                                >
-                                    Question suivante →
-                                </button>
-                            ) : (
-                                <button
-                                    className="btn btn-success btn-lg"
-                                    onClick={handleRequestNextQuestion}
-                                    disabled={!gameState.currentQuestion}
-                                >
-                                    Terminer l'entraînement ✓
-                                </button>
-                            )}
-
-                            {/* Show explanation again if available */}
-                            {gameState.lastAnswerFeedback?.explanation && (
-                                <button
-                                    className="btn btn-outline btn-sm"
-                                    onClick={() => setShowFeedbackOverlay(true)}
-                                >
-                                    Revoir l'explication
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
+                <PracticeModeProgression
+                    gameMode={gameMode}
+                    answered={gameState.answered}
+                    showFeedbackOverlay={showFeedbackOverlay}
+                    questionIndex={gameState.questionIndex}
+                    totalQuestions={gameState.totalQuestions}
+                    handleRequestNextQuestion={handleRequestNextQuestion}
+                    hasExplanation={!!gameState.lastAnswerFeedback?.explanation}
+                    onReopenFeedback={handleFeedbackReopen}
+                    currentQuestion={gameState.currentQuestion}
+                />
             </div>
 
             {/* Snackbar for notifications */}
@@ -662,7 +924,7 @@ export default function LiveGamePage() {
                 <AnswerFeedbackOverlay
                     explanation={feedbackText}
                     duration={feedbackDuration}
-                    onClose={() => setShowFeedbackOverlay(false)}
+                    onClose={handleFeedbackClose}
                     isCorrect={gameState.lastAnswerFeedback?.correct}
                     allowManualClose={gameMode === 'practice'}
                     mode={gameMode}
@@ -670,40 +932,19 @@ export default function LiveGamePage() {
             )}
 
             {/* Mobile Leaderboard FAB */}
-            {isMobile && userId && gameState.leaderboard.length > 0 && userLeaderboardData.rank && (
-                <button
-                    onClick={() => {
-                        logger.info('🏆 [FAB] Mobile leaderboard FAB clicked', {
-                            userId,
-                            leaderboardLength: gameState.leaderboard.length,
-                            userRank: userLeaderboardData.rank,
-                            userScore: userLeaderboardData.score
-                        });
-                        setShowLeaderboardModal(true);
-                    }}
-                    className="fixed right-4 z-[150] flex items-center space-x-2 px-3 py-2 bg-transparent text-[var(--success)] rounded-full hover:bg-white/10 transition-all duration-200"
-                    style={{
-                        zIndex: 150,
-                        top: 'calc(var(--navbar-height) / 2)',
-                        transform: 'translateY(-50%)'
-                    }}
-                    aria-label="Voir le classement complet"
-                >
-                    <Trophy className="w-5 h-5" />
-                    <span className="text-sm font-medium">
-                        #{userLeaderboardData.rank}
-                    </span>
-                </button>
-            )}
+            <LeaderboardFAB
+                isMobile={isMobile}
+                userId={userId}
+                leaderboardLength={stableLeaderboard.length}
+                userRank={userLeaderboardData.rank}
+                onOpen={handleLeaderboardOpen}
+            />
 
             {/* Leaderboard Modal */}
             <LeaderboardModal
                 isOpen={showLeaderboardModal}
-                onClose={() => {
-                    logger.info('🏆 [MODAL] Leaderboard modal closed');
-                    setShowLeaderboardModal(false);
-                }}
-                leaderboard={gameState.leaderboard}
+                onClose={handleLeaderboardClose}
+                leaderboard={stableLeaderboard}
                 currentUserId={userId}
             />
         </div>
