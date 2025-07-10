@@ -18,6 +18,291 @@ import { QUESTION_TYPES } from '@shared/types';
 
 const logger = createLogger('ProjectionPage');
 
+// Memoized timer display component to prevent unnecessary re-renders
+const TimerDisplay = React.memo(({ timeLeftMs }: { timeLeftMs: number | null }) => {
+    return (
+        <span
+            className="font-bold text-3xl"
+            style={{
+                color: 'var(--light-foreground)',
+                lineHeight: '1',
+                willChange: 'contents', // Optimize for content changes
+                transform: 'translateZ(0)', // Force GPU acceleration
+            }}
+        >
+            {formatTimerMs(timeLeftMs ?? null)}
+        </span>
+    );
+});
+TimerDisplay.displayName = 'TimerDisplay';
+
+// Memoized Question component
+const QuestionDisplay = React.memo(({ 
+    currentTournamentQuestion, 
+    currentQuestionUid, 
+    gameState,
+    questionKey,
+    zoomFactors,
+    setZoomFactors,
+    correctAnswersData,
+    showStats,
+    statsToShow,
+    tournamentUrl,
+    code,
+    bringToFront 
+}: {
+    currentTournamentQuestion: QuestionDataForStudent | null;
+    currentQuestionUid: string | undefined;
+    gameState: any;
+    questionKey: number;
+    zoomFactors: { question: number; classement: number };
+    setZoomFactors: React.Dispatch<React.SetStateAction<{ question: number; classement: number }>>;
+    correctAnswersData: any;
+    showStats: boolean;
+    statsToShow: any;
+    tournamentUrl: string;
+    code: string;
+    bringToFront: (id: string) => void;
+}) => {
+    const currentQuestion = currentTournamentQuestion;
+    
+    return (
+        <div
+            className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center overflow-hidden relative"
+            style={{ width: '100%', height: '100%' }}
+            onClick={() => bringToFront("question")}
+        >
+            <div onPointerDown={e => e.stopPropagation()}>
+                <ZoomControls
+                    zoomFactor={zoomFactors.question}
+                    onZoomIn={() => setZoomFactors(z => ({ ...z, question: Math.min(z.question + 0.1, 3) }))}
+                    onZoomOut={() => setZoomFactors(z => ({ ...z, question: Math.max(z.question - 0.1, 0.5) }))}
+                />
+            </div>
+            <div className="card-body w-full h-full p-4 overflow-auto">
+                {!currentTournamentQuestion ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                        <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
+                        <div className="font-mono text-center mt-2 break-all text-base">{code}</div>
+                    </div>
+                ) : (
+                    <div
+                        className="w-full h-full flex items-start justify-center"
+                        style={{ position: 'relative' }}
+                    >
+                        <div
+                            style={{
+                                transform: `scale(${zoomFactors.question})`,
+                                transformOrigin: 'top center',
+                                width: `calc(100% / ${zoomFactors.question})`,
+                                maxWidth: `calc(100% / ${zoomFactors.question})`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <QuestionCard
+                                key={questionKey}
+                                currentQuestion={currentTournamentQuestion}
+                                questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex((uid: string) => uid === currentQuestionUid) ?? 0 : 0}
+                                totalQuestions={gameState?.questionUids.length ?? 0}
+                                isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
+                                selectedAnswer={null}
+                                setSelectedAnswer={() => { }}
+                                selectedAnswers={[]}
+                                setSelectedAnswers={() => { }}
+                                handleSingleChoice={() => { }}
+                                handleSubmitMultiple={() => { }}
+                                answered={false}
+                                isQuizMode={true}
+                                readonly={true}
+                                correctAnswers={correctAnswersData?.correctAnswers || []}
+                                stats={showStats ? statsToShow : undefined}
+                                showStats={showStats}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+});
+QuestionDisplay.displayName = 'QuestionDisplay';
+
+// Memoized Leaderboard component
+const LeaderboardDisplay = React.memo(({ 
+    hookLeaderboard, 
+    correctAnswersData, 
+    shouldAnimatePodium,
+    shouldShowQRCode,
+    tournamentUrl,
+    code,
+    zoomFactors,
+    setZoomFactors,
+    bringToFront 
+}: {
+    hookLeaderboard: any[];
+    correctAnswersData: any;
+    shouldAnimatePodium: boolean;
+    shouldShowQRCode: boolean;
+    tournamentUrl: string;
+    code: string;
+    zoomFactors: { question: number; classement: number };
+    setZoomFactors: React.Dispatch<React.SetStateAction<{ question: number; classement: number }>>;
+    bringToFront: (id: string) => void;
+}) => {
+    return (
+        <div
+            className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center overflow-hidden relative"
+            style={{ width: '100%', height: '100%' }}
+            onClick={() => bringToFront("classement")}
+        >
+            <div onPointerDown={e => e.stopPropagation()}>
+                <ZoomControls
+                    zoomFactor={zoomFactors.classement}
+                    onZoomIn={() => setZoomFactors(z => ({ ...z, classement: Math.min(z.classement + 0.1, 3) }))}
+                    onZoomOut={() => setZoomFactors(z => ({ ...z, classement: Math.max(z.classement - 0.1, 0.5) }))}
+                />
+            </div>
+            <div className="card-body w-full h-full p-4 flex flex-col items-start justify-start overflow-hidden">
+                {shouldShowQRCode ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                        <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
+                        <div className="font-mono text-center mt-2 break-all text-base">{code}</div>
+                    </div>
+                ) : (
+                    <div
+                        style={{
+                            transform: `scale(${zoomFactors.classement})`,
+                            transformOrigin: 'top center',
+                            width: `calc(100% / ${zoomFactors.classement})`,
+                            maxWidth: `calc(100% / ${zoomFactors.classement})`,
+                            height: `calc(100% / ${zoomFactors.classement})`,
+                            position: 'relative',
+                        }}
+                    >
+                        <ClassementPodium
+                            key="leaderboard-podium"
+                            top3={hookLeaderboard.slice(0, 3).map((entry) => ({
+                                userId: entry.userId,
+                                name: entry.username || 'Unknown Player',
+                                avatarEmoji: entry.avatarEmoji || '👤',
+                                score: entry.score,
+                            }))}
+                            others={hookLeaderboard.slice(3).map((entry) => ({
+                                userId: entry.userId,
+                                name: entry.username || 'Unknown Player',
+                                score: entry.score,
+                            }))}
+                            correctAnswers={correctAnswersData?.correctAnswers || []}
+                            animate={shouldAnimatePodium}
+                        />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+});
+LeaderboardDisplay.displayName = 'LeaderboardDisplay';
+
+// Extract DraggableResizable as a separate component to prevent re-creation on every render
+const DraggableResizable = React.memo(({ 
+    id, 
+    elements, 
+    updateElement, 
+    bringToFront, 
+    children 
+}: { 
+    id: string; 
+    elements: Array<{id: string; x: number; y: number; w: number; h: number; z: number}>; 
+    updateElement: (id: string, update: Partial<{ x: number; y: number; w: number; h: number; z: number }>) => void;
+    bringToFront: (id: string) => void;
+    children: React.ReactNode;
+}) => {
+    const element = elements.find(e => e.id === id);
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+    
+    // Calculate transform for live dragging
+    let dragTransform = '';
+    if (transform) {
+        dragTransform = `translate3d(${transform.x}px, ${transform.y}px, 0)`;
+    }
+    
+    const style = {
+        position: 'absolute' as const,
+        left: element?.x ?? 0,
+        top: element?.y ?? 0,
+        width: element?.w ?? 200,
+        height: element?.h ?? 100,
+        zIndex: element?.z ?? 1,
+        touchAction: 'none',
+        transform: dragTransform,
+        // Remove transition to prevent jump-back effect during drag end
+        background: 'transparent',
+    };
+
+    const handleResizeStop = useCallback((_e: any, dir: any, ref: any, d: any) => {
+        updateElement(id, {
+            w: (element?.w ?? 200) + d.width,
+            h: (element?.h ?? 100) + d.height,
+        });
+    }, [id, element?.w, element?.h, updateElement]);
+
+    return (
+        <Resizable
+            size={{ width: element?.w ?? 200, height: element?.h ?? 100 }}
+            onResizeStop={handleResizeStop}
+            minWidth={120}
+            minHeight={60}
+            enable={{
+                top: false,
+                right: false,
+                bottom: false,
+                left: false,
+                topRight: false,
+                bottomRight: true,
+                bottomLeft: false,
+                topLeft: false,
+            }}
+            style={style}
+            handleWrapperStyle={{ zIndex: 10000 }}
+            handleComponent={{
+                bottomRight: (
+                    <div
+                        style={{
+                            width: 28,
+                            height: 28,
+                            position: 'absolute',
+                            right: 4,
+                            bottom: 4,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'se-resize',
+                            zIndex: 10001,
+                            pointerEvents: 'auto',
+                            background: 'transparent',
+                            borderTopLeftRadius: 8,
+                        }}
+                    >
+                        <ChevronRight size={18} color="#888" strokeWidth={2} style={{ transform: 'rotate(45deg)' }} />
+                    </div>
+                ),
+            }}
+        >
+            <div
+                ref={setNodeRef}
+                {...attributes}
+                {...listeners}
+                style={{ width: '100%', height: '100%', cursor: isDragging ? 'grabbing' : 'grab' }}
+            >
+                {children}
+            </div>
+        </Resizable>
+    );
+});
+DraggableResizable.displayName = 'DraggableResizable';
+
 function formatTimer(val: number | null) {
     if (val === null) return '-';
     if (val >= 60) {
@@ -111,101 +396,18 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
         }
     }, []);
 
+    // Helper to update element position/size
+    const updateElement = useCallback((id: string, update: Partial<{ x: number; y: number; w: number; h: number; z: number }>) => {
+        setElements(prev => prev.map(e => e.id === id ? { ...e, ...update } : e));
+    }, []);
+
     // Bring element to front (highest z)
-    const bringToFront = (id: string) => {
+    const bringToFront = useCallback((id: string) => {
         setElements(prev => {
             const maxZ = Math.max(...prev.map(e => e.z || 1), 1);
             return prev.map(e => e.id === id ? { ...e, z: maxZ + 1 } : e);
         });
-    };
-
-    // Helper to update element position/size
-    const updateElement = (id: string, update: Partial<{ x: number; y: number; w: number; h: number; z: number }>) => {
-        setElements(prev => prev.map(e => e.id === id ? { ...e, ...update } : e));
-    };
-
-    // DnD-kit drag logic
-    function DraggableResizable({ id, children }: { id: string; children: React.ReactNode }) {
-        const element = elements.find(e => e.id === id);
-        const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
-        // Calculate transform for live dragging
-        let dragTransform = '';
-        if (transform) {
-            dragTransform = `translate3d(${transform.x}px, ${transform.y}px, 0)`;
-        }
-        const style = {
-            position: 'absolute' as const,
-            left: element?.x ?? 0,
-            top: element?.y ?? 0,
-            width: element?.w ?? 200,
-            height: element?.h ?? 100,
-            zIndex: element?.z ?? 1,
-            touchAction: 'none',
-            transform: dragTransform,
-            transition: isDragging ? 'none' : 'transform 0.2s',
-            background: 'transparent',
-        };
-        // Only allow resizing from the bottom-right corner, add a resize icon
-        return (
-            <Resizable
-                size={{ width: element?.w ?? 200, height: element?.h ?? 100 }}
-                onResizeStop={(_e, dir, ref, d) => {
-                    // Only bottom-right, so no x/y update needed
-                    updateElement(id, {
-                        w: (element?.w ?? 200) + d.width,
-                        h: (element?.h ?? 100) + d.height,
-                    });
-                }}
-                minWidth={120}
-                minHeight={60}
-                enable={{
-                    top: false,
-                    right: false,
-                    bottom: false,
-                    left: false,
-                    topRight: false,
-                    bottomRight: true,
-                    bottomLeft: false,
-                    topLeft: false,
-                }}
-                style={style}
-                handleWrapperStyle={{ zIndex: 10000 }}
-                handleComponent={{
-                    bottomRight: (
-                        <div
-                            style={{
-                                width: 28,
-                                height: 28,
-                                position: 'absolute',
-                                right: 4,
-                                bottom: 4,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'se-resize',
-                                zIndex: 10001,
-                                pointerEvents: 'auto',
-                                background: 'transparent',
-                                borderTopLeftRadius: 8,
-                            }}
-                        >
-                            {/* ChevronRight rotated 45deg for resize handle */}
-                            <ChevronRight size={18} color="#888" strokeWidth={2} style={{ transform: 'rotate(45deg)' }} />
-                        </div>
-                    ),
-                }}
-            >
-                <div
-                    ref={setNodeRef}
-                    {...attributes}
-                    {...listeners}
-                    style={{ width: '100%', height: '100%', cursor: isDragging ? 'grabbing' : 'grab' }}
-                >
-                    {children}
-                </div>
-            </Resizable>
-        );
-    }
+    }, []);
 
     // Canonical: Only show QR code if there is no current question (like live/student page)
     const currentTournamentQuestion: QuestionDataForStudent | null = currentQuestion;
@@ -263,7 +465,12 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                     setActiveId(null);
                 }}
             >
-                <DraggableResizable id="live-timer">
+                <DraggableResizable 
+                    id="live-timer" 
+                    elements={elements} 
+                    updateElement={updateElement} 
+                    bringToFront={bringToFront}
+                >
                     <div
                         className="rounded-full shadow-lg border border-primary flex items-center justify-center overflow-hidden relative"
                         style={{
@@ -278,81 +485,37 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                     >
                         <div className="flex items-center gap-2 w-full h-full justify-center">
                             <Timer className="w-8 h-8 block flex-shrink-0" style={{ color: 'var(--light-foreground)' }} />
-                            <span
-                                className="font-bold text-3xl"
-                                style={{
-                                    color: 'var(--light-foreground)',
-                                    lineHeight: '1',
-                                    willChange: 'contents', // Optimize for content changes
-                                    transform: 'translateZ(0)', // Force GPU acceleration
-                                }}
-                            >
-                                {formatTimerMs(timeLeftMs ?? null)}
-                            </span>
+                            <TimerDisplay timeLeftMs={timeLeftMs ?? null} />
                         </div>
                     </div>
                 </DraggableResizable>
-                <DraggableResizable id="question">
-                    <div
-                        className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center overflow-hidden relative"
-                        style={{ width: '100%', height: '100%' }}
-                        onClick={() => bringToFront("question")}
-                    >
-                        <div onPointerDown={e => e.stopPropagation()}>
-                            <ZoomControls
-                                zoomFactor={zoomFactors.question}
-                                onZoomIn={() => setZoomFactors(z => ({ ...z, question: Math.min(z.question + 0.1, 3) }))}
-                                onZoomOut={() => setZoomFactors(z => ({ ...z, question: Math.max(z.question - 0.1, 0.5) }))}
-                            />
-                        </div>
-                        <div className="card-body w-full h-full p-4 overflow-auto">
-                            {!currentTournamentQuestion ? (
-                                <div className="w-full h-full flex flex-col items-center justify-center">
-                                    <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
-                                    <div className="font-mono text-center mt-2 break-all text-base">{code}</div>
-                                </div>
-                            ) : (
-                                <div
-                                    className="w-full h-full flex items-start justify-center"
-                                    style={{ position: 'relative' }}
-                                >
-                                    <div
-                                        style={{
-                                            transform: `scale(${zoomFactors.question})`,
-                                            transformOrigin: 'top center',
-                                            width: `calc(100% / ${zoomFactors.question})`,
-                                            maxWidth: `calc(100% / ${zoomFactors.question})`,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        <QuestionCard
-                                            key={questionKey}
-                                            currentQuestion={currentTournamentQuestion}
-                                            questionIndex={currentQuestionUid ? gameState?.questionUids.findIndex(uid => uid === currentQuestionUid) ?? 0 : 0}
-                                            totalQuestions={gameState?.questionUids.length ?? 0}
-                                            isMultipleChoice={currentQuestion?.questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-                                            selectedAnswer={null}
-                                            setSelectedAnswer={() => { }}
-                                            selectedAnswers={[]}
-                                            setSelectedAnswers={() => { }}
-                                            handleSingleChoice={() => { }}
-                                            handleSubmitMultiple={() => { }}
-                                            answered={false}
-                                            isQuizMode={true}
-                                            readonly={true}
-                                            correctAnswers={correctAnswersData?.correctAnswers || []}
-                                            stats={showStats ? statsToShow : undefined}
-                                            showStats={showStats}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                <DraggableResizable 
+                    id="question" 
+                    elements={elements} 
+                    updateElement={updateElement} 
+                    bringToFront={bringToFront}
+                >
+                    <QuestionDisplay
+                        currentTournamentQuestion={currentTournamentQuestion}
+                        currentQuestionUid={currentQuestionUid}
+                        gameState={gameState}
+                        questionKey={questionKey}
+                        zoomFactors={zoomFactors}
+                        setZoomFactors={setZoomFactors}
+                        correctAnswersData={correctAnswersData}
+                        showStats={showStats}
+                        statsToShow={statsToShow}
+                        tournamentUrl={tournamentUrl}
+                        code={code}
+                        bringToFront={bringToFront}
+                    />
                 </DraggableResizable>
-                <DraggableResizable id="qrcode">
+                <DraggableResizable 
+                    id="qrcode" 
+                    elements={elements} 
+                    updateElement={updateElement} 
+                    bringToFront={bringToFront}
+                >
                     <div
                         className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center overflow-hidden relative"
                         style={{ width: '100%', height: '100%' }}
@@ -370,56 +533,23 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                         </div>
                     </div>
                 </DraggableResizable>
-                <DraggableResizable id="classement">
-                    <div
-                        className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center relative"
-                        style={{ width: '100%', height: '100%' }}
-                        onClick={() => bringToFront("classement")}
-                    >
-                        <div onPointerDown={e => e.stopPropagation()}>
-                            <ZoomControls
-                                zoomFactor={zoomFactors.classement}
-                                onZoomIn={() => setZoomFactors(z => ({ ...z, classement: Math.min(z.classement + 0.1, 3) }))}
-                                onZoomOut={() => setZoomFactors(z => ({ ...z, classement: Math.max(z.classement - 0.1, 0.5) }))}
-                            />
-                        </div>
-                        <div className="card-body w-full h-full p-4 flex flex-col items-start justify-start overflow-hidden">
-                            {shouldShowQRCode.classement ? (
-                                <div className="w-full h-full flex flex-col items-center justify-center">
-                                    <QRCode value={tournamentUrl} size={192} style={{ width: '100%', height: '100%' }} />
-                                    <div className="font-mono text-center mt-2 break-all text-base">{code}</div>
-                                </div>
-                            ) : (
-                                <div
-                                    style={{
-                                        transform: `scale(${zoomFactors.classement})`,
-                                        transformOrigin: 'top center',
-                                        width: `calc(100% / ${zoomFactors.classement})`,
-                                        maxWidth: `calc(100% / ${zoomFactors.classement})`,
-                                        height: `calc(100% / ${zoomFactors.classement})`,
-                                        position: 'relative',
-                                    }}
-                                >
-                                    <ClassementPodium
-                                        key="leaderboard-podium"
-                                        top3={hookLeaderboard.slice(0, 3).map((entry) => ({
-                                            userId: entry.userId,
-                                            name: entry.username || 'Unknown Player',
-                                            avatarEmoji: entry.avatarEmoji || '👤',
-                                            score: entry.score,
-                                        }))}
-                                        others={hookLeaderboard.slice(3).map((entry) => ({
-                                            userId: entry.userId,
-                                            name: entry.username || 'Unknown Player',
-                                            score: entry.score,
-                                        }))}
-                                        correctAnswers={correctAnswersData?.correctAnswers || []}
-                                        animate={shouldAnimatePodium}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                <DraggableResizable 
+                    id="classement" 
+                    elements={elements} 
+                    updateElement={updateElement} 
+                    bringToFront={bringToFront}
+                >
+                    <LeaderboardDisplay
+                        hookLeaderboard={hookLeaderboard}
+                        correctAnswersData={correctAnswersData}
+                        shouldAnimatePodium={shouldAnimatePodium}
+                        shouldShowQRCode={shouldShowQRCode.classement}
+                        tournamentUrl={tournamentUrl}
+                        code={code}
+                        zoomFactors={zoomFactors}
+                        setZoomFactors={setZoomFactors}
+                        bringToFront={bringToFront}
+                    />
                 </DraggableResizable>
             </DndContext>
         </div>
