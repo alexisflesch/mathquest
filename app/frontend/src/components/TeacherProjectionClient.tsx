@@ -37,9 +37,9 @@ const TimerDisplay = React.memo(({ timeLeftMs }: { timeLeftMs: number | null }) 
 TimerDisplay.displayName = 'TimerDisplay';
 
 // Memoized Question component
-const QuestionDisplay = React.memo(({ 
-    currentTournamentQuestion, 
-    currentQuestionUid, 
+const QuestionDisplay = React.memo(({
+    currentTournamentQuestion,
+    currentQuestionUid,
     gameState,
     questionKey,
     zoomFactors,
@@ -49,7 +49,7 @@ const QuestionDisplay = React.memo(({
     statsToShow,
     tournamentUrl,
     code,
-    bringToFront 
+    bringToFront
 }: {
     currentTournamentQuestion: QuestionDataForStudent | null;
     currentQuestionUid: string | undefined;
@@ -65,7 +65,7 @@ const QuestionDisplay = React.memo(({
     bringToFront: (id: string) => void;
 }) => {
     const currentQuestion = currentTournamentQuestion;
-    
+
     return (
         <div
             className="card bg-base-100 rounded-lg shadow-xl flex flex-col items-center justify-center overflow-hidden relative"
@@ -130,16 +130,16 @@ const QuestionDisplay = React.memo(({
 QuestionDisplay.displayName = 'QuestionDisplay';
 
 // Memoized Leaderboard component
-const LeaderboardDisplay = React.memo(({ 
-    hookLeaderboard, 
-    correctAnswersData, 
+const LeaderboardDisplay = React.memo(({
+    hookLeaderboard,
+    correctAnswersData,
     shouldAnimatePodium,
     shouldShowQRCode,
     tournamentUrl,
     code,
     zoomFactors,
     setZoomFactors,
-    bringToFront 
+    bringToFront
 }: {
     hookLeaderboard: any[];
     correctAnswersData: any;
@@ -206,28 +206,28 @@ const LeaderboardDisplay = React.memo(({
 LeaderboardDisplay.displayName = 'LeaderboardDisplay';
 
 // Extract DraggableResizable as a separate component to prevent re-creation on every render
-const DraggableResizable = React.memo(({ 
-    id, 
-    elements, 
-    updateElement, 
-    bringToFront, 
-    children 
-}: { 
-    id: string; 
-    elements: Array<{id: string; x: number; y: number; w: number; h: number; z: number}>; 
+const DraggableResizable = React.memo(({
+    id,
+    elements,
+    updateElement,
+    bringToFront,
+    children
+}: {
+    id: string;
+    elements: Array<{ id: string; x: number; y: number; w: number; h: number; z: number }>;
     updateElement: (id: string, update: Partial<{ x: number; y: number; w: number; h: number; z: number }>) => void;
     bringToFront: (id: string) => void;
     children: React.ReactNode;
 }) => {
     const element = elements.find(e => e.id === id);
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
-    
+
     // Calculate transform for live dragging
     let dragTransform = '';
     if (transform) {
         dragTransform = `translate3d(${transform.x}px, ${transform.y}px, 0)`;
     }
-    
+
     const style = {
         position: 'absolute' as const,
         left: element?.x ?? 0,
@@ -465,10 +465,10 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                     setActiveId(null);
                 }}
             >
-                <DraggableResizable 
-                    id="live-timer" 
-                    elements={elements} 
-                    updateElement={updateElement} 
+                <DraggableResizable
+                    id="live-timer"
+                    elements={elements}
+                    updateElement={updateElement}
                     bringToFront={bringToFront}
                 >
                     <div
@@ -489,10 +489,10 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                         </div>
                     </div>
                 </DraggableResizable>
-                <DraggableResizable 
-                    id="question" 
-                    elements={elements} 
-                    updateElement={updateElement} 
+                <DraggableResizable
+                    id="question"
+                    elements={elements}
+                    updateElement={updateElement}
                     bringToFront={bringToFront}
                 >
                     <QuestionDisplay
@@ -510,10 +510,10 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                         bringToFront={bringToFront}
                     />
                 </DraggableResizable>
-                <DraggableResizable 
-                    id="qrcode" 
-                    elements={elements} 
-                    updateElement={updateElement} 
+                <DraggableResizable
+                    id="qrcode"
+                    elements={elements}
+                    updateElement={updateElement}
                     bringToFront={bringToFront}
                 >
                     <div
@@ -533,10 +533,10 @@ export default function TeacherProjectionClient({ code, gameId }: { code: string
                         </div>
                     </div>
                 </DraggableResizable>
-                <DraggableResizable 
-                    id="classement" 
-                    elements={elements} 
-                    updateElement={updateElement} 
+                <DraggableResizable
+                    id="classement"
+                    elements={elements}
+                    updateElement={updateElement}
                     bringToFront={bringToFront}
                 >
                     <LeaderboardDisplay
