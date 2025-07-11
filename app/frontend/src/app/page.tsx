@@ -85,78 +85,45 @@ export default function Home() {
             <h1 className="text-3xl text-center font-bold text-base-content">Mathquest</h1>
           </div>
 
-          {/* Subtitle */}
-          <div className="text-left mt-12 mb-6">
-            <p className="text-lg text-muted-foreground">
-              🧠 Une alternative libre à Kahoot, pour tous les niveaux, toutes les disciplines.
+          {/* Description */}
+          <div className="text-center mb-8">
+            <p className="text-lg text-muted-foreground mb-4">
+              🧠 Une alternative libre à Kahoot avec une base de question partagée.
             </p>
-            <p className="text-lg text-muted-foreground mt-2">
-              🧮 Support natif de{' '}
-              <span className="font-serif">
-                L<span style={{ position: 'relative', top: '-0.2em', fontSize: '0.8em' }}>A</span>
-                <span style={{ letterSpacing: '-0.1em' }}>T</span>
-                <span style={{ position: 'relative', top: '0.15em', fontSize: '0.8em' }}>E</span>
-                X
-              </span>{' '}
-              pour écrire des formules.
-            </p>
-            <p className="text-lg text-success mt-2">
+            {/* <p className="text-success font-medium mb-6">
               🔓 Pas besoin de compte pour jouer !
+            </p> */}
+
+            <div className="text-left text-muted-foreground space-y-2 max-w-2xl mt-6">
+              <p>• Créez vos quiz personnalisés ou utilisez la base de questions partagée</p>
+              <p>• Animez vos cours en temps réel avec scores et classements</p>
+              <p>• Support natif de LaTeX pour les formules mathématiques</p>
+              <p>• Jouez en solo, en duel ou en mode multi-joueurs</p>
+              {/* <p>• Interface adaptée mobile, tablette et ordinateur</p> */}
+            </div>
+          </div>
+
+          {/* Links */}
+          <div className="text-left space-y-2">
+            <p className="text-sm text-muted-foreground">Pour en savoir plus :
             </p>
-          </div>
-
-          {/* Features Grid */}
-          <div className="flex flex-col md:flex-row md:flex-wrap gap-6 my-6 w-full">
-            {/* For Students */}
-            <div className="bg-primary/10 p-6 rounded-lg md:flex-1 md:basis-[calc(50%-0.75rem)]">
-              <h3 className="font-semibold text-xl mb-4">👋 Pour les étudiants</h3>
-              <ul className="space-y-3 text-sm">
-                <li>• Révisez à votre rythme avec des quiz issus d'une grande base de données mutualisée</li>
-                <li>• Affrontez vos amis en duel ou en mode compétition multi-joueurs</li>
-                <li>• Jouez sans compte : entrez juste un pseudo et c'est parti !</li>
-                <li>• Envie de suivre vos progrès ? Créez un compte (optionnel) pour garder un historique</li>
-              </ul>
-            </div>
-
-            {/* For Teachers */}
-            <div className="bg-secondary/10 p-6 rounded-lg md:flex-1 md:basis-[calc(50%-0.75rem)]">
-              <h3 className="font-semibold text-xl mb-4">🧑‍🏫 Pour les enseignants</h3>
-              <ul className="space-y-3 text-sm">
-                <li>• Créez vos quiz personnalisés à partir de la base commune (ou ajoutez vos propres questions)</li>
-                <li>• Animez vos cours en projetant les quiz en temps réel avec scores, podiums, statistiques</li>
-                <li>• Contrôlez tout : timer, ordre des questions, affichage des réponses, visibilité des résultats…</li>
-                <li>• Partagez vos questions avec la communauté</li>
-              </ul>
-            </div>
-
-            {/* Question Database */}
-            <div className="bg-accent/10 p-6 rounded-lg md:flex-1 md:basis-[calc(50%-0.75rem)]">
-              <h3 className="font-semibold text-xl mb-4">📚 Une base de questions ouverte</h3>
-              <ul className="space-y-2 text-sm">
-                <li>• Des milliers de questions du CP à Bac+2, dans toutes les disciplines</li>
-                <li>• Rédigées, vérifiées et filtrées par un enseignant</li>
-                <li>• Utilisables en classe, en autonomie, en ligne, sur tablette ou smartphone</li>
-              </ul>
-            </div>
-
-            {/* Open Source */}
-            <div className="bg-success/10 p-6 rounded-lg md:flex-1 md:basis-[calc(50%-0.75rem)]">
-              <h3 className="font-semibold text-xl mb-4">🔓 Libre. Gratuit. Sans pub.</h3>
-              <ul className="space-y-2 text-sm">
-                <li>• Projet personnel libre et gratuit, sans publicité</li>
-                <li>• Hébergé sur mon propre serveur</li>
-                <li>• Utilisation illimitée, sans restriction de temps ni de fonctionnalités</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Help section for everyone */}
-          <div className="border-t pt-6 w-full">
-            <div className="bg-base-200 p-6 rounded-lg">
-              <h3 className="font-semibold mb-2">💡 Besoin d'aide ?</h3>
-              <p>
-                Commencez par vous connecter en choisissant un pseudo et un avatar (pas besoin de créer un compte) puis utilisez le menu pour naviguer dans les différentes sections.
-              </p>
+            <div className="space-x-6">
+              <a
+                href="https://alexisflesch.github.io/mathquest/utilisation/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                📖 Documentation
+              </a>
+              <a
+                href="https://github.com/alexisflesch/mathquest"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                💻 Code source
+              </a>
             </div>
           </div>
         </div>
