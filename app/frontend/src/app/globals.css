@@ -121,7 +121,7 @@ html[data-theme="dark"] {
   /* Foncé mais pas noir, plus doux */
   --success: #6ee7b7;
   --success-foreground: #1f2937;
-  --border: #374151;
+  --border: #6c7f9e;
   /* Un gris un peu plus clair que #27272a */
   --input: #374151;
   --muted: #2d3340;
