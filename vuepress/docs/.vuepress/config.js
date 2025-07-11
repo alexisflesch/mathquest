@@ -9,9 +9,10 @@ export default defineUserConfig({
   title: 'MathQuest',
   description: 'Alternative libre et open source à Kahoot, pour les enseignants et leurs élèves.',
   base: '/mathquest/',
-  
+
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }]
+    ['link', { rel: 'icon', href: '/mathquest/favicon.ico' }],
+    ['link', { rel: 'stylesheet', href: '/mathquest/styles/screenshots.css' }]
   ],
 
   theme: defaultTheme({
@@ -47,11 +48,21 @@ export default defineUserConfig({
           text: 'Utilisation',
           children: [
             '/utilisation/README.md',
+            '/utilisation/quiz.md',
+            '/utilisation/tournoi.md',
+            '/utilisation/entrainement.md',
           ],
         },
       ],
     },
   }),
 
-  bundler: viteBundler(),
+  bundler: viteBundler({
+    viteOptions: {
+      server: {
+        // Middleware pour servir le favicon à la racine
+        middlewareMode: false,
+      }
+    }
+  }),
 })
