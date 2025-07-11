@@ -109,7 +109,7 @@ export default function Home() {
             </p>
             <div className="space-x-6">
               <a
-                href="https://alexisflesch.github.io/mathquest/utilisation/"
+                href="https://alexisflesch.github.io/mathquest/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
