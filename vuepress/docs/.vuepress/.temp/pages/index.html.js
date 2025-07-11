@@ -1,3 +1,16 @@
 import comp from "/home/aflesch/mathquest/vuepress/docs/.vuepress/.temp/pages/index.html.vue"
 const data = JSON.parse("{\"path\":\"/\",\"title\":\"\",\"lang\":\"fr-FR\",\"frontmatter\":{\"home\":true,\"heroImage\":false,\"heroText\":\"MathQuest\",\"tagline\":\"Libre. Ludique. Pour tous les niveaux.\",\"footer\":\"Documentation MathQuest | © 2025\"},\"git\":{\"updatedTime\":1751576357000,\"contributors\":[{\"name\":\"alexisflesch\",\"username\":\"alexisflesch\",\"email\":\"alexis.flesch@gmail.com\",\"commits\":2,\"url\":\"https://github.com/alexisflesch\"}],\"changelog\":[{\"hash\":\"851a3d308700d7d2e0cfc710539da1afb70c20e4\",\"time\":1751576357000,\"email\":\"alexis.flesch@gmail.com\",\"author\":\"alexisflesch\",\"message\":\"doc update\"},{\"hash\":\"ff0e59106460a31d3b84585d7643b474d7e21cda\",\"time\":1751575389000,\"email\":\"alexis.flesch@gmail.com\",\"author\":\"alexisflesch\",\"message\":\"creating doc\"}]},\"filePathRelative\":\"README.md\"}")
 export { comp, data }
+
+if (import.meta.webpackHot) {
+  import.meta.webpackHot.accept()
+  if (__VUE_HMR_RUNTIME__.updatePageData) {
+    __VUE_HMR_RUNTIME__.updatePageData(data)
+  }
+}
+
+if (import.meta.hot) {
+  import.meta.hot.accept(({ data }) => {
+    __VUE_HMR_RUNTIME__.updatePageData(data)
+  })
+}
